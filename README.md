@@ -65,9 +65,9 @@ mindmap
       What is included
         MVP Scope
           SP Management
-          Tefémetry Collêctor
+          Log Collector
           Authenticaction Broker
-          Single&_Tenant Saas
+          Single_Tenant Saas
             Self_provisioning
       What is excluded
         NOT a DMS
