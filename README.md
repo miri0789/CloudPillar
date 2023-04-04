@@ -18,3 +18,70 @@ If you want to learn more about creating good readme files then refer the follow
 - [ASP.NET Core](https://github.com/aspnet/Home)
 - [Visual Studio Code](https://github.com/Microsoft/vscode)
 - [Chakra Core](https://github.com/Microsoft/ChakraCore)
+
+:::mermaid
+mindmap
+  root((IoT DICOM Hub))
+    Objectives
+      Missions
+      ::icon(fa fa-book)
+        Provide IoT management bus
+        Support diverse and sparsely connected environments
+        Provide DICOM transfer hub and management
+        Comply with the relevant regulations
+        Leverage latest and greatest in IoT
+      Cornerstones
+        Principles
+          A first class<br/>resident of IOTH
+          Minimalism
+          Synergy with CartoNet
+        Stack
+          )Targets Azure(
+          Basing on Azure IoT Hub
+            ((MQTT))
+            (AMQP)
+            [HTTP]
+            mTLS
+            RDP
+            SSH
+            MS_WUSP
+          Programming platforms
+            C#
+            Python
+            C
+            Node*
+            Angular<br/>or React            
+          Considered 3rd parties
+            Azure IoT Edge<br/>turned down
+            Azure IoT Device Update<br/>potential
+            Windows Update
+            DataDog<br/>turned down
+            Ngrok
+    Top Cases
+      Fleet registration<br/>and management
+      Service pack download<br/>and setup
+      Logs upload and analysis
+    Scope
+      What is included
+        MVP Scope
+          SP Management
+          Tefémetry Collêctor
+          Authenticaction Broker
+          Single&_Tenant Saas
+            Self_provisioning
+      What is excluded
+        NOT a DMS
+        NOT an ISRM
+        NOT a platform
+        NOT Auth Provider
+        NOT multi_tenant SaaS
+        NOT a BI 
+    Timeline
+      PoC
+      MVP Scope
+      GA #1 F&F
+      GA #2
+      Extended Scope
+      Maintenance
+:::
+
