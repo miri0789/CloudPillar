@@ -1,0 +1,4 @@
+src/agent/jnjiotagent/bin
+src/agent/jnjiotagent/obj
+.venv
+.conda
