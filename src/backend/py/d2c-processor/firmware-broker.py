@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import time
 from azure.iot.hub import IoTHubRegistryManager
 from azure.iot.hub.models import CloudToDeviceMethod
 from azure.storage.blob import BlobServiceClient, BlobClient
@@ -20,7 +21,7 @@ blob_service_client = BlobServiceClient.from_connection_string(storage_connectio
 container_client = blob_service_client.get_container_client(container_name)
 
 async def on_event(partition_context, event):
-    process_event(event)
+    await process_event(event)
     await partition_context.update_checkpoint(event)
 
 async def receive_device_to_cloud_messages(partition_id=None):
@@ -39,34 +40,48 @@ async def receive_device_to_cloud_messages(partition_id=None):
         else:
             await event_hub_consumer_client.receive(on_event)
 
-def process_event(event):
+async def process_event(event):
     event_data = json.loads(event.body_as_str())
     if event_data.get("event_type") == "FirmwareUpdateReady":
-        device_id = event.properties["device_id"]
+        device_id = event.properties[b"device_id"].decode("utf-8")
         filename = event_data["filename"]
         chunk_size = event_data["chunk_size"]
-        send_firmware_update(device_id, filename, chunk_size)
+        await send_firmware_update_async(device_id, filename, chunk_size)
 
-def send_firmware_update(device_id, filename, chunk_size):
-    blob_client = container_client.get_blob_client(filename)
-    blob_size = blob_client.get_blob_properties().size
-    total_chunks = (blob_size + chunk_size - 1) // chunk_size
+async def send_firmware_update_async(device_id, filename, chunk_size):
+    try:
+        blob_client = container_client.get_blob_client(filename)
+        blob_size = blob_client.get_blob_properties().size
+        total_chunks = (blob_size + chunk_size - 1) // chunk_size
 
-    for chunk_index in range(total_chunks):
-        offset = chunk_index * chunk_size
-        data = blob_client.download_blob(offset, chunk_size).readall()
-        message_payload = {
-            "filename": filename,
-            "chunk_index": chunk_index,
-            "write_position": offset,  # Add this line
-            "total_chunks": total_chunks,
-            "data": data.hex(),
-        }
-        c2d_message = Message(json.dumps(message_payload))
-        c2d_message.message_id = f"{filename}_{chunk_index}"
-        c2d_message.custom_properties["chunk_index"] = str(chunk_index)
-        c2d_message.custom_properties["total_chunks"] = str(total_chunks)
-        iot_hub_registry_manager.send_c2d_message(device_id, c2d_message)
+        for chunk_index in range(total_chunks):
+            offset = chunk_index * chunk_size
+            data = blob_client.download_blob(offset, chunk_size).readall()
+            message_payload = {
+                "filename": filename,
+                "chunk_index": chunk_index,
+                "write_position": offset,
+                "total_chunks": total_chunks,
+                "data": data.hex(),
+            }
+            c2d_message_json = json.dumps(message_payload)
+            c2d_message = Message(c2d_message_json)
+            c2d_message.message_id = f"{filename}_{chunk_index}"
+            message_size = len(c2d_message_json)
+            print(f"Message size: {message_size} bytes")
+            c2d_message.custom_properties["chunk_index"] = str(chunk_index)
+            c2d_message.custom_properties["total_chunks"] = str(total_chunks)
+            print(f"Sending C2D message to device {device_id}: {c2d_message_json}")
+            iot_hub_registry_manager.send_c2d_message(device_id, c2d_message)
+            print(f"Sent C2D message to device {device_id}")
+            await asyncio.sleep(10)  # Sleep for 10 seconds
+    except Exception as e:
+        print(f"Error sending C2D message to device {device_id}: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(receive_device_to_cloud_messages(partition_id))
+    while True:
+        try:
+            asyncio.run(receive_device_to_cloud_messages(partition_id))
+        except Exception as e:
+            print(f"Error in receive_device_to_cloud_messages: {e}")
+        time.sleep(5)  # Sleep for a short duration before restarting

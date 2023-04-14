@@ -2,40 +2,76 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "buildAgent",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/agent/jnjiotagent/jnjiotagent.csproj",
+                "${workspaceFolder}/src/agent/dotnet/jnjiotagent.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "publish",
+            "label": "publishAgent",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/src/agent/jnjiotagent/jnjiotagent.csproj",
+                "${workspaceFolder}/src/agent/dotnet/jnjiotagent.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "watch",
+            "label": "watchAgent",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/src/agent/jnjiotagent/jnjiotagent.csproj"
+                "${workspaceFolder}/src/agent/dotnet/jnjiotagent.csproj"
             ],
             "problemMatcher": "$msCompile"
-        }
+        },
+        {
+            "label": "buildBackend",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/backend/dotnet/d2c-processor/d2c-processor.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publishBackend",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/src/backend/dotnet/d2c-processor/d2c-processor.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watchBackend",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/src/backend/dotnet/d2c-processor/d2c-processor.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
     ]
 }
