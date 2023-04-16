@@ -9,6 +9,11 @@ TODO: Guide users through getting your code up and running on their own system. 
 4.	API references
 
 # Build and Test
+1. Purge all  C2D messages
+```
+az iot hub invoke-device-method --device-id <your_device_id> --hub-name <your_iothub_name> --method-name cloudtodevicepurge
+```
+
 TODO: Describe and show how to build your code and run the tests. 
 
 # Contribute

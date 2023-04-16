@@ -8,3 +8,18 @@ JNJ IoT Agent .Net Core main principles:
 4. It will be possible to completely pause the Agent, to allow the device to maximize its performance without CPU and I/O interruptions, and then restart it again
 5. It will receive pause and restart commands via http://localhost:8099  GET requests
 6. It will enforce only one instance of the Agent app is running on the device, via a global mutex. This one should adjust to both Windows and Linux cases.
+
+To run a singleton container on a target host, use the following command:
+```
+docker run --name jnjiotagent --restart unless-stopped -d -p 8099:8099 -e DEVICE_CONNECTION_STRING="your_connection_string_here" jnjiotagent:0.0.1
+```
+
+To stop, run
+```
+docker stop jnjiotagent
+```
+
+Configure the Docker service on your Windows host to start automatically. To do this, open the Services management console (services.msc) or run the following command in an elevated PowerShell prompt:
+```
+Set-Service -Name docker -StartupType Automatic
+```
