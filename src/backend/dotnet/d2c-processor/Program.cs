@@ -142,14 +142,15 @@ namespace FirmwareUpdate
                         string deviceId = eventData.SystemProperties["iothub-connection-device-id"].ToString();
                         string filename = eventDataJson["filename"].ToString();
                         int chunkSize = int.Parse(eventDataJson["chunk_size"].ToString());
-                        await SendFirmwareUpdateAsync(deviceId, filename, chunkSize);
+                        long startFromPos = eventDataJson.ContainsKey("start_from") ? long.Parse(eventDataJson["start_from"].ToString()):0L;
+                        await SendFirmwareUpdateAsync(deviceId, filename, chunkSize, startFromPos);
                     }
                 }
                 await context.CheckpointAsync();
             }
         }
 
-        private static async Task SendFirmwareUpdateAsync(string deviceId, string filename, int chunkSize)
+        private static async Task SendFirmwareUpdateAsync(string deviceId, string filename, int chunkSize, long startFromPos = 0)
         {
             try
             {
@@ -163,7 +164,7 @@ namespace FirmwareUpdate
                 long blobSize = blockBlob.Properties.Length;
                 int totalChunks = (int)Math.Ceiling((double)blobSize / chunkSize);
 
-                for (int chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++)
+                for (int chunkIndex = (int)(startFromPos / chunkSize); chunkIndex < totalChunks; chunkIndex++)
                 {
                     int offset = chunkIndex * chunkSize;
                     int length = (chunkIndex == totalChunks - 1) ? (int)(blobSize - offset) : chunkSize;

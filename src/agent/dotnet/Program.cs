@@ -81,7 +81,13 @@ namespace FirmwareUpdateAgent
                 : TransportType.Mqtt;
         }
 
-        private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, string device_id)
+        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, string device_id, string filename)
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
+            FileInfo fi = new FileInfo(path);
+            await SendFirmwareUpdateReady(cancellationToken, device_id, filename, fi.Exists ? fi.Length : 0L);
+        }
+        private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, string device_id, string filename, long startFromPos = -1L)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -99,8 +105,9 @@ namespace FirmwareUpdateAgent
                     var payloadData = new
                     {
                         event_type = "FirmwareUpdateReady",
-                        filename = "Microsoft Azure Storage Explorer.app.zip",
+                        filename = filename,
                         chunk_size = chunkSize,
+                        start_from = startFromPos >= 0 ? startFromPos : 0,
                     };
 
                     var messageString = JsonConvert.SerializeObject(payloadData);
@@ -124,6 +131,7 @@ namespace FirmwareUpdateAgent
 
         private static async Task ReceiveCloudToDeviceMessages(CancellationToken cancellationToken)
         {
+            long totalBytesDownloaded = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 Message receivedMessage = await _deviceClient.ReceiveAsync(TimeSpan.FromSeconds(1));
@@ -142,7 +150,7 @@ namespace FirmwareUpdateAgent
                     // byte[] bytes = StringToByteArray(data);
                     // string uuencodedData = messagePayload["data"].ToString();
                     byte[] bytes = Convert.FromBase64String(uuencodedData);
-                    await WriteChunkToFile(filename, writePosition, bytes, _stopwatch);
+                    totalBytesDownloaded = await WriteChunkToFile(filename, writePosition, bytes, _stopwatch, totalBytesDownloaded);
 
                     // Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);
 
@@ -151,9 +159,10 @@ namespace FirmwareUpdateAgent
             }
         }
 
-        private static async Task WriteChunkToFile(string filename, int writePosition, byte[] bytes, Stopwatch stopwatch, int writtenAmount = -1)
+        private static async Task<long> WriteChunkToFile(string filename, int writePosition, byte[] bytes, Stopwatch stopwatch, long writtenAmount = -1)
         {
             if(writtenAmount < 0) writtenAmount = writePosition;
+            long totalBytesDownloaded = writtenAmount + bytes.Length;
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             using (FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None)) // Use FileShare.Write for shared access (worker threads?)
             {
@@ -162,11 +171,15 @@ namespace FirmwareUpdateAgent
                 // fileStream.Write(bytes, 0, bytes.Length);
                 await fileStream.WriteAsync(bytes, 0, bytes.Length);
             }
+            if(!stopwatch.IsRunning) {
+                stopwatch.Start();
+                totalBytesDownloaded = bytes.Length;
+            }
             double timeElapsedInSeconds = stopwatch.Elapsed.TotalSeconds;
-            long totalBytesDownloaded = writePosition + bytes.Length;
             double throughput = totalBytesDownloaded / timeElapsedInSeconds / 1024.0; // in KiB/s
 
             Console.WriteLine($"@pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
+            return totalBytesDownloaded;
        }
 
         private static byte[] StringToByteArray(string hex)
@@ -199,7 +212,11 @@ namespace FirmwareUpdateAgent
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/update")
                     {
-                        SendFirmwareUpdateReady(_cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString)); // Async call for update
+                        SendFirmwareUpdateReady(_cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
+                    }
+                    else if (request.Url.AbsolutePath.ToLower() == "/continue")
+                    {
+                        SendFirmwareUpdateReadyContd(_cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
                     }
                 }
 
