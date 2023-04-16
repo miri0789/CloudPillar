@@ -3,23 +3,25 @@ using System.Text;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 
 namespace FirmwareUpdateAgent
 {
     class Program
     {
-        private static DeviceClient deviceClient;
-        private static string deviceConnectionString;
-        private static CancellationTokenSource cts;
-        private static Mutex mutex;
-        private static HttpListener httpListener;
-        private static bool isPaused = false;
+        private static DeviceClient _deviceClient;
+        private static string _deviceConnectionString;
+        private static CancellationTokenSource _cts;
+        private static Mutex _mutex;
+        private static HttpListener _httpListener;
+        private static bool _isPaused = false;
+        private static Stopwatch _stopwatch = new Stopwatch();
 
         static async Task Main(string[] args)
         {
-            deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
+            _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
 
-            if (string.IsNullOrEmpty(deviceConnectionString))
+            if (string.IsNullOrEmpty(_deviceConnectionString))
             {
                 Console.WriteLine("DEVICE_CONNECTION_STRING environment variable is missing.");
                 return;
@@ -36,25 +38,25 @@ namespace FirmwareUpdateAgent
                         return;
                     }
 
-                    deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, GetTransportType());
+                    _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
 
-                    cts = new CancellationTokenSource();
-                    var d2cTask = Task.Run(() => SendFirmwareUpdateReady(cts.Token, GetDeviceIdFromConnectionString(deviceConnectionString)), cts.Token);
-                    var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(cts.Token), cts.Token);
+                    _cts = new CancellationTokenSource();
+                    // var d2cTask = Task.Run(() => SendFirmwareUpdateReady(cts.Token, GetDeviceIdFromConnectionString(deviceConnectionString)), cts.Token);
+                    var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(_cts.Token), _cts.Token);
 
-                    httpListener = new HttpListener();
-                    httpListener.Prefixes.Add("http://localhost:8099/");
-                    httpListener.Start();
-                    var httpTask = Task.Run(() => HandleHttpListener(cts.Token), cts.Token);
+                    _httpListener = new HttpListener();
+                    _httpListener.Prefixes.Add("http://localhost:8099/");
+                    _httpListener.Start();
+                    var httpTask = Task.Run(() => HandleHttpListener(_cts.Token), _cts.Token);
 
-                    await Task.WhenAny(d2cTask, c2dTask, httpTask);
+                    await Task.WhenAny(/*d2cTask,*/ c2dTask, httpTask);
 
                     Console.WriteLine("Press any key to exit...");
                     Console.ReadKey();
 
-                    cts.Cancel();
+                    _cts.Cancel();
 
-                    httpListener.Stop();
+                    _httpListener.Stop();
                 }
                 catch (Exception ex)
                 {
@@ -62,7 +64,7 @@ namespace FirmwareUpdateAgent
                 }
                 finally
                 {
-                    deviceClient?.Dispose();
+                    _deviceClient?.Dispose(); _deviceClient = null;
                     mutex?.ReleaseMutex();
                 }
             }
@@ -80,7 +82,7 @@ namespace FirmwareUpdateAgent
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (!isPaused)
+                if (!_isPaused)
                 {
                     // Deduct the chunk size based on the protocol being used
                     int chunkSize = GetTransportType() switch
@@ -106,9 +108,11 @@ namespace FirmwareUpdateAgent
                     // Set the ExpiryTimeUtc property
                     // message.ExpiryTimeUtc = DateTime.UtcNow.AddHours(1); // 1 hour TTL
 
-                    await deviceClient.SendEventAsync(message);
+                    await _deviceClient.SendEventAsync(message);
 
                     Console.WriteLine("{0}: FirmwareUpdateReady sent", DateTime.Now);
+                    _stopwatch.Start();
+                    break;
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken);
@@ -119,9 +123,9 @@ namespace FirmwareUpdateAgent
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                Message receivedMessage = await deviceClient.ReceiveAsync(TimeSpan.FromSeconds(1));
+                Message receivedMessage = await _deviceClient.ReceiveAsync(TimeSpan.FromSeconds(1));
 
-                if (receivedMessage != null && !isPaused)
+                if (receivedMessage != null && !_isPaused)
                 {
                     string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
                     JObject messageObject = JObject.Parse(messageData);
@@ -135,26 +139,32 @@ namespace FirmwareUpdateAgent
                     // byte[] bytes = StringToByteArray(data);
                     // string uuencodedData = messagePayload["data"].ToString();
                     byte[] bytes = Convert.FromBase64String(uuencodedData);
-                    await WriteChunkToFile(filename, writePosition, bytes);
+                    await WriteChunkToFile(filename, writePosition, bytes, _stopwatch);
 
                     // Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);
 
-                    await deviceClient.CompleteAsync(receivedMessage); // Removes from the queue
+                    await _deviceClient.CompleteAsync(receivedMessage); // Removes from the queue
                 }
             }
         }
 
-        private static async Task WriteChunkToFile(string filename, int writePosition, byte[] bytes)
+        private static async Task WriteChunkToFile(string filename, int writePosition, byte[] bytes, Stopwatch stopwatch, int writtenAmount = -1)
         {
+            if(writtenAmount < 0) writtenAmount = writePosition;
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
-            using (FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+            using (FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None)) // Use FileShare.Write for shared access (worker threads?)
             {
                 // fileStream.Position = chunkIndex * bytes.Length;
                 fileStream.Seek(writePosition, SeekOrigin.Begin);
                 // fileStream.Write(bytes, 0, bytes.Length);
                 await fileStream.WriteAsync(bytes, 0, bytes.Length);
             }
-        }
+            double timeElapsedInSeconds = stopwatch.Elapsed.TotalSeconds;
+            long totalBytesDownloaded = writePosition + bytes.Length;
+            double throughput = totalBytesDownloaded / timeElapsedInSeconds / 1024.0; // in KiB/s
+
+            Console.WriteLine($"@pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
+       }
 
         private static byte[] StringToByteArray(string hex)
         {
@@ -171,23 +181,27 @@ namespace FirmwareUpdateAgent
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                HttpListenerContext context = await httpListener.GetContextAsync();
+                HttpListenerContext context = await _httpListener.GetContextAsync();
                 HttpListenerRequest request = context.Request;
 
                 if (request.HttpMethod == "GET")
                 {
                     if (request.Url.AbsolutePath.ToLower() == "/pause")
                     {
-                        isPaused = true;
+                        _isPaused = true;
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/start")
                     {
-                        isPaused = false;
+                        _isPaused = false;
+                    }
+                    else if (request.Url.AbsolutePath.ToLower() == "/update")
+                    {
+                        SendFirmwareUpdateReady(_cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString)); // Async call for update
                     }
                 }
 
                 using HttpListenerResponse response = context.Response;
-                string responseString = isPaused ? "Agent is paused" : "Agent is running";
+                string responseString = _isPaused ? "Agent is paused" : "Agent is running";
                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                 response.ContentLength64 = buffer.Length;
                 response.OutputStream.Write(buffer, 0, buffer.Length);

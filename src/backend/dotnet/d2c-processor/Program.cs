@@ -126,6 +126,13 @@ namespace FirmwareUpdate
             {
                 foreach (var eventData in messages)
                 {
+                    // Ignore messages older than 1 hour
+                    if (DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc > TimeSpan.FromHours(1))
+                    {
+                        Console.WriteLine("Ignoring message older than 1 hour.");
+                        continue;
+                    }
+
                     var data = Encoding.UTF8.GetString(eventData.Body.Array, eventData.Body.Offset, eventData.Body.Count);
                     // var eventDataJson = JsonSerializer.Deserialize<Dictionary<string, object>>(data);
                     var eventDataJson = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(data);
@@ -183,12 +190,20 @@ namespace FirmwareUpdate
 
                     c2dMessage.Properties["chunk_index"] = chunkIndex.ToString();
                     c2dMessage.Properties["total_chunks"] = totalChunks.ToString();
-                                        
-                    Console.WriteLine($"Sending C2D message to device {deviceId}: {c2dMessageJson}");
-                    await serviceClient.SendAsync(deviceId, c2dMessage);
+
+                    while(true) {
+                        try {
+                            Console.WriteLine($"=> {deviceId}: {ObfuscateDataField(c2dMessageJson)}");
+                            await serviceClient.SendAsync(deviceId, c2dMessage);
+                            break; //Succeeded
+                        } catch (Microsoft.Azure.Devices.Common.Exceptions.DeviceMaximumQueueDepthExceededException x) {
+                            Console.WriteLine("Overflow 50 messages, client must unload!");
+                            await Task.Delay(TimeSpan.FromSeconds(3));
+                        }
+                    }   
                     // await registryManager.SendAsync(deviceId, new Microsoft.Azure.Devices.Message(Encoding.UTF8.GetBytes(c2dMessageJson)));
                     // await registryManager.SendCloudToDeviceMessageAsync(deviceId, c2dMessage);
-                    Console.WriteLine($"Sent C2D message to device {deviceId}");
+                    // Console.WriteLine($"Sent C2D message to device {deviceId}");
                     await Task.Delay(TimeSpan.FromMilliseconds(10));
                 }
             }
@@ -196,6 +211,19 @@ namespace FirmwareUpdate
             {
                 Console.WriteLine($"Error sending C2D message to device {deviceId}: {e}");
             }
+        }
+
+        private static string ObfuscateDataField(string jsonString)
+        {
+            var jsonObject = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonString);
+            if (jsonObject.ContainsKey("data"))
+            {
+                string data = jsonObject["data"].ToString();
+                string obfuscatedData = data.Substring(0, Math.Min(data.Length, 10)) + "...";
+                jsonObject["data"] = obfuscatedData;
+            }
+
+            return System.Text.Json.JsonSerializer.Serialize(jsonObject);
         }
     }
 }
