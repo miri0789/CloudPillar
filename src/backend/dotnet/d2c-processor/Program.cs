@@ -170,16 +170,17 @@ namespace FirmwareUpdate
                     };
 
                     string c2dMessageJson = JsonConvert.SerializeObject(messagePayload);
-                    var c2dMessage = new Message(Encoding.ASCII.GetBytes(c2dMessageJson))
+                    var c2dMessage = new Message(Encoding.UTF8.GetBytes(c2dMessageJson))
                     {
-                        MessageId = $"{filename}_{chunkIndex}"
+                        MessageId = $"{filename}_{chunkIndex}",
+                        ExpiryTimeUtc = DateTime.UtcNow.AddHours(1)
                     };
 
                     c2dMessage.Properties["chunk_index"] = chunkIndex.ToString();
                     c2dMessage.Properties["total_chunks"] = totalChunks.ToString();
-
+                                        
                     Console.WriteLine($"Sending C2D message to device {deviceId}: {c2dMessageJson}");
-                    await serviceClient.SendAsync(deviceId, new Microsoft.Azure.Devices.Message(Encoding.UTF8.GetBytes(c2dMessageJson)));
+                    await serviceClient.SendAsync(deviceId, c2dMessage);
                     // await registryManager.SendAsync(deviceId, new Microsoft.Azure.Devices.Message(Encoding.UTF8.GetBytes(c2dMessageJson)));
                     // await registryManager.SendCloudToDeviceMessageAsync(deviceId, c2dMessage);
                     Console.WriteLine($"Sent C2D message to device {deviceId}");

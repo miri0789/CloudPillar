@@ -28,6 +28,6 @@ spec:
                   key: connection-string
             - name: BLOB_CONTAINER_NAME
               value: <your-blob-container-name>
-            - name: D2C_PARTITION_ID
-              value: "0"  # Replace with the desired partition ID, or remove this entry to listen to all partitions
+            # - name: D2C_PARTITION_ID
+            #   value: "0"  # Replace with the desired partition ID, or remove this entry to listen to all partitions
 

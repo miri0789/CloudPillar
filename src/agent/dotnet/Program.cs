@@ -103,6 +103,9 @@ namespace FirmwareUpdateAgent
 
                     message.Properties.Add("device_id", device_id);
 
+                    // Set the ExpiryTimeUtc property
+                    message.ExpiryTimeUtc = DateTime.UtcNow.AddHours(1); // 1 hour TTL
+
                     await deviceClient.SendEventAsync(message);
 
                     Console.WriteLine("{0}: FirmwareUpdateReady sent", DateTime.Now);
