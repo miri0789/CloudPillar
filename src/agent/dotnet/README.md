@@ -23,3 +23,8 @@ Configure the Docker service on your Windows host to start automatically. To do 
 ```
 Set-Service -Name docker -StartupType Automatic
 ```
+
+On Linux:
+```
+sudo systemctl enable docker
+```
