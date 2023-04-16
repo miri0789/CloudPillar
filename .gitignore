@@ -2,3 +2,5 @@
 **/obj
 .venv
 .conda
+src/agent/.DS_Store
+src/agent/dotnet/Microsoft Azure Storage Explorer.app.zip

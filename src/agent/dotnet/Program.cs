@@ -65,7 +65,10 @@ namespace FirmwareUpdateAgent
                 finally
                 {
                     _deviceClient?.Dispose(); _deviceClient = null;
-                    mutex?.ReleaseMutex();
+                    if (createdNew)
+                    {
+                        mutex?.ReleaseMutex();
+                    }
                 }
             }
         }
