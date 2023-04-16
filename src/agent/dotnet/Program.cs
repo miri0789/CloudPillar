@@ -104,7 +104,7 @@ namespace FirmwareUpdateAgent
                     message.Properties.Add("device_id", device_id);
 
                     // Set the ExpiryTimeUtc property
-                    message.ExpiryTimeUtc = DateTime.UtcNow.AddHours(1); // 1 hour TTL
+                    // message.ExpiryTimeUtc = DateTime.UtcNow.AddHours(1); // 1 hour TTL
 
                     await deviceClient.SendEventAsync(message);
 
@@ -134,10 +134,10 @@ namespace FirmwareUpdateAgent
 
                     // byte[] bytes = StringToByteArray(data);
                     // string uuencodedData = messagePayload["data"].ToString();
-                    byte[] data = Convert.FromBase64String(uuencodedData);
+                    byte[] bytes = Convert.FromBase64String(uuencodedData);
                     await WriteChunkToFile(filename, writePosition, bytes);
 
-                    Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);
+                    // Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);
 
                     await deviceClient.CompleteAsync(receivedMessage); // Removes from the queue
                 }
