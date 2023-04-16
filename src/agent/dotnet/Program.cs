@@ -127,12 +127,14 @@ namespace FirmwareUpdateAgent
                     JObject messageObject = JObject.Parse(messageData);
 
                     string filename = messageObject.Value<string>("filename");
-                    int chunkIndex = messageObject.Value<int>("chunk_index");
+                    // int chunkIndex = messageObject.Value<int>("chunk_index");
                     int writePosition = messageObject.Value<int>("write_position");
-                    int totalChunks = messageObject.Value<int>("total_chunks");
-                    string data = messageObject.Value<string>("data");
+                    // int totalChunks = messageObject.Value<int>("total_chunks");
+                    string uuencodedData = messageObject.Value<string>("data");
 
-                    byte[] bytes = StringToByteArray(data);
+                    // byte[] bytes = StringToByteArray(data);
+                    // string uuencodedData = messagePayload["data"].ToString();
+                    byte[] data = Convert.FromBase64String(uuencodedData);
                     await WriteChunkToFile(filename, writePosition, bytes);
 
                     Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);

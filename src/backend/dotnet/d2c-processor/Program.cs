@@ -146,7 +146,11 @@ namespace FirmwareUpdate
         {
             try
             {
-                chunkSize = Math.Min(chunkSize, 32000);
+                int maxEncodedChunkSize = 65535;
+                int reservedOverhead = 500;
+                int maxChunkSizeBeforeEncoding = (int)((maxEncodedChunkSize - reservedOverhead) * (3.0 / 4.0));
+                chunkSize = Math.Min(chunkSize, maxChunkSizeBeforeEncoding);
+
                 CloudBlockBlob blockBlob = container.GetBlockBlobReference(filename);
                 await blockBlob.FetchAttributesAsync();
                 long blobSize = blockBlob.Properties.Length;
@@ -166,7 +170,8 @@ namespace FirmwareUpdate
                         // chunk_index = chunkIndex,
                         write_position = offset,
                         // total_chunks = totalChunks,
-                        data = BitConverter.ToString(data).Replace("-", "").ToLower()
+                        // data = BitConverter.ToString(data).Replace("-", "").ToLower()
+                        data = Convert.ToBase64String(data)
                     };
 
                     string c2dMessageJson = JsonConvert.SerializeObject(messagePayload);
@@ -184,7 +189,7 @@ namespace FirmwareUpdate
                     // await registryManager.SendAsync(deviceId, new Microsoft.Azure.Devices.Message(Encoding.UTF8.GetBytes(c2dMessageJson)));
                     // await registryManager.SendCloudToDeviceMessageAsync(deviceId, c2dMessage);
                     Console.WriteLine($"Sent C2D message to device {deviceId}");
-                    await Task.Delay(TimeSpan.FromSeconds(10));
+                    await Task.Delay(TimeSpan.FromMilliseconds(10));
                 }
             }
             catch (Exception e)
