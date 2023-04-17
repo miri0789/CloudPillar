@@ -37,26 +37,34 @@ namespace FirmwareUpdateAgent
                         Console.WriteLine("Another instance of FirmwareUpdateAgent is already running.");
                         return;
                     }
-
-                    _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
-
                     _cts = new CancellationTokenSource();
-                    // var d2cTask = Task.Run(() => SendFirmwareUpdateReady(cts.Token, GetDeviceIdFromConnectionString(deviceConnectionString)), cts.Token);
-                    var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(_cts.Token), _cts.Token);
+                    while(!_cts.IsCancellationRequested) {
+                        try {
+                            Console.WriteLine("Loading the Agent....");
+                            _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
 
-                    _httpListener = new HttpListener();
-                    _httpListener.Prefixes.Add("http://localhost:8099/");
-                    _httpListener.Start();
-                    var httpTask = Task.Run(() => HandleHttpListener(_cts.Token), _cts.Token);
+                            // var d2cTask = Task.Run(() => SendFirmwareUpdateReady(cts.Token, GetDeviceIdFromConnectionString(deviceConnectionString)), cts.Token);
+                            var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(_cts.Token), _cts.Token);
 
-                    await Task.WhenAny(/*d2cTask,*/ c2dTask, httpTask);
+                            _httpListener = new HttpListener();
+                            _httpListener.Prefixes.Add("http://localhost:8099/");
+                            _httpListener.Start();
+                            var httpTask = Task.Run(() => HandleHttpListener(_cts.Token), _cts.Token);
 
-                    Console.WriteLine("Press any key to exit...");
-                    Console.ReadKey();
+                            await Task.WhenAny(/*d2cTask,*/ c2dTask, httpTask);
 
-                    _cts.Cancel();
+                            // await _cts.Token;
 
-                    _httpListener.Stop();
+                            // Console.WriteLine("Press any key to exit...");
+                            // Console.ReadKey();
+
+                            // _cts.Cancel();
+                        } finally {
+                            Console.WriteLine("Bailed out of the Agent....");
+                            _httpListener.Stop();
+                            _stopwatch.Reset(); // Resetting stopwatch causes next throughput calculations to reset
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -67,7 +75,9 @@ namespace FirmwareUpdateAgent
                     _deviceClient?.Dispose(); _deviceClient = null;
                     if (createdNew)
                     {
-                        mutex?.ReleaseMutex();
+                        try {
+                            mutex?.ReleaseMutex();
+                        } catch(Exception ) {}
                     }
                 }
             }
@@ -123,6 +133,8 @@ namespace FirmwareUpdateAgent
                     Console.WriteLine("{0}: FirmwareUpdateReady sent", DateTime.Now);
                     _stopwatch.Start();
                     break;
+                } else {
+                    _stopwatch.Reset(); // Resetting stopwatch causes next throughput calculations to reset
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken);
@@ -217,6 +229,11 @@ namespace FirmwareUpdateAgent
                     else if (request.Url.AbsolutePath.ToLower() == "/continue")
                     {
                         SendFirmwareUpdateReadyContd(_cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
+                    }
+                    else if (request.Url.AbsolutePath.ToLower() == "/shutdown")
+                    {
+                        _isPaused = true;
+                        _cts.Cancel();
                     }
                 }
 
