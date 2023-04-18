@@ -22,7 +22,7 @@ namespace FirmwareUpdate
         static string BlobContainerName = Environment.GetEnvironmentVariable("BLOB_CONTAINER_NAME");
         static string EventHubCompatibleEndpoint = Environment.GetEnvironmentVariable("IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT");
         static string EventHubCompatiblePath = Environment.GetEnvironmentVariable("IOTHUB_EVENT_HUB_COMPATIBLE_PATH");
-        static string PartitionId = Environment.GetEnvironmentVariable("PARTITION_ID").Split('-').Last();
+        static string PartitionId = Environment.GetEnvironmentVariable("PARTITION_ID")?.Split('-')?.Last();
 
         // static string iotHubSharedAccessKeyName = Environment.GetEnvironmentVariable("IOTHUB_SHARED_ACCESS_KEY_NAME");
         // static string iotHubSharedAccessKey = Environment.GetEnvironmentVariable("IOTHUB_SHARED_ACCESS_KEY");
@@ -92,7 +92,7 @@ namespace FirmwareUpdate
                 eventProcessorOptions.InitialOffsetProvider = (pid) => pid == PartitionId ? EventPosition.FromStart() : null;
             }
             // Register the event processor
-            await eventProcessorHost.RegisterEventProcessorAsync<SimpleEventProcessor>();
+            await eventProcessorHost.RegisterEventProcessorAsync<SimpleEventProcessor>(eventProcessorOptions);
 
             Console.WriteLine("Receiving. Press enter key to stop.");
             Console.ReadLine();
