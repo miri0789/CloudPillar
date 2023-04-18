@@ -89,7 +89,7 @@ namespace FirmwareUpdateAgent
             var transportTypeString = Environment.GetEnvironmentVariable("TRANSPORT_TYPE");
             return Enum.TryParse(transportTypeString, out TransportType transportType)
                 ? transportType
-                : TransportType.Mqtt;
+                : TransportType.Amqp;
         }
 
         private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, string device_id, string filename)
@@ -149,7 +149,7 @@ namespace FirmwareUpdateAgent
             {
                 Message receivedMessage = null;
                 try {
-                    receivedMessage = await _deviceClient.ReceiveAsync(TimeSpan.FromSeconds(1));
+                    receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);//TimeSpan.FromSeconds(1));
                 } catch (Exception x) {
                     Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x.Message);
                     continue;
@@ -158,22 +158,27 @@ namespace FirmwareUpdateAgent
                 if (receivedMessage != null && !_isPaused)
                 {
                     string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
-                    JObject messageObject = JObject.Parse(messageData);
+                    try {
+                        JObject messageObject = JObject.Parse(messageData);
 
-                    string filename = messageObject.Value<string>("filename");
-                    // int chunkIndex = messageObject.Value<int>("chunk_index");
-                    int writePosition = messageObject.Value<int>("write_position");
-                    // int totalChunks = messageObject.Value<int>("total_chunks");
-                    string uuencodedData = messageObject.Value<string>("data");
+                        string filename = messageObject.Value<string>("filename");
+                        // int chunkIndex = messageObject.Value<int>("chunk_index");
+                        int writePosition = messageObject.Value<int>("write_position");
+                        // int totalChunks = messageObject.Value<int>("total_chunks");
+                        string uuencodedData = messageObject.Value<string>("data");
 
-                    // byte[] bytes = StringToByteArray(data);
-                    // string uuencodedData = messagePayload["data"].ToString();
-                    byte[] bytes = Convert.FromBase64String(uuencodedData);
-                    totalBytesDownloaded = await WriteChunkToFile(filename, writePosition, bytes, _stopwatch, totalBytesDownloaded);
+                        // byte[] bytes = StringToByteArray(data);
+                        // string uuencodedData = messagePayload["data"].ToString();
+                        byte[] bytes = Convert.FromBase64String(uuencodedData);
+                        totalBytesDownloaded = await WriteChunkToFile(filename, writePosition, bytes, _stopwatch, totalBytesDownloaded);
 
-                    // Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);
+                        // Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);
 
-                    await _deviceClient.CompleteAsync(receivedMessage); // Removes from the queue
+                        await _deviceClient.CompleteAsync(receivedMessage); // Removes from the queue
+                    } catch (Exception x) {
+                        Console.WriteLine("{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, x.Message);
+                        continue;
+                    }
                 }
             }
         }
