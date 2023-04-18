@@ -11,11 +11,11 @@ namespace FirmwareUpdateAgent
     {
         private static DeviceClient _deviceClient;
         private static string _deviceConnectionString;
-        private static CancellationTokenSource _cts;
         private static Mutex _mutex;
         private static HttpListener _httpListener;
         private static bool _isPaused = false;
         private static Stopwatch _stopwatch = new Stopwatch();
+        private static bool _isShutdown = false;
 
         static async Task Main(string[] args)
         {
@@ -37,31 +37,32 @@ namespace FirmwareUpdateAgent
                         Console.WriteLine("Another instance of FirmwareUpdateAgent is already running.");
                         return;
                     }
-                    _cts = new CancellationTokenSource();
-                    while(!_cts.IsCancellationRequested) {
+                    CancellationTokenSource cts = null;
+                    while(!_isShutdown) {
                         try {
+                            cts = new CancellationTokenSource();
                             Console.WriteLine("Loading the Agent....");
                             _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
 
                             // var d2cTask = Task.Run(() => SendFirmwareUpdateReady(cts.Token, GetDeviceIdFromConnectionString(deviceConnectionString)), cts.Token);
-                            var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(_cts.Token), _cts.Token);
+                            var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(cts.Token), cts.Token);
 
                             _httpListener = new HttpListener();
                             _httpListener.Prefixes.Add("http://localhost:8099/");
                             _httpListener.Start();
-                            var httpTask = Task.Run(() => HandleHttpListener(_cts.Token), _cts.Token);
+                            var httpTask = Task.Run(() => HandleHttpListener(cts.Token), cts.Token);
 
                             await Task.WhenAny(/*d2cTask,*/ c2dTask, httpTask);
 
-                            // await _cts.Token;
+                            await cts.Token;
 
                             // Console.WriteLine("Press any key to exit...");
                             // Console.ReadKey();
 
-                            // _cts.Cancel();
                         } finally {
+                            cts?.Cancel();
                             Console.WriteLine("Bailed out of the Agent....");
-                            _httpListener.Stop();
+                            _httpListener.Stop(); _httpListener = null;
                             _stopwatch.Reset(); // Resetting stopwatch causes next throughput calculations to reset
                         }
                     }
@@ -131,7 +132,7 @@ namespace FirmwareUpdateAgent
                     await _deviceClient.SendEventAsync(message);
 
                     Console.WriteLine("{0}: FirmwareUpdateReady sent", DateTime.Now);
-                    _stopwatch.Start();
+                    // _stopwatch.Start();
                     break;
                 } else {
                     _stopwatch.Reset(); // Resetting stopwatch causes next throughput calculations to reset
@@ -146,7 +147,13 @@ namespace FirmwareUpdateAgent
             long totalBytesDownloaded = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
-                Message receivedMessage = await _deviceClient.ReceiveAsync(TimeSpan.FromSeconds(1));
+                Message receivedMessage = null;
+                try {
+                    receivedMessage = await _deviceClient.ReceiveAsync(TimeSpan.FromSeconds(1));
+                } catch (Exception x) {
+                    Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x);
+                    continue;
+                }
 
                 if (receivedMessage != null && !_isPaused)
                 {
@@ -214,26 +221,26 @@ namespace FirmwareUpdateAgent
 
                 if (request.HttpMethod == "GET")
                 {
-                    if (request.Url.AbsolutePath.ToLower() == "/pause")
+                    if (request.Url.AbsolutePath.ToLower() == "/busy")
                     {
                         _isPaused = true;
                     }
-                    else if (request.Url.AbsolutePath.ToLower() == "/start")
+                    else if (request.Url.AbsolutePath.ToLower() == "/ready")
                     {
                         _isPaused = false;
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/update")
                     {
-                        SendFirmwareUpdateReady(_cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
+                        SendFirmwareUpdateReady(cancellationToken, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/continue")
                     {
-                        SendFirmwareUpdateReadyContd(_cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
+                        SendFirmwareUpdateReadyContd(cancellationToken, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/shutdown")
                     {
                         _isPaused = true;
-                        _cts.Cancel();
+                        _isShutdown = true;
                     }
                 }
 
