@@ -13,8 +13,8 @@ spec:
         app: backend
     spec:
       containers:
-      - name: backend
-        image: <YOUR_BACKEND_IMAGE>
+      - name: jnjiotbackend
+        image: iotdicomacr.azurecr.io/d2c-prcoessor-backend:latest
         env:
         - name: IOTHUB_CONNECTION_STRING
           value: "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc="
