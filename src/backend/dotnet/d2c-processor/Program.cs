@@ -22,6 +22,7 @@ namespace FirmwareUpdate
         static string BlobContainerName = Environment.GetEnvironmentVariable("BLOB_CONTAINER_NAME");
         static string EventHubCompatibleEndpoint = Environment.GetEnvironmentVariable("IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT");
         static string EventHubCompatiblePath = Environment.GetEnvironmentVariable("IOTHUB_EVENT_HUB_COMPATIBLE_PATH");
+        static string PartitionId = Environment.GetEnvironmentVariable("PARTITION_ID");
         // static string iotHubSharedAccessKeyName = Environment.GetEnvironmentVariable("IOTHUB_SHARED_ACCESS_KEY_NAME");
         // static string iotHubSharedAccessKey = Environment.GetEnvironmentVariable("IOTHUB_SHARED_ACCESS_KEY");
 
@@ -76,6 +77,19 @@ namespace FirmwareUpdate
                 StorageConnectionString,
                 BlobContainerName);
 
+            Console.WriteLine("Registering EventProcessor...");
+            var eventProcessorOptions = new EventProcessorOptions
+            {
+                MaxBatchSize = 100,
+                PrefetchCount = 10,
+                ReceiveTimeout = TimeSpan.FromSeconds(40),
+                InvokeProcessorAfterReceiveTimeout = true,
+            };
+
+            if (!string.IsNullOrEmpty(PartitionId))
+            {
+                eventProcessorOptions.InitialOffsetProvider = (pid) => pid == PartitionId ? EventPosition.FromStart() : null;
+            }
             // Register the event processor
             await eventProcessorHost.RegisterEventProcessorAsync<SimpleEventProcessor>();
 

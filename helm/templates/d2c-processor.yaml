@@ -1,33 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: firmware-update-microservice
+  name: backend-deployment
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
-      app: firmware-update-microservice
+      app: backend
   template:
     metadata:
       labels:
-        app: firmware-update-microservice
+        app: backend
     spec:
       containers:
-        - name: firmware-update-microservice
-          image: <your-docker-image>
-          env:
-            - name: IOTHUB_CONNECTION_STRING
-              valueFrom:
-                secretKeyRef:
-                  name: iothub-connection-string-secret
-                  key: connection-string
-            - name: STORAGE_CONNECTION_STRING
-              valueFrom:
-                secretKeyRef:
-                  name: storage-connection-string-secret
-                  key: connection-string
-            - name: BLOB_CONTAINER_NAME
-              value: <your-blob-container-name>
-            # - name: D2C_PARTITION_ID
-            #   value: "0"  # Replace with the desired partition ID, or remove this entry to listen to all partitions
-
+      - name: backend
+        image: <YOUR_BACKEND_IMAGE>
+        env:
+        - name: IOTHUB_CONNECTION_STRING
+          value: "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc="
+        - name: IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT
+          value: "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub"
+        - name: IOTHUB_EVENT_HUB_COMPATIBLE_PATH
+          value: "szlabs-iot-hub"
+        - name: STORAGE_CONNECTION_STRING
+          value: "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net"
+        - name: BLOB_CONTAINER_NAME
+          value: "iot-firmware"
+        - name: PARTITION_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+          value: "{{.spec.replicaIndex}}"

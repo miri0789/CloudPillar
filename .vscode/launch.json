@@ -16,7 +16,8 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=amanaged01;SharedAccessKey=j9udQMCkrz+BmiiiPmd4uqWo5YkKRcfU9HLLsmLEKDI="
+                // "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=amanaged01;SharedAccessKey=j9udQMCkrz+BmiiiPmd4uqWo5YkKRcfU9HLLsmLEKDI="
+                "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=amanaged04;SharedAccessKey=PRiIt6X2qeSOnF4LUeqeqXTXmjhwNpQgbAq1HAvWGtg="
             },
             "stopAtEntry": false
         },
@@ -35,12 +36,12 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
+                "IOTHUB_CONNECTION_STRING":             "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
                 "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub",
-                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH": "szlabs-iot-hub",
-                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
-                "BLOB_CONTAINER_NAME": "iot-firmware",
-                // "D2C_PARTITION_ID": "0"
+                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH":     "szlabs-iot-hub",
+                "STORAGE_CONNECTION_STRING":            "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "BLOB_CONTAINER_NAME":                  "iot-firmware",
+                "PARTITION_ID":                         "0"
             },
             "stopAtEntry": false
         },
