@@ -198,7 +198,7 @@ namespace FirmwareUpdate
                             await serviceClient.SendAsync(deviceId, c2dMessage);
                             break; //Succeeded
                         } catch (Microsoft.Azure.Devices.Common.Exceptions.DeviceMaximumQueueDepthExceededException x) {
-                            Console.WriteLine("Overflow 50 messages, client must unload!");
+                            Console.WriteLine($"Overflow 50 messages, client '{deviceId}' must unload!");
                             await Task.Delay(TimeSpan.FromSeconds(3));
                         }
                     }   
