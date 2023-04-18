@@ -151,7 +151,7 @@ namespace FirmwareUpdateAgent
                 try {
                     receivedMessage = await _deviceClient.ReceiveAsync(TimeSpan.FromSeconds(1));
                 } catch (Exception x) {
-                    Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x);
+                    Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x.Message);
                     continue;
                 }
 
