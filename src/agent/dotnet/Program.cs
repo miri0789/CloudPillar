@@ -97,7 +97,7 @@ namespace FirmwareUpdateAgent
                 : TransportType.Amqp;
         }
 
-        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, string device_id, string filename, int fromPos)
+        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, string device_id, string filename, int fromPos = -1)
         {
             Console.WriteLine($"SDK command 'Continue' at device '{device_id}'....");
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
@@ -255,7 +255,11 @@ namespace FirmwareUpdateAgent
                     else if (request.Url.AbsolutePath.ToLower() == "/continue")
                     {
                         string fromPos = request.QueryString["from"];
-                        SendFirmwareUpdateReadyContd(cancellationToken, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip", string.IsNullOrEmpty(fromPos)?-1:int.Parse(fromPos)); // Async call for update
+                        string filename = request.QueryString["file"];
+                        SendFirmwareUpdateReadyContd(cancellationToken,
+                                                     GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                     string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
+                                                     string.IsNullOrEmpty(fromPos) ? -1 : int.Parse(fromPos)); // Async call for update
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/shutdown")
                     {
