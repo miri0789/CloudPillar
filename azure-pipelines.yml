@@ -1,11 +1,11 @@
 trigger:
   - main
 
-  variables:
-    imageName: 'd2c-prcoessor-backend'
-    imageVersion: 'd2c-prcoessor-backend'
-    registryName: 'szdevopslabscr.azurecr.io'
-    dockerfilePath: '/src/backend/dotnet/d2c-processor/Dockerfile'
+variables:
+  imageName: 'd2c-prcoessor-backend'
+  imageVersion: 'd2c-prcoessor-backend'
+  registryName: 'szdevopslabscr.azurecr.io'
+  dockerfilePath: '/src/backend/dotnet/d2c-processor/Dockerfile'
 stages:
 - stage: BuildAndPush
   displayName: Build and push Docker image
@@ -28,15 +28,3 @@ stages:
         repository: '$(registryName)/$(imageName)'
         command: 'buildAndPush'
         Dockerfile: '$(dockerfilePath)'
-  
-  # steps:
-  # - task: Docker@2
-  #   displayName: Build an image
-  #   inputs:
-  #     repository: $(imageName)
-  #     command: build
-  #     Dockerfile: app/Dockerfile
-
-export TOKEN=$(az acr login --name $acrName --expose-token --output tsv --query accessToken)
-export loginServer=$(az acr login --name $acrName --expose-token --output tsv --query loginServer)
-docker login $loginServer --username 00000000-0000-0000-0000-000000000000 --password $TOKEN
