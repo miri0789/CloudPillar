@@ -215,7 +215,7 @@ namespace FirmwareUpdateAgent
             double timeElapsedInSeconds = stopwatch.Elapsed.TotalSeconds;
             double throughput = totalBytesDownloaded / timeElapsedInSeconds / 1024.0; // in KiB/s
 
-            Console.WriteLine($"@pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
+            Console.WriteLine($"%{progressPercent:00} @pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
             return totalBytesDownloaded;
        }
 
