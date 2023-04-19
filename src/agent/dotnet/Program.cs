@@ -166,6 +166,11 @@ namespace FirmwareUpdateAgent
                 if (receivedMessage != null && !_isPaused)
                 {
                     string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+
+                    // Read properties from the received message
+                    int chunkIndex = int.Parse(receivedMessage.Properties["chunk_index"]);
+                    int totalChunks = int.Parse(receivedMessage.Properties["total_chunks"]);
+
                     try {
                         JObject messageObject = JObject.Parse(messageData);
 
@@ -178,7 +183,7 @@ namespace FirmwareUpdateAgent
                         // byte[] bytes = StringToByteArray(data);
                         // string uuencodedData = messagePayload["data"].ToString();
                         byte[] bytes = Convert.FromBase64String(uuencodedData);
-                        totalBytesDownloaded = await WriteChunkToFile(filename, writePosition, bytes, _stopwatch, totalBytesDownloaded);
+                        totalBytesDownloaded = await WriteChunkToFile(filename, writePosition, bytes, _stopwatch, totalBytesDownloaded, 100 * chunkIndex / totalChunks);
 
                         // Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);
 
@@ -191,7 +196,7 @@ namespace FirmwareUpdateAgent
             }
         }
 
-        private static async Task<long> WriteChunkToFile(string filename, int writePosition, byte[] bytes, Stopwatch stopwatch, long writtenAmount = -1)
+        private static async Task<long> WriteChunkToFile(string filename, int writePosition, byte[] bytes, Stopwatch stopwatch, long writtenAmount = -1, int progressPercent = 0)
         {
             if(writtenAmount < 0) writtenAmount = writePosition;
             long totalBytesDownloaded = writtenAmount + bytes.Length;
