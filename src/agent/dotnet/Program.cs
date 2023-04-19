@@ -97,12 +97,12 @@ namespace FirmwareUpdateAgent
                 : TransportType.Amqp;
         }
 
-        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, string device_id, string filename)
+        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, string device_id, string filename, int fromPos)
         {
             Console.WriteLine($"SDK command 'Continue' at device '{device_id}'....");
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             FileInfo fi = new FileInfo(path);
-            await SendFirmwareUpdateReady(cancellationToken, device_id, filename, fi.Exists ? fi.Length : 0L);
+            await SendFirmwareUpdateReady(cancellationToken, device_id, filename, fromPos >= 0 ? fromPos : fi.Exists ? fi.Length : 0L);
         }
         private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, string device_id, string filename, long startFromPos = -1L)
         {
@@ -254,7 +254,8 @@ namespace FirmwareUpdateAgent
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/continue")
                     {
-                        SendFirmwareUpdateReadyContd(cancellationToken, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
+                        string fromPos = request.QueryString["from"];
+                        SendFirmwareUpdateReadyContd(cancellationToken, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip", string.IsNullOrEmpty(fromPos)?-1:int.Parse(fromPos)); // Async call for update
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/shutdown")
                     {
