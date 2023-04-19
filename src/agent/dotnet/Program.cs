@@ -50,7 +50,7 @@ namespace FirmwareUpdateAgent
 
                             Console.WriteLine("Constructing HTTP Listener....");
                             _httpListener = new HttpListener();
-                            _httpListener.Prefixes.Add("http://localhost:8099/");
+                            _httpListener.Prefixes.Add("http://+:8099/");
                             _httpListener.Start();
                             var httpTask = Task.Run(() => HandleHttpListener(cts.Token), cts.Token);
 
