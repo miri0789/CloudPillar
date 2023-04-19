@@ -1,0 +1,106 @@
+{
+  "desired": {
+    "currentChangeset": "1.14.61044.20230418180114",
+    "1.14.61044.20230418180114": {
+      "patch": {
+        "preTransitConfig": [
+          {
+            "description": "Change script running permissions",
+            "shell": "powershell",
+            "command": "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
+          },
+          {
+            "description": "Install Windows Update utility",
+            "shell": "powershell",
+            "command": "Install-Module -Name PSWindowsUpdate"
+          },
+          {
+            "description": "Import Windows Update utility",
+            "shell": "powershell",
+            "command": "Import-Module PSWindowsUpdate"
+          },
+          {
+            "description": "Download pending updates via  Windows Update",
+            "shell": "powershell",
+            "command": "Net start wuauserv; Get-WindowsUpdate -Download -ForceDownload",
+            "onPause": "Net stop wuauserv; $pause = (Get-Date).AddDays(35); $pause = $pause.ToUniversalTime().ToString( \"yyyy-MM-ddTHH:mm:ssZ\" ); Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings' -Name 'PauseUpdatesExpiryTime' -Value $pause",
+            "onResume": "Net start wuauserv"
+          }
+        ],
+        "transitPackage": [
+          {
+            "description": "Azure Storage Explorer firmware artifact v1.14.61044",
+            "source": "Microsoft Azure Storage Explorer.app.zip",
+            "protocol": "iotmqtt",
+            "destinationPath": "./Microsoft Azure Storage Explorer.app.zip"
+          }
+        ],
+        "preInstallConfig": [
+          {
+            "description": "Extracted firmware artifact",
+            "shell": "powershell",
+            "command": "Expand-Archive -LiteralPath '.\\Microsoft Azure Storage Explorer.app.zip' -DestinationPath '.'"
+          }
+        ],
+        "installSteps": [
+          {
+            "description": "Install extracted firmware artifact",
+            "shell": "powershell",
+            "command": ".\\Install-Update.ps1 -ExampleArg1 value1 -ExampleArg2 value2"
+          }
+        ],
+        "postInstallConfig": [
+          {
+            "description": "Kick off immediate Windows Update",
+            "shell": "powershell",
+            "command": "Get-WindowsUpdate -AcceptAll -Install -AutoReboot"
+          },
+          {
+            "description": "Validate version integrity",
+            "shell": "powershell",
+            "command": ".\\validate.bat"
+          }
+        ]
+      },
+      "base": {
+        "transitPackage": [
+          {
+            "description": "Full firmware artifact v1.14.61044",
+            "source": "Microsoft Azure Storage Explorer.app.zip",
+            "protocol": "iotmqtt",
+            "destinationPath": "./Microsoft Azure Storage Explorer.app.zip"
+          }
+        ],
+        "preInstallConfig": [
+          {
+            "description": "Extracted firmware artifact",
+            "shell": "powershell",
+            "command": "Expand-Archive -LiteralPath '.\\Microsoft Azure Storage Explorer.app.zip' -DestinationPath '.'"
+          }
+        ],
+        "installSteps": [
+          {
+            "description": "Install extracted firmware artifact",
+            "shell": "powershell",
+            "command": ".\\Install-Update.ps1 -ExampleArg1 value1 -ExampleArg2 value2"
+          }
+        ]
+      }
+    }
+  },
+  "reported": {
+    "configStatus": {
+      "deviceFirmwareChangeset": "1.14.61044.20230418180114",
+      "status": "in-progress",
+      "preTransitConfig": [
+        {
+          "resultCode": "Success",
+          "output": "Downloaded pending updates.",
+          "executionStart": "2023-04-10T10:00:00Z",
+          "executionEnd": "2023-04-10T10:05:00Z",
+          "executionDuration": 300
+        }
+      ]
+    }
+  }
+}
