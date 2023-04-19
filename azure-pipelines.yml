@@ -1,0 +1,30 @@
+trigger:
+  - main
+
+variables:
+  imageName: 'd2c-prcoessor-backend'
+  imageVersion: 'd2c-prcoessor-backend'
+  registryName: 'szdevopslabscr.azurecr.io'
+  dockerfilePath: '/src/backend/dotnet/d2c-processor/Dockerfile'
+stages:
+- stage: BuildAndPush
+  displayName: Build and push Docker image
+  jobs:
+  - job: BuildAndPushJob
+    displayName: Build and push job
+    pool:
+      name: Default
+      agent.name: szPrivateBastion2 
+    steps:
+    - task: Docker@2
+      displayName: Login to ACR
+      inputs:
+        containerRegistry: '$(registryName)'
+        command: 'login'
+    - task: Docker@2
+      displayName: Build and push Docker image
+      inputs:
+        containerRegistry: '$(registryName)'
+        repository: '$(registryName)/$(imageName)'
+        command: 'buildAndPush'
+        Dockerfile: '$(dockerfilePath)'
