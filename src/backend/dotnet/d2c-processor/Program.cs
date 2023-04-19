@@ -94,8 +94,11 @@ namespace FirmwareUpdate
             // Register the event processor
             await eventProcessorHost.RegisterEventProcessorAsync<SimpleEventProcessor>(eventProcessorOptions);
 
-            Console.WriteLine("Receiving. Press enter key to stop.");
-            Console.ReadLine();
+            Console.WriteLine("Receiving. Press Ctrl+C to stop.");
+            var cts = new CancellationTokenSource(); 
+            Console.CancelKeyPress += (sender, e) => { cts.Cancel(); }; 
+            await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { }); 
+            Console.WriteLine("Bailed out.");
 
             // Unregister the event processor
             await eventProcessorHost.UnregisterEventProcessorAsync();
