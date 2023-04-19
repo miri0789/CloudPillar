@@ -46,7 +46,7 @@ namespace FirmwareUpdateAgent
 
                             Console.WriteLine("Constructing c2d listener....");
                             // var d2cTask = Task.Run(() => SendFirmwareUpdateReady(cts.Token, GetDeviceIdFromConnectionString(deviceConnectionString)), cts.Token);
-                            var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(cts.Token), cts.Token);
+                            var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString)), cts.Token);
 
                             Console.WriteLine("Constructing HTTP Listener....");
                             _httpListener = new HttpListener();
@@ -147,8 +147,9 @@ namespace FirmwareUpdateAgent
             }
         }
 
-        private static async Task ReceiveCloudToDeviceMessages(CancellationToken cancellationToken)
+        private static async Task ReceiveCloudToDeviceMessages(CancellationToken cancellationToken, string device_id)
         {
+            Console.WriteLine($"Started listening for C2D messages at device '{device_id}'....");
             long totalBytesDownloaded = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -224,6 +225,7 @@ namespace FirmwareUpdateAgent
 
         private static async Task HandleHttpListener(CancellationToken cancellationToken)
         {
+            Console.WriteLine($"Started listening for HTTP....");
             while (!cancellationToken.IsCancellationRequested)
             {
                 HttpListenerContext context = await _httpListener.GetContextAsync();
