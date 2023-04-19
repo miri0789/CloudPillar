@@ -13,7 +13,6 @@ namespace FirmwareUpdateAgent
         private static string _deviceConnectionString;
         private static Mutex _mutex;
         private static HttpListener _httpListener;
-        private static bool _isPaused = false;
         private static Stopwatch _stopwatch = new Stopwatch();
         private static bool _isShutdown = false;
 
@@ -37,40 +36,33 @@ namespace FirmwareUpdateAgent
                         Console.WriteLine("Another instance of FirmwareUpdateAgent is already running.");
                         return;
                     }
-                    CancellationTokenSource cts = null;
-                    while(!_isShutdown) {
-                        try {
-                            cts = new CancellationTokenSource();
-                            Console.WriteLine("Loading the Device Client....");
-                            _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
+                    Console.WriteLine("Starting Simulated device...");
 
-                            Console.WriteLine("Constructing c2d listener....");
-                            // var d2cTask = Task.Run(() => SendFirmwareUpdateReady(cts.Token, GetDeviceIdFromConnectionString(deviceConnectionString)), cts.Token);
-                            var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(cts.Token, GetDeviceIdFromConnectionString(_deviceConnectionString)), cts.Token);
+                    var cts = new CancellationTokenSource();
+                    _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, TransportType.Amqp);
+                    var c2dSubscription = new C2DSubscription(_deviceClient, GetDeviceIdFromConnectionString(_deviceConnectionString));
 
-                            Console.WriteLine("Constructing HTTP Listener....");
-                            _httpListener = new HttpListener();
-                            _httpListener.Prefixes.Add("http://+:8099/");
-                            _httpListener.Start();
-                            var httpTask = Task.Run(() => HandleHttpListener(cts.Token), cts.Token);
+                    Console.CancelKeyPress += (sender, eventArgs) =>
+                    {
+                        Console.WriteLine("Cancelling...");
+                        cts.Cancel();
+                        eventArgs.Cancel = true;
+                    };
 
-                            Console.WriteLine("Starting Listeners....");
-                            await Task.WhenAny(/*d2cTask,*/ c2dTask, httpTask);
-                            Console.WriteLine("Bailed out of Listeners, waiting for cancellation token....");
+                    _httpListener = new HttpListener();
+                    _httpListener.Prefixes.Add("http://+:8099/");
+                    _httpListener.Start();
 
-                            await cts.Token;
-                            Console.WriteLine("Cancellation done!");
+                    // Add the initial Subscribe() call here
+                    await c2dSubscription.Subscribe(cts.Token);
 
-                            // Console.WriteLine("Press any key to exit...");
-                            // Console.ReadKey();
+                    var httpTask = Task.Run(() => HandleHttpListener(cts.Token, c2dSubscription));
 
-                        } finally {
-                            cts?.Cancel();
-                            Console.WriteLine("Bailed out of the Agent....");
-                            _httpListener.Stop(); _httpListener = null;
-                            _stopwatch.Reset(); // Resetting stopwatch causes next throughput calculations to reset
-                        }
-                    }
+
+                    // Wait for any of the tasks to complete or be cancelled
+                    await httpTask;
+
+                    Console.WriteLine("Exiting...");
                 }
                 catch (Exception ex)
                 {
@@ -89,6 +81,92 @@ namespace FirmwareUpdateAgent
             }
         }
 
+        public class C2DSubscription
+        {
+            private readonly DeviceClient _deviceClient;
+            private CancellationTokenSource _privateCts;
+            private Task _c2dTask;
+            private readonly string _deviceId;
+            public bool IsSubscribed { get; private set; }
+
+            public C2DSubscription(DeviceClient deviceClient, string deviceId)
+            {
+                _deviceClient = deviceClient;
+                _deviceId = deviceId;
+            }
+
+            public async Task Subscribe(CancellationToken cancellationToken)
+            {
+                if (_privateCts != null)
+                {
+                    Console.WriteLine("Already subscribed to C2D messages.");
+                    return;
+                }
+
+                _privateCts = new CancellationTokenSource();
+                CancellationToken combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _privateCts.Token).Token;
+                Console.WriteLine("Subscribing to C2D messages...");
+
+                IsSubscribed = true;
+                _c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(combinedToken, _deviceId), combinedToken);
+            }
+
+            public void Unsubscribe()
+            {
+                if (_privateCts == null)
+                {
+                    Console.WriteLine("Not subscribed to C2D messages.");
+                    return;
+                }
+
+                Console.WriteLine("Unsubscribing from C2D messages...");
+                _privateCts.Cancel();
+                _privateCts = null;
+                IsSubscribed = false;
+            }
+
+            private async Task ReceiveCloudToDeviceMessages(CancellationToken cancellationToken, string device_id)
+            {
+                Console.WriteLine($"Started listening for C2D messages at device '{device_id}'....");
+                long totalBytesDownloaded = 0;
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    Message receivedMessage = null;
+                    try {
+                        receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);//TimeSpan.FromSeconds(1));
+                    } catch (Exception x) {
+                        Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x.Message);
+                        continue;
+                    }
+
+                    if (receivedMessage != null)
+                    {
+                        string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+
+                        // Read properties from the received message
+                        int chunkIndex = int.Parse(receivedMessage.Properties["chunk_index"]);
+                        int totalChunks = int.Parse(receivedMessage.Properties["total_chunks"]);
+
+                        try {
+                            JObject messageObject = JObject.Parse(messageData);
+
+                            string filename = messageObject.Value<string>("filename");
+                            int writePosition = messageObject.Value<int>("write_position");
+                            string uuencodedData = messageObject.Value<string>("data");
+
+                            byte[] bytes = Convert.FromBase64String(uuencodedData);
+                            totalBytesDownloaded = await WriteChunkToFile(filename, writePosition, bytes, _stopwatch, totalBytesDownloaded, 100 * chunkIndex / totalChunks);
+
+                            await _deviceClient.CompleteAsync(receivedMessage); // Removes from the queue
+                        } catch (Exception x) {
+                            Console.WriteLine("{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, x.Message);
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
         private static TransportType GetTransportType()
         {
             var transportTypeString = Environment.GetEnvironmentVariable("TRANSPORT_TYPE");
@@ -97,20 +175,21 @@ namespace FirmwareUpdateAgent
                 : TransportType.Amqp;
         }
 
-        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, string device_id, string filename, int fromPos = -1)
+        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, long startFromPos = -1)
         {
             Console.WriteLine($"SDK command 'Continue' at device '{device_id}'....");
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             FileInfo fi = new FileInfo(path);
-            await SendFirmwareUpdateReady(cancellationToken, device_id, filename, fromPos >= 0 ? fromPos : fi.Exists ? fi.Length : 0L);
+            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, device_id, filename, startFromPos >= 0 ? startFromPos : fi.Exists ? fi.Length : 0L);
         }
-        private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, string device_id, string filename, long startFromPos = -1L)
+        private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, long startFromPos = -1L)
         {
-            Console.WriteLine($"Sending FirmwareUpdateReady event at device '{device_id}'....");
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (!_isPaused)
+                if (c2dSubscription.IsSubscribed)
                 {
+                    Console.WriteLine($"Sending FirmwareUpdateReady event at device '{device_id}'....");
+
                     // Deduct the chunk size based on the protocol being used
                     int chunkSize = GetTransportType() switch
                     {
@@ -142,57 +221,11 @@ namespace FirmwareUpdateAgent
                     // _stopwatch.Start();
                     break;
                 } else {
+                    Console.WriteLine($"Can't send FirmwareUpdateReady event while paused at device '{device_id}'....");
                     _stopwatch.Reset(); // Resetting stopwatch causes next throughput calculations to reset
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken);
-            }
-        }
-
-        private static async Task ReceiveCloudToDeviceMessages(CancellationToken cancellationToken, string device_id)
-        {
-            Console.WriteLine($"Started listening for C2D messages at device '{device_id}'....");
-            long totalBytesDownloaded = 0;
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                Message receivedMessage = null;
-                try {
-                    receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);//TimeSpan.FromSeconds(1));
-                } catch (Exception x) {
-                    Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x.Message);
-                    continue;
-                }
-
-                if (receivedMessage != null && !_isPaused)
-                {
-                    string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
-
-                    // Read properties from the received message
-                    int chunkIndex = int.Parse(receivedMessage.Properties["chunk_index"]);
-                    int totalChunks = int.Parse(receivedMessage.Properties["total_chunks"]);
-
-                    try {
-                        JObject messageObject = JObject.Parse(messageData);
-
-                        string filename = messageObject.Value<string>("filename");
-                        // int chunkIndex = messageObject.Value<int>("chunk_index");
-                        int writePosition = messageObject.Value<int>("write_position");
-                        // int totalChunks = messageObject.Value<int>("total_chunks");
-                        string uuencodedData = messageObject.Value<string>("data");
-
-                        // byte[] bytes = StringToByteArray(data);
-                        // string uuencodedData = messagePayload["data"].ToString();
-                        byte[] bytes = Convert.FromBase64String(uuencodedData);
-                        totalBytesDownloaded = await WriteChunkToFile(filename, writePosition, bytes, _stopwatch, totalBytesDownloaded, 100 * chunkIndex / totalChunks);
-
-                        // Console.WriteLine("{0}: Received chunk {1} of {2} for file {3}", DateTime.Now, chunkIndex, totalChunks, filename);
-
-                        await _deviceClient.CompleteAsync(receivedMessage); // Removes from the queue
-                    } catch (Exception x) {
-                        Console.WriteLine("{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, x.Message);
-                        continue;
-                    }
-                }
             }
         }
 
@@ -230,7 +263,7 @@ namespace FirmwareUpdateAgent
             return bytes;
         }
 
-        private static async Task HandleHttpListener(CancellationToken cancellationToken)
+        private static async Task HandleHttpListener(CancellationToken cancellationToken, C2DSubscription c2dSubscription)
         {
             Console.WriteLine($"Started listening for HTTP....");
             while (!cancellationToken.IsCancellationRequested)
@@ -242,34 +275,36 @@ namespace FirmwareUpdateAgent
                 {
                     if (request.Url.AbsolutePath.ToLower() == "/busy")
                     {
-                        _isPaused = true;
+                        Console.WriteLine("Pausing Agent");
+                        c2dSubscription.Unsubscribe();
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/ready")
                     {
-                        _isPaused = false;
+                        Console.WriteLine("Resuming Agent");
+                        await c2dSubscription.Subscribe(cancellationToken);
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/update")
                     {
-                        SendFirmwareUpdateReady(cancellationToken, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
+                        _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/continue")
                     {
                         string fromPos = request.QueryString["from"];
                         string filename = request.QueryString["file"];
-                        SendFirmwareUpdateReadyContd(cancellationToken,
+                        _ = SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
                                                      GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                      string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
-                                                     string.IsNullOrEmpty(fromPos) ? -1 : int.Parse(fromPos)); // Async call for update
+                                                     string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/shutdown")
                     {
-                        _isPaused = true;
+                        c2dSubscription.Unsubscribe();
                         _isShutdown = true;
                     }
                 }
 
                 using HttpListenerResponse response = context.Response;
-                string responseString = _isPaused ? "Agent is paused" : "Agent is running";
+                string responseString = !c2dSubscription.IsSubscribed ? "Agent is paused" : "Agent is running";
                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                 response.ContentLength64 = buffer.Length;
                 response.OutputStream.Write(buffer, 0, buffer.Length);
