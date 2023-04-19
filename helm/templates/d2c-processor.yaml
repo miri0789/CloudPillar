@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: jnjiotd2cprocessor-deployment
 spec:
   replicas: 4
   selector:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: jnjiotbackend
-        image: iotdicomacr.azurecr.io/d2c-prcoessor-backend:latest
+        image: szdevopslabscr.azurecr.io/d2c-prcoessor-backend:latest
         env:
         - name: IOTHUB_CONNECTION_STRING
           value: "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc="
