@@ -41,20 +41,25 @@ namespace FirmwareUpdateAgent
                     while(!_isShutdown) {
                         try {
                             cts = new CancellationTokenSource();
-                            Console.WriteLine("Loading the Agent....");
+                            Console.WriteLine("Loading the Device Client....");
                             _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
 
+                            Console.WriteLine("Constructing c2d listener....");
                             // var d2cTask = Task.Run(() => SendFirmwareUpdateReady(cts.Token, GetDeviceIdFromConnectionString(deviceConnectionString)), cts.Token);
                             var c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(cts.Token), cts.Token);
 
+                            Console.WriteLine("Constructing HTTP Listener....");
                             _httpListener = new HttpListener();
                             _httpListener.Prefixes.Add("http://localhost:8099/");
                             _httpListener.Start();
                             var httpTask = Task.Run(() => HandleHttpListener(cts.Token), cts.Token);
 
+                            Console.WriteLine("Starting Listeners....");
                             await Task.WhenAny(/*d2cTask,*/ c2dTask, httpTask);
+                            Console.WriteLine("Bailed out of Listeners, waiting for cancellation token....");
 
                             await cts.Token;
+                            Console.WriteLine("Cancellation done!");
 
                             // Console.WriteLine("Press any key to exit...");
                             // Console.ReadKey();
