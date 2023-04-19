@@ -99,12 +99,14 @@ namespace FirmwareUpdateAgent
 
         private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, string device_id, string filename)
         {
+            Console.WriteLine($"SDK command 'Continue' at device '{device_id}'....");
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             FileInfo fi = new FileInfo(path);
             await SendFirmwareUpdateReady(cancellationToken, device_id, filename, fi.Exists ? fi.Length : 0L);
         }
         private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, string device_id, string filename, long startFromPos = -1L)
         {
+            Console.WriteLine($"Sending FirmwareUpdateReady event at device '{device_id}'....");
             while (!cancellationToken.IsCancellationRequested)
             {
                 if (!_isPaused)
