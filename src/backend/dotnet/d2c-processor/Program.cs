@@ -1,20 +1,14 @@
-using System;
-using System.IO;
 using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-// using Azure.Messaging.EventHubs.Consumer;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Newtonsoft.Json;
-// using ConsumerPartitionContext = Azure.Messaging.EventHubs.Consumer.PartitionContext;
-
 
 namespace FirmwareUpdate
 {
+    // Main class for the Firmware Update Backend
     class Program
     {
         static string IotHubConnectionString = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
@@ -24,52 +18,25 @@ namespace FirmwareUpdate
         static string EventHubCompatiblePath = Environment.GetEnvironmentVariable("IOTHUB_EVENT_HUB_COMPATIBLE_PATH");
         static string PartitionId = Environment.GetEnvironmentVariable("PARTITION_ID")?.Split('-')?.Last();
 
-        // static string iotHubSharedAccessKeyName = Environment.GetEnvironmentVariable("IOTHUB_SHARED_ACCESS_KEY_NAME");
-        // static string iotHubSharedAccessKey = Environment.GetEnvironmentVariable("IOTHUB_SHARED_ACCESS_KEY");
-
-        // static RegistryManager registryManager = RegistryManager.CreateFromConnectionString(IotHubConnectionString);
+        // Initialize service and storage clients
         static ServiceClient serviceClient = ServiceClient.CreateFromConnectionString(IotHubConnectionString);
         static CloudStorageAccount storageAccount = CloudStorageAccount.Parse(StorageConnectionString);
         static CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
         static CloudBlobContainer container = blobClient.GetContainerReference(BlobContainerName);
 
+        // Main method for the Firmware Update Backend
         static async Task Main(string[] args)
         {
             Console.WriteLine("Starting...");
             await StartEventProcessorHostAsync();
         }
 
-        // private static async Task StartEventProcessorHostAsync()
-        // {
-        //     string consumerGroupName = EventHubConsumerClient.DefaultConsumerGroupName;
-        //     string storageContainerName = BlobContainerName;
-        //     string leaseContainerName = "leases";
-
-        //     CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-
-        //     var storageContainer = blobClient.GetContainerReference(storageContainerName);
-        //     await storageContainer.CreateIfNotExistsAsync();
-
-        //     var leaseContainer = blobClient.GetContainerReference(leaseContainerName);
-        //     await leaseContainer.CreateIfNotExistsAsync();
-
-        //     var eventProcessorHost = new EventProcessorHost(
-        //         EventHubCompatiblePath,
-        //         consumerGroupName,
-        //         IotHubConnectionString,
-        //         StorageConnectionString,
-        //         leaseContainerName);
-
-        //     await eventProcessorHost.RegisterEventProcessorAsync<SimpleEventProcessor>();
-
-        //     Console.WriteLine("Press Ctrl+C to stop.");
-        //     await Task.Delay(TimeSpan.FromDays(1));
-        // }
-
+        // Method to start the EventProcessorHost for processing messages
         private static async Task StartEventProcessorHostAsync()
         {
             string eventHubsCompatibleConnectionString = EventHubCompatibleEndpoint;
 
+            // Initialize the EventProcessorHost with necessary parameters
             EventProcessorHost eventProcessorHost = new EventProcessorHost(
                 Guid.NewGuid().ToString(),
                 EventHubCompatiblePath,
@@ -87,6 +54,7 @@ namespace FirmwareUpdate
                 InvokeProcessorAfterReceiveTimeout = true,
             };
 
+            // Configure initial offset provider if PartitionId is set
             if (!string.IsNullOrEmpty(PartitionId))
             {
                 eventProcessorOptions.InitialOffsetProvider = (pid) => pid == PartitionId ? EventPosition.FromStart() : null;
@@ -104,7 +72,7 @@ namespace FirmwareUpdate
             await eventProcessorHost.UnregisterEventProcessorAsync();
         }
 
-
+        // Custom Event Processor class that implements IEventProcessor
         public class SimpleEventProcessor : IEventProcessor
         {
             public Task OpenAsync(PartitionContext context)
@@ -124,22 +92,8 @@ namespace FirmwareUpdate
                 Console.WriteLine($"Error on Partition: {context.PartitionId}, Error: {error.Message}");
                 return Task.CompletedTask;
             }
-            // public async Task CloseAsync(PartitionContext context, CloseReason reason)
-            // {
-            //     Console.WriteLine($"Processor shutting down. Partition: '{context.PartitionId}', Reason: '{reason}'.");
-            // }
 
-            // public Task OpenAsync(PartitionContext context)
-            // {
-            //     Console.WriteLine($"SimpleEventProcessor initialized. Partition: '{context.PartitionId}'");
-            //     return Task.CompletedTask;
-            // }
-
-            // public async Task ProcessErrorAsync(PartitionContext context, Exception error)
-            // {
-            //     Console.WriteLine($"Error on Partition: {context.PartitionId}, Error: {error.Message}");
-            // }
-
+            // Process events received from the Event Hubs
             public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
             {
                 foreach (var eventData in messages)
@@ -152,15 +106,15 @@ namespace FirmwareUpdate
                     }
 
                     var data = Encoding.UTF8.GetString(eventData.Body.Array, eventData.Body.Offset, eventData.Body.Count);
-                    // var eventDataJson = JsonSerializer.Deserialize<Dictionary<string, object>>(data);
                     var eventDataJson = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(data);
 
+                    // Check if the received message is a FirmwareUpdateReady event
                     if (eventDataJson.ContainsKey("event_type") && eventDataJson["event_type"].ToString() == "FirmwareUpdateReady")
                     {
                         string deviceId = eventData.SystemProperties["iothub-connection-device-id"].ToString();
                         string filename = eventDataJson["filename"].ToString();
                         int chunkSize = int.Parse(eventDataJson["chunk_size"].ToString());
-                        long startFromPos = eventDataJson.ContainsKey("start_from") ? long.Parse(eventDataJson["start_from"].ToString()):0L;
+                        long startFromPos = eventDataJson.ContainsKey("start_from") ? long.Parse(eventDataJson["start_from"].ToString()) : 0L;
                         await SendFirmwareUpdateAsync(deviceId, filename, chunkSize, startFromPos);
                     }
                 }
@@ -168,6 +122,7 @@ namespace FirmwareUpdate
             }
         }
 
+        // Send the firmware update to the specified device
         private static async Task SendFirmwareUpdateAsync(string deviceId, string filename, int chunkSize, long startFromPos = 0)
         {
             try
@@ -182,6 +137,7 @@ namespace FirmwareUpdate
                 long blobSize = blockBlob.Properties.Length;
                 int totalChunks = (int)Math.Ceiling((double)blobSize / chunkSize);
 
+                // Iterate through the chunks and send them as messages to the device
                 for (int chunkIndex = (int)(startFromPos / chunkSize); chunkIndex < totalChunks; chunkIndex++)
                 {
                     int offset = chunkIndex * chunkSize;
@@ -207,19 +163,23 @@ namespace FirmwareUpdate
                     c2dMessage.Properties["chunk_index"] = chunkIndex.ToString();
                     c2dMessage.Properties["total_chunks"] = totalChunks.ToString();
 
-                    while(true) {
-                        try {
+                    // Send the message and handle the device's maximum queue depth exceeded exception
+                    while (true)
+                    {
+                        try
+                        {
                             Console.WriteLine($"=> {deviceId}: {ObfuscateDataField(c2dMessageJson)}");
                             await serviceClient.SendAsync(deviceId, c2dMessage);
-                            break; //Succeeded
-                        } catch (Microsoft.Azure.Devices.Common.Exceptions.DeviceMaximumQueueDepthExceededException x) {
+                            break; // Succeeded
+                        }
+                        catch (Microsoft.Azure.Devices.Common.Exceptions.DeviceMaximumQueueDepthExceededException x)
+                        {
                             Console.WriteLine($"Overflow 50 messages, client '{deviceId}' must unload!");
                             await Task.Delay(TimeSpan.FromSeconds(3));
                         }
-                    }   
-                    // await registryManager.SendAsync(deviceId, new Microsoft.Azure.Devices.Message(Encoding.UTF8.GetBytes(c2dMessageJson)));
-                    // await registryManager.SendCloudToDeviceMessageAsync(deviceId, c2dMessage);
-                    // Console.WriteLine($"Sent C2D message to device {deviceId}");
+                    }
+
+                    // Add a short delay between sending messages to prevent overwhelming the device
                     await Task.Delay(TimeSpan.FromMilliseconds(10));
                 }
             }
@@ -229,6 +189,7 @@ namespace FirmwareUpdate
             }
         }
 
+        // Obfuscate the data field in the JSON string for better logging
         private static string ObfuscateDataField(string jsonString)
         {
             var jsonObject = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonString);
