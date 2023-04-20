@@ -1,7 +1,7 @@
 {
   "desired": {
-    "currentChangeset": "1.14.61044.20230418180114",
-    "1.14.61044.20230418180114": {
+    "changeSpec": {
+      "id": "1.14.61047.20230418180114",
       "patch": {
         "preTransitConfig": [
           {
@@ -86,72 +86,8 @@
           }
         ]
       }
-    }
-  },
-  "reported": {
-    "configStatus": {
-      "currentChangeset": "1.14.61044.20230418180114",
-      "status": "In Progress",
-      "patch": {
-        "preTransitConfig": [
-          {
-            "resultCode": "Success",
-            "output": "Downloaded pending updates.",
-            "executionStart": "2023-04-10T10:00:00Z",
-            "executionEnd": "2023-04-10T10:05:00Z",
-            "executionDuration": 300
-          },
-          {
-            "resultCode": "Success",
-            "output": "Downloaded pending updates.",
-            "executionStart": "2023-04-10T10:00:00Z",
-            "executionEnd": "2023-04-10T10:05:00Z",
-            "executionDuration": 300
-          },
-          {
-            "resultCode": "Success",
-            "output": "Downloaded pending updates.",
-            "executionStart": "2023-04-10T10:00:00Z",
-            "executionEnd": "2023-04-10T10:05:00Z",
-            "executionDuration": 300
-          },
-          {
-            "resultCode": "Paused",
-            "executionStart": "2023-04-10T10:00:00Z"
-          }
-        ],
-        "transitPackage": [
-          {
-            "status": "Pending"
-          }
-        ],
-        "preInstallConfig": [
-          {
-            "status": "Pending"
-          }
-        ],
-        "installSteps": [
-          {
-            "status": "Pending"
-          }
-        ],
-        "postInstallConfig": [
-          {
-            "resultCode": "Pending",
-            "output": "Downloaded pending updates.",
-            "executionStart": "2023-04-10T10:00:00Z",
-            "executionEnd": "2023-04-10T10:05:00Z",
-            "executionDuration": 300
-          },
-          {
-            "resultCode": "Pending",
-            "output": "Downloaded pending updates.",
-            "executionStart": "2023-04-10T10:00:00Z",
-            "executionEnd": "2023-04-10T10:05:00Z",
-            "executionDuration": 300
-          }
-        ]
-      }
+    },
+    "reported": {
     }
   }
 }

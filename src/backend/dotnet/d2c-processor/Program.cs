@@ -193,10 +193,7 @@ namespace FirmwareUpdate
                     var messagePayload = new
                     {
                         filename = filename,
-                        // chunk_index = chunkIndex,
                         write_position = offset,
-                        // total_chunks = totalChunks,
-                        // data = BitConverter.ToString(data).Replace("-", "").ToLower()
                         data = Convert.ToBase64String(data)
                     };
 
