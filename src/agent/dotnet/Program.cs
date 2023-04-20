@@ -16,6 +16,12 @@ namespace FirmwareUpdateAgent
         private static bool _isShutdown = false;
         private static TwinAction? _currentAction = null;
 
+        /// <summary>
+        /// The entry point of the FirmwareUpdateAgent application.
+        /// Initializes the device client, sets up desired properties update callback, handles cancellation,
+        /// sets up an HTTP listener for external commands, and starts the main loop for handling HTTP requests.
+        /// </summary>
+        /// <param name="args">Command-line arguments (not used in this application).</param>
         static async Task Main(string[] args)
         {
             _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
@@ -66,7 +72,6 @@ namespace FirmwareUpdateAgent
 
                     var httpTask = Task.Run(() => HandleHttpListener(cts.Token, c2dSubscription));
 
-
                     // Wait for any of the tasks to complete or be cancelled
                     await httpTask;
 
@@ -91,6 +96,10 @@ namespace FirmwareUpdateAgent
             }
         }
 
+        /// <summary>
+        /// Retrieves the transport type from the TRANSPORT_TYPE environment variable, or defaults to AMQP.
+        /// </summary>
+        /// <returns>The transport type.</returns>
         private static TransportType GetTransportType()
         {
             var transportTypeString = Environment.GetEnvironmentVariable("TRANSPORT_TYPE");
@@ -99,6 +108,13 @@ namespace FirmwareUpdateAgent
                 : TransportType.Amqp;
         }
 
+        /// <summary>
+        /// Sends a FirmwareUpdateReady event to continue the firmware update process.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token to cancel the task.</param>
+        /// <param name="c2dSubscription">C2D subscription instance.</param>
+        /// <param name="device_id">Device ID.</param>
+        /// <param name="filename">Filename of the firmware update file.</param>
         private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, long startFromPos = -1)
         {
             Console.WriteLine($"SDK command 'Continue' at device '{device_id}'....");
@@ -194,6 +210,11 @@ namespace FirmwareUpdateAgent
             return bytes;
         }
 
+        /// <summary>
+        /// Handles the HTTP Listener for incoming firmware update files.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token to cancel the task.</param>
+        /// <param name="c2dSubscription">C2D subscription instance.</param>
         private static async Task HandleHttpListener(CancellationToken cancellationToken, C2DSubscription c2dSubscription)
         {
             Console.WriteLine($"Started listening for HTTP....");
@@ -249,6 +270,11 @@ namespace FirmwareUpdateAgent
             }
         }
 
+        /// <summary>
+        /// Gets the device ID from the connection string.
+        /// </summary>
+        /// <param name="connectionString">Device connection string.</param>
+        /// <returns>Device ID.</returns>
         private static string GetDeviceIdFromConnectionString(string connectionString)
         {
             var items = connectionString.Split(';');
@@ -263,37 +289,70 @@ namespace FirmwareUpdateAgent
             throw new ArgumentException("DeviceId not found in the connection string.");
         }
 
-        private static async Task ExecTwinActions(CancellationToken cancellationToken, C2DSubscription c2dSubscription, DeviceClient deviceClient)
+        /// <summary>
+        /// Executes the twin actions based on the device twin state, handles the firmware update process and reports the progress.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+        /// <param name="c2dSubscription">An object representing the C2D subscription for the device.</param>
+        /// <param name="deviceClient">A device client instance to interact with IoT Hub.</param>
+        /// <returns>List of actions performed.</returns>
+        private static async Task<List<TwinAction>> ExecTwinActions(CancellationToken cancellationToken, C2DSubscription c2dSubscription, DeviceClient deviceClient)
         {
-            var actions = await TwinAction.ReportTwinState(cancellationToken, deviceClient, 
-                            c2dSubscription.IsSubscribed ? "READY" : "BUSY", 
-                            async (CancellationToken cancellationToken, TwinAction action) => {
-                _currentAction = action;
-                try {
-                    if(action.Desired.ContainsKey("protocol")) {
-                        if(action.IsInProgress) {
-                            await SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
-                                                        GetDeviceIdFromConnectionString(_deviceConnectionString),
-                                                        action.Desired["source"]?.ToString());
-                        } else {
-                            action.ReportProgress();
-                            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, GetDeviceIdFromConnectionString(_deviceConnectionString), action.Desired["source"]?.ToString()); 
-                        }
-                    } else {
-                        // Do nothing for a while
-                        action.ReportComplete("0", "Operation Completed Successfully");
-                    }
-                    // Wait for the action to be completed
-                    while (!action.IsComplete)
-                    {
-                        // You can adjust the delay time as needed
-                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-                        await action.Persist();
-                    }  
-                } finally {
-                    _currentAction = null;
-                }                  
-            });
+            /***
+            This method is responsible for executing twin actions based on the device twin state. It checks 
+            if the desired properties contain the "protocol" key, and if so, it handles the firmware update 
+            process by calling the appropriate methods (SendFirmwareUpdateReady and SendFirmwareUpdateReadyContd)
+            and reports the progress. 
+            If the desired properties do not contain the "protocol" key, it reports the action as completed. 
+            It also waits for the action to be completed and persists the action state.
+            ***/
+            
+            // Report the current device twin state and perform actions based on the state
+            return await TwinAction.ReportTwinState(cancellationToken, deviceClient,
+                            c2dSubscription.IsSubscribed ? "READY" : "BUSY",
+                            async (CancellationToken cancellationToken, TwinAction action) =>
+                            {
+                                // Set the current action being executed
+                                _currentAction = action;
+                                try
+                                {
+                                    // Check if the desired properties contain the "protocol" key
+                                    if (action.Desired.ContainsKey("protocol")) // Transit action
+                                    {
+                                        // If the action is in progress, call the SendFirmwareUpdateReadyContd method
+                                        if (action.IsInProgress)
+                                        {
+                                            await SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
+                                                                    GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                                    action.Desired["source"]?.ToString());
+                                        }
+                                        else
+                                        {
+                                            // Report the progress and call the SendFirmwareUpdateReady method
+                                            action.ReportProgress();
+                                            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, GetDeviceIdFromConnectionString(_deviceConnectionString), action.Desired["source"]?.ToString());
+                                        }
+                                    }
+                                    else 
+                                    {
+                                        // If the desired properties do not contain the "protocol" key, hence its a command action
+                                        action.ReportComplete("0", "Operation Completed Successfully"); // Currently not implemented, TBD
+                                    }
+                                    // Wait for the action to be completed
+                                    while (!action.IsComplete)
+                                    {
+                                        // Adjust the delay time as needed (currently 5 seconds)
+                                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                                        // Persist the action state
+                                        await action.Persist();
+                                    }
+                                }
+                                finally
+                                {
+                                    // Reset the current action to null
+                                    _currentAction = null;
+                                }
+                            });
         }
     }
 }
