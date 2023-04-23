@@ -63,9 +63,9 @@ namespace FirmwareUpdateAgent
 
         // Set the action status to Pending, InProgress, Failed, or Complete
         public void ReportPending() { Status = "Pending"; }
-        public void ReportProgress(int percent = 0) { Status = "InProgress"; Reported!["Progress"] = percent; }
+        public void ReportProgress(int percent = 0) { Status = "InProgress";if (percent > 0) Reported!["Progress"] = percent; }
         public void ReportFailed(string ResultCode, string ResultText) { Status = "Failed"; Reported!["ResultCode"] = ResultCode; Reported!["ResultText"] = ResultText; }
-        public void ReportSuccess(string ResultCode, string ResultText) { Status = "Success"; Reported!["ResultCode"] = ResultCode; Reported!["ResultText"] = ResultText; Reported!["Progress"]?.Remove(); }
+        public void ReportSuccess(string ResultCode, string ResultText) { Status = "Success"; Reported!["ResultCode"] = ResultCode; Reported!["ResultText"] = ResultText; }
 
         // Get or set the action status
         public String? Status

@@ -3,6 +3,10 @@ using System.Text;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using Newtonsoft.Json.Linq;
+using Microsoft.Azure.Devices.Client.Transport;
+using Microsoft.WindowsAzure.Storage.Blob;
+using System.Text.RegularExpressions;
 
 namespace FirmwareUpdateAgent
 {
@@ -14,7 +18,7 @@ namespace FirmwareUpdateAgent
         private static HttpListener _httpListener;
         private static Stopwatch _stopwatch = new Stopwatch();
         private static bool _isShutdown = false;
-        private static TwinAction? _currentAction = null;
+        private static TwinAction? _downloadAction = null;
 
         /// <summary>
         /// The entry point of the FirmwareUpdateAgent application.
@@ -115,12 +119,17 @@ namespace FirmwareUpdateAgent
         /// <param name="c2dSubscription">C2D subscription instance.</param>
         /// <param name="device_id">Device ID.</param>
         /// <param name="filename">Filename of the firmware update file.</param>
-        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename)
+        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, string? rewind = null)
         {
             Console.WriteLine($"SDK command 'Continue' at device '{device_id}'....");
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             FileInfo fi = new FileInfo(path);
-            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, device_id, filename, fi.Exists ? fi.Length : 0L);
+            long startFromPos = fi.Exists ? fi.Length : 0L;
+            if (!string.IsNullOrEmpty(rewind)) {
+                startFromPos -= long.Parse(rewind);
+                if(startFromPos < 0L) startFromPos = 0;
+            }
+            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, device_id, filename, startFromPos);
         }
         private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, long startFromPos = -1L)
         {
@@ -191,9 +200,9 @@ namespace FirmwareUpdateAgent
             double timeElapsedInSeconds = stopwatch.Elapsed.TotalSeconds;
             double throughput = totalBytesDownloaded / timeElapsedInSeconds / 1024.0; // in KiB/s
 
-            TwinAction? action = _currentAction;
+            TwinAction? action = _downloadAction;
             action?.ReportProgress(progressPercent);
-            if(progressPercent == 100) 
+            if (progressPercent == 100)
                 action?.ReportSuccess("FinishedTransit", "Finished streaming as the last chunk arrived.");
             Console.WriteLine($"%{progressPercent:00} @pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
             return totalBytesDownloaded;
@@ -240,7 +249,12 @@ namespace FirmwareUpdateAgent
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/update")
                     {
-                        _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription, GetDeviceIdFromConnectionString(_deviceConnectionString), "Microsoft Azure Storage Explorer.app.zip"); // Async call for update
+                        string? fromPos = request.QueryString["from"];
+                        string? filename = request.QueryString["file"];
+                        _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
+                                                     GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                     string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
+                                                     string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/twin")
                     {
@@ -248,12 +262,17 @@ namespace FirmwareUpdateAgent
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/continue")
                     {
-                        string fromPos = request.QueryString["from"];
-                        string filename = request.QueryString["file"];
-                        _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
+                        string? fromPos = request.QueryString["from"];
+                        string? filename = request.QueryString["file"];
+                        if(string.IsNullOrEmpty(fromPos))
+                            _ = SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
+                                                     GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                     string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename); // Async call for update
+                        else
+                            _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
                                                      GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                      string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
-                                                     string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
+                                                     long.Parse(fromPos)); // Async call for update
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/shutdown")
                     {
@@ -306,37 +325,53 @@ namespace FirmwareUpdateAgent
             If the desired properties do not contain the "protocol" key, it reports the action as completed. 
             It also waits for the action to be completed and persists the action state.
             ***/
-            
+
             // Report the current device twin state and perform actions based on the state
             return await TwinAction.ReportTwinState(cancellationToken, deviceClient,
                             c2dSubscription.IsSubscribed ? "READY" : "BUSY",
                             async (CancellationToken cancellationToken, TwinAction action) =>
                             {
-                                // Set the current action being executed
-                                _currentAction = action;
                                 try
                                 {
-                                    // Check if the desired properties contain the "protocol" key
-                                    if (action.Desired.ContainsKey("protocol")) // Transit action
+                                    switch(action.Desired["action"]?.Value<string>())
                                     {
-                                        // If the action is in progress, call the SendFirmwareUpdateReadyContd method
-                                        if (action.IsInProgress)
-                                        {
-                                            await SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
-                                                                    GetDeviceIdFromConnectionString(_deviceConnectionString),
-                                                                    action.Desired["source"]?.ToString());
+                                        case "singularDownload": {
+                                            // Set the current action being executed
+                                            _downloadAction = action;
+                                            if (action.IsInProgress || /*DEMO ONLY TBD REMOVE*/ action.Desired.ContainsKey("retransmissionRewind"))
+                                            {
+                                                await SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
+                                                                        GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                                        action.Desired["source"]?.ToString(),
+                                                                        action.Desired["retransmissionRewind"]?.ToString() );
+                                            }
+                                            else
+                                            {
+                                                // Report the initial progress and call the SendFirmwareUpdateReady method
+                                                action.ReportProgress();
+                                                await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, 
+                                                                        GetDeviceIdFromConnectionString(_deviceConnectionString), 
+                                                                        action.Desired["source"]?.ToString());
+                                            }
+                                            break;
                                         }
-                                        else
+                                        case "periodicUpload": 
                                         {
-                                            // Report the initial progress and call the SendFirmwareUpdateReady method
-                                            action.ReportProgress();
-                                            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, GetDeviceIdFromConnectionString(_deviceConnectionString), action.Desired["source"]?.ToString());
+                                            string filename = action.Desired["filename"].Value<string>();
+                                            int interval = action.Desired["interval"].Value<int>();
+                                            bool enabled = action.Desired["enabled"].Value<bool>();
+
+                                            if (enabled)
+                                            {
+                                                _ =  UploadFilePeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval));
+                                            }
+                                            break;
                                         }
-                                    }
-                                    else 
-                                    {
-                                        // If the desired properties do not contain the "protocol" key, hence its a command action
-                                        action.ReportSuccess("0", "Operation Completed Successfully"); // Currently not implemented, TBD
+                                        default:
+                                        {
+                                            action.ReportSuccess("0", "Operation Completed Successfully"); // Currently not implemented, TBD
+                                            break;
+                                        }
                                     }
                                     // Wait for the action to be completed
                                     while (!action.IsComplete)
@@ -350,9 +385,47 @@ namespace FirmwareUpdateAgent
                                 finally
                                 {
                                     // Reset the current action to null
-                                    _currentAction = null;
+                                    _downloadAction = null;
                                 }
                             });
+        }
+        private static async Task UploadFilePeriodicallyAsync(TwinAction action, string filename, TimeSpan interval)
+        {
+            while (true)
+            {
+                try
+                {
+                    await UploadFileToBlobStorageAsync(action, filename);
+                    action.ReportSuccess("Done", "Will keep uploading " + interval.ToString());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error uploading file '{filename}': {ex.Message}");
+                    action.ReportFailed(ex.GetType().Name, ex.Message);
+                }
+
+                await Task.Delay(interval);
+            }
+        }
+
+        private static async Task UploadFileToBlobStorageAsync(TwinAction action, string fullFilePath)
+        {
+            string filename = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");//Path.GetFileName(fullFilePath);
+
+            var sasUriResponse = await _deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
+            {
+                BlobName = filename
+            });
+
+            var storageUri = sasUriResponse.GetBlobUri();
+            var blob = new CloudBlockBlob(storageUri);
+            await blob.UploadFromFileAsync(fullFilePath);
+
+            await _deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
+            {
+                CorrelationId = sasUriResponse.CorrelationId,
+                IsSuccess = true
+            });
         }
     }
 }
