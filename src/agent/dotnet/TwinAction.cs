@@ -65,7 +65,7 @@ namespace FirmwareUpdateAgent
         public void ReportPending() { Status = "Pending"; }
         public void ReportProgress(int percent = 0) { Status = "InProgress"; Reported!["Progress"] = percent; }
         public void ReportFailed(string ResultCode, string ResultText) { Status = "Failed"; Reported!["ResultCode"] = ResultCode; Reported!["ResultText"] = ResultText; }
-        public void ReportComplete(string ResultCode, string ResultText) { Status = "Complete"; Reported!["ResultCode"] = ResultCode; Reported!["ResultText"] = ResultText; Reported!["Progress"]?.Remove(); }
+        public void ReportSuccess(string ResultCode, string ResultText) { Status = "Success"; Reported!["ResultCode"] = ResultCode; Reported!["ResultText"] = ResultText; Reported!["Progress"]?.Remove(); }
 
         // Get or set the action status
         public String? Status
@@ -78,7 +78,7 @@ namespace FirmwareUpdateAgent
         public bool IsPending { get { return "Pending" == Status; } }
         public bool IsInProgress { get { return "InProgress" == Status; } }
         public bool IsFailed { get { return "Failed" == Status; } }
-        public bool IsSuccess { get { return "Complete" == Status; } }
+        public bool IsSuccess { get { return "Success" == Status; } }
         public bool IsComplete { get { return IsFailed || IsSuccess;} }
 
         // Persist the action status to the device twin

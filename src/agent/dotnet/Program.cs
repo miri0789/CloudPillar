@@ -194,7 +194,7 @@ namespace FirmwareUpdateAgent
             TwinAction? action = _currentAction;
             action?.ReportProgress(progressPercent);
             if(progressPercent == 100) 
-                action?.ReportComplete("FinishedTransit", "Finished streaming as the last chunk arrived.");
+                action?.ReportSuccess("FinishedTransit", "Finished streaming as the last chunk arrived.");
             Console.WriteLine($"%{progressPercent:00} @pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
             return totalBytesDownloaded;
         }
@@ -336,7 +336,7 @@ namespace FirmwareUpdateAgent
                                     else 
                                     {
                                         // If the desired properties do not contain the "protocol" key, hence its a command action
-                                        action.ReportComplete("0", "Operation Completed Successfully"); // Currently not implemented, TBD
+                                        action.ReportSuccess("0", "Operation Completed Successfully"); // Currently not implemented, TBD
                                     }
                                     // Wait for the action to be completed
                                     while (!action.IsComplete)
