@@ -45,7 +45,7 @@ namespace FirmwareUpdateAgent
                     Console.WriteLine("Starting Simulated device...");
 
                     var cts = new CancellationTokenSource();
-                    _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, TransportType.Amqp);
+                    _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
                     var c2dSubscription = new C2DSubscription(_deviceClient, GetDeviceIdFromConnectionString(_deviceConnectionString));
 
                     await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(
@@ -115,12 +115,12 @@ namespace FirmwareUpdateAgent
         /// <param name="c2dSubscription">C2D subscription instance.</param>
         /// <param name="device_id">Device ID.</param>
         /// <param name="filename">Filename of the firmware update file.</param>
-        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, long startFromPos = -1)
+        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename)
         {
             Console.WriteLine($"SDK command 'Continue' at device '{device_id}'....");
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             FileInfo fi = new FileInfo(path);
-            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, device_id, filename, startFromPos >= 0 ? startFromPos : fi.Exists ? fi.Length : 0L);
+            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, device_id, filename, fi.Exists ? fi.Length : 0L);
         }
         private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, long startFromPos = -1L)
         {
@@ -211,7 +211,7 @@ namespace FirmwareUpdateAgent
         }
 
         /// <summary>
-        /// Handles the HTTP Listener for incoming firmware update files.
+        /// Handles the HTTP Listener for simulating commands from the SDK.
         /// </summary>
         /// <param name="cancellationToken">Cancellation token to cancel the task.</param>
         /// <param name="c2dSubscription">C2D subscription instance.</param>
@@ -250,7 +250,7 @@ namespace FirmwareUpdateAgent
                     {
                         string fromPos = request.QueryString["from"];
                         string filename = request.QueryString["file"];
-                        _ = SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
+                        _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
                                                      GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                      string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
                                                      string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
@@ -328,7 +328,7 @@ namespace FirmwareUpdateAgent
                                         }
                                         else
                                         {
-                                            // Report the progress and call the SendFirmwareUpdateReady method
+                                            // Report the initial progress and call the SendFirmwareUpdateReady method
                                             action.ReportProgress();
                                             await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, GetDeviceIdFromConnectionString(_deviceConnectionString), action.Desired["source"]?.ToString());
                                         }

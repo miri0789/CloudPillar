@@ -78,7 +78,8 @@ namespace FirmwareUpdateAgent
         public bool IsPending { get { return "Pending" == Status; } }
         public bool IsInProgress { get { return "InProgress" == Status; } }
         public bool IsFailed { get { return "Failed" == Status; } }
-        public bool IsComplete { get { return "Complete" == Status; } }
+        public bool IsSuccess { get { return "Complete" == Status; } }
+        public bool IsComplete { get { return IsFailed || IsSuccess;} }
 
         // Persist the action status to the device twin
         public async Task Persist() {
