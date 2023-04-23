@@ -17,7 +17,6 @@ namespace FirmwareUpdateAgent
         private static Mutex _mutex;
         private static HttpListener _httpListener;
         private static Stopwatch _stopwatch = new Stopwatch();
-        private static bool _isShutdown = false;
         private static TwinAction? _downloadAction = null;
 
         /// <summary>
@@ -247,6 +246,10 @@ namespace FirmwareUpdateAgent
                         await c2dSubscription.Subscribe(cancellationToken);
                         _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
                     }
+                    else if (request.Url.AbsolutePath.ToLower() == "/twin")
+                    {
+                        _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
+                    }
                     else if (request.Url.AbsolutePath.ToLower() == "/update")
                     {
                         string? fromPos = request.QueryString["from"];
@@ -255,10 +258,6 @@ namespace FirmwareUpdateAgent
                                                      GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                      string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
                                                      string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
-                    }
-                    else if (request.Url.AbsolutePath.ToLower() == "/twin")
-                    {
-                        _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/continue")
                     {
@@ -273,11 +272,6 @@ namespace FirmwareUpdateAgent
                                                      GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                      string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
                                                      long.Parse(fromPos)); // Async call for update
-                    }
-                    else if (request.Url.AbsolutePath.ToLower() == "/shutdown")
-                    {
-                        c2dSubscription.Unsubscribe();
-                        _isShutdown = true;
                     }
                 }
 
