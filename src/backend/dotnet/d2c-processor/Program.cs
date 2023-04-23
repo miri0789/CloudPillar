@@ -57,7 +57,7 @@ namespace FirmwareUpdate
             // Configure initial offset provider if PartitionId is set
             if (!string.IsNullOrEmpty(PartitionId))
             {
-                eventProcessorOptions.InitialOffsetProvider = (pid) => pid == PartitionId ? EventPosition.FromStart() : null;
+                eventProcessorOptions.InitialOffsetProvider = (pid) => int.Parse(pid) == int.Parse(PartitionId) ? EventPosition.FromStart() : null;
             }
             // Register the event processor
             await eventProcessorHost.RegisterEventProcessorAsync<SimpleEventProcessor>(eventProcessorOptions);
@@ -96,6 +96,7 @@ namespace FirmwareUpdate
             // Process events received from the Event Hubs
             public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
             {
+                Console.WriteLine($"SimpleEventProcessor ProcessEventsAsync. Partition: '{context.PartitionId}'");
                 foreach (var eventData in messages)
                 {
                     // Ignore messages older than 1 hour
