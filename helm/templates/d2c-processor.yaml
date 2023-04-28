@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: jnjiotd2cprocessor-statefulset
+  name: jnjiotd2cprocessor
 spec:
   serviceName: jnjiotd2cprocessor
   replicas: 1
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: jnjiotbackend
-        image: szdevopslabscr.azurecr.io/d2c-processor-backend:0.1
+        image: szdevopslabscr.azurecr.io/d2c-processor-backend:0.4
         env:
         - name: IOTHUB_CONNECTION_STRING
           value: "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc="
@@ -27,7 +27,24 @@ spec:
           value: "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net"
         - name: BLOB_CONTAINER_NAME
           value: "iot-firmware"
-        - name: PARTITION_ID
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
+        # - name: PARTITION_ID
+        #   valueFrom:
+        #     fieldRef:
+        #       fieldPath: metadata.name
+        # - name: SECRET_NAMESPACE
+        #   valueFrom:
+        #     fieldRef:
+        #       fieldPath: metadata.namespace
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: iottwinsecret
+type: Opaque
+stringData:
+  signKey: |
+    -----BEGIN PRIVATE KEY-----
+    .
+    -----END PRIVATE KEY-----
+
+

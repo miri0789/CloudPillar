@@ -7,6 +7,7 @@ namespace FirmwareUpdateAgent
     public class TwinAction
     {
         private const string _ChangeSpecKey = "changeSpec";
+        private const string _ChangeSignatureKey = "changeSign";
         private readonly string _changeSpec, _recipe, _stage, _path;
         private readonly int _step;
         private readonly DeviceClient _deviceClient;
@@ -95,7 +96,7 @@ namespace FirmwareUpdateAgent
         }
 
         // Main method to report the twin state and process the actions
-        public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, TwinAction, Task> processor = null)
+        public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, string, string, Task> signTwinKey, Func<CancellationToken, TwinAction, Task> processor = null)
         {   
             var actions = new List<TwinAction>();
             try {
@@ -111,6 +112,12 @@ namespace FirmwareUpdateAgent
 
                 if (!JObject.DeepEquals(changeSpecJObject["id"], reportedJObject[_ChangeSpecKey]?["id"]))
                 {
+                    // Check that the changeSpec is signed
+                    if(!desiredJObject.ContainsKey(_ChangeSignatureKey)) {
+                        // No signature found
+                        _ = signTwinKey(cancellationToken, changeSpecJObject.Path, _ChangeSignatureKey);
+                        return actions; // Currently empty
+                    }
                     reportedJObject[_ChangeSpecKey] = JObject.Parse("{\"id\": \"" + changeSpecJObject["id"] + "\"}");
                 }
 

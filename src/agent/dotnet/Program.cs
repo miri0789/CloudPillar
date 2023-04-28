@@ -132,40 +132,66 @@ namespace FirmwareUpdateAgent
         }
         private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, long startFromPos = -1L)
         {
+            await SendIoTEvent(cancellationToken, c2dSubscription, device_id, "FirmwareUpdateReady", (eventType) => {
+                // Deduct the chunk size based on the protocol being used
+                int chunkSize = GetTransportType() switch
+                {
+                    TransportType.Mqtt => 32 * 1024, // 32 KB
+                    TransportType.Amqp => 64 * 1024, // 64 KB
+                    TransportType.Http1 => 256 * 1024, // 256 KB
+                    _ => 32 * 1024 // 32 KB (default)
+                };
+
+                var payloadData = new
+                {
+                    event_type = eventType,
+                    filename = filename,
+                    chunk_size = chunkSize,
+                    start_from = startFromPos >= 0 ? startFromPos : 0,
+                };
+
+                var messageString = JsonConvert.SerializeObject(payloadData);
+                var message = new Message(Encoding.ASCII.GetBytes(messageString));
+
+                // message.Properties.Add("device_id", device_id);
+                return message;
+            });
+        }
+
+        public static async Task SendSignTwinKey(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string keyJPath, string atSignatureKey)
+        {
+            await SendIoTEvent(cancellationToken, c2dSubscription, device_id, "SignTwinKey", (eventType) => {
+
+                var payloadData = new
+                {
+                    event_type = eventType,
+                    keyPath = keyJPath,
+                    signatureKey = atSignatureKey
+                };
+
+                var messageString = JsonConvert.SerializeObject(payloadData);
+                var message = new Message(Encoding.ASCII.GetBytes(messageString));
+
+                // message.Properties.Add("device_id", device_id);
+                return message;
+            });
+        }
+
+        private static async Task SendIoTEvent(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string eventType, Func<string, Message> cbCreateMessage)
+        {
             while (!cancellationToken.IsCancellationRequested)
             {
                 if (c2dSubscription.IsSubscribed)
                 {
-                    Console.WriteLine($"Sending FirmwareUpdateReady event at device '{device_id}'....");
+                    Console.WriteLine($"Sending {eventType} event at device '{device_id}'....");
 
-                    // Deduct the chunk size based on the protocol being used
-                    int chunkSize = GetTransportType() switch
-                    {
-                        TransportType.Mqtt => 32 * 1024, // 32 KB
-                        TransportType.Amqp => 64 * 1024, // 64 KB
-                        TransportType.Http1 => 256 * 1024, // 256 KB
-                        _ => 32 * 1024 // 32 KB (default)
-                    };
-
-                    var payloadData = new
-                    {
-                        event_type = "FirmwareUpdateReady",
-                        filename = filename,
-                        chunk_size = chunkSize,
-                        start_from = startFromPos >= 0 ? startFromPos : 0,
-                    };
-
-                    var messageString = JsonConvert.SerializeObject(payloadData);
-                    var message = new Message(Encoding.ASCII.GetBytes(messageString));
-
-                    message.Properties.Add("device_id", device_id);
-
+                    Message message = cbCreateMessage(eventType);
                     // Set the ExpiryTimeUtc property
                     // message.ExpiryTimeUtc = DateTime.UtcNow.AddHours(1); // 1 hour TTL
 
                     await _deviceClient.SendEventAsync(message);
 
-                    Console.WriteLine("{0}: FirmwareUpdateReady sent", DateTime.Now);
+                    Console.WriteLine($"{DateTime.Now}: {eventType} sent");
                     // _stopwatch.Start();
                     break;
                 }
@@ -319,11 +345,16 @@ namespace FirmwareUpdateAgent
             If the desired properties do not contain the "protocol" key, it reports the action as completed. 
             It also waits for the action to be completed and persists the action state.
             ***/
+            string device_id = GetDeviceIdFromConnectionString(_deviceConnectionString);
 
             // Report the current device twin state and perform actions based on the state
             return await TwinAction.ReportTwinState(cancellationToken, deviceClient,
                             c2dSubscription.IsSubscribed ? "READY" : "BUSY",
-                            async (CancellationToken cancellationToken, TwinAction action) =>
+                            async (cancellationToken, path, key) =>
+                            {
+                                await SendSignTwinKey(cancellationToken, c2dSubscription, device_id, path, key);
+                            },
+                            async (cancellationToken, action) =>
                             {
                                 try
                                 {
@@ -335,7 +366,7 @@ namespace FirmwareUpdateAgent
                                             if (action.IsInProgress || /*DEMO ONLY TBD REMOVE*/ action.Desired.ContainsKey("retransmissionRewind"))
                                             {
                                                 await SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
-                                                                        GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                                        device_id,
                                                                         action.Desired["source"]?.ToString(),
                                                                         action.Desired["retransmissionRewind"]?.ToString() );
                                             }
@@ -344,7 +375,7 @@ namespace FirmwareUpdateAgent
                                                 // Report the initial progress and call the SendFirmwareUpdateReady method
                                                 action.ReportProgress();
                                                 await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, 
-                                                                        GetDeviceIdFromConnectionString(_deviceConnectionString), 
+                                                                        device_id, 
                                                                         action.Desired["source"]?.ToString());
                                             }
                                             break;
