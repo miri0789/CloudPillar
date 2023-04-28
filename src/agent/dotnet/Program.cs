@@ -64,6 +64,7 @@ namespace FirmwareUpdateAgent
                         Console.WriteLine("Cancelling...");
                         cts.Cancel();
                         eventArgs.Cancel = true;
+                        Environment.Exit(0);
                     };
 
                     _httpListener = new HttpListener();
