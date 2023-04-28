@@ -1,3 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jnjiotd2cprocessor-serviceaccount
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jnjiotd2cprocessor-clusterrole
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jnjiotd2cprocessor-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jnjiotd2cprocessor-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: jnjiotd2cprocessor-serviceaccount
+  namespace: default
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -13,6 +40,7 @@ spec:
       labels:
         app: backend
     spec:
+      serviceAccountName: jnjiotd2cprocessor-serviceaccount
       containers:
       - name: jnjiotbackend
         image: szdevopslabscr.azurecr.io/d2c-processor-backend:0.4
@@ -44,7 +72,12 @@ type: Opaque
 stringData:
   signKey: |
     -----BEGIN PRIVATE KEY-----
-    .
+    MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBiyAa7aRHFDCh2qga
+    9sTUGINE5jHAFnmM8xWeT/uni5I4tNqhV5Xx0pDrmCV9mbroFtfEa0XVfKuMAxxf
+    Z6LM/yKhgYkDgYYABAGBzgdnP798FsLuWYTDDQA7c0r3BVk8NnRUSexpQUsRilPN
+    v3SchO0lRw9Ru86x1khnVDx+duq4BiDFcvlSAcyjLACJvjvoyTLJiA+TQFdmrear
+    jMiZNE25pT2yWP1NUndJxPcvVtfBW48kPOmvkY4WlqP5bAwCXwbsKrCgk6xbsp12
+    ew==
     -----END PRIVATE KEY-----
 
 
