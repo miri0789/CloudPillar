@@ -67,15 +67,24 @@ namespace FirmwareUpdate
 
         private static async Task<string> GetPrivateKeyFromK8sSecretAsync(string secretName, string secretKey, string? secretNamespace = null)
         {
+            Console.WriteLine($"GetPrivateKeyFromK8sSecretAsync {secretName}, {secretKey}, {secretNamespace}");
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
             var k8sClient = new Kubernetes(config);
-            Console.WriteLine($"Got k8s client in namespase {config.Namespace}");
+            Console.WriteLine($"Got k8s client in namespace {config.Namespace}");
             
-            var secret = await k8sClient.ReadNamespacedSecretAsync(secretName, 
-                    String.IsNullOrEmpty(secretNamespace) ? config.Namespace : secretNamespace);
+            var ns = String.IsNullOrEmpty(secretNamespace) ? config.Namespace : secretNamespace;
+            var secrets = await k8sClient.ListNamespacedSecretAsync(ns);
+            
+            Console.WriteLine($"Secrets in namespace '{ns}':");
+            foreach (var secret in secrets.Items)
+            {
+                Console.WriteLine($"- {secret.Metadata.Name}");
+            }
+            
+            var targetSecret = await k8sClient.ReadNamespacedSecretAsync(secretName, ns);
             Console.WriteLine($"Got k8s secret");
 
-            if (secret.Data.TryGetValue(secretKey, out var privateKeyBytes))
+            if (targetSecret.Data.TryGetValue(secretKey, out var privateKeyBytes))
             {
                 Console.WriteLine($"Got k8s secret bytes");
                 return Encoding.UTF8.GetString(privateKeyBytes);
