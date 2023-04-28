@@ -4,26 +4,25 @@ metadata:
   name: jnjiotd2cprocessor-serviceaccount
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  name: jnjiotd2cprocessor-clusterrole
+  name: jnjiotd2cprocessor-role
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
-  name: jnjiotd2cprocessor-clusterrolebinding
+  name: jnjiotd2cprocessor-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: jnjiotd2cprocessor-clusterrole
+  kind: Role
+  name: jnjiotd2cprocessor-role
 subjects:
 - kind: ServiceAccount
   name: jnjiotd2cprocessor-serviceaccount
-  namespace: default
 ---
 apiVersion: apps/v1
 kind: StatefulSet
