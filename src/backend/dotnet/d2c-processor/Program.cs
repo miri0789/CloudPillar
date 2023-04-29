@@ -21,6 +21,7 @@ namespace FirmwareUpdate
         static string EventHubCompatibleEndpoint = Environment.GetEnvironmentVariable("IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT")!;
         static string EventHubCompatiblePath = Environment.GetEnvironmentVariable("IOTHUB_EVENT_HUB_COMPATIBLE_PATH")!;
         static string? PartitionId = Environment.GetEnvironmentVariable("PARTITION_ID")?.Split('-')?.Last();
+        static bool IsInCluster = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST"));
 
         // Initialize service and storage clients
         static RegistryManager registryManager = RegistryManager.CreateFromConnectionString(IotHubConnectionString);
@@ -41,19 +42,24 @@ namespace FirmwareUpdate
         private static async Task<ECDsa> GetSigningPrivateKeyAsync()
         {
             Console.WriteLine("Loading signing crypto key...");
-            var isInCluster = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST"));
             string? privateKeyPem = null;
-            if (isInCluster)
+            if (IsInCluster)
             {
-                Console.WriteLine("In kube run-time - loading crypto from the secret in the local namespace.");
-                string secretName = "IoTTwinSecret";
-                string secretKey = "signKey";
+                privateKeyPem = Environment.GetEnvironmentVariable("SIGNING_PEM");
+                if(!string.IsNullOrEmpty(privateKeyPem)) {
+                    privateKeyPem = Encoding.UTF8.GetString(Convert.FromBase64String(privateKeyPem));
+                    Console.WriteLine($"Key Base64 decoded layer 1");
+                } else {
+                    Console.WriteLine("In kube run-time - loading crypto from the secret in the local namespace.");
+                    string secretName = "IoTTwinSecret";
+                    string secretKey = "signKey";
 
-                if (string.IsNullOrEmpty(secretName) || string.IsNullOrEmpty(secretKey))
-                {
-                    throw new InvalidOperationException("Private key secret name and secret key must be set.");
+                    if (string.IsNullOrEmpty(secretName) || string.IsNullOrEmpty(secretKey))
+                    {
+                        throw new InvalidOperationException("Private key secret name and secret key must be set.");
+                    }
+                    privateKeyPem = await GetPrivateKeyFromK8sSecretAsync(secretName, secretKey);
                 }
-                privateKeyPem = await GetPrivateKeyFromK8sSecretAsync(secretName, secretKey);
             }
             else
             {
