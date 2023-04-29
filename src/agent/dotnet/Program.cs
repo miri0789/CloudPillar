@@ -196,7 +196,7 @@ namespace FirmwareUpdateAgent
                 };
 
                 var messageString = JsonConvert.SerializeObject(payloadData);
-                var message = new Message(Encoding.ASCII.GetBytes(messageString));
+                var message = new Message(Encoding.ASCII.GetBytes(messageString)); // TODO: why ASCII?
 
                 // message.Properties.Add("device_id", device_id);
                 return message;
@@ -215,7 +215,7 @@ namespace FirmwareUpdateAgent
                 };
 
                 var messageString = JsonConvert.SerializeObject(payloadData);
-                var message = new Message(Encoding.ASCII.GetBytes(messageString));
+                var message = new Message(Encoding.ASCII.GetBytes(messageString)); // TBD why ASCII?
 
                 // message.Properties.Add("device_id", device_id);
                 return message;

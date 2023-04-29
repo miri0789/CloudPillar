@@ -8,14 +8,14 @@ namespace FirmwareUpdateAgent
     {
         private const string _ChangeSpecKey = "changeSpec";
         private const string _ChangeSignatureKey = "changeSign";
-        private readonly string _changeSpec, _recipe, _stage, _path;
+        private readonly string _changeSpec, _recipe, _stage;
         private readonly int _step;
         private readonly DeviceClient _deviceClient;
         private readonly JObject _desired;
         private readonly JObject _reported;
 
         // Constructor
-        public TwinAction(DeviceClient deviceClient, JObject desired, JObject reported, string changeSpec, string recipe, string stage, int step, string path)
+        public TwinAction(DeviceClient deviceClient, JObject desired, JObject reported, string changeSpec, string recipe, string stage, int step)
         {
             _deviceClient = deviceClient;
             _desired = desired;
@@ -24,7 +24,6 @@ namespace FirmwareUpdateAgent
             _recipe = recipe;
             _stage = stage;
             _step = step;
-            _path = path;
         }
 
         // Get the desired properties of the TwinAction
@@ -137,8 +136,7 @@ namespace FirmwareUpdateAgent
                         for (int i = 0; i < stageJContainer.Count; i++)
                         {
                             var step = stageJContainer[i]!;
-                            var path = step.Path;
-                            var action = new TwinAction(deviceClient, desiredJObject, reportedJObject, _ChangeSpecKey, recipe.Key, stage.Key, i, path);
+                            var action = new TwinAction(deviceClient, desiredJObject, reportedJObject, _ChangeSpecKey, recipe.Key, stage.Key, i);
                             if(action.Status == null || action.IsPending || action.IsInProgress)
                                 actions.Add(action);
                             else
@@ -146,7 +144,7 @@ namespace FirmwareUpdateAgent
                                 // Handle failed actions and fallback to next recipe
                                 reportedJObject[_ChangeSpecKey]!["Status"] = nextRecipe != null ? $"Falling back to next recipe '{(nextRecipe as JProperty).Name}'" : "Failed";
                                 reportedJObject[_ChangeSpecKey]!["lastFaultedRecipe"] = recipe.Key;
-                                reportedJObject[_ChangeSpecKey]!["lastFaultedPath"] = path;
+                                reportedJObject[_ChangeSpecKey]!["lastFaultedPath"] = step.Path;
                                 await action.Persist();
                                 if(nextRecipe == null) // Fatal error, no fallback
                                     return actions;
@@ -181,7 +179,7 @@ namespace FirmwareUpdateAgent
                     foreach(var action in actions) {
                         if(cancellationToken.IsCancellationRequested)
                             break;
-                        reportedJObject[_ChangeSpecKey]!["actionPath"] = action._path;
+                        reportedJObject[_ChangeSpecKey]!["actionPath"] = action.Desired.Path;
                         reportedJObject[_ChangeSpecKey]!["Status"] = "InProgress";
                         await action.Persist();
                         try {

@@ -95,7 +95,7 @@ namespace FirmwareUpdateAgent
 
                     if (receivedMessage != null)
                     {
-                        string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+                        string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes()); // TODO: Why ASCII???
 
                         // Read properties from the received message
                         int chunkIndex = int.Parse(receivedMessage.Properties["chunk_index"]);
