@@ -122,14 +122,12 @@ namespace FirmwareUpdate
         // Method to start the EventProcessorHost for processing messages
         private static async Task StartEventProcessorHostAsync()
         {
-            string eventHubsCompatibleConnectionString = EventHubCompatibleEndpoint;
-
             // Initialize the EventProcessorHost with necessary parameters
             EventProcessorHost eventProcessorHost = new EventProcessorHost(
                 Guid.NewGuid().ToString(),
                 EventHubCompatiblePath,
                 PartitionReceiver.DefaultConsumerGroupName,
-                eventHubsCompatibleConnectionString,
+                EventHubCompatibleEndpoint,
                 StorageConnectionString,
                 BlobContainerName);
 
