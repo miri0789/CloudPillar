@@ -274,7 +274,10 @@ namespace FirmwareUpdateAgent
             action?.ReportProgress(progressPercent);
             Console.WriteLine($"%{progressPercent:00} @pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
             if (progressPercent == 100) {
-                action?.ReportSuccess("FinishedTransit", "Finished streaming as the last chunk arrived.");
+                if(action != null) {
+                    action.ReportSuccess("FinishedTransit", "Finished streaming as the last chunk arrived.");
+                    await action.Persist();
+                }
                 Console.WriteLine($"{DateTime.Now}: Finished streaming as the last chunk arrived.");
             }
             return totalBytesDownloaded;
@@ -311,6 +314,10 @@ namespace FirmwareUpdateAgent
                     {
                         Console.WriteLine("Pausing Agent");
                         c2dSubscription.Unsubscribe();
+                        TwinAction? action = _downloadAction;
+                        if(action != null) {
+                            await action.Persist();
+                        }
                         _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/ready")
@@ -457,16 +464,22 @@ namespace FirmwareUpdateAgent
                                         }
                                     }
                                     // Wait for the action to be completed
-                                    while (!action.IsComplete)
+                                    while (!cancellationToken.IsCancellationRequested)
                                     {
+                                        TwinAction? reportingAction = _downloadAction;
+                                        if(reportingAction == null || reportingAction.IsComplete) 
+                                            break;
                                         // Adjust the delay time as needed (currently 5 seconds)
                                         await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
                                         // Persist the action state
-                                        await action.Persist();
+                                        await reportingAction.Persist();
                                     }
                                 }
                                 finally
                                 {
+                                    TwinAction? persistingAction = _downloadAction;
+                                    if(persistingAction != null)
+                                        await persistingAction.Persist();
                                     // Reset the current action to null
                                     _downloadAction = null;
                                 }
