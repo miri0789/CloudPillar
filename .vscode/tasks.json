@@ -11,7 +11,11 @@
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "publishAgent",
@@ -72,6 +76,6 @@
                 "${workspaceFolder}/src/backend/dotnet/d2c-processor/d2c-processor.csproj"
             ],
             "problemMatcher": "$msCompile"
-        },
+        }
     ]
 }

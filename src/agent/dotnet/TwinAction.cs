@@ -109,15 +109,19 @@ namespace FirmwareUpdateAgent
 
                 JObject changeSpecJObject = (JObject)desiredJObject[_ChangeSpecKey]!;
 
-                if (JObject.DeepEquals(changeSpecJObject["id"], reportedJObject[_ChangeSpecKey]?["id"])
-                    // Check that the changeSpec is signed correctly
-                    || !await verifySignedTwin(cancellationToken, changeSpecJObject, _ChangeSignatureKey)) 
+                if (!JObject.DeepEquals(changeSpecJObject["id"], reportedJObject[_ChangeSpecKey]?["id"]))
                 {
-                    return actions; // empty at this point
+                    // Check that the changeSpec is signed correctly
+                    if(!await verifySignedTwin(cancellationToken, changeSpecJObject, _ChangeSignatureKey)) 
+                    {
+                        return actions; // empty at this point
+                    }
+                    // Init the reported change spec id
+                    // if(!reportedJObject.ContainsKey(_ChangeSpecKey))
+                    reportedJObject[_ChangeSpecKey] = JObject.Parse("{}");//\"id\": \"" + changeSpecJObject["id"] + "\"}");
+                    reportedJObject[_ChangeSpecKey]["id"] = changeSpecJObject["id"].ToString();
+                    // Still don;t bail out in case id == id, but there is an InProgress step
                 }
-
-                // Init the reported change spec id
-                reportedJObject[_ChangeSpecKey] = JObject.Parse("{\"id\": \"" + changeSpecJObject["id"] + "\"}");
 
                 // Loop through the recipes, stages, and steps in the changeSpec
                 foreach (var recipe in changeSpecJObject)
