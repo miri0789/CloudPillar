@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.WindowsAzure.Storage.Blob;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace FirmwareUpdateAgent
 {
@@ -18,6 +19,7 @@ namespace FirmwareUpdateAgent
         private static HttpListener _httpListener;
         private static Stopwatch _stopwatch = new Stopwatch();
         private static TwinAction? _downloadAction = null;
+        private static ECDsa? _signingPublicKey = null;
 
         /// <summary>
         /// The entry point of the FirmwareUpdateAgent application.
@@ -45,7 +47,9 @@ namespace FirmwareUpdateAgent
                         Console.WriteLine("Another instance of FirmwareUpdateAgent is already running.");
                         return;
                     }
-                    Console.WriteLine("Starting Simulated device...");
+                    Console.WriteLine("Loading crypto keys...");
+                    _signingPublicKey = await GetSigningPublicKeyAsync();
+                    Console.WriteLine("Starting device Agent...");
 
                     var cts = new CancellationTokenSource();
                     _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
@@ -54,8 +58,8 @@ namespace FirmwareUpdateAgent
                     await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(
                             async (desiredProperties, userContext) =>
                             {
-                                Console.WriteLine("Desired properties were updated:");
-                                Console.WriteLine(JsonConvert.SerializeObject(desiredProperties));
+                                Console.WriteLine($"{DateTime.Now}: Desired properties were updated.");
+                                // Console.WriteLine(JsonConvert.SerializeObject(desiredProperties));
                                 await ExecTwinActions(cts.Token, c2dSubscription, _deviceClient);
                             }, null);
 
@@ -100,6 +104,34 @@ namespace FirmwareUpdateAgent
             }
         }
 
+        private static async Task<ECDsa> GetSigningPublicKeyAsync()
+        {
+            Console.WriteLine("Loading signing public key...");
+            string? publicKeyPem = null;
+            Console.WriteLine("Not in kube run-time - loading crypto from the local storage.");
+            // Load the public key from a local file when running locally
+            publicKeyPem = await File.ReadAllTextAsync("dbg/sign-pubkey.pem");
+
+            return LoadPublicKeyFromPem(publicKeyPem);
+        }
+
+        private static ECDsa LoadPublicKeyFromPem(string pemContent)
+        {
+            var publicKeyContent = pemContent.Replace("-----BEGIN PUBLIC KEY-----", "")
+                                            .Replace("-----END PUBLIC KEY-----", "")
+                                            .Replace("\n", "")
+                                            .Replace("\r", "")
+                                            .Trim();
+
+            var publicKeyBytes = Convert.FromBase64String(publicKeyContent);
+            var keyReader = new ReadOnlySpan<byte>(publicKeyBytes);
+
+            ECDsa ecdsa = ECDsa.Create();
+            ecdsa.ImportSubjectPublicKeyInfo(keyReader, out _);
+
+            return ecdsa;
+        }
+
         /// <summary>
         /// Retrieves the transport type from the TRANSPORT_TYPE environment variable, or defaults to AMQP.
         /// </summary>
@@ -110,6 +142,18 @@ namespace FirmwareUpdateAgent
             return Enum.TryParse(transportTypeString, out TransportType transportType)
                 ? transportType
                 : TransportType.Amqp;
+        }
+
+        private static bool VerifySignature(string message, string signatureString, ECDsa publicKey)
+        {
+            // Convert the Base64-encoded signature back to a byte array
+            byte[] signature = Convert.FromBase64String(signatureString);
+
+            // Convert the message to a byte array
+            byte[] dataToVerify = Encoding.UTF8.GetBytes(message);
+
+            // Verify the signature using the ES512 algorithm (SHA-512)
+            return publicKey.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA512);
         }
 
         /// <summary>
@@ -184,7 +228,7 @@ namespace FirmwareUpdateAgent
             {
                 if (c2dSubscription.IsSubscribed)
                 {
-                    Console.WriteLine($"Sending {eventType} event at device '{device_id}'....");
+                    Console.WriteLine($"{DateTime.Now}: Sending {eventType} event at device '{device_id}'....");
 
                     Message message = cbCreateMessage(eventType);
                     // Set the ExpiryTimeUtc property
@@ -192,7 +236,7 @@ namespace FirmwareUpdateAgent
 
                     await _deviceClient.SendEventAsync(message);
 
-                    Console.WriteLine($"{DateTime.Now}: {eventType} sent");
+                    Console.WriteLine($"{DateTime.Now}: Event {eventType} sent");
                     // _stopwatch.Start();
                     break;
                 }
@@ -228,9 +272,11 @@ namespace FirmwareUpdateAgent
 
             TwinAction? action = _downloadAction;
             action?.ReportProgress(progressPercent);
-            if (progressPercent == 100)
-                action?.ReportSuccess("FinishedTransit", "Finished streaming as the last chunk arrived.");
             Console.WriteLine($"%{progressPercent:00} @pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
+            if (progressPercent == 100) {
+                action?.ReportSuccess("FinishedTransit", "Finished streaming as the last chunk arrived.");
+                Console.WriteLine($"{DateTime.Now}: Finished streaming as the last chunk arrived.");
+            }
             return totalBytesDownloaded;
         }
 
@@ -349,11 +395,22 @@ namespace FirmwareUpdateAgent
             string device_id = GetDeviceIdFromConnectionString(_deviceConnectionString);
 
             // Report the current device twin state and perform actions based on the state
-            return await TwinAction.ReportTwinState(cancellationToken, deviceClient,
+            var actions = await TwinAction.ReportTwinState(cancellationToken, deviceClient,
                             c2dSubscription.IsSubscribed ? "READY" : "BUSY",
-                            async (cancellationToken, path, key) =>
+                            async (cancellationToken, contentObject, key) =>
                             {
-                                await SendSignTwinKey(cancellationToken, c2dSubscription, device_id, path, key);
+                                var parentObject = contentObject?.Parent?.Parent as JObject;
+                                if(contentObject == null || parentObject == null ||
+                                   !parentObject.ContainsKey(key) || 
+                                   !VerifySignature(contentObject.ToString(), parentObject![key].ToString(), _signingPublicKey!)) {
+                                    var path = contentObject!.Path;
+                                    var text = !parentObject.ContainsKey(key) ? "is missing" : "fails verification: " + parentObject![key].ToString();
+                                    Console.WriteLine($"The signature '{key}' in container '{parentObject.Path}' {text}. \nOrdering backend to re-sign at device '{device_id}'....");
+                                    // No valid signature found or fails verification
+                                    _ = SendSignTwinKey(cancellationToken, c2dSubscription, device_id, path, key);
+                                    return false;
+                                }
+                                return true;
                             },
                             async (cancellationToken, action) =>
                             {
@@ -414,6 +471,10 @@ namespace FirmwareUpdateAgent
                                     _downloadAction = null;
                                 }
                             });
+            if(actions.Count == 0) {
+                Console.WriteLine($"{DateTime.Now}: Analyzed twin, nothing to do - at device '{device_id}'....");
+            }
+            return actions;
         }
         private static async Task UploadFilePeriodicallyAsync(TwinAction action, string filename, TimeSpan interval)
         {

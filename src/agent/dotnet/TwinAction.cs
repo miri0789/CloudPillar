@@ -96,7 +96,7 @@ namespace FirmwareUpdateAgent
         }
 
         // Main method to report the twin state and process the actions
-        public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, string, string, Task> signTwinKey, Func<CancellationToken, TwinAction, Task> processor = null)
+        public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, JObject, string, Task<bool>> verifySignedTwin, Func<CancellationToken, TwinAction, Task> processor = null)
         {   
             var actions = new List<TwinAction>();
             try {
@@ -110,16 +110,15 @@ namespace FirmwareUpdateAgent
 
                 JObject changeSpecJObject = (JObject)desiredJObject[_ChangeSpecKey]!;
 
-                if (!JObject.DeepEquals(changeSpecJObject["id"], reportedJObject[_ChangeSpecKey]?["id"]))
+                if (JObject.DeepEquals(changeSpecJObject["id"], reportedJObject[_ChangeSpecKey]?["id"])
+                    // Check that the changeSpec is signed correctly
+                    || !await verifySignedTwin(cancellationToken, changeSpecJObject, _ChangeSignatureKey)) 
                 {
-                    // Check that the changeSpec is signed
-                    if(!desiredJObject.ContainsKey(_ChangeSignatureKey)) {
-                        // No signature found
-                        _ = signTwinKey(cancellationToken, changeSpecJObject.Path, _ChangeSignatureKey);
-                        return actions; // Currently empty
-                    }
-                    reportedJObject[_ChangeSpecKey] = JObject.Parse("{\"id\": \"" + changeSpecJObject["id"] + "\"}");
+                    return actions; // empty at this point
                 }
+
+                // Init the reported change spec id
+                reportedJObject[_ChangeSpecKey] = JObject.Parse("{\"id\": \"" + changeSpecJObject["id"] + "\"}");
 
                 // Loop through the recipes, stages, and steps in the changeSpec
                 foreach (var recipe in changeSpecJObject)
