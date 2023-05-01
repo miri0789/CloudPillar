@@ -4,7 +4,7 @@ trigger:
 variables:
   imageName: 'd2c-prcoessor-backend'
   imageVersion: 'd2c-prcoessor-backend'
-  registryName: '.azurecr.io'
+  registryName: 'iotdicomacr.azurecr.io'
   dockerfilePath: '/src/backend/dotnet/d2c-processor/Dockerfile'
 stages:
 - stage: BuildAndPush
