@@ -16,7 +16,7 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=lazyrobot7;SharedAccessKey=BegLQhBNHAP0fjVk+koga+I9pX/phjxNVyrCB/6TlfA="
+                "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=carto3ag1;SharedAccessKey=JP25Buy7v47bTIxm4umXnhGsku4keCqrz7qB+vEcmbo="
             },
             "stopAtEntry": false
         },

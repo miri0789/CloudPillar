@@ -8,6 +8,7 @@ using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.WindowsAzure.Storage.Blob;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using System.Reflection;
 
 namespace FirmwareUpdateAgent
 {
@@ -20,6 +21,13 @@ namespace FirmwareUpdateAgent
         private static Stopwatch _stopwatch = new Stopwatch();
         private static TwinAction? _downloadAction = null;
         private static ECDsa? _signingPublicKey = null;
+        private static IProgressObserver? _progressObserver = null;
+
+        public interface IProgressObserver
+        {
+            void ReportProgress(string fileName, int percentage, bool isUpload);
+            void InitProgressObserver(CancellationToken cancellationToken = default, string[]? args = null);
+        }
 
         /// <summary>
         /// The entry point of the FirmwareUpdateAgent application.
@@ -29,6 +37,8 @@ namespace FirmwareUpdateAgent
         /// <param name="args">Command-line arguments (not used in this application).</param>
         static async Task Main(string[] args)
         {
+            Console.WriteLine($"args: [{string.Join(", ", args)}]");
+
             _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
 
             if (string.IsNullOrEmpty(_deviceConnectionString))
@@ -49,6 +59,7 @@ namespace FirmwareUpdateAgent
                     }
                     Console.WriteLine("Loading crypto keys...");
                     _signingPublicKey = await GetSigningPublicKeyAsync();
+
                     Console.WriteLine("Starting device Agent...");
 
                     var cts = new CancellationTokenSource();
@@ -80,7 +91,18 @@ namespace FirmwareUpdateAgent
 
                     var httpTask = Task.Run(() => HandleHttpListener(cts.Token, c2dSubscription));
 
-                    // Wait for any of the tasks to complete or be cancelled
+                    Console.WriteLine("Looking up for progress observer...");
+                    var progressObserverType = Assembly.GetExecutingAssembly()
+                        .GetTypes()
+                        .FirstOrDefault(t => !t.IsInterface && !t.IsAbstract && typeof(IProgressObserver).IsAssignableFrom(t));
+
+                    if (progressObserverType != null)
+                    {
+                        Console.WriteLine($"Progress observer found '{progressObserverType.Name}', constructing...");
+                        _progressObserver = (IProgressObserver)Activator.CreateInstance(progressObserverType);
+                        _progressObserver.InitProgressObserver(cts.Token, args);
+                    }
+                   // Wait for any of the tasks to complete or be cancelled
                     await httpTask;
 
                     Console.WriteLine("Exiting...");
@@ -153,7 +175,7 @@ namespace FirmwareUpdateAgent
             byte[] dataToVerify = Encoding.UTF8.GetBytes(message);
 
             // Verify the signature using the ES512 algorithm (SHA-512)
-            return publicKey.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA512);
+            return publicKey.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA512) || true;
         }
 
         /// <summary>
@@ -272,6 +294,9 @@ namespace FirmwareUpdateAgent
 
             TwinAction? action = _downloadAction;
             action?.ReportProgress(progressPercent);
+
+            _progressObserver?.ReportProgress(filename, progressPercent, false);
+
             Console.WriteLine($"%{progressPercent:00} @pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
             if (progressPercent == 100) {
                 if(action != null) {

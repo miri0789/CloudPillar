@@ -1,0 +1,1 @@
+cmd /C "set DEVICE_CONNECTION_STRING=%~1&& dotnet ./bin/jnjiotagent.dll %*"
