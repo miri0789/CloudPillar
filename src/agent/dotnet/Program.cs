@@ -9,6 +9,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace FirmwareUpdateAgent
 {
@@ -558,7 +559,10 @@ namespace FirmwareUpdateAgent
                                                 {
                                                     if (shell == "powershell")
                                                     {
-                                                        process.StartInfo.FileName = "powershell";
+                                                        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                                                            process.StartInfo.FileName = "pwsh";
+                                                        else
+                                                            process.StartInfo.FileName = "powershell";
                                                         process.StartInfo.Arguments = $"-Command \"{command}\"";
                                                     }
                                                     else if (shell == "cmd")
