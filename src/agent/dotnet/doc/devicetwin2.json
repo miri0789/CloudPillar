@@ -5,7 +5,7 @@
       {
           "action": "periodicUpload",
           "description": "Periodically (once in 10min) upload installation logging",
-          "filename": "I:\\ExportedData_2023.05.03_15.35.30.081.zip",
+          "filename": "I:\\ExportedData_2023.05.*.zip",
           "interval": 600,
           "enabled": true
       },

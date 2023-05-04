@@ -523,16 +523,91 @@ namespace FirmwareUpdateAgent
                                             }
                                             break;
                                         }
+                                        case "singularUpload": 
+                                        {
+                                            string? filename = action?.Desired["filename"]?.Value<string>();
+                                            int interval = action?.Desired["interval"]?.Value<int>() ?? -1;
+                                            bool enabled = action?.Desired["enabled"]?.Value<bool>() ?? true;
+
+                                            if (filename != null && enabled)
+                                            {
+                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 10), true);
+                                            }
+                                            break;
+                                        }
                                         case "periodicUpload": 
                                         {
-                                            string filename = action.Desired["filename"].Value<string>();
-                                            int interval = action.Desired["interval"].Value<int>();
-                                            bool enabled = action.Desired["enabled"].Value<bool>();
+                                            string? filename = action?.Desired["filename"]?.Value<string>();
+                                            int interval = action?.Desired["interval"]?.Value<int>() ?? -1;
+                                            bool enabled = action?.Desired["enabled"]?.Value<bool>() ?? true;
 
-                                            if (enabled)
+                                            if (filename != null && enabled)
                                             {
-                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval));
+                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 600));
                                             }
+                                            break;
+                                        }
+                                        case "executeOnce":
+                                        {
+                                            string shell = action.Desired["shell"]?.Value<string>() ?? "cmd.exe";
+                                            string? command = action.Desired["command"]?.Value<string>();
+
+                                            if (!string.IsNullOrEmpty(command))
+                                            {
+                                                using (var process = new Process())
+                                                {
+                                                    if (shell == "powershell")
+                                                    {
+                                                        process.StartInfo.FileName = "powershell";
+                                                        process.StartInfo.Arguments = $"-Command \"{command}\"";
+                                                    }
+                                                    else if (shell == "cmd")
+                                                    {
+                                                        process.StartInfo.FileName = "cmd.exe";
+                                                        process.StartInfo.Arguments = $"/c \"{command}\"";
+                                                    }
+                                                    else if (shell == "bash")
+                                                    {
+                                                        process.StartInfo.FileName = "bash";
+                                                        process.StartInfo.Arguments = $"-c \"{command}\"";
+                                                    }
+                                                    else
+                                                    {
+                                                        action.ReportFailed("-1", $"Invalid shell: {shell}");
+                                                        break;
+                                                    }
+
+                                                    process.StartInfo.RedirectStandardOutput = true;
+                                                    process.StartInfo.RedirectStandardError = true;
+                                                    process.StartInfo.UseShellExecute = false;
+                                                    process.StartInfo.CreateNoWindow = true;
+
+                                                    try 
+                                                    {
+                                                        process.Start();
+                                                        string output = process.StandardOutput.ReadToEnd();
+                                                        string error = process.StandardError.ReadToEnd();
+                                                        process.WaitForExit();
+                                                        if (process.ExitCode != 0)
+                                                        {
+                                                            action.ReportFailed(process.ExitCode.ToString(), $"Error: {error}; Output: {output}");
+                                                        }
+                                                        else
+                                                        {
+                                                            action.ReportSuccess(process.ExitCode.ToString(), $"Output: {output}");
+                                                        }
+                                                    }
+                                                    catch(Exception ex)
+                                                    {
+                                                        action.ReportFailed(ex.GetType().Name, ex.Message);
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                action.ReportFailed("-1", "Invalid command");
+                                            }
+
                                             break;
                                         }
                                         default:
@@ -567,7 +642,7 @@ namespace FirmwareUpdateAgent
             }
             return actions;
         }
-        private static async Task UploadFilesPeriodicallyAsync(TwinAction action, string filename, TimeSpan interval)
+        private static async Task UploadFilesPeriodicallyAsync(TwinAction action, string filename, TimeSpan interval, bool breakAfterSuccess = false)
         {
             while (true)
             {
@@ -575,6 +650,7 @@ namespace FirmwareUpdateAgent
                 {
                     await UploadFilesToBlobStorageAsync(action, filename);
                     action.ReportSuccess("Done", "Will keep uploading " + interval.ToString());
+                    if(breakAfterSuccess) break;
                 }
                 catch (Exception ex)
                 {

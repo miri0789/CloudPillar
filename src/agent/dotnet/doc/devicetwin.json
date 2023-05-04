@@ -34,6 +34,13 @@
         "enabled": true
       },
       {
+        "action": "singularUpload",
+        "description": "Periodically (once in 10min) upload wifi logging",
+        "filename": "/var/log/wifi*",
+        "interval": 600,
+        "enabled": true
+      },
+      {
         "action": "singularDownload",
         "description": "Download Velys firmware artifact v1.14.61044",
         "source": "CartoPatch-1.14.61047.zip",
@@ -43,9 +50,10 @@
     ],
     "preInstallConfig": [
       {
+        "action": "executeOnce",
         "description": "Extracted firmware artifact",
         "shell": "powershell",
-        "command": "Expand-Archive -LiteralPath '.\\CartoPatch-1.14.61047.zip' -DestinationPath '.'"
+        "command": "Expand-Archive -LiteralPath '.\\CartoPatch-1.14.61047.zip' -DestinationPath '.\\CartoPatch\\'"
       }
     ],
     "installSteps": [
