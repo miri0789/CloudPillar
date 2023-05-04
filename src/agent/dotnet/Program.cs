@@ -343,17 +343,17 @@ namespace FirmwareUpdateAgent
                         if(action != null) {
                             await action.Persist();
                         }
-                        _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
+                        await ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/ready")
                     {
                         Console.WriteLine("Resuming Agent");
                         await c2dSubscription.Subscribe(cancellationToken);
-                        _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
+                        await ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/twin")
                     {
-                        _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
+                        await ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
                     }
                     else if (request.Url.AbsolutePath.ToLower() == "/update")
                     {
@@ -379,13 +379,71 @@ namespace FirmwareUpdateAgent
                                                      long.Parse(fromPos)); // Async call for update
                     }
                 }
+                try
+                {
+                    byte[] buffer = Encoding.UTF8.GetBytes(await GetTwinHtml(request?.Url.AbsolutePath.ToLower() == "/state"));
 
-                using HttpListenerResponse response = context.Response;
-                string responseString = !c2dSubscription.IsSubscribed ? "Agent is paused" : "Agent is running";
-                byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-                response.ContentLength64 = buffer.Length;
-                response.OutputStream.Write(buffer, 0, buffer.Length);
+                    context.Response.ContentType = "text/html";
+                    context.Response.ContentLength64 = buffer.Length;
+                    context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                    context.Response.OutputStream.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error processing request: " + ex.ToString());
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    context.Response.OutputStream.Close();
+                }
             }
+        }
+
+        private static async Task<string> GetTwinHtml(bool autoRefresh)
+        {
+            var twin = await _deviceClient.GetTwinAsync();
+            var desired = twin.Properties.Desired.ToJson();
+            var reported = twin.Properties.Reported.ToJson();
+
+            string autoRefreshScript = autoRefresh
+                ? "<script>setTimeout(() => { window.location.reload(); }, 5000);</script>"
+                : "";
+
+            string html = $@"
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/default.min.css'>
+            <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js'></script>
+            <script>hljs.highlightAll();</script>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; }}
+                .container {{ display: flex; }}
+                .pane {{ flex: 1; padding: 20px; width: 50%; }}
+                .desired {{ border-right: 1px solid #ccc; }}
+                .reported {{ }}
+                pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+            </style>
+            {autoRefreshScript}
+        </head>
+        <body>
+            <div class='container'>
+                <div class='pane desired'>
+                    <h2>Desired Properties</h2>
+                    <pre><code class='json'>{desired}</code></pre>
+                </div>
+                <div class='pane reported'>
+                    <h2>Reported Properties</h2>
+                    <pre><code class='json'>{reported}</code></pre>
+                </div>
+            </div>
+            <script>
+                document.querySelectorAll('pre code').forEach((block) => {{
+                    hljs.highlightBlock(block);
+                }});
+            </script>
+        </body>
+        </html>";
+
+            return html;
         }
 
         /// <summary>
@@ -478,7 +536,7 @@ namespace FirmwareUpdateAgent
 
                                             if (enabled)
                                             {
-                                                _ =  UploadFilePeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval));
+                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval));
                                             }
                                             break;
                                         }
@@ -514,13 +572,13 @@ namespace FirmwareUpdateAgent
             }
             return actions;
         }
-        private static async Task UploadFilePeriodicallyAsync(TwinAction action, string filename, TimeSpan interval)
+        private static async Task UploadFilesPeriodicallyAsync(TwinAction action, string filename, TimeSpan interval)
         {
             while (true)
             {
                 try
                 {
-                    await UploadFileToBlobStorageAsync(action, filename);
+                    await UploadFilesToBlobStorageAsync(action, filename);
                     action.ReportSuccess("Done", "Will keep uploading " + interval.ToString());
                 }
                 catch (Exception ex)
@@ -533,24 +591,34 @@ namespace FirmwareUpdateAgent
             }
         }
 
-        private static async Task UploadFileToBlobStorageAsync(TwinAction action, string fullFilePath)
+        private static async Task UploadFilesToBlobStorageAsync(TwinAction action, string filePathPattern)
         {
-            string filename = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");//Path.GetFileName(fullFilePath);
+            string? directoryPath = Path.GetDirectoryName(filePathPattern);
+            string searchPattern = Path.GetFileName(filePathPattern);
 
-            var sasUriResponse = await _deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
+            // Get a list of all matching files
+            string[] files = Directory.GetFiles(directoryPath ?? "", searchPattern);
+
+            // Upload each file
+            foreach (string fullFilePath in files)
             {
-                BlobName = filename
-            });
+                string filename = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
 
-            var storageUri = sasUriResponse.GetBlobUri();
-            var blob = new CloudBlockBlob(storageUri);
-            await blob.UploadFromFileAsync(fullFilePath);
+                var sasUriResponse = await _deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
+                {
+                    BlobName = filename
+                });
 
-            await _deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
-            {
-                CorrelationId = sasUriResponse.CorrelationId,
-                IsSuccess = true
-            });
+                var storageUri = sasUriResponse.GetBlobUri();
+                var blob = new CloudBlockBlob(storageUri);
+                await blob.UploadFromFileAsync(fullFilePath);
+
+                await _deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
+                {
+                    CorrelationId = sasUriResponse.CorrelationId,
+                    IsSuccess = true
+                });
+            }
         }
     }
 }
