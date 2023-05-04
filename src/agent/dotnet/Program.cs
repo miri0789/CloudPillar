@@ -712,28 +712,16 @@ namespace FirmwareUpdateAgent
             // Get a list of all matching directories
             string[] directories = Directory.GetDirectories(directoryPath ?? "", searchPattern);
 
-            // Zip each matching directory
-            for (int i = 0; i < directories.Length; i++)
-            {
-                string directory = directories[i];
-                string zipFilePath = Path.Combine(directoryPath, Path.GetFileName(directory) + ".zip");
-
-                if (File.Exists(zipFilePath))
-                {
-                    File.Delete(zipFilePath);
-                }
-
-                ZipFile.CreateFromDirectory(directory, zipFilePath);
-                directories[i] = zipFilePath;
-            }
-
-            // Add the zipped directories to the list of files to be uploaded
-            files = files.Concat(directories).ToArray();
-
             // Upload each file
-            foreach (string fullFilePath in files)
+            foreach (string fullFilePath in files.Concat(directories))
             {
                 string filename = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
+
+                // Check if the path is a directory
+                if (Directory.Exists(fullFilePath))
+                {
+                    filename += ".zip";
+                }
 
                 var sasUriResponse = await _deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
                 {
@@ -742,7 +730,30 @@ namespace FirmwareUpdateAgent
 
                 var storageUri = sasUriResponse.GetBlobUri();
                 var blob = new CloudBlockBlob(storageUri);
-                await blob.UploadFromFileAsync(fullFilePath);
+
+                if (Directory.Exists(fullFilePath))
+                {
+                    // Create a zip in memory
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                        {
+                            string baseDir = Path.GetFileName(fullFilePath);
+                            foreach (string file in Directory.GetFiles(fullFilePath, "*", SearchOption.AllDirectories))
+                            {
+                                string relativePath = baseDir + file.Substring(fullFilePath.Length);
+                                archive.CreateEntryFromFile(file, relativePath);
+                            }
+                        }
+
+                        memoryStream.Position = 0;
+                        await blob.UploadFromStreamAsync(memoryStream);
+                    }
+                }
+                else
+                {
+                    await blob.UploadFromFileAsync(fullFilePath);
+                }
 
                 await _deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
                 {
