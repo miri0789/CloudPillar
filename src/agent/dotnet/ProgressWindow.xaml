@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="300"
+        x:Class="ProgressWindow"
+        Title="File Download Progress">
+
+    <ItemsControl Items="{Binding Files}">
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <StackPanel Orientation="Vertical" Margin="10">
+                    <TextBlock Text="{Binding FileName}" FontWeight="Bold" />
+                    <ProgressBar Value="{Binding Progress}" Width="400" Height="20" />
+                    <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}" HorizontalAlignment="Right" />
+                    <TextBlock Text="{Binding Status}" HorizontalAlignment="Right" FontStyle="Italic" />
+                </StackPanel>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</Window>
