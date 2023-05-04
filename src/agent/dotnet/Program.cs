@@ -400,8 +400,8 @@ namespace FirmwareUpdateAgent
         private static async Task<string> GetTwinHtml(bool autoRefresh)
         {
             var twin = await _deviceClient.GetTwinAsync();
-            var desired = twin.Properties.Desired.ToJson();
-            var reported = twin.Properties.Reported.ToJson();
+            var desired = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(twin.Properties.Desired.ToJson()), Formatting.Indented);
+            var reported = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(twin.Properties.Reported.ToJson()), Formatting.Indented);
 
             string autoRefreshScript = autoRefresh
                 ? "<script>setTimeout(() => { window.location.reload(); }, 5000);</script>"
@@ -413,7 +413,6 @@ namespace FirmwareUpdateAgent
         <head>
             <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/default.min.css'>
             <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js'></script>
-            <script>hljs.highlightAll();</script>
             <style>
                 body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; }}
                 .container {{ display: flex; }}
@@ -435,11 +434,7 @@ namespace FirmwareUpdateAgent
                     <pre><code class='json'>{reported}</code></pre>
                 </div>
             </div>
-            <script>
-                document.querySelectorAll('pre code').forEach((block) => {{
-                    hljs.highlightBlock(block);
-                }});
-            </script>
+            <script>hljs.highlightAll();</script>
         </body>
         </html>";
 
