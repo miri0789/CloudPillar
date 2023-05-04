@@ -333,55 +333,56 @@ namespace FirmwareUpdateAgent
             {
                 HttpListenerContext context = await _httpListener.GetContextAsync();
                 HttpListenerRequest request = context.Request;
-
-                if (request.HttpMethod == "GET")
-                {
-                    if (request.Url.AbsolutePath.ToLower() == "/busy")
-                    {
-                        Console.WriteLine("Pausing Agent");
-                        c2dSubscription.Unsubscribe();
-                        TwinAction? action = _downloadAction;
-                        if(action != null) {
-                            await action.Persist();
-                        }
-                        await ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
-                    }
-                    else if (request.Url.AbsolutePath.ToLower() == "/ready")
-                    {
-                        Console.WriteLine("Resuming Agent");
-                        await c2dSubscription.Subscribe(cancellationToken);
-                        await ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
-                    }
-                    else if (request.Url.AbsolutePath.ToLower() == "/twin")
-                    {
-                        await ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
-                    }
-                    else if (request.Url.AbsolutePath.ToLower() == "/update")
-                    {
-                        string? fromPos = request.QueryString["from"];
-                        string? filename = request.QueryString["file"];
-                        _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
-                                                     GetDeviceIdFromConnectionString(_deviceConnectionString),
-                                                     string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
-                                                     string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
-                    }
-                    else if (request.Url.AbsolutePath.ToLower() == "/continue")
-                    {
-                        string? fromPos = request.QueryString["from"];
-                        string? filename = request.QueryString["file"];
-                        if(string.IsNullOrEmpty(fromPos))
-                            _ = SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
-                                                     GetDeviceIdFromConnectionString(_deviceConnectionString),
-                                                     string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename); // Async call for update
-                        else
-                            _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
-                                                     GetDeviceIdFromConnectionString(_deviceConnectionString),
-                                                     string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
-                                                     long.Parse(fromPos)); // Async call for update
-                    }
-                }
                 try
                 {
+
+                    if (request.HttpMethod == "GET")
+                    {
+                        if (request.Url.AbsolutePath.ToLower() == "/busy")
+                        {
+                            Console.WriteLine("Pausing Agent");
+                            c2dSubscription.Unsubscribe();
+                            TwinAction? action = _downloadAction;
+                            if(action != null) {
+                                await action.Persist();
+                            }
+                            await TwinAction.UpdateDeviceState(_deviceClient, "BUSY");
+                        }
+                        else if (request.Url.AbsolutePath.ToLower() == "/ready")
+                        {
+                            Console.WriteLine("Resuming Agent");
+                            await c2dSubscription.Subscribe(cancellationToken);
+                            await TwinAction.UpdateDeviceState(_deviceClient, "BUSY");
+                        }
+                        else if (request.Url.AbsolutePath.ToLower() == "/twin")
+                        {
+                            _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
+                        }
+                        else if (request.Url.AbsolutePath.ToLower() == "/update")
+                        {
+                            string? fromPos = request.QueryString["from"];
+                            string? filename = request.QueryString["file"];
+                            _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
+                                                        GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                        string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
+                                                        string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
+                        }
+                        else if (request.Url.AbsolutePath.ToLower() == "/continue")
+                        {
+                            string? fromPos = request.QueryString["from"];
+                            string? filename = request.QueryString["file"];
+                            if(string.IsNullOrEmpty(fromPos))
+                                _ = SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
+                                                        GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                        string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename); // Async call for update
+                            else
+                                _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
+                                                        GetDeviceIdFromConnectionString(_deviceConnectionString),
+                                                        string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
+                                                        long.Parse(fromPos)); // Async call for update
+                        }
+                    }
+
                     byte[] buffer = Encoding.UTF8.GetBytes(await GetTwinHtml(request?.Url.AbsolutePath.ToLower() == "/state"));
 
                     context.Response.ContentType = "text/html";
@@ -396,6 +397,7 @@ namespace FirmwareUpdateAgent
                     context.Response.OutputStream.Close();
                 }
             }
+            Console.WriteLine("Bailed out of HTTP Listener");
         }
 
         private static async Task<string> GetTwinHtml(bool autoRefresh)

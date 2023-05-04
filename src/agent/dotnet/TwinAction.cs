@@ -95,11 +95,8 @@ namespace FirmwareUpdateAgent
             await deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
         }
 
-        // Main method to report the twin state and process the actions
-        public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, JObject, string, Task<bool>> verifySignedTwin, Func<CancellationToken, TwinAction, Task> processor = null)
-        {   
-            var actions = new List<TwinAction>();
-            try {
+        public static async Task UpdateDeviceState(DeviceClient deviceClient, string deviceState) 
+        {
                 var currentTwin = await deviceClient.GetTwinAsync();
 
                 var desiredJObject = JObject.Parse(currentTwin.Properties.Desired.ToJson());
@@ -113,6 +110,19 @@ namespace FirmwareUpdateAgent
                 JArray shells = JArray.FromObject(GetSupportedShells());
                 reportedJObject["supportedShells"] = shells;
                 await UpdateReportedPropertiesAsync(deviceClient, "supportedShells", shells);
+        }
+
+        // Main method to report the twin state and process the actions
+        public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, JObject, string, Task<bool>> verifySignedTwin, Func<CancellationToken, TwinAction, Task> processor = null)
+        {   
+            var actions = new List<TwinAction>();
+            try {
+                await UpdateDeviceState(deviceClient, deviceState);
+
+                var currentTwin = await deviceClient.GetTwinAsync();
+
+                var desiredJObject = JObject.Parse(currentTwin.Properties.Desired.ToJson());
+                var reportedJObject = JObject.Parse(currentTwin.Properties.Reported.ToJson());
 
                 JObject changeSpecJObject = (JObject)desiredJObject[_ChangeSpecKey]!;
 

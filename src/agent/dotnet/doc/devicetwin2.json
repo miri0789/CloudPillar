@@ -5,8 +5,8 @@
       {
           "action": "periodicUpload",
           "description": "Periodically (once in 10min) upload installation logging",
-          "filename": "I:\\ExportedData_2023.05.*.zip",
-          "interval": 600,
+          "filename": "I:\\ExportedData_2023.05.*",
+          "interval": 120,
           "enabled": true
       },
       {
@@ -27,9 +27,16 @@
     ],
     "preInstallConfig": [
       {
-        "description": "Extracted firmware artifact",
+        "action": "executeOnce",
+        "description": "Extracted firmware artifact McAfee",
         "shell": "powershell",
-        "command": "Expand-Archive -LiteralPath '.\\CartoPatch-1.14.61047.zip' -DestinationPath '.'"
+        "command": "Expand-Archive -LiteralPath '.\\mcaffeeV3_5150dat.zip' -DestinationPath 'I:\\'"
+      },
+      {
+        "action": "executeOnce",
+        "description": "Extracted firmware artifact SPU Patch",
+        "shell": "powershell",
+        "command": "Expand-Archive -LiteralPath '.\\SPU.zip' -DestinationPath 'I:\\'"
       }
     ]
   }
