@@ -558,6 +558,17 @@ namespace FirmwareUpdateAgent
                                                                         device_id, 
                                                                         action.Desired["source"]?.ToString());
                                             }
+                                            // Wait for the download action to be completed
+                                            while (!cancellationToken.IsCancellationRequested)
+                                            {
+                                                TwinAction? reportingAction = _downloadAction;
+                                                if(reportingAction == null || reportingAction.IsComplete) 
+                                                    break;
+                                                // Adjust the delay time as needed (currently 5 seconds)
+                                                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                                                // Persist the action state
+                                                await reportingAction.Persist();
+                                            }
                                             break;
                                         }
                                         case "singularUpload": 
@@ -622,12 +633,44 @@ namespace FirmwareUpdateAgent
                                                     process.StartInfo.UseShellExecute = false;
                                                     process.StartInfo.CreateNoWindow = true;
 
-                                                    try 
+                                                    try
                                                     {
+                                                        Console.WriteLine($"{DateTime.Now}: Spawning {process.StartInfo.FileName} command: {command} ...");
+
+                                                        process.StartInfo.RedirectStandardOutput = true;
+                                                        process.StartInfo.RedirectStandardError = true;
+
+                                                        StringBuilder outputBuilder = new StringBuilder();
+                                                        StringBuilder errorBuilder = new StringBuilder();
+
+                                                        process.OutputDataReceived += (sender, e) =>
+                                                        {
+                                                            if (!string.IsNullOrEmpty(e.Data))
+                                                            {
+                                                                outputBuilder.AppendLine(e.Data);
+                                                            }
+                                                        };
+
+                                                        process.ErrorDataReceived += (sender, e) =>
+                                                        {
+                                                            if (!string.IsNullOrEmpty(e.Data))
+                                                            {
+                                                                errorBuilder.AppendLine(e.Data);
+                                                            }
+                                                        };
+
                                                         process.Start();
-                                                        string output = process.StandardOutput.ReadToEnd();
-                                                        string error = process.StandardError.ReadToEnd();
+
+                                                        // Console.WriteLine($"Spawned: {command} via {process.StartInfo.FileName}...");
+
+                                                        process.BeginOutputReadLine();
+                                                        process.BeginErrorReadLine();
+
                                                         process.WaitForExit();
+
+                                                        string output = outputBuilder.ToString();
+                                                        string error = errorBuilder.ToString();
+
                                                         if (process.ExitCode != 0)
                                                         {
                                                             action.ReportFailed(process.ExitCode.ToString(), $"Error: {error}; Output: {output}");
@@ -637,8 +680,9 @@ namespace FirmwareUpdateAgent
                                                             action.ReportSuccess(process.ExitCode.ToString(), $"Output: {output}");
                                                         }
                                                     }
-                                                    catch(Exception ex)
+                                                    catch (Exception ex)
                                                     {
+                                                        Console.WriteLine($"Failed {ex.Message} in {process.StartInfo.FileName}...");
                                                         action.ReportFailed(ex.GetType().Name, ex.Message);
                                                     }
                                                 }
@@ -656,23 +700,10 @@ namespace FirmwareUpdateAgent
                                             break;
                                         }
                                     }
-                                    // Wait for the action to be completed
-                                    while (!cancellationToken.IsCancellationRequested)
-                                    {
-                                        TwinAction? reportingAction = _downloadAction;
-                                        if(reportingAction == null || reportingAction.IsComplete) 
-                                            break;
-                                        // Adjust the delay time as needed (currently 5 seconds)
-                                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-                                        // Persist the action state
-                                        await reportingAction.Persist();
-                                    }
                                 }
                                 finally
                                 {
-                                    TwinAction? persistingAction = _downloadAction;
-                                    if(persistingAction != null)
-                                        await persistingAction.Persist();
+                                    await action.Persist();
                                     // Reset the current action to null
                                     _downloadAction = null;
                                 }
