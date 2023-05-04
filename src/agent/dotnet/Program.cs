@@ -72,7 +72,7 @@ namespace FirmwareUpdateAgent
                             {
                                 Console.WriteLine($"{DateTime.Now}: Desired properties were updated.");
                                 // Console.WriteLine(JsonConvert.SerializeObject(desiredProperties));
-                                await ExecTwinActions(cts.Token, c2dSubscription, _deviceClient);
+                                _ = ExecTwinActions(cts.Token, c2dSubscription, _deviceClient);
                             }, null);
 
                     Console.CancelKeyPress += (sender, eventArgs) =>
@@ -384,11 +384,43 @@ namespace FirmwareUpdateAgent
                         }
                     }
 
-                    byte[] buffer = Encoding.UTF8.GetBytes(await GetTwinHtml(request?.Url.AbsolutePath.ToLower() == "/state"));
+                    if (request?.Url.AbsolutePath.ToLower() == "/state")
+                    {
+                        string twinHtml = string.Empty;
+                        int timeoutMilliseconds = 5000; // Set your desired timeout value here
+                        var getTwinHtmlTask = Task.Run(async () => await GetTwinHtml(true));
+                        if (await Task.WhenAny(getTwinHtmlTask, Task.Delay(timeoutMilliseconds)) == getTwinHtmlTask)
+                        {
+                            twinHtml = await getTwinHtmlTask;
+                        }
+                        else
+                        {
+                            // Handle the timeout case, e.g., set an error message or a default value for twinHtml
+                            twinHtml = @"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta http-equiv=""refresh"" content=""5"">
+                    </head>
+                    <body>
+                        <h1>Error: Retrieving twin data took too long.</h1>
+                        <p>The page will automatically refresh in 5 seconds.</p>
+                    </body>
+                    </html>";
+                        }
 
-                    context.Response.ContentType = "text/html";
-                    context.Response.ContentLength64 = buffer.Length;
-                    context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                        byte[] buffer = Encoding.UTF8.GetBytes(twinHtml);
+
+                        context.Response.ContentType = "text/html";
+                        context.Response.ContentLength64 = buffer.Length;
+                        context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                    }
+                    else
+                    {
+                        // Send 302 Redirect to /state
+                        context.Response.StatusCode = 302;
+                        context.Response.Headers.Add("Location", "/state");
+                    }
                     context.Response.OutputStream.Close();
                 }
                 catch (Exception ex)
