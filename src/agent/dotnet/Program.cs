@@ -353,6 +353,7 @@ namespace FirmwareUpdateAgent
                             Console.WriteLine("Resuming Agent");
                             await c2dSubscription.Subscribe(cancellationToken);
                             await TwinAction.UpdateDeviceState(_deviceClient, "READY");
+                            _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
                         }
                         else if (request.Url.AbsolutePath.ToLower() == "/twin")
                         {

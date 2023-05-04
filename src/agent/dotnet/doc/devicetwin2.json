@@ -14,7 +14,7 @@
           "description": "McAffee Security Update V3-515 DAT",
           "source": "mcaffeeV3_5150dat.zip",
           "protocol": "https|iotamqp|iotmqtt",
-          "retransmissionRewind": 67108864,
+          "retransmissionRewind": 33554432,
           "destinationPath": "./mcaffeeV3_5150dat.zip"
       },
       {
