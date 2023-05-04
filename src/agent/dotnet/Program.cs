@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.IO.Compression;
 
 namespace FirmwareUpdateAgent
 {
@@ -585,7 +586,7 @@ namespace FirmwareUpdateAgent
                                         }
                                         case "executeOnce":
                                         {
-                                            string shell = action.Desired["shell"]?.Value<string>() ?? "cmd.exe";
+                                            string shell = action.Desired["shell"]?.Value<string>() ?? "cmd";
                                             string? command = action.Desired["command"]?.Value<string>();
 
                                             if (!string.IsNullOrEmpty(command))
@@ -602,7 +603,7 @@ namespace FirmwareUpdateAgent
                                                     }
                                                     else if (shell == "cmd")
                                                     {
-                                                        process.StartInfo.FileName = "cmd.exe";
+                                                        process.StartInfo.FileName = "cmd";
                                                         process.StartInfo.Arguments = $"/c \"{command}\"";
                                                     }
                                                     else if (shell == "bash")
@@ -708,6 +709,26 @@ namespace FirmwareUpdateAgent
 
             // Get a list of all matching files
             string[] files = Directory.GetFiles(directoryPath ?? "", searchPattern);
+            // Get a list of all matching directories
+            string[] directories = Directory.GetDirectories(directoryPath ?? "", searchPattern);
+
+            // Zip each matching directory
+            for (int i = 0; i < directories.Length; i++)
+            {
+                string directory = directories[i];
+                string zipFilePath = Path.Combine(directoryPath, Path.GetFileName(directory) + ".zip");
+
+                if (File.Exists(zipFilePath))
+                {
+                    File.Delete(zipFilePath);
+                }
+
+                ZipFile.CreateFromDirectory(directory, zipFilePath);
+                directories[i] = zipFilePath;
+            }
+
+            // Add the zipped directories to the list of files to be uploaded
+            files = files.Concat(directories).ToArray();
 
             // Upload each file
             foreach (string fullFilePath in files)

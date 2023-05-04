@@ -224,7 +224,7 @@ namespace FirmwareUpdateAgent
             var supportedShells = new List<string>();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                supportedShells.Add("cmd.exe");
+                supportedShells.Add("cmd");
                 supportedShells.Add("powershell");
                 // Check if WSL is installed
                 if (File.Exists(@"C:\Windows\System32\wsl.exe"))
