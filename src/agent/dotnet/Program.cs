@@ -59,7 +59,7 @@ namespace FirmwareUpdateAgent
                         Console.WriteLine("Another instance of FirmwareUpdateAgent is already running.");
                         return;
                     }
-                    Console.WriteLine("Loading crypto keys...");
+                    Console.WriteLine("Loading cryptography keys...");
                     _signingPublicKey = await GetSigningPublicKeyAsync();
 
                     Console.WriteLine("Starting device Agent...");
@@ -132,7 +132,7 @@ namespace FirmwareUpdateAgent
         {
             Console.WriteLine("Loading signing public key...");
             string? publicKeyPem = null;
-            Console.WriteLine("Not in kube run-time - loading crypto from the local storage.");
+            Console.WriteLine("Not in kube run-time - loading cryptography from the local storage.");
             // Load the public key from a local file when running locally
             publicKeyPem = await File.ReadAllTextAsync("dbg/sign-pubkey.pem");
 
