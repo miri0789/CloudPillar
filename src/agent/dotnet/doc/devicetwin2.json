@@ -28,15 +28,15 @@
     "preInstallConfig": [
       {
         "action": "executeOnce",
-        "description": "Extracted firmware artifact McAfee",
+        "description": "Extraction of security update McAfee",
         "shell": "powershell",
-        "command": "Expand-Archive -LiteralPath '.\\mcaffeeV3_5150dat.zip' -DestinationPath 'I:\\'"
+        "command": "Expand-Archive -LiteralPath '.\\mcaffeeV3_5150dat.zip' -DestinationPath 'I:\\' -Force"
       },
       {
         "action": "executeOnce",
-        "description": "Extracted firmware artifact SPU Patch",
+        "description": "Extraction of firmware artifact SPU Patch",
         "shell": "powershell",
-        "command": "Expand-Archive -LiteralPath '.\\SPU.zip' -DestinationPath 'I:\\'"
+        "command": "Expand-Archive -LiteralPath '.\\SPU.zip' -DestinationPath 'I:\\' -Force"
       }
     ]
   }
