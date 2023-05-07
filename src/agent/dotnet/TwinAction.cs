@@ -112,6 +112,15 @@ namespace FirmwareUpdateAgent
                 await UpdateReportedPropertiesAsync(deviceClient, "supportedShells", shells);
         }
 
+        public static async Task ReportDeviceProperty(DeviceClient deviceClient, string key, string value) 
+        {
+                var currentTwin = await deviceClient.GetTwinAsync();
+
+                var reportedJObject = JObject.Parse(currentTwin.Properties.Reported.ToJson());
+
+                reportedJObject[key] = value;
+                await UpdateReportedPropertiesAsync(deviceClient, key, value);
+        }
         // Main method to report the twin state and process the actions
         public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, JObject, string, Task<bool>> verifySignedTwin, Func<CancellationToken, TwinAction, Task> processor = null)
         {   

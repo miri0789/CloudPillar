@@ -339,7 +339,19 @@ namespace FirmwareUpdateAgent
 
                     if (request.HttpMethod == "GET")
                     {
-                        if (request.Url.AbsolutePath.ToLower() == "/busy")
+                        if (request.Url.AbsolutePath.ToLower() == "/report")
+                        {
+                            Console.WriteLine("Reporting properties");
+                            // Iterate through all query parameters
+                            var queryParams = request.QueryString;
+                            foreach (string key in queryParams.AllKeys)
+                            {
+                                string value = queryParams[key];
+                                Console.WriteLine($"Reporting property: {key} = {value}");
+                                await TwinAction.ReportDeviceProperty(_deviceClient, key, value);
+                            }
+                        }
+                        else if (request.Url.AbsolutePath.ToLower() == "/busy")
                         {
                             Console.WriteLine("Pausing Agent");
                             c2dSubscription.Unsubscribe();
