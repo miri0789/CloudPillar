@@ -1,6 +1,7 @@
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json.Linq;
 using Microsoft.Azure.Devices.Shared;
+using System.Runtime.InteropServices;
 
 namespace FirmwareUpdateAgent
 {
@@ -94,11 +95,8 @@ namespace FirmwareUpdateAgent
             await deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
         }
 
-        // Main method to report the twin state and process the actions
-        public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, JObject, string, Task<bool>> verifySignedTwin, Func<CancellationToken, TwinAction, Task> processor = null)
-        {   
-            var actions = new List<TwinAction>();
-            try {
+        public static async Task UpdateDeviceState(DeviceClient deviceClient, string deviceState) 
+        {
                 var currentTwin = await deviceClient.GetTwinAsync();
 
                 var desiredJObject = JObject.Parse(currentTwin.Properties.Desired.ToJson());
@@ -106,6 +104,34 @@ namespace FirmwareUpdateAgent
 
                 reportedJObject["deviceState"] = deviceState;
                 await UpdateReportedPropertiesAsync(deviceClient, "deviceState", deviceState);
+                string agentPlatform = RuntimeInformation.OSDescription;
+                reportedJObject["agentPlatform"] = agentPlatform;
+                await UpdateReportedPropertiesAsync(deviceClient, "agentPlatform", agentPlatform);
+                JArray shells = JArray.FromObject(GetSupportedShells());
+                reportedJObject["supportedShells"] = shells;
+                await UpdateReportedPropertiesAsync(deviceClient, "supportedShells", shells);
+        }
+
+        public static async Task ReportDeviceProperty(DeviceClient deviceClient, string key, string value) 
+        {
+                var currentTwin = await deviceClient.GetTwinAsync();
+
+                var reportedJObject = JObject.Parse(currentTwin.Properties.Reported.ToJson());
+
+                reportedJObject[key] = value;
+                await UpdateReportedPropertiesAsync(deviceClient, key, value);
+        }
+        // Main method to report the twin state and process the actions
+        public static async Task<List<TwinAction>> ReportTwinState(CancellationToken cancellationToken, DeviceClient deviceClient, string deviceState, Func<CancellationToken, JObject, string, Task<bool>> verifySignedTwin, Func<CancellationToken, TwinAction, Task> processor = null)
+        {   
+            var actions = new List<TwinAction>();
+            try {
+                await UpdateDeviceState(deviceClient, deviceState);
+
+                var currentTwin = await deviceClient.GetTwinAsync();
+
+                var desiredJObject = JObject.Parse(currentTwin.Properties.Desired.ToJson());
+                var reportedJObject = JObject.Parse(currentTwin.Properties.Reported.ToJson());
 
                 JObject changeSpecJObject = (JObject)desiredJObject[_ChangeSpecKey]!;
 
@@ -201,5 +227,32 @@ namespace FirmwareUpdateAgent
             }
             return actions;
         }
+
+        private static List<string> GetSupportedShells()
+        {
+            var supportedShells = new List<string>();
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                supportedShells.Add("cmd");
+                supportedShells.Add("powershell");
+                // Check if WSL is installed
+                if (File.Exists(@"C:\Windows\System32\wsl.exe"))
+                {
+                    supportedShells.Add("bash");
+                }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                supportedShells.Add("bash");
+                
+                // Add PowerShell if it's installed on Linux or macOS
+                if (File.Exists("/usr/bin/pwsh") || File.Exists("/usr/local/bin/pwsh"))
+                {
+                    supportedShells.Add("powershell");
+                }
+            }
+            return supportedShells;
+        }
+
     };
 }
