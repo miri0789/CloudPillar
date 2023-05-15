@@ -1,0 +1,63 @@
+{{- range .Values.controllers }}
+---
+apiVersion: apps/v1
+kind: {{ .kind | default "Deployment" }}
+metadata:
+  name: {{ .title }}-{{ .kind | default "deployment" | lower }}
+  labels:
+    app: {{ .title }}
+spec:
+  replicas: {{ $.Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .title }}
+  template:
+    metadata:
+      labels:
+        app: {{ .title }}
+    spec:
+      containers:
+      - name: {{ .title }}
+        image: "{{ $.Values.image.acr }}/{{ .title }}:{{ .tag | default $.Values.image.tag }}"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
+        imagePullPolicy: IfNotPresent
+        {{- if .port }}
+        ports:
+        - containerPort: {{ .port }}
+        {{- end }}
+        env:
+        {{- if $.Values.env }}
+        {{- toYaml $.Values.env | nindent 8 }}
+        {{- end }}
+        {{- if .env }}
+        {{- toYaml .env | nindent 8 }}
+        {{- end }}
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "0.5"
+          limits:
+            memory: "512Mi"
+            cpu: "1"
+      imagePullSecrets:
+      - name: acr-secret
+{{- if .port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .title }}-service
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .title }}
+  ports:
+  - protocol: TCP
+    port: {{ .port }}
+    targetPort: {{ .port }}
+{{- end }}
+{{- end }}
