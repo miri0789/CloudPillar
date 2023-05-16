@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: {{ .kind | default "Deployment" }}
 metadata:
-  name: {{ .title }}-{{ .kind | default "deployment" | lower }}
+  name: {{ .title }}_{{ eq (.kind | default "Deployment") "Deployment" | ternary "D" (eq .kind "ReplicationController" | ternary "RC" (eq .kind "ReplicaSet" | ternary "RS" (eq .kind "DaemonSet" | ternary "DS" (eq .kind "StatefulSet" | ternary "SS" (eq .kind "Job" | ternary "J" (eq .kind "CronJob" | ternary "CJ" "other")))))) }}
   labels:
     app: {{ .title }}
 spec:
