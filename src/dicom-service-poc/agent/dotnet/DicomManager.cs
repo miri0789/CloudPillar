@@ -12,6 +12,11 @@ namespace DicomAgentPoC
     {
         private static Microsoft.Health.Dicom.Client.IDicomWebClient client;
         private static readonly string webServerUrl = "https://malamdicomworkspace-dicom-service-test.dicom.azurehealthcareapis.com";
+        private static readonly string tenantId = "63d53a16-04d5-4981-b530-4f38d3b16281";
+        private static readonly string clientId = "947edf6d-b41d-4f18-9912-b007670e71b3";
+        private static readonly string clientSecret = "kaJ8Q~y2~z3meNKe87FV9BFb9bFCdncWOt1Fbb2h";
+        private static readonly string resource = "https://dicom.healthcareapis.azure.com";
+        private static readonly string login = "https://login.microsoftonline.com";
 
         /// <summary>
         /// Connect to Dicom service using DicomWebClient.
@@ -33,14 +38,8 @@ namespace DicomAgentPoC
         /// <returns>The Access Token.</returns>
         private static async Task<string> GetAccessToken()
         {
-            // OAuth necessary Information
-            string tenantId = "63d53a16-04d5-4981-b530-4f38d3b16281"; // tenant-id
-            string clientId = "947edf6d-b41d-4f18-9912-b007670e71b3"; // client-id 
-            string clientSecret = "kaJ8Q~y2~z3meNKe87FV9BFb9bFCdncWOt1Fbb2h";
-            string resource = "https://dicom.healthcareapis.azure.com";
             // Construct the authority and token endpoints
-            string authority = $"https://login.microsoftonline.com/{tenantId}";
-
+            string authority = $"{login}/{tenantId}";
             // Create a confidential client application object with your app id and secret
             IConfidentialClientApplication app;
             app = ConfidentialClientApplicationBuilder.Create(clientId)
