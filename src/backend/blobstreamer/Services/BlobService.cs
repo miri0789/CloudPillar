@@ -2,12 +2,18 @@ using System.Threading.Tasks;
 using blobstreamer.Contracts;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
+using Microsoft.Azure.Devices;
+using Newtonsoft.Json;
+using System.Text;
+using Polly;
+using blobstreamer.Models;
 
 namespace blobstreamer.Services
 {
     public class BlobService : IBlobService
     {
         private readonly CloudBlobContainer _container;
+        private readonly ServiceClient _serviceClient;
 
         public BlobService()
         {
@@ -16,13 +22,62 @@ namespace blobstreamer.Services
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(StorageConnectionString);
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
             _container = blobClient.GetContainerReference(blobContainerName);
+
+            string IotHubConnectionString = Environment.GetEnvironmentVariable(Constants.iothubConnectionString)!;
+            _serviceClient = ServiceClient.CreateFromConnectionString(IotHubConnectionString);
         }
 
-        public async Task<BlobProperties> GetBlobMeatadataAsync(string filename)
+        private async Task<CloudBlockBlob> GetBlobWithAttributes(string fileName)
         {
-            CloudBlockBlob blockBlob = _container.GetBlockBlobReference(filename);
+            CloudBlockBlob blockBlob = _container.GetBlockBlobReference(fileName);
             await blockBlob.FetchAttributesAsync();
+            return blockBlob;
+        }
+
+        public async Task<BlobProperties> GetBlobMeatadataAsync(string fileName)
+        {
+            var blockBlob = await GetBlobWithAttributes(fileName);
             return blockBlob.Properties;
+        }
+
+
+
+        public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition)
+        {
+            var blockBlob = await GetBlobWithAttributes(fileName);
+
+            for (long offset = startPosition, chunkIndex = 0; offset < rangeSize + startPosition; offset += chunkSize, chunkIndex++)
+            {
+                long bytesRemaining = rangeSize + startPosition - offset;
+                int length = bytesRemaining > chunkSize ? chunkSize : (int)bytesRemaining;
+                byte[] data = new byte[length];
+                await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
+
+                var blobMessage = new BlobMessage()
+                {
+                    RangeIndex = rangeIndex,
+                    ChunkIndex = (int)chunkIndex,
+                    Offset = offset,
+                    Filename = fileName
+                };
+
+                var c2dMessage = blobMessage.PrefareBlobMessage(data);
+                
+                try
+                {
+                    var retryPolicy = Policy.Handle<Exception>()
+                        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                        //TODO: log
+                            (ex, time) => Console.WriteLine($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
+                    await retryPolicy.ExecuteAsync(async () => await _serviceClient.SendAsync(deviceId, c2dMessage));
+                    // TODO :log
+                }
+                catch (Exception ex)
+                {
+                    // TODO :log
+                }
+
+            }
         }
     }
 }

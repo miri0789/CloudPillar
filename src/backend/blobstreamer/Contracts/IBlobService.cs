@@ -4,6 +4,8 @@ namespace blobstreamer.Contracts
 {
     public interface IBlobService
     {
-        Task<BlobProperties> GetBlobMeatadataAsync(string filename);
+        Task<BlobProperties> GetBlobMeatadataAsync(string fileName);
+
+        Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition);
     }
 }
