@@ -41,7 +41,6 @@ namespace DicomBackendPoC
             IConfidentialClientApplication app;
             app = ConfidentialClientApplicationBuilder.Create(clientId)
                 .WithClientSecret(clientSecret)
-               // .WithTenantId(tenantId)
                 .WithAuthority(new Uri(authority))
                 .Build();
 
@@ -60,26 +59,36 @@ namespace DicomBackendPoC
             var dicomFile = await DicomFile.OpenAsync(fileName);
             try
             {
-                // Call StoreAsync to store the instance
                 var response = await client.StoreAsync(dicomFile);
 
                 return response.StatusCode;
             }
             catch (Exception ex)
             {
-                // Handle any exceptions that occur during the store process
-                throw new Exception($"Failed to store file: {fileName}", ex);
+                throw new Exception($"{ex.Message}, file name: {fileName}", ex);
             }    
         }
 
-        public async Task<DicomFile> RetrieveInstance(string studyInstanceUID, string seriesInstanceUID, string sopInstanceUID)
+        public async Task<HttpStatusCode> StoreDicom(DicomFile dicomFile)
         {
             try
             {
-                // Call RetrieveInstanceAsync to retrieve the instance
-                var response = await client.RetrieveInstanceAsync(studyInstanceUID, seriesInstanceUID, sopInstanceUID);
+                var response = await client.StoreAsync(dicomFile);
 
-                // Check if the response is successful
+                return response.StatusCode;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }    
+        }
+
+        public async Task<DicomFile> RetrieveInstanceAsync(string studyInstanceUid, string seriesInstanceUid, string sopInstanceUid)
+        {
+            try
+            {
+                var response = await client.RetrieveInstanceAsync(studyInstanceUid, seriesInstanceUid, sopInstanceUid);
+
                 if (response.IsSuccessStatusCode)
                 {
                     // Get the response content as a byte array
@@ -88,22 +97,159 @@ namespace DicomBackendPoC
                     // Create a DicomFile object from the response content
                     var dicomFile = DicomFile.Open(new MemoryStream(content));
 
-                    // Return the DicomFile object
                     return dicomFile;
                 }
                 else
                 {
-                    // Handle the case where the instance was not found
-                    throw new Exception($"Instance not found: {studyInstanceUID}, {seriesInstanceUID}, {sopInstanceUID}");
+                    throw new Exception($"Instance not found: {studyInstanceUid}, {seriesInstanceUid}, {sopInstanceUid}");
                 }
             }
             catch (Exception ex)
             {
-                // Handle any exceptions that occur during the retrieval process
-                throw new Exception($"Failed to retrieve instance: {studyInstanceUID}, {seriesInstanceUID}, {sopInstanceUID}", ex);
+                throw new Exception($"Failed to retrieve instance: {studyInstanceUid}, {seriesInstanceUid}, {sopInstanceUid}", ex);
             }
 
         }
 
+        public async Task<DicomDataset> RetrieveInstanceMetadataAsync(string studyInstanceUid, string seriesInstanceUid, string sopInstanceUid)
+        {
+
+            var response = await client.RetrieveInstanceMetadataAsync(studyInstanceUid, seriesInstanceUid, sopInstanceUid);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to retrieve matadata for instance {sopInstanceUid}");
+            } 
+                
+            var enumerator = response.GetAsyncEnumerator();
+            try
+            {
+                // Move to the first DicomDataset in the response
+                if(await enumerator.MoveNextAsync())
+                {
+                    return enumerator.Current;
+                }
+                throw new Exception($"Failed to retrieve matadata for instance {sopInstanceUid}");
+            }
+            finally
+            {
+                // Dispose the enumerator in any case
+                await enumerator.DisposeAsync();
+            }       
+            
+        }
+
+        // This function uses asynchronous enumerator to retrieve the instances of the series one at a time when they are downloaded.
+        // It is efficient for dealling with large series because it allows processing each instance
+        // as soon as it is available without waiting to the entire series to download.
+        public async Task<DicomWebAsyncEnumerableResponse<DicomFile>> RetrieveSeriesAsync(string studyInstanceUid, string seriesInstanceUid, string dicomTransferSyntax = "*")
+        {
+            var response = await client.RetrieveSeriesAsync(studyInstanceUid, seriesInstanceUid, dicomTransferSyntax);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to retrieve series {seriesInstanceUid}");
+            } 
+
+            // Return the enumerator of the retrieved series Dicom files
+            return response;   
+        }
+
+        public async Task<List<DicomFile>> RetrieveSeriesDicomList(string studyInstanceUid, string seriesInstanceUid, string dicomTransferSyntax = "*")
+        {
+            var response = await client.RetrieveSeriesAsync(studyInstanceUid, seriesInstanceUid, dicomTransferSyntax);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to retrieve series {seriesInstanceUid}");
+            } 
+
+            return await GetDicomFilesListFromEnumerator(response);
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> RetrieveSeriesMetadataAsync(string studyInstanceUid, string seriesInstanceUid)
+        {
+            var response = await client.RetrieveSeriesMetadataAsync(studyInstanceUid, seriesInstanceUid);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to retrieve series metadata for {seriesInstanceUid}");
+            } 
+
+            // Return the enumerator of the retrieved series metadata
+            return response;   
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomFile>> RetrieveStudyAsync(string studyInstanceUid, string dicomTransferSyntax = "*")
+        {
+            var response = await client.RetrieveStudyAsync(studyInstanceUid, dicomTransferSyntax);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to retrieve study {studyInstanceUid}");
+            } 
+
+            // Return the enumerator of the retrieved study
+            return response; 
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> RetrieveStudyMetadataAsync(string studyInstanceUid)
+        {
+            var response = await client.RetrieveStudyMetadataAsync(studyInstanceUid);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to retrieve study metadata {studyInstanceUid}");
+            } 
+
+            // Return the enumerator of the retrieved study metadata
+            return response;
+        }
+
+        public async Task<List<DicomFile>> GetDicomFilesListFromEnumerator(DicomWebAsyncEnumerableResponse<DicomFile> response)
+        {
+            var files = new List<DicomFile>();
+            var enumerator = response.GetAsyncEnumerator();
+            try
+            {
+                // Move to the next Dicom file in the response
+                while (await enumerator.MoveNextAsync())
+                {
+                    var instance = enumerator.Current;
+                    if (instance != null && instance.FileMetaInfo != null)
+                    {
+                        files.Add(instance);
+                    }
+                }
+            }
+            finally
+            {
+                await enumerator.DisposeAsync();
+            }
+            return files;
+        }
+
+        public async Task<List<DicomDataset>> GetDicomDatasetsListFromEnumerator(DicomWebAsyncEnumerableResponse<DicomDataset> response)
+        {
+            var datasets = new List<DicomDataset>();
+            var enumerator = response.GetAsyncEnumerator();
+            try
+            {
+                // Move to the next Dicom file in the response
+                while (await enumerator.MoveNextAsync())
+                {
+                    var instance = enumerator.Current;
+                    if (instance != null)
+                    {
+                        datasets.Add(instance);
+                    }
+                }
+            }
+            finally
+            {
+                await enumerator.DisposeAsync();
+            }
+            return datasets;
+        }
     }
 }
