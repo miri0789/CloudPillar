@@ -90,6 +90,25 @@
                 "BLOB_CONTAINER_NAME": "iot-firmware",
                 // "D2C_PARTITION_ID": "0"
             }
+        },
+        {
+            "name": "Blob Streamer Service",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildBlobStreamer",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/src/backend/blobstreamer/dotnet/bin/Debug/net7.0/blobstreamer.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/backend/blobstreamer",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "env": {
+                "IOTHUB_CONNECTION_STRING":             "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
+                "STORAGE_CONNECTION_STRING":            "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "BLOB_CONTAINER_NAME":                  "iot-firmware",
+                "MESSAGE_EXPIRED_MINUTES":              "60"
+            },
+            "stopAtEntry": false
         }
     ]
 }

@@ -76,6 +76,18 @@
                 "${workspaceFolder}/src/backend/dotnet/d2c-processor/d2c-processor.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "buildBlobStreamer",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/src/backend/blobstreamer/blobstreamer.csproj"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
