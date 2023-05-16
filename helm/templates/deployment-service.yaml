@@ -7,7 +7,7 @@ metadata:
   labels:
     app: {{ .title }}
 spec:
-  replicas: {{ $.Values.replicaCount }}
+  replicas: {{ .replicaCount | default $.Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .title }}
