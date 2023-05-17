@@ -1,12 +1,10 @@
-using System.Threading.Tasks;
 using blobstreamer.Contracts;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
-using Newtonsoft.Json;
-using System.Text;
 using Polly;
 using blobstreamer.Models;
+using System.Reflection;
 
 namespace blobstreamer.Services
 {
@@ -27,24 +25,21 @@ namespace blobstreamer.Services
             _serviceClient = ServiceClient.CreateFromConnectionString(IotHubConnectionString);
         }
 
-        private async Task<CloudBlockBlob> GetBlobWithAttributes(string fileName)
-        {
-            CloudBlockBlob blockBlob = _container.GetBlockBlobReference(fileName);
-            await blockBlob.FetchAttributesAsync();
-            return blockBlob;
-        }
 
         public async Task<BlobProperties> GetBlobMeatadataAsync(string fileName)
         {
-            var blockBlob = await GetBlobWithAttributes(fileName);
+            CloudBlockBlob blockBlob = _container.GetBlockBlobReference(fileName);
+            await blockBlob.FetchAttributesAsync();
             return blockBlob.Properties;
         }
 
 
 
+
+
         public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition)
         {
-            var blockBlob = await GetBlobWithAttributes(fileName);
+            CloudBlockBlob blockBlob = _container.GetBlockBlobReference(fileName);
 
             for (long offset = startPosition, chunkIndex = 0; offset < rangeSize + startPosition; offset += chunkSize, chunkIndex++)
             {
@@ -61,13 +56,13 @@ namespace blobstreamer.Services
                     Filename = fileName
                 };
 
-                var c2dMessage = blobMessage.PrefareBlobMessage(data);
-                
+                var c2dMessage = blobMessage.PrepareBlobMessage(data, blobMessage);
+
                 try
                 {
                     var retryPolicy = Policy.Handle<Exception>()
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                        //TODO: log
+                            //TODO: log
                             (ex, time) => Console.WriteLine($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
                     await retryPolicy.ExecuteAsync(async () => await _serviceClient.SendAsync(deviceId, c2dMessage));
                     // TODO :log
@@ -79,5 +74,8 @@ namespace blobstreamer.Services
 
             }
         }
+
+
+       
     }
 }

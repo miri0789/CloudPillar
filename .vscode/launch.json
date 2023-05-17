@@ -92,12 +92,15 @@
             }
         },
         {
+            // Use IntelliSense to find out which attributes exist for C# debugging
+            // Use hover for the description of the existing attributes
+            // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
             "name": "Blob Streamer Service",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "buildBlobStreamer",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/backend/blobstreamer/dotnet/bin/Debug/net7.0/blobstreamer.dll",
+            "program": "${workspaceFolder}/src/backend/blobstreamer/bin/Debug/net7.0/blobstreamer.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/backend/blobstreamer",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
