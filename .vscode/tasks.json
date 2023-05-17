@@ -76,6 +76,22 @@
                 "${workspaceFolder}/src/backend/dotnet/d2c-processor/d2c-processor.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "buildDicomAgent",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/dicom-service-poc/agent/dotnet/dicom-service-agent.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
