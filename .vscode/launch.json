@@ -36,11 +36,11 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "IOTHUB_CONNECTION_STRING":             "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
+                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
                 "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub",
-                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH":     "szlabs-iot-hub",
-                "STORAGE_CONNECTION_STRING":            "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
-                "BLOB_CONTAINER_NAME":                  "iot-firmware",
+                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH": "szlabs-iot-hub",
+                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "BLOB_CONTAINER_NAME": "iot-firmware",
                 // "PARTITION_ID":                         "0"
             },
             "stopAtEntry": false
@@ -60,12 +60,12 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "IOTHUB_CONNECTION_STRING":             "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
+                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
                 "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub",
-                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH":     "szlabs-iot-hub",
-                "STORAGE_CONNECTION_STRING":            "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
-                "BLOB_CONTAINER_NAME":                  "iot-firmware",
-                "DRAIN_D2C_QUEUES":                     "true",
+                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH": "szlabs-iot-hub",
+                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "BLOB_CONTAINER_NAME": "iot-firmware",
+                "DRAIN_D2C_QUEUES": "true",
                 // "PARTITION_ID":                         "0"
             },
             "stopAtEntry": false
@@ -106,10 +106,29 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "IOTHUB_CONNECTION_STRING":             "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
-                "STORAGE_CONNECTION_STRING":            "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
-                "BLOB_CONTAINER_NAME":                  "iot-firmware",
-                "MESSAGE_EXPIRED_MINUTES":              "60"
+                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
+                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "BLOB_CONTAINER_NAME": "iot-firmware",
+                "MESSAGE_EXPIRED_MINUTES": "60"
+            }
+        },
+        {
+            "name": "DICOM Agent Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildDicomAgent",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/src/dicom-service-poc/agent/dotnet/bin/Debug/net7.0/dicom-service-agent.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/dicom-service-poc/agent/dotnet",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "env": {
+                "TENANT_ID": "63d53a16-04d5-4981-b530-4f38d3b16281", // tenant-id
+                "CLIENT_ID": "947edf6d-b41d-4f18-9912-b007670e71b3", // client-id 
+                "CLIENT_SECRET": "kaJ8Q~y2~z3meNKe87FV9BFb9bFCdncWOt1Fbb2h", // client-secret
+                "RESOURCE": "https://dicom.healthcareapis.azure.com",
+                "AUTHORITY": "https://login.microsoftonline.com"
             },
             "stopAtEntry": false
         }

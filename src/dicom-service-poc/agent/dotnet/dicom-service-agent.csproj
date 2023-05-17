@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>dicom_service_agent</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.identity" Version="1.9.0" />
+    <PackageReference Include="fo-dicom" Version="5.0.3" />
+    <PackageReference Include="Microsoft.Health.Dicom.Client" Version="10.0.282" />
+  </ItemGroup>
+
+</Project>
