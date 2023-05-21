@@ -1,0 +1,19 @@
+# Default values for cartonet.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+controllers:
+  - title: "bemgr"
+    path: /cloudpillar/mgr
+    port: 8080
+
+replicaCount: 1
+
+# env:
+#   - name: ASPNETCORE_ENVIRONMENT
+#     value: DevEU
+
+image:
+  acr: "iotimageacr.azurecr.io"
+  tag: latest
+
