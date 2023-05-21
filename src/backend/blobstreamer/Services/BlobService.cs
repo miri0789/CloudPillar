@@ -33,10 +33,6 @@ namespace blobstreamer.Services
             return blockBlob.Properties;
         }
 
-
-
-
-
         public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition)
         {
             CloudBlockBlob blockBlob = _container.GetBlockBlobReference(fileName);
@@ -56,26 +52,51 @@ namespace blobstreamer.Services
                     Filename = fileName
                 };
 
-                var c2dMessage = blobMessage.PrepareBlobMessage(data, blobMessage);
+                var c2dMessage = blobMessage.PrepareBlobMessage(data);
+                await SendMessage(c2dMessage, deviceId);
+            }
 
-                try
-                {
-                    var retryPolicy = Policy.Handle<Exception>()
-                        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                            //TODO: log
-                            (ex, time) => Console.WriteLine($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
-                    await retryPolicy.ExecuteAsync(async () => await _serviceClient.SendAsync(deviceId, c2dMessage));
-                    // TODO :log
-                }
-                catch (Exception ex)
-                {
-                    // TODO :log
-                }
+            var endBlobRangeMessage = new EndBlobRangeMessage()
+            {
+                RangeIndex = rangeIndex,
+                Filename = fileName
+            };
 
+            var c2dEndRangeMessage = endBlobRangeMessage.PrepareBlobMessage(null);
+            await SendMessage(c2dEndRangeMessage, deviceId);
+        }
+
+        public async Task SendStartBlobMessage(string deviceId, string fileName, long blobLength)
+        {
+            var startBlobRangeMessage = new StartBlobMessage()
+            {
+                BlobLength = blobLength,
+                Filename = fileName
+            };
+
+            var c2dStartBlobMessage = startBlobRangeMessage.PrepareBlobMessage(null);
+            await SendMessage(c2dStartBlobMessage, deviceId);
+        }
+
+        private async Task SendMessage(Message c2dMessage, string deviceId)
+        {
+            try
+            {
+                int.TryParse(Environment.GetEnvironmentVariable(Constants.retryPolicyBaseDelay), out int retryPolicyBaseDelay);
+                int.TryParse(Environment.GetEnvironmentVariable(Constants.retryPolicyExponent), out int retryPolicyExponent);
+
+                var retryPolicy = Policy.Handle<Exception>()
+                    .WaitAndRetryAsync(retryPolicyExponent, retryAttempt => TimeSpan.FromSeconds(Math.Pow(retryPolicyBaseDelay, retryAttempt)),
+                        //TODO: log
+                        (ex, time) => Console.WriteLine($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
+                await retryPolicy.ExecuteAsync(async () => await _serviceClient.SendAsync(deviceId, c2dMessage));
+                // TODO :log
+            }
+            catch (Exception ex)
+            {
+                // TODO :log
             }
         }
 
-
-       
     }
 }

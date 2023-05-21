@@ -3,11 +3,19 @@ using Microsoft.Azure.Devices;
 
 namespace blobstreamer.Models;
 
+public enum MessageType
+{
+    Start,
+    Chunk,
+    End
+}
+
 public abstract class BaseMessage
 {
+    public abstract MessageType messageType { get; set; }
     public abstract string GetMessageId();
 
-    public Message PrepareBlobMessage(byte[] data, BaseMessage messageType)
+    public Message PrepareBlobMessage(byte[] data)
     {
         int.TryParse(Environment.GetEnvironmentVariable(Constants.messageExpiredMinutes), out int expiredMinutes);
         var message = new Message(data)

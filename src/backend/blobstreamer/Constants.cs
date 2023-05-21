@@ -10,6 +10,9 @@ namespace blobstreamer
 
         #region appProperties
         public static readonly string messageExpiredMinutes = "MESSAGE_EXPIRED_MINUTES";
+        public static readonly string retryPolicyBaseDelay = "RETRY_POLICY_BASE_DELAY";
+        public static readonly string retryPolicyExponent = "RETRY_POLICY_EXPONENT";
+
         #endregion
     }
 }
