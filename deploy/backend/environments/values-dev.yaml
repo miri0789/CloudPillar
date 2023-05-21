@@ -5,7 +5,7 @@
 controllers:
   - title: "analyzer"
   - title: "beapi"
-    path: /iotmanager/api
+    path: /cloudpillar/api
     port: 8089
   - title: "blobstreamer"
     port: 8089
