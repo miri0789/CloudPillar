@@ -12,5 +12,5 @@ helm template cartoiot . -f environments/values-<env>.yaml
 
 If need to apply to the currently connected k8s cluster:
 ````
-helm upgrade --install cartoiot ./path-to-your-chart -f environments/values-<env>.yaml
+helm upgrade --install cloudpillarback ./path-to-your-chart -f environments/values-<env>.yaml
 ````
