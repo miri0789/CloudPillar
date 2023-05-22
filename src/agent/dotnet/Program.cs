@@ -134,7 +134,7 @@ namespace FirmwareUpdateAgent
             string? publicKeyPem = null;
             Console.WriteLine("Not in kube run-time - loading cryptography from the local storage.");
             // Load the public key from a local file when running locally
-            publicKeyPem = await File.ReadAllTextAsync("dbg/sign-pubkey.pem");
+            publicKeyPem = await File.ReadAllTextAsync("pki/sign-pubkey.pem");
 
             return LoadPublicKeyFromPem(publicKeyPem);
         }
