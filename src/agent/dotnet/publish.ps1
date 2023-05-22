@@ -17,16 +17,18 @@ $scriptPath = $MyInvocation.MyCommand.Path
 $scriptDir = Split-Path -Parent $scriptPath
 
 # Define the source directory and zip file path
-$sourceDir = Join-Path -Path $scriptDir -ChildPath "jnjiotagent"
+$sourceDir = Join-Path -Path $scriptDir -ChildPath "publish"
 $zipName = "cloudpillar.zip"
 $zipPath = Join-Path -Path $scriptDir -ChildPath "$zipName"
 $targetZipPath = Join-Path -Path $sourceDir -ChildPath "$zipName"
 
 # Remove the existing zip file if it exists
+if (Test-Path $zipPath) {
+    Remove-Item $zipPath
+}
 if (Test-Path $targetZipPath) {
     Remove-Item $targetZipPath
 }
-
 Write-Host "* Publishing in $sourceDir..."
 
 # Loop through each platform and architecture
@@ -34,7 +36,12 @@ foreach ($platform in $platforms) {
     Write-Host "*** Publishing for $platform..."
 
     # Publish the self-contained deployment and specify the output directory
-    dotnet publish -r $platform --self-contained true -p:PublishTrimmed=true -c Release -o "$sourceDir/$platform"
+    $publishCommand = "dotnet publish -r $platform --self-contained true -p:PublishTrimmed=true -c Release -o `"$sourceDir/$platform`""
+    Invoke-Expression $publishCommand -ErrorAction Stop
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error: Failed to publish for $platform"
+        exit 1
+    }
 }
 
 Write-Host "Publishing completed. Zipping to $zipPath"
