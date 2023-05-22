@@ -1,0 +1,24 @@
+# specific branch build
+
+trigger:
+  branches:
+    include:
+    - main
+    - releases/*
+    exclude:
+    - releases/old*
+
+stages:
+- stage: Docker_Build
+  displayName: Building Docker Images
+  jobs:
+  - job: "Job1"
+  pool:
+   name: Default
+   agent.name: iot-dicom-agent-devops
+   steps:
+   
+    - script: |
+        echo "computer name:"
+        hostname
+      displayName: Computer info
