@@ -5,7 +5,7 @@ public class BlobMessage : BaseMessage
 {
     public override MessageType messageType
     {
-        get { return messageType; }
+        get { return MessageType.Chunk; }
         set { messageType = MessageType.Chunk; }
     }
     public int RangeIndex { get; set; }

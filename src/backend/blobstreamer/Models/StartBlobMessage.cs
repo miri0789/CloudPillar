@@ -4,7 +4,7 @@ public class StartBlobMessage: BaseMessage
 {
     public override MessageType messageType
     {
-        get { return messageType; }
+        get { return MessageType.Start; }
         set { messageType = MessageType.Start; }
     }
     public long BlobLength { get; set; }

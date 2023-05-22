@@ -29,7 +29,7 @@ public abstract class BaseMessage
         {
             message.Properties.Add(property.Name.ToLower(), property.GetValue(this).ToString());
         }
-
+        Console.WriteLine($"Blobstreamer PrepareBlobMessage. message title: {this.messageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
     }
 

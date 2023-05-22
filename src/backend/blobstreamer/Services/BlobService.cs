@@ -62,7 +62,7 @@ namespace blobstreamer.Services
                 Filename = fileName
             };
 
-            var c2dEndRangeMessage = endBlobRangeMessage.PrepareBlobMessage(null);
+            var c2dEndRangeMessage = endBlobRangeMessage.PrepareBlobMessage(new byte[0]);
             await SendMessage(c2dEndRangeMessage, deviceId);
         }
 
@@ -74,7 +74,7 @@ namespace blobstreamer.Services
                 Filename = fileName
             };
 
-            var c2dStartBlobMessage = startBlobRangeMessage.PrepareBlobMessage(null);
+            var c2dStartBlobMessage = startBlobRangeMessage.PrepareBlobMessage(new byte[0]);
             await SendMessage(c2dStartBlobMessage, deviceId);
         }
 
@@ -87,14 +87,13 @@ namespace blobstreamer.Services
 
                 var retryPolicy = Policy.Handle<Exception>()
                     .WaitAndRetryAsync(retryPolicyExponent, retryAttempt => TimeSpan.FromSeconds(Math.Pow(retryPolicyBaseDelay, retryAttempt)),
-                        //TODO: log
                         (ex, time) => Console.WriteLine($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
                 await retryPolicy.ExecuteAsync(async () => await _serviceClient.SendAsync(deviceId, c2dMessage));
-                // TODO :log
+                Console.WriteLine($"Blobstreamer SendMessage success. message title: {c2dMessage.MessageId}");
             }
             catch (Exception ex)
             {
-                // TODO :log
+                Console.WriteLine($"Blobstreamer SendMessage failed. Message: {ex.Message}");
             }
         }
 

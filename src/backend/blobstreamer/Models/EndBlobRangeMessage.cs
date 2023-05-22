@@ -4,7 +4,7 @@ public class EndBlobRangeMessage: BaseMessage
 {
     public override MessageType messageType
     {
-        get { return messageType; }
+        get { return MessageType.End; }
         set { messageType = MessageType.End; }
     }
     public int RangeIndex { get; set; }
