@@ -9,3 +9,9 @@ variable "location" {
   description = "The resource phisical location"
   default     = "west europe"
 }
+
+variable "ip-pfx" {
+  type        = string
+  description = "Prefix of k8s vnet ip address space"
+  default     = "22" # For dev
+}
