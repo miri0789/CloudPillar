@@ -588,10 +588,11 @@ namespace FirmwareUpdateAgent
                                             string? filename = action?.Desired["filename"]?.Value<string>();
                                             int interval = action?.Desired["interval"]?.Value<int>() ?? -1;
                                             bool enabled = action?.Desired["enabled"]?.Value<bool>() ?? true;
+                                            string method = action?.Desired["method"]?.Value<string>() ?? "stream";
 
                                             if (filename != null && enabled)
                                             {
-                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 10), true);
+                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 10), method, true);
                                             }
                                             break;
                                         }
@@ -600,10 +601,11 @@ namespace FirmwareUpdateAgent
                                             string? filename = action?.Desired["filename"]?.Value<string>();
                                             int interval = action?.Desired["interval"]?.Value<int>() ?? -1;
                                             bool enabled = action?.Desired["enabled"]?.Value<bool>() ?? true;
+                                            string method = action?.Desired["method"]?.Value<string>() ?? "stream";
 
                                             if (filename != null && enabled)
                                             {
-                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 600));
+                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 600), method, false);
                                             }
                                             break;
                                         }
@@ -725,13 +727,13 @@ namespace FirmwareUpdateAgent
             }
             return actions;
         }
-        private static async Task UploadFilesPeriodicallyAsync(TwinAction action, string filename, TimeSpan interval, bool breakAfterSuccess = false)
+        private static async Task UploadFilesPeriodicallyAsync(TwinAction action, string filename, TimeSpan interval, string method, bool breakAfterSuccess = false)
         {
             while (true)
             {
                 try
                 {
-                    await UploadFilesToBlobStorageAsync(action, filename);
+                    await UploadFilesToBlobStorageAsync(action, filename, method);
                     action.ReportSuccess("Done", "Will keep uploading " + interval.ToString());
                     if(breakAfterSuccess) break;
                 }
@@ -745,7 +747,7 @@ namespace FirmwareUpdateAgent
             }
         }
 
-        private static async Task UploadFilesToBlobStorageAsync(TwinAction action, string filePathPattern)
+        private static async Task UploadFilesToBlobStorageAsync(TwinAction action, string filePathPattern, string method)
         {
             string? directoryPath = Path.GetDirectoryName(filePathPattern);
             string searchPattern = Path.GetFileName(filePathPattern);
@@ -758,22 +760,22 @@ namespace FirmwareUpdateAgent
             // Upload each file
             foreach (string fullFilePath in files.Concat(directories))
             {
-                string filename = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
+                string blobname = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
 
                 // Check if the path is a directory
                 if (Directory.Exists(fullFilePath))
                 {
-                    filename += ".zip";
+                    blobname += ".zip";
                 }
 
                 var sasUriResponse = await _deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
                 {
-                    BlobName = filename
+                    BlobName = blobname
                 });
 
                 var storageUri = sasUriResponse.GetBlobUri();
-                var blob = new CloudBlockBlob(storageUri);
-
+                IFileUploader uploader = CreateFileUploader(storageUri, method);
+                Stream? readStream = null;
                 if (Directory.Exists(fullFilePath))
                 {
                     // Create a zip in memory
@@ -790,19 +792,61 @@ namespace FirmwareUpdateAgent
                         }
 
                         memoryStream.Position = 0;
-                        await blob.UploadFromStreamAsync(memoryStream);
+                        readStream = memoryStream; // Will read from memory where the zip file was formed
                     }
                 }
                 else
                 {
-                    await blob.UploadFromFileAsync(fullFilePath);
+                    // await blob.UploadFromFileAsync(fullFilePath);
+                    var fileStream = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4 * 1024 * 1024, true);
+                    fileStream.Position = 0;
+                    readStream = fileStream;
                 }
 
-                await _deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
-                {
-                    CorrelationId = sasUriResponse.CorrelationId,
-                    IsSuccess = true
+                // Upload via either memory or file stream set up above
+                await uploader.UploadFromStreamAsync(readStream, sasUriResponse.CorrelationId, async (string correlationId, Exception? exception) => {
+                    if(exception != null)
+                        Console.WriteLine("Error during upload: " + exception.Message);
+                    
+                    await _deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
+                    {
+                        CorrelationId = correlationId,
+                        IsSuccess = exception == null
+                    });
                 });
+            }
+        }
+
+        public interface IFileUploader
+        {
+            Task UploadFromStreamAsync(Stream readStream, string correlationId, Func<string, Exception?, Task> onUploadComplete);
+        }
+
+        private static IFileUploader CreateFileUploader(Uri storageUri, string uploadMethod)
+        {
+            return new BlobStorageFileUploader(storageUri);
+        }
+
+        public class BlobStorageFileUploader : IFileUploader
+        {
+            private CloudBlockBlob blob;
+
+            public BlobStorageFileUploader(Uri storageUri)
+            {
+                blob = new CloudBlockBlob(storageUri);
+            }
+
+            public async Task UploadFromStreamAsync(Stream readStream, string correlationId, Func<string, Exception?, Task> onUploadComplete)
+            {
+                try 
+                {
+                    await blob.UploadFromStreamAsync(readStream);
+                    await onUploadComplete(correlationId, null);
+                } 
+                catch(Exception x)
+                {
+                    await onUploadComplete(correlationId, x);
+                }
             }
         }
     }
