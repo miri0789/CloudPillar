@@ -25,7 +25,7 @@ jobs:
         echo "Folder - Pipeline Folder is Missing"
         exit 1
       
-      elif [ ! -f iac/pipeline/backend-infra.yml ]; then
+      elif [ ! -f iac/pipelines/backend-infra.yml ]; then
         echo "File - backend-infra.yml File does not exists."
         exit 1
 
