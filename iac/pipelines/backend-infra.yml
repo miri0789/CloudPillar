@@ -3,7 +3,9 @@ name: iac_backend_infra
 trigger:
   - none
 
-# variables:
+variables:
+- group: arm-vg
+
 
 
 stages:
@@ -102,4 +104,9 @@ stages:
         targetType: inline
         script: |
           ls -la
+          echo "ARM TENANT ID: $(ARM_TENANT_ID)"
+          echo "ARM SUBSCRIPTION ID: $(ARM_SUBSCRIPTION_ID)"
+          echo "Location: $(LOCATION)"
+          echo "REGION: $(REGION)"
+          echo "DEVOPS URL: $(DEVOPS_URL)"
         workingDirectory: 'iac/terraform/backend'
