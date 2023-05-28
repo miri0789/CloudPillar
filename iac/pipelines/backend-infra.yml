@@ -21,7 +21,7 @@ jobs:
         echo "Folder - IaC Folder is Missing"
         exit 1
 
-      elif [ ! -d iac/pipeline/ ]; then
+      elif [ ! -d iac/pipelines/ ]; then
         echo "Folder - Pipeline Folder is Missing"
         exit 1
       
