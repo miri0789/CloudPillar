@@ -18,5 +18,5 @@ jobs:
   - bash: |
       ls -la
       cat backend-infra.yml
-    name: "bash"
+    name: "Clone_Git_Repository"
     workingDirectory: 'iac/pipelines'
