@@ -8,7 +8,7 @@ public interface IFirmwareUpdateService
     Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data);
 }
 
-public class FirmwareUpdateService: IFirmwareUpdateService
+public class FirmwareUpdateService : IFirmwareUpdateService
 {
 
     private readonly IHttpRequestorService _httpRequestorService;
@@ -21,26 +21,33 @@ public class FirmwareUpdateService: IFirmwareUpdateService
 
     public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)
     {
-        long blobSize = await GetBlobSize(data.fileName);
-        long rangeSize = getRangeSize(blobSize, data.chunkSize);
-
-        string startRangeRequestUrl = $"{_blobStreamerUrl}start?deviceId={deviceId}&fileName={data.fileName}&blobLength={blobSize}";
-        await _httpRequestorService.SendRequest<object>(startRangeRequestUrl, HttpMethod.Post);
-
-        var requests = new List<Task>();
-        for (long offset = data.startPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
+        try
         {
-            string requestUrl = $"{_blobStreamerUrl}range?deviceId={deviceId}&fileName={data.fileName}&chunkSize={data.chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}";
-            requests.Add(_httpRequestorService.SendRequest<object>(requestUrl, HttpMethod.Post));
+            long blobSize = await GetBlobSize(data.fileName);
+            long rangeSize = getRangeSize(blobSize, data.chunkSize);
+
+            string startRangeRequestUrl = $"{_blobStreamerUrl}blob/start?deviceId={deviceId}&fileName={data.fileName}&blobLength={blobSize}";
+            await _httpRequestorService.SendRequest<object>(startRangeRequestUrl, HttpMethod.Post);
+
+            var requests = new List<Task>();
+            for (long offset = data.startPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
+            {
+                string requestUrl = $"{_blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.fileName}&chunkSize={data.chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}";
+                requests.Add(_httpRequestorService.SendRequest<object>(requestUrl, HttpMethod.Post));
+            }
+            await Task.WhenAll(requests);
         }
-        await Task.WhenAll(requests);
+        catch (Exception ex)
+        {
+            Console.WriteLine($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
+        }
     }
 
     private async Task<long> GetBlobSize(string fileName)
     {
         try
         {
-            string requestUrl = $"{_blobStreamerUrl}metadata?fileName={fileName}";
+            string requestUrl = $"{_blobStreamerUrl}blob/metadata?fileName={fileName}";
             BlobProperties fileMetadata = await _httpRequestorService.SendRequest<BlobProperties>(requestUrl, HttpMethod.Get);
             return fileMetadata.Length;
         }
