@@ -71,12 +71,35 @@ stages:
           echo "Terraform Backend Folder & Files Exists"
 
     - task: Bash@3
-      displayName: 'Validate Env File'
+      displayName: 'Validate Env File Exists'
       inputs:
         targetType: inline
         script: |
+          # if [ ! -f iac/terraform/.env ]; then
           if [ ! -f iac/terraform/Template.env ]; then
             echo "Env Variable File is Missing"
             exit 1
           fi
           echo "Env Variables Files Exist"
+
+- stage: Initilize_Terraform
+  displayName: Initilize Terraform Backend
+  dependsOn: Validate_Files
+  jobs:
+
+  - job: Initilize_Terraform_Backend
+    displayName: Initilize Terraform Backend
+    pool:
+      vmImage: 'ubuntu-20.04'    
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+
+    - task: Bash@3
+      displayName: 'Updating Env Variabless File'
+      inputs:
+        targetType: inline
+        script: |
+          ls -la
+        workingDirectory: 'iac/terraform/backend'
