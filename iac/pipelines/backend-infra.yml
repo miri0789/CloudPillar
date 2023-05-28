@@ -6,7 +6,7 @@ trigger:
 variables:
 - group: arm-vg
 - group: iac-backend-vg
-
+- group: backend-secrets-vg
 
 stages:
 - stage: Validate_Files
@@ -113,6 +113,33 @@ stages:
           sed -i "s/^tf_backend_container=.*/tf_backend_container=\"$(TF_BACKEND_CONTAINER)\"/" ../env/backend.tfvars          
           sed -i "s/^tfstate_key=.*/tfstate_key=\"$(TFSTATE_KEY)\"/" ../env/backend.tfvars
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KEYVAULT)\"/" ../env/backend.tfvars
+          sed -i "s/^client_id=.*/client_id=\"$(ARM_CLIENT_ID)\"/" ../env/backend.tfvars
+          sed -i "s/^client_secret=.*/client_secret=\"$(ARM_CLIENT_SECRET)\"/" ../env/backend.tfvars          
           cat ../env/backend.tfvars
         workingDirectory: 'iac/terraform/backend'
+
+    - task: Bash@3
+      displayName: 'Azure Login'
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(ARM_CLIENT_ID -p $(ARM_CLIENT_SECRET --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+        workingDirectory: 'iac/terraform/backend'
+
+    - task: Bash@3
+      displayName: 'Initilize & Plan Terraform Backend'
+      inputs:
+        targetType: inline
+        script: |
+          export ARM_CLIENT_ID=$(ARM_CLIENT_ID)
+          export ARM_CLIENT_SECRET=$(ARM_CLIENT_SECRET)
+          export ARM_TENANT_ID=$(ARM_TENANT_ID)
+          export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+          terraform init -var-file=../env/backend.tfvars
+          terraform plan -var-file=../env/backend.tfvars          
+          echo "Terraform Backend Initilized"
+        workingDirectory: 'iac/terraform/backend'
+
 
