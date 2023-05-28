@@ -31,12 +31,12 @@ echo ""
 terraform init -var-file=../env/backend.tfvars
 terraform plan -var-file=../env/backend.tfvars
 
-read -p "Do you want to apply? - [Terraform Backend] - (Y/N): " apply_response
-if [[ $apply_response =~ ^[Yy]$ ]]
-then
-  terraform apply -var-file=../env/backend.tfvars -auto-approve
-fi
+# read -p "Do you want to apply? - [Terraform Backend] - (Y/N): " apply_response
+# if [[ $apply_response =~ ^[Yy]$ ]]
+# then
+#   terraform apply -var-file=../env/backend.tfvars -auto-approve
+# fi
 
-echo ""
-echo "Finished TF Backend Deployment"
-echo ""
+# echo ""
+# echo "Finished TF Backend Deployment"
+# echo ""

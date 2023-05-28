@@ -1,0 +1,76 @@
+# Azure Devops Pipeline for backend infrastructure Initilizing Terraform
+# Path: CloudPillar\iac\pipelines\backend-infra.yml
+
+# No Trigger
+# With Variables
+# With Stages
+name: iac_backend_infra
+trigger:
+  - none
+
+# variables:
+
+jobs:
+
+- job: Clone_Code
+  pool:
+    vmImage: 'ubuntu-20.04'
+
+  steps:
+  - checkout: self
+    persistCredentials: true
+    clean: true
+
+    
+    - bash: |
+      ls -la
+    verbose: true
+    workingDir: 'CloudPillar/iac'
+
+    # - task: AzureCLI@2
+    #   displayName: Clone Repo
+    #   inputs:
+    #     azureSubscription: 'Azure Pipelines'
+    #     scriptType: 'pscore'
+    #     scriptLocation: 'inlineScript'
+    #     inlineScript: |
+    #       git clone
+# stages:
+# - stage: Clone_Repo
+#   displayName: Clone Repo
+
+  # pool:
+  #   vmImage: 'ubuntu-20.04'  
+  # jobs:
+  # - job: Clone_Repo_Job
+  #   displayName: Clone Repo Job
+  #   pool:
+  #     vmImage: 'ubuntu-20.04'
+  #   steps:
+  #   - checkout: self
+  #     persistCredentials: true
+  #     clean: true
+      # lfs: true
+      # submodules: true
+      # fetchDepth: 1
+      # path: 'iac'
+    # steps:
+    # - task: AzureCLI@2
+    #   displayName: Clone Repo
+    #   inputs:
+    #     azureSubscription: 'Azure Pipelines'
+    #     scriptType: 'pscore'
+    #     scriptLocation: 'inlineScript'
+    #     inlineScript: |
+    #       git clone
+
+# Plan
+# stages:
+# - stage: Clone_Repo
+#   displayName: Clone Repo
+# - stage: Update_Env_Variables
+#   displayName: Creating .env file for Terraform
+# - stage: TF_Backend_Init
+#   displayName: Updating TF Vars and Initializing
+# - stage: TF_Backend_Apply
+#   displayName: Executing TF Apply
