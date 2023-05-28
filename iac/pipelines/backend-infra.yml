@@ -14,7 +14,12 @@ jobs:
   - checkout: self
     persistCredentials: true
     clean: true
-    - bash: |
+  - bash: |
       ls -la
-    verbose: true
-    # workingDir: 'CloudPillar/iac'
+    name: "bash"
+    workingDirectory: 'CloudPillar/iac'
+    # workingDirectory: 
+
+    # - bash: |
+    #   ls -la
+    # verbose: true
