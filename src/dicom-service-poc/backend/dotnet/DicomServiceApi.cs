@@ -1,4 +1,6 @@
 using Microsoft.Health.Dicom.Client;
+using Microsoft.Health.Dicom.Core.Features.Query;
+using Microsoft.Health.Dicom.Client.Models;
 using Azure.Identity;
 using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
@@ -14,26 +16,27 @@ namespace DicomBackendPoC
     public class DicomServiceApi
     {
         private readonly Microsoft.Health.Dicom.Client.IDicomWebClient client;
+        private readonly string webServerUrl ="https://malamdicomworkspace-dicom-service-test.dicom.azurehealthcareapis.com";
+        private readonly string tenantId = "63d53a16-04d5-4981-b530-4f38d3b16281"; // tenant-id
+        private readonly string clientId = "947edf6d-b41d-4f18-9912-b007670e71b3"; // client-id 
+        private readonly string clientSecret = "kaJ8Q~y2~z3meNKe87FV9BFb9bFCdncWOt1Fbb2h"; // client-secret
+        private readonly string resource = "https://dicom.healthcareapis.azure.com";
 
         public DicomServiceApi() 
         {
-            string accessToken = GetAccessToken().Result;
-            string webServerUrl ="https://malamdicomworkspace-dicom-service-test.dicom.azurehealthcareapis.com";
+            string accessToken = GetAccessToken().Result;         
             var httpClient = new HttpClient();
             httpClient.BaseAddress = new Uri(webServerUrl);
             client = new DicomWebClient(httpClient);  
             client.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         }
-
+        private void xxxxxxxx()
+        {
+            
+        }
         private async Task<string> GetAccessToken()
         {
-            // OAuth necessary Information
-            string tenantId = "63d53a16-04d5-4981-b530-4f38d3b16281"; // tenant-id
-            string clientId = "947edf6d-b41d-4f18-9912-b007670e71b3"; // client-id 
-            string clientSecret = "kaJ8Q~y2~z3meNKe87FV9BFb9bFCdncWOt1Fbb2h"; // client-secret
-            string resource = "https://dicom.healthcareapis.azure.com";
-
             // Construct the authority and token endpoints
             string authority = $"https://login.microsoftonline.com/{tenantId}";
 
@@ -206,6 +209,133 @@ namespace DicomBackendPoC
             return response;
         }
 
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> QueryInstancesAsync(string queryString)
+        {
+            var response = await client.QueryInstancesAsync(queryString);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to query metadata {queryString}");
+            } 
+
+            // Return the enumerator of the metadata
+            return response;
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> QuerySeriesAsync(string queryString)
+        {
+            var response = await client.QuerySeriesAsync(queryString);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to query metadata {queryString}");
+            } 
+
+            // Return the enumerator of the metadata
+            return response;
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> QuerySeriesInstanceAsync(string seriesInstanceUid, string queryString)
+        {
+            var response = await client.QuerySeriesInstanceAsync(seriesInstanceUid, queryString);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to query metadata {queryString}");
+            } 
+
+            // Return the enumerator of the metadata
+            return response;
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> QueryStudyAsync(string queryString)
+        {
+            var response = await client.QueryStudyAsync(queryString);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to query metadata {queryString}");
+            } 
+
+            // Return the enumerator of the metadata
+            return response;
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> QueryStudyInstanceAsync(string studyInstanceUid, string queryString)
+        {
+            var response = await client.QueryStudyInstanceAsync(studyInstanceUid, queryString);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to query metadata {queryString}");
+            } 
+
+            // Return the enumerator of the metadata
+            return response;
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> QueryStudySeriesAsync(string studyInstanceUid, string queryString)
+        {
+            var response = await client.QueryStudySeriesAsync(studyInstanceUid, queryString);
+                
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to query metadata {queryString}");
+            } 
+
+            // Return the enumerator of the metadata
+            return response;
+        }
+
+        public async Task<DicomWebAsyncEnumerableResponse<DicomDataset>> QueryStudySeriesInstanceAsync(string studyInstanceUid, string seriesInstanceUid, string queryString)
+        {
+            var response = await client.QueryStudySeriesInstanceAsync(studyInstanceUid, seriesInstanceUid, queryString);
+              
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to query metadata {queryString}");
+            } 
+
+            // Return the enumerator of the metadata
+            return response;
+        }
+
+        public async Task<GetExtendedQueryTagEntry> GetExtendedQueryTagAsync(string tagPath)
+        {
+            var response = await client.GetExtendedQueryTagAsync(tagPath);
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to get extended tag data: {tagPath}");
+            }
+
+            return await response.GetValueAsync();
+        }
+
+        public async Task<HttpStatusCode> DeleteInstanceAsync(string studyInstanceUid, string seriesInstanceUid, string sopInstanceUid)
+        {
+            var response = await client.DeleteInstanceAsync(studyInstanceUid, seriesInstanceUid, sopInstanceUid);
+
+            if(response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to delete instance");
+            }
+
+            return response.StatusCode;
+        }
+
+        public async Task<HttpStatusCode> DeleteSeriesAsync(string studyInstanceUid, string seriesInstanceUid)
+        {
+            var response = await client.DeleteSeriesAsync(studyInstanceUid, seriesInstanceUid);
+
+            if(response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to delete Series");
+            }
+
+            return response.StatusCode;
+        }
+
+        /*Task<DicomWebResponse> DeleteStudyAsync(string studyInstanceUid, string partitionName = null, CancellationToken cancellationToken = default);*/
         public async Task<List<DicomFile>> GetDicomFilesListFromEnumerator(DicomWebAsyncEnumerableResponse<DicomFile> response)
         {
             var files = new List<DicomFile>();
