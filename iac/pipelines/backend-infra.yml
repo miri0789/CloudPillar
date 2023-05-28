@@ -5,7 +5,7 @@ trigger:
 
 variables:
 - group: arm-vg
-
+- group: iac-backend-vg
 
 
 stages:
@@ -103,10 +103,14 @@ stages:
       inputs:
         targetType: inline
         script: |
-          ls -la
-          echo "ARM TENANT ID: $(ARM_TENANT_ID)"
-          echo "ARM SUBSCRIPTION ID: $(ARM_SUBSCRIPTION_ID)"
-          echo "Location: $(LOCATION)"
-          echo "REGION: $(REGION)"
-          echo "DEVOPS URL: $(DEVOPS_URL)"
+          sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../env/backend.tfvars
+          sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../env/backend.tfvars
+          sed -i "s/^Location=.*/Location=\"$(LOCATION)\"/" ../env/backend.tfvars
+          sed -i "s/^region=.*/region=\"$(REGION)\"/" ../env/backend.tfvars
+          sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../env/backend.tfvars
+          sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../env/backend.tfvars
+          sed -i "s/^tf_backend_container=.*/tf_backend_container=\"$(TF_BACKEND_CONTAINER)\"/" ../env/backend.tfvars          
+          sed -i "s/^tfstate_key=.*/tfstate_key=\"$(TFSTATE_KEY)\"/" ../env/backend.tfvars
+          sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KEYVAULT)\"/" ../env/backend.tfvars
+          cat ../.env
         workingDirectory: 'iac/terraform/backend'
