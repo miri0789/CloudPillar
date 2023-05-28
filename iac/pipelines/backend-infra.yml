@@ -33,7 +33,7 @@ jobs:
         echo "Folder - TF Backend Folder  Is Missing."
         exit 1
 
-      elif [ ! -f iac/env/backend.tfvars ]; then
+      elif [ ! -f iac/terraform/env/backend.tfvars ]; then
         echo "File - backend.tfvars File does not exists."
         exit 1
       
