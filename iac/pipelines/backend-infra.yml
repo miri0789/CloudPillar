@@ -103,6 +103,7 @@ stages:
       inputs:
         targetType: inline
         script: |
+
           sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../env/backend.tfvars
           sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../env/backend.tfvars
           sed -i "s/^Location=.*/Location=\"$(LOCATION)\"/" ../env/backend.tfvars
@@ -112,5 +113,6 @@ stages:
           sed -i "s/^tf_backend_container=.*/tf_backend_container=\"$(TF_BACKEND_CONTAINER)\"/" ../env/backend.tfvars          
           sed -i "s/^tfstate_key=.*/tfstate_key=\"$(TFSTATE_KEY)\"/" ../env/backend.tfvars
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KEYVAULT)\"/" ../env/backend.tfvars
-          cat ../.env
+          cat ../env/backend.tfvars
         workingDirectory: 'iac/terraform/backend'
+
