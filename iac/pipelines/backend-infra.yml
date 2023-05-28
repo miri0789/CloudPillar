@@ -7,7 +7,8 @@ trigger:
 
 jobs:
 
-- job: Clone_Code
+- job: Validate_Files
+  displayName: Validate Cloned Repo Files
   pool:
     vmImage: 'ubuntu-20.04'
 
@@ -16,7 +17,57 @@ jobs:
     persistCredentials: true
     clean: true
   - bash: |
-      ls -la
-      cat backend-infra.yml
-    name: "Clone_Git_Repository"
-    workingDirectory: 'iac/pipelines'
+      if [ ! -d iac/ ]; then
+        echo "Folder - IaC Folder is Missing"
+        exit 1
+      fi
+      
+      elif [ ! -d iac/pipeline/ ]; then
+        echo "Folder - Pipeline Folder is Missing"
+        exit 1
+      fi
+      
+      elif [ ! -f iac/pipeline/backend-infra.yml ]; then
+        echo "File - backend-infra.yml File does not exists."
+        exit 1
+      fi
+
+      elif [ ! -d iac/terraform/backend ]; then
+        echo "Folder - TF Backend Folder  Is Missing."
+        exit 1
+      fi
+      elif [ ! -f iac/env/backend.tfvars ]; then
+        echo "File - backend.tfvars File does not exists."
+        exit 1
+      fi
+      
+      elif [ ! -d iac/terraform/backend/terraform.tfstate.d ] || [ ! -f iac/terraform/backend/0-backend-variables.tf ] || [ ! -f iac/terraform/backend/1-main.tf ] || [ ! -f iac/terraform/backend/2-providers.tf ] || [ ! -f iac/terraform/backend/tf-backend-init.sh ] || [ ! -f iac/terraform/backend/tf-backend-apply.sh ]; then
+        missing_files=()
+  
+        if [ ! -d iac/terraform/backend/terraform.tfstate.d ]; then
+          missing_files+=("terraform.tfstate.d")
+        fi
+        if [ ! -f iac/terraform/backend/0-backend-variables.tf ]; then
+          missing_files+=("0-backend-variables.tf")
+        fi
+        
+        if [ ! -f iac/terraform/backend/1-main.tf ]; then
+          missing_files+=("1-main.tf")
+        fi
+        
+        if [ ! -f iac/terraform/backend/2-providers.tf ]; then
+          missing_files+=("2-providers.tf")
+        fi
+        
+        if [ ! -f iac/terraform/backend/tf-backend-init.sh ]; then
+          missing_files+=("tf-backend-init.sh")
+        fi
+        
+        if [ ! -f iac/terraform/backend/tf-backend-apply.sh ]; then
+          missing_files+=("tf-backend-apply.sh")
+        fi
+        
+        echo "One or more files are missing in the TF Backend directory (iac/terraform/backend/): ${missing_files[*]}"
+        exit 1
+      fi
+    name: "Validate_Files"
