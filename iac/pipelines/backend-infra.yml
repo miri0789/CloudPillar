@@ -10,6 +10,7 @@ stages:
 - stage: Validate_Files
   displayName: Validate Cloned Repo Files
   jobs: 
+
   - job: Validate_Backend_Files
     displayName: Validate IaC Backend Files Existence
     pool:
@@ -69,6 +70,13 @@ stages:
           fi
           echo "Terraform Backend Folder & Files Exists"
 
-
-
-  
+    - task: Bash@3
+      displayName: 'Validate Env File'
+      inputs:
+        targetType: inline
+        script: |
+          if [ ! -f iac/terraform/Template.env ]; then
+            echo "Env Variable File is Missing"
+            exit 1
+          fi
+          echo "Env Variables Files Exist"
