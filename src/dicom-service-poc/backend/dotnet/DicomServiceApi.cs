@@ -31,10 +31,6 @@ namespace DicomBackendPoC
             client.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         }
-        private void xxxxxxxx()
-        {
-            
-        }
         private async Task<string> GetAccessToken()
         {
             // Construct the authority and token endpoints
@@ -335,7 +331,18 @@ namespace DicomBackendPoC
             return response.StatusCode;
         }
 
-        /*Task<DicomWebResponse> DeleteStudyAsync(string studyInstanceUid, string partitionName = null, CancellationToken cancellationToken = default);*/
+        public async Task<DicomWebResponse> DeleteStudyAsync(string studyInstanceUid)
+        {
+            var response = await client.DeleteStudyAsync(studyInstanceUid);
+
+            if(response == null || !response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to delete Study");
+            }
+
+            return response;
+        }
+
         public async Task<List<DicomFile>> GetDicomFilesListFromEnumerator(DicomWebAsyncEnumerableResponse<DicomFile> response)
         {
             var files = new List<DicomFile>();
