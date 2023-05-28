@@ -123,7 +123,7 @@ stages:
       inputs:
         targetType: inline
         script: |
-          az login --service-principal -u $(ARM_CLIENT_ID -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
         workingDirectory: 'iac/terraform/backend'
