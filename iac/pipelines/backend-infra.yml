@@ -17,7 +17,7 @@ jobs:
   - bash: |
       ls -la
     name: "bash"
-    workingDirectory: 'CloudPillar/iac'
+    # workingDirectory: 'CloudPillar/iac'
     # workingDirectory: 
 
     # - bash: |
