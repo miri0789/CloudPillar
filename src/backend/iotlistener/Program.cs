@@ -17,8 +17,13 @@ class Program
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddScoped<IHttpRequestorService, HttpRequestorService>();
         serviceCollection.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
+        serviceCollection.AddSingleton<ISigningService, SigningService>();
+
         serviceCollection.AddHttpClient();
         var serviceProvider = serviceCollection.BuildServiceProvider();
+
+        var signingService = serviceProvider.GetService<ISigningService>();
+        signingService.Init();
 
         EventProcessorHost eventProcessorHost = new EventProcessorHost(
                 Guid.NewGuid().ToString(),
@@ -36,12 +41,15 @@ class Program
             InvokeProcessorAfterReceiveTimeout = true,
         };
 
-        await eventProcessorHost.RegisterEventProcessorFactoryAsync(
-            new AzureStreamProcessorFactory(serviceProvider.GetRequiredService<IFirmwareUpdateService>()), eventProcessorOptions);
+
+        var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
+        var szureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService);
+
+        await eventProcessorHost.RegisterEventProcessorFactoryAsync(szureStreamProcessorFactory, eventProcessorOptions);
 
         Console.WriteLine("Receiving. Press Ctrl+C to stop.");
-        var cts = new CancellationTokenSource(); 
-        Console.CancelKeyPress += (sender, e) => { cts.Cancel(); }; 
+        var cts = new CancellationTokenSource();
+        Console.CancelKeyPress += (sender, e) => { cts.Cancel(); };
         await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { }); // Wait indefinitely until the token is cancelled 
         Console.WriteLine("Bailed out.");
 

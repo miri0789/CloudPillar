@@ -7,26 +7,30 @@ namespace iotlistener;
 
 class AzureStreamProcessorFactory : IEventProcessorFactory
 {
-     private readonly IFirmwareUpdateService _firmwareUpdateService;
+    private readonly IFirmwareUpdateService _firmwareUpdateService;
+    private readonly ISigningService _signingService;
 
-    public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService)
+    public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService)
     {
         _firmwareUpdateService = firmwareUpdateService;
+        _signingService = signingService;
     }
-    
+
     IEventProcessor IEventProcessorFactory.CreateEventProcessor(PartitionContext context)
     {
-        return new AgentEventProcessor(_firmwareUpdateService);
+        return new AgentEventProcessor(_firmwareUpdateService, _signingService);
     }
 }
 
 public class AgentEventProcessor : IEventProcessor
 {
     private readonly IFirmwareUpdateService _firmwareUpdateService;
+    private readonly ISigningService _signingService;
 
-    public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService)
+    public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService)
     {
         _firmwareUpdateService = firmwareUpdateService;
+        _signingService = signingService;
     }
 
     public Task OpenAsync(PartitionContext context)
@@ -83,6 +87,12 @@ public class AgentEventProcessor : IEventProcessor
                             {
                                 var firmwareUpdateEvent = JsonSerializer.Deserialize<FirmwareUpdateEvent>(data)!;
                                 await _firmwareUpdateService.SendFirmwareUpdateAsync(deviceId, firmwareUpdateEvent);
+                                break;
+                            }
+                        case EventType.SignTwinKey:
+                            {
+                                var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;
+                                await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);
                                 break;
                             }
                     }

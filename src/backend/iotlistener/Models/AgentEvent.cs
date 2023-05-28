@@ -15,3 +15,10 @@ public class FirmwareUpdateEvent : AgentEvent
     [DefaultValue(0)]
     public long startPosition { get; set; }
 }
+
+public class SignEvent : AgentEvent
+{
+    public string keyPath { get; set; }
+
+    public string signatureKey { get; set; }
+}
