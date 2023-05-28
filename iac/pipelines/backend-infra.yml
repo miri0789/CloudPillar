@@ -1,3 +1,4 @@
+
 name: iac_backend_infra
 trigger:
   - none
@@ -16,10 +17,6 @@ jobs:
     clean: true
   - bash: |
       ls -la
+      cat backend-infra.yml
     name: "bash"
-    # workingDirectory: 'CloudPillar/iac'
-    # workingDirectory: 
-
-    # - bash: |
-    #   ls -la
-    # verbose: true
+    workingDirectory: 'iac/pipelines'
