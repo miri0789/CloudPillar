@@ -36,6 +36,7 @@ namespace FirmwareUpdate
         {
             Console.WriteLine("Starting...");
             _signingPrivateKey = await GetSigningPrivateKeyAsync();
+            await StartEventProcessorHostAsync();
         }
 
         private static async Task<ECDsa> GetSigningPrivateKeyAsync()
