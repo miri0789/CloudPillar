@@ -51,12 +51,13 @@ stages:
           echo "Azure Login Successfull"
           sudo az acr login -n $(acrName)
           sudo docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
-    # - task: Bash@3
-    #   displayName: Scan Blob Streamer Image
-    #   inputs:
-    #     targetType: inline
-    #     script: |
-    #       sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(blobstreamer_image):latest
+    - task: Bash@3
+      displayName: Scan Blob Streamer Image
+      inputs:
+        targetType: inline
+        script: |
+          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(blobstreamer_image):latest
+          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(acrName).azurecr.io/$(blobstreamer_image):latest
     - task: Bash@3
       displayName: Push Blob Streamer Image
       inputs:
@@ -91,12 +92,13 @@ stages:
           echo "Azure Login Successfull"
           sudo az acr login -n $(acrName)
           sudo docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
-    # - task: Bash@3
-    #   displayName: Scan IoT Listener Image
-    #   inputs:
-    #     targetType: inline
-    #     script: |
-    #       docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
+    - task: Bash@3
+      displayName: Scan IoT Listener Image
+      inputs:
+        targetType: inline
+        script: |
+          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
+          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
     - task: Bash@3
       displayName: Push IoT Listener Image
       inputs:
