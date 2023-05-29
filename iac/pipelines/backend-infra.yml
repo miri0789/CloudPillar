@@ -23,6 +23,14 @@ stages:
       clean: true
 
     - task: Bash@3
+      displayName: 'Tests'
+      inputs:
+        targetType: inline
+        script: |
+          echo "Build.BuildId"
+          echo "$(Build.BuildId)"
+    
+    - task: Bash@3
       displayName: 'Validate IaC Pipelines Files'
       inputs:
         targetType: inline
