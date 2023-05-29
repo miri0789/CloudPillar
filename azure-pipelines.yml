@@ -47,7 +47,8 @@ stages:
         script: |
           az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
-          echo "Azure Login Successfull"        
+          echo "Azure Login Successfull"
+          az acr login --name $(acrName) --expose-token --output tsv --query accessToken        
           export TOKEN=`az acr login --name $acrName --expose-token --output tsv --query accessToken`
           echo "Token: $TOKEN"
           export loginServer=`az acr login --name $acrName --expose-token --output tsv --query loginServer`
