@@ -47,13 +47,7 @@ class Program
 
         await eventProcessorHost.RegisterEventProcessorFactoryAsync(szureStreamProcessorFactory, eventProcessorOptions);
 
-        Console.WriteLine("Receiving. Press Ctrl+C to stop.");
-        var cts = new CancellationTokenSource();
-        Console.CancelKeyPress += (sender, e) => { cts.Cancel(); };
-        await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { }); // Wait indefinitely until the token is cancelled 
-        Console.WriteLine("Bailed out.");
-
-        // Unregister the event processor
-        await eventProcessorHost.UnregisterEventProcessorAsync();
+        //TODO termination hander
+        //await eventProcessorHost.UnregisterEventProcessorAsync();
     }
 }
