@@ -1,9 +1,7 @@
 
 name: ci_build_pipeline
-# trigger:
-#   - main
 trigger:
-  - none
+  - main
 
 
 
@@ -77,9 +75,9 @@ stages:
       agent.name: $(aksAgentName)
 
       steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
+      - checkout: self
+        persistCredentials: true
+        clean: true
 
     - task: Bash@3
       displayName: 'Build Blob Streamer Image'
@@ -103,24 +101,24 @@ stages:
       agent.name: $(aksAgentName)
       
       steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
+      - checkout: self
+        persistCredentials: true
+        clean: true
 
-    - task: Bash@3
-      displayName: 'Build IoT Listener Image'
-      inputs:
-        targetType: inline
-        script: |
-          cd src/backend/iotlistener
-          docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ..\infra\build\Dockerfile .
+      - task: Bash@3
+        displayName: 'Build IoT Listener Image'
+        inputs:
+          targetType: inline
+          script: |
+            cd src/backend/iotlistener
+            docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ..\infra\build\Dockerfile .
 
-    - task: Bash@3
-      displayName: 'Scan Blob Streamer Image'
-      inputs:
-        targetType: inline
-        script: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
+      - task: Bash@3
+        displayName: 'Scan Blob Streamer Image'
+        inputs:
+          targetType: inline
+          script: |
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
 
 
 
@@ -134,32 +132,32 @@ stages:
       agent.name: $(aksAgentName)
 
       steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
+      - checkout: self
+        persistCredentials: true
+        clean: true
 
-    - task: Bash@3
-      displayName: 'Push Blob Streamer Image'
-      inputs:
-        targetType: inline
-        script: |
-          cd src/backend/blobstreamer
-          docker push $(acrName).azurecr.io/$(blobstreamer_image):latest
-  - job: IoTListener_Image
-    displayName: Push IoT Listener Image
-    pool: 
-      name: $(agentPool)
-      agent.name: $(aksAgentName)
-      
-      steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
+      - task: Bash@3
+        displayName: 'Push Blob Streamer Image'
+        inputs:
+          targetType: inline
+          script: |
+            cd src/backend/blobstreamer
+            docker push $(acrName).azurecr.io/$(blobstreamer_image):latest
+    - job: IoTListener_Image
+      displayName: Push IoT Listener Image
+      pool: 
+        name: $(agentPool)
+        agent.name: $(aksAgentName)
+        
+        steps:
+        - checkout: self
+          persistCredentials: true
+          clean: true
 
-    - task: Bash@3
-      displayName: 'Push IoT Listener Image'
-      inputs:
-        targetType: inline
-        script: |
-          cd src/backend/iotlistener
-          docker push $(acrName).azurecr.io/$(iotlistener_image):latest
+      - task: Bash@3
+        displayName: 'Push IoT Listener Image'
+        inputs:
+          targetType: inline
+          script: |
+            cd src/backend/iotlistener
+            docker push $(acrName).azurecr.io/$(iotlistener_image):latest
