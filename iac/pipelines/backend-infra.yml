@@ -150,11 +150,7 @@ stages:
           export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
           terraform init -var-file=../env/backend.tfvars -force-copy
           # terraform init -var-file=../env/backend.tfvars
-          echo "$ARM_CLIENT_ID = $(iac-app-client-id)"
-          echo "$ARM_CLIENT_SECRET = $(iac-app-client-secret)"
-          echo "$ARM_TENANT_ID = $(ARM_TENANT_ID)"
-          echo "$ARM_SUBSCRIPTION_ID = $(ARM_SUBSCRIPTION_ID)"
-          # terraform plan -var-file=../env/backend.tfvars          
+          terraform plan -var-file=../env/backend.tfvars          
           echo "Terraform Backend Initilized"
         workingDirectory: 'iac/terraform/backend'
 
