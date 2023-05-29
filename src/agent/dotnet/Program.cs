@@ -5,12 +5,12 @@ using Newtonsoft.Json;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using Microsoft.Azure.Devices.Client.Transport;
-using Microsoft.WindowsAzure.Storage.Blob;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.IO.Compression;
+using System.Collections.Concurrent;
 
 namespace FirmwareUpdateAgent
 {
@@ -24,6 +24,7 @@ namespace FirmwareUpdateAgent
         private static TwinAction? _downloadAction = null;
         private static ECDsa? _signingPublicKey = null;
         private static IProgressObserver? _progressObserver = null;
+        private static ConcurrentDictionary<string, Func<string, string?, Task>> _uploadCompletionHandlers = new ConcurrentDictionary<string, Func<string, string?, Task>> ();
 
         public interface IProgressObserver
         {
@@ -73,7 +74,7 @@ namespace FirmwareUpdateAgent
                             {
                                 Console.WriteLine($"{DateTime.Now}: Desired properties were updated.");
                                 // Console.WriteLine(JsonConvert.SerializeObject(desiredProperties));
-                                _ = ExecTwinActions(cts.Token, c2dSubscription, _deviceClient);
+                                _ = ExecTwinActions(cts.Token, ()=>!c2dSubscription.IsSubscribed, _deviceClient);
                             }, null);
 
                     Console.CancelKeyPress += (sender, eventArgs) =>
@@ -187,7 +188,7 @@ namespace FirmwareUpdateAgent
         /// <param name="c2dSubscription">C2D subscription instance.</param>
         /// <param name="device_id">Device ID.</param>
         /// <param name="filename">Filename of the firmware update file.</param>
-        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, string? rewind = null)
+        private static async Task SendFirmwareUpdateReadyContd(CancellationToken cancellationToken, Func<bool> cbIsPaused, string device_id, string filename, string? rewind = null)
         {
             Console.WriteLine($"SDK command 'Continue' at device '{device_id}'....");
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
@@ -197,11 +198,11 @@ namespace FirmwareUpdateAgent
                 startFromPos -= long.Parse(rewind);
                 if(startFromPos < 0L) startFromPos = 0;
             }
-            await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, device_id, filename, startFromPos);
+            await SendFirmwareUpdateReady(cancellationToken, cbIsPaused, device_id, filename, startFromPos);
         }
-        private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string filename, long startFromPos = -1L)
+        private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, Func<bool> cbIsPaused, string device_id, string filename, long startFromPos = -1L)
         {
-            await SendIoTEvent(cancellationToken, c2dSubscription, device_id, "FirmwareUpdateReady", (eventType) => {
+            await SendIoTEvent(cancellationToken, cbIsPaused, device_id, "FirmwareUpdateReady", (eventType) => {
                 // Deduct the chunk size based on the protocol being used
                 int chunkSize = GetTransportType() switch
                 {
@@ -227,9 +228,9 @@ namespace FirmwareUpdateAgent
             });
         }
 
-        public static async Task SendSignTwinKey(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string keyJPath, string atSignatureKey)
+        public static async Task SendSignTwinKey(CancellationToken cancellationToken, Func<bool> cbIsPaused, string device_id, string keyJPath, string atSignatureKey)
         {
-            await SendIoTEvent(cancellationToken, c2dSubscription, device_id, "SignTwinKey", (eventType) => {
+            await SendIoTEvent(cancellationToken, cbIsPaused, device_id, "SignTwinKey", (eventType) => {
 
                 var payloadData = new
                 {
@@ -246,11 +247,11 @@ namespace FirmwareUpdateAgent
             });
         }
 
-        private static async Task SendIoTEvent(CancellationToken cancellationToken, C2DSubscription c2dSubscription, string device_id, string eventType, Func<string, Message> cbCreateMessage)
+        private static async Task SendIoTEvent(CancellationToken cancellationToken, Func<bool> cbIsPaused, string device_id, string eventType, Func<string, Message> cbCreateMessage)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (c2dSubscription.IsSubscribed)
+                if (!cbIsPaused())
                 {
                     Console.WriteLine($"{DateTime.Now}: Sending {eventType} event at device '{device_id}'....");
 
@@ -329,7 +330,7 @@ namespace FirmwareUpdateAgent
         private static async Task HandleHttpListener(CancellationToken cancellationToken, C2DSubscription c2dSubscription)
         {
             Console.WriteLine($"Started listening for HTTP....");
-            _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient); // First time just hook up to the twin status
+            _ = ExecTwinActions(cancellationToken, ()=>!c2dSubscription.IsSubscribed, _deviceClient); // First time just hook up to the twin status
             while (!cancellationToken.IsCancellationRequested)
             {
                 HttpListenerContext context = await _httpListener.GetContextAsync();
@@ -366,17 +367,17 @@ namespace FirmwareUpdateAgent
                             Console.WriteLine("Resuming Agent");
                             await c2dSubscription.Subscribe(cancellationToken);
                             await TwinAction.UpdateDeviceState(_deviceClient, "READY");
-                            _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
+                            _ = ExecTwinActions(cancellationToken, ()=>!c2dSubscription.IsSubscribed, _deviceClient);
                         }
                         else if (request.Url.AbsolutePath.ToLower() == "/twin")
                         {
-                            _ = ExecTwinActions(cancellationToken, c2dSubscription, _deviceClient);
+                            _ = ExecTwinActions(cancellationToken, ()=>!c2dSubscription.IsSubscribed, _deviceClient);
                         }
                         else if (request.Url.AbsolutePath.ToLower() == "/update")
                         {
                             string? fromPos = request.QueryString["from"];
                             string? filename = request.QueryString["file"];
-                            _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
+                            _ = SendFirmwareUpdateReady(cancellationToken, ()=>!c2dSubscription.IsSubscribed,
                                                         GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                         string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
                                                         string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
@@ -386,11 +387,11 @@ namespace FirmwareUpdateAgent
                             string? fromPos = request.QueryString["from"];
                             string? filename = request.QueryString["file"];
                             if(string.IsNullOrEmpty(fromPos))
-                                _ = SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
+                                _ = SendFirmwareUpdateReadyContd(cancellationToken, ()=>!c2dSubscription.IsSubscribed,
                                                         GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                         string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename); // Async call for update
                             else
-                                _ = SendFirmwareUpdateReady(cancellationToken, c2dSubscription,
+                                _ = SendFirmwareUpdateReady(cancellationToken, ()=>!c2dSubscription.IsSubscribed,
                                                         GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                         string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
                                                         long.Parse(fromPos)); // Async call for update
@@ -516,7 +517,7 @@ namespace FirmwareUpdateAgent
         /// <param name="c2dSubscription">An object representing the C2D subscription for the device.</param>
         /// <param name="deviceClient">A device client instance to interact with IoT Hub.</param>
         /// <returns>List of actions performed.</returns>
-        private static async Task<List<TwinAction>> ExecTwinActions(CancellationToken cancellationToken, C2DSubscription c2dSubscription, DeviceClient deviceClient)
+        private static async Task<List<TwinAction>> ExecTwinActions(CancellationToken cancellationToken, Func<bool> cbIsPaused, DeviceClient deviceClient)
         {
             /***
             This method is responsible for executing twin actions based on the device twin state. It checks 
@@ -530,7 +531,7 @@ namespace FirmwareUpdateAgent
 
             // Report the current device twin state and perform actions based on the state
             var actions = await TwinAction.ReportTwinState(cancellationToken, deviceClient,
-                            c2dSubscription.IsSubscribed ? "READY" : "BUSY",
+                            cbIsPaused() ? "BUSY" : "READY",
                             async (cancellationToken, contentObject, key) =>
                             {
                                 var parentObject = contentObject?.Parent?.Parent as JObject;
@@ -541,7 +542,7 @@ namespace FirmwareUpdateAgent
                                     var text = !parentObject.ContainsKey(key) ? "is missing" : "fails verification: " + parentObject![key].ToString();
                                     Console.WriteLine($"The signature '{key}' in container '{parentObject.Path}' {text}. \nOrdering backend to re-sign at device '{device_id}'....");
                                     // No valid signature found or fails verification
-                                    _ = SendSignTwinKey(cancellationToken, c2dSubscription, device_id, path, key);
+                                    _ = SendSignTwinKey(cancellationToken, cbIsPaused, device_id, path, key);
                                     return false;
                                 }
                                 return true;
@@ -557,7 +558,7 @@ namespace FirmwareUpdateAgent
                                             _downloadAction = action;
                                             if (action.IsInProgress || /*DEMO ONLY TBD REMOVE*/ action.Desired.ContainsKey("retransmissionRewind"))
                                             {
-                                                await SendFirmwareUpdateReadyContd(cancellationToken, c2dSubscription,
+                                                await SendFirmwareUpdateReadyContd(cancellationToken, cbIsPaused,
                                                                         device_id,
                                                                         action.Desired["source"]?.ToString(),
                                                                         action.Desired["retransmissionRewind"]?.ToString() );
@@ -566,7 +567,7 @@ namespace FirmwareUpdateAgent
                                             {
                                                 // Report the initial progress and call the SendFirmwareUpdateReady method
                                                 action.ReportProgress();
-                                                await SendFirmwareUpdateReady(cancellationToken, c2dSubscription, 
+                                                await SendFirmwareUpdateReady(cancellationToken, cbIsPaused, 
                                                                         device_id, 
                                                                         action.Desired["source"]?.ToString());
                                             }
@@ -592,7 +593,7 @@ namespace FirmwareUpdateAgent
 
                                             if (filename != null && enabled)
                                             {
-                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 10), method, true);
+                                                _ =  UploadFilesPeriodicallyAsync(cancellationToken, action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 10), method, cbIsPaused, true);
                                             }
                                             break;
                                         }
@@ -605,7 +606,7 @@ namespace FirmwareUpdateAgent
 
                                             if (filename != null && enabled)
                                             {
-                                                _ =  UploadFilesPeriodicallyAsync(action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 600), method, false);
+                                                _ =  UploadFilesPeriodicallyAsync(cancellationToken, action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 600), method, cbIsPaused, false);
                                             }
                                             break;
                                         }
@@ -727,13 +728,13 @@ namespace FirmwareUpdateAgent
             }
             return actions;
         }
-        private static async Task UploadFilesPeriodicallyAsync(TwinAction action, string filename, TimeSpan interval, string method, bool breakAfterSuccess = false)
+        private static async Task UploadFilesPeriodicallyAsync(CancellationToken cancellationToken, TwinAction action, string filename, TimeSpan interval, string method, Func<bool> cbIsPaused, bool breakAfterSuccess = false)
         {
             while (true)
             {
                 try
                 {
-                    await UploadFilesToBlobStorageAsync(action, filename, method);
+                    await UploadFilesToBlobStorageAsync(cancellationToken, action, filename, method, cbIsPaused);
                     action.ReportSuccess("Done", "Will keep uploading " + interval.ToString());
                     if(breakAfterSuccess) break;
                 }
@@ -747,7 +748,7 @@ namespace FirmwareUpdateAgent
             }
         }
 
-        private static async Task UploadFilesToBlobStorageAsync(TwinAction action, string filePathPattern, string method)
+        private static async Task UploadFilesToBlobStorageAsync(CancellationToken cancellationToken, TwinAction action, string filePathPattern, string method, Func<bool> cbIsPaused)
         {
             string? directoryPath = Path.GetDirectoryName(filePathPattern);
             string searchPattern = Path.GetFileName(filePathPattern);
@@ -804,7 +805,7 @@ namespace FirmwareUpdateAgent
                 }
 
                 // Upload via either memory or file stream set up above
-                await uploader.UploadFromStreamAsync(readStream, sasUriResponse.CorrelationId, async (string correlationId, Exception? exception) => {
+                await uploader.UploadFromStreamAsync(cancellationToken, readStream, sasUriResponse.CorrelationId, 0, cbIsPaused, async (string correlationId, Exception? exception) => {
                     if(exception != null)
                         Console.WriteLine("Error during upload: " + exception.Message);
                     
@@ -819,34 +820,123 @@ namespace FirmwareUpdateAgent
 
         public interface IFileUploader
         {
-            Task UploadFromStreamAsync(Stream readStream, string correlationId, Func<string, Exception?, Task> onUploadComplete);
+            Task UploadFromStreamAsync(CancellationToken cancellationToken, Stream readStream, string correlationId, long startFromPos, Func<bool> cbIsPaused, Func<string, Exception?, Task> onUploadComplete);
+        }
+
+        private class IoTStreamingFileUploader: IFileUploader
+        {
+            private readonly Uri storageUri;
+
+            public IoTStreamingFileUploader(Uri storageUri)
+            {
+                this.storageUri = storageUri;
+            }
+
+            public async Task UploadFromStreamAsync(CancellationToken cancellationToken, Stream readStream, string correlationId, long startFromPos, Func<bool> cbIsPaused, Func<string, Exception?, Task> onUploadComplete)
+            {
+                var completionHandler = async (string remoteCorellationId, string? error) => {
+                    var x = error != null ? new InvalidOperationException(error) : null;
+                    if(remoteCorellationId != correlationId)
+                        throw new InvalidOperationException("correlationId must match", x);
+                    
+                    // Will call once, now remove
+                    Func<string, string?, Task>? handler = null;
+                    if(!_uploadCompletionHandlers.TryRemove(correlationId, out handler) || handler == null)
+                    {
+                        ArgumentException ax = new ArgumentException("FATAL: Upload completion handler with this CorellationId is incorrect or unexpectedly missing: " + correlationId, "correlationId", x);
+                        await onUploadComplete(correlationId, ax);
+                        throw ax;
+                    }
+
+                    await onUploadComplete(correlationId, x);
+                };
+
+                if(!_uploadCompletionHandlers.TryAdd(correlationId, completionHandler))
+                {
+                    await onUploadComplete(correlationId, new ArgumentException("Upload completion handler with this CorellationId already exists: " + correlationId, "correlationId"));
+                    return; // Bail out
+                }
+
+                try {
+                    int chunkSize = GetTransportType() switch
+                    {
+                        TransportType.Mqtt => 32 * 1024, // 32 KB
+                        TransportType.Amqp => 64 * 1024, // 64 KB
+                        TransportType.Http1 => 256 * 1024, // 256 KB
+                        _ => 32 * 1024 // 32 KB (default)
+                    };
+
+                    int totalChunks = (int)Math.Ceiling((double)readStream.Length / chunkSize);
+
+                    byte[] data = new byte[chunkSize];
+                    for (int chunkIndex = (int)(startFromPos / chunkSize); chunkIndex < totalChunks; chunkIndex++)
+                    {
+                        int offset = chunkIndex * chunkSize;
+                        int length = (chunkIndex == totalChunks - 1) ? (int)(readStream.Length - offset) : chunkSize;
+
+                        await readStream.ReadAsync(data, 0, length, cancellationToken);
+                        
+                        await SendIoTEvent(cancellationToken, cbIsPaused, GetDeviceIdFromConnectionString(_deviceConnectionString), "StreamingUploadChunk", (eventType) => {
+                            // Deduct the chunk size based on the protocol being used
+
+                            var payloadData = new
+                            {
+                                event_type = eventType,
+                                absolutePath = storageUri.AbsolutePath,
+                                write_position = offset,
+                                data = Convert.ToBase64String(data, 0, length)
+                            };
+
+                            var messageString = JsonConvert.SerializeObject(payloadData);
+                            var message = new Message(Encoding.ASCII.GetBytes(messageString)); // TODO: why ASCII?
+
+                            // message.Properties.Add("device_id", device_id);
+                            message.Properties.Add("chunk_index", chunkIndex.ToString());
+                            message.Properties.Add("total_chunks", totalChunks.ToString());
+                            return message;
+                        });
+                    }
+
+                    await SendIoTEvent(cancellationToken, cbIsPaused, GetDeviceIdFromConnectionString(_deviceConnectionString), "StreamingUploadValidate", (eventType) => {
+                        // Deduct the chunk size based on the protocol being used
+
+                        var payloadData = new
+                        {
+                            event_type = eventType,
+                            absolutePath = storageUri.AbsolutePath,
+                            write_position = offset,
+                            data = Convert.ToBase64String(data, 0, length)
+                        };
+
+                        var messageString = JsonConvert.SerializeObject(payloadData);
+                        var message = new Message(Encoding.ASCII.GetBytes(messageString)); // TODO: why ASCII?
+
+                        return message;
+                    });
+
+                    _ = Task.Run(() => Task.Delay(2000).ContinueWith(_ => {
+                        // simulate the confirmation of completion from the backend (PoC)
+                        Func<string, string?, Task>? handler = null;
+                        if(_uploadCompletionHandlers.TryGetValue(correlationId, out handler) || handler != null)
+                            handler(correlationId, null); // Self removes
+                    }));
+
+                    while (_uploadCompletionHandlers.ContainsKey(correlationId)) await Task.Delay(500);
+                } 
+                catch(Exception exc) 
+                {
+                    await onUploadComplete(correlationId, exc);
+                }
+            }
         }
 
         private static IFileUploader CreateFileUploader(Uri storageUri, string uploadMethod)
         {
-            return new BlobStorageFileUploader(storageUri);
-        }
-
-        public class BlobStorageFileUploader : IFileUploader
-        {
-            private CloudBlockBlob blob;
-
-            public BlobStorageFileUploader(Uri storageUri)
+            switch(uploadMethod) 
             {
-                blob = new CloudBlockBlob(storageUri);
-            }
-
-            public async Task UploadFromStreamAsync(Stream readStream, string correlationId, Func<string, Exception?, Task> onUploadComplete)
-            {
-                try 
-                {
-                    await blob.UploadFromStreamAsync(readStream);
-                    await onUploadComplete(correlationId, null);
-                } 
-                catch(Exception x)
-                {
-                    await onUploadComplete(correlationId, x);
-                }
+                case "blob":   return new BlobStorageFileUploader(storageUri); 
+                case "stream": return new IoTStreamingFileUploader(storageUri); 
+                default:       throw new ArgumentException("Unsupported upload method", "uploadMethod"); 
             }
         }
     }
