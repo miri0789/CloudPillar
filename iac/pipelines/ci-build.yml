@@ -1,7 +1,7 @@
 
 name: ci_build_pipeline
 trigger:
-  - main
+  - none
 
 
 
