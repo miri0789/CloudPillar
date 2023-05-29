@@ -1,8 +1,5 @@
 # Define Terraform provider
 terraform {
-  backend "local" {
-    path = "terraform.tfstate.d/dev/terraform.tfstate"
-  }
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -11,6 +8,19 @@ terraform {
   }
   required_version = ">= 0.13"
 }
+
+// terraform {
+//   backend "local" {
+//     path = "terraform.tfstate.d/dev/terraform.tfstate"
+//   }
+//   required_providers {
+//     azurerm = {
+//       source  = "hashicorp/azurerm"
+//       version = "=2.46.0"
+//     }
+//   }
+//   required_version = ">= 0.13"
+// }
 
 # Configure the Azure provider
 provider "azurerm" {
