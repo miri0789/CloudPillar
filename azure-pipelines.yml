@@ -20,7 +20,7 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ..\infra\build\Dockerfile src/backend/blobstreamer
+- script: docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./infra/build/Dockerfile ./src/backend/blobstreamer/
   displayName: 'Run a one-line script'
 
 - script: |
