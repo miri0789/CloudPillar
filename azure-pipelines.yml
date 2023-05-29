@@ -6,14 +6,25 @@
 trigger:
 - Build_Pipeline
 
+variables:
+- name: acrName
+  value: 'iotimageacr'
+- name: acrUrl 
+  value: 'iotimageacr.azurecr.io'
+- name: blobstreamer_image
+  value: 'backend_blobstreamer.dll'
+- name: iotlistener_image
+  value: 'backend_iotlistener.dll'
+
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: echo Hello, world!
+- script: docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ..\infra\build\Dockerfile src/backend/blobstreamer
   displayName: 'Run a one-line script'
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
+
