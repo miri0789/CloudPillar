@@ -49,24 +49,20 @@ stages:
           az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
-          export TOKEN=`az acr login --name $(acrName) --expose-token --output tsv --query accessToken`
-          echo "Token: $TOKEN"
-          export loginServer=`az acr login --name $(acrName) --expose-token --output tsv --query loginServer`
-          echo "loginServer: $loginServer"
-          docker login $loginServer --username 00000000-0000-0000-0000-000000000000 -p accessToken $TOKEN
-          docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
+          sudo az acr login -n $(acrName)
+          sudo docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
     # - task: Bash@3
     #   displayName: Scan Blob Streamer Image
     #   inputs:
     #     targetType: inline
     #     script: |
-    #       docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(blobstreamer_image):latest
+    #       sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(blobstreamer_image):latest
     - task: Bash@3
       displayName: Push Blob Streamer Image
       inputs:
         targetType: inline
         script: |
-          docker push $(acrName).azurecr.io/$(blobstreamer_image):latest
+          sudo docker push $(acrName).azurecr.io/$(blobstreamer_image):latest
 
 
 
@@ -93,12 +89,8 @@ stages:
           az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
-          export TOKEN=`az acr login --name $(acrName) --expose-token --output tsv --query accessToken`
-          echo "Token: $TOKEN"
-          export loginServer=`az acr login --name $(acrName) --expose-token --output tsv --query loginServer`
-          echo "loginServer: $loginServer"
-          docker login $loginServer --username 00000000-0000-0000-0000-000000000000 --password-stdin <<< $TOKEN
-          docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
+          sudo az acr login -n $(acrName)
+          sudo docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
     # - task: Bash@3
     #   displayName: Scan IoT Listener Image
     #   inputs:
@@ -110,4 +102,4 @@ stages:
       inputs:
         targetType: inline
         script: |
-          docker push $(acrName).azurecr.io/$(iotlistener_image):latest
+          sudo docker push $(acrName).azurecr.io/$(iotlistener_image):latest
