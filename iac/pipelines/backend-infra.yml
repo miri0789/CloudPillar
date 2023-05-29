@@ -28,15 +28,10 @@ stages:
         targetType: inline
         script: |
           echo "Build.BuildId - $(Build.BuildId)"
-          echo "ARM_CLIENT_ID1 - $(ARM_CLIENT_ID)"
-          echo "ARM_CLIENT_SECRET - $(ARM_CLIENT_SECRET)"
+          echo "ARM_CLIENT_ID - $(iac-app-client-id)"
+          echo "ARM_CLIENT_SECRET - $(iac-app-client-secret)"
           echo "ARM_TENANT_ID - $(ARM_TENANT_ID)"
-          echo "ARM_SUBSCRIPTION_ID - $(ARM_SUBSCRIPTION_ID)"
-          
-          # export ARM_CLIENT_ID=$(ARM_CLIENT_ID)
-          # export ARM_CLIENT_SECRET=$(ARM_CLIENT_SECRET)
-          # export ARM_TENANT_ID=$(ARM_TENANT_ID)
-          # export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)          
+          echo "ARM_SUBSCRIPTION_ID - $(ARM_SUBSCRIPTION_ID)"         
     
     - task: Bash@3
       displayName: 'Validate IaC Pipelines Files'
@@ -149,8 +144,8 @@ stages:
       inputs:
         targetType: inline
         script: |
-          export ARM_CLIENT_ID=$(ARM_CLIENT_ID)
-          export ARM_CLIENT_SECRET=$(ARM_CLIENT_SECRET)
+          export ARM_CLIENT_ID=$(iac-app-client-id)
+          export ARM_CLIENT_SECRET=$(iac-app-client-secret)
           export ARM_TENANT_ID=$(ARM_TENANT_ID)
           export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
           terraform init -var-file=../env/backend.tfvars -migrate-state
