@@ -7,6 +7,9 @@ trigger:
 - $(Build.SourceBranch)
 
 variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: backend-secrets-vg
 - name: agentPool
   value: 'IoT-Dicom-Pool'
 - name: aksAgentName
@@ -36,11 +39,15 @@ stages:
       persistCredentials: true
       clean: true
     
+
     - task: Bash@3
       displayName: Build Blob Streamer Image
       inputs:
         targetType: inline
         script: |
+          export TOKEN=$(az acr login --name $acrName --expose-token --output tsv --query accessToken)
+          export loginServer=$(az acr login --name $acrName --expose-token --output tsv --query loginServer)
+          docker login $loginServer --username 00000000-0000-0000-0000-000000000000 --password $TOKEN
           docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
     # - task: Bash@3
     #   displayName: Scan Blob Streamer Image
@@ -77,6 +84,9 @@ stages:
       inputs:
         targetType: inline
         script: |
+          export TOKEN=$(az acr login --name $acrName --expose-token --output tsv --query accessToken)
+          export loginServer=$(az acr login --name $acrName --expose-token --output tsv --query loginServer)
+          docker login $loginServer --username 00000000-0000-0000-0000-000000000000 --password $TOKEN        
           docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
     # - task: Bash@3
     #   displayName: Scan IoT Listener Image
