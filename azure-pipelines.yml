@@ -48,12 +48,11 @@ stages:
           az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
-          az acr login --name $(acrName) --expose-token --output tsv --query accessToken        
-          export TOKEN=`az acr login --name $acrName --expose-token --output tsv --query accessToken`
+          export TOKEN=`az acr login --name $(acrName) --expose-token --output tsv --query accessToken`
           echo "Token: $TOKEN"
-          export loginServer=`az acr login --name $acrName --expose-token --output tsv --query loginServer`
+          export loginServer=`az acr login --name $(acrName) --expose-token --output tsv --query loginServer`
           echo "loginServer: $loginServer"
-          # TOKEN=$(az acr login --name $acrName --expose-token --output tsv --query accessToken) loginServer=$(az acr login --name $acrName --expose-token --output tsv --query loginServer) docker login $loginServer --username 00000000-0000-0000-0000-000000000000 --password $TOKEN
+          docker login $loginServer --username 00000000-0000-0000-0000-000000000000 --password $TOKEN
           docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
     # - task: Bash@3
     #   displayName: Scan Blob Streamer Image
