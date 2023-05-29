@@ -4,9 +4,13 @@
 # https://aka.ms/yaml
 
 trigger:
-- Build_Pipeline
+- $(Build.SourceBranch)
 
 variables:
+- name: agentPool
+  value: 'IoT-Dicom-Pool'
+- name: aksAgentName
+  value: 'iot-dicom-aks-agent'
 - name: acrName
   value: 'iotimageacr'
 - name: acrUrl 
@@ -16,20 +20,73 @@ variables:
 - name: iotlistener_image
   value: 'backend_iotlistener.dll'
 
-pool:
-  vmImage: ubuntu-latest
+stages:
 
-steps:
-- checkout: self
-  persistCredentials: true
-  clean: true
-# - script: ls -la src/
-# - script: docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
-- script: $(Build.SourceBranch)
-  displayName: 'Run a one-line script'
+- stage: Blob_Streamer
+  displayName: Build, Scan & Push Blob Streamer
+  jobs:
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - job: Blob_Streamer_Image
+    displayName: Build Blob Streamer Image
+    pool:
+      name: $(agentPool)
+      agent.name: $(aksAgentName) 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    
+    - task: Bash@3
+      displayName: Build Blob Streamer Image
+      inputs:
+        targetType: inline
+        script: |
+          docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
+    # - task: Bash@3
+    #   displayName: Scan Blob Streamer Image
+    #   inputs:
+    #     targetType: inline
+    #     script: |
+    #       docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(blobstreamer_image):latest
+    - task: Bash@3
+      displayName: Push Blob Streamer Image
+      inputs:
+        targetType: inline
+        script: |
+          docker push $(acrName).azurecr.io/$(blobstreamer_image):latest
 
+
+
+
+- stage: IoT_Listener_Image
+  displayName: Build, Scan & Push IoT Listener
+  jobs:
+
+  - job: BlobStreamer_Image
+    displayName: Build Blob Streamer Image
+    pool:
+      name: $(agentPool)
+      agent.name: $(aksAgentName) 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    
+    - task: Bash@3
+      displayName: Build IoT Listener Image
+      inputs:
+        targetType: inline
+        script: |
+          docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
+    # - task: Bash@3
+    #   displayName: Scan IoT Listener Image
+    #   inputs:
+    #     targetType: inline
+    #     script: |
+    #       docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
+    - task: Bash@3
+      displayName: Push IoT Listener Image
+      inputs:
+        targetType: inline
+        script: |
+          docker push $(acrName).azurecr.io/$(iotlistener_image):latest
