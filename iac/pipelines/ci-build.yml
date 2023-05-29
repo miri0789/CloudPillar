@@ -85,6 +85,7 @@ stages:
           targetType: inline
           script: |
             cd src/backend/blobstreamer
+            ls
             docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ..\infra\build\Dockerfile .
 
       - task: Bash@3
@@ -92,6 +93,7 @@ stages:
         inputs:
           targetType: inline
           script: |
+            docker image ls
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(blobstreamer_image):latest
 
   - job: IoTListener_Image
@@ -110,6 +112,7 @@ stages:
           targetType: inline
           script: |
             cd src/backend/iotlistener
+            ls
             docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ..\infra\build\Dockerfile .
 
       - task: Bash@3
@@ -117,6 +120,7 @@ stages:
         inputs:
           targetType: inline
           script: |
+            docker image ls
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
 
 
