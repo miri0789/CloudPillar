@@ -144,14 +144,18 @@ stages:
       inputs:
         targetType: inline
         script: |
-          export ARM_CLIENT_ID=$(iac-app-client-id)
-          export ARM_CLIENT_SECRET=$(iac-app-client-secret)
-          export ARM_TENANT_ID=$(ARM_TENANT_ID)
-          export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+          export ARM_CLIENT_ID="63d53a16-04d5-4981-b530-4f38d3b16281"
+          export ARM_CLIENT_SECRET=".ry8Q~HTJwZ-io_VJ.1MRU5W2RbMQhT9voGJLaGM"
+          export ARM_TENANT_ID="63d53a16-04d5-4981-b530-4f38d3b16281"
+          export ARM_SUBSCRIPTION_ID="a147112f-bc59-4e9e-ac2f-5b4585e6542e"          
           terraform init -var-file=../env/backend.tfvars
-          # terraform init -var-file=../env/backend.tfvars
           terraform plan -var-file=../env/backend.tfvars          
-          echo "Terraform Backend Initilized"
+#          terraform init -var-file=../env/backend.tfvars
+#          export ARM_CLIENT_ID=$(iac-app-client-id)
+#          export ARM_CLIENT_SECRET=$(iac-app-client-secret)
+#          export ARM_TENANT_ID=$(ARM_TENANT_ID)
+#          export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+#          echo "Terraform Backend Initilized"
         workingDirectory: 'iac/terraform/backend'
 
 
