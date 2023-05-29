@@ -119,3 +119,45 @@ stages:
         targetType: inline
         script: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
+
+
+
+- stage: Push_Images
+  displayName: Push Docker Images
+  jobs:
+  - job: BlobStreamer_Image
+    displayName: Push Blob Streamer Image
+    pool: 
+      name: $(agentPool)
+      agent.name: $(aksAgentName)
+
+      steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+
+    - task: Bash@3
+      displayName: 'Push Blob Streamer Image'
+      inputs:
+        targetType: inline
+        script: |
+          cd src/backend/blobstreamer
+          docker push $(acrName).azurecr.io/$(blobstreamer_image):latest
+  - job: IoTListener_Image
+    displayName: Push IoT Listener Image
+    pool: 
+      name: $(agentPool)
+      agent.name: $(aksAgentName)
+      
+      steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+
+    - task: Bash@3
+      displayName: 'Push IoT Listener Image'
+      inputs:
+        targetType: inline
+        script: |
+          cd src/backend/iotlistener
+          docker push $(acrName).azurecr.io/$(iotlistener_image):latest
