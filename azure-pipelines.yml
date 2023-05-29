@@ -24,7 +24,8 @@ steps:
   persistCredentials: true
   clean: true
 # - script: ls -la src/
-- script: docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
+# - script: docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
+- script: $(Build.SourceBranch)
   displayName: 'Run a one-line script'
 
 - script: |
