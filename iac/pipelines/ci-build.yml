@@ -3,50 +3,119 @@ name: ci_build_pipeline
 trigger:
   - main
 
+
+
+
+
 variables:
-- name: build-versions-vg
 # - group: arm-vg
 # - group: iac-backend-vg
 # - group: backend-secrets-vg
-
+- name agentPool
+  value: 'IoT-Dicom-Pool'
+- name: aksAgentName
+  value: 'iot-dicom-aks-agent'
+- name: acrName
+  value: 'iotimageacr'
+- name: acrUrl 
+  value: 'iotimageacr.azurecr.io'
+- name: blobstreamer_image
+  value: 'backend_blobstreamer.dll'
+- name: iotlistener_image
+  value: 'backend_iotlistener.dll'
 
 stages:
-- stage: Test
-  displayName: Test
-  jobs:
+# - stage: Test
+#   displayName: Test
+#   jobs:
 
-  - job: Testing_Variables
-    displayName: Testing Variables
-    pool:
-      vmImage: 'ubuntu-20.04'
+#   - job: Testing_Variables
+#     displayName: Testing Variables
+#     pool:
+#       vmImage: 'ubuntu-20.04'
+#       steps:
+#     - checkout: self
+#       persistCredentials: true
+#       clean: true
+
+#     - task: Bash@3
+#       displayName: 'Tests'
+#       inputs:
+#         targetType: inline
+#         script: |
+#           echo "Build.BuildId - $(Build.BuildId)"
+#           echo "Build.BuildNumber(Time) - $(Build.BuildNumber)"
+#           echo "SYSTEM_ACCESSTOKEN - $(System.AccessToken)"
+#           echo "Execution ID: $(System.JobId)"
+#           echo "Version: $(versionLabel)-$(System.JobId)"
+#           echo "Build.ContainerId	- $(Build.ContainerId)"
+#           echo "Build.DefinitionName	- $(Build.DefinitionName)"
+#           echo "Build.DefinitionId	- $(Build.DefinitionId)"
+#           echo "Build.DefinitionVersion	- $(Build.DefinitionVersion)"
+#           echo "Build.SourceVersion	- $(Build.SourceVersion)"
+#           echo "Build.TriggeredBy.BuildId	- $(Build.TriggeredBy.BuildId)"
+#           echo "Build.TriggeredBy.DefinitionId	- $(Build.TriggeredBy.DefinitionId)"
+#           echo "Build.TriggeredBy.BuildNumber	- $(Build.TriggeredBy.BuildNumber)"
+#           echo "System.JobId	- $(System.JobId)"
+#           echo "System.DefinitionId	- $(System.DefinitionId)"
+#           echo "TF_BUILD  - $(TF_BUILD)"
+#           # echo "Build.Repository.Name	- $(Build.Repository.Name)"
+#           # echo "Build.Repository.Provider	- $(Build.Repository.Provider)"
+
+#           echo "Agent.Id, Agent.Name - $(Agent.Id), $(Agent.Name)"
+#           # ${major}.${minor}.${build}.${timestamp}   
+
+- stage: Build_Scan_Images
+  displayName: Build Docker Images
+  jobs:
+  - job: BlobStreamer_Image
+    displayName: Build & Scan Blob Streamer Image
+    pool: 
+      name: $(agentPool)
+      agent.name: $(aksAgentName)
+
       steps:
     - checkout: self
       persistCredentials: true
       clean: true
 
     - task: Bash@3
-      displayName: 'Tests'
+      displayName: 'Build Blob Streamer Image'
       inputs:
         targetType: inline
         script: |
-          echo "Build.BuildId - $(Build.BuildId)"
-          echo "Build.BuildNumber(Time) - $(Build.BuildNumber)"
-          echo "SYSTEM_ACCESSTOKEN - $(System.AccessToken)"
-          echo "Execution ID: $(System.JobId)"
-          echo "Version: $(versionLabel)-$(System.JobId)"
-          echo "Build.ContainerId	- $(Build.ContainerId)"
-          echo "Build.DefinitionName	- $(Build.DefinitionName)"
-          echo "Build.DefinitionId	- $(Build.DefinitionId)"
-          echo "Build.DefinitionVersion	- $(Build.DefinitionVersion)"
-          echo "Build.SourceVersion	- $(Build.SourceVersion)"
-          echo "Build.TriggeredBy.BuildId	- $(Build.TriggeredBy.BuildId)"
-          echo "Build.TriggeredBy.DefinitionId	- $(Build.TriggeredBy.DefinitionId)"
-          echo "Build.TriggeredBy.BuildNumber	- $(Build.TriggeredBy.BuildNumber)"
-          echo "System.JobId	- $(System.JobId)"
-          echo "System.DefinitionId	- $(System.DefinitionId)"
-          echo "TF_BUILD  - $(TF_BUILD)"
-          # echo "Build.Repository.Name	- $(Build.Repository.Name)"
-          # echo "Build.Repository.Provider	- $(Build.Repository.Provider)"
+          cd src/backend/blobstreamer
+          docker build -t $(acrName).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ..\infra\build\Dockerfile .
 
-          echo "Agent.Id, Agent.Name - $(Agent.Id), $(Agent.Name)"
-          # ${major}.${minor}.${build}.${timestamp}   
+    - task: Bash@3
+      displayName: 'Scan Blob Streamer Image'
+      inputs:
+        targetType: inline
+        script: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(blobstreamer_image):latest
+
+  - job: IoTListener_Image
+    displayName: Build & Scan IoT Listener Image
+    pool: 
+      name: $(agentPool)
+      agent.name: $(aksAgentName)
+      
+      steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+
+    - task: Bash@3
+      displayName: 'Build IoT Listener Image'
+      inputs:
+        targetType: inline
+        script: |
+          cd src/backend/iotlistener
+          docker build -t $(acrName).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ..\infra\build\Dockerfile .
+
+    - task: Bash@3
+      displayName: 'Scan Blob Streamer Image'
+      inputs:
+        targetType: inline
+        script: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(acrName).azurecr.io/$(iotlistener_image):latest
