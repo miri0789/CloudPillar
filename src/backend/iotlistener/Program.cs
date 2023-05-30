@@ -1,4 +1,5 @@
-﻿using common;
+﻿using System.Runtime.Loader;
+using common;
 using iotlistener;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
@@ -25,6 +26,13 @@ class Program
         var signingService = serviceProvider.GetService<ISigningService>();
         signingService.Init();
 
+
+        var cts = new CancellationTokenSource();
+        AssemblyLoadContext.Default.Unloading += context =>
+        {
+            cts.Cancel();
+        };
+
         EventProcessorHost eventProcessorHost = new EventProcessorHost(
                 Guid.NewGuid().ToString(),
                 EventHubCompatiblePath,
@@ -43,11 +51,12 @@ class Program
 
 
         var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
-        var szureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService);
+        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService);
 
-        await eventProcessorHost.RegisterEventProcessorFactoryAsync(szureStreamProcessorFactory, eventProcessorOptions);
+        await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 
-        //TODO termination hander
-        //await eventProcessorHost.UnregisterEventProcessorAsync();
+        await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
+
+        await eventProcessorHost.UnregisterEventProcessorAsync();
     }
 }
