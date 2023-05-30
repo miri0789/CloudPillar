@@ -5,7 +5,7 @@
 
 trigger:
 - none
-# - $(Build.SourceBranch)
+- $(Build.SourceBranchName)
 
 variables:
 - group: arm-vg
