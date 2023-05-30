@@ -1,9 +1,15 @@
-**/bin
+**/*bin
 **/obj
 **/dbg
+src/agent/dotnet/publish/linux*
+src/agent/dotnet/publish/win*
+src/agent/dotnet/publish/osx*
+src/agent/dotnet/publish/*.zip
 .venv
 .conda
 **/.DS_Store
 src/agent/dotnet/Microsoft Azure Storage Explorer.app.zip
 src/agent/dotnet/CartoPatch*
 src/agent/dotnet/VelysPatch*
+**/tfplan
+**/.terraform*

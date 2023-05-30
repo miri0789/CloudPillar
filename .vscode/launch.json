@@ -109,6 +109,49 @@
                 "BLOB_CONTAINER_NAME": "iot-firmware",
                 // "D2C_PARTITION_ID": "0"
             }
+        },
+        {
+            // Use IntelliSense to find out which attributes exist for C# debugging
+            // Use hover for the description of the existing attributes
+            // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
+            "name": "Blob Streamer Service",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildBlobStreamer",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/src/backend/blobstreamer/bin/Debug/net7.0/blobstreamer.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/backend/blobstreamer",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "env": {
+                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
+                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "BLOB_CONTAINER_NAME": "iot-firmware",
+                "MESSAGE_EXPIRED_MINUTES": "60",
+                "RETRY_POLICY_BASE_DELAY": "2",
+                "RETRY_POLICY_EXPONENT": "3"
+            }
+        },
+        {
+            "name": "DICOM Agent Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildDicomAgent",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/src/dicom-service-poc/agent/dotnet/bin/Debug/net7.0/dicom-service-agent.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/dicom-service-poc/agent/dotnet",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "env": {
+                "TENANT_ID": "63d53a16-04d5-4981-b530-4f38d3b16281", // tenant-id
+                "CLIENT_ID": "947edf6d-b41d-4f18-9912-b007670e71b3", // client-id 
+                "CLIENT_SECRET": "kaJ8Q~y2~z3meNKe87FV9BFb9bFCdncWOt1Fbb2h", // client-secret
+                "RESOURCE": "https://dicom.healthcareapis.azure.com",
+                "AUTHORITY": "https://login.microsoftonline.com"
+            },
+            "stopAtEntry": false
         }
     ]
 }

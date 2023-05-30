@@ -1,0 +1,68 @@
+# Default values for cartonet.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+controllers:
+  - title: "analyzer"
+  - title: "beapi"
+    path: /cloudpillar/api
+    port: 8089
+  - title: "blobstreamer"
+    port: 8089
+    env:
+    - name: BLOB_CONTAINER_NAME
+      value: "iot-firmware"
+    - name: IOTHUB_CONNECTION_STRING
+      value: "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc="
+    - name: STORAGE_CONNECTION_STRING
+      value: "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net"
+    - name: MESSAGE_EXPIRED_MINUTES
+      value: "60"
+    - name: RETRY_POLICY_BASE_DELAY
+      value: "2"
+    - name: RETRY_POLICY_EXPONENT
+      value: "3"
+    # - name: PARTITION_ID
+    #   valueFrom:
+    #     fieldRef:
+    #       fieldPath: metadata.name
+    # - name: SECRET_NAMESPACE
+    #   valueFrom:
+    #     fieldRef:
+    #       fieldPath: metadata.namespace
+  - title: "iotlistener"
+    kind: StatefulSet
+    env:
+    - name: LOGSWRITE_TOPIC
+      value: "logswrite-topic"
+    - name: IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT
+      value: "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub"
+    - name: IOTHUB_EVENT_HUB_COMPATIBLE_PATH
+      value: "szlabs-iot-hub"
+    - name: STORAGE_CONNECTION_STRING
+      value: "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net"
+    - name: BLOB_CONTAINER_NAME
+      value: "iot-firmware"
+  - title: "keyholder"
+    port: 8089
+  - title: "mongowriter"
+    env:
+    - name: LOG_TOPIC
+      value: "logswrite-topic"
+    - name: TELEMETRY_TOPIC
+      value: "telemetrywrite-topic"
+  - title: "twinlistener"
+    env:
+    - name: WRITE_TOPIC
+      value: "telemetrywrite-topic"
+
+replicaCount: 1
+
+# env:
+#   - name: ASPNETCORE_ENVIRONMENT
+#     value: DevEU
+
+image:
+  acr: "iotimageacr.azurecr.io"
+  tag: latest
+
