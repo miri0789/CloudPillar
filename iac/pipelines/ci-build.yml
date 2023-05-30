@@ -13,7 +13,7 @@ variables:
 
 stages:
 - stage: Blob_Streamer
-  displayName: Build, Scan & Push Blob Streamer
+  displayName: Blob Streamer
   jobs:
 
   - job: Blob_Streamer_Image
@@ -27,7 +27,7 @@ stages:
       clean: true
 
     - task: Bash@3
-      displayName: Blob Streamer Build 
+      displayName: Build & Tag Image
       inputs:
         targetType: inline
         script: |
@@ -38,7 +38,7 @@ stages:
           sudo docker build -t $(ACR_NAME).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
 
     - task: Bash@3
-      displayName: Blob Streamer Scan
+      displayName: Trviy Scan Image
       inputs:
         targetType: inline
         script: |
@@ -46,7 +46,7 @@ stages:
           sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(blobstreamer_image):latest
 
     - task: Bash@3
-      displayName: Blob Streamer Push 
+      displayName: Push Image to ACR
       inputs:
         targetType: inline
         script: |
@@ -56,7 +56,7 @@ stages:
 
 
 - stage: IoT_Listener_Image
-  displayName: Build, Scan & Push IoT Listener
+  displayName: IoT Listener
   jobs:
 
   - job: IoTListener_Image
@@ -70,7 +70,7 @@ stages:
       clean: true
     
     - task: Bash@3
-      displayName: IoT Listener Build 
+      displayName: Build & Tag Image
       inputs:
         targetType: inline
         script: |
@@ -81,7 +81,7 @@ stages:
           sudo docker build -t $(ACR_NAME).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
 
     - task: Bash@3
-      displayName: IoT Listener Scan 
+      displayName: Trivy Scan Image
       inputs:
         targetType: inline
         script: |
@@ -89,7 +89,7 @@ stages:
           sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(iotlistener_image):latest
 
     - task: Bash@3
-      displayName: IoT Listener Push 
+      displayName: Push Image to ACR
       inputs:
         targetType: inline
         script: |
