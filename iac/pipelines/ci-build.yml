@@ -1,0 +1,96 @@
+trigger:
+# - none
+- $(Build.SourceBranchName)
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+- group: images-vg
+
+
+
+stages:
+- stage: Blob_Streamer
+  displayName: Build, Scan & Push Blob Streamer
+  jobs:
+
+  - job: Blob_Streamer_Image
+    displayName: Build, Scan & Push
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: $(AKS_AGENT_NAME) 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+
+    - task: Bash@3
+      displayName: Blob Streamer Build 
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+          sudo az acr login -n $(ACR_NAME)
+          sudo docker build -t $(ACR_NAME).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
+
+    - task: Bash@3
+      displayName: Blob Streamer Scan
+      inputs:
+        targetType: inline
+        script: |
+          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(blobstreamer_image):latest
+          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(blobstreamer_image):latest
+
+    - task: Bash@3
+      displayName: Blob Streamer Push 
+      inputs:
+        targetType: inline
+        script: |
+          sudo docker push $(ACR_NAME).azurecr.io/$(blobstreamer_image):latest
+
+
+
+
+- stage: IoT_Listener_Image
+  displayName: Build, Scan & Push IoT Listener
+  jobs:
+
+  - job: IoTListener_Image
+    displayName: Build, Scan & Push
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: $(AKS_AGENT_NAME) 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    
+    - task: Bash@3
+      displayName: IoT Listener Build 
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+          sudo az acr login -n $(ACR_NAME)
+          sudo docker build -t $(ACR_NAME).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
+
+    - task: Bash@3
+      displayName: IoT Listener Scan 
+      inputs:
+        targetType: inline
+        script: |
+          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(iotlistener_image):latest
+          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(iotlistener_image):latest
+
+    - task: Bash@3
+      displayName: IoT Listener Push 
+      inputs:
+        targetType: inline
+        script: |
+          sudo docker push $(ACR_NAME).azurecr.io/$(iotlistener_image):latest
