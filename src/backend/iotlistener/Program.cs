@@ -13,7 +13,7 @@ class Program
         string EventHubCompatibleEndpoint = Environment.GetEnvironmentVariable(Constants.iothubEventHubCompatibleEndpoint)!;
         string StorageConnectionString = Environment.GetEnvironmentVariable(Constants.storageConnectionString)!;
         string BlobContainerName = Environment.GetEnvironmentVariable(Constants.blobContainerName)!;
-
+        string? PartitionId = Environment.GetEnvironmentVariable("PARTITION_ID")?.Split('-')?.Last();
 
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddScoped<IHttpRequestorService, HttpRequestorService>();
@@ -51,7 +51,7 @@ class Program
 
 
         var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
-        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService);
+        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, PartitionId);
 
         await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 

@@ -9,19 +9,25 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
 {
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
+    private readonly string _partitionId;
 
-    public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService)
+    public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService, string partitionId)
     {
         _firmwareUpdateService = firmwareUpdateService;
         _signingService = signingService;
+        _partitionId = partitionId;
     }
 
     IEventProcessor IEventProcessorFactory.CreateEventProcessor(PartitionContext context)
     {
-        return new AgentEventProcessor(_firmwareUpdateService, _signingService);
+        if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
+        {
+            return new AgentEventProcessor(_firmwareUpdateService, _signingService);
+        }
+
+        return new NullEventProcessor();
     }
 }
-
 public class AgentEventProcessor : IEventProcessor
 {
     private readonly IFirmwareUpdateService _firmwareUpdateService;
@@ -107,4 +113,28 @@ public class AgentEventProcessor : IEventProcessor
         await context.CheckpointAsync();
     }
 
+}
+
+
+class NullEventProcessor : IEventProcessor
+{
+    public Task CloseAsync(PartitionContext context, CloseReason reason)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task OpenAsync(PartitionContext context)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task ProcessErrorAsync(PartitionContext context, Exception error)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
+    {
+        return Task.CompletedTask;
+    }
 }
