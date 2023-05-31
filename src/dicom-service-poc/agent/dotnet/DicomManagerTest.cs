@@ -32,11 +32,12 @@ namespace DicomAgentPoC
             var dicomWithZipTag = dicomManager.ExpandDicomWithNewPrivateTag(dicomFile, zipDicomTag, DicomVR.OB, binaryData);
             var updetedDicom = dicomManager.ExpandDicomWithNewPrivateTag(dicomWithZipTag, sizeOfZipDicomTag, DicomVR.US, Convert.ToUInt16(binaryData.Length));
             
-            var xx = dicomManager.SetDicomStandardTag(updetedDicom, DicomTag.SOPInstanceUID, DicomUID.Generate().UID);
-            var response = await dicomManager.StoreDicom(xx);
+            dicomManager.SetDicomStandardTag(updetedDicom, DicomTag.SOPInstanceUID, DicomUID.Generate().UID);
+            var response = await dicomManager.StoreDicom(updetedDicom);
             if(response.IsSuccessStatusCode)
                 Console.WriteLine($"{updetedDicom.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID)} saved with status code: {response.StatusCode}");
         }
+
 
         /// <summary>
         /// Query Dicom with expended standard tag.
@@ -72,14 +73,14 @@ namespace DicomAgentPoC
             var dicomFile = await DicomFile.OpenAsync(dicomFilePath);
             var binaryData = File.ReadAllBytes(zipFilePath);
 
-            var sizeOfZipDicomTag = new DicomTag(0x0009, 0x08, "BiosensePrivateGroup");
+            var sizeOfZipDicomTag = new DicomTag(0x0009, 0x03, "BiosensePrivateGroup");
             var updetedDicom = dicomManager.ExpandDicomWithNewPrivateTag(dicomFile, sizeOfZipDicomTag, DicomVR.US, Convert.ToUInt16(binaryData.Length));
             dicomManager.SetDicomStandardTag(updetedDicom, DicomTag.SOPInstanceUID, DicomUID.Generate().UID);
-            // var response = await dicomManager.StoreDicom(updetedDicom);
-            // if(response.IsSuccessStatusCode)
-                // Console.WriteLine($"{updetedDicom.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID)} saved with status code: {response.StatusCode}");
+            var response = await dicomManager.StoreDicom(updetedDicom);
+            if(response.IsSuccessStatusCode)
+                Console.WriteLine($"{updetedDicom.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID)} saved with status code: {response.StatusCode}");
 
-            var instance = await dicomManager.QueryDicomExpandedPrivateTag(sizeOfZipDicomTag, DicomVR.CS, QueryTagLevel.Instance, "aaa");
+            var instance = await dicomManager.QueryDicomExpandedPrivateTag(sizeOfZipDicomTag, DicomVR.US, QueryTagLevel.Instance, binaryData.Length);
             foreach (var item in instance)
             {
                 Console.WriteLine($"{item.GetSingleValue<string>(DicomTag.SOPInstanceUID)} queried with tag: {ds.GetPrivateTag(sizeOfZipDicomTag).GetPath()}");

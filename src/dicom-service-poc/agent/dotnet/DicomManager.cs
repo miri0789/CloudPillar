@@ -98,7 +98,7 @@ namespace DicomAgentPoC
             var dataset = new DicomDataset();
 
             var entry = new AddExtendedQueryTagEntry{Path = dataset.GetPrivateTag(expendedTag).GetPath(), VR = tagVr.Code, Level = tagLevel, PrivateCreator = expendedTag.PrivateCreator.ToString()};
-            var extendedTagexist = await GetExtendedQueryTagAsync(dataset.GetPrivateTag(expendedTag).GetPath());
+            var extendedTagexist = await client.GetExtendedQueryTagAsync(dataset.GetPrivateTag(expendedTag).GetPath());
             if(extendedTagexist.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 try
