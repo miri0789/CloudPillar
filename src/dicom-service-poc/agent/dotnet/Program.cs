@@ -1,9 +1,7 @@
 ﻿using System;
-using Microsoft.Health.Dicom.Client;
-using Azure.Identity;
-using Azure.Core;
 using FellowOakDicom;
-using Microsoft.Identity.Client;
+using Microsoft.Health.Dicom.Client.Models;
+using Microsoft.Health.Dicom.Core.Extensions;
 
 namespace DicomAgentPoC
 {
@@ -11,14 +9,11 @@ namespace DicomAgentPoC
     {
         static async Task Main(string[] args)
         {
-            DicomManager.DicomServiceConnection();
+            DicomManagerTest managerTest = new DicomManagerTest();
 
-            //Store a DICOM with zip
-            var dcmImage = @"C:\Dev\minimal_01.dcm";
-            var zipFile = @"C:\Dev\Catheter-501.zip";
-            // Read the contents of the zip file into a byte array
-            byte[] zipData = File.ReadAllBytes(zipFile);
-            await DicomManager.StoreDicomWithBinaryTag(dcmImage, zipData);
+            await managerTest.StoreDicomWithBinaryTag();
+            await managerTest.QueryDicomWithExpandedStandardTag();
+            await managerTest.QueryDicomWithExpandedPrivateTag();
         }
     }
 }
