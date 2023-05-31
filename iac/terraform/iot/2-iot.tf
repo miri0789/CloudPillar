@@ -1,6 +1,6 @@
 resource "azurerm_iothub" "iot" {
   # name has to be unique amongst all iot hubs in Azure could over the world
-  name                = "iot-dicom-${var.env}-hub"
+  name                = "cp-${var.env}-iothub"
   resource_group_name = data.azurerm_resource_group.iot.name
   location            = data.azurerm_resource_group.iot.location
 
