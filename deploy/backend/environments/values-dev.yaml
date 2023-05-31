@@ -49,6 +49,8 @@ controllers:
       value: "percent"
     - name: RANGE_PERCENT
       value: "25"
+    - name: MESSAGE_TIMEOUT_MINUTES
+      value: "60"
     - name: RANGE_BYTES
       value: "123456"
     - name: KUBERNETES_SERVICE_HOST
