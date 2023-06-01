@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Storage.Blob;
+using common;
 
 namespace iotlistener;
 
@@ -9,7 +10,6 @@ public interface IFirmwareUpdateService
 
 public class FirmwareUpdateService : IFirmwareUpdateService
 {
-
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly Uri _blobStreamerUrl;
     public FirmwareUpdateService(IHttpRequestorService httpRequestorService)

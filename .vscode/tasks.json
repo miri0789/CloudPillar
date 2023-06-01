@@ -110,6 +110,22 @@
             }
         },
         {
+            "label": "buildKeyholder",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/backend/keyholder/keyholder.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "buildDicomAgent",
             "command": "dotnet",
             "type": "process",

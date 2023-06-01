@@ -18,15 +18,10 @@ class Program
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddScoped<IHttpRequestorService, HttpRequestorService>();
         serviceCollection.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
-        serviceCollection.AddSingleton<ISigningService, SigningService>();
+        serviceCollection.AddScoped<ISigningService, SigningService>();
 
         serviceCollection.AddHttpClient();
         var serviceProvider = serviceCollection.BuildServiceProvider();
-
-        var signingService = serviceProvider.GetService<ISigningService>();
-        signingService.Init();
-
-
         var cts = new CancellationTokenSource();
         AssemblyLoadContext.Default.Unloading += context =>
         {
@@ -51,6 +46,7 @@ class Program
 
 
         var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
+        var signingService = serviceProvider.GetService<ISigningService>();
         var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, PartitionId);
 
         await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
