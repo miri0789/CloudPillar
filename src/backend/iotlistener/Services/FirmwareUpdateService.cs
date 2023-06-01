@@ -1,5 +1,4 @@
-﻿using common;
-using Microsoft.Azure.Storage.Blob;
+﻿using Microsoft.Azure.Storage.Blob;
 
 namespace iotlistener;
 
@@ -12,11 +11,11 @@ public class FirmwareUpdateService : IFirmwareUpdateService
 {
 
     private readonly IHttpRequestorService _httpRequestorService;
-    private readonly string _blobStreamerUrl;
+    private readonly Uri _blobStreamerUrl;
     public FirmwareUpdateService(IHttpRequestorService httpRequestorService)
     {
         _httpRequestorService = httpRequestorService;
-        _blobStreamerUrl = Environment.GetEnvironmentVariable(Constants.blobStreamerUrl)!;
+        _blobStreamerUrl = new Uri(Environment.GetEnvironmentVariable(Constants.blobStreamerUrl)!);
     }
 
     public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)
