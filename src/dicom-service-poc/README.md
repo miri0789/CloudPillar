@@ -35,3 +35,51 @@ Add NuGet package source:
     Then: `dotnet add package Microsoft.Health.Dicom.Client --version 10.0.282`
 * fo-dicom package `dotnet add package fo-dicom --version 5.0.3`
 * Azure.identity: `dotnet add package Azure.identity`
+* `dotnet add package Microsoft.Health.Dicom.Core -v 10.0.337`
+
+## Private and standard tags
+
+### Adding Private tag
+To add private tag you need a Private Creator. The Private creator is automaticly added when create the new private tag with tag element (gggg,0010-00FF) (gggg is odd).
+when you add new private tag you set the tag element with the low byte and it save with combine the low byte of the automatic Private Creator.
+
+
+Example: 
+```c#
+Dataset ds = new Dataset();
+var privateTag = new DicomTag(0x0009, 0x05, "BiosensePrivateGroup");
+dicomFile.Dataset.AddOrUpdate(DicomVR.CS, ds.GetPrivateTag(privateTag), "value");
+```
+
+This code generate:
+1. One tag of Private Creator:
+**(0009, 0010)** with VR: **LO** and value: **BiosensePrivateGroup**.
+2. Another tag with combine element: **(0009, 1005)** with VR: **CS** and value: **value**.
+
+**Important!** 
+
+Before save/store the DICOM with the private element be sure the Transfare syntax of the Dicom is ExplicitVRLittleEndian.
+This is update the Transfare syntax: `dicomFile.FileMetaInfo.TransferSyntax = DicomTransferSyntax.ExplicitVRLittleEndian;`
+
+### Query with Tag filter
+The query is divided into three types:
+#### *Supported Tags*
+There are list of tag that the Microsoft Azure Dicom Service support to qury by use them. they listed here: 
+https://learn.microsoft.com/en-us/azure/healthcare-apis/dicom/dicom-services-conformance-statement#searchable-attributes.
+#### *Standard Tags*
+We can extend the Query tags by using `QueryDicomExpandedStandardTag()`.
+
+example for query all the instances with tag PatientSex==F:
+```c#
+DicomTag genderTag = DicomTag.PatientSex;
+QueryDicomExpandedStandardTag(genderTag, "F");
+```
+
+#### *Private Tags*
+We can extend the Query tags by using `QueryDicomExpandedPrivateTag()`.
+
+example for query all the instances with tag (0x0009, 0x1005)==value:
+```c#
+var privateTag = new DicomTag(0x0009, 0x05, "BiosensePrivateGroup");
+QueryDicomExpandedPrivateTag(privateTag, DicomVR.CS, QueryTagLevel.Study "value");
+```

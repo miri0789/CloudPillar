@@ -12,6 +12,7 @@
     <PackageReference Include="Azure.identity" Version="1.9.0" />
     <PackageReference Include="fo-dicom" Version="5.0.3" />
     <PackageReference Include="Microsoft.Health.Dicom.Client" Version="10.0.282" />
+    <PackageReference Include="Microsoft.Health.Dicom.Core" Version="10.0.337" />
   </ItemGroup>
 
 </Project>
