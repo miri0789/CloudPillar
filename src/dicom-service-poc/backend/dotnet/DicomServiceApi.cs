@@ -1,15 +1,8 @@
-using Microsoft.Health.Dicom.Client;
-using Microsoft.Health.Dicom.Core.Features.Query;
-using Microsoft.Health.Dicom.Client.Models;
-using Azure.Identity;
-using Azure.Core;
-using Azure.Security.KeyVault.Secrets;
-using FellowOakDicom;
-//using FellowOakDicom.DicomDataSet;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Identity.Client; // I am using the Package Microsoft.Identity.Client from nuget.org
-using System;
 using System.Net;
+using FellowOakDicom;
+using Microsoft.Health.Dicom.Client;
+using Microsoft.Health.Dicom.Client.Models;
+using Microsoft.Identity.Client;
 
 namespace DicomBackendPoC
 {
@@ -56,16 +49,7 @@ namespace DicomBackendPoC
         public async Task<HttpStatusCode> StoreDicom(string fileName)
         {
             var dicomFile = await DicomFile.OpenAsync(fileName);
-            try
-            {
-                var response = await client.StoreAsync(dicomFile);
-
-                return response.StatusCode;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"{ex.Message}, file name: {fileName}", ex);
-            }    
+            return await StoreDicom(dicomFile);
         }
 
         public async Task<HttpStatusCode> StoreDicom(DicomFile dicomFile)
