@@ -1,34 +1,29 @@
 ﻿namespace common;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 
-public class SchemaValidator
+public interface ISchemaValidator
+{
+    bool ValidatePayloadSchema(string payload, string schemaPath);
+} 
+
+public class SchemaValidator: ISchemaValidator
 {
     private readonly ConcurrentDictionary<string, JSchema> SchemaCache = new ConcurrentDictionary<string, JSchema>();
 
- 
-
-    public JToken ParseAndValidate(string payload, string schemaPath)
+    public bool ValidatePayloadSchema(string payload, string schemaPath)
     {
-        JSchema jSchema = SchemaCache.GetOrAdd(schemaPath, LoadAndParseSchema);
-
- 
-
+        JSchema jSchema = SchemaCache.GetOrAdd(schemaPath, LoadSchema);
         JToken jToken = JToken.Parse(payload);
-        jToken.Validate(jSchema);
+        bool isValid = jToken.IsValid(jSchema);
 
- 
-
-        return jToken;
+        return isValid;
     }
 
- 
 
-    private JSchema LoadAndParseSchema(string schemaPath)
+    private JSchema LoadSchema(string schemaPath)
     {
         string schema = File.ReadAllText(schemaPath);
         return JSchema.Parse(schema);
