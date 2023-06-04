@@ -1,5 +1,5 @@
 resource "azurerm_virtual_network" "aks" {
-  name                = "iot-${var.env}-vnet"
+  name                = "cp-${var.env}-vnet"
   resource_group_name = azurerm_resource_group.aks.name
   location            = azurerm_resource_group.aks.location
   tags                = { "terraform": "true" }
