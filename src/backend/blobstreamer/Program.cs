@@ -1,5 +1,11 @@
 using blobstreamer.Services;
 using blobstreamer.Contracts;
+using System.Reflection;
+
+var informationalVersion = Assembly.GetEntryAssembly()?
+                               .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                               .InformationalVersion;
+Console.WriteLine($"Informational Version: {informationalVersion ?? "Unknown"}");
 
 var builder = WebApplication.CreateBuilder(args);
 

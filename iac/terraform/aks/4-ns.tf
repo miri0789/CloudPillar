@@ -6,6 +6,6 @@ resource "kubernetes_namespace" "aks" {
     # labels = {
     #   mylabel = "label-value"
     # }
-    name = "jnj-iot-osm-ns"
+    name = "cp-osm-ns"
   }
 }

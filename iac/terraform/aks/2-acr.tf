@@ -1,7 +1,8 @@
+// In future there should be established also a white-acr
 resource "azurerm_container_registry" "acr"{
   count                         = var.env == "dev" ? 1 : 0
-  name                          = "iotimageacr"
-  resource_group_name           = "iot-rg"
+  name                          = "cpgreyacr"
+  resource_group_name           = "cp-rg"
   location                      = azurerm_resource_group.aks.location
   sku                           = "Standard"
   admin_enabled                 = false
@@ -13,7 +14,7 @@ resource "azurerm_container_registry" "acr"{
 
 data "azurerm_container_registry" "aks"{
   #count                         = var.env == "dev" ? 1 : 0
-  name                          = "iotimageacr"
-  resource_group_name           = "iot-rg"
+  name                          = "cpgreyacr"
+  resource_group_name           = "cp-rg"
   depends_on = [ azurerm_container_registry.acr ]
 }
