@@ -48,7 +48,7 @@ class Program
 
         var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
         var signingService = serviceProvider.GetService<ISigningService>();
-        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, "1");
+        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, PartitionId);
 
         await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 
