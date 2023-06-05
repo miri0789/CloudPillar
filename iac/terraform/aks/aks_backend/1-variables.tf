@@ -75,7 +75,8 @@ variable "personal_access_token_secret" {
     type        = string
     description = "The name of the subnet in which to create the resources"
     sensitive = true
-    default = "Cloud-Pillar-Agent-Token"
+    /* default = "Cloud-Pillar-Agent-Token" */
+    default = "iot-dicom-agent-devops-token"
 }
 
 variable "personal_access_token_value" {
