@@ -32,25 +32,25 @@ variable "location" {
 variable "region" {
     type = string
     description = "The IaC Backend Location"
-    default = "West Europe"
+    default = "westeurope"
 }
 
 variable "tf_backend_rg" {
     type = string
     description = "The IaC Backend Resource Group"
-    default = "iac-rg"  
+    /* default = "iac-rg"   */
 }
 
 variable "tf_backend_sa" {
     type = string
     description = "The IaC Backend Storage Account"
-    default = "iacsa"  
+    /* default = "iacsa"   */
 }
 
 variable "tf_backend_kv" {
     type = string
     description = "The IaC Backend Key Vault"
-    default = "iackv"  
+    /* default = "iackv"   */
 }
 
 
