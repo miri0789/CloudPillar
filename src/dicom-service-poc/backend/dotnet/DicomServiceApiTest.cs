@@ -1,4 +1,5 @@
 using FellowOakDicom;
+using System.Net;
 
 namespace DicomBackendPoC
 {
@@ -9,6 +10,7 @@ namespace DicomBackendPoC
         private string StudyInstanceUID = "12.3.6468.789454613000";
         private string SeriesInstanceUID = "36541287984.3000";
         private string[] SOPInstanceUIDs = {"1187945.3.6458.12000", "1187945.3.6458.12001", "1187945.3.6458.12002", "1187945.3.6458.12003"};
+        public string dicomFilePath = @"C:\Dev\minimal_01.dcm";
 
         public DicomServiceApiTest() {}
 
@@ -230,5 +232,29 @@ namespace DicomBackendPoC
                 }
 
             }
+
+        /// <summary>
+        /// Store Dicom with patient details changes.
+        /// </summary>
+        public async Task StoreDicomWithPatientDetailsChanges()
+        {
+            DicomDataset ds = new DicomDataset();
+            var dicomFile = await DicomFile.OpenAsync(dicomFilePath);
+            dicomServiceApi.SetDicomStandardTag(dicomFile, DicomTag.SOPInstanceUID, DicomUID.Generate().UID);
+            dicomServiceApi.SetDicomStandardTag(dicomFile, DicomTag.StudyInstanceUID, DicomUID.Generate().UID);
+            var response = await dicomServiceApi.StoreDicom(dicomFile);
+            if(response == HttpStatusCode.OK)
+                Console.WriteLine($"{dicomFile.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID)} saved with status code: {response.ToString()}");
+            try
+            {
+                dicomServiceApi.SetDicomStandardTag(dicomFile, DicomTag.SOPInstanceUID, DicomUID.Generate().UID);
+                dicomServiceApi.SetDicomStandardTag(dicomFile, DicomTag.PatientBirthDate, DateTime.Now);
+                await dicomServiceApi.StoreDicomWithValidation(dicomFile);
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
     }
 }

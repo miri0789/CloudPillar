@@ -11,10 +11,36 @@ namespace DicomAgentPoC
         {
             DicomManagerTest managerTest = new DicomManagerTest();
 
-            await managerTest.StoreDicomWithBinaryTag();
-            await managerTest.QueryDicomWithExpandedStandardTag();
-            await managerTest.QueryDicomWithExpandedPrivateTag();
-            await managerTest.StoreDicomWithPatientDetailsChanges();
+            try
+            {
+                await managerTest.StoreDicomWithBinaryTag();
+            }
+            catch (System.Exception e)
+            {
+                
+                Console.WriteLine(e.Message);
+            }
+
+            try
+            {
+                await managerTest.QueryDicomWithExpandedStandardTag();
+            }
+            catch (System.Exception e)
+            {
+                
+                Console.WriteLine(e.Message);
+            }
+
+            try
+            {
+                await managerTest.QueryDicomWithExpandedPrivateTag();
+            }
+            catch (System.Exception e)
+            {
+                
+                Console.WriteLine(e.Message);
+            }
+            
         }
     }
 }

@@ -13,7 +13,7 @@
     <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.5.0" />
     <PackageReference Include="fo-dicom" Version="5.0.3" />
     <PackageReference Include="Microsoft.Health.Dicom.Client" Version="10.0.322" />
-    <PackageReference Include="Microsoft.Health.Dicom.Core" Version="10.0.322" />
+    <PackageReference Include="Microsoft.Health.Dicom.Core" Version="10.0.337" />
   </ItemGroup>
 
 </Project>
