@@ -22,11 +22,22 @@ data "azurerm_virtual_network" "aks_backend" {
 
 
 
+locals {
+    tags = {
+        environment = var.env
+        terraform = true
+        creator = "GM"
+        relation = "aks_backend"
+        phase = "backend"        
+    }
 
+}
 
 resource "azurerm_resource_group" "aks_backend" {
     name     = "aks-${var.env}-backend-rg"
     location = var.location
+    tags = local.tags
+
 }
 
 
@@ -96,18 +107,24 @@ resource "azurerm_key_vault" "aks_backend" {
             "Purge"
         ]
     }
+    tags = local.tags
+
 }
 
 resource "azurerm_key_vault_secret" "aks_backend_public_ssh_key" {
     name         = "aks-${var.env}-backend-ssh-pub"
     value        = tls_private_key.aks_backend_ssh_key.public_key_openssh
     key_vault_id = azurerm_key_vault.aks_backend.id
+    tags = local.tags
+
 }
 
 resource "azurerm_key_vault_secret" "aks_backend_private_ssh_key" {
     name         = "aks-${var.env}-backend-ssh-private"
     value        = tls_private_key.aks_backend_ssh_key.private_key_pem
     key_vault_id = azurerm_key_vault.aks_backend.id
+    tags = local.tags
+
 }
 
 
@@ -153,6 +170,8 @@ resource "azurerm_network_interface" "aks_backend_vm" {
     subnet_id                     = data.azurerm_subnet.aks_backend.id
     private_ip_address_allocation = "Dynamic"
     }
+    tags = local.tags
+
 }
 
 
@@ -194,4 +213,6 @@ resource "azurerm_linux_virtual_machine" "aks_backend_vm" {
     /* custom_data = filebase64("${path.module}/iac-vm-init.sh") */
     custom_data = base64encode(local.aks_backend_vm_custom_data)
     /*  */
+    tags = local.tags
+
 }
