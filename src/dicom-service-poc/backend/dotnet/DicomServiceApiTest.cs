@@ -12,16 +12,6 @@ namespace DicomBackendPoC
 
         public DicomServiceApiTest() {}
 
-        private async Task<bool> IsQueryTagEnabled(string tagPath)
-        {
-            var tagEntry = await dicomServiceApi.GetExtendedQueryTagAsync(tagPath);
-            if (tagEntry.QueryStatus == Microsoft.Health.Dicom.Client.Models.QueryStatus.Enabled)
-            {
-                return true;
-            }
-            return false;
-        }
-
         public DicomDataset CreateRandomInstanceDataset(
             string? studyInstanceUid = null,
             string? seriesInstanceUid = null,
