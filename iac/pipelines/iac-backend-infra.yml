@@ -128,8 +128,8 @@ stages:
           export ARM_CLIENT_ID=$(iac-app-client-id) && export ARM_CLIENT_SECRET=$(iac-app-client-secret) && export ARM_TENANT_ID=$(ARM_TENANT_ID) && export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
           terraform init -var-file=../env/${{parameters.env}}.tfvars \
           -backend-config="subscription_id=$ARM_SUBSCRIPTION_ID" \
-          -backend-config="resource_group_name=$TF_BACKEND_RG" \
-          -backend-config="storage_account_name=$TF_BACKEND_SA" \
+          -backend-config="resource_group_name=$(TF_BACKEND_RG)" \
+          -backend-config="storage_account_name=$(TF_BACKEND_SA)" \
           -backend-config="container_name=tfstate" \
           -backend-config="key=iac-backend.tfstate"
           terraform plan -var-file=../env/${{parameters.env}}.tfvars
