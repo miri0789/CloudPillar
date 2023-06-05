@@ -51,8 +51,8 @@
                 Console.WriteLine(ex.Message);
             }
 
+            await dicomApiTests.StoreDicomWithPatientDetailsChanges();
+
         }
-
     }
-
 }

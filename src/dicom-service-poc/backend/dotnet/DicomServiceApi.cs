@@ -3,6 +3,7 @@ using FellowOakDicom;
 using Microsoft.Health.Dicom.Client;
 using Microsoft.Health.Dicom.Client.Models;
 using Microsoft.Identity.Client;
+using Microsoft.Health.Dicom.Core.Extensions;
 
 namespace DicomBackendPoC
 {
@@ -371,6 +372,65 @@ namespace DicomBackendPoC
                 await enumerator.DisposeAsync();
             }
             return datasets;
+        }
+
+        /// <summary>
+        /// Set value to dicom standard tag.
+        /// </summary>
+        /// <param name="dicomFile">The Dicom file to change.</param>
+        /// <param name="dicomTag">The Dicom tag to add.</param>
+        /// <param name="value">The value to set in tag.</param>
+        /// <returns>The Dicom file with the new tag.</returns>
+        public DicomFile SetDicomStandardTag<T>(DicomFile dicomFile, DicomTag dicomTag, params T[] value)
+        {
+            DicomDataset ds= new DicomDataset();
+            ds.AddOrUpdate(dicomTag, value);
+            dicomFile.Dataset.AddOrUpdate(ds);
+            return dicomFile;
+        }
+        
+        public async Task<DicomWebResponse<DicomDataset>> StoreDicomWithValidation(DicomFile dicomFile)
+        {
+            try
+            {
+                if(await PatientMetadataValidation(dicomFile.Dataset))
+                {
+                    var response = await client.StoreAsync(dicomFile);
+                    return response;
+                }
+                else
+                    throw new Exception("You cannot change patient details");
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{e.Message}", e);
+            }    
+        }
+
+        public async Task<bool> PatientMetadataValidation(DicomDataset dataset)
+        {
+            string query = $"{DicomTag.StudyInstanceUID.GetPath()}={dataset.GetSingleValue<string>(DicomTag.StudyInstanceUID)}&includefield={DicomTag.PatientAge.GetPath()}";
+            var response = await client.QueryStudyAsync(query);
+            var instances = await response.ToArrayAsync();
+            string value;
+            if(instances.Length > 0){
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientID, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientID))
+                        return false;
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientName, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientName))
+                        return false;
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientBirthDate, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientBirthDate))
+                        return false;
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientAge, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientAge))
+                        return false;
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientSex, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientSex))
+                        return false;
+            }
+            return true;
         }
     }
 }
