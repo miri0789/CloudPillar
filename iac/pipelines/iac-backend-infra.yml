@@ -23,65 +23,65 @@ variables:
 # - group: ${{ parameters.env }}-vg
 
 stages:
-- stage: File_Validation
-  displayName: Validate Required  Files Cloned
-  jobs: 
+# - stage: File_Validation
+#   displayName: Validate Required  Files Cloned
+#   jobs: 
 
-  - job: Validate Files
-    displayName: Validate IaC Backend Files Existence
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: iac-${{ parameters.env }}-agent
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
+#   - job: Validate Files
+#     displayName: Validate IaC Backend Files Existence
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: iac-${{ parameters.env }}-agent
+#     steps:
+#     - checkout: self
+#       persistCredentials: true
+#       clean: true
 
-    - task: Bash@3
-      displayName: 'Validate IaC Pipelines Files'
-      inputs:
-        targetType: inline
-        script: |
-          if [ ! -d iac/ ] || [ ! -d iac/pipelines/ ] || [ ! -f iac/pipelines/backend-infra.yml ]; then
-            echo "Missing - IaC Pipelines Folder Or Files is Missing"
-            exit 1
-          fi
-          echo "IaC & Pipelines Folders Exists"
+#     - task: Bash@3
+#       displayName: 'Validate IaC Pipelines Files'
+#       inputs:
+#         targetType: inline
+#         script: |
+#           if [ ! -d iac/ ] || [ ! -d iac/pipelines/ ] || [ ! -f iac/pipelines/backend-infra.yml ]; then
+#             echo "Missing - IaC Pipelines Folder Or Files is Missing"
+#             exit 1
+#           fi
+#           echo "IaC & Pipelines Folders Exists"
 
-    - task: Bash@3
-      displayName: 'Validate iac Backend TerraForm Files'
-      inputs:
-        targetType: inline
-        script: |
-          if [ ! -d iac/terraform/iac_backend ]; then
-            echo "iac_backend Folder is Missing"
-            exit 1
-          elif [ ! -f iac/terraform/env/${{ parameters.env }}.tfvars ] || [ ! -f iac/terraform/iac_backend/1-variables.tf ] || [ ! -f iac/terraform/iac_backend/0-providers.tf ] || [ ! -f iac/terraform/iac_backend/2-iac-backend.tf ] ; then
-            missing_files=()
-            if [ ! -f iac/terraform/env/${{ parameters.env }}.tfvars ]; then
-              missing_files+=("terraform.tfstate.d")
-            fi
-            if [ ! -f iac/terraform/iac_backend/1-variables.tf ]; then
-              missing_files+=("1-variables.tf")
-            fi
-            #+TODO
-            if [ ! -f iac/terraform/backend/1-main.tf ]; then
-              missing_files+=("1-main.tf")
-            fi
+#     - task: Bash@3
+#       displayName: 'Validate iac Backend TerraForm Files'
+#       inputs:
+#         targetType: inline
+#         script: |
+#           if [ ! -d iac/terraform/iac_backend ]; then
+#             echo "iac_backend Folder is Missing"
+#             exit 1
+#           elif [ ! -f iac/terraform/env/${{ parameters.env }}.tfvars ] || [ ! -f iac/terraform/iac_backend/1-variables.tf ] || [ ! -f iac/terraform/iac_backend/0-providers.tf ] || [ ! -f iac/terraform/iac_backend/2-iac-backend.tf ] ; then
+#             missing_files=()
+#             if [ ! -f iac/terraform/env/${{ parameters.env }}.tfvars ]; then
+#               missing_files+=("terraform.tfstate.d")
+#             fi
+#             if [ ! -f iac/terraform/iac_backend/1-variables.tf ]; then
+#               missing_files+=("1-variables.tf")
+#             fi
+#             #+TODO
+#             if [ ! -f iac/terraform/backend/1-main.tf ]; then
+#               missing_files+=("1-main.tf")
+#             fi
             
-            if [ ! -f iac/terraform/backend/0-providers.tf ]; then
-              missing_files+=("0-providers.tf")
-            fi
+#             if [ ! -f iac/terraform/backend/0-providers.tf ]; then
+#               missing_files+=("0-providers.tf")
+#             fi
 
-            echo "One or more files are missing in the TF Backend directory (iac/terraform/backend/): ${missing_files[*]}"
-            exit 1          
+#             echo "One or more files are missing in the TF Backend directory (iac/terraform/backend/): ${missing_files[*]}"
+#             exit 1          
           
-          fi
-          echo "Terraform Backend Folder & Files Exists"
+#           fi
+#           echo "Terraform Backend Folder & Files Exists"
 
 - stage: Initilize_Terraform
   displayName: Initilize Terraform Backend
-  dependsOn: Validate_Files
+  # dependsOn: Validate_Files
   jobs:
 
   - job: Initilize_Terraform_Backend
@@ -126,7 +126,12 @@ stages:
         targetType: inline
         script: |
           export ARM_CLIENT_ID=$(iac-app-client-id) && export ARM_CLIENT_SECRET=$(iac-app-client-secret) && export ARM_TENANT_ID=$(ARM_TENANT_ID) && export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
-          terraform init -var-file=../env/${{parameters.env}}.tfvars
+          terraform init -var-file=../env/${{parameters.env}}.tfvars \
+          -backend-config="subscription_id=$ARM_SUBSCRIPTION_ID" \
+          -backend-config="resource_group_name=$TF_BACKEND_RG" \
+          -backend-config="storage_account_name=$TF_BACKEND_SA" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=iac-backend.tfstate"
           terraform plan -var-file=../env/${{parameters.env}}.tfvars
           echo "Terraform Initilized"
         workingDirectory: 'iac/terraform/iac_backend/'
