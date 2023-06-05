@@ -23,7 +23,7 @@ data "azurerm_virtual_network" "aks_backend" {
 
 
 locals {
-iac_backend_vm_custom_data = <<CUSTOM_DATA
+    iac_backend_vm_custom_data = <<CUSTOM_DATA
 #!/bin/bash
 set -x
 echo "Writing token to file" >> /var/log/script.log
