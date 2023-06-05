@@ -6,26 +6,47 @@ using System.IO;
 
 public interface ISchemaValidator
 {
-    bool ValidatePayloadSchema(string payload, string schemaPath);
-} 
+    bool ValidatePayloadSchema(string payload, string schemaPath, bool isRequest);
+}
 
-public class SchemaValidator: ISchemaValidator
+public class SchemaValidator : ISchemaValidator
 {
     private readonly ConcurrentDictionary<string, JSchema> SchemaCache = new ConcurrentDictionary<string, JSchema>();
-
-    public bool ValidatePayloadSchema(string payload, string schemaPath)
+    private readonly string basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "schema");
+    public bool ValidatePayloadSchema(string payload, string schemaPath, bool isRequest)
     {
-        JSchema jSchema = SchemaCache.GetOrAdd(schemaPath, LoadSchema);
+        var path = Path.Combine(basePath, GetUriDirectionPath(isRequest), $"{schemaPath}.json");
+        JSchema jSchema = SchemaCache.GetOrAdd(path, LoadSchema, isRequest);
         JToken jToken = JToken.Parse(payload);
-        bool isValid = jToken.IsValid(jSchema);
+        bool isValid = jToken.IsValid(jSchema, out IList<string> errorMessages);
+        if (!isValid)
+        {
+            foreach (var errorMessage in errorMessages)
+            {
+                Console.WriteLine(errorMessage);
+            }
+        }
 
         return isValid;
     }
 
 
-    private JSchema LoadSchema(string schemaPath)
+    private JSchema LoadSchema(string schemaPath, bool isRequest = true)
     {
-        string schema = File.ReadAllText(schemaPath);
-        return JSchema.Parse(schema);
+        if (File.Exists(schemaPath))
+        {
+            string schema = File.ReadAllText(schemaPath);
+            return JSchema.Parse(schema);
+        }
+        else
+        {
+            var defaultPath = Path.Combine(basePath, GetUriDirectionPath(isRequest), "default.json");
+            return LoadSchema(defaultPath);
+        }
+    }
+
+    private string GetUriDirectionPath(bool isRequest)
+    {
+        return isRequest ? "request" : "response";
     }
 }

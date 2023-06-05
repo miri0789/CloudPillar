@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Reflection;
 using Newtonsoft.Json;
 
 namespace common;
@@ -8,35 +9,56 @@ namespace common;
 //TODO: enforcement of some kind of schema for the calls with Newtonsoft
 public interface IHttpRequestorService
 {
-    Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null);
+    Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default);
 }
 
 public class HttpRequestorService : IHttpRequestorService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ISchemaValidator _schemaValidator;
 
-    public HttpRequestorService(IHttpClientFactory httpClientFactory)
+    public HttpRequestorService(IHttpClientFactory httpClientFactory, ISchemaValidator schemaValidator)
     {
         _httpClientFactory = httpClientFactory;
+        _schemaValidator = schemaValidator;
     }
 
-    public async Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null)
+    public async Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default)
     {
         HttpClient client = _httpClientFactory.CreateClient();
 
         HttpRequestMessage request = new HttpRequestMessage(method, url);
 
+        string schemaPath = $"{request.RequestUri.Host}/{method.Method}{request.RequestUri.AbsolutePath.Replace("/", "_")}";
+
         if (requestData != null)
         {
             string serializedData = JsonConvert.SerializeObject(requestData);
+            var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
+            if (!isRequestValid)
+            {
+                throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
+            }
             request.Content = new StringContent(serializedData, System.Text.Encoding.UTF8, "application/json");
         }
 
-        HttpResponseMessage response = await client.SendAsync(request);
+        if (request.RequestUri.Scheme == "https")
+        {
+            string httpsTimeoutSecondsString = Environment.GetEnvironmentVariable(Constants.httpsTimeoutSeconds);
+            int httpsTimeoutSeconds = int.TryParse(httpsTimeoutSecondsString, out int parsedValue) ? parsedValue : 300;
+            client.Timeout = TimeSpan.FromSeconds(httpsTimeoutSeconds);
+        }
+
+        HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
             string responseContent = await response.Content.ReadAsStringAsync();
+            var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
+            if (!isResponseValid)
+            {
+                throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
+            }
             TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
             return result;
         }

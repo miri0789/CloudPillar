@@ -39,10 +39,12 @@ public class AgentEventProcessor : IEventProcessor
         _signingService = signingService;
     }
 
-    public Task OpenAsync(PartitionContext context)
+    public async Task OpenAsync(PartitionContext context)
     {
+             var firmwareUpdateEvent = new FirmwareUpdateEvent(){chunkSize=100,eventType=EventType.FirmwareUpdateReady,fileName="aaa",startPosition=0};
+                         await _firmwareUpdateService.SendFirmwareUpdateAsync("232323", firmwareUpdateEvent);
         Console.WriteLine($"AgentEventProcessor initialized. Partition: '{context.PartitionId}'");
-        return Task.CompletedTask;
+        //return Task.CompletedTask;
     }
 
     public Task CloseAsync(PartitionContext context, CloseReason reason)

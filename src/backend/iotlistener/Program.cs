@@ -35,7 +35,7 @@ class Program
                 PartitionReceiver.DefaultConsumerGroupName,
                 EventHubCompatibleEndpoint,
                 StorageConnectionString,
-                BlobContainerName);
+                BlobContainerName,"1");
 
         var eventProcessorOptions = new EventProcessorOptions
         {
@@ -48,7 +48,7 @@ class Program
 
         var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
         var signingService = serviceProvider.GetService<ISigningService>();
-        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, PartitionId);
+        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, "1");
 
         await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 
