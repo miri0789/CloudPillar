@@ -143,6 +143,20 @@ stages:
           echo "Terraform Initilized"
         workingDirectory: 'iac/terraform/iac_backend/'
 
+
+- stage: Apply_Terraform
+  displayName: Apply Terraform Backend
+  # dependsOn: Validate_Files
+  jobs:
+
+  - job: Apply_Terraform_Backend
+    displayName: Apply Terraform Backend
+    pool:
+      vmImage: 'ubuntu-20.04'    
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
     - task: Bash@3
       displayName: 'Apply Terraform Backend'
       inputs:
@@ -159,6 +173,21 @@ stages:
           
           echo "Terraform Applied"
         workingDirectory: 'iac/terraform/iac_backend/'
+
+
+- stage: Destroy_Terraform
+  displayName: Destroy Terraform Backend
+  # dependsOn: Validate_Files
+  jobs:
+
+  - job: Destroy_Terraform_Backend
+    displayName: Destroy Terraform Backend
+    pool:
+      vmImage: 'ubuntu-20.04'    
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
     - task: Bash@3
       displayName: 'Destroy Terraform Backend'
       inputs:
