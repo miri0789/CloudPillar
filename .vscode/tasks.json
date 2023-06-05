@@ -140,6 +140,22 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+
+            "label": "buildDicomBackend",
+            "command": "dotnet",
+            "type": "process",
+            "args": [ "build",
+            "${workspaceFolder}/src/dicom-service-poc/backend/dotnet/dicom-service-backend.csproj",
+            "/property:GenerateFullPaths=true",
+            "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
