@@ -23,6 +23,29 @@ data "azurerm_virtual_network" "aks_backend" {
 
 
 locals {
+iac_backend_vm_custom_data = <<CUSTOM_DATA
+#!/bin/bash
+set -x
+echo "Writing token to file" >> /var/log/script.log
+apt-get update -y && apt-get upgrade -y  && apt-get dist-upgrade -y 
+apt-get install git curl apt-transport-https ca-certificates software-properties-common -y
+wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg 
+gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint 
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+apt update -y && apt-get install terraform -y 
+curl -sL https://aka.ms/InstallAzureCLIDeb -o installazcli.sh 
+chmod +x installazcli.sh && ./installazcli.sh
+az --version
+apt-get install docker.io -y
+su azureuser -c 'cd ~; mkdir myagent && cd myagent && curl -LsS https://vstsagentpackage.azureedge.net/agent/3.220.0/vsts-agent-linux-x64-3.220.0.tar.gz -o vstsagent.tar.gz && tar -zxvf vstsagent.tar.gz'
+su  azureuser -c 'cd ~/myagent && ./config.sh --unattended --url "${var.devops_url}" --auth pat --token "${var.personal_access_token_value}" --pool "${var.agent_pool}" --agent "iac-${var.env}-agent" --work _work --runAsService'
+cd /home/azureuser/myagent && ./svc.sh install azureuser
+cd /home/azureuser/myagent && ./svc.sh start
+su azureuser -c 'cd ~/ && git clone https://${var.personal_access_token_value}@dev.azure.com/BiosenseWebsterIs/CloudPillar/_git/CloudPillar'
+
+echo "Token written to file" >> /var/log/script.log
+CUSTOM_DATA  
+
     tags = {
         environment = var.env
         terraform = true
@@ -133,31 +156,6 @@ resource "azurerm_key_vault_secret" "aks_backend_private_ssh_key" {
 
 
 
-# +N IaC VM 
-locals {
-iac_backend_vm_custom_data = <<CUSTOM_DATA
-#!/bin/bash
-set -x
-echo "Writing token to file" >> /var/log/script.log
-apt-get update -y && apt-get upgrade -y  && apt-get dist-upgrade -y 
-apt-get install git curl apt-transport-https ca-certificates software-properties-common -y
-wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg 
-gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint 
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
-apt update -y && apt-get install terraform -y 
-curl -sL https://aka.ms/InstallAzureCLIDeb -o installazcli.sh 
-chmod +x installazcli.sh && ./installazcli.sh
-az --version
-apt-get install docker.io -y
-su azureuser -c 'cd ~; mkdir myagent && cd myagent && curl -LsS https://vstsagentpackage.azureedge.net/agent/3.220.0/vsts-agent-linux-x64-3.220.0.tar.gz -o vstsagent.tar.gz && tar -zxvf vstsagent.tar.gz'
-su  azureuser -c 'cd ~/myagent && ./config.sh --unattended --url "${var.devops_url}" --auth pat --token "${var.personal_access_token_value}" --pool "${var.agent_pool}" --agent "iac-${var.env}-agent" --work _work --runAsService'
-cd /home/azureuser/myagent && ./svc.sh install azureuser
-cd /home/azureuser/myagent && ./svc.sh start
-su azureuser -c 'cd ~/ && git clone https://${var.personal_access_token_value}@dev.azure.com/BiosenseWebsterIs/CloudPillar/_git/CloudPillar'
-
-echo "Token written to file" >> /var/log/script.log
-CUSTOM_DATA  
-}
 
 
 # +N IaC VM Network Interface Card
