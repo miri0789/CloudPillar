@@ -35,7 +35,7 @@ class Program
                 PartitionReceiver.DefaultConsumerGroupName,
                 EventHubCompatibleEndpoint,
                 StorageConnectionString,
-                BlobContainerName,"1");
+                BlobContainerName);
 
         var eventProcessorOptions = new EventProcessorOptions
         {
