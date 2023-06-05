@@ -99,7 +99,7 @@ stages:
       inputs:
         targetType: inline
         script: |
-          cat Pre File ../env/${{ parameters.env }}.tfvars
+          cat ../env/${{ parameters.env }}.tfvars
           sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../env/${{ parameters.env }}.tfvars
