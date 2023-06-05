@@ -158,6 +158,15 @@ stages:
       persistCredentials: true
       clean: true
     - task: Bash@3
+      displayName: 'Azure Login'
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+        workingDirectory: 'iac/terraform/backend'
+    - task: Bash@3
       displayName: 'Apply Terraform Backend'
       inputs:
         targetType: inline
@@ -188,6 +197,15 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
+    - task: Bash@3
+      displayName: 'Azure Login'
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+        workingDirectory: 'iac/terraform/backend'
     - task: Bash@3
       displayName: 'Destroy Terraform Backend'
       inputs:
