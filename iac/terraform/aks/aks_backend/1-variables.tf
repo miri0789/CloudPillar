@@ -48,6 +48,13 @@ variable "tf_backend_kv" {
     default = "iackv"  
 }
 
+
+variable "region" {
+    type = string
+    description = "The IaC Backend Location"
+    default = "West Europe"
+}
+
 #* New Resources
 
 #* IaC Backend Resources
@@ -75,4 +82,10 @@ variable "personal_access_token_value" {
     type        = string
     description = "The name of the subnet in which to create the resources"
     sensitive = true
+}
+
+variable "ip-pfx" {
+    type        = string
+    description = "The name of the subnet in which to create the resources"
+    default = 22
 }
