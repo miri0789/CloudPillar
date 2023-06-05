@@ -216,5 +216,49 @@ namespace DicomAgentPoC
                 throw new Exception($"{e.Message}", e);
             }    
         }
+
+        public async Task<DicomWebResponse<DicomDataset>> StoreDicomWithValidation(DicomFile dicomFile)
+        {
+            try
+            {
+                if(await PatientMetadataValidation(dicomFile.Dataset))
+                {
+                    var response = await client.StoreAsync(dicomFile);
+                    return response;
+                }
+                else
+                    throw new Exception("You cannot change patient details");
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{e.Message}", e);
+            }    
+        }
+
+        public async Task<bool> PatientMetadataValidation(DicomDataset dataset)
+        {
+            string query = $"{DicomTag.StudyInstanceUID.GetPath()}={dataset.GetSingleValue<string>(DicomTag.StudyInstanceUID)}&includefield={DicomTag.PatientAge.GetPath()}";
+            var response = await client.QueryStudyAsync(query);
+            var instances = await response.ToArrayAsync();
+            string value;
+            if(instances.Length > 0){
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientID, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientID))
+                        return false;
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientName, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientName))
+                        return false;
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientBirthDate, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientBirthDate))
+                        return false;
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientAge, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientAge))
+                        return false;
+                if(instances.Last().TryGetSingleValue<string>(DicomTag.PatientSex, out value))
+                    if(value!= dataset.GetSingleValue<string>(DicomTag.PatientSex))
+                        return false;
+            }
+            return true;
+        }
     }
 }

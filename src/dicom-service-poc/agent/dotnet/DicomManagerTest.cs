@@ -86,5 +86,29 @@ namespace DicomAgentPoC
                 Console.WriteLine($"{item.GetSingleValue<string>(DicomTag.SOPInstanceUID)} queried with tag: {ds.GetPrivateTag(sizeOfZipDicomTag).GetPath()}");
             }
         }
+
+        /// <summary>
+        /// Store Dicom with patient details changes.
+        /// </summary>
+        public async Task StoreDicomWithPatientDetailsChanges()
+        {
+            DicomDataset ds = new DicomDataset();
+            var dicomFile = await DicomFile.OpenAsync(dicomFilePath);
+            dicomManager.SetDicomStandardTag(dicomFile, DicomTag.SOPInstanceUID, DicomUID.Generate().UID);
+            dicomManager.SetDicomStandardTag(dicomFile, DicomTag.StudyInstanceUID, DicomUID.Generate().UID);
+            var response = await dicomManager.StoreDicom(dicomFile);
+            if(response.IsSuccessStatusCode)
+                Console.WriteLine($"{dicomFile.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID)} saved with status code: {response.StatusCode}");
+            try
+            {
+                dicomManager.SetDicomStandardTag(dicomFile, DicomTag.SOPInstanceUID, DicomUID.Generate().UID);
+                dicomManager.SetDicomStandardTag(dicomFile, DicomTag.PatientBirthDate, DateTime.Now);
+                response = await dicomManager.StoreDicomWithValidation(dicomFile);
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
     }
 }

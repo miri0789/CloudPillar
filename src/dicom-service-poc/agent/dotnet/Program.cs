@@ -14,6 +14,7 @@ namespace DicomAgentPoC
             await managerTest.StoreDicomWithBinaryTag();
             await managerTest.QueryDicomWithExpandedStandardTag();
             await managerTest.QueryDicomWithExpandedPrivateTag();
+            await managerTest.StoreDicomWithPatientDetailsChanges();
         }
     }
 }
