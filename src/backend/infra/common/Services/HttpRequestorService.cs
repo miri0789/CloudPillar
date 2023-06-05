@@ -1,12 +1,7 @@
-﻿using System;
-using System.Net.Http;
-using System.Reflection;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace common;
 
-
-//TODO: enforcement of some kind of schema for the calls with Newtonsoft
 public interface IHttpRequestorService
 {
     Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default);
@@ -44,7 +39,7 @@ public class HttpRequestorService : IHttpRequestorService
 
         if (request.RequestUri.Scheme == "https")
         {
-            string httpsTimeoutSecondsString = Environment.GetEnvironmentVariable(Constants.httpsTimeoutSeconds);
+            string httpsTimeoutSecondsString = Environment.GetEnvironmentVariable(CommonConstants.httpsTimeoutSeconds);
             int httpsTimeoutSeconds = int.TryParse(httpsTimeoutSecondsString, out int parsedValue) ? parsedValue : 300;
             client.Timeout = TimeSpan.FromSeconds(httpsTimeoutSeconds);
         }
