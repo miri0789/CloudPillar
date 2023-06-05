@@ -97,16 +97,16 @@ stages:
       inputs:
         targetType: inline
         script: |
-          sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../env/${{ parameters.env }}.tfvars
-          sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../env/${{ parameters.env }}.tfvars
-          sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../env/${{ parameters.env }}.tfvars
-          sed -i "s/^region=.*/region=\"$(REGION)\"/" ../env/${{ parameters.env }}.tfvars
-          export ARM_CLIENT_ID="$(iac-app-client-id)" && sed -i "s/^client_id=.*/client_id=\"$ARM_CLIENT_ID\"/" ../env/${{ parameters.env }}.tfvars
-          export ARM_CLIENT_SECRET="$(iac-app-client-secret)" && sed -i "s/^client_secret=.*/client_secret=\"$ARM_CLIENT_SECRET\"/" ../env/${{ parameters.env }}.tfvars          
-          sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../env/${{ parameters.env }}.tfvars  
-          sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../env/${{parameters.env}}.tfvars
-          sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../env/${{parameters.env}}.tfvars
-          cat ../env/${{parameters.env}}.tfvars
+          sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^region=.*/region=\"$(REGION)\"/" ../../env/${{ parameters.env }}.tfvars
+          export ARM_CLIENT_ID="$(iac-app-client-id)" && sed -i "s/^client_id=.*/client_id=\"$ARM_CLIENT_ID\"/" ../../env/${{ parameters.env }}.tfvars
+          export ARM_CLIENT_SECRET="$(iac-app-client-secret)" && sed -i "s/^client_secret=.*/client_secret=\"$ARM_CLIENT_SECRET\"/" ../../env/${{ parameters.env }}.tfvars          
+          sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../../env/${{ parameters.env }}.tfvars  
+          sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../../env/${{parameters.env}}.tfvars
+          cat ../../env/${{parameters.env}}.tfvars
         workingDirectory: 'iac/terraform/aks/aks_backend/'
 
     - task: Bash@3
@@ -125,8 +125,15 @@ stages:
         targetType: inline
         script: |
           export ARM_CLIENT_ID=$(iac-app-client-id) && export ARM_CLIENT_SECRET=$(iac-app-client-secret) && export ARM_TENANT_ID=$(ARM_TENANT_ID) && export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
-          terraform init -var-file=../env/${{parameters.env}}.tfvars
+          terraform init -var-file=../../env/${{parameters.env}}.tfvars \
+          -backend-config="subscription_id=$ARM_SUBSCRIPTION_ID" \
+          -backend-config="resource_group_name=$(TF_BACKEND_RG)" \
+          -backend-config="storage_account_name=$(TF_BACKEND_SA)" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=iac-backend.tfstate"
           terraform plan -var-file=../env/${{parameters.env}}.tfvars
+
+          terraform plan -var-file=../../env/${{parameters.env}}.tfvars
           echo "Terraform Initilized"
         workingDirectory: 'iac/terraform/aks/aks_backend/'
 
