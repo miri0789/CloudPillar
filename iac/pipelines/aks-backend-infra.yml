@@ -182,6 +182,8 @@ stages:
           sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../../env/${{parameters.env}}.tfvars
           sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i 's#^devops_url=.*#devops_url="'"$DEVOPS_URL"'"#' ../../env/${{parameters.env}}.tfvars
+
           cat ../../env/${{parameters.env}}.tfvars
         workingDirectory: 'iac/terraform/aks/aks_backend/'
     - task: Bash@3
@@ -237,7 +239,6 @@ stages:
           sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../../env/${{ parameters.env }}.tfvars  
           sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../../env/${{parameters.env}}.tfvars
-          sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../../env/${{parameters.env}}.tfvars
           sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../../env/${{parameters.env}}.tfvars
           sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../../env/${{parameters.env}}.tfvars
           sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../../env/${{parameters.env}}.tfvars
