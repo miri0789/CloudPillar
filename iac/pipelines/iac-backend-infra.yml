@@ -189,7 +189,7 @@ stages:
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../env/${{parameters.env}}.tfvars          
           cat ../env/${{parameters.env}}.tfvars
         workingDirectory: 'iac/terraform/iac_backend/'        
-        - task: Bash@3
+    - task: Bash@3
       displayName: 'Apply Terraform Backend'
       inputs:
         targetType: inline
