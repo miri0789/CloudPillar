@@ -17,8 +17,9 @@ parameters:
   - name: image
     displayName: Select Image to Build & Scan
     type: string
-    default: bloblstreamer
+    default: blobstreamer
     values:
+    - all
     - analyzer
     - beapi
     - blobstreamer
@@ -59,7 +60,16 @@ stages:
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
           sudo az acr login -n $(ACR_NAME)
-          sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameter.image}}.dll --build-arg DLL=backend_${{parameter.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameter.image}}/
+          echo ""
+          echo ""
+          cat src/backend/infra/build/Dockerfile
+          echo ""
+          echo ""
+          cat src/backend/${{parameter.image}}/${{parameter.image}}.csproj
+          echo ""
+          echo ""
+          
+          # sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameter.image}}.dll --build-arg DLL=backend_${{parameter.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameter.image}}/
           # sudo docker build -t $(ACR_NAME).azurecr.io/$(BLOBSTEAMER_IMAGE) --build-arg DLL=$(BLOBSTEAMER_IMAGE) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
 
 #     - task: Bash@3
