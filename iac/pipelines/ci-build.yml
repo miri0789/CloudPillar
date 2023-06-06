@@ -19,7 +19,7 @@ parameters:
     type: string
     default: blobstreamer
     values:
-    - all
+    # - all
     - analyzer
     - beapi
     - blobstreamer
