@@ -15,7 +15,7 @@ parameters:
     - stg
     - prd
   - name: image
-    displayName: Select Image to Build & Scan
+    displayName: Select Image to Build and Scan
     type: string
     default: blobstreamer
     values:
@@ -38,11 +38,11 @@ variables:
 
 stages:
 - stage: Update_Build_Tag_Scan_Push
-  displayName: Update Version, Build, Tag & Push Images
+  displayName: Update Version, Build, Tag and Push Images
   jobs:
 
-  - job: Update Version, Tag & Build Image
-    displayName: Updating Version Label, Building & Tagging Images
+  - job: Update_Version_Tag_Build_Image
+    displayName: Updating Version Label, Building and Tagging Images
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
