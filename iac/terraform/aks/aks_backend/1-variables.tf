@@ -2,10 +2,13 @@
 variable "tenant_id" {
     type = string
     description = "The IaC Backend Tenant ID"
+    sensitive = true
 }
 variable "subscription_id" {
     type = string
     description = "The IaC Backend Subscription ID"
+    sensitive = true
+
 }
 variable "client_id" {
     type = string
@@ -37,16 +40,19 @@ variable "region" {
 variable "tf_backend_rg" {
     type = string
     description = "The IaC Backend Resource Group"
+    sensitive = true
 }
 
 variable "tf_backend_sa" {
     type = string
     description = "The IaC Backend Storage Account"
+    sensitive = true
 }
 
 variable "tf_backend_kv" {
     type = string
     description = "The IaC Backend Key Vault"
+    sensitive = true
 }
 
 

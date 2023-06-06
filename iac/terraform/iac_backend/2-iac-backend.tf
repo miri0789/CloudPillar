@@ -38,7 +38,9 @@ chmod +x installazcli.sh && ./installazcli.sh
 az --version
 apt-get install docker.io -y
 su azureuser -c 'cd ~; mkdir myagent && cd myagent && curl -LsS https://vstsagentpackage.azureedge.net/agent/3.220.0/vsts-agent-linux-x64-3.220.0.tar.gz -o vstsagent.tar.gz && tar -zxvf vstsagent.tar.gz'
+su  azureuser -c 'cd ~/myagent && ./config.sh remove --unattended --url "${var.devops_url}" --auth pat --token "${var.personal_access_token_value}" --pool "${var.agent_pool}" --agent "iac-${var.env}-agent"'
 su  azureuser -c 'cd ~/myagent && ./config.sh --unattended --url "${var.devops_url}" --auth pat --token "${var.personal_access_token_value}" --pool "${var.agent_pool}" --agent "iac-${var.env}-agent" --work _work'
+
 cd /home/azureuser/myagent && cat runsvc.sh
 cd /home/azureuser/myagent && ./env.sh
 cd /home/azureuser/myagent && ./svc.sh install azureuser
