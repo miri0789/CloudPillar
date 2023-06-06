@@ -85,11 +85,11 @@ stages:
         targetType: inline
         script: |
           # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/${{parameters.image}}.dll:latest
-          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/${{parameters.image}}.dll:latest
+          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
 
     - task: Bash@3
       displayName: Push Image to ACR
       inputs:
         targetType: inline
         script: |
-          sudo docker push $(ACR_NAME).azurecr.io/${{parameters.image}}.dll:latest
+          sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
