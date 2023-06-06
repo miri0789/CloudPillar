@@ -94,6 +94,38 @@
             }
         },
         {
+            "label": "buildIotListener",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/backend/iotlistener/iotlistener.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "buildKeyholder",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/backend/keyholder/keyholder.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "buildDicomAgent",
             "command": "dotnet",
             "type": "process",
@@ -102,6 +134,22 @@
                 "${workspaceFolder}/src/dicom-service-poc/agent/dotnet/dicom-service-agent.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+
+            "label": "buildDicomBackend",
+            "command": "dotnet",
+            "type": "process",
+            "args": [ "build",
+            "${workspaceFolder}/src/dicom-service-poc/backend/dotnet/dicom-service-backend.csproj",
+            "/property:GenerateFullPaths=true",
+            "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile",
             "group": {

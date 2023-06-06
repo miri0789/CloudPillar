@@ -3,15 +3,16 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-    <RootNamespace>dicom_service_agent</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.core" Version="1.32.0" />
     <PackageReference Include="Azure.identity" Version="1.9.0" />
+    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.5.0" />
     <PackageReference Include="fo-dicom" Version="5.0.3" />
-    <PackageReference Include="Microsoft.Health.Dicom.Client" Version="10.0.282" />
+    <PackageReference Include="Microsoft.Health.Dicom.Client" Version="10.0.322" />
     <PackageReference Include="Microsoft.Health.Dicom.Core" Version="10.0.337" />
   </ItemGroup>
 

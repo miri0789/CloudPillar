@@ -1,10 +1,9 @@
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                    = "iot-${var.env}-aks"
-  tags                    = { "Terraform": "true" }
+  name                    = "cp-${var.env}-aks"
   resource_group_name     = azurerm_resource_group.aks.name
   location                = azurerm_resource_group.aks.location
   private_cluster_enabled = var.env != "lab"
-  dns_prefix              = "iot-${var.env}-dns"
+  dns_prefix              = "cp-${var.env}-dns"
   sku_tier                = "Free"
   kubernetes_version      = "1.26.3"
   open_service_mesh_enabled = true
