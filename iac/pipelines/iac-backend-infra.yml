@@ -99,7 +99,7 @@ stages:
       inputs:
         targetType: inline
         script: |
-          cat ../env/${{ parameters.env }}.tfvars
+          
           sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../env/${{ parameters.env }}.tfvars
@@ -109,12 +109,11 @@ stages:
           sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../env/${{ parameters.env }}.tfvars  
           sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../env/${{parameters.env}}.tfvars          
           sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../env/${{parameters.env}}.tfvars          
-          echo $(AGENT_POOL)
-          echo $(DEVOPS_URL)
           cat ../env/${{parameters.env}}.tfvars
         workingDirectory: 'iac/terraform/iac_backend/'
 
@@ -164,6 +163,7 @@ stages:
       inputs:
         targetType: inline
         script: |
+          
           sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../env/${{ parameters.env }}.tfvars
@@ -225,6 +225,7 @@ stages:
       inputs:
         targetType: inline
         script: |
+          
           sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../env/${{ parameters.env }}.tfvars
@@ -234,6 +235,7 @@ stages:
           sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../env/${{ parameters.env }}.tfvars  
           sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../env/${{parameters.env}}.tfvars          
           sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../env/${{parameters.env}}.tfvars
