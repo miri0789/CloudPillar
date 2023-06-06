@@ -73,9 +73,6 @@ resource "tls_private_key" "iac_backend_ssh_key" {
 
 
 
-
-
-
 #* Key Vaults
 
 # +N IaC Key Vault

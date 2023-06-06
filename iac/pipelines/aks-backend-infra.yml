@@ -19,7 +19,6 @@ variables:
 - group: arm-vg
 - group: iac-backend-vg
 - group: aks-backend-vg
-
 - group: backend-secrets-vg
 - group: tf-backend-rg
 # - group: ${{ parameters.env }}-vg

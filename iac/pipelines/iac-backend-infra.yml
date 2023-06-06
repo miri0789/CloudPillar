@@ -159,11 +159,20 @@ stages:
       persistCredentials: true
       clean: true
     - task: Bash@3
+      displayName: 'Azure Login'
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+        workingDirectory: 'iac/terraform/backend'
+
+    - task: Bash@3
       displayName: 'Updating Env Variabless File'
       inputs:
         targetType: inline
         script: |
-          
           sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../env/${{ parameters.env }}.tfvars
           sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../env/${{ parameters.env }}.tfvars
@@ -179,17 +188,8 @@ stages:
           sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../env/${{parameters.env}}.tfvars          
           cat ../env/${{parameters.env}}.tfvars
-        workingDirectory: 'iac/terraform/iac_backend/'
-    - task: Bash@3
-      displayName: 'Azure Login'
-      inputs:
-        targetType: inline
-        script: |
-          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-          az account set --subscription $(ARM_SUBSCRIPTION_ID)
-          echo "Azure Login Successfull"
-        workingDirectory: 'iac/terraform/backend'
-    - task: Bash@3
+        workingDirectory: 'iac/terraform/iac_backend/'        
+        - task: Bash@3
       displayName: 'Apply Terraform Backend'
       inputs:
         targetType: inline
@@ -221,6 +221,15 @@ stages:
       persistCredentials: true
       clean: true
     - task: Bash@3
+      displayName: 'Azure Login'
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+        workingDirectory: 'iac/terraform/backend'
+    - task: Bash@3
       displayName: 'Updating Env Variabless File'
       inputs:
         targetType: inline
@@ -243,15 +252,6 @@ stages:
           cat ../env/${{parameters.env}}.tfvars
         workingDirectory: 'iac/terraform/iac_backend/'
     - task: Bash@3
-      displayName: 'Azure Login'
-      inputs:
-        targetType: inline
-        script: |
-          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-          az account set --subscription $(ARM_SUBSCRIPTION_ID)
-          echo "Azure Login Successfull"
-        workingDirectory: 'iac/terraform/backend'
-    - task: Bash@3
       displayName: 'Destroy Terraform Backend'
       inputs:
         targetType: inline
@@ -263,8 +263,8 @@ stages:
           -backend-config="storage_account_name=$(TF_BACKEND_SA)" \
           -backend-config="container_name=tfstate" \
           -backend-config="key=iac-backend.tfstate"
-          terraform destroy -var-file=../env/${{parameters.env}}.tfvars -auto-approve
           
+          terraform destroy -var-file=../env/${{parameters.env}}.tfvars -auto-approve
           echo "Terraform destroyed"
         workingDirectory: 'iac/terraform/iac_backend/'
 
