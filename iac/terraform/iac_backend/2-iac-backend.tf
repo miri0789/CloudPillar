@@ -39,8 +39,11 @@ az --version
 apt-get install docker.io -y
 su azureuser -c 'cd ~; mkdir myagent && cd myagent && curl -LsS https://vstsagentpackage.azureedge.net/agent/3.220.0/vsts-agent-linux-x64-3.220.0.tar.gz -o vstsagent.tar.gz && tar -zxvf vstsagent.tar.gz'
 su  azureuser -c 'cd ~/myagent && ./config.sh --unattended --url "${var.devops_url}" --auth pat --token "${var.personal_access_token_value}" --pool "${var.agent_pool}" --agent "iac-${var.env}-agent" --work _work'
+cd /home/azureuser/myagent && cat runsvc.sh
+cd /home/azureuser/myagent && ./env.sh
 cd /home/azureuser/myagent && ./svc.sh install azureuser
 cd /home/azureuser/myagent && ./svc.sh start
+cd /home/azureuser/myagent && cat runsvc.sh
 su azureuser -c 'cd ~/ && git clone https://${var.personal_access_token_value}@dev.azure.com/BiosenseWebsterIs/CloudPillar/_git/CloudPillar'
 
 echo "Token written to file" >> /var/log/script.log
