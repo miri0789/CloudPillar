@@ -46,7 +46,8 @@ stages:
     displayName: Build, Scan & Push
     pool:
       name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent 
+      # agent.name: aks-${{parameters.env}}-agent 
+      agent.name: iac-${{parameters.env}}-agent 
     steps:
     - checkout: self
       persistCredentials: true
