@@ -4,30 +4,52 @@ trigger:
 # - none
 - $(Build.SourceBranchName)
 
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+  - name: image
+    displayName: Select Image to Build & Scan
+    type: string
+    default: bloblstreamer
+    values:
+    - analyzer
+    - beapi
+    - blobstreamer
+    - iotlistener
+    - keyholder
+    - mongowriter
+    - twinlistener
+
 variables:
 - group: arm-vg
 - group: iac-backend-vg
 - group: aks-backend-vg
 - group: backend-secrets-vg
-- group: images-vg
+# - group: images-vg
 
 
 
 stages:
-- stage: Blob_Streamer
-  displayName: Blob Streamer
+- stage: Build
+  displayName: Build Images & Update Infomational Version
   jobs:
 
   - job: Blob_Streamer_Image
     displayName: Build, Scan & Push
     pool:
       name: $(AGENT_POOL)
-      agent.name: $(AKS_AGENT_NAME) 
+      agent.name: aks-${{parameters.env}}-agent 
     steps:
     - checkout: self
       persistCredentials: true
       clean: true
-
     - task: Bash@3
       displayName: Build & Tag Image
       inputs:
@@ -37,62 +59,63 @@ stages:
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
           sudo az acr login -n $(ACR_NAME)
-          sudo docker build -t $(ACR_NAME).azurecr.io/$(blobstreamer_image) --build-arg DLL=$(blobstreamer_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
+          sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameter.image}}.dll --build-arg DLL=backend_${{parameter.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameter.image}}/
+          # sudo docker build -t $(ACR_NAME).azurecr.io/$(BLOBSTEAMER_IMAGE) --build-arg DLL=$(BLOBSTEAMER_IMAGE) -f ./src/backend/infra/build/Dockerfile ./src/backend/blobstreamer/
 
-    - task: Bash@3
-      displayName: Trviy Scan Image
-      inputs:
-        targetType: inline
-        script: |
-          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(blobstreamer_image):latest
-          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(blobstreamer_image):latest
+#     - task: Bash@3
+#       displayName: Trviy Scan Image
+#       inputs:
+#         targetType: inline
+#         script: |
+#           # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(BLOBSTEAMER_IMAGE):latest
+#           sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(BLOBSTEAMER_IMAGE):latest
 
-    - task: Bash@3
-      displayName: Push Image to ACR
-      inputs:
-        targetType: inline
-        script: |
-          sudo docker push $(ACR_NAME).azurecr.io/$(blobstreamer_image):latest
-
-
+#     - task: Bash@3
+#       displayName: Push Image to ACR
+#       inputs:
+#         targetType: inline
+#         script: |
+#           sudo docker push $(ACR_NAME).azurecr.io/$(BLOBSTEAMER_IMAGE):latest
 
 
-- stage: IoT_Listener_Image
-  displayName: IoT Listener
-  jobs:
 
-  - job: IoTListener_Image
-    displayName: Build, Scan & Push
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: $(AKS_AGENT_NAME) 
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
+
+# - stage: IoT_Listener
+#   displayName: IoT Listener
+#   jobs:
+
+#   - job: IoTListener_Image
+#     displayName: Build, Scan & Push
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: $(AKS_AGENT_NAME) 
+#     steps:
+#     - checkout: self
+#       persistCredentials: true
+#       clean: true
     
-    - task: Bash@3
-      displayName: Build & Tag Image
-      inputs:
-        targetType: inline
-        script: |
-          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-          az account set --subscription $(ARM_SUBSCRIPTION_ID)
-          echo "Azure Login Successfull"
-          sudo az acr login -n $(ACR_NAME)
-          sudo docker build -t $(ACR_NAME).azurecr.io/$(iotlistener_image) --build-arg DLL=$(iotlistener_image) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
+#     - task: Bash@3
+#       displayName: Build & Tag Image
+#       inputs:
+#         targetType: inline
+#         script: |
+#           az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+#           az account set --subscription $(ARM_SUBSCRIPTION_ID)
+#           echo "Azure Login Successfull"
+#           sudo az acr login -n $(ACR_NAME)
+#           sudo docker build -t $(ACR_NAME).azurecr.io/$(IOTLISTENER_IMAGE) --build-arg DLL=$(IOTLISTENER_IMAGE) -f ./src/backend/infra/build/Dockerfile ./src/backend/iotlistener/
 
-    - task: Bash@3
-      displayName: Trivy Scan Image
-      inputs:
-        targetType: inline
-        script: |
-          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(iotlistener_image):latest
-          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(iotlistener_image):latest
+#     - task: Bash@3
+#       displayName: Trivy Scan Image
+#       inputs:
+#         targetType: inline
+#         script: |
+#           # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(IOTLISTENER_IMAGE):latest
+#           sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$(IOTLISTENER_IMAGE):latest
 
-    - task: Bash@3
-      displayName: Push Image to ACR
-      inputs:
-        targetType: inline
-        script: |
-          sudo docker push $(ACR_NAME).azurecr.io/$(iotlistener_image):latest
+#     - task: Bash@3
+#       displayName: Push Image to ACR
+#       inputs:
+#         targetType: inline
+#         script: |
+#           sudo docker push $(ACR_NAME).azurecr.io/$(IOTLISTENER_IMAGE):latest
