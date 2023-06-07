@@ -1,0 +1,267 @@
+name: aks_backend_infra
+
+trigger:
+# - $(Build.SourceBranchName)
+- none
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+- group: tf-backend-rg
+# - group: ${{ parameters.env }}-vg
+
+stages:
+# - stage: File_Validation
+#   displayName: Validate Required  Files Cloned
+#   jobs: 
+
+#   - job: Validate Files
+#     displayName: Validate IaC Backend Files Existence
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: aks-${{ parameters.env }}-agent
+#     steps:
+#     - checkout: self
+#       persistCredentials: true
+#       clean: true
+
+#     - task: Bash@3
+#       displayName: 'Validate IaC Pipelines Files'
+#       inputs:
+#         targetType: inline
+#         script: |
+#           if [ ! -d iac/ ] || [ ! -d iac/pipelines/ ] || [ ! -f iac/pipelines/backend-infra.yml ]; then
+#             echo "Missing - AKS Pipelines Folder Or Files is Missing"
+#             exit 1
+#           fi
+#           echo "IaC & Pipelines Folders Exists"
+
+#     - task: Bash@3
+#       displayName: 'Validate AKS Backend TerraForm Files'
+#       inputs:
+#         targetType: inline
+#         script: |
+#           if [ ! -d iac/terraform/aks/aks_backend ]; then
+#             echo "aks_backend Folder is Missing"
+#             exit 1
+#           elif [ ! -f iac/terraform/env/${{ parameters.env }}.tfvars ] || [ ! -f iac/terraform/aks/aks_backend/1-variables.tf ] || [ ! -f iac/terraform/aks/aks_backend/0-providers.tf ] || [ ! -f iac/terraform/aks/aks_backend/2-aks-backend.tf ] ; then
+#             missing_files=()
+#             if [ ! -f iac/terraform/env/${{ parameters.env }}.tfvars ]; then
+#               missing_files+=("terraform.tfstate.d")
+#             fi
+#             if [ ! -f iac/terraform/aks/aks_backend/1-variables.tf ]; then
+#               missing_files+=("1-variables.tf")
+#             fi
+#             #+TODO
+#             if [ ! -f iac/terraform/backend/1-main.tf ]; then
+#               missing_files+=("1-main.tf")
+#             fi
+            
+#             if [ ! -f iac/terraform/backend/0-providers.tf ]; then
+#               missing_files+=("0-providers.tf")
+#             fi
+
+#             echo "One or more files are missing in the TF Backend directory (iac/terraform/backend/): ${missing_files[*]}"
+#             exit 1          
+          
+#           fi
+#           echo "Terraform Backend Folder & Files Exists"
+
+- stage: Initilize_Terraform
+  displayName: Initilize Terraform Backend
+  # dependsOn: Validate_Files
+  jobs:
+
+  - job: Initilize_Terraform_Backend
+    displayName: Initilize Terraform Backend
+    pool:
+      vmImage: 'ubuntu-20.04'    
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - task: Bash@3
+      displayName: 'Updating Env Variabless File'
+      inputs:
+        targetType: inline
+        script: |
+          sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^region=.*/region=\"$(REGION)\"/" ../../env/${{ parameters.env }}.tfvars
+          export ARM_CLIENT_ID="$(iac-app-client-id)" && sed -i "s/^client_id=.*/client_id=\"$ARM_CLIENT_ID\"/" ../../env/${{ parameters.env }}.tfvars
+          export ARM_CLIENT_SECRET="$(iac-app-client-secret)" && sed -i "s/^client_secret=.*/client_secret=\"$ARM_CLIENT_SECRET\"/" ../../env/${{ parameters.env }}.tfvars          
+          sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../../env/${{ parameters.env }}.tfvars  
+          sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../../env/${{parameters.env}}.tfvars
+          cat ../../env/${{parameters.env}}.tfvars
+        workingDirectory: 'iac/terraform/aks/aks_backend/'
+
+    - task: Bash@3
+      displayName: 'Azure Login'
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+        workingDirectory: 'iac/terraform/backend'
+
+    - task: Bash@3
+      displayName: 'Initilize & Plan Terraform Backend'
+      inputs:
+        targetType: inline
+        script: |
+          export ARM_CLIENT_ID=$(iac-app-client-id) && export ARM_CLIENT_SECRET=$(iac-app-client-secret) && export ARM_TENANT_ID=$(ARM_TENANT_ID) && export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+          terraform init -var-file=../env/${{parameters.env}}.tfvars \
+          -backend-config="subscription_id=$ARM_SUBSCRIPTION_ID" \
+          -backend-config="resource_group_name=$(TF_BACKEND_RG)" \
+          -backend-config="storage_account_name=$(TF_BACKEND_SA)" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=aks-backend.tfstate"
+          terraform plan -var-file=../../env/${{parameters.env}}.tfvars
+          echo "Terraform Initilized"
+        workingDirectory: 'iac/terraform/aks/aks_backend/'
+
+
+- stage: Apply_Terraform
+  displayName: Apply Terraform Backend
+  # dependsOn: Validate_Files
+  jobs:
+
+  - job: Apply_Terraform_Backend
+    displayName: Apply Terraform Backend
+    pool:
+      vmImage: 'ubuntu-20.04'    
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - task: Bash@3
+      displayName: 'Updating Env Variabless File'
+      inputs:
+        targetType: inline
+        script: |
+          sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^region=.*/region=\"$(REGION)\"/" ../../env/${{ parameters.env }}.tfvars
+          export ARM_CLIENT_ID="$(iac-app-client-id)" && sed -i "s/^client_id=.*/client_id=\"$ARM_CLIENT_ID\"/" ../../env/${{ parameters.env }}.tfvars
+          export ARM_CLIENT_SECRET="$(iac-app-client-secret)" && sed -i "s/^client_secret=.*/client_secret=\"$ARM_CLIENT_SECRET\"/" ../../env/${{ parameters.env }}.tfvars          
+          sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../../env/${{ parameters.env }}.tfvars  
+          sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i 's#^devops_url=.*#devops_url="'"$DEVOPS_URL"'"#' ../../env/${{parameters.env}}.tfvars
+
+          cat ../../env/${{parameters.env}}.tfvars
+        workingDirectory: 'iac/terraform/aks/aks_backend/'
+    - task: Bash@3
+      displayName: 'Azure Login'
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+        workingDirectory: 'iac/terraform/backend'
+    - task: Bash@3
+      displayName: 'Apply Terraform Backend'
+      inputs:
+        targetType: inline
+        script: |
+          export ARM_CLIENT_ID=$(iac-app-client-id) && export ARM_CLIENT_SECRET=$(iac-app-client-secret) && export ARM_TENANT_ID=$(ARM_TENANT_ID) && export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+          terraform init -var-file=../env/${{parameters.env}}.tfvars \
+          -backend-config="subscription_id=$ARM_SUBSCRIPTION_ID" \
+          -backend-config="resource_group_name=$(TF_BACKEND_RG)" \
+          -backend-config="storage_account_name=$(TF_BACKEND_SA)" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=aks-backend.tfstate"
+          
+          terraform apply -var-file=../../env/${{parameters.env}}.tfvars -auto-approve
+          echo "Terraform Applied"
+        workingDirectory: 'iac/terraform/aks/aks_backend/'
+
+- stage: Destroy_Terraform
+  displayName: Destroy Terraform Backend
+  # dependsOn: Validate_Files
+  jobs:
+
+  - job: Destroy_Terraform_Backend
+    displayName: Destroy Terraform Backend
+    pool:
+      vmImage: 'ubuntu-20.04'    
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - task: Bash@3
+      displayName: 'Updating Env Variabless File'
+      inputs:
+        targetType: inline
+        script: |
+          sed -i "s/^tenant_id=.*/tenant_id=\"$(ARM_TENANT_ID)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^subscription_id=.*/subscription_id=\"$(ARM_SUBSCRIPTION_ID)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^location=.*/location=\"$(LOCATION)\"/" ../../env/${{ parameters.env }}.tfvars
+          sed -i "s/^region=.*/region=\"$(REGION)\"/" ../../env/${{ parameters.env }}.tfvars
+          export ARM_CLIENT_ID="$(iac-app-client-id)" && sed -i "s/^client_id=.*/client_id=\"$ARM_CLIENT_ID\"/" ../../env/${{ parameters.env }}.tfvars
+          export ARM_CLIENT_SECRET="$(iac-app-client-secret)" && sed -i "s/^client_secret=.*/client_secret=\"$ARM_CLIENT_SECRET\"/" ../../env/${{ parameters.env }}.tfvars          
+          sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../../env/${{ parameters.env }}.tfvars  
+          sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../../env/${{parameters.env}}.tfvars
+          # sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../../env/${{parameters.env}}.tfvars
+          sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../../env/${{parameters.env}}.tfvars
+          cat ../../env/${{parameters.env}}.tfvars
+        workingDirectory: 'iac/terraform/aks/aks_backend/'
+    - task: Bash@3
+      displayName: 'Azure Login'
+      inputs:
+        targetType: inline
+        script: |
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+        workingDirectory: 'iac/terraform/backend'
+    - task: Bash@3
+      displayName: 'Destroy Terraform Backend'
+      inputs:
+        targetType: inline
+        script: |
+          export ARM_CLIENT_ID=$(iac-app-client-id) && export ARM_CLIENT_SECRET=$(iac-app-client-secret) && export ARM_TENANT_ID=$(ARM_TENANT_ID) && export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+          terraform init -var-file=../env/${{parameters.env}}.tfvars \
+          -backend-config="subscription_id=$ARM_SUBSCRIPTION_ID" \
+          -backend-config="resource_group_name=$(TF_BACKEND_RG)" \
+          -backend-config="storage_account_name=$(TF_BACKEND_SA)" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=aks-backend.tfstate"
+          
+          terraform destroy -var-file=../../env/${{parameters.env}}.tfvars -auto-approve
+          echo "Terraform Destroyed"
+        workingDirectory: 'iac/terraform/aks/aks_backend/'
+
+
