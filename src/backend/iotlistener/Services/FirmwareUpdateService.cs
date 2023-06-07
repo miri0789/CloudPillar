@@ -26,13 +26,13 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             long rangeSize = getRangeSize(blobSize, data.chunkSize);
 
             string startRangeRequestUrl = $"{_blobStreamerUrl}blob/start?deviceId={deviceId}&fileName={data.fileName}&blobLength={blobSize}";
-            await _httpRequestorService.SendRequest<object>(startRangeRequestUrl, HttpMethod.Post);
+            await _httpRequestorService.SendRequest(startRangeRequestUrl, HttpMethod.Post);
 
             var requests = new List<Task>();
             for (long offset = data.startPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
             {
                 string requestUrl = $"{_blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.fileName}&chunkSize={data.chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}";
-                requests.Add(_httpRequestorService.SendRequest<object>(requestUrl, HttpMethod.Post));
+                requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
             }
             await Task.WhenAll(requests);
         }
@@ -47,6 +47,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         try
         {
             string requestUrl = $"{_blobStreamerUrl}blob/metadata?fileName={fileName}";
+            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Get);
             BlobProperties fileMetadata = await _httpRequestorService.SendRequest<BlobProperties>(requestUrl, HttpMethod.Get);
             return fileMetadata.Length;
         }

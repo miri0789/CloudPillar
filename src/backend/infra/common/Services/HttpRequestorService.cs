@@ -4,6 +4,8 @@ namespace common;
 
 public interface IHttpRequestorService
 {
+
+    Task SendRequest(string url, HttpMethod method, CancellationToken cancellationToken = default);
     Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default);
 }
 
@@ -16,6 +18,11 @@ public class HttpRequestorService : IHttpRequestorService
     {
         _httpClientFactory = httpClientFactory;
         _schemaValidator = schemaValidator;
+    }
+
+    public async Task SendRequest(string url, HttpMethod method, CancellationToken cancellationToken = default)
+    {
+        await SendRequest<object>(url, method, null, cancellationToken);
     }
 
     public async Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default)
