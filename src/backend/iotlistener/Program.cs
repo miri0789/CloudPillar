@@ -16,6 +16,7 @@ class Program
         string? PartitionId = Environment.GetEnvironmentVariable("PARTITION_ID")?.Split('-')?.Last();
 
         var serviceCollection = new ServiceCollection();
+        serviceCollection.AddSingleton<ISchemaValidator, SchemaValidator>();
         serviceCollection.AddScoped<IHttpRequestorService, HttpRequestorService>();
         serviceCollection.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
         serviceCollection.AddScoped<ISigningService, SigningService>();
