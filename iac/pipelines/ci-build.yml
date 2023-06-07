@@ -2,7 +2,8 @@ name: ci_build
 
 trigger:
 # - none
-- $(Build.SourceBranchName)
+# - $(Build.SourceBranchName)
+- main
 
 parameters:
   - name: env
