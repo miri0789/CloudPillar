@@ -2,7 +2,7 @@ name: ci_build_test
 
 trigger:
 # - none
-- $(Build.SourceBranchName)
+- '$(Build.SourceBranchName)'
 # - main
 
 parameters:
@@ -47,7 +47,6 @@ stages:
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
-      # agent.name: iac-${{parameters.env}}-agent 
     steps:
     - checkout: self
       persistCredentials: true
