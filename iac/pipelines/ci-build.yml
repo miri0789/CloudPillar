@@ -38,6 +38,26 @@ variables:
 
 
 stages:
+- stage: Test
+  displayName: Testing
+  jobs:
+
+  - job: Tester
+    displayName: Testing Triggeres
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+      # agent.name: iac-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - task: Bash@3
+      displayName: Test
+      inputs:
+        targetType: inline
+        script: |
+          echo $(Build.SourceBranchName)
 - stage: Update_Build_Tag_Scan_Push
   displayName: Update Version, Build, Tag and Push Images
   jobs:
@@ -52,6 +72,7 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
+
     - task: Bash@3
       displayName: Build & Tag Image
       inputs:
