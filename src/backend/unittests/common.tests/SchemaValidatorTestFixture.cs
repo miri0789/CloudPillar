@@ -4,12 +4,12 @@ using common;
 [TestFixture]
 public class SchemaValidatorTestFixture
 {
-    private SchemaValidator validator;
+    private SchemaValidator _validator;
 
     [SetUp]
     public void SetUp()
     {
-        validator = new SchemaValidator();
+        _validator = new SchemaValidator();
     }
 
     [Test]
@@ -19,7 +19,7 @@ public class SchemaValidatorTestFixture
         string schemaPath = "tests/test";
         bool isRequest = true;
 
-        bool isValid = validator.ValidatePayloadSchema(payload, schemaPath, isRequest);
+        bool isValid = _validator.ValidatePayloadSchema(payload, schemaPath, isRequest);
 
         Assert.IsTrue(isValid);
     }
@@ -31,7 +31,7 @@ public class SchemaValidatorTestFixture
         string schemaPath = "tests/test";
         bool isRequest = true;
 
-        bool isValid = validator.ValidatePayloadSchema(payload, schemaPath, isRequest);
+        bool isValid = _validator.ValidatePayloadSchema(payload, schemaPath, isRequest);
 
         Assert.IsFalse(isValid);
     }
