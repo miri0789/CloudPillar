@@ -389,19 +389,23 @@ namespace DicomBackendPoC
             return dicomFile;
         }
         
-        public async Task<DicomWebResponse<DicomDataset>> StoreDicomWithValidation(DicomFile dicomFile)
+        public async Task<DicomWebResponse<DicomDataset>> StoreDicomWithValidation(DicomFile dicomFile, bool isOriginal = false)
         {
             try
             {
                 if(await PatientMetadataValidation(dicomFile.Dataset))
                 {
-                    var response = await client.StoreAsync(dicomFile);
-                    return response;
+                    if(ValidateSeriesVarsion(dicomFile.Dataset, isOriginal)) {
+                        var response = await client.StoreAsync(dicomFile);
+                        return response;
+                    }
+                    else
+                        throw new Exception("Series UID is not allowed");
                 }
                 else
                     throw new Exception("You cannot change patient details");
             }
-            catch (Exception e)
+            catch (DicomWebException e)
             {
                 throw new Exception($"{e.Message}", e);
             }    
@@ -431,6 +435,22 @@ namespace DicomBackendPoC
                         return false;
             }
             return true;
+        }
+
+        public string SetSeriesUidForOriginalCase(DicomDataset ds)
+        {
+            var seriesUID = ds.GetSingleValue<string>(DicomTag.StudyInstanceUID);
+        
+            ds.AddOrUpdate(DicomTag.SeriesInstanceUID, seriesUID);
+            return seriesUID;
+        }
+
+        public bool ValidateSeriesVarsion(DicomDataset ds, bool isOriginal)
+        {
+            if(isOriginal)
+                return ds.GetSingleValue<string>(DicomTag.StudyInstanceUID) == ds.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
+            else
+                return ds.GetSingleValue<string>(DicomTag.StudyInstanceUID) != ds.GetSingleValue<string>(DicomTag.SeriesInstanceUID);
         }
     }
 }

@@ -52,7 +52,8 @@
             }
 
             await dicomApiTests.StoreDicomWithPatientDetailsChanges();
-
+            await dicomApiTests.StoreDicomAsOriginalCase();
+            await dicomApiTests.StoreDicomNotOriginalCase();
         }
     }
 }

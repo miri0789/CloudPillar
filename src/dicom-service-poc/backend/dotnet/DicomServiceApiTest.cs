@@ -256,5 +256,74 @@ namespace DicomBackendPoC
                 Console.WriteLine(e.Message);
             }
         }
+
+        /// <summary>
+        /// Store Dicom as original case.
+        /// </summary>
+        public async Task StoreDicomAsOriginalCase()
+        {
+            DicomFile dicomFile = CreateRandomDicomFile();
+            // seriesUID same to study -> store will success 
+            try
+            {
+                dicomServiceApi.SetSeriesUidForOriginalCase(dicomFile.Dataset);
+                var response = await dicomServiceApi.StoreDicomWithValidation(dicomFile, true);
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            // seriesUID not same to study -> store will fail with exeption
+            try
+            {
+                dicomServiceApi.SetDicomStandardTag(dicomFile, DicomTag.SeriesInstanceUID, DicomUID.Generate().UID);
+                var response = await dicomServiceApi.StoreDicomWithValidation(dicomFile, true);
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Store Dicom not original case.
+        /// </summary>
+        public async Task StoreDicomNotOriginalCase()
+        {
+            DicomFile dicomFile = CreateRandomDicomFile();
+            // Store original case -> store will success 
+            try
+            {
+                dicomServiceApi.SetSeriesUidForOriginalCase(dicomFile.Dataset);
+                var response = await dicomServiceApi.StoreDicomWithValidation(dicomFile, true);
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            // seriesUID same to study -> store will fail with exeption 
+            try
+            {
+                dicomServiceApi.SetSeriesUidForOriginalCase(dicomFile.Dataset);
+                var response = await dicomServiceApi.StoreDicomWithValidation(dicomFile, false);
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            // seriesUID not same to study -> store will success
+            try
+            {
+                dicomServiceApi.SetDicomStandardTag(dicomFile, DicomTag.SeriesInstanceUID, DicomUID.Generate().UID);
+                var response = await dicomServiceApi.StoreDicomWithValidation(dicomFile, false);
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
     }
 }
