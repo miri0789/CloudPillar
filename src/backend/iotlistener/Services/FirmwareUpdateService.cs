@@ -47,7 +47,6 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         try
         {
             string requestUrl = $"{_blobStreamerUrl}blob/metadata?fileName={fileName}";
-            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Get);
             BlobProperties fileMetadata = await _httpRequestorService.SendRequest<BlobProperties>(requestUrl, HttpMethod.Get);
             return fileMetadata.Length;
         }
