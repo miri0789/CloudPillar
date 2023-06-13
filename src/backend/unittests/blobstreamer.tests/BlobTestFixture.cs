@@ -1,21 +1,12 @@
-﻿using blobstreamer.Models;
-using blobstreamer.Services;
+﻿using blobstreamer.Services;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Moq;
-using NUnit.Framework;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace YourNamespace.Tests
 {
-
-    public interface ICloudBlobWrapper
-    {
-        Task FetchAttributesAsync();
-        BlobProperties Properties { get; }
-    }
 
     [TestFixture]
     public class BlobTestFixture
@@ -32,12 +23,9 @@ namespace YourNamespace.Tests
             Environment.SetEnvironmentVariable("BLOB_CONTAINER_NAME", "iot-firmware");
             Environment.SetEnvironmentVariable("IOTHUB_CONNECTION_STRING", "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=");
 
-
             _mockContainer = new Mock<CloudBlobContainer>(new Uri("http://storageaccount/container"));
             _mockServiceClient = new Mock<ServiceClient>();
-
             _mockBlockBlob = new Mock<CloudBlockBlob>(new Uri("http://storageaccount/container/blob"));
-
             _blobService = new BlobService();
 
             var containerField = typeof(BlobService).GetField("_container", BindingFlags.NonPublic | BindingFlags.Instance);
