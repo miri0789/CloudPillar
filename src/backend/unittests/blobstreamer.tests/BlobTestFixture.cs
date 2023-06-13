@@ -82,8 +82,8 @@ namespace YourNamespace.Tests
             _mockBlockBlob.Setup(b => b.FetchAttributesAsync()).ThrowsAsync(new StorageException("The specified blob does not exist.", null));
             _mockContainer.Setup(c => c.GetBlockBlobReference(fileName)).Returns(_mockBlockBlob.Object);
 
-            async Task SendRequest() => await _blobService.GetBlobMetadataAsync(fileName);
-            Assert.ThrowsAsync<StorageException>(SendRequest);
+            async Task GetBlobMetadataAsync() => await _blobService.GetBlobMetadataAsync(fileName);
+            Assert.ThrowsAsync<StorageException>(GetBlobMetadataAsync);
         }
 
 
