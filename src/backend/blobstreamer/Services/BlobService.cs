@@ -1,13 +1,23 @@
-using blobstreamer.Contracts;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Polly;
 using blobstreamer.Models;
 using System.Reflection;
+using System.Net;
 
 namespace blobstreamer.Services
 {
+    public interface IBlobService
+    {
+        Task<BlobProperties> GetBlobMetadataAsync(string fileName);
+
+        Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition);
+
+        Task SendStartBlobMessage(string deviceId, string fileName, long blobLength);
+    }
+
+
     public class BlobService : IBlobService
     {
         private readonly CloudBlobContainer _container;
@@ -26,7 +36,7 @@ namespace blobstreamer.Services
         }
 
 
-        public async Task<BlobProperties> GetBlobMeatadataAsync(string fileName)
+        public async Task<BlobProperties> GetBlobMetadataAsync(string fileName)
         {
             CloudBlockBlob blockBlob = _container.GetBlockBlobReference(fileName);
             await blockBlob.FetchAttributesAsync();
