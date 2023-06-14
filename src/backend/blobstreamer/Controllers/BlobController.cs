@@ -1,4 +1,4 @@
-using blobstreamer.Contracts;
+using blobstreamer.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace blobstreamer.Controllers;
@@ -17,7 +17,7 @@ public class BlobController : ControllerBase
     [HttpGet("metadata")]
     public async Task<IActionResult> GetMeatadata(string fileName)
     {
-        var result = await _blobService.GetBlobMeatadataAsync(fileName);
+        var result = await _blobService.GetBlobMetadataAsync(fileName);
         return Ok(result);
     }
 

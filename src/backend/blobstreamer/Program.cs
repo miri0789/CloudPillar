@@ -1,5 +1,4 @@
 using blobstreamer.Services;
-using blobstreamer.Contracts;
 using System.Reflection;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
