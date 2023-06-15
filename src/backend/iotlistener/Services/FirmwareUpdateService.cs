@@ -39,6 +39,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         catch (Exception ex)
         {
             Console.WriteLine($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
+            throw ex;
         }
     }
 
@@ -53,7 +54,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         catch (Exception ex)
         {
             Console.WriteLine($"FirmwareUpdateService GetBlobSize failed. Message: {ex.Message}");
-            throw;
+            throw ex;
         }
     }
 
