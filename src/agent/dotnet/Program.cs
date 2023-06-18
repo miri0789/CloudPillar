@@ -24,7 +24,7 @@ namespace FirmwareUpdateAgent
         private static TwinAction? _downloadAction = null;
         private static ECDsa? _signingPublicKey = null;
         private static IProgressObserver? _progressObserver = null;
-        private static ConcurrentDictionary<string, Func<string, string?, Task>> _uploadCompletionHandlers = new ConcurrentDictionary<string, Func<string, string?, Task>> ();
+        private static ConcurrentDictionary<string, Func<string, string?, Task>> _uploadCompletionHandlers = new ConcurrentDictionary<string, Func<string, string?, Task>>();
 
         public interface IProgressObserver
         {
@@ -74,7 +74,7 @@ namespace FirmwareUpdateAgent
                             {
                                 Console.WriteLine($"{DateTime.Now}: Desired properties were updated.");
                                 // Console.WriteLine(JsonConvert.SerializeObject(desiredProperties));
-                                _ = ExecTwinActions(cts.Token, ()=>!c2dSubscription.IsSubscribed, _deviceClient);
+                                _ = ExecTwinActions(cts.Token, () => !c2dSubscription.IsSubscribed, _deviceClient);
                             }, null);
 
                     Console.CancelKeyPress += (sender, eventArgs) =>
@@ -105,7 +105,7 @@ namespace FirmwareUpdateAgent
                         _progressObserver = (IProgressObserver)Activator.CreateInstance(progressObserverType);
                         _progressObserver.InitProgressObserver(cts.Token, args);
                     }
-                   // Wait for any of the tasks to complete or be cancelled
+                    // Wait for any of the tasks to complete or be cancelled
                     await httpTask;
 
                     Console.WriteLine("Exiting...");
@@ -194,15 +194,17 @@ namespace FirmwareUpdateAgent
             string path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             FileInfo fi = new FileInfo(path);
             long startFromPos = fi.Exists ? fi.Length : 0L;
-            if (!string.IsNullOrEmpty(rewind)) {
+            if (!string.IsNullOrEmpty(rewind))
+            {
                 startFromPos -= long.Parse(rewind);
-                if(startFromPos < 0L) startFromPos = 0;
+                if (startFromPos < 0L) startFromPos = 0;
             }
             await SendFirmwareUpdateReady(cancellationToken, cbIsPaused, device_id, filename, startFromPos);
         }
         private static async Task SendFirmwareUpdateReady(CancellationToken cancellationToken, Func<bool> cbIsPaused, string device_id, string filename, long startFromPos = -1L)
         {
-            await SendIoTEvent(cancellationToken, cbIsPaused, device_id, "FirmwareUpdateReady", (eventType) => {
+            await SendIoTEvent(cancellationToken, cbIsPaused, device_id, "FirmwareUpdateReady", (eventType) =>
+            {
                 // Deduct the chunk size based on the protocol being used
                 int chunkSize = GetTransportType() switch
                 {
@@ -230,7 +232,8 @@ namespace FirmwareUpdateAgent
 
         public static async Task SendSignTwinKey(CancellationToken cancellationToken, Func<bool> cbIsPaused, string device_id, string keyJPath, string atSignatureKey)
         {
-            await SendIoTEvent(cancellationToken, cbIsPaused, device_id, "SignTwinKey", (eventType) => {
+            await SendIoTEvent(cancellationToken, cbIsPaused, device_id, "SignTwinKey", (eventType) =>
+            {
 
                 var payloadData = new
                 {
@@ -301,8 +304,10 @@ namespace FirmwareUpdateAgent
             _progressObserver?.ReportProgress(filename, progressPercent, false);
 
             Console.WriteLine($"%{progressPercent:00} @pos: {writePosition:00000000000} tot: {writtenAmount:00000000000} Throughput: {throughput:0.00} KiB/s");
-            if (progressPercent == 100) {
-                if(action != null) {
+            if (progressPercent == 100)
+            {
+                if (action != null)
+                {
                     action.ReportSuccess("FinishedTransit", "Finished streaming as the last chunk arrived.");
                     await action.Persist();
                 }
@@ -330,7 +335,7 @@ namespace FirmwareUpdateAgent
         private static async Task HandleHttpListener(CancellationToken cancellationToken, C2DSubscription c2dSubscription)
         {
             Console.WriteLine($"Started listening for HTTP....");
-            _ = ExecTwinActions(cancellationToken, ()=>!c2dSubscription.IsSubscribed, _deviceClient); // First time just hook up to the twin status
+            _ = ExecTwinActions(cancellationToken, () => !c2dSubscription.IsSubscribed, _deviceClient); // First time just hook up to the twin status
             while (!cancellationToken.IsCancellationRequested)
             {
                 HttpListenerContext context = await _httpListener.GetContextAsync();
@@ -357,7 +362,8 @@ namespace FirmwareUpdateAgent
                             Console.WriteLine("Pausing Agent");
                             c2dSubscription.Unsubscribe();
                             TwinAction? action = _downloadAction;
-                            if(action != null) {
+                            if (action != null)
+                            {
                                 await action.Persist();
                             }
                             await TwinAction.UpdateDeviceState(_deviceClient, "BUSY");
@@ -367,17 +373,17 @@ namespace FirmwareUpdateAgent
                             Console.WriteLine("Resuming Agent");
                             await c2dSubscription.Subscribe(cancellationToken);
                             await TwinAction.UpdateDeviceState(_deviceClient, "READY");
-                            _ = ExecTwinActions(cancellationToken, ()=>!c2dSubscription.IsSubscribed, _deviceClient);
+                            _ = ExecTwinActions(cancellationToken, () => !c2dSubscription.IsSubscribed, _deviceClient);
                         }
                         else if (request.Url.AbsolutePath.ToLower() == "/twin")
                         {
-                            _ = ExecTwinActions(cancellationToken, ()=>!c2dSubscription.IsSubscribed, _deviceClient);
+                            _ = ExecTwinActions(cancellationToken, () => !c2dSubscription.IsSubscribed, _deviceClient);
                         }
                         else if (request.Url.AbsolutePath.ToLower() == "/update")
                         {
                             string? fromPos = request.QueryString["from"];
                             string? filename = request.QueryString["file"];
-                            _ = SendFirmwareUpdateReady(cancellationToken, ()=>!c2dSubscription.IsSubscribed,
+                            _ = SendFirmwareUpdateReady(cancellationToken, () => !c2dSubscription.IsSubscribed,
                                                         GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                         string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
                                                         string.IsNullOrEmpty(fromPos) ? -1L : long.Parse(fromPos)); // Async call for update
@@ -386,12 +392,12 @@ namespace FirmwareUpdateAgent
                         {
                             string? fromPos = request.QueryString["from"];
                             string? filename = request.QueryString["file"];
-                            if(string.IsNullOrEmpty(fromPos))
-                                _ = SendFirmwareUpdateReadyContd(cancellationToken, ()=>!c2dSubscription.IsSubscribed,
+                            if (string.IsNullOrEmpty(fromPos))
+                                _ = SendFirmwareUpdateReadyContd(cancellationToken, () => !c2dSubscription.IsSubscribed,
                                                         GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                         string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename); // Async call for update
                             else
-                                _ = SendFirmwareUpdateReady(cancellationToken, ()=>!c2dSubscription.IsSubscribed,
+                                _ = SendFirmwareUpdateReady(cancellationToken, () => !c2dSubscription.IsSubscribed,
                                                         GetDeviceIdFromConnectionString(_deviceConnectionString),
                                                         string.IsNullOrEmpty(filename) ? "Microsoft Azure Storage Explorer.app.zip" : filename,
                                                         long.Parse(fromPos)); // Async call for update
@@ -535,9 +541,10 @@ namespace FirmwareUpdateAgent
                             async (cancellationToken, contentObject, key) =>
                             {
                                 var parentObject = contentObject?.Parent?.Parent as JObject;
-                                if(contentObject == null || parentObject == null ||
-                                   !parentObject.ContainsKey(key) || 
-                                   !VerifySignature(contentObject.ToString(), parentObject![key].ToString(), _signingPublicKey!)) {
+                                if (contentObject == null || parentObject == null ||
+                                   !parentObject.ContainsKey(key) ||
+                                   !VerifySignature(contentObject.ToString(), parentObject![key].ToString(), _signingPublicKey!))
+                                {
                                     var path = contentObject!.Path;
                                     var text = !parentObject.ContainsKey(key) ? "is missing" : "fails verification: " + parentObject![key].ToString();
                                     Console.WriteLine($"The signature '{key}' in container '{parentObject.Path}' {text}. \nOrdering backend to re-sign at device '{device_id}'....");
@@ -551,169 +558,170 @@ namespace FirmwareUpdateAgent
                             {
                                 try
                                 {
-                                    switch(action.Desired["action"]?.Value<string>())
+                                    switch (action.Desired["action"]?.Value<string>())
                                     {
-                                        case "singularDownload": {
-                                            // Set the current action being executed
-                                            _downloadAction = action;
-                                            if (action.IsInProgress || /*DEMO ONLY TBD REMOVE*/ action.Desired.ContainsKey("retransmissionRewind"))
+                                        case "singularDownload":
                                             {
-                                                await SendFirmwareUpdateReadyContd(cancellationToken, cbIsPaused,
-                                                                        device_id,
-                                                                        action.Desired["source"]?.ToString(),
-                                                                        action.Desired["retransmissionRewind"]?.ToString() );
-                                            }
-                                            else
-                                            {
-                                                // Report the initial progress and call the SendFirmwareUpdateReady method
-                                                action.ReportProgress();
-                                                await SendFirmwareUpdateReady(cancellationToken, cbIsPaused, 
-                                                                        device_id, 
-                                                                        action.Desired["source"]?.ToString());
-                                            }
-                                            // Wait for the download action to be completed
-                                            while (!cancellationToken.IsCancellationRequested)
-                                            {
-                                                TwinAction? reportingAction = _downloadAction;
-                                                if(reportingAction == null || reportingAction.IsComplete) 
-                                                    break;
-                                                // Adjust the delay time as needed (currently 5 seconds)
-                                                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-                                                // Persist the action state
-                                                await reportingAction.Persist();
-                                            }
-                                            break;
-                                        }
-                                        case "singularUpload": 
-                                        {
-                                            string? filename = action?.Desired["filename"]?.Value<string>();
-                                            int interval = action?.Desired["interval"]?.Value<int>() ?? -1;
-                                            bool enabled = action?.Desired["enabled"]?.Value<bool>() ?? true;
-                                            string method = action?.Desired["method"]?.Value<string>() ?? "stream";
-
-                                            if (filename != null && enabled)
-                                            {
-                                                _ =  UploadFilesPeriodicallyAsync(cancellationToken, action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 10), method, cbIsPaused, true);
-                                            }
-                                            break;
-                                        }
-                                        case "periodicUpload": 
-                                        {
-                                            string? filename = action?.Desired["filename"]?.Value<string>();
-                                            int interval = action?.Desired["interval"]?.Value<int>() ?? -1;
-                                            bool enabled = action?.Desired["enabled"]?.Value<bool>() ?? true;
-                                            string method = action?.Desired["method"]?.Value<string>() ?? "stream";
-
-                                            if (filename != null && enabled)
-                                            {
-                                                _ =  UploadFilesPeriodicallyAsync(cancellationToken, action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 600), method, cbIsPaused, false);
-                                            }
-                                            break;
-                                        }
-                                        case "executeOnce":
-                                        {
-                                            string shell = action.Desired["shell"]?.Value<string>() ?? "cmd";
-                                            string? command = action.Desired["command"]?.Value<string>();
-
-                                            if (!string.IsNullOrEmpty(command))
-                                            {
-                                                using (var process = new Process())
+                                                // Set the current action being executed
+                                                _downloadAction = action;
+                                                if (action.IsInProgress || /*DEMO ONLY TBD REMOVE*/ action.Desired.ContainsKey("retransmissionRewind"))
                                                 {
-                                                    if (shell == "powershell")
-                                                    {
-                                                        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                                                            process.StartInfo.FileName = "pwsh";
-                                                        else
-                                                            process.StartInfo.FileName = "powershell";
-                                                        process.StartInfo.Arguments = $"-Command \"{command}\"";
-                                                    }
-                                                    else if (shell == "cmd")
-                                                    {
-                                                        process.StartInfo.FileName = "cmd";
-                                                        process.StartInfo.Arguments = $"/c \"{command}\"";
-                                                    }
-                                                    else if (shell == "bash")
-                                                    {
-                                                        process.StartInfo.FileName = "bash";
-                                                        process.StartInfo.Arguments = $"-c \"{command}\"";
-                                                    }
-                                                    else
-                                                    {
-                                                        action.ReportFailed("-1", $"Invalid shell: {shell}");
+                                                    await SendFirmwareUpdateReadyContd(cancellationToken, cbIsPaused,
+                                                                            device_id,
+                                                                            action.Desired["source"]?.ToString(),
+                                                                            action.Desired["retransmissionRewind"]?.ToString());
+                                                }
+                                                else
+                                                {
+                                                    // Report the initial progress and call the SendFirmwareUpdateReady method
+                                                    action.ReportProgress();
+                                                    await SendFirmwareUpdateReady(cancellationToken, cbIsPaused,
+                                                                            device_id,
+                                                                            action.Desired["source"]?.ToString());
+                                                }
+                                                // Wait for the download action to be completed
+                                                while (!cancellationToken.IsCancellationRequested)
+                                                {
+                                                    TwinAction? reportingAction = _downloadAction;
+                                                    if (reportingAction == null || reportingAction.IsComplete)
                                                         break;
-                                                    }
+                                                    // Adjust the delay time as needed (currently 5 seconds)
+                                                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                                                    // Persist the action state
+                                                    await reportingAction.Persist();
+                                                }
+                                                break;
+                                            }
+                                        case "singularUpload":
+                                            {
+                                                string? filename = action?.Desired["filename"]?.Value<string>();
+                                                int interval = action?.Desired["interval"]?.Value<int>() ?? -1;
+                                                bool enabled = action?.Desired["enabled"]?.Value<bool>() ?? true;
+                                                string method = action?.Desired["method"]?.Value<string>() ?? "stream";
 
-                                                    process.StartInfo.RedirectStandardOutput = true;
-                                                    process.StartInfo.RedirectStandardError = true;
-                                                    process.StartInfo.UseShellExecute = false;
-                                                    process.StartInfo.CreateNoWindow = true;
+                                                if (filename != null && enabled)
+                                                {
+                                                    _ = UploadFilesPeriodicallyAsync(cancellationToken, action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 10), method, cbIsPaused, true);
+                                                }
+                                                break;
+                                            }
+                                        case "periodicUpload":
+                                            {
+                                                string? filename = action?.Desired["filename"]?.Value<string>();
+                                                int interval = action?.Desired["interval"]?.Value<int>() ?? -1;
+                                                bool enabled = action?.Desired["enabled"]?.Value<bool>() ?? true;
+                                                string method = action?.Desired["method"]?.Value<string>() ?? "stream";
 
-                                                    try
+                                                if (filename != null && enabled)
+                                                {
+                                                    _ = UploadFilesPeriodicallyAsync(cancellationToken, action, filename, TimeSpan.FromSeconds(interval > 0 ? interval : 600), method, cbIsPaused, false);
+                                                }
+                                                break;
+                                            }
+                                        case "executeOnce":
+                                            {
+                                                string shell = action.Desired["shell"]?.Value<string>() ?? "cmd";
+                                                string? command = action.Desired["command"]?.Value<string>();
+
+                                                if (!string.IsNullOrEmpty(command))
+                                                {
+                                                    using (var process = new Process())
                                                     {
-                                                        Console.WriteLine($"{DateTime.Now}: Spawning {process.StartInfo.FileName} command: {command} ...");
+                                                        if (shell == "powershell")
+                                                        {
+                                                            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                                                                process.StartInfo.FileName = "pwsh";
+                                                            else
+                                                                process.StartInfo.FileName = "powershell";
+                                                            process.StartInfo.Arguments = $"-Command \"{command}\"";
+                                                        }
+                                                        else if (shell == "cmd")
+                                                        {
+                                                            process.StartInfo.FileName = "cmd";
+                                                            process.StartInfo.Arguments = $"/c \"{command}\"";
+                                                        }
+                                                        else if (shell == "bash")
+                                                        {
+                                                            process.StartInfo.FileName = "bash";
+                                                            process.StartInfo.Arguments = $"-c \"{command}\"";
+                                                        }
+                                                        else
+                                                        {
+                                                            action.ReportFailed("-1", $"Invalid shell: {shell}");
+                                                            break;
+                                                        }
 
                                                         process.StartInfo.RedirectStandardOutput = true;
                                                         process.StartInfo.RedirectStandardError = true;
+                                                        process.StartInfo.UseShellExecute = false;
+                                                        process.StartInfo.CreateNoWindow = true;
 
-                                                        StringBuilder outputBuilder = new StringBuilder();
-                                                        StringBuilder errorBuilder = new StringBuilder();
-
-                                                        process.OutputDataReceived += (sender, e) =>
+                                                        try
                                                         {
-                                                            if (!string.IsNullOrEmpty(e.Data))
+                                                            Console.WriteLine($"{DateTime.Now}: Spawning {process.StartInfo.FileName} command: {command} ...");
+
+                                                            process.StartInfo.RedirectStandardOutput = true;
+                                                            process.StartInfo.RedirectStandardError = true;
+
+                                                            StringBuilder outputBuilder = new StringBuilder();
+                                                            StringBuilder errorBuilder = new StringBuilder();
+
+                                                            process.OutputDataReceived += (sender, e) =>
                                                             {
-                                                                outputBuilder.AppendLine(e.Data);
-                                                            }
-                                                        };
+                                                                if (!string.IsNullOrEmpty(e.Data))
+                                                                {
+                                                                    outputBuilder.AppendLine(e.Data);
+                                                                }
+                                                            };
 
-                                                        process.ErrorDataReceived += (sender, e) =>
-                                                        {
-                                                            if (!string.IsNullOrEmpty(e.Data))
+                                                            process.ErrorDataReceived += (sender, e) =>
                                                             {
-                                                                errorBuilder.AppendLine(e.Data);
+                                                                if (!string.IsNullOrEmpty(e.Data))
+                                                                {
+                                                                    errorBuilder.AppendLine(e.Data);
+                                                                }
+                                                            };
+
+                                                            process.Start();
+
+                                                            // Console.WriteLine($"Spawned: {command} via {process.StartInfo.FileName}...");
+
+                                                            process.BeginOutputReadLine();
+                                                            process.BeginErrorReadLine();
+
+                                                            process.WaitForExit();
+
+                                                            string output = outputBuilder.ToString();
+                                                            string error = errorBuilder.ToString();
+
+                                                            if (process.ExitCode != 0)
+                                                            {
+                                                                action.ReportFailed(process.ExitCode.ToString(), $"Error: {error}; Output: {output}");
                                                             }
-                                                        };
-
-                                                        process.Start();
-
-                                                        // Console.WriteLine($"Spawned: {command} via {process.StartInfo.FileName}...");
-
-                                                        process.BeginOutputReadLine();
-                                                        process.BeginErrorReadLine();
-
-                                                        process.WaitForExit();
-
-                                                        string output = outputBuilder.ToString();
-                                                        string error = errorBuilder.ToString();
-
-                                                        if (process.ExitCode != 0)
-                                                        {
-                                                            action.ReportFailed(process.ExitCode.ToString(), $"Error: {error}; Output: {output}");
+                                                            else
+                                                            {
+                                                                action.ReportSuccess(process.ExitCode.ToString(), $"Output: {output}");
+                                                            }
                                                         }
-                                                        else
+                                                        catch (Exception ex)
                                                         {
-                                                            action.ReportSuccess(process.ExitCode.ToString(), $"Output: {output}");
+                                                            Console.WriteLine($"Failed {ex.Message} in {process.StartInfo.FileName}...");
+                                                            action.ReportFailed(ex.GetType().Name, ex.Message);
                                                         }
-                                                    }
-                                                    catch (Exception ex)
-                                                    {
-                                                        Console.WriteLine($"Failed {ex.Message} in {process.StartInfo.FileName}...");
-                                                        action.ReportFailed(ex.GetType().Name, ex.Message);
                                                     }
                                                 }
-                                            }
-                                            else
-                                            {
-                                                action.ReportFailed("-1", "Invalid command");
-                                            }
+                                                else
+                                                {
+                                                    action.ReportFailed("-1", "Invalid command");
+                                                }
 
-                                            break;
-                                        }
+                                                break;
+                                            }
                                         default:
-                                        {
-                                            action.ReportSuccess("0", "Operation Completed Successfully"); // Currently not implemented, TBD
-                                            break;
-                                        }
+                                            {
+                                                action.ReportSuccess("0", "Operation Completed Successfully"); // Currently not implemented, TBD
+                                                break;
+                                            }
                                     }
                                 }
                                 finally
@@ -723,7 +731,8 @@ namespace FirmwareUpdateAgent
                                     _downloadAction = null;
                                 }
                             });
-            if(actions.Count == 0) {
+            if (actions.Count == 0)
+            {
                 Console.WriteLine($"{DateTime.Now}: Analyzed twin, nothing to do - at device '{device_id}'....");
             }
             return actions;
@@ -736,7 +745,7 @@ namespace FirmwareUpdateAgent
                 {
                     await UploadFilesToBlobStorageAsync(cancellationToken, action, filename, method, cbIsPaused);
                     action.ReportSuccess("Done", "Will keep uploading " + interval.ToString());
-                    if(breakAfterSuccess) break;
+                    if (breakAfterSuccess) break;
                 }
                 catch (Exception ex)
                 {
@@ -805,10 +814,11 @@ namespace FirmwareUpdateAgent
                 }
 
                 // Upload via either memory or file stream set up above
-                await uploader.UploadFromStreamAsync(cancellationToken, readStream, sasUriResponse.CorrelationId, 0, cbIsPaused, async (string correlationId, Exception? exception) => {
-                    if(exception != null)
+                await uploader.UploadFromStreamAsync(cancellationToken, readStream, sasUriResponse.CorrelationId, 0, cbIsPaused, async (string correlationId, Exception? exception) =>
+                {
+                    if (exception != null)
                         Console.WriteLine("Error during upload: " + exception.Message);
-                    
+
                     await _deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
                     {
                         CorrelationId = correlationId,
@@ -823,7 +833,7 @@ namespace FirmwareUpdateAgent
             Task UploadFromStreamAsync(CancellationToken cancellationToken, Stream readStream, string correlationId, long startFromPos, Func<bool> cbIsPaused, Func<string, Exception?, Task> onUploadComplete);
         }
 
-        private class IoTStreamingFileUploader: IFileUploader
+        private class IoTStreamingFileUploader : IFileUploader
         {
             private readonly Uri storageUri;
 
@@ -834,14 +844,15 @@ namespace FirmwareUpdateAgent
 
             public async Task UploadFromStreamAsync(CancellationToken cancellationToken, Stream readStream, string correlationId, long startFromPos, Func<bool> cbIsPaused, Func<string, Exception?, Task> onUploadComplete)
             {
-                var completionHandler = async (string remoteCorellationId, string? error) => {
+                var completionHandler = async (string remoteCorellationId, string? error) =>
+                {
                     var x = error != null ? new InvalidOperationException(error) : null;
-                    if(remoteCorellationId != correlationId)
+                    if (remoteCorellationId != correlationId)
                         throw new InvalidOperationException("correlationId must match", x);
-                    
+
                     // Will call once, now remove
                     Func<string, string?, Task>? handler = null;
-                    if(!_uploadCompletionHandlers.TryRemove(correlationId, out handler) || handler == null)
+                    if (!_uploadCompletionHandlers.TryRemove(correlationId, out handler) || handler == null)
                     {
                         ArgumentException ax = new ArgumentException("FATAL: Upload completion handler with this CorellationId is incorrect or unexpectedly missing: " + correlationId, "correlationId", x);
                         await onUploadComplete(correlationId, ax);
@@ -851,13 +862,14 @@ namespace FirmwareUpdateAgent
                     await onUploadComplete(correlationId, x);
                 };
 
-                if(!_uploadCompletionHandlers.TryAdd(correlationId, completionHandler))
+                if (!_uploadCompletionHandlers.TryAdd(correlationId, completionHandler))
                 {
                     await onUploadComplete(correlationId, new ArgumentException("Upload completion handler with this CorellationId already exists: " + correlationId, "correlationId"));
                     return; // Bail out
                 }
 
-                try {
+                try
+                {
                     int chunkSize = GetTransportType() switch
                     {
                         TransportType.Mqtt => 32 * 1024, // 32 KB
@@ -868,15 +880,16 @@ namespace FirmwareUpdateAgent
 
                     int totalChunks = (int)Math.Ceiling((double)readStream.Length / chunkSize);
 
-                    byte[] data = new byte[chunkSize];
+
                     for (int chunkIndex = (int)(startFromPos / chunkSize); chunkIndex < totalChunks; chunkIndex++)
                     {
                         int offset = chunkIndex * chunkSize;
                         int length = (chunkIndex == totalChunks - 1) ? (int)(readStream.Length - offset) : chunkSize;
+                        byte[] data = new byte[length];
+                        await readStream.ReadAsync(data, offset, length, cancellationToken);
 
-                        await readStream.ReadAsync(data, 0, length, cancellationToken);
-                        
-                        await SendIoTEvent(cancellationToken, cbIsPaused, GetDeviceIdFromConnectionString(_deviceConnectionString), "StreamingUploadChunk", (eventType) => {
+                        await SendIoTEvent(cancellationToken, cbIsPaused, GetDeviceIdFromConnectionString(_deviceConnectionString), "StreamingUploadChunk", (eventType) =>
+                        {
                             // Deduct the chunk size based on the protocol being used
 
                             var payloadData = new
@@ -884,7 +897,7 @@ namespace FirmwareUpdateAgent
                                 event_type = eventType,
                                 absolutePath = storageUri.AbsolutePath,
                                 write_position = offset,
-                                data = Convert.ToBase64String(data, 0, length)
+                                data = Convert.ToBase64String(data)
                             };
 
                             var messageString = JsonConvert.SerializeObject(payloadData);
@@ -895,35 +908,37 @@ namespace FirmwareUpdateAgent
                             message.Properties.Add("total_chunks", totalChunks.ToString());
                             return message;
                         });
-                    }
 
-                    await SendIoTEvent(cancellationToken, cbIsPaused, GetDeviceIdFromConnectionString(_deviceConnectionString), "StreamingUploadValidate", (eventType) => {
-                        // Deduct the chunk size based on the protocol being used
-
-                        var payloadData = new
+                        await SendIoTEvent(cancellationToken, cbIsPaused, GetDeviceIdFromConnectionString(_deviceConnectionString), "StreamingUploadValidate", (eventType) =>
                         {
-                            event_type = eventType,
-                            absolutePath = storageUri.AbsolutePath,
-                            write_position = offset,
-                            data = Convert.ToBase64String(data, 0, length)
-                        };
+                            // Deduct the chunk size based on the protocol being used
 
-                        var messageString = JsonConvert.SerializeObject(payloadData);
-                        var message = new Message(Encoding.ASCII.GetBytes(messageString)); // TODO: why ASCII?
+                            var payloadData = new
+                            {
+                                event_type = eventType,
+                                absolutePath = storageUri.AbsolutePath,
+                                write_position = offset,
+                                data = Convert.ToBase64String(data)
+                            };
 
-                        return message;
-                    });
+                            var messageString = JsonConvert.SerializeObject(payloadData);
+                            var message = new Message(Encoding.ASCII.GetBytes(messageString)); // TODO: why ASCII?
 
-                    _ = Task.Run(() => Task.Delay(2000).ContinueWith(_ => {
+                            return message;
+                        });
+
+                    }
+                    _ = Task.Run(() => Task.Delay(2000).ContinueWith(_ =>
+                    {
                         // simulate the confirmation of completion from the backend (PoC)
                         Func<string, string?, Task>? handler = null;
-                        if(_uploadCompletionHandlers.TryGetValue(correlationId, out handler) || handler != null)
+                        if (_uploadCompletionHandlers.TryGetValue(correlationId, out handler) || handler != null)
                             handler(correlationId, null); // Self removes
                     }));
 
                     while (_uploadCompletionHandlers.ContainsKey(correlationId)) await Task.Delay(500);
-                } 
-                catch(Exception exc) 
+                }
+                catch (Exception exc)
                 {
                     await onUploadComplete(correlationId, exc);
                 }
@@ -932,11 +947,11 @@ namespace FirmwareUpdateAgent
 
         private static IFileUploader CreateFileUploader(Uri storageUri, string uploadMethod)
         {
-            switch(uploadMethod) 
+            switch (uploadMethod)
             {
-                case "blob":   return new BlobStorageFileUploader(storageUri); 
-                case "stream": return new IoTStreamingFileUploader(storageUri); 
-                default:       throw new ArgumentException("Unsupported upload method", "uploadMethod"); 
+                case "blob": return new BlobStorageFileUploader(storageUri);
+                case "stream": return new IoTStreamingFileUploader(storageUri);
+                default: throw new ArgumentException("Unsupported upload method", "uploadMethod");
             }
         }
     }
