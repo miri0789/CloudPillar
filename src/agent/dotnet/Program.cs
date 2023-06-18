@@ -909,24 +909,6 @@ namespace FirmwareUpdateAgent
                             return message;
                         });
 
-                        await SendIoTEvent(cancellationToken, cbIsPaused, GetDeviceIdFromConnectionString(_deviceConnectionString), "StreamingUploadValidate", (eventType) =>
-                        {
-                            // Deduct the chunk size based on the protocol being used
-
-                            var payloadData = new
-                            {
-                                event_type = eventType,
-                                absolutePath = storageUri.AbsolutePath,
-                                write_position = offset,
-                                data = Convert.ToBase64String(data)
-                            };
-
-                            var messageString = JsonConvert.SerializeObject(payloadData);
-                            var message = new Message(Encoding.ASCII.GetBytes(messageString)); // TODO: why ASCII?
-
-                            return message;
-                        });
-
                     }
                     _ = Task.Run(() => Task.Delay(2000).ContinueWith(_ =>
                     {
