@@ -256,5 +256,44 @@ namespace DicomBackendPoC
                 Console.WriteLine(e.Message);
             }
         }
+
+        public async Task ExportOutdatedDicoms()
+        {
+            // Store two outdated files
+            await PostDicomFileAsync(new DicomDataset()
+                {
+                    { DicomTag.StudyDate, DateTime.Now.AddMonths(-3) }
+                });
+
+            await PostDicomFileAsync(new DicomDataset()
+                {
+                    { DicomTag.StudyDate, DateTime.Now.AddDays(-110) }
+                });
+
+            DicomLifeCycleManager blobManager = new DicomLifeCycleManager(dicomServiceApi);
+
+            var outdatedFiles1 = await blobManager.QueryOutdatedDicomFiles(DateTime.Now.AddYears(-1), DateTime.Now.AddMonths(-3));
+
+            Console.WriteLine("Outdated files before exporting:");
+            await foreach(var file in outdatedFiles1)
+            {
+                string id;
+                if (file.TryGetString(DicomTag.StudyInstanceUID, out id))
+                {
+                    Console.WriteLine(id);
+                }
+                
+            }
+
+            await blobManager.ExportAndDeleteOutdatedDicoms();
+
+            var outdatedFiles2 = await blobManager.QueryOutdatedDicomFiles(DateTime.Now.AddYears(-1), DateTime.Now.AddMonths(-3));
+
+            Console.WriteLine("Outdated files after exporting:");
+            await foreach(var file in outdatedFiles2)
+            {
+                Console.WriteLine(file.GetString(DicomTag.StudyInstanceUID));
+            }
+        }
     }
 }
