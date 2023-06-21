@@ -51,8 +51,23 @@
                 Console.WriteLine(ex.Message);
             }
 
-            await dicomApiTests.StoreDicomWithPatientDetailsChanges();
+            try
+            {
+                await dicomApiTests.StoreDicomWithPatientDetailsChanges();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
 
+            try
+            {
+                await dicomApiTests.ExportOutdatedDicoms();
+            } 
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
