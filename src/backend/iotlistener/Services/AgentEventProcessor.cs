@@ -2,6 +2,8 @@
 using System.Text.Json;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
+using shared.Entities;
+using shared.Entities.Enums;
 
 namespace iotlistener;
 

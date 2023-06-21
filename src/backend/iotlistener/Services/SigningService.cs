@@ -1,4 +1,5 @@
 ﻿using common;
+using shared.Entities;
 
 namespace iotlistener;
 

@@ -4,17 +4,17 @@ using shared.Entities.Enums;
 namespace shared.Entities;
 public class AgentEvent
 {
-    public EventType eventType { get; set; }
+    public EventType EventType { get; set; }
 }
 
 public class FirmwareUpdateEvent : AgentEvent
 {
-    public string fileName { get; set; }
+    public string FileName { get; set; }
 
-    public int chunkSize { get; set; }
+    public int ChunkSize { get; set; }
     
     [DefaultValue(0)]
-    public long startPosition { get; set; }
+    public long StartPosition { get; set; }
 }
 
 public class SignEvent : AgentEvent
