@@ -186,6 +186,19 @@
                 "AUTHORITY": "https://login.microsoftonline.com"
             },
             "stopAtEntry": false
+        },
+        {
+            "name": "Iot Device",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildIotDevice",
+            "program": "${workspaceFolder}/src/agent/iotdevice/bin/Debug/net7.0/iotdevice.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/agent/iotdevice",
+            "console": "internalConsole",
+            "env": {
+            },
+            "stopAtEntry": false
         }
     ]
 }

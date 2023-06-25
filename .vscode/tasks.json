@@ -156,6 +156,22 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+
+            "label": "buildIotDevice",
+            "command": "dotnet",
+            "type": "process",
+            "args": [ "build",
+            "${workspaceFolder}/src/agent/iotdevice/iotdevice.csproj",
+            "/property:GenerateFullPaths=true",
+            "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
