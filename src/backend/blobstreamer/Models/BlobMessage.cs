@@ -29,7 +29,7 @@ public class BlobMessage
         PropertyInfo[] properties = GetType().GetProperties();
         foreach (var property in properties)
         {
-            message.Properties.Add(property.Name.ToLower(), property.GetValue(this).ToString());
+            message.Properties.Add(property.Name, property.GetValue(this).ToString());
         }
         Console.WriteLine($"Blobstreamer PrepareBlobMessage. properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
