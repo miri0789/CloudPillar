@@ -13,8 +13,6 @@ namespace blobstreamer.Services
         Task<BlobProperties> GetBlobMetadataAsync(string fileName);
 
         Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition);
-
-        Task SendStartBlobMessage(string deviceId, string fileName, long blobLength);
     }
 
 
@@ -62,30 +60,14 @@ namespace blobstreamer.Services
                     Filename = fileName
                 };
 
+                if (offset + chunkSize >= rangeSize + startPosition)
+                {
+                    blobMessage.RangeSize = rangeSize;
+                }
+
                 var c2dMessage = blobMessage.PrepareBlobMessage(data);
                 await SendMessage(c2dMessage, deviceId);
             }
-
-            var endBlobRangeMessage = new EndBlobRangeMessage()
-            {
-                RangeIndex = rangeIndex,
-                Filename = fileName
-            };
-
-            var c2dEndRangeMessage = endBlobRangeMessage.PrepareBlobMessage(new byte[0]);
-            await SendMessage(c2dEndRangeMessage, deviceId);
-        }
-
-        public async Task SendStartBlobMessage(string deviceId, string fileName, long blobLength)
-        {
-            var startBlobRangeMessage = new StartBlobMessage()
-            {
-                BlobLength = blobLength,
-                Filename = fileName
-            };
-
-            var c2dStartBlobMessage = startBlobRangeMessage.PrepareBlobMessage(new byte[0]);
-            await SendMessage(c2dStartBlobMessage, deviceId);
         }
 
         private async Task SendMessage(Message c2dMessage, string deviceId)

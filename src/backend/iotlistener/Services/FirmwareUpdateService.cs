@@ -25,9 +25,6 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             long blobSize = await GetBlobSize(data.fileName);
             long rangeSize = getRangeSize(blobSize, data.chunkSize);
 
-            string startRangeRequestUrl = $"{_blobStreamerUrl}blob/start?deviceId={deviceId}&fileName={data.fileName}&blobLength={blobSize}";
-            await _httpRequestorService.SendRequest<object>(startRangeRequestUrl, HttpMethod.Post);
-
             var requests = new List<Task>();
             for (long offset = data.startPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
             {
