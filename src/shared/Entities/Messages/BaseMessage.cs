@@ -1,13 +1,11 @@
 using System.Reflection;
 using Microsoft.Azure.Devices;
 
-namespace blobstreamer.Models;
+namespace shared.Entities.Blob;
 
 public enum MessageType
 {
-    Start,
-    Chunk,
-    End
+    DownloadChunk
 }
 
 public abstract class BaseMessage
@@ -15,9 +13,8 @@ public abstract class BaseMessage
     public abstract MessageType messageType { get; set; }
     public abstract string GetMessageId();
 
-    public Message PrepareBlobMessage(byte[] data)
+    public Message PrepareBlobMessage(byte[] data, int expiredMinutes = 60)
     {
-        int.TryParse(Environment.GetEnvironmentVariable(Constants.messageExpiredMinutes), out int expiredMinutes);
         var message = new Message(data)
         {
             MessageId = this.GetMessageId(),
@@ -27,7 +24,7 @@ public abstract class BaseMessage
         PropertyInfo[] properties = GetType().GetProperties();
         foreach (var property in properties)
         {
-            message.Properties.Add(property.Name.ToLower(), property.GetValue(this).ToString());
+            message.Properties.Add(property.Name, property.GetValue(this).ToString());
         }
         Console.WriteLine($"Blobstreamer PrepareBlobMessage. message title: {this.messageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;

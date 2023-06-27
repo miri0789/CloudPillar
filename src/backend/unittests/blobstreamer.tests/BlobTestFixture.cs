@@ -50,18 +50,7 @@ namespace YourNamespace.Tests
 
             _mockServiceClient.Setup(s => s.SendAsync(deviceId, It.IsAny<Message>(), null)).Returns(Task.CompletedTask);
             await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition);
-            _mockServiceClient.Verify(s => s.SendAsync(deviceId, It.IsAny<Message>(), null), Times.Exactly(5));
-        }
-
-        [Test]
-        public async Task SendStartBlobMessage_ShouldSendStartBlobMessage()
-        {
-            string deviceId = "test-device";
-            string fileName = "test-file.txt";
-            long blobLength = 1024;
-            _mockServiceClient.Setup(s => s.SendAsync(deviceId, It.IsAny<Message>(), null));
-            await _blobService.SendStartBlobMessage(deviceId, fileName, blobLength);
-            _mockServiceClient.Verify(s => s.SendAsync(deviceId, It.IsAny<Message>(), null), Times.Exactly(1));
+            _mockServiceClient.Verify(s => s.SendAsync(deviceId, It.IsAny<Message>(), null), Times.Exactly(4));
         }
 
         [Test]
@@ -92,8 +81,13 @@ namespace YourNamespace.Tests
         {
             string deviceId = "test-device";
             string fileName = "test-file.txt";
-            long blobLength = 1024;
+            int chunkSize = 1024;
+            int rangeSize = 1024;
+            int rangeIndex = 0;
+            long startPosition = 0;
             Environment.SetEnvironmentVariable("RETRY_POLICY_EXPONENT", "3");
+            _mockContainer.Setup(c => c.GetBlockBlobReference(fileName)).Returns(_mockBlockBlob.Object);
+            _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
 
             _mockServiceClient
                 .SetupSequence(s => s.SendAsync(deviceId, It.IsAny<Message>(), null))
@@ -101,7 +95,7 @@ namespace YourNamespace.Tests
                 .Throws(new Exception("Second send failed"))
                 .Returns(Task.CompletedTask);
 
-            await _blobService.SendStartBlobMessage(deviceId, fileName, blobLength);
+            await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition);
             _mockServiceClient.Verify(s => s.SendAsync(deviceId, It.IsAny<Message>(), null), Times.Exactly(3));
         }
     }
