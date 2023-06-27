@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Storage.Blob;
 using common;
+using shared.Entities;
 
 namespace iotlistener;
 

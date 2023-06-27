@@ -2,9 +2,7 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Polly;
-using blobstreamer.Models;
-using System.Reflection;
-using System.Net;
+using shared.Entities.Blob;
 
 namespace blobstreamer.Services
 {
@@ -59,7 +57,7 @@ namespace blobstreamer.Services
                     RangeIndex = rangeIndex,
                     ChunkIndex = (int)chunkIndex,
                     Offset = offset,
-                    Filename = fileName
+                    FileName = fileName
                 };
 
                 var c2dMessage = blobMessage.PrepareBlobMessage(data);
@@ -69,7 +67,7 @@ namespace blobstreamer.Services
             var endBlobRangeMessage = new EndBlobRangeMessage()
             {
                 RangeIndex = rangeIndex,
-                Filename = fileName
+                FileName = fileName
             };
 
             var c2dEndRangeMessage = endBlobRangeMessage.PrepareBlobMessage(new byte[0]);
@@ -81,7 +79,7 @@ namespace blobstreamer.Services
             var startBlobRangeMessage = new StartBlobMessage()
             {
                 BlobLength = blobLength,
-                Filename = fileName
+                FileName = fileName
             };
 
             var c2dStartBlobMessage = startBlobRangeMessage.PrepareBlobMessage(new byte[0]);
