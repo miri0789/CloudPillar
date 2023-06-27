@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Person",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "age": {
+        "type": "integer",
+        "minimum": 18
+      },
+      "email": {
+        "type": "string",
+        "format": "email"
+      }
+    },
+    "required": ["name", "age"]
+  }
+  

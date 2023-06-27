@@ -1,4 +1,5 @@
 ﻿using common;
+using shared.Entities;
 
 namespace iotlistener;
 
@@ -23,7 +24,7 @@ public class SigningService : ISigningService
         try
         {
             string requestUrl = $"{_signingUrl}signing/create?deviceId={deviceId}&keyPath={signEvent.keyPath}&signatureKey={signEvent.signatureKey}";
-            await _httpRequestorService.SendRequest<object>(requestUrl, HttpMethod.Post);
+            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
         }
         catch (Exception ex)
         {

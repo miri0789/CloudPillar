@@ -1,17 +1,18 @@
 
 namespace shared.Entities.Blob;
 
-public class BlobMessage : BaseMessage
+public class DownloadBlobChunkMessage : BaseMessage
 {
     public override MessageType messageType
     {
-        get { return MessageType.Chunk; }
-        set { messageType = MessageType.Chunk; }
+        get { return MessageType.DownloadChunk; }
+        set { messageType = MessageType.DownloadChunk; }
     }
     public int RangeIndex { get; set; }
     public int ChunkIndex { get; set; }
     public long Offset { get; set; }
     public string FileName { get; set; }
+    public int RangeSize { get; set; }
 
     public override string GetMessageId()
     {
