@@ -1,9 +1,12 @@
 ﻿using Newtonsoft.Json;
+using System.Text;
 
 namespace common;
 
 public interface IHttpRequestorService
 {
+
+    Task SendRequest(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default);
     Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default);
 }
 
@@ -16,6 +19,11 @@ public class HttpRequestorService : IHttpRequestorService
     {
         _httpClientFactory = httpClientFactory;
         _schemaValidator = schemaValidator;
+    }
+
+    public async Task SendRequest(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default)
+    {
+        await SendRequest<object>(url, method, requestData, cancellationToken);
     }
 
     public async Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default)
@@ -34,13 +42,13 @@ public class HttpRequestorService : IHttpRequestorService
             {
                 throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
             }
-            request.Content = new StringContent(serializedData, System.Text.Encoding.UTF8, "application/json");
+            request.Content = new StringContent(serializedData, Encoding.UTF8, "application/json");
         }
 
         if (request.RequestUri.Scheme == "https")
         {
             string httpsTimeoutSecondsString = Environment.GetEnvironmentVariable(CommonConstants.httpsTimeoutSeconds);
-            int httpsTimeoutSeconds = int.TryParse(httpsTimeoutSecondsString, out int parsedValue) ? parsedValue : 300;
+            int httpsTimeoutSeconds = int.TryParse(httpsTimeoutSecondsString, out int parsedValue) ? parsedValue : 30;
             client.Timeout = TimeSpan.FromSeconds(httpsTimeoutSeconds);
         }
 
