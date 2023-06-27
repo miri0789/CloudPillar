@@ -5,9 +5,7 @@ namespace shared.Entities.Blob;
 
 public enum MessageType
 {
-    Start,
-    Chunk,
-    End
+    DownloadChunk
 }
 
 public abstract class BaseMessage

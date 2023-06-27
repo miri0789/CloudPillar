@@ -2,9 +2,7 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Polly;
-using blobstreamer.Models;
-using System.Reflection;
-using System.Net;
+using shared.Entities.Blob;
 
 namespace blobstreamer.Services
 {
@@ -52,12 +50,12 @@ namespace blobstreamer.Services
                 byte[] data = new byte[length];
                 await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
 
-                var blobMessage = new BlobMessage()
+                var blobMessage = new DownloadBlobChunkMessage()
                 {
                     RangeIndex = rangeIndex,
                     ChunkIndex = (int)chunkIndex,
                     Offset = offset,
-                    Filename = fileName
+                    FileName = fileName
                 };
 
                 if (offset + chunkSize >= rangeSize + startPosition)
