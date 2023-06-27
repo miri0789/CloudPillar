@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace iotdevice.Services;
+namespace CloudPillar.Agent.Services;
 
 
 public interface ISignatureHandler

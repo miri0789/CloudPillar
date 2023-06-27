@@ -159,11 +159,11 @@
         },
         {
 
-            "label": "buildIotDevice",
+            "label": "buildCloudPillarAgent",
             "command": "dotnet",
             "type": "process",
             "args": [ "build",
-            "${workspaceFolder}/src/agent/iotdevice/iotdevice.csproj",
+            "${workspaceFolder}/src/agent/CloudPillar.Agent/CloudPillar.Agent.csproj",
             "/property:GenerateFullPaths=true",
             "/consoleloggerparameters:NoSummary"
             ],

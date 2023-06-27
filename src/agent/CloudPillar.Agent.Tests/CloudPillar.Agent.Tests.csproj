@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\iotdevice\iotdevice.csproj" />
+    <ProjectReference Include="..\CloudPillar.Agent\CloudPillar.Agent.csproj" />
   </ItemGroup>
 
 </Project>

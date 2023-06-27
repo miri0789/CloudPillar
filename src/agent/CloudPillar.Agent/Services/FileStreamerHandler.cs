@@ -1,4 +1,4 @@
-﻿namespace iotdevice.Services;
+﻿namespace CloudPillar.Agent.Services;
 
 public interface IFileStreamerHandler
 {

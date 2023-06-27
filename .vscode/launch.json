@@ -188,13 +188,13 @@
             "stopAtEntry": false
         },
         {
-            "name": "Iot Device",
+            "name": "Cloud Pillar Agent",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "buildIotDevice",
-            "program": "${workspaceFolder}/src/agent/iotdevice/bin/Debug/net7.0/iotdevice.dll",
+            "preLaunchTask": "buildCloudPillarAgent",
+            "program": "${workspaceFolder}/src/agent/CloudPillar.Agent/bin/Debug/net7.0/CloudPillar.Agent.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/agent/iotdevice",
+            "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
             },

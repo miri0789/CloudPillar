@@ -1,4 +1,4 @@
-using iotdevice.Services;
+using CloudPillar.Agent.Services;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>

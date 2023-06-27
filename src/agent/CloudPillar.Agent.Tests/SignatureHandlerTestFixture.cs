@@ -1,11 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
 using Moq;
-using iotdevice.Services;
+using CloudPillar.Agent.Services;
 
-
-
-namespace iotdevice.tests;
+namespace CloudPillar.Agent.Tests;
 
 public class SignatureHandlerTestFixture
 {
