@@ -27,11 +27,4 @@ public class BlobController : ControllerBase
         await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition);
         return Ok();
     }
-
-    [HttpPost("start")]
-    public async Task<IActionResult> Start(string deviceId, string fileName, long blobLength)
-    {
-        await _blobService.SendStartBlobMessage(deviceId, fileName, blobLength);
-        return Ok();
-    }
 }
