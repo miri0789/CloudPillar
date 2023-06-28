@@ -186,6 +186,19 @@
                 "AUTHORITY": "https://login.microsoftonline.com"
             },
             "stopAtEntry": false
+        },
+        {
+            "name": "Cloud Pillar Agent",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildCloudPillarAgent",
+            "program": "${workspaceFolder}/src/agent/CloudPillar.Agent/bin/Debug/net7.0/CloudPillar.Agent.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
+            "console": "internalConsole",
+            "env": {
+            },
+            "stopAtEntry": false
         }
     ]
 }
