@@ -3,10 +3,10 @@ namespace shared.Entities.Blob;
 
 public class DownloadBlobChunkMessage : BaseMessage
 {
-    public override MessageType messageType
+    public override MessageType MessageType
     {
         get { return MessageType.DownloadChunk; }
-        set { messageType = MessageType.DownloadChunk; }
+        set { MessageType = MessageType.DownloadChunk; }
     }
     public int RangeIndex { get; set; }
     public int ChunkIndex { get; set; }

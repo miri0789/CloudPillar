@@ -10,7 +10,7 @@ namespace blobstreamer.Services
     {
         Task<BlobProperties> GetBlobMetadataAsync(string fileName);
 
-        Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition);
+        Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, Guid actionGuid);
     }
 
 
@@ -39,7 +39,7 @@ namespace blobstreamer.Services
             return blockBlob.Properties;
         }
 
-        public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition)
+        public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, Guid actionGuid)
         {
             CloudBlockBlob blockBlob = _container.GetBlockBlobReference(fileName);
 
@@ -55,7 +55,8 @@ namespace blobstreamer.Services
                     RangeIndex = rangeIndex,
                     ChunkIndex = (int)chunkIndex,
                     Offset = offset,
-                    FileName = fileName
+                    FileName = fileName,
+                    ActionGuid = actionGuid
                 };
 
                 if (offset + chunkSize >= rangeSize + startPosition)

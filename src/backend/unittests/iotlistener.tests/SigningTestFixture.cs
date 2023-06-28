@@ -1,5 +1,6 @@
 ﻿using common;
 using Moq;
+using shared.Entities;
 
 namespace iotlistener.tests;
 public class SigningTestFixture
@@ -23,16 +24,16 @@ public class SigningTestFixture
         string deviceId = "testDeviceId";
         SignEvent signEvent = new SignEvent
         {
-            keyPath = "testKeyPath",
-            signatureKey = "testSignatureKey"
+            KeyPath = "testKeyPath",
+            SignatureKey = "testSignatureKey"
         };
 
-        string requestUrl = $"{signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.keyPath}&signatureKey={signEvent.signatureKey}";
+        string requestUrl = $"{signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
 
         await _signingService.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
-            service => service.SendRequest<object>(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+            service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
@@ -43,14 +44,14 @@ public class SigningTestFixture
         string deviceId = "testDeviceId";
         SignEvent signEvent = new SignEvent
         {
-            keyPath = "testKeyPath",
-            signatureKey = "testSignatureKey"
+            KeyPath = "testKeyPath",
+            SignatureKey = "testSignatureKey"
         };
 
-        string requestUrl = $"{signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.keyPath}&signatureKey={signEvent.signatureKey}";
+        string requestUrl = $"{signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
 
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest<object>(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .Throws<Exception>();
 
         Assert.ThrowsAsync<Exception>(async () =>

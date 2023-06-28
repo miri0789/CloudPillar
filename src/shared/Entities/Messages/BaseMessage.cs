@@ -10,7 +10,8 @@ public enum MessageType
 
 public abstract class BaseMessage
 {
-    public abstract MessageType messageType { get; set; }
+    public abstract MessageType MessageType { get; set; }
+    public Guid ActionGuid { get; set; }
     public abstract string GetMessageId();
 
     public Message PrepareBlobMessage(byte[] data, int expiredMinutes = 60)
@@ -26,9 +27,24 @@ public abstract class BaseMessage
         {
             message.Properties.Add(property.Name, property.GetValue(this).ToString());
         }
-        Console.WriteLine($"Blobstreamer PrepareBlobMessage. message title: {this.messageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
+        Console.WriteLine($"Blobstreamer PrepareBlobMessage. message title: {this.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
     }
+
+    public T CreateObjectFromMessage<T>() where T : BaseMessage, new()
+    {
+        var obj = new T();
+
+        PropertyInfo[] properties = GetType().GetProperties();
+        foreach (var property in properties)
+        {
+            object value = this.GetType().GetProperty(property.Name).GetValue(this);
+            obj.GetType().GetProperty(property.Name).SetValue(obj, value);
+        }
+
+        return obj;
+    }
+
 
 }
 

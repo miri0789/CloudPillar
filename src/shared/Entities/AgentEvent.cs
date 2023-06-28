@@ -5,6 +5,7 @@ namespace shared.Entities;
 public class AgentEvent
 {
     public EventType EventType { get; set; }
+    public Guid ActionGuid { get; set; }
 }
 
 public class FirmwareUpdateEvent : AgentEvent
@@ -19,7 +20,7 @@ public class FirmwareUpdateEvent : AgentEvent
 
 public class SignEvent : AgentEvent
 {
-    public string keyPath { get; set; }
+    public string KeyPath { get; set; }
 
-    public string signatureKey { get; set; }
+    public string SignatureKey { get; set; }
 }

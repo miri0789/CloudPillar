@@ -23,13 +23,13 @@ public class FirmwareUpdateService : IFirmwareUpdateService
     {
         try
         {
-            long blobSize = await GetBlobSize(data.fileName);
-            long rangeSize = getRangeSize(blobSize, data.chunkSize);
+            long blobSize = await GetBlobSize(data.FileName);
+            long rangeSize = getRangeSize(blobSize, data.ChunkSize);
 
             var requests = new List<Task>();
-            for (long offset = data.startPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
+            for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
             {
-                string requestUrl = $"{_blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.fileName}&chunkSize={data.chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}";
+                string requestUrl = $"{_blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionGuid={data.ActionGuid}";
                 requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
             }
             await Task.WhenAll(requests);

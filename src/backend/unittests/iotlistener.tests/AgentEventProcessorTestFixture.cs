@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using static Microsoft.Azure.EventHubs.EventData;
+using shared.Entities;
 
 namespace iotlistener.tests;
 
@@ -54,7 +55,7 @@ public class AgentEventProcessorTestFixture
     [Test]
     public async Task ProcessEventsAsync_WhenCalledSignTwinKey_CallSignTwinKey()
     {
-        var messages = initMessage("{\"eventType\": 1, \"keyPath\": \"keyPath1\",\"signatureKey\": \"signatureKey\"}");
+        var messages = initMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
@@ -69,7 +70,7 @@ public class AgentEventProcessorTestFixture
     public async Task ProcessEventsAsync_WhenCalledSignTwinKey_DrainMode_NotCallSignTwinKey()
     {
         Environment.SetEnvironmentVariable(Constants.drainD2cQueues, "drainD2cQueues");
-        var messages = initMessage("{\"eventType\": 1, \"keyPath\": \"keyPath1\",\"signatureKey\": \"signatureKey\"}");
+        var messages = initMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
@@ -83,7 +84,7 @@ public class AgentEventProcessorTestFixture
     [Test]
     public async Task ProcessEventsAsync_WhenCalledSignTwinKey_ExpiredTimeOut_NotCallSignTwinKey()
     {
-        var messages = initMessage("{\"eventType\": 1, \"keyPath\": \"keyPath1\",\"signatureKey\": \"signatureKey\"}");
+        var messages = initMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         Environment.SetEnvironmentVariable(Constants.messageTimeoutMinutes, "0");
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
