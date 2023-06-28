@@ -1,7 +1,7 @@
 using System.Reflection;
 using Microsoft.Azure.Devices;
 
-namespace shared.Entities.Blob;
+namespace shared.Entities.Messages;
 
 public enum MessageType
 {

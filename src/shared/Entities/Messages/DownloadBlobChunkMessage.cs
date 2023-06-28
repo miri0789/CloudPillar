@@ -1,5 +1,5 @@
 
-namespace shared.Entities.Blob;
+namespace shared.Entities.Messages;
 
 public class DownloadBlobChunkMessage : BaseMessage
 {
