@@ -52,6 +52,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
         if (file.TotalBytesDownloaded == file.TotalBytes)
         {
+            file.Stopwatch.Stop();
             //TODO report success
         }
         else
