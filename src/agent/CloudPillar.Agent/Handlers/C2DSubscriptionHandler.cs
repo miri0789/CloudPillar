@@ -10,7 +10,7 @@ namespace CloudPillar.Agent.Handlers
         Task Subscribe(CancellationToken cancellationToken);
         void Unsubscribe();
 
-        bool IsSubscribed();
+        bool CheckSubscribed();
     }
 
     /// <summary>
