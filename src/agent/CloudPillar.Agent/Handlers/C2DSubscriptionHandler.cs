@@ -82,7 +82,7 @@ namespace CloudPillar.Agent.Handlers
             IsSubscribed = false;
         }
 
-        public bool IsSubscribed()
+        public bool CheckSubscribed()
         {
             return IsSubscribed;
         }
