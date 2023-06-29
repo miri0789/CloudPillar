@@ -27,10 +27,20 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             long rangeSize = getRangeSize(blobSize, data.ChunkSize);
 
             var requests = new List<Task>();
-            for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
+
+            if (data.EndPosition != null)
             {
-                string requestUrl = $"{_blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionGuid={data.ActionGuid}&fileSize={blobSize}";
+                rangeSize = data.EndPosition - data.StartPosition;
+                string requestUrl = $"{_blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionGuid={data.ActionGuid}&fileSize={blobSize}";
                 requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+            }
+            else
+            {
+                for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
+                {
+                    string requestUrl = $"{_blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionGuid={data.ActionGuid}&fileSize={blobSize}";
+                    requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                }
             }
             await Task.WhenAll(requests);
         }

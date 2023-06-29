@@ -15,4 +15,6 @@ public class FirmwareUpdateEvent : AgentEvent
 
     [DefaultValue(0)]
     public long StartPosition { get; set; }
+
+    public long? EndPosition { get; set; }
 }

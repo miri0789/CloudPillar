@@ -6,20 +6,23 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface IFileDownloadHandler
 {
-    void DownloadMessageData(DownloadBlobChunkMessage downloadBlobChunkMessage, byte[] messageData);
+    Task InitFileDownload(Guid actionGuid, string path, string fileName);
+    Task DownloadMessageData(DownloadBlobChunkMessage downloadBlobChunkMessage, byte[] messageData);
 }
 
 public class FileDownloadHandler : IFileDownloadHandler
 {
     private readonly IFileStreamerHandler _fileStreamerHandler;
+    private readonly ID2CEventHandler _D2CEventHandler;
     private List<FileDownload> _filesDownloads = new List<FileDownload>();
 
-    public FileDownloadHandler(IFileStreamerHandler fileStreamerHandler)
+    public FileDownloadHandler(IFileStreamerHandler fileStreamerHandler, ID2CEventHandler D2CEventHandler)
     {
         _fileStreamerHandler = fileStreamerHandler;
+        _D2CEventHandler = D2CEventHandler;
     }
 
-    public void InitFileDownload(Guid actionGuid, string path, string fileName)
+    public async Task InitFileDownload(Guid actionGuid, string path, string fileName)
     {
         _filesDownloads.Add(new FileDownload()
         {
@@ -28,9 +31,10 @@ public class FileDownloadHandler : IFileDownloadHandler
             FileName = fileName,
             Stopwatch = new Stopwatch()
         });
+        await _D2CEventHandler.SendFirmwareUpdateEvent(fileName, actionGuid);
     }
 
-    public async void DownloadMessageData(DownloadBlobChunkMessage blobChunk, byte[] fileBytes)
+    public async Task DownloadMessageData(DownloadBlobChunkMessage blobChunk, byte[] fileBytes)
     {
         var file = _filesDownloads.Find(item => item.ActionGuid == blobChunk.ActionGuid && item.FileName == blobChunk.FileName);
         if (file == null)
@@ -74,7 +78,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         if (!isEmptyRangeBytes)
         {
             await _fileStreamerHandler.DeleteFileBytes(filePath, startPosition, endPosition);
-            //TODO send FirmwareUpdateReady event for this range
+            await _D2CEventHandler.SendFirmwareUpdateEvent(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
         }
     }
 }
