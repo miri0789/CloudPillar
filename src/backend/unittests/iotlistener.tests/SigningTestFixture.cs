@@ -1,6 +1,6 @@
 ﻿using common;
 using Moq;
-using shared.Entities;
+using shared.Entities.Events;
 
 namespace iotlistener.tests;
 public class SigningTestFixture

@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Moq;
-using CloudPillar.Agent.Services;
+using CloudPillar.Agent.Handlers;
 
 namespace CloudPillar.Agent.Tests;
 

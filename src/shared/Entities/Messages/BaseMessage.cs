@@ -27,24 +27,23 @@ public abstract class BaseMessage
         {
             message.Properties.Add(property.Name, property.GetValue(this).ToString());
         }
-        Console.WriteLine($"Blobstreamer PrepareBlobMessage. message title: {this.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
+        Console.WriteLine($"BaseMessage PrepareBlobMessage. message title: {this.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
     }
 
-    public T CreateObjectFromMessage<T>() where T : BaseMessage, new()
+    public T CreateObjectFromMessage<T>(Microsoft.Azure.Devices.Client.Message message) where T : BaseMessage, new()
     {
         var obj = new T();
 
         PropertyInfo[] properties = GetType().GetProperties();
         foreach (var property in properties)
         {
-            object value = this.GetType().GetProperty(property.Name).GetValue(this);
+            object value = message.Properties[property.Name];
             obj.GetType().GetProperty(property.Name).SetValue(obj, value);
         }
 
         return obj;
     }
-
 
 }
 

@@ -2,7 +2,7 @@
 using common;
 using Microsoft.Azure.Storage.Blob;
 using Moq;
-using shared.Entities;
+using shared.Entities.Events;
 
 namespace iotlistener.tests;
 public class FirmwareUpdateTestFixture

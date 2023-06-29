@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using static Microsoft.Azure.EventHubs.EventData;
-using shared.Entities;
+using shared.Entities.Events;
 
 namespace iotlistener.tests;
 

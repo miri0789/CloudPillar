@@ -1,35 +1,45 @@
 using System.Text;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json.Linq;
+using shared.Entities.Messages;
 
-namespace FirmwareUpdateAgent
+namespace CloudPillar.Agent.Handlers
 {
+    public interface IC2DSubscriptionHandler
+    {
+        Task Subscribe(CancellationToken cancellationToken);
+        void Unsubscribe();
+    }
+
     /// <summary>
     /// Represents a subscription to Cloud-to-Device messages for a specific device client.
     /// </summary>
-    public class C2DSubscription
+    public class C2DSubscriptionHandler : IC2DSubscriptionHandler
     {
         private readonly DeviceClient _deviceClient;
         private CancellationTokenSource _privateCts;
         private Task _c2dTask;
         private readonly string _deviceId;
 
+        private readonly IFileDownloadHandler _fileDownloadHandler;
+
         /// <summary>
         /// Gets a value indicating whether the subscription is active.
         /// </summary>
-        public bool IsSubscribed { get; private set; }
+        private bool IsSubscribed { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="C2DSubscription"/> class.
         /// </summary>
         /// <param name="deviceClient">The DeviceClient associated with the device.</param>
         /// <param name="deviceId">The device identifier.</param>
-        public C2DSubscription(, string deviceId)
+        public C2DSubscriptionHandler(ICommonHandler commonHandler, IFileDownloadHandler fileDownloadHandler)
         {
-            
-                    _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, GetTransportType());
-            _deviceClient = deviceClient;
-            _deviceId = deviceId;
+            _fileDownloadHandler = fileDownloadHandler;
+            string _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
+            TransportType _transportType = commonHandler.GetTransportType();
+            _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
+            _deviceId = commonHandler.GetDeviceIdFromConnectionString(_deviceConnectionString);
         }
 
         /// <summary>
@@ -85,38 +95,33 @@ namespace FirmwareUpdateAgent
                 Message receivedMessage = null;
                 try
                 {
-                    receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);
-                }
-                catch (Exception x)
-                {
-                    Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x.Message);
-                    continue;
-                }
-
-                if (receivedMessage != null)
-                {
-
-                    try
+                    receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken); try
                     {
                         string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
                         MessageType.TryParse(receivedMessage.Properties["MessageType"], out MessageType messageType);
-                        byte[] messageData = Convert.FromBase64String(messageObject.Value);
 
                         switch (messageType)
                         {
                             case MessageType.DownloadChunk:
-                                DownloadBlobChunkMessage downloadBlobChunkMessage = receivedMessage.CreateObjectFromMessage<DownloadBlobChunkMessage>();
+                                DownloadBlobChunkMessage downloadBlobChunkMessage = new DownloadBlobChunkMessage();
+                                downloadBlobChunkMessage.CreateObjectFromMessage<DownloadBlobChunkMessage>(receivedMessage);
+                                _fileDownloadHandler.DownloadMessageData(downloadBlobChunkMessage, receivedMessage.GetBytes());
                                 break;
                             default: break;
                         }
 
                         await _deviceClient.CompleteAsync(receivedMessage);
                     }
-                    catch (Exception x)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, x.Message);
+                        Console.WriteLine("{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, ex.Message);
                         continue;
                     }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, ex.Message);
+                    continue;
                 }
             }
         }

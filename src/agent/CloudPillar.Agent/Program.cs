@@ -1,8 +1,11 @@
-using CloudPillar.Agent.Services;
+using CloudPillar.Agent.Handlers;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
+        services.AddSingleton<ICommonHandler, CommonHandler>();
+        services.AddSingleton<IC2DSubscriptionHandler, C2DSubscriptionHandler>();
+        services.AddSingleton<IFileDownloadHandler, FileDownloadHandler>();
         services.AddSingleton<IFileStreamerHandler, FileStreamerHandler>();
         services.AddSingleton<ISignatureHandler, SignatureHandler>();
     })

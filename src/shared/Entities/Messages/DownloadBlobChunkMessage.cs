@@ -13,6 +13,7 @@ public class DownloadBlobChunkMessage : BaseMessage
     public long Offset { get; set; }
     public string FileName { get; set; }
     public int RangeSize { get; set; }
+    public long FileSize { get; set; }
 
     public override string GetMessageId()
     {

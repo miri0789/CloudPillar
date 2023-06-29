@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using shared.Entities.Enums;
 
-namespace shared.Entities;
+namespace shared.Entities.Events;
 public class AgentEvent
 {
     public EventType EventType { get; set; }
