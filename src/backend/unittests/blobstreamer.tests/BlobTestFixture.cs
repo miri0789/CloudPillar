@@ -49,7 +49,7 @@ namespace YourNamespace.Tests
             _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
 
             _mockServiceClient.Setup(s => s.SendAsync(deviceId, It.IsAny<Message>(), null)).Returns(Task.CompletedTask);
-            await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, new Guid());
+            await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, new Guid(), rangeSize);
             _mockServiceClient.Verify(s => s.SendAsync(deviceId, It.IsAny<Message>(), null), Times.Exactly(4));
         }
 
@@ -95,7 +95,7 @@ namespace YourNamespace.Tests
                 .Throws(new Exception("Second send failed"))
                 .Returns(Task.CompletedTask);
 
-            await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, new Guid());
+            await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, new Guid(), rangeSize);
             _mockServiceClient.Verify(s => s.SendAsync(deviceId, It.IsAny<Message>(), null), Times.Exactly(3));
         }
     }

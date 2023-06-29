@@ -58,7 +58,7 @@ public class FirmwareUpdateTestFixture
         for (long offset = startPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
         {
             _httpRequestorServiceMock.Verify(service =>
-                service.SendRequest($"{blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionGuid={actionGuid}", HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+                service.SendRequest($"{blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionGuid={actionGuid}&fileSize={blobSize}", HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
     }
@@ -87,7 +87,7 @@ public class FirmwareUpdateTestFixture
         Assert.ThrowsAsync<Exception>(SendFirmwareUpdate);
 
         _httpRequestorServiceMock.Verify(service =>
-            service.SendRequest($"{blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition=0&actionGuid={actionGuid}", HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+            service.SendRequest($"{blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition=0&actionGuid={actionGuid}&fileSize={rangeSize}", HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -101,7 +101,7 @@ public class FirmwareUpdateTestFixture
         var actionGuid = new Guid();
 
         _httpRequestorServiceMock.Setup(service =>
-            service.SendRequest($"{blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition=0&actionGuid={actionGuid}", HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            service.SendRequest($"{blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition=0&actionGuid={actionGuid}&fileSize={rangeSize}", HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Failed to send request."));
 
         SetMockBlobProperties(rangeSize);

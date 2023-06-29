@@ -9,6 +9,8 @@ namespace CloudPillar.Agent.Handlers
     {
         Task Subscribe(CancellationToken cancellationToken);
         void Unsubscribe();
+
+        bool IsSubscribed();
     }
 
     /// <summary>
@@ -78,6 +80,11 @@ namespace CloudPillar.Agent.Handlers
             _privateCts.Cancel();
             _privateCts = null;
             IsSubscribed = false;
+        }
+
+        public bool IsSubscribed()
+        {
+            return IsSubscribed;
         }
 
         /// <summary>
