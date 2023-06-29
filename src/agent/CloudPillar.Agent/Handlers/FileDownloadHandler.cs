@@ -59,15 +59,15 @@ public class FileDownloadHandler : IFileDownloadHandler
             //TODO report progress
             if (blobChunk.RangeSize != null && blobChunk.RangeSize != 0)
             {
-                await CheckFullRangeBytes(blobChunk, filePath);
+                await CheckFullRangeBytes(blobChunk, filePath, fileBytes.Length);
             }
         }
 
     }
 
-    private async Task CheckFullRangeBytes(DownloadBlobChunkMessage blobChunk, string filePath)
+    private async Task CheckFullRangeBytes(DownloadBlobChunkMessage blobChunk, string filePath, int fileBytesLength)
     {
-        long endPosition = blobChunk.Offset + fileBytes.Length;
+        long endPosition = blobChunk.Offset + fileBytesLength;
         long startPosition = endPosition - blobChunk.RangeSize;
         var isEmptyRangeBytes = await _fileStreamerHandler.CheckFileBytesNotEmpty(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
