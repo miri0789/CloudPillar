@@ -7,7 +7,7 @@ namespace CloudPillar.Agent.Handlers
 {
     public interface ID2CEventHandler
     {
-        Task SendFirmwareUpdateEvent(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null);
+        Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null);
     }
 
     public class D2CEventHandler : ID2CEventHandler
@@ -22,7 +22,7 @@ namespace CloudPillar.Agent.Handlers
             _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
         }
 
-        public async Task SendFirmwareUpdateEvent(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null)
+        public async Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null)
         {
             // Deduct the chunk size based on the protocol being used
             int chunkSize = _commonHandler.GetTransportType() switch
@@ -42,10 +42,10 @@ namespace CloudPillar.Agent.Handlers
                 ActionGuid = actionGuid
             };
 
-            await SendMessage(firmwareUpdateEvent);
+            await SendMessageAsync(firmwareUpdateEvent);
         }
 
-        private async Task SendMessage(AgentEvent agentEvent)
+        private async Task SendMessageAsync(AgentEvent agentEvent)
         {
             var messageString = JsonConvert.SerializeObject(agentEvent);
             Message message = new Message(Encoding.ASCII.GetBytes(messageString));

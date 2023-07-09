@@ -6,8 +6,8 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface IFileDownloadHandler
 {
-    Task InitFileDownload(Guid actionGuid, string path, string fileName);
-    Task DownloadMessageData(DownloadBlobChunkMessage downloadBlobChunkMessage, byte[] messageData);
+    Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName);
+    Task DownloadMessageDataAsync(DownloadBlobChunkMessage downloadBlobChunkMessage, byte[] messageData);
 }
 
 public class FileDownloadHandler : IFileDownloadHandler
@@ -22,7 +22,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _D2CEventHandler = D2CEventHandler;
     }
 
-    public async Task InitFileDownload(Guid actionGuid, string path, string fileName)
+    public async Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName)
     {
         _filesDownloads.Add(new FileDownload()
         {
@@ -31,10 +31,10 @@ public class FileDownloadHandler : IFileDownloadHandler
             FileName = fileName,
             Stopwatch = new Stopwatch()
         });
-        await _D2CEventHandler.SendFirmwareUpdateEvent(fileName, actionGuid);
+        await _D2CEventHandler.SendFirmwareUpdateEventAsync(fileName, actionGuid);
     }
 
-    public async Task DownloadMessageData(DownloadBlobChunkMessage blobChunk, byte[] fileBytes)
+    public async Task DownloadMessageDataAsync(DownloadBlobChunkMessage blobChunk, byte[] fileBytes)
     {
         var file = _filesDownloads.Find(item => item.ActionGuid == blobChunk.ActionGuid && item.FileName == blobChunk.FileName);
         if (file == null)
@@ -47,7 +47,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Stopwatch.Start();
             file.TotalBytes = blobChunk.FileSize;
         }
-        await _fileStreamerHandler.WriteChunkToFile(filePath, blobChunk.Offset, fileBytes);
+        await _fileStreamerHandler.WriteChunkToFileAsync(filePath, blobChunk.Offset, fileBytes);
 
         file.TotalBytesDownloaded += fileBytes.Length;
         double progressPercent = Math.Round((double)file.TotalBytesDownloaded / fileBytes.Length * 100, 2);
@@ -64,21 +64,21 @@ public class FileDownloadHandler : IFileDownloadHandler
             //TODO report progress
             if (blobChunk.RangeSize != null && blobChunk.RangeSize != 0)
             {
-                await CheckFullRangeBytes(blobChunk, filePath, fileBytes.Length);
+                await CheckFullRangeBytesAsync(blobChunk, filePath, fileBytes.Length);
             }
         }
 
     }
 
-    private async Task CheckFullRangeBytes(DownloadBlobChunkMessage blobChunk, string filePath, int fileBytesLength)
+    private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath, int fileBytesLength)
     {
         long endPosition = blobChunk.Offset + fileBytesLength;
         long startPosition = endPosition - blobChunk.RangeSize;
-        var isEmptyRangeBytes = await _fileStreamerHandler.CheckFileBytesNotEmpty(filePath, startPosition, endPosition);
+        var isEmptyRangeBytes = await _fileStreamerHandler.CheckFileBytesNotEmptyAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
-            await _fileStreamerHandler.DeleteFileBytes(filePath, startPosition, endPosition);
-            await _D2CEventHandler.SendFirmwareUpdateEvent(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
+            await _fileStreamerHandler.DeleteFileBytesAsync(filePath, startPosition, endPosition);
+            await _D2CEventHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
         }
     }
 }

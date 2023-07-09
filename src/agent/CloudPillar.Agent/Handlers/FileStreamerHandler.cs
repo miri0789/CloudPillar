@@ -2,18 +2,18 @@
 
 public interface IFileStreamerHandler
 {
-    Task WriteChunkToFile(string filePath, long writePosition, byte[] bytes);
+    Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 
-    Task DeleteFile(string filePath);
+    void DeleteFile(string filePath);
 
-    Task<bool> CheckFileBytesNotEmpty(string filePath, long startPosition, long endPosition);
+    Task<bool> CheckFileBytesNotEmptyAsync(string filePath, long startPosition, long endPosition);
 
-    Task DeleteFileBytes(string filePath, long startPosition, long endPosition);
+    Task DeleteFileBytesAsync(string filePath, long startPosition, long endPosition);
 }
 
 public class FileStreamerHandler : IFileStreamerHandler
 {
-    public async Task WriteChunkToFile(string filePath, long writePosition, byte[] bytes)
+    public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {
         using (FileStream fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
         {
@@ -22,15 +22,15 @@ public class FileStreamerHandler : IFileStreamerHandler
         }
     }
 
-    public async Task DeleteFile(string filePath)
+    public void DeleteFile(string filePath)
     {
         if (File.Exists(filePath))
         {
-            File.Delete(filePath);
+           File.Delete(filePath);
         }
     }
 
-    public async Task<bool> CheckFileBytesNotEmpty(string filePath, long startPosition, long endPosition)
+    public async Task<bool> CheckFileBytesNotEmptyAsync(string filePath, long startPosition, long endPosition)
     {
         if (startPosition > endPosition)
         {
@@ -48,7 +48,7 @@ public class FileStreamerHandler : IFileStreamerHandler
         return true;
     }
 
-    public async Task DeleteFileBytes(string filePath, long startPosition, long endPosition)
+    public async Task DeleteFileBytesAsync(string filePath, long startPosition, long endPosition)
     {
         if (startPosition > endPosition)
         {

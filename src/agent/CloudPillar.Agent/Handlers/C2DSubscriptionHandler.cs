@@ -28,7 +28,7 @@ namespace CloudPillar.Agent.Handlers
         /// <summary>
         /// Gets a value indicating whether the subscription is active.
         /// </summary>
-        private bool IsSubscribed { get; set; }
+        private bool _isSubscribed { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="C2DSubscription"/> class.
@@ -61,8 +61,8 @@ namespace CloudPillar.Agent.Handlers
             CancellationToken combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _privateCts.Token).Token;
             Console.WriteLine("Subscribing to C2D messages...");
 
-            IsSubscribed = true;
-            _c2dTask = Task.Run(() => ReceiveCloudToDeviceMessages(combinedToken, _deviceId), combinedToken);
+            _isSubscribed = true;
+            _c2dTask = Task.Run(() => ReceiveCloudToDeviceMessagesAsync(combinedToken, _deviceId), combinedToken);
         }
 
         /// <summary>
@@ -79,12 +79,12 @@ namespace CloudPillar.Agent.Handlers
             Console.WriteLine("Unsubscribing from C2D messages...");
             _privateCts.Cancel();
             _privateCts = null;
-            IsSubscribed = false;
+            _isSubscribed = false;
         }
 
         public bool CheckSubscribed()
         {
-            return IsSubscribed;
+            return _isSubscribed;
         }
 
         /// <summary>
@@ -93,13 +93,14 @@ namespace CloudPillar.Agent.Handlers
         /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <param name="device_id">The device identifier.</param>
         /// <returns>A task that represents the asynchronous message receiving operation.</returns>
-        private async Task ReceiveCloudToDeviceMessages(CancellationToken cancellationToken, string device_id)
+        private async Task ReceiveCloudToDeviceMessagesAsync(CancellationToken cancellationToken, string device_id)
         {
             Console.WriteLine($"Started listening for C2D messages at device '{device_id}'....");
             // long totalBytesDownloaded = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 Message receivedMessage = null;
+                
                 try
                 {
                     receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken); try
@@ -112,7 +113,7 @@ namespace CloudPillar.Agent.Handlers
                             case MessageType.DownloadChunk:
                                 DownloadBlobChunkMessage downloadBlobChunkMessage = new DownloadBlobChunkMessage();
                                 downloadBlobChunkMessage.CreateObjectFromMessage<DownloadBlobChunkMessage>(receivedMessage);
-                                _fileDownloadHandler.DownloadMessageData(downloadBlobChunkMessage, receivedMessage.GetBytes());
+                                _fileDownloadHandler.DownloadMessageDataAsync(downloadBlobChunkMessage, receivedMessage.GetBytes());
                                 break;
                             default: break;
                         }

@@ -30,7 +30,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
 
             if (data.EndPosition != null)
             {
-                rangeSize = data.EndPosition - data.StartPosition;
+                rangeSize = (long)data.EndPosition - data.StartPosition;
                 string requestUrl = $"{_blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionGuid={data.ActionGuid}&fileSize={blobSize}";
                 requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
             }
