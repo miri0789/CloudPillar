@@ -1,0 +1,43 @@
+"changeSpec": {
+  "id": "1.15.77830.38115.20230503151445",
+  "patch": {
+    "transitPackage": [
+      {
+          "action": "periodicUpload",
+          "description": "Periodically (once in 10min) upload installation logging",
+          "filename": "I:\\ExportedData_2023.05.*",
+          "interval": 120,
+          "enabled": true
+      },
+      {
+          "action": "singularDownload",
+          "description": "McAffee Security Update V3-515 DAT",
+          "source": "mcaffeeV3_5150dat.zip",
+          "protocol": "https|iotamqp|iotmqtt",
+          "retransmissionRewind": 33554432,
+          "destinationPath": "./mcaffeeV3_5150dat.zip"
+      },
+      {
+          "action": "singularDownload",
+          "description": "Carto 7.2 SPU Patch",
+          "source": "SPU.zip",
+          "protocol": "https|iotamqp|iotmqtt",
+          "destinationPath": "./SPU.zip"
+      }
+    ],
+    "preInstallConfig": [
+      {
+        "action": "executeOnce",
+        "description": "Extraction of security update McAfee",
+        "shell": "powershell",
+        "command": "Expand-Archive -LiteralPath '.\\mcaffeeV3_5150dat.zip' -DestinationPath 'I:\\' -Force"
+      },
+      {
+        "action": "executeOnce",
+        "description": "Extraction of firmware artifact SPU Patch",
+        "shell": "powershell",
+        "command": "Expand-Archive -LiteralPath '.\\SPU.zip' -DestinationPath 'I:\\' -Force"
+      }
+    ]
+  }
+}

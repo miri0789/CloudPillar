@@ -1,1 +1,0 @@
-SELECT * FROM devices WHERE (NOT IS_DEFINED(properties.desired.changeSpec.id) OR properties.desired.changeSpec.id != '1.14.61047.38115.20230418180124') AND properties.reported.deviceState = 'READY'

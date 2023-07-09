@@ -1,0 +1,66 @@
+"changeSpec": {
+  "id": "1.17.66419.44823.20230425145510",
+  "patch": {
+    "preTransitConfig": [
+    ],
+    "transitPackage": [
+      {
+        "action": "singularDownload",
+        "description": "Download Velys firmware artifact v1.17.66419",
+        "source": "VelysPatch-1.17.66419.zip",
+        "protocol": "https|iotamqp|iotmqtt",
+        "destinationPath": "./VelysPatch-1.17.66419"
+      }
+    ],
+    "preInstallConfig": [
+      {
+        "description": "Extracted firmware artifact",
+        "shell": "powershell",
+        "command": "Expand-Archive -LiteralPath '.\\Microsoft Azure Storage Explorer.app.zip' -DestinationPath '.'"
+      }
+    ],
+    "installSteps": [
+      {
+        "description": "Install extracted firmware artifact",
+        "shell": "powershell",
+        "command": ".\\Install-Update.ps1 -ExampleArg1 value1 -ExampleArg2 value2"
+      }
+    ],
+    "postInstallConfig": [
+      {
+        "description": "Kick off immediate Windows Update",
+        "shell": "powershell",
+        "command": "Get-WindowsUpdate -AcceptAll -Install -AutoReboot"
+      },
+      {
+        "description": "Validate version integrity",
+        "shell": "powershell",
+        "command": ".\\validate.bat"
+      }
+    ]
+  },
+  "base": {
+    "transitPackage": [
+      {
+        "description": "Full firmware artifact v1.14.61044",
+        "source": "Microsoft Azure Storage Explorer.app.zip",
+        "protocol": "https|iotamqp|iotmqtt",
+        "destinationPath": "./Microsoft Azure Storage Explorer.app.zip"
+      }
+    ],
+    "preInstallConfig": [
+      {
+        "description": "Extracted firmware artifact",
+        "shell": "powershell",
+        "command": "Expand-Archive -LiteralPath '.\\Microsoft Azure Storage Explorer.app.zip' -DestinationPath '.'"
+      }
+    ],
+    "installSteps": [
+      {
+        "description": "Install extracted firmware artifact",
+        "shell": "powershell",
+        "command": ".\\Install-Update.ps1 -ExampleArg1 value1 -ExampleArg2 value2"
+      }
+    ]
+  }
+}

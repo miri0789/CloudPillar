@@ -25,7 +25,7 @@ namespace DicomBackendPoC
             client.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         }
-        private async Task<string> GetAccessToken()
+        public async Task<string> GetAccessToken()
         {
             // Construct the authority and token endpoints
             string authority = $"https://login.microsoftonline.com/{tenantId}";
@@ -281,6 +281,46 @@ namespace DicomBackendPoC
             return response;
         }
 
+        /*public async Task<DicomDataset[]> QueryDicomExpandedStandardTag<T>(DicomTag expendedTag, T value)
+        {
+            var entry = new AddExtendedQueryTagEntry{Path = expendedTag.GetPath(), VR = expendedTag.GetDefaultVR().Code};
+            var extendedTagexist = await client.GetExtendedQueryTagAsync(expendedTag.GetPath());
+            if(extendedTagexist.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                try
+                {
+                    await client.AddExtendedQueryTagAsync(new List <AddExtendedQueryTagEntry>{entry});
+                }
+                catch (System.Exception e)
+                {
+                    throw new Exception($"Failed to add extened query tag, {e.Message}", e);
+                }
+            }
+
+            var result = await client.GetExtendedQueryTagAsync(expendedTag.GetPath());
+            if(result.Status != ExtendedQueryTagStatus.Ready)
+            {
+                throw new Exception($"get extended query tag status is: {result.Status}");
+            }
+
+            if(result.QueryStatus != QueryStatus.Enabled)
+            {
+                throw new Exception($"get extended query tag QueryStatus is Disable");
+            }
+
+            try
+            {
+                DicomWebAsyncEnumerableResponse<DicomDataset> queryResponse = 
+                    await client.QueryInstancesAsync($"{expendedTag.GetPath()}={value}");
+                DicomDataset[] instances = await queryResponse.ToArrayAsync();
+                return instances;
+            }
+            catch (System.Exception e)
+            {
+                throw new Exception($"Failed to query extended tag, {e.Message}", e);
+            }
+        }*/
+
         public async Task<GetExtendedQueryTagEntry> GetExtendedQueryTagAsync(string tagPath)
         {
             var response = await client.GetExtendedQueryTagAsync(tagPath);
@@ -289,6 +329,16 @@ namespace DicomBackendPoC
                 throw new Exception($"Failed to get extended tag data: {tagPath}");
             }
 
+            return await response.GetValueAsync();
+        }
+
+        public async Task<DicomOperationReference> AddExtendedQueryTagAsync(IEnumerable<AddExtendedQueryTagEntry> tagEntries)
+        {
+            var response = await client.AddExtendedQueryTagAsync(tagEntries);
+            if (response.StatusCode != System.Net.HttpStatusCode.Accepted)
+            {
+                throw new Exception($"Failed to add extended tag, status code: {response.StatusCode}");
+            }
             return await response.GetValueAsync();
         }
 
