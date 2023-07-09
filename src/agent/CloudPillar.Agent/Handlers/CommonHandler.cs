@@ -1,11 +1,7 @@
 ﻿using Microsoft.Azure.Devices.Client;
 
 namespace CloudPillar.Agent.Handlers;
-public interface ICommonHandler
-{
-    string GetDeviceIdFromConnectionString(string connectionString);
-    TransportType GetTransportType();
-}
+
 public class CommonHandler: ICommonHandler
 {
     /// <summary>

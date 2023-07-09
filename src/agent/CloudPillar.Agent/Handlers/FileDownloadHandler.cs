@@ -4,22 +4,17 @@ using shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 
-public interface IFileDownloadHandler
-{
-    Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName);
-    Task DownloadMessageDataAsync(DownloadBlobChunkMessage downloadBlobChunkMessage, byte[] messageData);
-}
-
 public class FileDownloadHandler : IFileDownloadHandler
 {
     private readonly IFileStreamerHandler _fileStreamerHandler;
     private readonly ID2CEventHandler _D2CEventHandler;
-    private List<FileDownload> _filesDownloads = new List<FileDownload>();
+    private IList<FileDownload> _filesDownloads;
 
     public FileDownloadHandler(IFileStreamerHandler fileStreamerHandler, ID2CEventHandler D2CEventHandler)
     {
         _fileStreamerHandler = fileStreamerHandler;
         _D2CEventHandler = D2CEventHandler;
+        _filesDownloads = new List<FileDownload>();
     }
 
     public async Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName)

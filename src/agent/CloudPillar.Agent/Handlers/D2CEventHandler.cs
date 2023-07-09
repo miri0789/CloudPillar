@@ -3,53 +3,47 @@ using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using shared.Entities.Events;
 
-namespace CloudPillar.Agent.Handlers
+namespace CloudPillar.Agent.Handlers;
+
+public class D2CEventHandler : ID2CEventHandler
 {
-    public interface ID2CEventHandler
+    private readonly ICommonHandler _commonHandler;
+    private readonly DeviceClient _deviceClient;
+    public D2CEventHandler(ICommonHandler commonHandler)
     {
-        Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null);
+        _commonHandler = commonHandler;
+        string _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
+        TransportType _transportType = commonHandler.GetTransportType();
+        _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
     }
 
-    public class D2CEventHandler : ID2CEventHandler
+    public async Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null)
     {
-        private readonly ICommonHandler _commonHandler;
-        private readonly DeviceClient _deviceClient;
-        public D2CEventHandler(ICommonHandler commonHandler)
+        // Deduct the chunk size based on the protocol being used
+        int chunkSize = _commonHandler.GetTransportType() switch
         {
-            _commonHandler = commonHandler;
-            string _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
-            TransportType _transportType = commonHandler.GetTransportType();
-            _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
-        }
+            TransportType.Mqtt => 32 * 1024, // 32 KB
+            TransportType.Amqp => 64 * 1024, // 64 KB
+            TransportType.Http1 => 256 * 1024, // 256 KB
+            _ => 32 * 1024 // 32 KB (default)
+        };
 
-        public async Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null)
+        var firmwareUpdateEvent = new FirmwareUpdateEvent()
         {
-            // Deduct the chunk size based on the protocol being used
-            int chunkSize = _commonHandler.GetTransportType() switch
-            {
-                TransportType.Mqtt => 32 * 1024, // 32 KB
-                TransportType.Amqp => 64 * 1024, // 64 KB
-                TransportType.Http1 => 256 * 1024, // 256 KB
-                _ => 32 * 1024 // 32 KB (default)
-            };
+            FileName = fileName,
+            ChunkSize = chunkSize,
+            StartPosition = startPosition ?? 0,
+            EndPosition = endPosition,
+            ActionGuid = actionGuid
+        };
 
-            var firmwareUpdateEvent = new FirmwareUpdateEvent()
-            {
-                FileName = fileName,
-                ChunkSize = chunkSize,
-                StartPosition = startPosition ?? 0,
-                EndPosition = endPosition,
-                ActionGuid = actionGuid
-            };
+        await SendMessageAsync(firmwareUpdateEvent);
+    }
 
-            await SendMessageAsync(firmwareUpdateEvent);
-        }
-
-        private async Task SendMessageAsync(AgentEvent agentEvent)
-        {
-            var messageString = JsonConvert.SerializeObject(agentEvent);
-            Message message = new Message(Encoding.ASCII.GetBytes(messageString));
-            await _deviceClient.SendEventAsync(message);
-        }
+    private async Task SendMessageAsync(AgentEvent agentEvent)
+    {
+        var messageString = JsonConvert.SerializeObject(agentEvent);
+        Message message = new Message(Encoding.ASCII.GetBytes(messageString));
+        await _deviceClient.SendEventAsync(message);
     }
 }

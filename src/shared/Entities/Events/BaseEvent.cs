@@ -10,6 +10,6 @@ public enum EventType
 
 public abstract class AgentEvent
 {
-    public abstract EventType EventType { get; set; }
+    public EventType EventType { get; set; }
     public Guid ActionGuid { get; set; }
 }

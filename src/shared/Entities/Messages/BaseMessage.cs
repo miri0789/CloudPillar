@@ -10,7 +10,7 @@ public enum MessageType
 
 public abstract class BaseMessage
 {
-    public abstract MessageType MessageType { get; set; }
+    public MessageType MessageType { get; set; }
     public Guid ActionGuid { get; set; }
     public abstract string GetMessageId();
 

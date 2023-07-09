@@ -3,12 +3,6 @@ using shared.Entities.Events;
 
 public class FirmwareUpdateEvent : AgentEvent
 {
-    public override EventType EventType
-    {
-        get { return EventType.FirmwareUpdateReady; }
-        set { EventType = EventType.FirmwareUpdateReady; }
-    }
-
     public string FileName { get; set; }
 
     public int ChunkSize { get; set; }
@@ -17,4 +11,9 @@ public class FirmwareUpdateEvent : AgentEvent
     public long StartPosition { get; set; }
 
     public long? EndPosition { get; set; }
+
+    public FirmwareUpdateEvent()
+    {
+        this.EventType = EventType.FirmwareUpdateReady;
+    }
 }
