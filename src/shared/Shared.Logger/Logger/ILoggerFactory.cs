@@ -1,6 +1,5 @@
 ﻿using log4net;
 using log4net.Repository;
-using Microsoft.Extensions.Hosting;
 
 namespace shared.Logger;
 

@@ -2,23 +2,13 @@
 using System.Web;
 using log4net;
 using log4net.Appender;
-using log4net.Config;
 using log4net.Core;
-using log4net.Layout;
 using log4net.Repository;
 using log4net.Repository.Hierarchy;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Primitives;
 using Microsoft.ApplicationInsights.Log4NetAppender;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace shared.Logger;
 
@@ -64,7 +54,6 @@ public class Logger : ILogger
 
         if (!string.IsNullOrWhiteSpace(appInsightsKey))
         {
-            m_telemetryClient = loggerFactory.CreateTelemetryClient(appInsightsKey, connectionString);
             m_applicationName = applicationName;
 
             if (m_appInsightsAppender != null)
@@ -72,13 +61,17 @@ public class Logger : ILogger
                 m_appInsightsAppender.InstrumentationKey = appInsightsKey;
                 m_appInsightsAppender.ActivateOptions();
             }
+            else
+            {
+                m_telemetryClient = loggerFactory.CreateTelemetryClient(appInsightsKey, connectionString);
+            }
         }
         
         AddCustomLogLevel("Debug", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["DEBUG"].Value);
         AddCustomLogLevel("Info", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["INFO"].Value);
         AddCustomLogLevel("Information", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["INFO"].Value);
-        AddCustomLogLevel("Warning", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["WARN"].Value);
         AddCustomLogLevel("Warn", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["WARN"].Value);
+        AddCustomLogLevel("Warning", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["WARN"].Value);
         AddCustomLogLevel("Error", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["ERROR"].Value);
 
         Log4netConfigurationValidator.ValidateConfiguration(this);
@@ -278,6 +271,8 @@ public class Logger : ILogger
         Info($"App Insights Log Level changed to {logLevel}"); 
 
         m_appInsightsLogLevel = level;
+        
+        // For manually controlling telemetry trace log level severity
         m_appInsightsSeverity = GetSeverityLevel(m_appInsightsLogLevel);
     }
 
