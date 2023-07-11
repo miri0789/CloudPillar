@@ -87,6 +87,8 @@ stages:
     - bash: |
       echo "$MAJORVERSION.$MINORVERSION"
       echo "$MAJOR.$MINOR"
+      echo "$major.$minor"
+      echo "$MajorVersion.$MajorVersion"
 
 - stage: GetVersion
   displayName: Get Major & Minor Version
