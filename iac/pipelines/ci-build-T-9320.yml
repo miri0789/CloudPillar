@@ -94,9 +94,9 @@ stages:
           # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
           # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber} && echo TAG: $TAG
           ## TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG_SUFFIX=$BuildNumber.$TIMESTAMP && echo TAG: $TAG
-          echo {{variables.Test}}
-          echo {{variables.TIMESTAMP}}
-          echo {{variables.BuildNumber}}
+          echo $(Test)
+          echo $(TIMESTAMP)
+          echo $(BuildNumber)
 
           
 
