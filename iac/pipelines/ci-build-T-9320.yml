@@ -91,7 +91,7 @@ stages:
     - bash: |
       
       echo 1- && echo "$MAJORVERSION" && echo "$MINORVERSION"
-      echo 2- && echo "$MAJOR" && echo "$MINOR"
+      # echo 2- && echo "$MAJOR" && echo "$MINOR"
       echo 3- && echo "$major" && echo "$minor"
       echo 4- && echo "$MajorVersion" && echo $MajorVersion"
       echo 5- && echo "$(major)" && echo "$(minor)"
