@@ -1,0 +1,92 @@
+name: ci_build
+
+trigger:
+# - none
+- $(Build.SourceBranchName)
+# - main
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: blobstreamer
+    values:
+    # - all
+    - analyzer
+    - beapi
+    - blobstreamer
+    - iotlistener
+    - keyholder
+    - mongowriter
+    - twinlistener
+  - name: version
+    displayName: Select Major & Minor Verson
+    type: string
+    default: 1.0
+    values:
+    - 1.0
+    - 1.1
+    - 2.1
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+- name: BuildNumber
+  value: $[counter(variables['BuildNumber'], 0)]
+- name: TIMESTAMP
+  value: $[counter(variables['TIMESTAMP'], 0)]
+
+
+
+stages:
+
+- stage: Test
+  displayName: Update Version, Build, Tag and Push Images
+  jobs:
+  - job: Update_Version_Tag_Build_Image
+    displayName: Updating Version Label, Building and Tagging Images
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - task: Bash@3
+      displayName: Build & Tag Image
+      inputs:
+        targetType: inline
+        script: |
+          # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+          echo ${{variables.BuildNumber}}
+          echo ${{variables.Timestamp}}
+          echo ""
+          echo ""
+          echo ""
+          echo Build.SourceVersion: $(Build.SourceVersion)
+          echo Build.SourceVersionMessage: $(Build.SourceVersionMessage)
+          echo Build.TriggeredBy.DefinitionId: $(Build.TriggeredBy.DefinitionId)
+          echo Build.TriggeredBy.DefinitionName: $(Build.TriggeredBy.DefinitionName)
+          echo Build.TriggeredBy.BuildId: $(Build.TriggeredBy.BuildId)
+          echo Build.TriggeredBy.BuildNumber: $(Build.TriggeredBy.BuildNumber)
+          echo Pipeline.Workspace: $(Pipeline.Workspace)
+          echo Environment.Name: $(Environment.Name)
+          echo Environment.ResourceName: $(Environment.ResourceName)
+          echo Environment.EnvironmentId: $(Environment.EnvironmentId)
+          echo Environment.ResourceId: $(Environment.ResourceId)
+          
+          
+
+
+
+          
