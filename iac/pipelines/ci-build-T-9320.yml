@@ -65,13 +65,24 @@ stages:
       persistCredentials: true
       clean: true
     - task: Bash@3
-      displayName: Build & Tag Image
+      displayName: Test_T_1
       inputs:
         targetType: inline
         script: |
           # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD)
           # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-          TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber} && echo TAG: $TAG
+          echo "BuildNumber: $(BuildNumber)"
+          echo "TIMESTAMP: $(TIMESTAMP)"
+          echo "Test: ${{parameters.Test}}"
+          echo "Version: ${{parameters.version}}"
+          TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
+          # TAG_PREFIX=$(MajorVersion).$(MinorVersion)
+          TAG_PREFIX=${{parameters.version}}
+          TAG=$TAG_PREFIX.$TAG_SUFFIX
+          echo "TAG: $TAG"
+
+
+          # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber}.{TIMESTAMP} && echo TAG: $TAG
 
 - stage: GetVersion
   displayName: Get Major & Minor Version
@@ -97,6 +108,7 @@ stages:
           echo $(Test)
           echo $(TIMESTAMP)
           echo $(BuildNumber)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && echo $TIMESTAMP.$BuildNumber
 
           
 
