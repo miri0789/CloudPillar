@@ -41,8 +41,6 @@ variables:
 - group: iac-backend-vg
 - group: aks-backend-vg
 - group: backend-secrets-vg
-- name: Test
-  value: Test121212
 - name: TIMESTAMP
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
@@ -73,7 +71,6 @@ stages:
           # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
           echo "BuildNumber: $(BuildNumber)"
           echo "TIMESTAMP: $(TIMESTAMP)"
-          echo "Test: $(Test)"
           echo "Version: ${{parameters.version}}"
           TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
           # TAG_PREFIX=$(MajorVersion).$(MinorVersion)
