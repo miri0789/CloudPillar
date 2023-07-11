@@ -102,12 +102,22 @@ stages:
       inputs:
         targetType: inline
         script: |
+          echo "                Version File:               "
+          echo "============================================"
+          cat src/backend/version.txt
+          echo "============================================"
+          echo "============================================"
           major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
           minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
-          echo "##vso[task.setvariable variable=major;]$major"" 
-          echo "##vso[task.setvariable variable=minor;]$minor"" 
-          echo "##vso[task.setvariable variable=MajorVersion;]$major"" 
-          echo "##vso[task.setvariable variable=MinorVersion;]$minor"" 
+          echo "major: $major"
+          echo "minor: $minor"
+          echo "============================================"
+          echo "============================================"
+
+          # echo "##vso[task.setvariable variable=major;]$major"" 
+          # echo "##vso[task.setvariable variable=minor;]$minor"" 
+          # echo "##vso[task.setvariable variable=MajorVersion;]$major"" 
+          # echo "##vso[task.setvariable variable=MinorVersion;]$minor"" 
 
 
 
