@@ -94,15 +94,6 @@ stages:
       name: SetVars
     - bash: |
       echo echo "$(major).$(minor)"
-      #echo "$(MajorVersion.$(MinorVersion)"
-      #echo "$MAJORVERSION"
-      #echo "$MINORVERSION"
-      #echo "$MAJOR"
-      #echo "$MINOR"
-      #echo "$major"
-      #echo "$minor"
-      #echo "$MajorVersion $MinorVersion"
-      # echo 5- && echo "$(major)" && echo "$(minor)"
 
 - stage: GetVersion
   displayName: Get Major & Minor Version
@@ -137,8 +128,6 @@ stages:
           echo "============================================"
           echo "============================================"
 
-          # echo $(MajorVersion).$(MinorVersion)
-          # echo $MAJOR.$MINOR
 
 
 
