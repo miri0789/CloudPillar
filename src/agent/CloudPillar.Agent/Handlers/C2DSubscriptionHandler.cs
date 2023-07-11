@@ -95,7 +95,7 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            Message receivedMessage = null;
+            Message receivedMessage;
 
             try
             {
