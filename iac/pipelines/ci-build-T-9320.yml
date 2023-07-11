@@ -41,20 +41,22 @@ variables:
 - group: iac-backend-vg
 - group: aks-backend-vg
 - group: backend-secrets-vg
-- name: BuildNumber
-  value: $[counter(variables['BuildNumber'], 0)]
+- name: Test
+  value: Test121212
 - name: TIMESTAMP
-  value: $[counter(variables['TIMESTAMP'], 0)]
+  value: $(date +%Y%m%d%H%M%S)
+- name: BuildNumber
+  value: $(git rev-list --count HEAD)
+
 
 
 
 stages:
-
 - stage: Test
-  displayName: Update Version, Build, Tag and Push Images
+  displayName: Test Stage
   jobs:
-  - job: Update_Version_Tag_Build_Image
-    displayName: Updating Version Label, Building and Tagging Images
+  - job: Test_J_1
+    displayName: Test Job 1
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
@@ -67,25 +69,38 @@ stages:
       inputs:
         targetType: inline
         script: |
-          # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-          echo ${{variables.BuildNumber}}
-          echo ${{variables.Timestamp}}
-          echo ""
-          echo ""
-          echo ""
-          echo Build.SourceVersion: $(Build.SourceVersion)
-          echo Build.SourceVersionMessage: $(Build.SourceVersionMessage)
-          echo Build.TriggeredBy.DefinitionId: $(Build.TriggeredBy.DefinitionId)
-          echo Build.TriggeredBy.DefinitionName: $(Build.TriggeredBy.DefinitionName)
-          echo Build.TriggeredBy.BuildId: $(Build.TriggeredBy.BuildId)
-          echo Build.TriggeredBy.BuildNumber: $(Build.TriggeredBy.BuildNumber)
-          echo Pipeline.Workspace: $(Pipeline.Workspace)
-          echo Environment.Name: $(Environment.Name)
-          echo Environment.ResourceName: $(Environment.ResourceName)
-          echo Environment.EnvironmentId: $(Environment.EnvironmentId)
-          echo Environment.ResourceId: $(Environment.ResourceId)
+          # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD)
+          # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+          TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber} && echo TAG: $TAG
+
+- stage: GetVersion
+  displayName: Get Major & Minor Version
+  jobs:
+  - job: Get_Upadte_Major
+    displayName: Get & Update Major Version
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - task: Bash@3
+      displayName: Build & Tag Image
+      inputs:
+        targetType: inline
+        script: |
+          # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD)
+          # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+          # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber} && echo TAG: $TAG
+          ## TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG_SUFFIX=$BuildNumber.$TIMESTAMP && echo TAG: $TAG
+          echo {{variables.Test}}
+          echo {{variables.TIMESTAMP}}
+          echo {{variables.BuildNumber}}
+
           
-          
+
+
 
 
 
