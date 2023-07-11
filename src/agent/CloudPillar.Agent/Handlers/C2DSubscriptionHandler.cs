@@ -117,6 +117,7 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
                     }
 
                     await _deviceClient.CompleteAsync(receivedMessage);
+                    Console.WriteLine($"{0}: Recived message of type: {1} completed", DateTime.Now, messageType.ToString());
                 }
                 catch (Exception ex)
                 {

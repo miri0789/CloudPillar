@@ -35,8 +35,6 @@ public class FileStreamerHandler : IFileStreamerHandler
             await fileStream.ReadAsync(buffer, 0, buffer.Length);
             return Array.IndexOf(buffer, (byte)0) == -1;
         }
-
-        return true;
     }
 
     public async Task DeleteFileBytesAsync(string filePath, long startPosition, long endPosition)

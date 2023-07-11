@@ -10,6 +10,8 @@ public class D2CEventHandler : ID2CEventHandler
 {
     private readonly ICommonHandler _commonHandler;
     private readonly DeviceClient _deviceClient;
+
+    private const int kB = 1024;
     public D2CEventHandler(ICommonHandler commonHandler)
     {
         ArgumentNullException.ThrowIfNull(commonHandler);
@@ -24,10 +26,10 @@ public class D2CEventHandler : ID2CEventHandler
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _commonHandler.GetTransportType() switch
         {
-            TransportType.Mqtt => 32 * 1024, // 32 KB
-            TransportType.Amqp => 64 * 1024, // 64 KB
-            TransportType.Http1 => 256 * 1024, // 256 KB
-            _ => 32 * 1024 // 32 KB (default)
+            TransportType.Mqtt => 32 * kB,
+            TransportType.Amqp => 64 * kB,
+            TransportType.Http1 => 256 * kB,
+            _ => 32 * kB
         };
 
         var firmwareUpdateEvent = new FirmwareUpdateEvent()
