@@ -1,17 +1,13 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using k8s;
+using keyholder.Interfaces;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json.Linq;
 
-namespace keyholder;
+namespace keyholder.Services;
 
-public interface ISigningService
-{
-    Task Init();
-    Task CreateTwinKeySignature(string deviceId, string keyPath, string signatureKey);
-}
 
 public class SigningService : ISigningService
 {
@@ -33,11 +29,11 @@ public class SigningService : ISigningService
     {
         Console.WriteLine("Loading signing crypto key...");
         string? privateKeyPem = null;
-        bool IsInCluster = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(Constants.kubernetesServiceHost));
+        bool IsInCluster = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(Constants.kubernetesServiceHost));
         if (IsInCluster)
         {
             privateKeyPem = Environment.GetEnvironmentVariable(Constants.signingPem);
-            if (!string.IsNullOrEmpty(privateKeyPem))
+            if (!string.IsNullOrWhiteSpace(privateKeyPem))
             {
                 privateKeyPem = Encoding.UTF8.GetString(Convert.FromBase64String(privateKeyPem));
                 Console.WriteLine($"Key Base64 decoded layer 1");
@@ -48,7 +44,7 @@ public class SigningService : ISigningService
                 string secretName = Environment.GetEnvironmentVariable(Constants.secretName);
                 string secretKey = Environment.GetEnvironmentVariable(Constants.secretKey);
 
-                if (string.IsNullOrEmpty(secretName) || string.IsNullOrEmpty(secretKey))
+                if (string.IsNullOrWhiteSpace(secretName) || string.IsNullOrWhiteSpace(secretKey))
                 {
                     throw new InvalidOperationException("Private key secret name and secret key must be set.");
                 }
@@ -72,7 +68,7 @@ public class SigningService : ISigningService
         var k8sClient = new Kubernetes(config);
         Console.WriteLine($"Got k8s client in namespace {config.Namespace}");
 
-        var ns = String.IsNullOrEmpty(secretNamespace) ? config.Namespace : secretNamespace;
+        var ns = String.IsNullOrWhiteSpace(secretNamespace) ? config.Namespace : secretNamespace;
         var secrets = await k8sClient.ListNamespacedSecretAsync(ns);
 
         Console.WriteLine($"Secrets in namespace '{ns}':");

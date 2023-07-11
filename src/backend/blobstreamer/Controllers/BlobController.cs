@@ -1,4 +1,4 @@
-using blobstreamer.Services;
+using blobstreamer.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace blobstreamer.Controllers;

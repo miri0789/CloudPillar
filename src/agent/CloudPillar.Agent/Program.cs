@@ -1,4 +1,5 @@
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Interfaces;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>

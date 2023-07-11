@@ -1,86 +1,75 @@
 using System.Text;
 using Moq;
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Interfaces;
+using System.Reflection;
 
 namespace CloudPillar.Agent.Tests;
 
 public class FileStreamerTestFixture
 {
     private IFileStreamerHandler _fileStreamerHandler;
-    private string testDirectory;
+    private string _filePath;
+    private string _fileDirectory;
 
     [SetUp]
     public void Setup()
     {
         _fileStreamerHandler = new FileStreamerHandler();
-        testDirectory = Path.Combine(Path.GetTempPath(), "TestDirectory");
-        Directory.CreateDirectory(testDirectory);
+        _fileDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        _filePath = Path.Combine(_fileDirectory, "testfile.txt");
     }
 
     [TearDown]
     public void Cleanup()
     {
-        Directory.Delete(testDirectory, true);
+        File.Delete(_filePath);
     }
+    
     [Test]
-    public async Task WriteChunkToFile_Should_WriteBytesToFile()
+    public async Task WriteChunkToFile_OnExistingValidFile_AppendBytes()
     {
-        string fileName = "testfile.txt";
         int writePosition = 0;
-        byte[] bytes = { 65, 66, 67 };
-        string filePath = Path.Combine(testDirectory, fileName);
+        byte[] expectedBytes = { 65, 66, 67 };
 
-        await _fileStreamerHandler.WriteChunkToFileAsync(filePath, writePosition, bytes);
+        await _fileStreamerHandler.WriteChunkToFileAsync(_filePath, writePosition, expectedBytes);
 
-        byte[] writtenBytes = await File.ReadAllBytesAsync(filePath);
-        CollectionAssert.AreEqual(bytes, writtenBytes);
+        byte[] actualBytes = await File.ReadAllBytesAsync(_filePath);
+        CollectionAssert.AreEqual(expectedBytes, actualBytes);
     }
 
 
     [Test]
-    public async Task WriteChunkToFile_Should_AppendBytesToExistingFile()
+    public async Task WriteChunkToFile_OnExistingValidFullFile_AppendBytes()
     {
-        string fileName = "existingfile.txt";
         int writePosition = 3;
         byte[] existingBytes = { 65, 66, 67 };
         byte[] newBytes = { 68, 69, 70 };
         byte[] expectedBytes = { 65, 66, 67, 68, 69, 70 };
 
-        string filePath = Path.Combine(testDirectory, fileName);
-        await File.WriteAllBytesAsync(filePath, existingBytes);
+        await File.WriteAllBytesAsync(_filePath, existingBytes);
 
-        await _fileStreamerHandler.WriteChunkToFileAsync(filePath, writePosition, newBytes);
+        await _fileStreamerHandler.WriteChunkToFileAsync(_filePath, writePosition, newBytes);
 
-        byte[] writtenBytes = await File.ReadAllBytesAsync(filePath);
-        CollectionAssert.AreEqual(expectedBytes, writtenBytes);
+        byte[] actualBytes = await File.ReadAllBytesAsync(_filePath);
+        CollectionAssert.AreEqual(expectedBytes, actualBytes);
     }
 
     [Test]
-    public async Task DeleteFile_WithValidFilePath_DeletesFile()
+    public async Task DeleteFile_OnValidFilePath_Delete()
     {
         string fileName = "testDeletd.txt";
-        string fullPath = Path.Combine(testDirectory, fileName);
+        string fullPath = Path.Combine(_fileDirectory, fileName);
         File.Create(fullPath).Dispose();
         _fileStreamerHandler.DeleteFile(fullPath);
         Assert.IsFalse(File.Exists(fullPath), "File should be deleted.");
     }
 
     [Test]
-    public async Task DeleteFile_WithNullFilePath_DeletesFileInCurrentDirectory()
-    {
-        string fileName = "test.txt";
-        string currentDirectory = Directory.GetCurrentDirectory();
-        string fullPath = Path.Combine(currentDirectory, fileName);
-        File.Create(fullPath).Dispose();
-        _fileStreamerHandler.DeleteFile(fullPath);
-        Assert.IsFalse(File.Exists(fullPath), "File should be deleted.");
-    }
-
-    [Test]
-    public async Task DeleteFile_FileDoesNotExist_NoExceptionThrown()
+    public async Task DeleteFile_OnNotExistFilePath_NotDelete()
     {
         string fileName = "nonexistent.txt";
-        string filePath = testDirectory;
+        string filePath = Path.Combine(_fileDirectory, fileName);
         string fullPath = Path.Combine(filePath, fileName);
         _fileStreamerHandler.DeleteFile(filePath);
         Assert.Pass("No exception should be thrown when deleting a non-existent file.");
@@ -88,81 +77,65 @@ public class FileStreamerTestFixture
 
 
     [Test]
-    public async Task CheckFileBytesNotEmpty_ValidRange_NoEmptyBytes()
+    public async Task CheckFileBytesNotEmpty_OnValidRange_ReturnTrue()
     {
-        string fileName = "test.txt";
         byte[] bytes = { 65, 66, 67, 68, 69, 70 };
-
-        string filePath = Path.Combine(testDirectory, fileName);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await File.WriteAllBytesAsync(_filePath, bytes);
 
         long startPosition = 2;
         long endPosition = 4;
-        bool result = await _fileStreamerHandler.CheckFileBytesNotEmptyAsync(filePath, startPosition, endPosition);
+        bool result = await _fileStreamerHandler.HasBytesAsync(_filePath, startPosition, endPosition);
         Assert.IsTrue(result, "Expected the file bytes to be not empty within the range.");
-        _fileStreamerHandler.DeleteFile(filePath);
     }
 
     [Test]
-    public async Task CheckFileBytesNotEmpty_InvalidRange_ReturnsTrue()
+    public async Task CheckFileBytesNotEmpty_InValidRange_ReturnTrue()
     {
-        string fileName = "test.txt";
-        string filePath = Path.Combine(testDirectory, fileName);
         long startPosition = 100;
         long endPosition = 0;
-        bool result = await _fileStreamerHandler.CheckFileBytesNotEmptyAsync(filePath, startPosition, endPosition);
+        bool result = await _fileStreamerHandler.HasBytesAsync(_filePath, startPosition, endPosition);
         Assert.IsTrue(result, "Expected the function to return false for an invalid range.");
     }
 
     [Test]
-    public async Task CheckFileBytesNotEmpty_EmptyBytesFound_ReturnsFalse()
+    public async Task CheckFileBytesNotEmpty_EmptyRange_ReturnFalse()
     {
-        string fileName = "test.txt";
         byte[] bytes = { 65, 66, 0, 68, 69, 70 };
-
-        string filePath = Path.Combine(testDirectory, fileName);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await File.WriteAllBytesAsync(_filePath, bytes);
 
         long startPosition = 2;
         long endPosition = 4;
-        bool result = await _fileStreamerHandler.CheckFileBytesNotEmptyAsync(filePath, startPosition, endPosition);
+        bool result = await _fileStreamerHandler.HasBytesAsync(_filePath, startPosition, endPosition);
         Assert.IsFalse(result, "Expected the function to return false when empty bytes are found within the range.");
-        _fileStreamerHandler.DeleteFile(filePath);
     }
 
     [Test]
     public async Task DeleteFileBytes_ValidRange_FileBytesDeleted()
     {
-        string fileName = "test.txt";
         byte[] bytes = { 65, 66, 66, 68, 69, 70 };
 
-        string filePath = Path.Combine(testDirectory, fileName);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await File.WriteAllBytesAsync(_filePath, bytes);
         long startPosition = 1;
         long endPosition = 3;
-        await _fileStreamerHandler.DeleteFileBytesAsync(filePath, startPosition, endPosition);
+        await _fileStreamerHandler.DeleteFileBytesAsync(_filePath, startPosition, endPosition);
 
-        byte[] modifiedFileBytes = File.ReadAllBytes(filePath);
+        byte[] modifiedFileBytes = File.ReadAllBytes(_filePath);
         Assert.IsTrue(Array.FindAll(modifiedFileBytes, byteValue => byteValue == 0).Count() == 3, "Expected all file bytes within the range to be deleted.");
-        _fileStreamerHandler.DeleteFile(filePath);
     }
 
     [Test]
     public async Task DeleteFileBytes_InvalidRange_NoChanges()
     {
-        string fileName = "test.txt";
-        string filePath = Path.Combine(testDirectory, fileName);
         long startPosition = 100;
         long endPosition = 0;
 
         byte[] originalFileBytes = { 65, 66, 66, 68, 69, 70 };
-        await File.WriteAllBytesAsync(filePath, originalFileBytes);
+        await File.WriteAllBytesAsync(_filePath, originalFileBytes);
 
-        await _fileStreamerHandler.DeleteFileBytesAsync(filePath, startPosition, endPosition);
+        await _fileStreamerHandler.DeleteFileBytesAsync(_filePath, startPosition, endPosition);
 
-        byte[] modifiedFileBytes = File.ReadAllBytes(filePath);
+        byte[] modifiedFileBytes = File.ReadAllBytes(_filePath);
         Assert.AreEqual(originalFileBytes.Length, modifiedFileBytes.Length, "Expected the file length to remain unchanged.");
         Assert.AreEqual(originalFileBytes, modifiedFileBytes, "Expected the file content to remain unchanged.");
-        _fileStreamerHandler.DeleteFile(filePath);
     }
 }

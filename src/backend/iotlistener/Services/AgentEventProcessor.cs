@@ -1,10 +1,11 @@
 ﻿using System.Text;
 using System.Text.Json;
+using iotlistener.Interfaces;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using shared.Entities.Events;
 
-namespace iotlistener;
+namespace iotlistener.Services;
 
 class AzureStreamProcessorFactory : IEventProcessorFactory
 {
@@ -33,11 +34,16 @@ public class AgentEventProcessor : IEventProcessor
 {
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
+    private readonly int _messageTimeoutMinutes;
 
     public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService)
     {
+        ArgumentNullException.ThrowIfNull(firmwareUpdateService);
+        ArgumentNullException.ThrowIfNull(signingService);
         _firmwareUpdateService = firmwareUpdateService;
         _signingService = signingService;
+        int.TryParse(Environment.GetEnvironmentVariable(Constants.messageTimeoutMinutes), out _messageTimeoutMinutes);
+        _messageTimeoutMinutes = _messageTimeoutMinutes > 0 ? _messageTimeoutMinutes : 20;
     }
 
     public Task OpenAsync(PartitionContext context)
@@ -66,10 +72,11 @@ public class AgentEventProcessor : IEventProcessor
         {
             try
             {
-                int.TryParse(Environment.GetEnvironmentVariable(Constants.messageTimeoutMinutes), out int messageTimeoutMinutes);
-                if (DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc > TimeSpan.FromMinutes(messageTimeoutMinutes))
+                if (DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc > TimeSpan.FromMinutes(_messageTimeoutMinutes))
                 {
                     Console.WriteLine("Ignoring message older than 1 hour.");
+                    Console.WriteLine(DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc);
+                    Console.WriteLine(TimeSpan.FromMinutes(_messageTimeoutMinutes));
                     continue;
                 }
 
@@ -86,7 +93,7 @@ public class AgentEventProcessor : IEventProcessor
                 string iothubConnectionDeviceId = Environment.GetEnvironmentVariable(Constants.iothubConnectionDeviceId);
                 string? deviceId = eventData.SystemProperties[iothubConnectionDeviceId]?.ToString();
 
-                if (!String.IsNullOrEmpty(deviceId) && agentEvent.EventType != null)
+                if (!String.IsNullOrWhiteSpace(deviceId) && agentEvent.EventType != null)
                 {
                     switch (agentEvent.EventType)
                     {

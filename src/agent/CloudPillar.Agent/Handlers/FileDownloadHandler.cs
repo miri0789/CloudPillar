@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using CloudPillar.Agent.Interfaces;
 using shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
@@ -12,6 +13,8 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public FileDownloadHandler(IFileStreamerHandler fileStreamerHandler, ID2CEventHandler D2CEventHandler)
     {
+        ArgumentNullException.ThrowIfNull(fileStreamerHandler);
+        ArgumentNullException.ThrowIfNull(D2CEventHandler);
         _fileStreamerHandler = fileStreamerHandler;
         _D2CEventHandler = D2CEventHandler;
         _filesDownloads = new List<FileDownload>();
@@ -31,7 +34,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task DownloadMessageDataAsync(DownloadBlobChunkMessage blobChunk, byte[] fileBytes)
     {
-        var file = _filesDownloads.Find(item => item.ActionGuid == blobChunk.ActionGuid && item.FileName == blobChunk.FileName);
+        var file = _filesDownloads.FirstOrDefault(item => item.ActionGuid == blobChunk.ActionGuid && item.FileName == blobChunk.FileName);
         if (file == null)
         {
             throw new Exception($"There is no active download for message {blobChunk.GetMessageId()}");
@@ -57,7 +60,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         else
         {
             //TODO report progress
-            if (blobChunk.RangeSize != null && blobChunk.RangeSize != 0)
+            if (blobChunk.RangeSize?.Value != 0)
             {
                 await CheckFullRangeBytesAsync(blobChunk, filePath, fileBytes.Length);
             }
@@ -69,7 +72,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         long endPosition = blobChunk.Offset + fileBytesLength;
         long startPosition = endPosition - blobChunk.RangeSize;
-        var isEmptyRangeBytes = await _fileStreamerHandler.CheckFileBytesNotEmptyAsync(filePath, startPosition, endPosition);
+        var isEmptyRangeBytes = await _fileStreamerHandler.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
             await _fileStreamerHandler.DeleteFileBytesAsync(filePath, startPosition, endPosition);

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using CloudPillar.Agent.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 

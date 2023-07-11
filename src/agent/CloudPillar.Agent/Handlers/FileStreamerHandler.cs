@@ -1,4 +1,5 @@
 ﻿namespace CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Interfaces;
 
 
 public class FileStreamerHandler : IFileStreamerHandler
@@ -20,7 +21,7 @@ public class FileStreamerHandler : IFileStreamerHandler
         }
     }
 
-    public async Task<bool> CheckFileBytesNotEmptyAsync(string filePath, long startPosition, long endPosition)
+    public async Task<bool> HasBytesAsync(string filePath, long startPosition, long endPosition)
     {
         if (startPosition > endPosition)
         {

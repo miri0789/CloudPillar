@@ -13,6 +13,7 @@ public abstract class BaseMessage
     public MessageType MessageType { get; set; }
     public Guid ActionGuid { get; set; }
     public abstract string GetMessageId();
+    public BaseMessage() {}
 
     public Message PrepareBlobMessage(byte[] data, int expiredMinutes = 60)
     {

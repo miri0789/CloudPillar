@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using shared.Entities.Events;
+using CloudPillar.Agent.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -11,6 +12,7 @@ public class D2CEventHandler : ID2CEventHandler
     private readonly DeviceClient _deviceClient;
     public D2CEventHandler(ICommonHandler commonHandler)
     {
+        ArgumentNullException.ThrowIfNull(commonHandler);
         _commonHandler = commonHandler;
         string _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
         TransportType _transportType = commonHandler.GetTransportType();

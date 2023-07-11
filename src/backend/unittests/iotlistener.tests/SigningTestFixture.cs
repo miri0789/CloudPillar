@@ -1,4 +1,5 @@
 ﻿using common;
+using iotlistener.Services;
 using Moq;
 using shared.Entities.Events;
 
@@ -8,6 +9,10 @@ public class SigningTestFixture
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
     private SigningService _signingService;
     private Uri signingUrl;
+
+    const string deviceId = "testDeviceId";
+    const string keyPath = "testKeyPath";
+    const string signatureKey = "testSignatureKey";
 
     [SetUp]
     public void Setup()
@@ -21,11 +26,10 @@ public class SigningTestFixture
     [Test]
     public async Task CreateTwinKeySignature_ValidParameters_SendsRequest()
     {
-        string deviceId = "testDeviceId";
         SignEvent signEvent = new SignEvent
         {
-            KeyPath = "testKeyPath",
-            SignatureKey = "testSignatureKey"
+            KeyPath = keyPath,
+            SignatureKey = signatureKey
         };
 
         string requestUrl = $"{signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
@@ -39,13 +43,12 @@ public class SigningTestFixture
     }
 
     [Test]
-    public void CreateTwinKeySignature_ExceptionThrown_WrapsAndRethrowsException()
+    public void CreateTwinKeySignature_ExceptionThrown_WrapsAndThrowsException()
     {
-        string deviceId = "testDeviceId";
         SignEvent signEvent = new SignEvent
         {
-            KeyPath = "testKeyPath",
-            SignatureKey = "testSignatureKey"
+            KeyPath = keyPath,
+            SignatureKey = signatureKey
         };
 
         string requestUrl = $"{signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";

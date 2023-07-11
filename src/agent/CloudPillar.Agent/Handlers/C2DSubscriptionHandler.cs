@@ -2,15 +2,9 @@ using System.Text;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json.Linq;
 using shared.Entities.Messages;
+using CloudPillar.Agent.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
-public interface IC2DSubscriptionHandler
-{
-    Task Subscribe(CancellationToken cancellationToken);
-    void Unsubscribe();
-
-    bool CheckSubscribed();
-}
 
 /// <summary>
 /// Represents a subscription to Cloud-to-Device messages for a specific device client.
@@ -36,6 +30,9 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
     /// <param name="deviceId">The device identifier.</param>
     public C2DSubscriptionHandler(ICommonHandler commonHandler, IFileDownloadHandler fileDownloadHandler)
     {
+        ArgumentNullException.ThrowIfNull(commonHandler);
+        ArgumentNullException.ThrowIfNull(fileDownloadHandler);
+
         _fileDownloadHandler = fileDownloadHandler;
         string _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
         TransportType _transportType = commonHandler.GetTransportType();

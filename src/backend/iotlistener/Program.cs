@@ -1,6 +1,8 @@
 ﻿using System.Runtime.Loader;
 using common;
 using iotlistener;
+using iotlistener.Interfaces;
+using iotlistener.Services;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
 using shared.Entities.Events;
 
 public class FirmwareUpdateEvent : AgentEvent
@@ -12,6 +13,8 @@ public class FirmwareUpdateEvent : AgentEvent
 
     public long? EndPosition { get; set; }
 
+
+    [JsonConstructor]
     public FirmwareUpdateEvent()
     {
         this.EventType = EventType.FirmwareUpdateReady;

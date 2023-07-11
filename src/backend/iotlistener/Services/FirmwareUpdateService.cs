@@ -1,13 +1,8 @@
 ﻿using Microsoft.Azure.Storage.Blob;
 using common;
-using shared.Entities.Events;
+using iotlistener.Interfaces;
 
-namespace iotlistener;
-
-public interface IFirmwareUpdateService
-{
-    Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data);
-}
+namespace iotlistener.Services;
 
 public class FirmwareUpdateService : IFirmwareUpdateService
 {
@@ -15,6 +10,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
     private readonly Uri _blobStreamerUrl;
     public FirmwareUpdateService(IHttpRequestorService httpRequestorService)
     {
+        ArgumentNullException.ThrowIfNull(httpRequestorService);
         _httpRequestorService = httpRequestorService;
         _blobStreamerUrl = new Uri(Environment.GetEnvironmentVariable(Constants.blobStreamerUrl)!);
     }
@@ -24,7 +20,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         try
         {
             long blobSize = await GetBlobSize(data.FileName);
-            long rangeSize = getRangeSize(blobSize, data.ChunkSize);
+            long rangeSize = GetRangeSize(blobSize, data.ChunkSize);
 
             var requests = new List<Task>();
 
@@ -66,7 +62,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         }
     }
 
-    private long getRangeSize(long blobSize, int chunkSize)
+    private long GetRangeSize(long blobSize, int chunkSize)
     {
         int.TryParse(Environment.GetEnvironmentVariable(Constants.rangePercent), out int rangePercent);
         int.TryParse(Environment.GetEnvironmentVariable(Constants.rangeBytes), out int rangeBytes);

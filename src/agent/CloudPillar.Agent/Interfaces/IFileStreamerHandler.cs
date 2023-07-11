@@ -6,7 +6,7 @@ public interface IFileStreamerHandler
 
     void DeleteFile(string filePath);
 
-    Task<bool> CheckFileBytesNotEmptyAsync(string filePath, long startPosition, long endPosition);
+    Task<bool> HasBytesAsync(string filePath, long startPosition, long endPosition);
 
     Task DeleteFileBytesAsync(string filePath, long startPosition, long endPosition);
 }

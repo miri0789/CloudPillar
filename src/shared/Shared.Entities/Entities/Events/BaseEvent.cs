@@ -8,7 +8,7 @@ public enum EventType
     SignTwinKey
 }
 
-public abstract class AgentEvent
+public class AgentEvent
 {
     public EventType EventType { get; set; }
     public Guid ActionGuid { get; set; }

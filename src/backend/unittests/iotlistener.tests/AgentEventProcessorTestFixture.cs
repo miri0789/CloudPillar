@@ -4,6 +4,8 @@ using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using static Microsoft.Azure.EventHubs.EventData;
 using shared.Entities.Events;
+using iotlistener.Services;
+using iotlistener.Interfaces;
 
 namespace iotlistener.tests;
 
@@ -20,27 +22,28 @@ public class AgentEventProcessorTestFixture
     {
         _firmwareUpdateServiceMock = new Mock<IFirmwareUpdateService>();
         _signingServiceMock = new Mock<ISigningService>();
+         Environment.SetEnvironmentVariable(Constants.messageTimeoutMinutes, "20");
         _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object);
+        Environment.SetEnvironmentVariable(Constants.drainD2cQueues, "");
     }
 
 
-    private List<EventData> initMessage(string body)
+    private List<EventData> InitMessage(string body)
     {
         var iothubConnectionDeviceId = "abcd1234";
-        Environment.SetEnvironmentVariable(Constants.messageTimeoutMinutes, "30");
         Environment.SetEnvironmentVariable(Constants.iothubConnectionDeviceId, iothubConnectionDeviceId);
         byte[] eventDataBody = Encoding.UTF8.GetBytes(body);
         var eventDataMock = new EventData(eventDataBody);
-        eventDataMock.SystemProperties = new SystemPropertiesCollection(0, DateTime.UtcNow, "0", "1");
+        eventDataMock.SystemProperties = new SystemPropertiesCollection(0, DateTime.UtcNow.AddMinutes(-10), "0", "1");
         eventDataMock.SystemProperties[iothubConnectionDeviceId] = "deviceId";
         var messages = new List<EventData> { eventDataMock };
         return messages;
     }
 
     [Test]
-    public async Task ProcessEventsAsync_WhenCalledFirmwareUpdate_CallFirmwareUpdate()
+    public async Task ProcessEventsAsync_FirmwareUpdateMessage_CallFirmwareUpdate()
     {
-        var messages = initMessage("{\"eventType\": 0, \"fileName\": \"fileName1\",\"chunkSize\": 1234}");
+        var messages = InitMessage("{\"EventType\": 0, \"FileName\": \"fileName1\",\"ChunkSize\": 1234, \"ActionGuid\": \"" + new Guid() + "\"}");
 
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
@@ -53,9 +56,9 @@ public class AgentEventProcessorTestFixture
     }
 
     [Test]
-    public async Task ProcessEventsAsync_WhenCalledSignTwinKey_CallSignTwinKey()
+    public async Task ProcessEventsAsync_SignTwinKeyMessage_CallSignTwinKey()
     {
-        var messages = initMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
+        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
@@ -67,10 +70,10 @@ public class AgentEventProcessorTestFixture
     }
 
     [Test]
-    public async Task ProcessEventsAsync_WhenCalledSignTwinKey_DrainMode_NotCallSignTwinKey()
+    public async Task ProcessEventsAsync_DrainMode_NotCall()
     {
         Environment.SetEnvironmentVariable(Constants.drainD2cQueues, "drainD2cQueues");
-        var messages = initMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
+        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
@@ -80,12 +83,13 @@ public class AgentEventProcessorTestFixture
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
     }
-    
+
     [Test]
-    public async Task ProcessEventsAsync_WhenCalledSignTwinKey_ExpiredTimeOut_NotCallSignTwinKey()
+    public async Task ProcessEventsAsync_ExpiredTimeOutMessage_NotCall()
     {
-        var messages = initMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
-        Environment.SetEnvironmentVariable(Constants.messageTimeoutMinutes, "0");
+        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
+        Environment.SetEnvironmentVariable(Constants.messageTimeoutMinutes, "1");
+        _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object);
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true

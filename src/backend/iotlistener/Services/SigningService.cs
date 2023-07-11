@@ -1,12 +1,9 @@
 ﻿using common;
+using iotlistener.Interfaces;
 using shared.Entities.Events;
 
-namespace iotlistener;
+namespace iotlistener.Services;
 
-public interface ISigningService
-{
-    Task CreateTwinKeySignature(string deviceId, SignEvent signEvent);
-}
 
 public class SigningService : ISigningService
 {
@@ -15,6 +12,7 @@ public class SigningService : ISigningService
     private readonly Uri _signingUrl;
     public SigningService(IHttpRequestorService httpRequestorService)
     {
+        ArgumentNullException.ThrowIfNull(httpRequestorService);
         _httpRequestorService = httpRequestorService;
         _signingUrl = new Uri(Environment.GetEnvironmentVariable(Constants.signingUrl)!);
     }
