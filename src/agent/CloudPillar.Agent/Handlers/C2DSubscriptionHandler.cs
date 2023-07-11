@@ -92,7 +92,7 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
     private async Task ReceiveCloudToDeviceMessagesAsync(CancellationToken cancellationToken, string device_id)
     {
         Console.WriteLine($"Started listening for C2D messages at device '{device_id}'....");
-        // long totalBytesDownloaded = 0;
+
         while (!cancellationToken.IsCancellationRequested)
         {
             Message receivedMessage = null;
@@ -100,34 +100,34 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
             try
             {
                 receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);
-
-                try
-                {
-                    string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
-                    MessageType.TryParse(receivedMessage.Properties["MessageType"], out MessageType messageType);
-
-                    switch (messageType)
-                    {
-                        case MessageType.DownloadChunk:
-                            DownloadBlobChunkMessage downloadBlobChunkMessage = new DownloadBlobChunkMessage();
-                            downloadBlobChunkMessage.CreateObjectFromMessage<DownloadBlobChunkMessage>(receivedMessage);
-                            _fileDownloadHandler.DownloadMessageDataAsync(downloadBlobChunkMessage, receivedMessage.GetBytes());
-                            break;
-                        default: break;
-                    }
-
-                    await _deviceClient.CompleteAsync(receivedMessage);
-                    Console.WriteLine($"{0}: Recived message of type: {1} completed", DateTime.Now, messageType.ToString());
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, ex.Message);
-                    continue;
-                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, ex.Message);
+                continue;
+            }
+
+            try
+            {
+                string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+                MessageType.TryParse(receivedMessage.Properties["MessageType"], out MessageType messageType);
+
+                switch (messageType)
+                {
+                    case MessageType.DownloadChunk:
+                        DownloadBlobChunkMessage downloadBlobChunkMessage = new DownloadBlobChunkMessage();
+                        downloadBlobChunkMessage.CreateObjectFromMessage<DownloadBlobChunkMessage>(receivedMessage);
+                        _fileDownloadHandler.DownloadMessageDataAsync(downloadBlobChunkMessage, receivedMessage.GetBytes());
+                        break;
+                    default: break;
+                }
+
+                await _deviceClient.CompleteAsync(receivedMessage);
+                Console.WriteLine($"{0}: Recived message of type: {1} completed", DateTime.Now, messageType.ToString());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, ex.Message);
                 continue;
             }
         }
