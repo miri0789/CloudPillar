@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Hosting;
 
-namespace shared.Logger;
+namespace Shared.Logger;
 
-public interface ILogger
+public interface ILoggerHandler
 {
     public void Error(string message, params object[] args);
 
@@ -21,6 +21,4 @@ public interface ILogger
     public void RefreshAppInsightsLogLevel(string logLevel);
 
     public void RefreshAppendersLogLevel(string logLevel);
-
-    public IHostBuilder GetLoggerHostBuilder(string[] args);
 }

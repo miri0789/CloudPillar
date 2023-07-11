@@ -1,4 +1,4 @@
-﻿namespace shared.Logger;
+﻿namespace Shared.Logger;
 
 public class LoggerConstants
 {

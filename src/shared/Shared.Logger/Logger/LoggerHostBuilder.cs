@@ -3,14 +3,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace shared.Logger
+namespace Shared.Logger
 {
     public class LoggerHostBuilder
     {
-        private ILogger _logger;
+        private ILoggerHandler _logger;
         private IConfigurationRefresher? _refresher;
 
-        public LoggerHostBuilder(ILogger logger)
+        public LoggerHostBuilder(ILoggerHandler logger)
         {
             _logger = logger;
             _refresher = null;

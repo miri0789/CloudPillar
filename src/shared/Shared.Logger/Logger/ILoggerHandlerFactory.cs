@@ -1,13 +1,14 @@
 ﻿using log4net;
 using log4net.Repository;
+using Shared.Logger.Wrappers;
 
-namespace shared.Logger;
+namespace Shared.Logger;
 
-public interface ILoggerFactory
+public interface ILoggerHandlerFactory
 {
     public ILog CreateLogger(string filename);
 
-    public ILoggerRepository createLogRepository(string log4netConfigFile);
+    public ILoggerRepository CreateLogRepository(string log4netConfigFile);
 
     public ITelemetryClientWrapper CreateTelemetryClient(string appInsightsKey, string connectionString);
 }

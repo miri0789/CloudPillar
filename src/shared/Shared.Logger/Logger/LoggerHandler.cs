@@ -9,10 +9,11 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.ApplicationInsights.Log4NetAppender;
 using Microsoft.Extensions.Hosting;
+using Shared.Logger.Wrappers;
 
-namespace shared.Logger;
+namespace Shared.Logger;
 
-public class Logger : ILogger
+public class LoggerHandler : ILoggerHandler
 {
     private ILog m_logger;
 
@@ -31,14 +32,14 @@ public class Logger : ILogger
 
     private ApplicationInsightsAppender? m_appInsightsAppender;
 
-    public Logger(ILoggerFactory loggerFactory, string filename,
+    public LoggerHandler(ILoggerHandlerFactory loggerFactory, string filename,
                           string appInsightsKey = null, string log4netConfigFile = null,
                           string applicationName = null, string connectionString = null) : this(loggerFactory,
                               null, loggerFactory.CreateLogger(filename), appInsightsKey, log4netConfigFile,
                               applicationName, connectionString, false)
     { }
 
-    public Logger(ILoggerFactory loggerFactory, IHttpContextAccessor httpContextAccessor, ILog logger, string appInsightsKey = null, string log4netConfigFile = null, string applicationName = null, string connectionString = null, bool hasHttpContext = true)
+    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IHttpContextAccessor httpContextAccessor, ILog logger, string appInsightsKey = null, string log4netConfigFile = null, string applicationName = null, string connectionString = null, bool hasHttpContext = true)
     {
         m_httpContextAccessor = httpContextAccessor;
         m_logger = logger;
@@ -47,7 +48,7 @@ public class Logger : ILogger
         ILoggerRepository? repo = null;
         if (!string.IsNullOrWhiteSpace(log4netConfigFile))
         {
-            repo = loggerFactory.createLogRepository(log4netConfigFile);
+            repo = loggerFactory.CreateLogRepository(log4netConfigFile);
         }
 
         m_appInsightsAppender = repo?.GetAppenders().OfType<ApplicationInsightsAppender>().FirstOrDefault() as ApplicationInsightsAppender;
@@ -74,15 +75,11 @@ public class Logger : ILogger
         AddCustomLogLevel("Warning", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["WARN"].Value);
         AddCustomLogLevel("Error", LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap["ERROR"].Value);
 
+        RefreshAppInsightsLogLevel("Debug");
+        RefreshAppendersLogLevel("Debug");
         Log4netConfigurationValidator.ValidateConfiguration(this);
     }
 
-    public IHostBuilder GetLoggerHostBuilder(string[] args)
-    {
-        LoggerHostBuilder loggerBuilder = new LoggerHostBuilder(this);
-        return loggerBuilder.CreateHostBuilder(args);
-    }
-    
     public void Error(string message, params object[] args)
     {
 

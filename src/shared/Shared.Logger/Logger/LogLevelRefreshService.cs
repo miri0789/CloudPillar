@@ -2,15 +2,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 
-namespace shared.Logger
+namespace Shared.Logger
 {
     public class LogLevelRefreshService : BackgroundService
     {
         private readonly IConfiguration _configuration;
         private readonly IConfigurationRefresher _refresher;
-        private readonly ILogger _logger;
+        private readonly ILoggerHandler _logger;
 
-        public LogLevelRefreshService(IConfiguration configuration, IConfigurationRefresher refresher, ILogger logger)
+        public LogLevelRefreshService(IConfiguration configuration, IConfigurationRefresher refresher, ILoggerHandler logger)
         {
             _configuration = configuration;
             _refresher = refresher;

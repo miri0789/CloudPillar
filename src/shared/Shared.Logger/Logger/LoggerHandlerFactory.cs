@@ -2,17 +2,18 @@
 using log4net.Config;
 using log4net.Repository;
 using System.Reflection;
+using Shared.Logger.Wrappers;
 
-namespace shared.Logger;
+namespace Shared.Logger;
 
-public class LoggerFactory : ILoggerFactory
+public class LoggerFactoryHandler : ILoggerHandlerFactory
 {
     public ILog CreateLogger(string filename)
     {
         return LogManager.GetLogger(filename);
     }
 
-    public ILoggerRepository createLogRepository(string log4netConfigFile)
+    public ILoggerRepository CreateLogRepository(string log4netConfigFile)
     {
         var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
         if (String.IsNullOrEmpty(log4netConfigFile))
