@@ -14,3 +14,4 @@ src/agent/dotnet/VelysPatch*
 **/tfplan
 **/.terraform*
 .vscode/extensions.json
+1.txt

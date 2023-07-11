@@ -93,8 +93,7 @@ stages:
         # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber}.{TIMESTAMP} && echo TAG: $TAG
       name: SetVars
     - bash: |
-      echo echo "$(major).$(minor)"
-
+        echo echo "$(major).$(minor)"
 - stage: GetVersion
   displayName: Get Major & Minor Version
   jobs:
