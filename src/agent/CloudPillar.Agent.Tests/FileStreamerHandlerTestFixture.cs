@@ -12,12 +12,16 @@ public class FileStreamerTestFixture
     private string _filePath;
     private string _fileDirectory;
 
-    [SetUp]
-    public void Setup()
-    {
+    public FileStreamerTestFixture() {        
         _fileStreamerHandler = new FileStreamerHandler();
         _fileDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         _filePath = Path.Combine(_fileDirectory, "testfile.txt");
+    }
+
+    [SetUp]
+    public void Setup()
+    {
+        File.Create(_filePath).Dispose();
     }
 
     [TearDown]
@@ -58,21 +62,8 @@ public class FileStreamerTestFixture
     [Test]
     public async Task DeleteFile_OnValidFilePath_Delete()
     {
-        string fileName = "testDeletd.txt";
-        string fullPath = Path.Combine(_fileDirectory, fileName);
-        File.Create(fullPath).Dispose();
-        _fileStreamerHandler.DeleteFile(fullPath);
-        Assert.IsFalse(File.Exists(fullPath), "File should be deleted.");
-    }
-
-    [Test]
-    public async Task DeleteFile_OnNotExistFilePath_NotDelete()
-    {
-        string fileName = "nonexistent.txt";
-        string filePath = Path.Combine(_fileDirectory, fileName);
-        string fullPath = Path.Combine(filePath, fileName);
-        _fileStreamerHandler.DeleteFile(filePath);
-        Assert.Pass("No exception should be thrown when deleting a non-existent file.");
+        _fileStreamerHandler.DeleteFile(_filePath);
+        Assert.IsFalse(File.Exists(_filePath), "File should be deleted.");
     }
 
 

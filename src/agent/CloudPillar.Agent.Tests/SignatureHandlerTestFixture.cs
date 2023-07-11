@@ -19,7 +19,7 @@ public class SignatureHandlerTestFixture
     }
 
     [Test]
-    public async Task InitPublicKeyAsync_LoadsPublicKeyFromPem()
+    public async Task InitPublicKeyAsync_LoadsPublicKey_Success()
     {
         await _signatureHandler.InitPublicKeyAsync();
         _signatureHandler.GetType()

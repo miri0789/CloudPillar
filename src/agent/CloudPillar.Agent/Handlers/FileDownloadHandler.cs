@@ -37,7 +37,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var file = _filesDownloads.FirstOrDefault(item => item.ActionGuid == blobChunk.ActionGuid && item.FileName == blobChunk.FileName);
         if (file == null)
         {
-            throw new Exception($"There is no active download for message {blobChunk.GetMessageId()}");
+            throw new InvalidOperationException($"There is no active download for message {blobChunk.GetMessageId()}");
         }
         var filePath = Path.Combine(file.Path, file.FileName);
         if (!file.Stopwatch.IsRunning)
@@ -47,10 +47,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         await _fileStreamerHandler.WriteChunkToFileAsync(filePath, blobChunk.Offset, fileBytes);
 
-        file.TotalBytesDownloaded += fileBytes.Length;
-        double progressPercent = Math.Round((double)file.TotalBytesDownloaded / fileBytes.Length * 100, 2);
-        double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / 1024.0; // in KiB/s
-        Console.WriteLine($"%{progressPercent:00} @pos: {blobChunk.Offset:00000000000} Throughput: {throughput:0.00} KiB/s");
+        CalculateBytesDownloadedPercent(file, fileBytes.Length, blobChunk.Offset);
 
         if (file.TotalBytesDownloaded == file.TotalBytes)
         {
@@ -60,7 +57,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         else
         {
             //TODO report progress
-            if (blobChunk.RangeSize?.Value != 0)
+            if (blobChunk.RangeSize != null)
             {
                 await CheckFullRangeBytesAsync(blobChunk, filePath, fileBytes.Length);
             }
@@ -68,10 +65,19 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     }
 
+    private void CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
+    {
+        file.TotalBytesDownloaded += bytesLength;
+        double progressPercent = Math.Round((double)file.TotalBytesDownloaded / bytesLength * 100, 2);
+        double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / 1024.0; // in KiB/s
+        Console.WriteLine($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
+        //TODO report percent
+    }
+
     private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath, int fileBytesLength)
     {
         long endPosition = blobChunk.Offset + fileBytesLength;
-        long startPosition = endPosition - blobChunk.RangeSize;
+        long startPosition = endPosition - (long)blobChunk.RangeSize;
         var isEmptyRangeBytes = await _fileStreamerHandler.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {

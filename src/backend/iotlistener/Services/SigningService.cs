@@ -27,7 +27,6 @@ public class SigningService : ISigningService
         catch (Exception ex)
         {
             Console.WriteLine($"SigningService CreateTwinKeySignature failed. Message: {ex.Message}");
-            throw;
         }
     }
 

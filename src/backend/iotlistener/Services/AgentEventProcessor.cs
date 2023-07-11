@@ -20,7 +20,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
         _partitionId = partitionId;
     }
 
-    IEventProcessor IEventProcessorFactory.CreateEventProcessor(PartitionContext context)
+    public IEventProcessor CreateEventProcessor(PartitionContext context)
     {
         if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
         {
@@ -68,57 +68,61 @@ public class AgentEventProcessor : IEventProcessor
     public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
     {
         Console.WriteLine($"AgentEventProcessor ProcessEventsAsync. Partition: '{context.PartitionId}'.");
+
+        string drainD2cQueues = Environment.GetEnvironmentVariable(Constants.drainD2cQueues);
+
         foreach (var eventData in messages)
         {
-            try
+            if (DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc > TimeSpan.FromMinutes(_messageTimeoutMinutes))
             {
-                if (DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc > TimeSpan.FromMinutes(_messageTimeoutMinutes))
-                {
-                    Console.WriteLine("Ignoring message older than 1 hour.");
-                    Console.WriteLine(DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc);
-                    Console.WriteLine(TimeSpan.FromMinutes(_messageTimeoutMinutes));
-                    continue;
-                }
-
-                var data = Encoding.UTF8.GetString(eventData!.Body!.Array!, eventData.Body.Offset, eventData.Body.Count);
-                AgentEvent agentEvent = JsonSerializer.Deserialize<AgentEvent>(data)!;
-
-                string drainD2cQueues = Environment.GetEnvironmentVariable(Constants.drainD2cQueues);
-                if (agentEvent == null || !String.IsNullOrEmpty(drainD2cQueues))
-                {
-                    Console.WriteLine($"Draining on Partition: {context.PartitionId}, Event: {data}");
-                    continue;
-                }
-
-                string iothubConnectionDeviceId = Environment.GetEnvironmentVariable(Constants.iothubConnectionDeviceId);
-                string? deviceId = eventData.SystemProperties[iothubConnectionDeviceId]?.ToString();
-
-                if (!String.IsNullOrWhiteSpace(deviceId) && agentEvent.EventType != null)
-                {
-                    switch (agentEvent.EventType)
-                    {
-                        case EventType.FirmwareUpdateReady:
-                            {
-                                var firmwareUpdateEvent = JsonSerializer.Deserialize<FirmwareUpdateEvent>(data)!;
-                                await _firmwareUpdateService.SendFirmwareUpdateAsync(deviceId, firmwareUpdateEvent);
-                                break;
-                            }
-                        case EventType.SignTwinKey:
-                            {
-                                var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;
-                                await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);
-                                break;
-                            }
-                    }
-
-                }
+                Console.WriteLine($"Ignoring message older than {_messageTimeoutMinutes} minutes.");
+                continue;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed parsing message on Partition: {context.PartitionId}, Error: {ex.Message} - Ignoring");
-            }
+            await HandleMessageData(eventData, !String.IsNullOrWhiteSpace(drainD2cQueues), context.PartitionId);
         }
         await context.CheckpointAsync();
+    }
+
+    private async Task HandleMessageData(EventData eventData, bool isDrainMode, string partitionId)
+    {
+        try
+        {
+            var data = Encoding.UTF8.GetString(eventData!.Body!.Array!, eventData.Body.Offset, eventData.Body.Count);
+            AgentEvent agentEvent = JsonSerializer.Deserialize<AgentEvent>(data)!;
+
+            if (agentEvent == null || isDrainMode)
+            {
+                Console.WriteLine($"Draining on Partition: {partitionId}, Event: {data}");
+                return;
+            }
+
+            string iothubConnectionDeviceId = Environment.GetEnvironmentVariable(Constants.iothubConnectionDeviceId);
+            string? deviceId = eventData.SystemProperties[iothubConnectionDeviceId]?.ToString();
+
+            if (!String.IsNullOrWhiteSpace(deviceId) && agentEvent.EventType != null)
+            {
+                switch (agentEvent.EventType)
+                {
+                    case EventType.FirmwareUpdateReady:
+                        {
+                            var firmwareUpdateEvent = JsonSerializer.Deserialize<FirmwareUpdateEvent>(data)!;
+                            await _firmwareUpdateService.SendFirmwareUpdateAsync(deviceId, firmwareUpdateEvent);
+                            break;
+                        }
+                    case EventType.SignTwinKey:
+                        {
+                            var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;
+                            await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);
+                            break;
+                        }
+                }
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed parsing message on Partition: {partitionId}, Error: {ex.Message} - Ignoring");
+        }
     }
 
 }
