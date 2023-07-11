@@ -93,14 +93,15 @@ stages:
         # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber}.{TIMESTAMP} && echo TAG: $TAG
       name: SetVars
     - bash: |
-
-      echo "$MAJORVERSION"
-      echo "$MINORVERSION"
-      echo "$MAJOR"
-      echo "$MINOR"
-      echo "$major"
-      echo "$minor"
-      echo "$MajorVersion $MinorVersion"
+      echo echo "$(major).$(minor)"
+      #echo "$(MajorVersion.$(MinorVersion)"
+      #echo "$MAJORVERSION"
+      #echo "$MINORVERSION"
+      #echo "$MAJOR"
+      #echo "$MINOR"
+      #echo "$major"
+      #echo "$minor"
+      #echo "$MajorVersion $MinorVersion"
       # echo 5- && echo "$(major)" && echo "$(minor)"
 
 - stage: GetVersion
@@ -136,8 +137,8 @@ stages:
           echo "============================================"
           echo "============================================"
 
-          echo $(MajorVersion).$(MinorVersion)
-          echo $MAJOR.$MINOR
+          # echo $(MajorVersion).$(MinorVersion)
+          # echo $MAJOR.$MINOR
 
 
 
