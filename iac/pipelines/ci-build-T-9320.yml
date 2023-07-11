@@ -80,11 +80,15 @@ stages:
         # TAG=$TAG_PREFIX.$TAG_SUFFIX
         # echo "TAG: $TAG"
         major=1
-        minor=0          
-        echo "##vso[task.setvariable variable=major;]$major" 
-        echo "##vso[task.setvariable variable=minor;]$minor"
-        echo "##vso[task.setvariable variable=MajorVersion;]$major"
-        echo "##vso[task.setvariable variable=MinorVersion;]$minor"
+        minor=0
+        echo "##vso[task.setvariable variable=major;]1"          
+        echo "##vso[task.setvariable variable=minor;]0"          
+        echo "##vso[task.setvariable variable=MajorVersion;]1"
+        echo "##vso[task.setvariable variable=MinorVersion;]0"
+        # echo "##vso[task.setvariable variable=major;]$major" 
+        # echo "##vso[task.setvariable variable=minor;]$minor"
+        # echo "##vso[task.setvariable variable=MajorVersion;]$major"
+        # echo "##vso[task.setvariable variable=MinorVersion;]$minor"
 
         # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber}.{TIMESTAMP} && echo TAG: $TAG
       name: SetVars
