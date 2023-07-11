@@ -116,29 +116,17 @@ stages:
         script: |
           echo "##[section]Version File:
           cat src/backend/version.txt
-          
           echo "##[section]Major Minor Version:
           #+TODO Un Comment Both Rows in the Actual Main Version Update
           # major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-          # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
-
-          #+TODO Remove or Comment Below Row
+          # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)   
           major=1
           minor=0
           echo "major: $major"
           echo "minor: $minor"
           echo "$(major).$(minor)"
-          echo "============================================"
-          echo "============================================"
-
-
-
-
-
-
-
-
-
+          echo "============================================
+          
           OLD_TAG_PREFIX=${{parameters.version}}
           OLD_TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
           OLD_TAG=$OLD_TAG_PREFIX.$OLD_TAG_SUFFIX
