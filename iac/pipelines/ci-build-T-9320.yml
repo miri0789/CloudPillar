@@ -1,5 +1,4 @@
 name: ci_build_t_9320
-displayName: CI Build T-9320
 
 trigger:
 # - none
