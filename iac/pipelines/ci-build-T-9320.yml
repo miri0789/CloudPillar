@@ -98,14 +98,23 @@ stages:
       inputs:
         targetType: inline
         script: |
-          # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD)
-          # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-          # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber} && echo TAG: $TAG
-          ## TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG_SUFFIX=$BuildNumber.$TIMESTAMP && echo TAG: $TAG
-          echo $(Test)
-          echo $(TIMESTAMP)
-          echo $(BuildNumber)
-          TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && echo $TIMESTAMP.$BuildNumber
+          cat src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+          echo "============="
+          echo "============="
+          echo "============="
+          cat src/backend/${{parameters.image}}/${{parameters.image}}.csproj | grep "InformationalVersion" 
+
+
+
+
+
+
+
+
+          OLD_TAG_PREFIX=${{parameters.version}}
+          OLD_TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
+          OLD_TAG=$OLD_TAG_PREFIX.$OLD_TAG_SUFFIX
+          echo "OLD_TAG: $OLD_TAG"
 
           
 
