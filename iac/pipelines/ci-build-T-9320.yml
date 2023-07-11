@@ -1,4 +1,8 @@
 name: ci_build_t_9320
+          # major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
+          # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
+          # TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          # BuildNumber=$(git rev-list --count HEAD)
 
 trigger:
 # - none
