@@ -72,11 +72,11 @@ stages:
   displayName: Update Major & Minor Version
   jobs:
   - job: Create_Variables_Job
+    condition: ${{ eq(parameters.version, currnet) }}
     displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
-    condition: ${{ eq(parameters.version, currnet) }}
     steps:
     - checkout: self
       persistCredentials: true
@@ -98,11 +98,11 @@ stages:
     name: SetVars
 
   - job: Create_Variables_Job
+    condition: ${{ eq(parameters.version, nextMinor) }}
     displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
-    condition: ${{ eq(parameters.version, nextMinor) }}
     steps:
     - checkout: self
       persistCredentials: true
@@ -118,11 +118,11 @@ stages:
         echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
 
   - job: Create_Variables_Job
+    condition: ${{ eq(parameters.version, nextMajor) }}
     displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
-    condition: ${{ eq(parameters.version, nextMajor) }}
     steps:
     - checkout: self
       persistCredentials: true
