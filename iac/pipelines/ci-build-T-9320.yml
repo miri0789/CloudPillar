@@ -52,27 +52,20 @@ parameters:
     - keyholder
     - mongowriter
     - twinlistener
-  - name: version
+  - name: versionfix
     displayName: Select Major & Minor Verson
     type: string
-    default: current
+    default: current # 1.0
     values:
-    - current
-    - nextMajor
-    - nextMinor
-    # default: 1.0
-    # values:
-    # - 1.0
-    # - 1.1
-    # - 2.1
-
+    - current # 1.0
+    - nextminor # 1.1
+    - nextmajor #2.0
 
 stages:
 - stage: Create_Variables_Stage
   displayName: Update Major & Minor Version
   jobs:
   - job: Create_Variables_Job
-    condition: ${{ eq(parameters.version, 'currnet') }}
     displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
@@ -81,7 +74,7 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
-    ${{ if eq(parameters.version, 'currnet') }}:
+    - ${{ if eq(parameters.versionfix, 'currnet') }}:
       - bash: |
           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
           major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
@@ -98,7 +91,7 @@ stages:
           # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
         name: SetVars
     
-    ${{ if eq(parameters.version, 'nextMinor') }}:
+    - ${{ if eq(parameters.versionfix, 'nextminor') }}:
       - bash: |
           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
           major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
@@ -109,7 +102,7 @@ stages:
           echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
           echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
         name: SetVars
-    ${{ if eq(parameters.version, 'nextMajor') }}:
+    - ${{ if eq(parameters.versionfix, 'nextmajor') }}:
     - bash: |
         # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
         major=2 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt + 1)
@@ -130,7 +123,7 @@ stages:
 
 # - stage: Update_Version
 #   jobs:
-#   condition: ${{ eq(parameters.version, currnet) }}
+#   condition: ${{ eq(parameters.versionfix, currnet) }}
 #     variables:
 #       major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']
 #       minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']
@@ -162,11 +155,11 @@ stages:
 #       persistCredentials: true
 #       clean: true
 #     - bash: |
-#       # echo equal = $($(major).$(minor)==$(parameters.Version))
+#       # echo equal = $($(major).$(minor)==$(parameters.versionfix))
 #       # echo "##vso[task.setvariable variable=equal;isOutput=true]$equal"
 #       echo $($(major).$(minor)
-#       echo $(parameters.Version))
-#       echo $($(major).$(minor)==$(parameters.Version))
+#       echo $(parameters.versionfix))
+#       echo $($(major).$(minor)==$(parameters.versionfix))
   
 
 
