@@ -1,7 +1,8 @@
 name: final_9320
 
 trigger:
-- $(Build.SourceBranchName)
+# - $(Build.SourceBranchName)
+- none
 
 # * Parameters
 parameters:
