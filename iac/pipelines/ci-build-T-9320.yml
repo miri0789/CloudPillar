@@ -80,7 +80,8 @@ stages:
           major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
           minor=0 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
           buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-          FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
+          FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: major.minor $FullVersion"
+          OrgFullVersion=$(major).$(minor).$(BuildNumber).$(TIMESTAMP) && echo "OrgFullVersion: major.minor $OrgFullVersion"
           echo "##vso[task.setvariable variable=major;isOutput=true]$major"
           echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
           echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"

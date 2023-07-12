@@ -1,0 +1,164 @@
+name: ci_build_t_9320_2
+trigger:
+- $(Build.SourceBranchName)
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: iotlistener
+    values:
+    # - all
+    - analyzer
+    - beapi
+    - blobstreamer
+    - iotlistener
+    - keyholder
+    - mongowriter
+    - twinlistener  
+  - name: versionString
+    displayName: Select Major & Minor Verson
+    type: string
+    default: current # 1.0
+    values:
+    - current # 1.0
+    - nextminor # 1.1
+    - nextmajor #2.0
+  - name: versionInt
+    displayName: Select Major & Minor Verson
+    type: string
+    default: 1.0
+    values:
+    - 1.0
+    - 1.1
+    - 2.0
+
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+- name: TIMESTAMP
+  value: $(date +%Y%m%d%H%M%S)
+- name: BuildNumber
+  value: $(git rev-list --count HEAD)
+- name: majorT # Major- Test
+  value: 2
+- name: minorT # Minor- Test 
+  value: 2
+- name: majorInt # versionInt - Parsed
+  value: ${{ coalesce(split(parameters.versionInt, '.')[0], '1') }}
+- name: minorInt # versionInt - Parsed
+  value: ${{ coalesce(split(parameters.versionInt, '.')[1], '0') }}
+# - name: majorStr # versionStr - Parsed
+#   - ${{ if eq(parameters.versionfix, 'current') }}:
+#       value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
+#   - ${{ if eq(parameters.versionfix, 'nextminor') }}:
+#       value: $(grep -oP '^major=\K\d+' src/backend/version.txt + 1)
+#   - ${{ else(parameters.versionfix, 'nextminor') }}:
+# - name: minorStr # versionStr - Parsed
+#   value: ${{ coalesce(split(parameters.versionInt, '.')[1], '0') }}
+# - name: majorF # From version.txt File
+#   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)  
+# - name: minorF # From version.txt File
+#   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+
+stages:
+- stage: CI_Build
+  displayName: CI Build Process
+  jobs:
+  - job: Create_Variables_Job
+    displayName: Update Variables
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - ${{ if eq(parameters.versionfix, 'current') }}:
+      - bash: |
+          echo "##[group]Vars Group"
+          # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
+          minor=0 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
+          echo "##vso[task.setvariable variable=major;isOutput=true]$major"
+          echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
+          NewVersion=$major.$minor.$buildnumber.$timestamp
+          echo "##[command]major:\t $major"
+          echo "##[command]minor:\t $minor"
+          echo "##[command]NewVersion:\t $NewVersion"
+          echo "##[endgroup]"
+
+
+          # buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          # NewVersion=$major.$minor.$buildnumber.$timestamp
+          # echo "NewVersion:\n==================\n major.minor.buildnumber.timestamp\n $NewVersion"
+          # OrgFullVersion=$(majorT).$(minorT).$(BuildNumber).$(TIMESTAMP)
+          # echo "OrgFullVersion:\n==================\n majorT.minorT.buildnumber.timestamp\n $OrgFullVersion"
+          # echo "##vso[task.setvariable variable=major;isOutput=true]$major"
+          # echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
+          # echo "##vso[task.setvariable variable=newversion;isOutput=true]$NewVersion"
+          # echo "##vso[task.setvariable variable=OrgFullVersion;isOutput=true]$OrgFullVersion"
+          
+          #* Backup Script
+          # echo "##vso[task.setvariable variable=major;isOutput=true]$(grep -oP '^major=\K\d+' src/backend/version.txt)"
+          # echo "##vso[task.setvariable variable=minor;isOutput=true]$(grep -oP '^minor=\K\d+' src/backend/version.txt)"
+          # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
+        name: SetVars
+      - bash: |
+          echo "##[group]Vars Group"
+          echo "##[command]major:\t $major"
+          echo "##[command]minor:\t $minor"
+          echo "##[warning]majorT:\t $majorT"
+          echo "##[warning]minorT:\t $minorT"
+          echo "##[command]majorInt:\t $majorInt"
+          echo "##[command]minorInt:\t $minorInt"
+          echo "##[command] versionString:\t ${{parameters.versionString}}"
+          echo "##[command] versionInt:\t ${{parameters.versionInt}}"
+          echo "##[endgroup]"
+        name: CheckVars
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+# - bash: |
+#     # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+#     major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
+#     minor=0 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
+#     echo "##vso[task.setvariable variable=major;isOutput=true]$major"
+#     echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
+    
+#     # buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+#     # NewVersion=$major.$minor.$buildnumber.$timestamp
+#     # echo "NewVersion:\n==================\n major.minor.buildnumber.timestamp\n $NewVersion"
+#     # OrgFullVersion=$(majorT).$(minorT).$(BuildNumber).$(TIMESTAMP)
+#     # echo "OrgFullVersion:\n==================\n majorT.minorT.buildnumber.timestamp\n $OrgFullVersion"
+#     # echo "##vso[task.setvariable variable=major;isOutput=true]$major"
+#     # echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
+#     # echo "##vso[task.setvariable variable=newversion;isOutput=true]$NewVersion"
+#     # echo "##vso[task.setvariable variable=OrgFullVersion;isOutput=true]$OrgFullVersion"
+    
+#     #* Backup Script
+#     # echo "##vso[task.setvariable variable=major;isOutput=true]$(grep -oP '^major=\K\d+' src/backend/version.txt)"
+#     # echo "##vso[task.setvariable variable=minor;isOutput=true]$(grep -oP '^minor=\K\d+' src/backend/version.txt)"
+#     # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
+#   name: SetVars
