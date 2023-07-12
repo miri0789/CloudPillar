@@ -92,19 +92,19 @@ stages:
   jobs:
   - job: Update_Version
     displayName: Update Latest Version ID
-    variables:
-    
     - ${{ if eq(parameters.chosenVersionString, 'current') }}:
-      major: $(currentMajor)
-      minor: $(currentMinor)
-      version: $(currentMajor).$(currentMinor)
-      newversion: $(currentMajor).$(currentMinor).$(BuildNumber).$(TIMESTAMP)
+      variables:
+        major: $(currentMajor)
+        minor: $(currentMinor)
+        version: $(currentMajor).$(currentMinor)
+        newversion: $(currentMajor).$(currentMinor).$(BuildNumber).$(TIMESTAMP)
     
     - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
-      major: $(currentMajor)
-      minor: $(( $currentMinor) + 1 ))
-      version: $(currentMajor).$(( $currentMinor) + 1 ))
-      newversion: $(currentMajor).$(( $currentMinor) + 1 )).$(BuildNumber).$(TIMESTAMP)      
+      variables:
+        major: $(currentMajor)
+        minor: $(( $currentMinor) + 1 ))
+        version: $(currentMajor).$(( $currentMinor) + 1 ))
+        newversion: $(currentMajor).$(( $currentMinor) + 1 )).$(BuildNumber).$(TIMESTAMP)      
     
     pool:
       name: $(AGENT_POOL)
