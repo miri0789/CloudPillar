@@ -1,0 +1,22 @@
+
+name: ci_build_t_9320_2
+trigger:
+- $(Build.SourceBranchName)
+jobs:
+- job: A
+  steps:
+  - bash: |
+      echo "##vso[task.setvariable variable=myVar;]foo"  
+  - bash: |
+      echo "You can use macro syntax for variables: $(myVar)"    
+  # - bash: |
+  #    echo "##vso[task.setvariable variable=myJobVar]this is the same job"
+  #   name: SetVar
+  # - bash: |
+  #    echo "##vso[task.setvariable variable=myOutputJobVar;isoutput=true]this is the same job too"
+  #   name: setOutput
+  # - bash: |
+  #    echo $(myJobVar) 
+  # - bash: |
+  #    echo $(setOutput.myOutputJobVar)
+  #   name: SetOutput2
