@@ -1,0 +1,103 @@
+name: ci_build_t_9320_2
+trigger:
+- $(Build.SourceBranchName)
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: iotlistener
+    values:
+    # - all
+    - analyzer
+    - beapi
+    - blobstreamer
+    - iotlistener
+    - keyholder
+    - mongowriter
+    - twinlistener  
+  - name: versionString
+    displayName: Select Major & Minor Verson
+    type: string
+    default: current # 1.0
+    values:
+    - current # 1.0
+    - nextminor # 1.1
+    - nextmajor #2.0
+  - name: versionInt
+    displayName: Select Major & Minor Verson
+    type: string
+    default: 1.0
+    values:
+    - 1.0
+    - 1.1
+    - 2.0
+
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+
+- name: TIMESTAMP
+  value: $(date +%Y%m%d%H%M%S)
+- name: BuildNumber
+  value: $(git rev-list --count HEAD)
+- name: major # Major (Based on User Selection)
+  value: ${{ coalesce(split(parameters.versionInt, '.')[0], '1') }}
+- name: minor # Minor (Based on User Selection)
+  value: ${{ coalesce(split(parameters.versionInt, '.')[1], '0') }}
+- name: version # major.minor (Based on User Selection)
+  value: $(major).$(minor)
+- name: versionF # major.minor.buildnumber.timestamp (Based on User Selection)
+  value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+
+- name: majorT # Major- Test
+  value: 2
+- name: minorT # Minor- Test 
+  value: 2
+- name: versionT # Minor- Test 
+  value: $(majorT).$(minorT)
+- name: versionTF # Minor- Test Full
+  value: $(majorT).$(minorT).$(BuildNumber).$(TIMESTAMP)
+
+stages:
+- stage: CI_Build
+  displayName: CI Build Process
+  jobs:
+  - job: Create_Variables_Job
+    displayName: Update Variables
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - bash: |
+        currentVersion = $(versionF)
+- stage: Test
+  displayName: Testing
+  jobs:
+  - job: Create_Variables_Job
+    displayName: Update Variables
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - bash: |
+        currentVersion = $(versionTF)
