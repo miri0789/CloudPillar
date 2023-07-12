@@ -87,7 +87,7 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
-    - ${{ if eq(parameters.versionfix, 'current') }}:
+    - ${{ if eq(parameters.versionString, 'current') }}:
       - bash: |
           echo "##[group]Vars Group"
           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
