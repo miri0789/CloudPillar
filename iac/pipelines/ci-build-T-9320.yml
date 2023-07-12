@@ -81,53 +81,35 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
-    - bash: |
-        # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-        major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-        minor=0 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
-        buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-        FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
-        echo "##vso[task.setvariable variable=major;isOutput=true]$major"
-        echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
-        echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
-        
-        #* Backup Script
-        # echo "##vso[task.setvariable variable=major;isOutput=true]$(grep -oP '^major=\K\d+' src/backend/version.txt)"
-        # echo "##vso[task.setvariable variable=minor;isOutput=true]$(grep -oP '^minor=\K\d+' src/backend/version.txt)"
-        # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
-      name: SetVars
-
-  - job: Create_Variables_Job
-    condition: ${{ eq(parameters.version, 'nextMinor') }}
-    displayName: Update Variables
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent 
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
-    - bash: |
-        # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-        major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-        minor=1 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt + 1)
-        buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-        FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
-        echo "##vso[task.setvariable variable=major;isOutput=true]$major"
-        echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
-        echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
-      name: SetVars
-
-  - job: Create_Variables_Job
-    condition: ${{ eq(parameters.version, 'nextMajor') }}
-    displayName: Update Variables
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent 
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
+    ${{ if eq(parameters.version, 'currnet') }}:
+      - bash: |
+          # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
+          minor=0 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
+          buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
+          echo "##vso[task.setvariable variable=major;isOutput=true]$major"
+          echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
+          echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
+          
+          #* Backup Script
+          # echo "##vso[task.setvariable variable=major;isOutput=true]$(grep -oP '^major=\K\d+' src/backend/version.txt)"
+          # echo "##vso[task.setvariable variable=minor;isOutput=true]$(grep -oP '^minor=\K\d+' src/backend/version.txt)"
+          # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
+        name: SetVars
+    
+    ${{ if eq(parameters.version, 'nextMinor') }}:
+      - bash: |
+          # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
+          minor=1 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt + 1)
+          buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
+          echo "##vso[task.setvariable variable=major;isOutput=true]$major"
+          echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
+          echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
+        name: SetVars
+    ${{ if eq(parameters.version, 'nextMajor') }}:
     - bash: |
         # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
         major=2 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt + 1)
