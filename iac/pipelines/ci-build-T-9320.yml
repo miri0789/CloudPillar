@@ -70,10 +70,20 @@ stages:
         echo "##[section]Update Version Section"
         echo "##[group]Get Current Version Group"
         
-        # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
-        Major=1 && Minor=0
+        # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && version=$Major.$Minor && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && fullVersion=$version.$buildnumber.$timestamp
+        Major=1 && Minor=0 && version=$Major.$Minor && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && fullVersion=$version.$buildnumber.$timestamp
+        
         echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
         echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
+        echo "##vso[task.setvariable variable=version;isoutput=true]$version"
+        echo "##vso[task.setvariable variable=fullVersion;isoutput=true]$fullVersion"
         
-        echo "Major.Minor - $Major.$Minor"
+        echo "fullVersion: $fullVersion"
+        echo "##[endgroup]Get Current Version Finished"
+      name: SetCurrentVersion
+    - bash: |
+        echo "##[warning]Print Current Version"
+        echo "##[debug]$fullVersion"
+        echo "##[command]$(fullVersion)"
+      name: printCurrentVersion
         
