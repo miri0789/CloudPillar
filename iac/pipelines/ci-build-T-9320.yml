@@ -3,7 +3,10 @@ name: ci_build_t_9320
           # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
           # TIMESTAMP=$(date +%Y%m%d%H%M%S)
           # BuildNumber=$(git rev-list --count HEAD)
-
+# steps: 
+# - ${{ each parameter in parameters }}:
+#   - script: echo ${{ parameter.Key }} 
+#   - script: echo ${{ parameter.Value }}
 trigger:
 # - none
 - $(Build.SourceBranchName)
@@ -35,11 +38,11 @@ parameters:
   - name: version
     displayName: Select Major & Minor Verson
     type: string
-    default: 1.0
+    default: $(major).$(minor)
     values:
-    - 1.0
-    - 1.1
-    - 2.1
+    - $(major).$(minor)
+    - $(major).$(minor)
+    - $(major).$(minor)
 variables:
 - group: arm-vg
 - group: iac-backend-vg
@@ -49,10 +52,10 @@ variables:
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
-- name: MajorVersion
-  value: 0
-- name: MinorVersion
-  value: 6
+- name: major
+  value: $(grep -oP '^major=\K\d+' src/backend/version.txt)  
+- name: minor
+  value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
 
 
 
@@ -86,22 +89,21 @@ stages:
         # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)        
         echo "##vso[task.setvariable variable=major;]$major"          
         echo "##vso[task.setvariable variable=minor;]$minor"          
-        echo "##vso[task.setvariable variable=MajorVersion;]1"
-        echo "##vso[task.setvariable variable=MinorVersion;]0"
-        # echo "##vso[task.setvariable variable=major;]$major" 
-        # echo "##vso[task.setvariable variable=minor;]$minor"
-        # echo "##vso[task.setvariable variable=MajorVersion;]$major"
-        # echo "##vso[task.setvariable variable=MinorVersion;]$minor"
+
 
         # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber}.{TIMESTAMP} && echo TAG: $TAG
       name: SetVars
     - bash: |
         echo "$(major).$(minor)"
-- stage: GetVersion
-  displayName: Get Major & Minor Version
+      name: major.minor
+
+
+
+- stage: Update_Version
+  displayName: Update Major & Minor Version
   jobs:
   - job: Upadte_Major_Minor_Version
-    displayName: Get & Update Major Version
+    displayName: Get & Update Version
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
@@ -109,6 +111,36 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
+    - bash: |
+        major=1
+        minor=0
+        # major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
+        # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)        
+        echo "##vso[task.setvariable variable=major;]$major"          
+        echo "##vso[task.setvariable variable=minor;]$minor"  
+      name: SetVars
+    - ${{ each parameter in parameters }}:
+      - script: echo ${{ parameter.Key }} 
+      - script: echo ${{ parameter.Value }}
+
+
+
+
+
+major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && 
+
+
+
+
+
+
+
+
+
+
+
+
+
     - task: Bash@3
       displayName: Update Major & Minor Version
       inputs:
@@ -126,7 +158,7 @@ stages:
           echo "minor: $minor"
           echo "$(major).$(minor)"
           echo "============================================
-          
+
           OLD_TAG_PREFIX=${{parameters.version}}
           OLD_TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
           OLD_TAG=$OLD_TAG_PREFIX.$OLD_TAG_SUFFIX
