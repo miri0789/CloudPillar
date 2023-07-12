@@ -59,9 +59,11 @@ variables:
 - name: minor # Minor (Based on User Selection)
   value: ${{ coalesce(split(parameters.versionInt, '.')[1], '0') }}
 - name: version # major.minor (Based on User Selection)
-  value: ${{ variable.major }}.${{ variable.minor }}
+  value: ${{ variable.major }}
+  # value: ${{ variable.major }}.${{ variable.minor }}
 - name: versionF # major.minor.buildnumber.timestamp (Based on User Selection)
-  value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+  value: $(major)
+  # value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
 
 - name: majorT # Major- Test
   value: 2
