@@ -59,14 +59,16 @@ variables:
   value: ${{ coalesce(split(parameters.chosenVersion, '.')[0], '1') }}
 - name: chosenMinor # Minor (Based on User Selection)
   value: ${{ coalesce(split(parameters.chosenVersion, '.')[1], '0') }}
+- name: chosenVersion # Minor (Based on User Selection)
+  value: ${{ parameters.chosenVersion }}
 
 - name: currentMajor # Major (Based on User Selection)
-  value: 8
+  value: 1
   # value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 - name: currentMinor # Minor (Based on User Selection)
-  value: 3
+  value: 0
 - name: currentVersion # Version (Based on User Selection)
-  value: 8.3
+  value: 1.0
   # value: $(grep -oP '^major=\K\d+' src/backend/version.txt).$(grep -oP '^minor=\K\d+' src/backend/version.txt)
 
 
