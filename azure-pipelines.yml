@@ -58,11 +58,17 @@ variables:
   value: ${{ coalesce(split(parameters.versionInt, '.')[0], '1') }}
 - name: minor # Minor (Based on User Selection)
   value: ${{ coalesce(split(parameters.versionInt, '.')[1], '0') }}
-- name: version # major.minor (Based on User Selection)
-  value: ${{ variable.major }}
+
+# +N Current!!!!!!!!!!!!!!!!!!!!!!!!!
+# - name: version # major.minor (Based on User Selection)
+#   value: $(major)
+
+  # indyx: $[ variables[format('{0}{1}', 'testCategories', variables['System.JobPositionInPhase'])] ]
+  # value: $(major)
+  # value: ${{ variable.major }}
   # value: ${{ variable.major }}.${{ variable.minor }}
-- name: versionF # major.minor.buildnumber.timestamp (Based on User Selection)
-  value: $(major)
+# - name: versionF # major.minor.buildnumber.timestamp (Based on User Selection)
+  # value: $(major)
   # value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
 
 - name: majorT # Major- Test
@@ -77,6 +83,9 @@ variables:
 stages:
 - stage: CI_Build
   displayName: CI Build Process
+  variables:
+    version: $(major).$(minor)
+    versionF: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
   jobs:
   - job: Create_Variables_Job
     displayName: Update Variables
