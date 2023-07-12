@@ -115,32 +115,25 @@ stages:
           echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
         name: SetVars
 
-
-
-
-
-
-
-
-# - stage: Update_Version
-#   jobs:
-#   condition: ${{ eq(parameters.versionfix, currnet) }}
-#     variables:
-#       major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']
-#       minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']
-#       FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']
-#     displayName: Get & Update Version
-#     pool:
-#       name: $(AGENT_POOL)
-#       agent.name: aks-${{parameters.env}}-agent 
-#     steps:
-#     - checkout: self
-#       persistCredentials: true
-#       clean: true
-#     - bash: |
-#         echo "major.minor: $(major).$(minor)"
+- stage: Update_Version
+  jobs:
+  condition: ${{ eq(parameters.versionfix, currnet) }}
+    variables:
+      major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']
+      minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']
+      FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']
+    displayName: Get & Update Version
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - bash: |
+        echo "major.minor: $(major).$(minor)"
+        echo "FullVersion: $(FullVersion)"
 #         FullVersion=$(major).$(minor).$(BuildNumber).$(TIMESTAMP)
-#         echo "FullVersion: $FullVersion"
 
 
 #   - job: Compare_Major_Minor_Version
