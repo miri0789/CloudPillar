@@ -114,8 +114,8 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-        echo "Major $(Set_Current_Version.Major)"
-        echo "Minor $(Set_Current_Version.Minor)"
+        echo "Major $(SetCurrentVersion.Major)"
+        echo "Minor $(SetCurrentVersion.Minor)"
         # echo "${{ parameters.versionString }}"
         # echo "##[group]Current Group"
         # echo "Current Major: $(Major)"
