@@ -96,16 +96,34 @@ stages:
         persistCredentials: true
         clean: true
       - bash: |
-          # +TODO 3. newChosenVersion Var
           echo "##[section]Current Group"
           echo "##[group]Current Group"
           currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
           echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"
 
-          # +TODO Set As Var
           newVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp
+          # +TODO Set As Var
           echo "newVersion: $newVersion"
           
           echo "##[endgroup]Current Group Finished"
         name: SetVarsCurrent
 
+    - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
+      - checkout: self
+        persistCredentials: true
+        clean: true
+      - bash: |
+          # +TODO 4. newChosenVersion Var and Update Major Minor Vars Number
+          echo "##[section]Next Minor Group"
+          echo "##[group]Current Group"
+          currentMajor=$(currentMajor) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          currentMinor=$(currentMinor) + 1 
+          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor"
+          # && currentMinor=$(currentMinor) + 1 && currentVersion=$(currentVersion)
+          # echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"          
+          
+          # newVersion=$currentMajor.$currentMinor.$BuildNumber.$TIMESTAMP          
+          # echo "newVersion: $newVersion"
+
+          echo "##[endgroup]Current Group Finished"
+        name: SetVarsNextMinor
