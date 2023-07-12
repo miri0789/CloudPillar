@@ -105,6 +105,7 @@ stages:
       ${{ if eq(parameters.versionString, 'nextMinor') }}:
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
         Minor: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ] + 1 )
+        Version: $(Major).$(Minor)
     
       ${{ if eq(parameters.versionString, 'nextMajor') }}:
         Major: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ] + 1 )
@@ -125,6 +126,7 @@ stages:
         echo "Version String: ${{ parameters.versionString }}"
         echo "Major $(Major)"
         echo "Minor $(Minor)"
+
         # echo "${{ parameters.versionString }}"
         # echo "##[group]Current Group"
         # echo "Current Major: $(Major)"
