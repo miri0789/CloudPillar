@@ -34,7 +34,7 @@ parameters:
     - current # 1.0
     - nextminor # 1.1
     - nextmajor #2.0
-  - name: chosenVersion
+  - name: chosenVersionInt
     displayName: Select Major & Minor Verson
     type: string
     default: 8.3
@@ -56,11 +56,11 @@ variables:
   value: $(git rev-list --count HEAD)
 
 - name: chosenMajor # Major (Based on User Selection)
-  value: ${{ coalesce(split(parameters.chosenVersion, '.')[0], '1') }}
+  value: ${{ coalesce(split(parameters.chosenVersionInt, '.')[0], '1') }}
 - name: chosenMinor # Minor (Based on User Selection)
-  value: ${{ coalesce(split(parameters.chosenVersion, '.')[1], '0') }}
-- name: chosenVersion # Version (Based on User Selection)
-  value: ${{ parameters.chosenVersion }}
+  value: ${{ coalesce(split(parameters.chosenVersionInt, '.')[1], '0') }}
+- name: chosenVersionInt # Version (Based on User Selection)
+  value: ${{ parameters.chosenVersionInt }}
 - name: chosenVersionString # Version String (Based on User Selection)
   value: ${{ parameters.chosenVersionString }}
 
@@ -75,6 +75,8 @@ variables:
   # +TODO 2. Uncomment below
   # value: $(grep -oP '^major=\K\d+' src/backend/version.txt).$(grep -oP '^minor=\K\d+' src/backend/version.txt)
 
+# - name: versionEqual # Current vs Chosen Version (Based on User Selection) (IFF Condition)
+  # value: 1.0
 
 
 
@@ -97,47 +99,13 @@ stages:
           # +TODO 3. newChosenVersion Var
           echo "##[section]Current Group"
           echo "##[group]Current Group"
-          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)
+          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
           echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"
 
           # +TODO Set As Var
-          newVersion=$currentMajor.$currentMinor.$BuildNumber.$TIMESTAMP          
+          newVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp
           echo "newVersion: $newVersion"
           
           echo "##[endgroup]Current Group Finished"
         name: SetVarsCurrent
 
-    - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
-      - checkout: self
-        persistCredentials: true
-        clean: true
-      - bash: |
-          # +TODO 4. newChosenVersion Var and Update Major Minor Vars Number
-          echo "##[section]Next Minor Group"
-          echo "##[group]Current Group"
-          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) + 1 && currentVersion=$(currentVersion)
-          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"          
-          
-          newVersion=$currentMajor.$currentMinor.$BuildNumber.$TIMESTAMP          
-          echo "newVersion: $newVersion"
-
-          echo "##[endgroup]Current Group Finished"
-        name: SetVarsNextMinor
-
-
-    - ${{ if eq(parameters.chosenVersionString, 'nextmajor') }}:
-      - checkout: self
-        persistCredentials: true
-        clean: true
-      - bash: |
-          # +TODO 3. newChosenVersion Var
-          echo "##[section]Next Major Group"
-          echo "##[group]Current Group"
-          currentMajor=$(currentMajor) + 1 && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)
-          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"                    
-
-          newVersion=$currentMajor.$currentMinor.$BuildNumber.$TIMESTAMP          
-          echo "newVersion: $newVersion"
-          
-          echo "##[endgroup]Current Group Finished"
-        name: SetVarsNextMajor
