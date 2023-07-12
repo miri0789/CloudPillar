@@ -100,15 +100,14 @@ stages:
     dependsOn: ['SetCurrentVersion']
     variables:              
       ${{ if eq(parameters.versionString, 'latest') }}:
-        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
       ${{ if eq(parameters.versionString, 'nextminor') }}:          
-        Minor: 1  
-        # Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Minor: 1  
       ${{ if eq(parameters.versionString, 'nextmajor') }}:          
-        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
         Major: 2
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
     steps:
     - checkout: self
       persistCredentials: true
@@ -117,8 +116,8 @@ stages:
         echo "Version String: ${{ parameters.versionString }}"
         echo "Major $(Major)"
         echo "Minor $(Minor)"
-        echo "Version $(Version)"
-        echo "Full Version $(FullVersion)"
+        echo "Version $(Major).$(Minor)"
+        echo "Full Version $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)"
       name: "PrintVersion"
 
   # - job: UpdateCurrentVersion
