@@ -67,8 +67,12 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-        # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && Version=$Major.$Minor && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && FullVersion=$Version.$buildnumber.$timestamp
-        Major=1 && Minor=0 && version=$Major.$Minor && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && fullVersion=$version.$buildNumber.$timestamp
+        buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+        # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) 
+        # Version=$Major.$Minor && FullVersion=$Version.$buildnumber.$timestamp
+        
+        Major=1 && Minor=0
+        Version=$Major.$Minor && FullVersion=$version.$buildNumber.$timestamp
 
         echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
         echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
@@ -94,18 +98,17 @@ stages:
     variables:              
       ${{ if eq(parameters.versionString, 'latest') }}:
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-
-        # - name: Minor
-        #   value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-
-        # - name: Version
-        #   value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
-        
-        # - name: FullVersion
-        #   value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
-          
-      ${{ if ne(parameters.versionString, 'latest') }}:
-        Major: 8
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+        Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
+        FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
+      ${{ if eq(parameters.versionString, 'nextMinor') }}:
+        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Minor: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ] + 1 )
+    
+      ${{ if eq(parameters.versionString, 'nextMajor') }}:
+        Major: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ] + 1 )
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+    
         # - name: Minor
         #   value: 7
         # - name: Version
@@ -118,6 +121,7 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
+        echo "Version String: ${{ parameters.versionString }}"
         echo "Major $(Major)"
         echo "Minor $(Minor)"
         # echo "${{ parameters.versionString }}"
