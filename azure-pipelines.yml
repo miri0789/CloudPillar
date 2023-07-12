@@ -7,8 +7,11 @@ jobs:
   steps:
   - bash: |
       echo "##vso[task.setvariable variable=myVar;]foo"  
+    name: SetVar
   - bash: |
-      echo "You can use macro syntax for variables: $(myVar)"    
+      echo "You can use macro syntax for variables: $(myVar)"
+    name: PrintVar
+
   # - bash: |
   #    echo "##vso[task.setvariable variable=myJobVar]this is the same job"
   #   name: SetVar
