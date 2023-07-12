@@ -11,7 +11,15 @@ jobs:
   - bash: |
       echo "You can use macro syntax for variables: $(myVar)"
     name: PrintVar
-
+  - bash: |
+     echo "##vso[task.setvariable variable=myOutputJobVar;isoutput=true]this is the same job too"
+    name: setOutput
+  - bash: |
+     echo $(myJobVar) 
+    name: PrintVar2
+  - bash: |
+     echo $(setOutput.myOutputJobVar)    
+    name: PrintOutput
   # - bash: |
   #    echo "##vso[task.setvariable variable=myJobVar]this is the same job"
   #   name: SetVar
