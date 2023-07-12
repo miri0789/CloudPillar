@@ -34,14 +34,14 @@ parameters:
     - current # 1.0
     - nextminor # 1.1
     - nextmajor #2.0
-  - name: versionInt
+  - name: chosenVersion
     displayName: Select Major & Minor Verson
     type: string
-    default: 1.0
+    default: 8.3
     values:
-    - 1.0
-    - 1.1
-    - 2.0
+    - 8.3
+    - 8.4
+    - 9.0
 
 
 variables:
@@ -54,40 +54,32 @@ variables:
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
-- name: major # Major (Based on User Selection)
-  value: ${{ coalesce(split(parameters.versionInt, '.')[0], '1') }}
-- name: minor # Minor (Based on User Selection)
-  value: ${{ coalesce(split(parameters.versionInt, '.')[1], '0') }}
 
-# +N Current!!!!!!!!!!!!!!!!!!!!!!!!!
-# - name: version # major.minor (Based on User Selection)
-#   value: $(major)
+- name: chosenMajor # Major (Based on User Selection)
+  value: ${{ coalesce(split(parameters.chosenVersion, '.')[0], '1') }}
+- name: chosenMinor # Minor (Based on User Selection)
+  value: ${{ coalesce(split(parameters.chosenVersion, '.')[1], '0') }}
 
-  # indyx: $[ variables[format('{0}{1}', 'testCategories', variables['System.JobPositionInPhase'])] ]
-  # value: $(major)
-  # value: ${{ variable.major }}
-  # value: ${{ variable.major }}.${{ variable.minor }}
-# - name: versionF # major.minor.buildnumber.timestamp (Based on User Selection)
-  # value: $(major)
-  # value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+- name: currentMajor # Major (Based on User Selection)
+  value: 8
+  # value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
+- name: currentMinor # Minor (Based on User Selection)
+  value: 3
+- name: currentVersion # Version (Based on User Selection)
+  value: 8.3
+  # value: $(grep -oP '^major=\K\d+' src/backend/version.txt).$(grep -oP '^minor=\K\d+' src/backend/version.txt)
 
-- name: majorT # Major- Test
-  value: 2
-- name: minorT # Minor- Test 
-  value: 2
-- name: versionT # Minor- Test 
-  value: $(majorT).$(minorT)
-- name: versionTF # Minor- Test Full
-  value: $(majorT).$(minorT).$(BuildNumber).$(TIMESTAMP)
+
 
 stages:
 - stage: CI_Build
   displayName: CI Build Process
   variables:
-    version: $(major).$(minor)
-    versionF: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+    # currentVersion: $(currentMajor).$(currentMinor)
+    # chosenVersion: $(chosenMajor).$(chosenMinor)
+    # versionF: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
   jobs:
-  - job: Create_Variables_Job
+  - job: Update_Version
     displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
@@ -97,39 +89,24 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-        currentMajor=$(major)
-        currentMinor=$(minor)
-        currentVersion=$(version)
-        currentVersionF=$(versionF)
-        echo "cuurentMajor: $currentMajor"
-        echo "cuurentMinor: $currentMinor"
-        echo "cuurentVersion: $currentVersion"
-        echo "cuurentVersionF: $currentVersionF"
-        
-      name: SetVars
-- stage: Test
-  displayName: Testing
-  variables:
-    versionT: $(majorT).$(minorT)
-    versionFT: $(majorT).$(minorT).$(BuildNumber).$(TIMESTAMP)  
-  jobs:
-  - job: Create_Variables_Job
-    displayName: Update Variables
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent 
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
-    - bash: |
-        currentMajorT=$(majorT)
-        currentMinorT=$(minorT)
-        currentVersionT=$(versionT)
-        currentVersionFT=$(versionFT)
-        echo "cuurentMajorT: $currentMajorT"
-        echo "cuurentMinorT: $currentMinorT"
-        echo "cuurentVersionT: $currentVersionT"
-        echo "cuurentVersionFT: $currentVersionFT"
-        
-      name: SetVars
+        echo "##[section]Chosen Group"
+        echo "##[group]Chosen Group"
+        echo "##[command]chosenMajor:   $(chosenMajor)"
+        echo "##[command]chosenMinor:   $(chosenMinor)"
+        echo "##[command]chosenVersion:   $(chosenVersion)"
+        echo "##[endgroup]Chosen Group Finished"
+
+
+
+        echo "##[section]Current Group"
+        echo "##[group]Current Group"
+        echo "##[command]currentMajor:   $(currentMajor)"
+        echo "##[command]currentMinor:   $(currentMinor)"
+        echo "##[command]currentVersion:   $(currentVersion)"
+        echo "##[endgroup]Current Group Finished"
+#           echo "##vso[task.setvariable variable=version;isOutput=true]$NewVersion"
+  
+#           echo "##[warning]NewVersion  =  major.minor.buildnumber.timestamp"
+#           echo "##[command]NewVersion  =  $NewVersion"
+
+      name: CompareVersions
