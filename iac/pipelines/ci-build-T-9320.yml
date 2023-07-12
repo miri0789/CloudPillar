@@ -74,7 +74,7 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
-    - ${{ if eq(parameters.versionfix, 'currnet') }}:
+    - ${{ if eq(parameters.versionfix, 'current') }}:
       - bash: |
           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
           major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
