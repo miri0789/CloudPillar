@@ -141,6 +141,7 @@ stages:
             echo "major.minor: $(major).$(minor)"
             echo "FullVersion: $(FullVersion)"
             cat src/backend/version.txt
+          name: PrintVars
 
 
 
