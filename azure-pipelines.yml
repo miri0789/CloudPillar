@@ -92,34 +92,23 @@ stages:
 
         echo "##[endgroup]Get Current Version Finished"
       name: BashSetCurrentVersion
-
   - job: UpdateCurrentVersion
     displayName: Update Version ID
     pool:
       name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent     
+      agent.name: aks-${{parameters.env}}-agent 
     dependsOn: ['SetCurrentVersion']
     variables:              
       ${{ if eq(parameters.versionString, 'latest') }}:
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-        Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
-        FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
-
-      ${{ if eq(parameters.versionString, 'nextminor') }}:
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
+      ${{ if eq(parameters.versionString, 'nextminor') }}:          
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-        Minor: $['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-        # Minor: $[ counter(['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
-        # Minor: $[ counter(variables['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
-        Version: $(Major).$(Minor)
-        FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
-    
-      ${{ if eq(parameters.versionString, 'nextmajor') }}:
-        Major: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ] + 1 )
-        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-        Version: $(Major).$(Minor)
-        FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
-
+        # Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
+        Minor: 1  
+      ${{ if eq(parameters.versionString, 'nextmajor') }}:          
+        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Major: 2
     steps:
     - checkout: self
       persistCredentials: true
@@ -130,15 +119,54 @@ stages:
         echo "Minor $(Minor)"
         echo "Version $(Version)"
         echo "Full Version $(FullVersion)"
+      name: "PrintVersion"
 
-        # echo "${{ parameters.versionString }}"
-        # echo "##[group]Current Group"
-        # echo "Current Major: $(Major)"
-        # echo "Current Minor: $(Minor)"
-        # echo "Current Version: $(Version)"
-        # echo "Current Full Version: $(FullVersion)"
-        # echo "##[endgroup]Current Group Finished"
-      name: UpdateCurrentVersion
+  # - job: UpdateCurrentVersion
+  #   displayName: Update Version ID
+  #   pool:
+  #     name: $(AGENT_POOL)
+  #     agent.name: aks-${{parameters.env}}-agent     
+  #   dependsOn: ['SetCurrentVersion']
+  #   variables:              
+  #     ${{ if eq(parameters.versionString, 'latest') }}:
+  #       Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+  #       Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+  #       Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
+  #       FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
+
+  #     ${{ if eq(parameters.versionString, 'nextminor') }}:
+  #       Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+  #       Minor: $['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+  #       # Minor: $[ counter(['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
+  #       # Minor: $[ counter(variables['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
+  #       Version: $(Major).$(Minor)
+  #       FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
+    
+  #     ${{ if eq(parameters.versionString, 'nextmajor') }}:
+  #       Major: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ] + 1 )
+  #       Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+  #       Version: $(Major).$(Minor)
+  #       FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
+
+  #   steps:
+  #   - checkout: self
+  #     persistCredentials: true
+  #     clean: true
+  #   - bash: |
+  #       echo "Version String: ${{ parameters.versionString }}"
+  #       echo "Major $(Major)"
+  #       echo "Minor $(Minor)"
+  #       echo "Version $(Version)"
+  #       echo "Full Version $(FullVersion)"
+
+  #       # echo "${{ parameters.versionString }}"
+  #       # echo "##[group]Current Group"
+  #       # echo "Current Major: $(Major)"
+  #       # echo "Current Minor: $(Minor)"
+  #       # echo "Current Version: $(Version)"
+  #       # echo "Current Full Version: $(FullVersion)"
+  #       # echo "##[endgroup]Current Group Finished"
+  #     name: UpdateCurrentVersion
 
 
 
