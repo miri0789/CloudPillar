@@ -115,13 +115,13 @@ stages:
           echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
         name: SetVars
 
-# - stage: Update_Version_Step
+- stage: Update_Version_Step
   - job: Update_Version_Job
     displayName: Get and Update Version
-    # variables:
-    #   major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
-    #   minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
-    #   FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]  
+    variables:
+      major: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.major']]
+      minor: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.minor']]
+      FullVersion: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.FullVersion']]  
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
@@ -130,12 +130,12 @@ stages:
         persistCredentials: true
         clean: true
       - bash: |
-          # major=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
-          # minor=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
-          # FullVersion=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]
-          # major="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]"
-          # minor="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]"
-          # minor="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]"
+          # major=$[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.major']]
+          # minor=$[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.minor']]
+          # FullVersion=$[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.FullVersion']]
+          # major="$[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.major']]"
+          # minor="$[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.minor']]"
+          # minor="$[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.FullVersion']]"
           echo "major.minor: $(major).$(minor)"
           echo "FullVersion: $(FullVersion)"
           cat src/backend/version.txt
@@ -143,86 +143,7 @@ stages:
 
 
 
-
-# stages:
-# - stage: Create_Variables_Stage
-#   displayName: Update Major & Minor Version
-#   jobs:
-#   - job: Create_Variables_Job
-#     displayName: Update Variables
-#     pool:
-#       name: $(AGENT_POOL)
-#       agent.name: aks-${{parameters.env}}-agent 
-#     steps:
-#     - checkout: self
-#       persistCredentials: true
-#       clean: true
-#     - ${{ if eq(parameters.versionfix, 'current') }}:
-#       - bash: |
-#           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-#           major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-#           minor=0 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
-#           buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-#           FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
-#           echo "##vso[task.setvariable variable=major;isOutput=true]$major"
-#           echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
-#           echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
-          
-#           #* Backup Script
-#           # echo "##vso[task.setvariable variable=major;isOutput=true]$(grep -oP '^major=\K\d+' src/backend/version.txt)"
-#           # echo "##vso[task.setvariable variable=minor;isOutput=true]$(grep -oP '^minor=\K\d+' src/backend/version.txt)"
-#           # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
-#         name: SetVars
-
-#     - ${{ if eq(parameters.versionfix, 'nextminor') }}:
-#       - bash: |
-#           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-#           major=1 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-#           minor=1 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt + 1)
-#           buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-#           FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
-#           echo "##vso[task.setvariable variable=major;isOutput=true]$major"
-#           echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
-#           echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
-#         name: SetVars
-
-#     - ${{ if eq(parameters.versionfix, 'nextmajor') }}:
-#       - bash: |
-#           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-#           major=2 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt + 1)
-#           minor=0 #+TODO minor=0
-#           buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-#           FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
-#           echo "##vso[task.setvariable variable=major;isOutput=true]$major"
-#           echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
-#           echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
-#         name: SetVars
-
-# - stage: Update_Version_Step
-#   jobs:
-#   - job: Update_Version_Job
-#     displayName: Get and Update Version
-#     # variables:
-#     #   major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
-#     #   minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
-#     #   FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]  
-#     pool:
-#       name: $(AGENT_POOL)
-#       agent.name: aks-${{parameters.env}}-agent 
-#       steps:
-#       - checkout: self
-#         persistCredentials: true
-#         clean: true
-#       - bash: |
-#           # major=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
-#           # minor=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
-#           # FullVersion=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]
-#           # major="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]"
-#           # minor="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]"
-#           # minor="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]"
-#           # echo "major.minor: $(major).$(minor)"
-#           # echo "FullVersion: $(FullVersion)"
-        # FullVersion=$(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+      # FullVersion=$(major).$(minor).$(BuildNumber).$(TIMESTAMP)
 
 
 #   - job: Compare_Major_Minor_Version
