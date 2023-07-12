@@ -86,7 +86,6 @@ stages:
         echo "##vso[task.setvariable variable=major;isOutput=true]$major"          
         echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"  
         echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"  
-
       name: SetVars
 
 # - stage: Compare_Version
@@ -115,8 +114,8 @@ stages:
   jobs:
   - job: Compare_Major_Minor_Version
     variables:
-      major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']
-      minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']
+      major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
+      minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
     displayName: Compare Major Minor Version
     pool:
       name: $(AGENT_POOL)
