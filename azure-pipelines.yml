@@ -59,7 +59,7 @@ variables:
 - name: minor # Minor (Based on User Selection)
   value: ${{ coalesce(split(parameters.versionInt, '.')[1], '0') }}
 - name: version # major.minor (Based on User Selection)
-  value: $(major).$(minor)
+  value: ${{ variable.major }}.${{ variable.minor }}
 - name: versionF # major.minor.buildnumber.timestamp (Based on User Selection)
   value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
 
@@ -86,7 +86,10 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-        currentVersion = $(versionF)
+        currentMajor=$(major)
+        currentMinor=$(minor)
+        currentVersion=$(version)
+        currentVersionF=$(versionF)
 - stage: Test
   displayName: Testing
   jobs:
@@ -100,4 +103,8 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-        currentVersion = $(versionTF)
+        currentMajorT=$(majorT)
+        currentMinorT=$(minorT)
+        currentVersionT=$(versionT)
+        currentVersionTF=$(versionTF)
+      name: SetVars
