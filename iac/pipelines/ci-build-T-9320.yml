@@ -98,6 +98,7 @@ stages:
           echo "##[section]Current Group"
           echo "##[group]Current Group"
           currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)
+          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"
           echo "##[endgroup]Current Group Finished"
         name: SetVarsCurrent
 
@@ -110,6 +111,7 @@ stages:
           echo "##[section]Next Minor Group"
           echo "##[group]Current Group"
           currentMajor=$(currentMajor) && currentMinor=$(currentMinor) + 1 && currentVersion=$(currentVersion)
+          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"          
           echo "##[endgroup]Current Group Finished"
         name: SetVarsNextMinor
     - ${{ if eq(parameters.chosenVersionString, 'nextmajor') }}:
@@ -121,5 +123,6 @@ stages:
           echo "##[section]Next Major Group"
           echo "##[group]Current Group"
           currentMajor=$(currentMajor) + 1 && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)
+          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"                    
           echo "##[endgroup]Current Group Finished"
         name: SetVarsNextMajor
