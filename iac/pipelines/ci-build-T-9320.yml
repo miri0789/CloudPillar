@@ -117,7 +117,7 @@ stages:
 
 - stage: Update_Version_Step
   displayName: Update Major & Minor Version
-    jobs:
+  jobs:
     - job: Update_Version_Job
       displayName: Get and Update Version
       variables:
