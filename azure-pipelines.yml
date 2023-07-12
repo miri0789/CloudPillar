@@ -34,8 +34,8 @@ parameters:
     default: latest # 1.0
     values:
     - latest # 1.0
-    - nextMinor # 1.1
-    - nextMajor #2.0
+    - nextminor # 1.1
+    - nextmajor #2.0
 
 # * Variables
 variables:
@@ -106,7 +106,7 @@ stages:
         Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
         FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
 
-      ${{ if eq(parameters.versionString, 'nextMinor') }}:
+      ${{ if eq(parameters.versionString, 'nextminor') }}:
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
         Minor: $['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
         # Minor: $[ counter(['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
@@ -114,7 +114,7 @@ stages:
         Version: $(Major).$(Minor)
         FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
     
-      ${{ if eq(parameters.versionString, 'nextMajor') }}:
+      ${{ if eq(parameters.versionString, 'nextmajor') }}:
         Major: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ] + 1 )
         Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
         Version: $(Major).$(Minor)
@@ -126,10 +126,10 @@ stages:
       clean: true
     - bash: |
         echo "Version String: ${{ parameters.versionString }}"
-        echo "Version $(Version)"
-        echo "Full Version $(FullVersion)"
         echo "Major $(Major)"
         echo "Minor $(Minor)"
+        echo "Version $(Version)"
+        echo "Full Version $(FullVersion)"
 
         # echo "${{ parameters.versionString }}"
         # echo "##[group]Current Group"
