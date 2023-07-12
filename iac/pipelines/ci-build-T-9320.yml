@@ -116,12 +116,12 @@ stages:
         name: SetVars
 
 - stage: Update_Version_Step
+  variables:
+    major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
+    minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
+    FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]
   jobs:
   - job: Update_Version_Job
-      variables:
-        major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']
-        minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']
-        FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']
       displayName: Get & Update Version
       pool:
         name: $(AGENT_POOL)
@@ -138,8 +138,8 @@ stages:
 
 #   - job: Compare_Major_Minor_Version
 #     variables:
-#       major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
-#       minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
+#       major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]]
+#       minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]]
 #     displayName: Compare Major Minor Version
 #     pool:
 #       name: $(AGENT_POOL)
@@ -159,9 +159,9 @@ stages:
 
 #   - job: Upadte_Major_Minor_Version
 #     variables:
-#       major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']
-#       minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']
-#       FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']
+#       major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
+#       minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
+#       FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]
 #     displayName: Get & Update Version
 #     pool:
 #       name: $(AGENT_POOL)
