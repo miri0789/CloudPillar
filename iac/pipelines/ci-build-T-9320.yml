@@ -94,21 +94,21 @@ stages:
     variables:              
       - name: Major
         ${{ if eq(parameters.versionString, 'nextMajor') }}:
-          value: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ] + 1 )
+          value: $( $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Major'] ] + 1 )
         ${{ if ne(parameters.versionString, 'nextMajor') }}:
-          value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
+          value: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Major'] ]
 
       - name: Minor
         ${{ if eq(parameters.versionString, 'nextMinor') }}:
-          value: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ] + 1 )
+          value: $( $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Minor'] ] + 1 )
         
         ${{ if ne(parameters.versionString, 'nextMinor') }}:
-          value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
+          value: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Minor'] ]
 
       # - name: version
-      #   value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.version'] ]
+      #   value: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.version'] ]
       # - name: fullVersion
-      #   value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.fullVersion'] ]
+      #   value: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.fullVersion'] ]
     steps:
     - checkout: self
       persistCredentials: true
@@ -126,14 +126,14 @@ stages:
       name: UpdateCurrentVersion
 
       
-    #     Major: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
-    #     Minor: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
-    #     version: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.version'] ]
-    #     FullVersion: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.fullVersion'] ]
+    #     Major: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Major'] ]
+    #     Minor: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Minor'] ]
+    #     version: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.version'] ]
+    #     FullVersion: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.fullVersion'] ]
   
     #   ${{ if eq(parameters.versionString, 'nextMinor') }}:              
-    #     Major: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
-    #     Minor: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ] + 1 )
+    #     Major: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Major'] ]
+    #     Minor: $( $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Minor'] ] + 1 )
 
       
     # steps:
