@@ -117,12 +117,12 @@ stages:
 
 - stage: Update_Version_Step
   jobs:
-  variables:
-    major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
-    minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
-    FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]  
   - job: Update_Version_Job
       displayName: Get & Update Version
+    # variables:
+    #   major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
+    #   minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
+    #   FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]  
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent 
@@ -131,6 +131,9 @@ stages:
         persistCredentials: true
         clean: true
       - bash: |
+          major = $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
+          minor = $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
+          minor = $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]
           echo "major.minor: $(major).$(minor)"
           echo "FullVersion: $(FullVersion)"
 #         FullVersion=$(major).$(minor).$(BuildNumber).$(TIMESTAMP)
