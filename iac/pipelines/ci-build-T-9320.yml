@@ -31,7 +31,7 @@ parameters:
     type: string
     default: current # 1.0
     values:
-    - current # 1.0
+    - latest # 1.0
     - nextMinor # 1.1
     - nextMajor #2.0
 
@@ -92,10 +92,28 @@ stages:
     displayName: Update Version ID
     dependsOn: ['SetCurrentVersion']
     variables:              
-      Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-      Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-      Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
-      FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
+      ${{ if eq(parameters.versionString, 'latest') }}:
+        - name: Major
+          value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+
+        - name: Minor: 
+          value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+
+        - name: Version: 
+          value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
+        
+        - name: FullVersion: 
+          value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
+          
+      ${{ if ne(parameters.versionString, 'latest') }}:
+        - name: Major
+          value: 8
+        Minor: 7
+        Version: 8.7
+        FullVersion:8.7
+
+    # ${{ if eq(parameters.versionString, 'nextMinor') }}:
+    # ${{ if eq(parameters.versionString, 'nextMajor') }}:
     steps:
     - checkout: self
       persistCredentials: true
