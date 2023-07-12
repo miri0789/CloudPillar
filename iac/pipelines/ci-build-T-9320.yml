@@ -113,10 +113,8 @@ stages:
         - name: Version
           value: 8.7
         - name: FullVersion
-          value:8.7
+          value: 8.7
 
-    # ${{ if eq(parameters.versionString, 'nextMinor') }}:
-    # ${{ if eq(parameters.versionString, 'nextMajor') }}:
     steps:
     - checkout: self
       persistCredentials: true
