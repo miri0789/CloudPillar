@@ -104,7 +104,8 @@ stages:
 
       ${{ if eq(parameters.versionString, 'nextMinor') }}:
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-        Minor: $[ counter(['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
+        Minor: $['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+        # Minor: $[ counter(['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
         # Minor: $[ counter(variables['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
         Version: $(Major).$(Minor)
     
