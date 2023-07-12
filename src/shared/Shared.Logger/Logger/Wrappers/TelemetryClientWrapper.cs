@@ -1,8 +1,9 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
+using Shared.Logger;
 
-namespace shared.Logger;
+namespace Shared.Logger.Wrappers;
 
 public class TelemetryClientWrapper: ITelemetryClientWrapper
 {

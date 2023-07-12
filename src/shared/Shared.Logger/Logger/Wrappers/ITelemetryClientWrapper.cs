@@ -1,6 +1,6 @@
 ﻿using Microsoft.ApplicationInsights.DataContracts;
 
-namespace shared.Logger;
+namespace Shared.Logger.Wrappers;
 
 public interface ITelemetryClientWrapper
 {
