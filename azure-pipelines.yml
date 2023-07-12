@@ -30,11 +30,11 @@ parameters:
   - name: versionString
     displayName: Select Major & Minor Verson
     type: string
-    default: current # 1.0
+    default: latest # 1.0
     values:
-    - current # 1.0
-    - nextminor # 1.1
-    - nextmajor #2.0
+    - latest # 1.0
+    - nextMinor # 1.1
+    - nextMajor #2.0
 
 # * Variables
 variables:
