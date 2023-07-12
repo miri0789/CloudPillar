@@ -70,8 +70,9 @@ variables:
   # value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 - name: currentMinor # Minor (Based on User Selection)
   value: 0
-- name: currentVersion # Version (Based on User Selection)
-  value: 1.0
+
+# - name: currentVersion # Version (Based on User Selection)
+  # value: 1.0
   # +TODO 2. Uncomment below
   # value: $(grep -oP '^major=\K\d+' src/backend/version.txt).$(grep -oP '^minor=\K\d+' src/backend/version.txt)
 - name: currentVersionFull # Version (Based on User Selection)
@@ -92,13 +93,23 @@ stages:
   - job: Update_Version
     displayName: Update Latest Version ID
     variables:
-      major: 
-      
+    
+    - ${{ if eq(parameters.chosenVersionString, 'current') }}:
+      major: $(currentMajor)
+      minor: $(currentMinor)
+      version: $(currentMajor).$(currentMinor)
+      newversion: $(currentMajor).$(currentMinor).$(BuildNumber).$(TIMESTAMP)
+    
+    - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
+      major: $(currentMajor)
+      minor: $(( $currentMinor) + 1 ))
+      version: $(currentMajor).$(( $currentMinor) + 1 ))
+      newversion: $(currentMajor).$(( $currentMinor) + 1 )).$(BuildNumber).$(TIMESTAMP)      
+    
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
     steps:
-    - ${{ if eq(parameters.chosenVersionString, 'current') }}:
       - checkout: self
         persistCredentials: true
         clean: true
@@ -107,25 +118,5 @@ stages:
           echo "##[group]Current Group"
           currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && newVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp
           echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"
-
-          newVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp
-          # +TODO Set As Var
-          echo "newVersion: $newVersion"
-          
-          echo "##[endgroup]Current Group Finished"
         name: SetVarsCurrent
 
-    - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
-      - checkout: self
-        persistCredentials: true
-        clean: true
-      - bash: |
-          # +TODO 4. newChosenVersion Var and Update Major Minor Vars Number
-          echo "##[section]Next Minor Group"
-          echo "##[group]Current Group"
-          currentMajor=$(currentMajor) && && currentMinor=$(( $currentMinor) + 1 )) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && currentVersion=$(currentVersion) && newVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp 
-          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion" && echo "" && echo "newVersion: $newVersion"
-          
-          echo "##[endgroup]Current Group Finished"
-
-        name: SetVarsNextMinor
