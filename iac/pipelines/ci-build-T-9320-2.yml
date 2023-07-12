@@ -87,7 +87,7 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
-    - ${{ if eq(parameters.versionfix, 'current') }}:
+    - ${{ if eq(parameters.versionString, 'current') }}:
       - bash: |
           echo "##[group]Vars Group"
           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
@@ -95,10 +95,9 @@ stages:
           minor=0 #+TODO minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
           echo "##vso[task.setvariable variable=major;isOutput=true]$major"
           echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
+          buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
           NewVersion=$major.$minor.$buildnumber.$timestamp
-          echo "##[command]major:\t $major"
-          echo "##[command]minor:\t $minor"
-          echo "##[command]NewVersion:\t $NewVersion"
+          echo "##[command]New Version\n major.minor.buildnumber.timestamp\n $NewVersion"
           echo "##[endgroup]"
 
 
@@ -119,12 +118,12 @@ stages:
         name: SetVars
       - bash: |
           echo "##[group]Vars Group"
-          echo "##[command]major:\t $major"
-          echo "##[command]minor:\t $minor"
-          echo "##[warning]majorT:\t $majorT"
-          echo "##[warning]minorT:\t $minorT"
-          echo "##[command]majorInt:\t $majorInt"
-          echo "##[command]minorInt:\t $minorInt"
+          echo "##[command]major:\t $(major)"
+          echo "##[command]minor:\t $(minor)"
+          echo "##[warning]majorT:\t $(majorT)"
+          echo "##[warning]minorT:\t $(minorT)"
+          echo "##[command]majorInt:\t $(majorInt)"
+          echo "##[command]minorInt:\t $(minorInt)"
           echo "##[command] versionString:\t ${{parameters.versionString}}"
           echo "##[command] versionInt:\t ${{parameters.versionInt}}"
           echo "##[endgroup]"
