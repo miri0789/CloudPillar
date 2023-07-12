@@ -11,7 +11,6 @@ trigger:
 # - none
 - $(Build.SourceBranchName)
 # - main
-      VNET_RESOURCE_ID_SET: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.VNET_RESOURCE_ID_SET']]
 
 parameters:
   - name: env
