@@ -94,7 +94,7 @@ stages:
 
   - job: UpdateCurrentVersion
     displayName: Update Version ID
-    dependsOn: ['SetCurrentVersion']
+    dependsOn: ['BashSetCurrentVersion']
     variables:              
       ${{ if eq(parameters.versionString, 'latest') }}:
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
