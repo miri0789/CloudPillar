@@ -74,6 +74,10 @@ variables:
   value: 1.0
   # +TODO 2. Uncomment below
   # value: $(grep -oP '^major=\K\d+' src/backend/version.txt).$(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: currentVersionFull # Version (Based on User Selection)
+  value: 1.0.$(BuildNumber).$(TIMESTAMP)
+  # +TODO 2. Uncomment below
+  # value: $(grep -oP '^major=\K\d+' src/backend/version.txt).$(grep -oP '^minor=\K\d+' src/backend/version.txt).$(BuildNumber).$(TIMESTAMP)
 
 # - name: versionEqual # Current vs Chosen Version (Based on User Selection) (IFF Condition)
   # value: 1.0
@@ -87,6 +91,9 @@ stages:
   jobs:
   - job: Update_Version
     displayName: Update Latest Version ID
+    variables:
+      major: 
+      
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
@@ -98,7 +105,7 @@ stages:
       - bash: |
           echo "##[section]Current Group"
           echo "##[group]Current Group"
-          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && newVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp
           echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"
 
           newVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp
@@ -116,7 +123,9 @@ stages:
           # +TODO 4. newChosenVersion Var and Update Major Minor Vars Number
           echo "##[section]Next Minor Group"
           echo "##[group]Current Group"
-          currentMajor=$(currentMajor) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && currentMinor=$(( $currentMinor) + 1 )) && currentVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp
-          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor"
-          echo "currentVersion: $currentVersion"
+          currentMajor=$(currentMajor) && && currentMinor=$(( $currentMinor) + 1 )) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && currentVersion=$(currentVersion) && newVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp 
+          echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion" && echo "" && echo "newVersion: $newVersion"
+          
+          echo "##[endgroup]Current Group Finished"
+
         name: SetVarsNextMinor
