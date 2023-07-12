@@ -119,9 +119,11 @@ stages:
 
 - stage: Update_Version_Step
   displayName: Update Major & Minor Version
+  dependsOn: Create_Variables_Stage
   jobs:
     - job: Update_Version_Job
       displayName: Get and Update Version
+      dependsOn: Create_Variables_Job
       variables:
         major: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.major']]
         minor: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.minor']]
