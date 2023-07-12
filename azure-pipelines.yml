@@ -1,6 +1,8 @@
-name: ci_build_t_9320_2
+name: final_9320
+
 trigger:
-- $(Build.SourceBranchName)
+# - $(Build.SourceBranchName)
+- none
 
 # * Parameters
 parameters:
@@ -29,13 +31,13 @@ parameters:
   - name: versionString
     displayName: Select Major & Minor Verson
     type: string
-    default: current # 1.0
+    default: latest # 1.0
     values:
     - latest # 1.0
     - nextMinor # 1.1
     - nextMajor #2.0
 
-
+# * Variables
 variables:
 # * Variables Groups
 - group: arm-vg
@@ -43,17 +45,13 @@ variables:
 - group: aks-backend-vg
 - group: backend-secrets-vg
 
-# * Variables
+# * Variables.Variables
 
 # * Dynamic Variables
 - name: TIMESTAMP
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
-
-# * Clean Variables
-
-
 
 stages:
 - stage: CI_Build
@@ -97,10 +95,10 @@ stages:
 
   - job: UpdateCurrentVersion
     displayName: Update Version ID
-    dependsOn: ['SetCurrentVersion']
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent     
+    dependsOn: ['SetCurrentVersion']
     variables:              
       ${{ if eq(parameters.versionString, 'latest') }}:
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
@@ -114,17 +112,13 @@ stages:
         # Minor: $[ counter(['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
         # Minor: $[ counter(variables['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
         Version: $(Major).$(Minor)
+        FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
     
       ${{ if eq(parameters.versionString, 'nextMajor') }}:
         Major: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ] + 1 )
         Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-    
-        # - name: Minor
-        #   value: 7
-        # - name: Version
-        #   value: 8.7
-        # - name: FullVersion
-        #   value: 8.7
+        Version: $(Major).$(Minor)
+        FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
 
     steps:
     - checkout: self
@@ -133,6 +127,7 @@ stages:
     - bash: |
         echo "Version String: ${{ parameters.versionString }}"
         echo "Version $(Version)"
+        echo "Full Version $(FullVersion)"
         echo "Major $(Major)"
         echo "Minor $(Minor)"
 
@@ -144,3 +139,9 @@ stages:
         # echo "Current Full Version: $(FullVersion)"
         # echo "##[endgroup]Current Group Finished"
       name: UpdateCurrentVersion
+
+
+
+
+
+        
