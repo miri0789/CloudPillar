@@ -57,17 +57,90 @@ stages:
   displayName: CI Build Process
 
   jobs:
-  # Conver Version String, Compare, Update Version Number, Set as Var
-  - job: Update_Version
-    displayName: Update Version ID
+  - job: SetCurrentVersion
+    displayName: Set Current Version ID
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
     steps:
     - checkout: self
       persistCredentials: true
       clean: true
-    - bash: |  
-        echo "##[section]Update Version Section"
-        echo "##[group]Get Current Version Group"    
+    - bash: |
+        buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+        # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) 
+        # Version=$Major.$Minor && FullVersion=$Version.$(BuildNumber).$(TIMESTAMP)
+        
+        Major=1 && Minor=0
+        Version=$Major.$Minor && FullVersion=$Version.$(BuildNumber).$(TIMESTAMP)
+
+        echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
+        echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
+        echo "##vso[task.setvariable variable=Version;isoutput=true]$Version"
+        echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$FullVersion"
+        
+        echo "##[section]Current Version Section"
+        echo "##[group]Get Current Version Group"
+        
+        echo "Major: $Major"
+        echo "Minor: $Minor"
+        echo buildNumber: $buildNumber
+        
+        echo "Version: $Version"
+        echo "FullVersion: $FullVersion"
+
+        echo "##[endgroup]Get Current Version Finished"
+      name: BashSetCurrentVersion
+
+  - job: UpdateCurrentVersion
+    displayName: Update Version ID
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent     
+    dependsOn: ['SetCurrentVersion']
+    variables:              
+      ${{ if eq(parameters.versionString, 'latest') }}:
+        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+        Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
+        FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
+
+      ${{ if eq(parameters.versionString, 'nextMinor') }}:
+        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Minor: $['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+        # Minor: $[ counter(['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
+        # Minor: $[ counter(variables['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
+        Version: $(Major).$(Minor)
+        FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
+    
+      ${{ if eq(parameters.versionString, 'nextMajor') }}:
+        Major: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ] + 1 )
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+        Version: $(Major).$(Minor)
+        FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
+
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - bash: |
+        echo "Version String: ${{ parameters.versionString }}"
+        echo "Version $(Version)"
+        echo "Full Version $(FullVersion)"
+        echo "Major $(Major)"
+        echo "Minor $(Minor)"
+
+        # echo "${{ parameters.versionString }}"
+        # echo "##[group]Current Group"
+        # echo "Current Major: $(Major)"
+        # echo "Current Minor: $(Minor)"
+        # echo "Current Version: $(Version)"
+        # echo "Current Full Version: $(FullVersion)"
+        # echo "##[endgroup]Current Group Finished"
+      name: UpdateCurrentVersion
 
 
-        echo "##[endgroup]Convert Version Group Finished"
-        echo "##[error]Convert Version Section"        
+
+
+
+        
