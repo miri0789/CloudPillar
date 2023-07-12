@@ -116,14 +116,7 @@ stages:
           # +TODO 4. newChosenVersion Var and Update Major Minor Vars Number
           echo "##[section]Next Minor Group"
           echo "##[group]Current Group"
-          currentMajor=$(currentMajor) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-          currentMinor=$(currentMinor) + 1 
+          currentMajor=$(currentMajor) && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && currentMinor=$(( $currentMinor) + 1 )) && currentVersion=$currentMajor.$currentMinor.$buildnumber.$timestamp
           echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor"
-          # && currentMinor=$(currentMinor) + 1 && currentVersion=$(currentVersion)
-          # echo "currentMajor: $currentMajor" && echo "" && echo "currentMinor: $currentMinor" && echo "" && echo "currentVersion: $currentVersion"          
-          
-          # newVersion=$currentMajor.$currentMinor.$BuildNumber.$TIMESTAMP          
-          # echo "newVersion: $newVersion"
-
-          echo "##[endgroup]Current Group Finished"
+          echo "currentVersion: $currentVersion"
         name: SetVarsNextMinor
