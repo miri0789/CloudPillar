@@ -66,11 +66,13 @@ variables:
 
 - name: currentMajor # Major (Based on User Selection)
   value: 1
+  # +TODO 1. Uncomment below
   # value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 - name: currentMinor # Minor (Based on User Selection)
   value: 0
 - name: currentVersion # Version (Based on User Selection)
   value: 1.0
+  # +TODO 2. Uncomment below
   # value: $(grep -oP '^major=\K\d+' src/backend/version.txt).$(grep -oP '^minor=\K\d+' src/backend/version.txt)
 
 
@@ -92,54 +94,32 @@ stages:
         persistCredentials: true
         clean: true
       - bash: |
-          echo "##[section]Chosen Group"
-          echo "##[group]Chosen Group"
-          echo "##[command]chosenMajor:   $(chosenMajor)"
-          echo "##[command]chosenMinor:   $(chosenMinor)"
-          echo "##[command]chosenVersion:   $(chosenVersion)"
-          echo "##[command]chosenVersionString:   $(chosenVersionString)"
-          echo "##[endgroup]Chosen Group Finished"
+          # +TODO 3. newChosenVersion Var
+          echo "##[section]Current Group"
+          echo "##[group]Current Group"
+          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)"
+          echo "##[endgroup]Current Group Finished"
+
     - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
       - checkout: self
         persistCredentials: true
         clean: true
       - bash: |
-          echo "##[section]Chosen Group"
-          echo "##[group]Chosen Group"
-          echo "##[command]chosenMajor:   $(chosenMajor)"
-          echo "##[command]chosenMinor:   $(chosenMinor)"
-          echo "##[command]chosenVersion:   $(chosenVersion)"
-          echo "##[command]chosenVersionString:   $(chosenVersionString)"
-          echo "##[endgroup]Chosen Group Finished"
+          # +TODO 4. newChosenVersion Var and Update Major Minor Vars Number
+          echo "##[section]Next Minor Group"
+          echo "##[group]Current Group"
+          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) + 1 && currentVersion=$(currentVersion)"
+          echo "##[endgroup]Current Group Finished"
 
-    # - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
-    # - ${{ if eq(parameters.chosenVersionString, 'nextmajor') }}:
-
-
-    - checkout: self
-      persistCredentials: true
-      clean: true
-
-    - bash: |
-        echo "##[section]Chosen Group"
-        echo "##[group]Chosen Group"
-        echo "##[command]chosenMajor:   $(chosenMajor)"
-        echo "##[command]chosenMinor:   $(chosenMinor)"
-        echo "##[command]chosenVersion:   $(chosenVersion)"
-        echo "##[command]chosenVersionString:   $(chosenVersionString)"
-        echo "##[endgroup]Chosen Group Finished"
+    - ${{ if eq(parameters.chosenVersionString, 'nextmajor') }}:
+      - checkout: self
+        persistCredentials: true
+        clean: true
+      - bash: |
+          # +TODO 3. newChosenVersion Var
+          echo "##[section]Next Major Group"
+          echo "##[group]Current Group"
+          currentMajor=$(currentMajor) + 1 && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)"
+          echo "##[endgroup]Current Group Finished"
 
 
-
-        echo "##[section]Current Group"
-        echo "##[group]Current Group"
-        echo "##[command]currentMajor:   $(currentMajor)"
-        echo "##[command]currentMinor:   $(currentMinor)"
-        echo "##[command]currentVersion:   $(currentVersion)"
-        echo "##[endgroup]Current Group Finished"
-#           echo "##vso[task.setvariable variable=version;isOutput=true]$NewVersion"
-  
-#           echo "##[warning]NewVersion  =  major.minor.buildnumber.timestamp"
-#           echo "##[command]NewVersion  =  $NewVersion"
-
-      name: CompareVersions
