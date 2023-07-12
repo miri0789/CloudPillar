@@ -95,7 +95,7 @@ stages:
         # echo "##vso[task.setvariable variable=major;isOutput=true]$(grep -oP '^major=\K\d+' src/backend/version.txt)"
         # echo "##vso[task.setvariable variable=minor;isOutput=true]$(grep -oP '^minor=\K\d+' src/backend/version.txt)"
         # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
-    name: SetVars
+      name: SetVars
 
   - job: Create_Variables_Job
     condition: ${{ eq(parameters.version, nextMinor) }}
@@ -116,6 +116,7 @@ stages:
         echo "##vso[task.setvariable variable=major;isOutput=true]$major"
         echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
         echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
+      name: SetVars
 
   - job: Create_Variables_Job
     condition: ${{ eq(parameters.version, nextMajor) }}
@@ -136,7 +137,7 @@ stages:
         echo "##vso[task.setvariable variable=major;isOutput=true]$major"
         echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
         echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
-
+      name: SetVars
 
 
 
