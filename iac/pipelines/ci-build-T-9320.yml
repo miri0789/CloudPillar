@@ -92,10 +92,10 @@ stages:
     displayName: Update Version ID
     dependsOn: ['SetCurrentVersion']
     variables:              
-      Major: ${{ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Major'] }}
-      Minor: ${{ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Minor'] }}
-      Version: ${{ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Version'] }}
-      FullVersion: ${{ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.FullVersion'] }}
+      Major: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Major'] ]
+      Minor: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Minor'] ]
+      Version: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.Version'] ]
+      FullVersion: $[ dependencies.SetCurrentVersion.outputs['SetCurrentVersion.FullVersion'] ]
     steps:
     - checkout: self
       persistCredentials: true
