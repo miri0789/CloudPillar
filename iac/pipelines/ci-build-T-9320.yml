@@ -117,11 +117,6 @@ stages:
 
 - stage: Update_Version
   jobs:
-  condition: ${{ eq(parameters.versionfix, currnet) }}
-    variables:
-      major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']
-      minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']
-      FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']
     displayName: Get & Update Version
     pool:
       name: $(AGENT_POOL)
