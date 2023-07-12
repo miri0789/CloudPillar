@@ -60,7 +60,7 @@ stages:
   displayName: CI Build Process
 
   jobs:
-  - job: Set_Current Version
+  - job: SetCurrentVersion
     displayName: Set Current Version ID
     steps:
     - checkout: self
@@ -86,51 +86,67 @@ stages:
         echo "fullVersion: $fullVersion"
 
         echo "##[endgroup]Get Current Version Finished"
-      name: SetCurrentVersion
+      name: BashSetCurrentVersion
   
 
-  - job: Update_Current_Version
+  - job: UpdateCurrentVersion
     displayName: Update Version ID
-    dependsOn: Set_Current Version    
-
+    dependsOn: SetCurrentVersion    
     variables:
-      currentMajor: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
-      currentMinor: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
-      currentversion: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.version'] ]
-      currentFullVersion: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.fullVersion'] ]
-
-      - name: newMajor
-        ${{ if eq(parameters.chosenVersionString, 'nextMajor') }}:          
-          value: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ] + 1)
-        ${{ if ne (parameters.chosenVersionString, 'nextMajor') }}:
-          value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
-      - name: newMinor
-        ${{ if eq(parameters.chosenVersionString, 'nextMinor') }}:          
-          value: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ] + 1)
-        ${{ if ne (parameters.chosenVersionString, 'nextMinor') }}:
-          value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
-      
+    - ${{ if eq(parameters.versionString, 'current') }}:              
+      - name: Major
+        value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
+      - name: Minor
+        value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
+      - name: version
+        value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.version'] ]
+      - name: fullVersion
+        value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.fullVersion'] ]
     steps:
     - checkout: self
       persistCredentials: true
       clean: true
     - bash: |
         echo "##[group]Current Group"
-        echo "Current Major: $(currentMajor)"
-        echo "Current Minor: $(currentMinor)"
-        echo "Current Version: $(currentVersion)"
-        echo "Current Full Version: $(currentFullVersion)"
+        echo "Current Major: $(Major)"
+        echo "Current Minor: $(Minor)"
+        echo "Current Version: $(Version)"
+        echo "Current Full Version: $(FullVersion)"
         echo "##[endgroup]Current Group Finished"
-
-
-        echo "##[group]New Group"
-        buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && newVersion=$newMajor.$newMinor && newFullVersion=$newMajor.$newMinor.$buildNumber.$timestamp
-        echo "New Major: $(newMajor)"
-        echo "New Minor: $(newMinor)"
-        echo "New Version: $newVersion)
-        echo "New Full Version: $newFullVersion"
-        # echo "New Version: $(newVersion)"
-        # echo "New Full Version: $(newFullVersion)"
-        echo "##[endgroup]New Group Finished"
-
       name: UpdateCurrentVersion
+
+      
+    #     Major: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
+    #     Minor: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
+    #     version: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.version'] ]
+    #     FullVersion: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.fullVersion'] ]
+  
+    #   ${{ if eq(parameters.versionString, 'nextMinor') }}:              
+    #     Major: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
+    #     Minor: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ] + 1 )
+
+      
+    # steps:
+    # - checkout: self
+    #   persistCredentials: true
+    #   clean: true
+    # - bash: |
+    #     echo "##[group]Current Group"
+    #     echo "Current Major: $(currentMajor)"
+    #     echo "Current Minor: $(currentMinor)"
+    #     echo "Current Version: $(currentVersion)"
+    #     echo "Current Full Version: $(currentFullVersion)"
+    #     echo "##[endgroup]Current Group Finished"
+
+
+    #     echo "##[group]New Group"
+    #     buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && newVersion=$newMajor.$newMinor && newFullVersion=$newMajor.$newMinor.$buildNumber.$timestamp
+    #     echo "New Major: $(newMajor)"
+    #     echo "New Minor: $(newMinor)"
+    #     echo "New Version: $newVersion)
+    #     echo "New Full Version: $newFullVersion"
+    #     # echo "New Version: $(newVersion)"
+    #     # echo "New Full Version: $(newFullVersion)"
+    #     echo "##[endgroup]New Group Finished"
+
+    #   name: UpdateCurrentVersion
