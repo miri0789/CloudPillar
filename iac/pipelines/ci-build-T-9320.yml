@@ -118,7 +118,7 @@ stages:
 - stage: Update_Version_Step
   jobs:
   - job: Update_Version_Job
-      displayName: Get & Update Version
+      displayName: Get and Update Version
     # variables:
     #   major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
     #   minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
@@ -133,7 +133,7 @@ stages:
       - bash: |
           major=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]
           minor=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]
-          minor=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]
+          FullVersion=$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]
           # major="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']]"
           # minor="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']]"
           # minor="$[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']]"
