@@ -93,7 +93,7 @@ stages:
     displayName: Update Version ID
     dependsOn: SetCurrentVersion    
     variables:
-    - ${{ if eq(${{ parameters.versionString }}, 'current') }}:              
+    - ${{ if eq(parameters.versionString, 'current') }}:              
       - name: Major
         value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
       - name: Minor
