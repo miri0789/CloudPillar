@@ -58,8 +58,8 @@ parameters:
     default: current
     values:
     - current
-    - nextMinor
     - nextMajor
+    - nextMinor
     # default: 1.0
     # values:
     # - 1.0
@@ -72,7 +72,7 @@ stages:
   displayName: Update Major & Minor Version
   jobs:
   - job: Create_Variables_Job
-    condition: ${{ eq(parameters.version, currnet) }}
+    condition: ${{ eq(parameters.version, 'currnet') }}
     displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
@@ -98,7 +98,7 @@ stages:
       name: SetVars
 
   - job: Create_Variables_Job
-    condition: ${{ eq(parameters.version, nextMinor) }}
+    condition: ${{ eq(parameters.version, 'nextMinor') }}
     displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
@@ -119,7 +119,7 @@ stages:
       name: SetVars
 
   - job: Create_Variables_Job
-    condition: ${{ eq(parameters.version, nextMajor) }}
+    condition: ${{ eq(parameters.version, 'nextMajor') }}
     displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
