@@ -92,28 +92,38 @@ stages:
   - job: UpdateCurrentVersion
     displayName: Update Version ID
     dependsOn: SetCurrentVersion    
-    variables:
-    - ${{ if eq(parameters.versionString, 'current') }}:              
+    variables:              
       - name: Major
-        value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
+        ${{ if eq(parameters.versionString, 'nextMajor') }}:
+          value: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ] + 1 )
+        ${{ if ne(parameters.versionString, 'nextMajor') }}:
+          value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
+
       - name: Minor
-        value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
-      - name: version
-        value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.version'] ]
-      - name: fullVersion
-        value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.fullVersion'] ]
+        ${{ if eq(parameters.versionString, 'nextMinor') }}:
+          value: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ] + 1 )
+        
+        ${{ if ne(parameters.versionString, 'nextMinor') }}:
+          value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
+
+      # - name: version
+      #   value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.version'] ]
+      # - name: fullVersion
+      #   value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.fullVersion'] ]
     steps:
     - checkout: self
       persistCredentials: true
       clean: true
     - bash: |
-        echo "${{ parameters.versionString }}"
-        echo "##[group]Current Group"
-        echo "Current Major: $(Major)"
-        echo "Current Minor: $(Minor)"
-        echo "Current Version: $(Version)"
-        echo "Current Full Version: $(FullVersion)"
-        echo "##[endgroup]Current Group Finished"
+        echo "Major $(Major)"
+        echo "Minor $(Minor)"
+        # echo "${{ parameters.versionString }}"
+        # echo "##[group]Current Group"
+        # echo "Current Major: $(Major)"
+        # echo "Current Minor: $(Minor)"
+        # echo "Current Version: $(Version)"
+        # echo "Current Full Version: $(FullVersion)"
+        # echo "##[endgroup]Current Group Finished"
       name: UpdateCurrentVersion
 
       
