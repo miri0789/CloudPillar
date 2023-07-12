@@ -8,7 +8,7 @@ public interface ILoggerHandlerFactory
 {
     public ILog CreateLogger(string filename);
 
-    public ILoggerRepository CreateLogRepository(string log4netConfigFile);
+    public ILoggerRepository CreateLogRepository(string? log4netConfigFile);
 
-    public ITelemetryClientWrapper CreateTelemetryClient(string appInsightsKey, string connectionString);
+    public ITelemetryClientWrapper CreateTelemetryClient(string connectionString);
 }

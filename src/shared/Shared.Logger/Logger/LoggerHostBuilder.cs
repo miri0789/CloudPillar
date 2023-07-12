@@ -18,7 +18,7 @@ namespace Shared.Logger
 
         public IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostingContext, config) =>
+        .ConfigureAppConfiguration((hostingContext, config) =>
             { 
                 var settings = config.Build();
                 config.AddAzureAppConfiguration(options =>
@@ -26,9 +26,9 @@ namespace Shared.Logger
                     .Select("Logging", LabelFilter.Null)
                     .ConfigureRefresh(refreshOptions =>
                     {
-                        refreshOptions.Register("Logging:LogLevel:Default", refreshAll: true)
-                                      .Register("Logging:LogLevel:AppInsights", refreshAll: true)
-                                      .Register("Logging:LogLevel:Appenders", refreshAll: true)
+                        refreshOptions.Register("Log4Net:LogLevel:Default", refreshAll: true)
+                                      .Register("Log4Net:LogLevel:AppInsights", refreshAll: true)
+                                      .Register("Log4Net:LogLevel:Appenders", refreshAll: true)
                                       .Register("Logging:LogLevel:RefreshInterval", refreshAll: true)
                                       .Register("Logging:AppInsights:InstrumentationKey", refreshAll: false)
                                       .Register("Logging:AppInsights:ConnectionString", refreshAll: false);

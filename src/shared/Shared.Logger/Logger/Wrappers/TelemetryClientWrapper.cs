@@ -8,10 +8,9 @@ namespace Shared.Logger.Wrappers;
 public class TelemetryClientWrapper: ITelemetryClientWrapper
 {
     TelemetryClient m_telemetryClient;
-    public TelemetryClientWrapper(string appInsightsKey, string connectionString)
+    public TelemetryClientWrapper(string connectionString)
     {
         var configuration = TelemetryConfiguration.CreateDefault();
-        configuration.InstrumentationKey = appInsightsKey;
 
         if (!String.IsNullOrEmpty(connectionString))
         {

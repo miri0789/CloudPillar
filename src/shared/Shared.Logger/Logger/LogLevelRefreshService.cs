@@ -23,22 +23,35 @@ namespace Shared.Logger
             {
                 await _refresher.TryRefreshAsync();
                 
-                var defaultLogLevel = _configuration["Logging:LogLevel:Default"];
-                var appInsightsLogLevel = _configuration["Logging:LogLevel:AppInsights"];
-                var appendersLogLevel = _configuration["Logging:LogLevel:Appenders"];
+                LogLevelOptions options = new LogLevelOptions(_configuration["Log4Net:LogLevel:AppInsights"],
+                                                              _configuration["Log4Net:LogLevel:Appenders"],
+                                                              _configuration["Log4Net:LogLevel:Default"]);
 
-                _logger.RefreshAppInsightsLogLevel(appInsightsLogLevel != null ? appInsightsLogLevel : 
-                                                  appendersLogLevel != null ? appendersLogLevel:
-                                                  defaultLogLevel != null ? defaultLogLevel : "Debug");
+                var appInsightsLevelRefresh = options.AppInsights ?? options.Appenders ?? options.Default ?? "Debug";
+                var appendersLevelRefresh = options.Appenders ?? options.AppInsights ?? options.Default ?? "Debug";
 
-                _logger.RefreshAppendersLogLevel(appendersLogLevel != null ? appendersLogLevel:
-                                                appInsightsLogLevel != null ? appInsightsLogLevel : 
-                                                defaultLogLevel != null ? defaultLogLevel : "Debug");
+                _logger.RefreshAppInsightsLogLevel(appInsightsLevelRefresh);
+                _logger.RefreshAppendersLogLevel(appendersLevelRefresh);
 
-                var interval = _configuration["Logging:LogLevel:RefreshInterval"];
-
-                await Task.Delay(TimeSpan.FromMilliseconds(interval != null ? Convert.ToDouble(interval) : 15000), stoppingToken);  
+                var intervalStr = _configuration["Logging:LogLevel:RefreshInterval"];
+                double interval = Double.TryParse(intervalStr, out interval) ? interval : 15000;
+  
+                await Task.Delay(TimeSpan.FromMilliseconds(interval), stoppingToken);  
             }
         }
+    }
+
+    public class LogLevelOptions
+    {
+        public LogLevelOptions(string appInsightsLevel, string appendersLevel, string defaultLevel)
+        {
+            AppInsights = appInsightsLevel;
+            Appenders = appendersLevel;
+            Default = defaultLevel;
+        }
+
+        public string AppInsights { get; set; }
+        public string Appenders { get; set; }
+        public string Default { get; set; }
     }
 }

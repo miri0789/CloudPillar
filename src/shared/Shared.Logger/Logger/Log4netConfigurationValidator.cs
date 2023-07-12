@@ -28,7 +28,7 @@ namespace Shared.Logger
                 ILayout layout = null;
 
                 var layoutProperty = appenderType.GetProperty("Layout");
-                if (layoutProperty != null && layoutProperty.CanRead)
+                if (layoutProperty?.CanRead == true)
                 {
                     layout = layoutProperty.GetValue(appender) as PatternLayout;
                 }
@@ -38,7 +38,7 @@ namespace Shared.Logger
                     var layoutType = layout.GetType();
                     var conversionPatternProperty = layoutType.GetProperty("ConversionPattern");
 
-                    if (conversionPatternProperty != null && conversionPatternProperty.CanRead)
+                    if (conversionPatternProperty?.CanRead == true)
                     {
                         string? currentConversionPattern = conversionPatternProperty.GetValue(layout) as string;
                         if(!IsValidMessagePattern(currentConversionPattern))
@@ -51,7 +51,7 @@ namespace Shared.Logger
                 // Validate log level
                 var thresholdProperty = appenderType.GetProperty("Threshold");
 
-                if (thresholdProperty != null && thresholdProperty.CanWrite)
+                if (thresholdProperty?.CanWrite == true)
                 {
                     Level? threshold = thresholdProperty.GetValue(appender) as Level;
 

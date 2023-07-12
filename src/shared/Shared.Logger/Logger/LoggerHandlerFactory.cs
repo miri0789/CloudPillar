@@ -13,7 +13,7 @@ public class LoggerFactoryHandler : ILoggerHandlerFactory
         return LogManager.GetLogger(filename);
     }
 
-    public ILoggerRepository CreateLogRepository(string log4netConfigFile)
+    public ILoggerRepository CreateLogRepository(string? log4netConfigFile)
     {
         var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
         if (String.IsNullOrEmpty(log4netConfigFile))
@@ -27,10 +27,8 @@ public class LoggerFactoryHandler : ILoggerHandlerFactory
         return logRepository;
     }
 
-    public ITelemetryClientWrapper CreateTelemetryClient(string appInsightsKey, string connectionString)
+    public ITelemetryClientWrapper CreateTelemetryClient(string connectionString)
     {
-
-        return new TelemetryClientWrapper(appInsightsKey, connectionString);
-        
+        return new TelemetryClientWrapper(connectionString);     
     }
 }
