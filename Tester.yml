@@ -23,15 +23,15 @@ jobs:
   displayName: "Use Var from Same Job"
   steps:
   - bash: |
-     echo "##vso[task.setvariable variable=myJobVar]this is the same job"
+     echo "##vso[task.setvariable variable=myJobVar]JobVar1"
     name: "SetMyJobVar"
   - bash: |
-     echo "##vso[task.setvariable variable=myOutputJobVar;isoutput=true]this is the same job too"
+     echo "##vso[task.setvariable variable=myOutputJobVar;isoutput=true]JobVar2"
     name: setOutputMyJobVar
   - bash: |
      echo $(myJobVar) 
     name: "PrintMyJobVar"
   - bash: |
-     echo $(setOutput.myOutputJobVar)
+     echo $(setOutputMyJobVar.myOutputJobVar)
     name: "PrintOutputMyJobVar"
     
