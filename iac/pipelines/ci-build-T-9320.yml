@@ -53,12 +53,14 @@ variables:
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
-# - name: major
-#   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)  
-# - name: minor
+- name: major
+  value: 2  
+  # value: $(grep -oP '^major=\K\d+' src/backend/version.txt)  
+- name: minor
+  value: 2
 #   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
-# - name: FullVersion
-  # value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+- name: FullVersion
+  value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
 
 
 
