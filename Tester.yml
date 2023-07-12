@@ -9,7 +9,8 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-- job: MyVar
+- job: SetPrintVar
+  displayName: "Var from Same Job"
   steps:
   - bash: |
      echo "##vso[task.setvariable variable=myVar;]myvar1"
@@ -17,4 +18,20 @@ jobs:
   - bash: |
       echo "You can use macro syntax for variables: $(myVar)"
     name: "PrintMyVar"
+
+- job: VarInJob
+  displayName: "Use Var from Same Job"
+  steps:
+  - bash: |
+     echo "##vso[task.setvariable variable=myJobVar]this is the same job"
+    name: "SetMyJobVar"
+  - bash: |
+     echo "##vso[task.setvariable variable=myOutputJobVar;isoutput=true]this is the same job too"
+    name: setOutputMyJobVar
+  - bash: |
+     echo $(myJobVar) 
+    name: "PrintMyJobVar"
+  - bash: |
+     echo $(setOutput.myOutputJobVar)
+    name: "PrintOutputMyJobVar"
     
