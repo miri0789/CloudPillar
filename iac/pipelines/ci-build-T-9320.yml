@@ -11,7 +11,24 @@ trigger:
 # - none
 - $(Build.SourceBranchName)
 # - main
-
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+- name: TIMESTAMP
+  value: $(date +%Y%m%d%H%M%S)
+- name: BuildNumber
+  value: $(git rev-list --count HEAD)
+- name: major
+  value: 2  
+  # value: $(grep -oP '^major=\K\d+' src/backend/version.txt)  
+- name: minor
+  value: 2
+#   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: FullVersion
+  value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+  
 parameters:
   - name: env
     displayName: Select Environment to deploy
@@ -43,23 +60,7 @@ parameters:
     - $(major).$(minor)
     - $(major).$(minor)
     - $(major).$(minor)
-variables:
-- group: arm-vg
-- group: iac-backend-vg
-- group: aks-backend-vg
-- group: backend-secrets-vg
-- name: TIMESTAMP
-  value: $(date +%Y%m%d%H%M%S)
-- name: BuildNumber
-  value: $(git rev-list --count HEAD)
-- name: major
-  value: 2  
-  # value: $(grep -oP '^major=\K\d+' src/backend/version.txt)  
-- name: minor
-  value: 2
-#   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
-- name: FullVersion
-  value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+
 
 
 
