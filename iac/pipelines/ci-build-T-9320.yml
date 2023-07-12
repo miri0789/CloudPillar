@@ -90,7 +90,7 @@ stages:
           # echo "##vso[task.setvariable variable=minor;isOutput=true]$(grep -oP '^minor=\K\d+' src/backend/version.txt)"
           # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
         name: SetVars
-    
+
     - ${{ if eq(parameters.versionfix, 'nextminor') }}:
       - bash: |
           # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
@@ -102,17 +102,18 @@ stages:
           echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
           echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
         name: SetVars
+
     - ${{ if eq(parameters.versionfix, 'nextmajor') }}:
-    - bash: |
-        # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-        major=2 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt + 1)
-        minor=0 #+TODO minor=0
-        buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-        FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
-        echo "##vso[task.setvariable variable=major;isOutput=true]$major"
-        echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
-        echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
-      name: SetVars
+      - bash: |
+          # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          major=2 #+TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt + 1)
+          minor=0 #+TODO minor=0
+          buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+          FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
+          echo "##vso[task.setvariable variable=major;isOutput=true]$major"
+          echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"
+          echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"
+        name: SetVars
 
 
 
