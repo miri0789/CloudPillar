@@ -87,11 +87,10 @@ stages:
 
         echo "##[endgroup]Get Current Version Finished"
       name: BashSetCurrentVersion
-  
 
   - job: UpdateCurrentVersion
     displayName: Update Version ID
-    dependsOn: SetCurrentVersion    
+    dependsOn: ['SetCurrentVersion']
     variables:              
       - name: Major
         ${{ if eq(parameters.versionString, 'nextMajor') }}:
@@ -115,8 +114,8 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-        echo "Major $(Major)"
-        echo "Minor $(Minor)"
+        echo "Major $(Set_Current_Version.Major)"
+        echo "Minor $(Set_Current_Version.Minor)"
         # echo "${{ parameters.versionString }}"
         # echo "##[group]Current Group"
         # echo "Current Major: $(Major)"
