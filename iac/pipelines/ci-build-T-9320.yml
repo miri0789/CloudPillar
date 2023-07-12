@@ -26,7 +26,7 @@ parameters:
     - keyholder
     - mongowriter
     - twinlistener  
-  - name: versionString
+  - name: chosenVersionString
     displayName: Select Major & Minor Verson
     type: string
     default: current # 1.0
@@ -59,8 +59,10 @@ variables:
   value: ${{ coalesce(split(parameters.chosenVersion, '.')[0], '1') }}
 - name: chosenMinor # Minor (Based on User Selection)
   value: ${{ coalesce(split(parameters.chosenVersion, '.')[1], '0') }}
-- name: chosenVersion # Minor (Based on User Selection)
+- name: chosenVersion # Version (Based on User Selection)
   value: ${{ parameters.chosenVersion }}
+- name: chosenVersionString # Version String (Based on User Selection)
+  value: ${{ parameters.chosenVersionString }}
 
 - name: currentMajor # Major (Based on User Selection)
   value: 1
@@ -73,29 +75,58 @@ variables:
 
 
 
+
 stages:
 - stage: CI_Build
   displayName: CI Build Process
-  # variables:
-    # currentVersion: $(currentMajor).$(currentMinor)
-    # chosenVersion: $(chosenMajor).$(chosenMinor)
-    # versionF: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+
   jobs:
   - job: Update_Version
-    displayName: Update Variables
+    displayName: Update Latest Version ID
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
     steps:
+    - ${{ if eq(parameters.chosenVersionString, 'current') }}:
+      - checkout: self
+        persistCredentials: true
+        clean: true
+      - bash: |
+          echo "##[section]Chosen Group"
+          echo "##[group]Chosen Group"
+          echo "##[command]chosenMajor:   $(chosenMajor)"
+          echo "##[command]chosenMinor:   $(chosenMinor)"
+          echo "##[command]chosenVersion:   $(chosenVersion)"
+          echo "##[command]chosenVersionString:   $(chosenVersionString)"
+          echo "##[endgroup]Chosen Group Finished"
+    - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
+      - checkout: self
+        persistCredentials: true
+        clean: true
+      - bash: |
+          echo "##[section]Chosen Group"
+          echo "##[group]Chosen Group"
+          echo "##[command]chosenMajor:   $(chosenMajor)"
+          echo "##[command]chosenMinor:   $(chosenMinor)"
+          echo "##[command]chosenVersion:   $(chosenVersion)"
+          echo "##[command]chosenVersionString:   $(chosenVersionString)"
+          echo "##[endgroup]Chosen Group Finished"
+
+    # - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
+    # - ${{ if eq(parameters.chosenVersionString, 'nextmajor') }}:
+
+
     - checkout: self
       persistCredentials: true
       clean: true
+
     - bash: |
         echo "##[section]Chosen Group"
         echo "##[group]Chosen Group"
         echo "##[command]chosenMajor:   $(chosenMajor)"
         echo "##[command]chosenMinor:   $(chosenMinor)"
         echo "##[command]chosenVersion:   $(chosenVersion)"
+        echo "##[command]chosenVersionString:   $(chosenVersionString)"
         echo "##[endgroup]Chosen Group Finished"
 
 
