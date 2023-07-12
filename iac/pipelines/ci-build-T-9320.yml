@@ -97,8 +97,9 @@ stages:
           # +TODO 3. newChosenVersion Var
           echo "##[section]Current Group"
           echo "##[group]Current Group"
-          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)"
+          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)
           echo "##[endgroup]Current Group Finished"
+        name: SetVarsCurrent
 
     - ${{ if eq(parameters.chosenVersionString, 'nextminor') }}:
       - checkout: self
@@ -108,9 +109,9 @@ stages:
           # +TODO 4. newChosenVersion Var and Update Major Minor Vars Number
           echo "##[section]Next Minor Group"
           echo "##[group]Current Group"
-          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) + 1 && currentVersion=$(currentVersion)"
+          currentMajor=$(currentMajor) && currentMinor=$(currentMinor) + 1 && currentVersion=$(currentVersion)
           echo "##[endgroup]Current Group Finished"
-
+        name: SetVarsNextMinor
     - ${{ if eq(parameters.chosenVersionString, 'nextmajor') }}:
       - checkout: self
         persistCredentials: true
@@ -119,7 +120,6 @@ stages:
           # +TODO 3. newChosenVersion Var
           echo "##[section]Next Major Group"
           echo "##[group]Current Group"
-          currentMajor=$(currentMajor) + 1 && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)"
+          currentMajor=$(currentMajor) + 1 && currentMinor=$(currentMinor) && currentVersion=$(currentVersion)
           echo "##[endgroup]Current Group Finished"
-
-
+        name: SetVarsNextMajor
