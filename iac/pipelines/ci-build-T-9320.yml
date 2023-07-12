@@ -32,8 +32,8 @@ parameters:
     default: current # 1.0
     values:
     - current # 1.0
-    - nextminor # 1.1
-    - nextmajor #2.0
+    - nextMinor # 1.1
+    - nextMajor #2.0
 
 
 variables:
@@ -46,7 +46,7 @@ variables:
 # * Variables
 
 # * Dynamic Variables
-- name: StartTime
+- name: TIMESTAMP
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
@@ -60,29 +60,77 @@ stages:
   displayName: CI Build Process
 
   jobs:
-  - job: Update_Version
-    displayName: Update Version ID
+  - job: Set_Current Version
+    displayName: Set Current Version ID
     steps:
     - checkout: self
       persistCredentials: true
       clean: true
     - bash: |
-        echo "##[section]Update Version Section"
-        echo "##[group]Get Current Version Group"
-        
-        # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && version=$Major.$Minor && buildNumber=$(BuildNumber) && timestamp=$(date +%Y%m%d%H%M%S) && fullVersion=$version.$buildnumber.$timestamp
+        # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && version=$Major.$Minor && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && fullVersion=$version.$buildnumber.$timestamp
         Major=1 && Minor=0 && version=$Major.$Minor && buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && fullVersion=$version.$buildNumber.$timestamp
-        
+
         echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
         echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
         echo "##vso[task.setvariable variable=version;isoutput=true]$version"
         echo "##vso[task.setvariable variable=fullVersion;isoutput=true]$fullVersion"
         
+        echo "##[section]Current Version Section"
+        echo "##[group]Get Current Version Group"
+        
+        echo "Major: $Major"
+        echo "Minor: $Minor"
+        echo buildNumber: $buildNumber
+        
+        echo "version: $version"
         echo "fullVersion: $fullVersion"
+
         echo "##[endgroup]Get Current Version Finished"
       name: SetCurrentVersion
+  
+
+  - job: Update_Current_Version
+    displayName: Update Version ID
+    dependsOn: Set_Current Version    
+
+    variables:
+      currentMajor: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
+      currentMinor: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
+      currentversion: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.version'] ]
+      currentFullVersion: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.fullVersion'] ]
+
+      - name: newMajor
+        ${{ if eq(parameters.chosenVersionString, 'nextMajor') }}:          
+          value: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ] + 1)
+        ${{ if ne (parameters.chosenVersionString, 'nextMajor') }}:
+          value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Major'] ]
+      - name: newMinor
+        ${{ if eq(parameters.chosenVersionString, 'nextMinor') }}:          
+          value: $( $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ] + 1)
+        ${{ if ne (parameters.chosenVersionString, 'nextMinor') }}:
+          value: $[ dependencies.Set_Current_Version.outputs['SetCurrentVersion.Minor'] ]
+      
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
     - bash: |
-        echo "##[warning]Print Current Version"
-        echo "##[command]$(SetCurrentVersion.fullVersion)"
-      name: printCurrentVersion
-        
+        echo "##[group]Current Group"
+        echo "Current Major: $(currentMajor)"
+        echo "Current Minor: $(currentMinor)"
+        echo "Current Version: $(currentVersion)"
+        echo "Current Full Version: $(currentFullVersion)"
+        echo "##[endgroup]Current Group Finished"
+
+
+        echo "##[group]New Group"
+        buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP) && newVersion=$newMajor.$newMinor && newFullVersion=$newMajor.$newMinor.$buildNumber.$timestamp
+        echo "New Major: $(newMajor)"
+        echo "New Minor: $(newMinor)"
+        echo "New Version: $newVersion)
+        echo "New Full Version: $newFullVersion"
+        # echo "New Version: $(newVersion)"
+        # echo "New Full Version: $(newFullVersion)"
+        echo "##[endgroup]New Group Finished"
+
+      name: UpdateCurrentVersion
