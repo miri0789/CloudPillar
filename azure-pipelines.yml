@@ -120,25 +120,25 @@ stages:
         Version: $(Major).$(Minor)
         FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
 
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
-    - bash: |
-        echo "Version String: ${{ parameters.versionString }}"
-        echo "Version $(Version)"
-        echo "Full Version $(FullVersion)"
-        echo "Major $(Major)"
-        echo "Minor $(Minor)"
+      steps:
+      - checkout: self
+        persistCredentials: true
+        clean: true
+      - bash: |
+          echo "Version String: ${{ parameters.versionString }}"
+          echo "Version $(Version)"
+          echo "Full Version $(FullVersion)"
+          echo "Major $(Major)"
+          echo "Minor $(Minor)"
 
-        # echo "${{ parameters.versionString }}"
-        # echo "##[group]Current Group"
-        # echo "Current Major: $(Major)"
-        # echo "Current Minor: $(Minor)"
-        # echo "Current Version: $(Version)"
-        # echo "Current Full Version: $(FullVersion)"
-        # echo "##[endgroup]Current Group Finished"
-      name: UpdateCurrentVersion
+          # echo "${{ parameters.versionString }}"
+          # echo "##[group]Current Group"
+          # echo "Current Major: $(Major)"
+          # echo "Current Minor: $(Minor)"
+          # echo "Current Version: $(Version)"
+          # echo "Current Full Version: $(FullVersion)"
+          # echo "##[endgroup]Current Group Finished"
+        name: UpdateCurrentVersion
 
 
 
