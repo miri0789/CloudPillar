@@ -69,10 +69,10 @@ stages:
     - bash: |
         buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
         # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) 
-        # Version=$Major.$Minor && FullVersion=$Version.$buildnumber.$timestamp
+        # Version=$Major.$Minor && FullVersion=$Version.$(BuildNumber).$(TIMESTAMP)
         
         Major=1 && Minor=0
-        Version=$Major.$Minor && FullVersion=$version.$buildNumber.$timestamp
+        Version=$Major.$Minor && FullVersion=$Version.$(BuildNumber).$(TIMESTAMP)
 
         echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
         echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
@@ -101,6 +101,7 @@ stages:
         Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
         Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
         FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
+
       ${{ if eq(parameters.versionString, 'nextMinor') }}:
         Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
         Minor: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ] + 1 )
