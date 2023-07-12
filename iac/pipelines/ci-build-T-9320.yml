@@ -11,6 +11,7 @@ trigger:
 # - none
 - $(Build.SourceBranchName)
 # - main
+      VNET_RESOURCE_ID_SET: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.VNET_RESOURCE_ID_SET']]
 
 parameters:
   - name: env
@@ -35,7 +36,7 @@ parameters:
     - keyholder
     - mongowriter
     - twinlistener
-  - name: version
+  - name: Version
     displayName: Select Major & Minor Verson
     type: string
     default: $(major).$(minor)
@@ -52,58 +53,22 @@ variables:
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
-- name: major
-  value: $(grep -oP '^major=\K\d+' src/backend/version.txt)  
-- name: minor
-  value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+# - name: major
+#   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)  
+# - name: minor
+#   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+# - name: FullVersion
+  # value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
 
 
 
 
 stages:
-# - stage: Test
-#   displayName: Test Stage
-#   jobs:
-#   - job: Test_J_1
-#     displayName: Test Job 1
-#     pool:
-#       name: $(AGENT_POOL)
-#       agent.name: aks-${{parameters.env}}-agent 
-#     steps:
-#     - checkout: self
-#       persistCredentials: true
-#       clean: true
-#     - bash: |
-#         # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD)
-#         # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-#         # echo "BuildNumber: $(BuildNumber)"
-#         # TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
-#         # TAG_PREFIX=$(MajorVersion).$(MinorVersion)
-#         # TAG_PREFIX=${{parameters.version}}
-#         # TAG=$TAG_PREFIX.$TAG_SUFFIX
-#         # echo "TAG: $TAG"
-        
-#         major=1
-#         minor=0
-#         # major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-#         # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)        
-#         echo "##vso[task.setvariable variable=major;]$major"          
-#         echo "##vso[task.setvariable variable=minor;]$minor"          
-
-
-#         # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber}.{TIMESTAMP} && echo TAG: $TAG
-#       name: SetVars
-#     - bash: |
-#         echo "$(major).$(minor)"
-#       name: major.minor
-
-
-
-- stage: Update_Version
+- stage: Create_Variables_Stage
   displayName: Update Major & Minor Version
   jobs:
-  - job: Upadte_Major_Minor_Version
-    displayName: Get & Update Version
+  - job: Create_Variables_Job
+    displayName: Update Variables
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
@@ -115,9 +80,28 @@ stages:
         major=1 && minor=0 && timestamp=$(TIMESTAMP) && buildnumber=$(BuildNumber)
         FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
         # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
-        echo "##vso[task.setvariable variable=major;]$major"          
-        echo "##vso[task.setvariable variable=minor;]$minor"  
+        echo "##vso[task.setvariable variable=major;isOutput=true]$major"          
+        echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"  
+        echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"  
       name: SetVars
+
+
+- stage: Update_Version
+  displayName: Update Major & Minor Version
+  jobs:
+  - job: Upadte_Major_Minor_Version
+    variables:
+      major: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.major']
+      minor: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.minor']
+      FullVersion: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.FullVersion']
+    displayName: Get & Update Version
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
     - bash: |
         echo "major.minor: $(major).$(minor)"
         FullVersion=$(major).$(minor).$(BuildNumber).$(TIMESTAMP)
