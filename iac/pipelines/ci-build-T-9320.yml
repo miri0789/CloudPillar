@@ -126,8 +126,9 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-      echo equal = $($(major).$(minor)==$(parameters.Version))
-      echo "##vso[task.setvariable variable=equal;isOutput=true]$equal"
+      # echo equal = $($(major).$(minor)==$(parameters.Version))
+      # echo "##vso[task.setvariable variable=equal;isOutput=true]$equal"
+      # echo $($(major).$(minor)==$(parameters.Version))
   
   - job: Upadte_Major_Minor_Version
     dependsOn: Compare_Major_Minor_Version
