@@ -74,7 +74,7 @@ variables:
 stages:
 - stage: CI_Build
   displayName: CI Build Process
-  variables:
+  # variables:
     # currentVersion: $(currentMajor).$(currentMinor)
     # chosenVersion: $(chosenMajor).$(chosenMinor)
     # versionF: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
