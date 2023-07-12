@@ -101,6 +101,12 @@ stages:
         currentMinor=$(minor)
         currentVersion=$(version)
         currentVersionF=$(versionF)
+        echo "cuurentMajor: $currentMajor"
+        echo "cuurentMinor: $currentMinor"
+        echo "cuurentVersion: $currentVersion"
+        echo "cuurentVersionF: $currentVersionF"
+        
+      name: SetVars
 - stage: Test
   displayName: Testing
   jobs:
@@ -117,5 +123,11 @@ stages:
         currentMajorT=$(majorT)
         currentMinorT=$(minorT)
         currentVersionT=$(versionT)
-        currentVersionTF=$(versionTF)
+        currentVersionFT=$(versionFT)
+        echo "cuurentMajorT: $currentMajorT"
+        echo "cuurentMinorT: $currentMinorT"
+        echo "cuurentVersionT: $currentVersionT"
+        echo "cuurentVersionFT: $currentVersionFT"
+        
       name: SetVars
+    # variables:
