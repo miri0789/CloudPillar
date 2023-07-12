@@ -83,7 +83,5 @@ stages:
       name: SetCurrentVersion
     - bash: |
         echo "##[warning]Print Current Version"
-        echo "##[debug]$fullVersion"
         echo "##[command]$(fullVersion)"
       name: printCurrentVersion
-        
