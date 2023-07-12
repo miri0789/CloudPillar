@@ -61,41 +61,41 @@ variables:
 
 
 stages:
-- stage: Test
-  displayName: Test Stage
-  jobs:
-  - job: Test_J_1
-    displayName: Test Job 1
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent 
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
-    - bash: |
-        # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD)
-        # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-        # echo "BuildNumber: $(BuildNumber)"
-        # TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
-        # TAG_PREFIX=$(MajorVersion).$(MinorVersion)
-        # TAG_PREFIX=${{parameters.version}}
-        # TAG=$TAG_PREFIX.$TAG_SUFFIX
-        # echo "TAG: $TAG"
+# - stage: Test
+#   displayName: Test Stage
+#   jobs:
+#   - job: Test_J_1
+#     displayName: Test Job 1
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: aks-${{parameters.env}}-agent 
+#     steps:
+#     - checkout: self
+#       persistCredentials: true
+#       clean: true
+#     - bash: |
+#         # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD)
+#         # && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+#         # echo "BuildNumber: $(BuildNumber)"
+#         # TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
+#         # TAG_PREFIX=$(MajorVersion).$(MinorVersion)
+#         # TAG_PREFIX=${{parameters.version}}
+#         # TAG=$TAG_PREFIX.$TAG_SUFFIX
+#         # echo "TAG: $TAG"
         
-        major=1
-        minor=0
-        # major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-        # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)        
-        echo "##vso[task.setvariable variable=major;]$major"          
-        echo "##vso[task.setvariable variable=minor;]$minor"          
+#         major=1
+#         minor=0
+#         # major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
+#         # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)        
+#         echo "##vso[task.setvariable variable=major;]$major"          
+#         echo "##vso[task.setvariable variable=minor;]$minor"          
 
 
-        # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber}.{TIMESTAMP} && echo TAG: $TAG
-      name: SetVars
-    - bash: |
-        echo "$(major).$(minor)"
-      name: major.minor
+#         # TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && export TAG=${{parameters.version}}.${BuildNumber}.{TIMESTAMP} && echo TAG: $TAG
+#       name: SetVars
+#     - bash: |
+#         echo "$(major).$(minor)"
+#       name: major.minor
 
 
 
@@ -112,60 +112,20 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-        major=1
-        minor=0
-        # major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-        # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)        
+        major=1 && minor=0 && timestamp=$(TIMESTAMP) && buildnumber=$(BuildNumber)
+        FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
+        # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
         echo "##vso[task.setvariable variable=major;]$major"          
         echo "##vso[task.setvariable variable=minor;]$minor"  
       name: SetVars
+    - bash: |
+        echo "major.minor: $(major).$(minor)"
+        FullVersion=$(major).$(minor).$(BuildNumber).$(TIMESTAMP)
+        echo "FullVersion: $FullVersion"
+      name: major.minor          
     - ${{ each parameter in parameters }}:
       - script: echo ${{ parameter.Key }} 
       - script: echo ${{ parameter.Value }}
-
-
-
-
-
-major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    - task: Bash@3
-      displayName: Update Major & Minor Version
-      inputs:
-        targetType: inline
-        script: |
-          echo "##[section]Version File:
-          cat src/backend/version.txt
-          echo "##[section]Major Minor Version:
-          #+TODO Un Comment Both Rows in the Actual Main Version Update
-          # major=$(grep -oP '^major=\K\d+' src/backend/version.txt)
-          # minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)   
-          major=1
-          minor=0
-          echo "major: $major"
-          echo "minor: $minor"
-          echo "$(major).$(minor)"
-          echo "============================================
-
-          OLD_TAG_PREFIX=${{parameters.version}}
-          OLD_TAG_SUFFIX=$(BuildNumber).$(TIMESTAMP)
-          OLD_TAG=$OLD_TAG_PREFIX.$OLD_TAG_SUFFIX
-          echo "OLD_TAG: $OLD_TAG"
-
-          
-
 
 
 
