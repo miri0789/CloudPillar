@@ -28,7 +28,7 @@ variables:
 #   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
 - name: FullVersion
   value: $(major).$(minor).$(BuildNumber).$(TIMESTAMP)
-  
+
 parameters:
   - name: env
     displayName: Select Environment to deploy
@@ -55,11 +55,11 @@ parameters:
   - name: Version
     displayName: Select Major & Minor Verson
     type: string
-    default: $(major).$(minor)
+    default: 1.0
     values:
-    - $(major).$(minor)
-    - $(major).$(minor)
-    - $(major).$(minor)
+    - 1.0
+    - 1.1
+    - 2.1
 
 
 
@@ -82,11 +82,15 @@ stages:
         major=1 && minor=0 && timestamp=$(TIMESTAMP) && buildnumber=$(BuildNumber)
         FullVersion=$major.$minor.$buildnumber.$timestamp && echo "FullVersion: $FullVersion"
         # +TODO major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) && buildnumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+        # echo "##vso[task.setvariable variable=major;isOutput=true]$(grep -oP '^major=\K\d+' src/backend/version.txt)"
+        # echo "##vso[task.setvariable variable=minor;isOutput=true]$(grep -oP '^minor=\K\d+' src/backend/version.txt)"
+        # echo "##vso[task.setvariable variable=version;isOutput=true]$major.$minor.$buildnumber.$timestamp
+        
         echo "##vso[task.setvariable variable=major;isOutput=true]$major"          
         echo "##vso[task.setvariable variable=minor;isOutput=true]$minor"  
         echo "##vso[task.setvariable variable=version;isOutput=true]$FullVersion"  
-      name: SetVars
 
+      name: SetVars
 
 - stage: Update_Version
   displayName: Update Major & Minor Version
