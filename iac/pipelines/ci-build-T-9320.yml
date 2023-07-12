@@ -93,27 +93,25 @@ stages:
     dependsOn: ['SetCurrentVersion']
     variables:              
       ${{ if eq(parameters.versionString, 'latest') }}:
-        - name: Major
-          value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
 
-        - name: Minor
-          value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+        # - name: Minor
+        #   value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
 
-        - name: Version
-          value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
+        # - name: Version
+        #   value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
         
-        - name: FullVersion
-          value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
+        # - name: FullVersion
+        #   value: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
           
       ${{ if ne(parameters.versionString, 'latest') }}:
-        - name: Major
-          value: 8
-        - name: Minor
-          value: 7
-        - name: Version
-          value: 8.7
-        - name: FullVersion
-          value: 8.7
+        Major: 8
+        # - name: Minor
+        #   value: 7
+        # - name: Version
+        #   value: 8.7
+        # - name: FullVersion
+        #   value: 8.7
 
     steps:
     - checkout: self
