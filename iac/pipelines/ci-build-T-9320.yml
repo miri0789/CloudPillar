@@ -123,12 +123,10 @@ stages:
   jobs:
     - job: Update_Version_Job
       displayName: Get and Update Version
-      dependsOn: Create_Variables_Job
       variables:
-        major: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.major']]
-        minor: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.minor']]
-        version: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.version']]  
-        FullVersion: $[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.FullVersion']]  
+        major: $[stageDependencies.Create_Variables_Stage.Create_Variables_Job.outputs['SetVars.major']]
+        minor: $[stageDependencies.Create_Variables_Stage.Create_Variables_Job.outputs['SetVars.minor']]
+        version: $[stageDependencies.Create_Variables_Stage.Create_Variables_Job.outputs['SetVars.version']]  
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent 
@@ -144,8 +142,8 @@ stages:
             # minor="$[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.minor']]"
             # minor="$[stageDependencies.Create_Variables_Stage.create_variables_job.outputs['ADO_variables.FullVersion']]"
             echo "major.minor: $(major).$(minor)"
-            echo "FullVersion: $(FullVersion)"
             echo "version: $(version)"
+            echo "FullVersion: $(FullVersion)"
             cat src/backend/version.txt
           name: PrintVars
 
