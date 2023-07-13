@@ -141,7 +141,7 @@ stages:
 
       name: "UpdateCurrentVersion"
 
-  - job: UpdateCurrentVersion
+  - job: BuildTagScanPus
     displayName: Update Version ID
     pool:
       name: $(AGENT_POOL)
