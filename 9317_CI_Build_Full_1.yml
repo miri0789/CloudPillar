@@ -120,9 +120,9 @@ stages:
           newVersion=$(Major).$newMinor
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
           
-          echo "echo "##vso[task.setvariable variable=Minor]$(newMinor)"
-          echo "echo "##vso[task.setvariable variable=Version]$(newVersion)"
-          echo "echo "##vso[task.setvariable variable=FullVersion]$(newFullVersion)"
+          echo "echo "##vso[task.setvariable variable=Minor]$newMinor"
+          echo "echo "##vso[task.setvariable variable=Version]$newVersion"
+          echo "echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
 
           sed -i "s/^minor=.*/minor=$newMinor/" src/backend/version.txt
           echo "##vso[command]Version TXT File"
@@ -132,14 +132,13 @@ stages:
     - ${{ if eq(parameters.versionString, 'nextmajor') }}:          
 
       - bash: |
-
           newMajor=$(( $(Minor) + 1 ))
           newVersion=$newMajor.$(Minor)
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
           
-          echo "echo "##vso[task.setvariable variable=Major]$(newMajor)"
-          echo "echo "##vso[task.setvariable variable=Version]$(newVersion)"
-          echo "echo "##vso[task.setvariable variable=FullVersion]$(newFullVersion)"
+          echo "echo "##vso[task.setvariable variable=Major]$newMajor"
+          echo "echo "##vso[task.setvariable variable=Version]$newVersion"
+          echo "echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
 
           sed -i "s/^major=.*/major=$newMajor/" src/backend/version.txt
           echo "##vso[command]Version TXT File"
@@ -170,30 +169,19 @@ stages:
         echo "Azure Login Successfull"
         sudo az acr login -n $(ACR_NAME)
         echo "Build ${{parameters.image}} and Update Version Tag"
-        # sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
-        
-        echo $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
-        echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
-        # sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
+        sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
       name: "BuildTagDocker"
         
     - bash: |
         ImageName="backend_${{parameters.image}}"
         FullVersion=$(FullVersion)
-        # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
-        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
-
-        echo $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
-        echo "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion"
-
+        sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
       name: "TriggerTrivyScan"
 
     - bash: |
         ImageName="backend_${{parameters.image}}"
         FullVersion=$(FullVersion)
-        # docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion
-        # sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion
-
-        echo $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
-        echo "docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion"
+        sudo docker ush $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion
       name: "Push"
+        
+        # sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
