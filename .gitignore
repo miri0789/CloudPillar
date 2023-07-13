@@ -13,3 +13,4 @@ src/agent/dotnet/CartoPatch*
 src/agent/dotnet/VelysPatch*
 **/tfplan
 **/.terraform*
+.vscode/extensions.json
