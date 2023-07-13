@@ -121,30 +121,27 @@ stages:
           
           TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) && Version=$Major.$Minor 
           newFullVersion=$Version.$BuildNumber.$TIMESTAMP
+          echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"
 
           echo "##vso[task.setvariable variable=Major]$Major"
-          echo "##vso[task.setvariable variable=Minor]$newMinor"
+          echo "##vso[task.setvariable variable=Minor]$Minor"
           echo "##vso[task.setvariable variable=Version]$Version"
           echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
         name: "BashUpdateCurrentVersion"
     - ${{ if eq(parameters.versionString, 'nextminor') }}:          
       - bash: |
-          TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) && Version=$Major.$Minor 
+          TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) 
+          
+          Minor=$((Minor + 1)) && Version=$Major.$Minor 
           newFullVersion=$Version.$BuildNumber.$TIMESTAMP
+          echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"          
 
-          echo "Major: $Major, Minor:$Minor"
           
-          newMinor=$((Minor + 1))
-          echo "newMinor: $newMinor"
-
-          newVersion=$Major.$newMinor
-          echo "newVersion: $newVersion"
           
-          echo "newFullVersion: $newFullVersion"
           
           echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
-          echo "##vso[task.setvariable variable=Minor;isoutput=true]$newMinor"
-          echo "##vso[task.setvariable variable=Version;isoutput=true]$newVersion"
+          echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
+          echo "##vso[task.setvariable variable=Version;isoutput=true]$Version"
           echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$newFullVersion"
           ###########################################################################################################################################################
           # sed -i "s/^minor=.*/minor=$newMinor/" src/backend/version.txt
@@ -158,19 +155,11 @@ stages:
       - bash: |
           TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) && Version=$Major.$Minor 
           newFullVersion=$Version.$BuildNumber.$TIMESTAMP
+          echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"                    
 
-          echo "Major: $Major, Minor:$Minor"
-
-          newMajor=$((Major + 1))
-          echo "newMajor: $newMajor"
-
-          newVersion=$newMajor.$Minor
-          echo "newVersion: $newVersion"
-          echo "newFullVersion: $newFullVersion"
-
-          echo "##vso[task.setvariable variable=Major]$newMajor"
+          echo "##vso[task.setvariable variable=Major]$Major"
           echo "##vso[task.setvariable variable=Minor]$Minor"
-          echo "##vso[task.setvariable variable=Version]$newVersion"
+          echo "##vso[task.setvariable variable=Version]$Version"
           echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
           ###########################################################################################################################################################
           # sed -i "s/^major=.*/major=$newMajor/" src/backend/version.txt
@@ -190,7 +179,7 @@ stages:
       Major: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Major'] ]
       Minor: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Minor'] ]
       Version: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Version'] ]
-      FullVersion: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.FullVersion'] ]    
+      FullVersion: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.newFullVersion'] ]    
     steps:
     - checkout: self
       persistCredentials: true
