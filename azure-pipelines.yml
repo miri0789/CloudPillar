@@ -104,70 +104,41 @@ stages:
       agent.name: aks-${{parameters.env}}-agent 
     dependsOn: ['SetCurrentVersion']
     variables:              
-      ${{ if eq(parameters.versionString, 'latest') }}:
-        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
-      ${{ if eq(parameters.versionString, 'nextminor') }}:          
-        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-        Minor: 1  
-      ${{ if eq(parameters.versionString, 'nextmajor') }}:          
-        Major: 2
-        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
+      Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+      Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+      Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
+      FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
     steps:
     - checkout: self
       persistCredentials: true
       clean: true
-    - bash: |
-        
-        versionString="${{ parameters.versionString }}"
-        echo "Version String: $versionString"
-        # echo "Version String: ${{ parameters.versionString }}"
+    - ${{ if eq(parameters.versionString, 'nextminor') }}:          
+      - bash: |
+          newMinor=$(( $(Minor) + 1 ))
+          newVersion=$(Major).$newMinor
+          newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
+          
+          echo "echo "##vso[task.setvariable variable=Minor]$(newMinor)"
+          echo "echo "##vso[task.setvariable variable=Version]$(newVersion)"
+          echo "echo "##vso[task.setvariable variable=FullVersion]$(newFullVersion)"
 
-        echo "Major $(Major)"
-        echo "Minor $(Minor)"
-        
-        Version=$(Major).$(Minor)
-        echo "Version $Version"
-        # echo "Version $(Major).$(Minor)"
+          sed -i "s/^minor=.*/minor=$newMinor/" src/backend/version.txt
+          echo "##vso[command]Version TXT File"
+          cat version.txt
 
-        FullVersion=$(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
-        echo "Full Version $FullVersion"
-        # echo "Full Version $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)"
+        name: "BashUpdateMinorVersion"
+    - ${{ if eq(parameters.versionString, 'nextmajor') }}:          
+      - bash: |
+          newMajor=$(( $(Minor) + 1 ))
+          newVersion=$newMajor.$(Minor)
+          newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
+          
+          echo "echo "##vso[task.setvariable variable=Major]$(newMajor)"
+          echo "echo "##vso[task.setvariable variable=Version]$(newVersion)"
+          echo "echo "##vso[task.setvariable variable=FullVersion]$(newFullVersion)"
 
-        echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
-        echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
-        echo "##vso[task.setvariable variable=Version;isoutput=true]$Version"
-        echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$FullVersion"
+          sed -i "s/^major=.*/major=$newMajor/" src/backend/version.txt
+          echo "##vso[command]Version TXT File"
+          cat version.txt
 
-      name: "UpdateCurrentVersion"
-
-  - job: BuildTagScanPus
-    displayName: Build, Tag, Scan, Pusg
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent 
-    dependsOn: ['SetCurrentVersion']
-    variables:              
-      ${{ if eq(parameters.versionString, 'latest') }}:
-        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
-      ${{ if eq(parameters.versionString, 'nextminor') }}:          
-        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-        Minor: 1  
-      ${{ if eq(parameters.versionString, 'nextmajor') }}:          
-        Major: 2
-        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
-    - bash: |
-        az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-        az account set --subscription $(ARM_SUBSCRIPTION_ID)
-        echo "Azure Login Successfull"
-        sudo az acr login -n $(ACR_NAME)
-        echo "Updating ${{parameters.image}} Informational Version Label"
-        timestamp=$(TIMESTAMP) && buildnumber=$(BuildNumber)
-        sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-        sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}        
-      name: "BuildAndTagImage"
+        name: "BashUpdateMajorVersion"
