@@ -170,17 +170,30 @@ stages:
         echo "Azure Login Successfull"
         sudo az acr login -n $(ACR_NAME)
         echo "Build ${{parameters.image}} and Update Version Tag"
-        sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
+        # sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
+        
+        echo $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
+        echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
+        # sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
       name: "BuildTagDocker"
         
     - bash: |
         ImageName="backend_${{parameters.image}}"
         FullVersion=$(FullVersion)
-        sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
+        # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
+        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
+
+        echo $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
+        echo "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion"
+
       name: "TriggerTrivyScan"
 
     - bash: |
         ImageName="backend_${{parameters.image}}"
         FullVersion=$(FullVersion)
-        sudo docker ush $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion
+        # docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion
+        # sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion
+
+        echo $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
+        echo "docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion"
       name: "Push"
