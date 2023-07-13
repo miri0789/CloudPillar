@@ -149,9 +149,13 @@ stages:
           echo "Major: $Major, Minor:$Minor"
           
           newMajor=$((Major + 1))
+          echo "newMajor: $newMajor"
+
           newVersion=$newMajor.$Minor
+          echo "newVersion: $newVersion"
 
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
+          echo "newFullVersion: $newFullVersion"
           
           echo "##vso[task.setvariable variable=Major]$newMajor"
           echo "##vso[task.setvariable variable=Minor]$Minor"
@@ -172,10 +176,10 @@ stages:
       agent.name: aks-${{parameters.env}}-agent 
     dependsOn: ['UpdateCurrentVersion']
     variables:              
-      Major: $[ dependencies.SetCurrentVersion.outputs['BashUpdateCurrentVersion.Major'] ]
-      Minor: $[ dependencies.SetCurrentVersion.outputs['BashUpdateCurrentVersion.Minor'] ]
-      Version: $[ dependencies.SetCurrentVersion.outputs['BashUpdateCurrentVersion.Version'] ]
-      FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashUpdateCurrentVersion.FullVersion'] ]    
+      Major: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Major'] ]
+      Minor: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Minor'] ]
+      Version: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Version'] ]
+      FullVersion: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.FullVersion'] ]    
     steps:
     - checkout: self
       persistCredentials: true
