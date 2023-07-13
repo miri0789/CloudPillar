@@ -12,11 +12,12 @@ public class D2CEventHandler : ID2CEventHandler
     private readonly DeviceClient _deviceClient;
 
     private const int kB = 1024;
-    public D2CEventHandler(ICommonHandler commonHandler)
+    public D2CEventHandler(ICommonHandler commonHandler, IEnvironmentsWrapper environmentsWrapper)
     {
         ArgumentNullException.ThrowIfNull(commonHandler);
+        ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _commonHandler = commonHandler;
-        string _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
+        string _deviceConnectionString = environmentsWrapper.deviceConnectionString;
         TransportType _transportType = commonHandler.GetTransportType();
         _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
     }

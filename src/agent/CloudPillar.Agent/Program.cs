@@ -7,7 +7,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<ICommonHandler, CommonHandler>();
         services.AddSingleton<IC2DSubscriptionHandler, C2DSubscriptionHandler>();
         services.AddSingleton<IFileDownloadHandler, FileDownloadHandler>();
-        services.AddSingleton<IFileStreamerHandler, FileStreamerHandler>();
+        services.AddSingleton<IFileStreamerFactory, FileStreamerFactory>();
         services.AddSingleton<ISignatureHandler, SignatureHandler>();
     })
     .Build();

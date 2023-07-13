@@ -7,5 +7,5 @@ namespace CloudPillar.Agent.Interfaces;
 public interface IFileDownloadHandler
 {
     Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName);
-    Task DownloadMessageDataAsync(DownloadBlobChunkMessage downloadBlobChunkMessage, byte[] messageData);
+    Task DownloadMessageDataAsync(DownloadBlobChunkMessage downloadBlobChunkMessage);
 }

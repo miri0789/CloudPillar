@@ -12,12 +12,24 @@ public abstract class BaseMessage
 {
     public MessageType MessageType { get; set; }
     public Guid ActionGuid { get; set; }
+    public byte[] Data { get; set; }
     public abstract string GetMessageId();
-    public BaseMessage() {}
 
-    public Message PrepareBlobMessage(byte[] data, int expiredMinutes = 60)
+    public BaseMessage() { }
+    public BaseMessage(Microsoft.Azure.Devices.Client.Message message)
     {
-        var message = new Message(data)
+        PropertyInfo[] properties = GetType().GetProperties();
+        foreach (var property in properties)
+        {
+            object value = message.Properties[property.Name];
+            this.GetType().GetProperty(property.Name).SetValue(this, value);
+        }
+        this.Data = message.GetBytes();
+    }
+
+    public Message PrepareBlobMessage(int expiredMinutes = 60)
+    {
+        var message = new Message(this.Data)
         {
             MessageId = this.GetMessageId(),
             ExpiryTimeUtc = DateTime.UtcNow.AddMinutes(expiredMinutes)
@@ -26,24 +38,13 @@ public abstract class BaseMessage
         PropertyInfo[] properties = GetType().GetProperties();
         foreach (var property in properties)
         {
-            message.Properties.Add(property.Name, property.GetValue(this).ToString());
+            if (property.Name != "Data")
+            {
+                message.Properties.Add(property.Name, property.GetValue(this)?.ToString());
+            }
         }
         Console.WriteLine($"BaseMessage PrepareBlobMessage. message title: {this.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
-    }
-
-    public T CreateObjectFromMessage<T>(Microsoft.Azure.Devices.Client.Message message) where T : BaseMessage, new()
-    {
-        var obj = new T();
-
-        PropertyInfo[] properties = GetType().GetProperties();
-        foreach (var property in properties)
-        {
-            object value = message.Properties[property.Name];
-            obj.GetType().GetProperty(property.Name).SetValue(obj, value);
-        }
-
-        return obj;
     }
 
 }

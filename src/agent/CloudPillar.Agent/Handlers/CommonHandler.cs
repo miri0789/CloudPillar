@@ -3,8 +3,15 @@ using CloudPillar.Agent.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 
-public class CommonHandler: ICommonHandler
+public class CommonHandler : ICommonHandler
 {
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
+    public CommonHandler(IEnvironmentsWrapper environmentsWrapper)
+    {
+        ArgumentNullException.ThrowIfNull(environmentsWrapper);
+        _environmentsWrapper = environmentsWrapper;
+    }
+
     /// <summary>
     /// Gets the device ID from the connection string.
     /// </summary>
@@ -30,7 +37,7 @@ public class CommonHandler: ICommonHandler
     /// <returns>The transport type.</returns>
     public TransportType GetTransportType()
     {
-        var transportTypeString = Environment.GetEnvironmentVariable("TRANSPORT_TYPE");
+        var transportTypeString = _environmentsWrapper.transportType;
         return Enum.TryParse(transportTypeString, out TransportType transportType)
             ? transportType
             : TransportType.Amqp;

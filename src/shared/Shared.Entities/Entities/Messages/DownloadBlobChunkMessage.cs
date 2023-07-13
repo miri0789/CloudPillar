@@ -1,5 +1,4 @@
-
-using System.Text.Json.Serialization;
+using Microsoft.Azure.Devices.Client;
 
 namespace shared.Entities.Messages;
 
@@ -17,10 +16,13 @@ public class DownloadBlobChunkMessage : BaseMessage
         return $"{this.FileName}_{this.RangeIndex}_{this.ChunkIndex}";
     }
 
-    [JsonConstructor]
     public DownloadBlobChunkMessage()
     {
         this.MessageType = MessageType.DownloadChunk;
+    }
+    public DownloadBlobChunkMessage(Message message) : base(message)
+    {
+        
     }
 }
 

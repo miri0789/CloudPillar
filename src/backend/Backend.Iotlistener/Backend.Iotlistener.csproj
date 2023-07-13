@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.EventHubs" Version="4.3.2" />
+    <PackageReference Include="Microsoft.Azure.EventHubs.Processor" Version="4.3.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="SharedEntities" Version="1.0.23" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\infra\common\common.csproj" />    
+  </ItemGroup>
+  <PropertyGroup>
+    <InformationalVersion>1.0._BUILDNUM_._TIMESTAMP_</InformationalVersion>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

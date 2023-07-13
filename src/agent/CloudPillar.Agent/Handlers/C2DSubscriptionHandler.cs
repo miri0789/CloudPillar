@@ -28,13 +28,14 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
     /// </summary>
     /// <param name="deviceClient">The DeviceClient associated with the device.</param>
     /// <param name="deviceId">The device identifier.</param>
-    public C2DSubscriptionHandler(ICommonHandler commonHandler, IFileDownloadHandler fileDownloadHandler)
+    public C2DSubscriptionHandler(ICommonHandler commonHandler, IFileDownloadHandler fileDownloadHandler, IEnvironmentsWrapper environmentsWrapper)
     {
         ArgumentNullException.ThrowIfNull(commonHandler);
         ArgumentNullException.ThrowIfNull(fileDownloadHandler);
+        ArgumentNullException.ThrowIfNull(environmentsWrapper);
 
         _fileDownloadHandler = fileDownloadHandler;
-        string _deviceConnectionString = Environment.GetEnvironmentVariable("DEVICE_CONNECTION_STRING");
+        string _deviceConnectionString = environmentsWrapper.deviceConnectionString;
         TransportType _transportType = commonHandler.GetTransportType();
         _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
         _deviceId = commonHandler.GetDeviceIdFromConnectionString(_deviceConnectionString);
@@ -115,9 +116,8 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
                 switch (messageType)
                 {
                     case MessageType.DownloadChunk:
-                        DownloadBlobChunkMessage downloadBlobChunkMessage = new DownloadBlobChunkMessage();
-                        downloadBlobChunkMessage.CreateObjectFromMessage<DownloadBlobChunkMessage>(receivedMessage);
-                        _fileDownloadHandler.DownloadMessageDataAsync(downloadBlobChunkMessage, receivedMessage.GetBytes());
+                        DownloadBlobChunkMessage downloadBlobChunkMessage = new DownloadBlobChunkMessage(receivedMessage);
+                        _fileDownloadHandler.DownloadMessageDataAsync(downloadBlobChunkMessage);
                         break;
                     default: break;
                 }
