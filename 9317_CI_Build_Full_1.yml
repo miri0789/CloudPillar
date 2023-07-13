@@ -120,9 +120,9 @@ stages:
           newVersion=$(Major).$newMinor
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
           
-          echo "echo "##vso[task.setvariable variable=Minor]$newMinor"
-          echo "echo "##vso[task.setvariable variable=Version]$newVersion"
-          echo "echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+          echo "##vso[task.setvariable variable=Minor]$newMinor"
+          echo "##vso[task.setvariable variable=Version]$newVersion"
+          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
 
           sed -i "s/^minor=.*/minor=$newMinor/" src/backend/version.txt
           echo "##vso[command]Version TXT File"
@@ -136,9 +136,9 @@ stages:
           newVersion=$newMajor.$(Minor)
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
           
-          echo "echo "##vso[task.setvariable variable=Major]$newMajor"
-          echo "echo "##vso[task.setvariable variable=Version]$newVersion"
-          echo "echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+          echo "##vso[task.setvariable variable=Major]$newMajor"
+          echo "##vso[task.setvariable variable=Version]$newVersion"
+          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
 
           sed -i "s/^major=.*/major=$newMajor/" src/backend/version.txt
           echo "##vso[command]Version TXT File"
