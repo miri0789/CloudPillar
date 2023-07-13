@@ -199,9 +199,7 @@ stages:
         echo "Build ${{parameters.image}} and Update Version Tag"
         echo "Major: $(Major)     $Major"
         echo "Minor: $(Minor)     $Minor"
-        echo "Version: $(Version)     $Version"
-        echo "newFullVersion: $(newFullVersion)     $newFullVersion"
-        
+
         echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
         sudo docker build -t "$(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion" --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
         ###########################################################################################################################################################
