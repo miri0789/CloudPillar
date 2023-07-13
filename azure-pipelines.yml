@@ -141,9 +141,6 @@ stages:
 
       name: "UpdateCurrentVersion"
 
-
-
-
   - job: UpdateCurrentVersion
     displayName: Update Version ID
     pool:
