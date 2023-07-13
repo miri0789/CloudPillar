@@ -1,8 +1,9 @@
-name: final_9320
+name: ci_build
 
 trigger:
+# - none
 # - $(Build.SourceBranchName)
-- none
+- main
 
 # * Parameters
 parameters:
@@ -27,7 +28,7 @@ parameters:
     - iotlistener
     - keyholder
     - mongowriter
-    - twinlistener  
+    - twinlistener
   - name: versionString
     displayName: Select Major & Minor Verson
     type: string
@@ -39,19 +40,22 @@ parameters:
 
 # * Variables
 variables:
-# * Variables Groups
+#* Variable Groups
 - group: arm-vg
 - group: iac-backend-vg
 - group: aks-backend-vg
 - group: backend-secrets-vg
 
-# * Variables.Variables
-
-# * Dynamic Variables
+#* Dynamic Variables
 - name: TIMESTAMP
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
+
+# - group: images-vg
+
+
+
 
 stages:
 - stage: CI_Build
@@ -92,6 +96,7 @@ stages:
 
         echo "##[endgroup]Get Current Version Finished"
       name: BashSetCurrentVersion
+
   - job: UpdateCurrentVersion
     displayName: Update Version ID
     pool:
@@ -113,62 +118,59 @@ stages:
       persistCredentials: true
       clean: true
     - bash: |
-        echo "Version String: ${{ parameters.versionString }}"
+        
+        versionString="${{ parameters.versionString }}"
+        echo "Version String: $versionString"
+        # echo "Version String: ${{ parameters.versionString }}"
+
         echo "Major $(Major)"
         echo "Minor $(Minor)"
-        echo "Version $(Major).$(Minor)"
-        echo "Full Version $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)"
-      name: "PrintVersion"
-
-  # - job: UpdateCurrentVersion
-  #   displayName: Update Version ID
-  #   pool:
-  #     name: $(AGENT_POOL)
-  #     agent.name: aks-${{parameters.env}}-agent     
-  #   dependsOn: ['SetCurrentVersion']
-  #   variables:              
-  #     ${{ if eq(parameters.versionString, 'latest') }}:
-  #       Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-  #       Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-  #       Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
-  #       FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
-
-  #     ${{ if eq(parameters.versionString, 'nextminor') }}:
-  #       Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-  #       Minor: $['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-  #       # Minor: $[ counter(['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
-  #       # Minor: $[ counter(variables['dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor']'], 1) ]
-  #       Version: $(Major).$(Minor)
-  #       FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
-    
-  #     ${{ if eq(parameters.versionString, 'nextmajor') }}:
-  #       Major: $( $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ] + 1 )
-  #       Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-  #       Version: $(Major).$(Minor)
-  #       FullVersion: $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
-
-  #   steps:
-  #   - checkout: self
-  #     persistCredentials: true
-  #     clean: true
-  #   - bash: |
-  #       echo "Version String: ${{ parameters.versionString }}"
-  #       echo "Major $(Major)"
-  #       echo "Minor $(Minor)"
-  #       echo "Version $(Version)"
-  #       echo "Full Version $(FullVersion)"
-
-  #       # echo "${{ parameters.versionString }}"
-  #       # echo "##[group]Current Group"
-  #       # echo "Current Major: $(Major)"
-  #       # echo "Current Minor: $(Minor)"
-  #       # echo "Current Version: $(Version)"
-  #       # echo "Current Full Version: $(FullVersion)"
-  #       # echo "##[endgroup]Current Group Finished"
-  #     name: UpdateCurrentVersion
-
-
-
-
-
         
+        Version=$(Major).$(Minor)
+        echo "Version $Version"
+        # echo "Version $(Major).$(Minor)"
+
+        FullVersion=$(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)
+        echo "Full Version $FullVersion"
+        # echo "Full Version $(Major).$(Minor).$(BuildNumber).$(TIMESTAMP)"
+
+        echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
+        echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
+        echo "##vso[task.setvariable variable=Version;isoutput=true]$Version"
+        echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$FullVersion"
+
+      name: "UpdateCurrentVersion"
+
+
+
+
+  - job: UpdateCurrentVersion
+    displayName: Update Version ID
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    dependsOn: ['SetCurrentVersion']
+    variables:              
+      ${{ if eq(parameters.versionString, 'latest') }}:
+        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
+      ${{ if eq(parameters.versionString, 'nextminor') }}:          
+        Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+        Minor: 1  
+      ${{ if eq(parameters.versionString, 'nextmajor') }}:          
+        Major: 2
+        Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]  
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - bash: |
+        az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+        az account set --subscription $(ARM_SUBSCRIPTION_ID)
+        echo "Azure Login Successfull"
+        sudo az acr login -n $(ACR_NAME)
+        echo "Updating ${{parameters.image}} Informational Version Label"
+        timestamp=$(TIMESTAMP) && buildnumber=$(BuildNumber)
+        sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+        sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}        
+      name: "BuildAndTagImage"
