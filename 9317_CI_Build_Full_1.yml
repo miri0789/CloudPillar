@@ -141,10 +141,10 @@ stages:
 
           echo "newFullVersion: $newFullVersion"
           
-          echo "##vso[task.setvariable variable=Major]$Major"
-          echo "##vso[task.setvariable variable=Minor]$newMinor"
-          echo "##vso[task.setvariable variable=Version]$newVersion"
-          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+          echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
+          echo "##vso[task.setvariable variable=Minor;isoutput=true]$newMinor"
+          echo "##vso[task.setvariable variable=Version;isoutput=true]$newVersion"
+          echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$newFullVersion"
           ###########################################################################################################################################################
           # sed -i "s/^minor=.*/minor=$newMinor/" src/backend/version.txt
           # echo "##vso[command]Version TXT File"
