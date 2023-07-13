@@ -173,6 +173,8 @@ stages:
         echo "Azure Login Successfull"
         sudo az acr login -n $(ACR_NAME)
         echo "Build ${{parameters.image}} and Update Version Tag"
+        echo "FullVersion1: $FullVersion"
+        echo "FullVersion1: $(FullVersion)"
         echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
         sudo docker build -t "$(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion" --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
         ###########################################################################################################################################################
