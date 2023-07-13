@@ -6,7 +6,7 @@ using Shared.Logger.Wrappers;
 
 namespace Shared.Logger;
 
-public class LoggerFactoryHandler : ILoggerHandlerFactory
+public class LoggerHandlerFactory : ILoggerHandlerFactory
 {
     public ILog CreateLogger(string filename)
     {
