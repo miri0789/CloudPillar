@@ -5,6 +5,8 @@ trigger:
 # - $(Build.SourceBranchName)
 - main
 
+
+# * Parameters
 parameters:
   - name: env
     displayName: Select Environment to deploy
@@ -18,7 +20,7 @@ parameters:
   - name: image
     displayName: Select Image to Build and Scan
     type: string
-    default: blobstreamer
+    default: iotlistener
     values:
     # - all
     - analyzer
@@ -28,16 +30,125 @@ parameters:
     - keyholder
     - mongowriter
     - twinlistener
+  - name: versionString
+    displayName: Select Major & Minor Verson
+    type: string
+    default: latest # 1.0
+    values:
+    - latest # 1.0
+    - nextminor # 1.1
+    - nextmajor #2.0
 
+# * Variables
 variables:
+#* Variable Groups
 - group: arm-vg
 - group: iac-backend-vg
 - group: aks-backend-vg
 - group: backend-secrets-vg
-# - group: images-vg
 
+#* Dynamic Variables
+- name: TIMESTAMP
+  value: $(date +%Y%m%d%H%M%S)
+- name: BuildNumber
+  value: $(git rev-list --count HEAD)
 
 stages:
+- stage: CI_Build
+  displayName: CI Build Process
+
+  jobs:
+  - job: SetCurrentVersion
+    displayName: Set Current Version ID
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - bash: |
+        buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+        ###########################################################################################################################################################
+        # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt) 
+        # Version=$Major.$Minor && FullVersion=$Version.$(BuildNumber).$(TIMESTAMP)
+        ###########################################################################################################################################################        
+        Major=1 && Minor=0
+        Version=$Major.$Minor && FullVersion=$Version.$(BuildNumber).$(TIMESTAMP)
+        ###########################################################################################################################################################
+
+        echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
+        echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
+        echo "##vso[task.setvariable variable=Version;isoutput=true]$Version"
+        echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$FullVersion"
+        
+        echo "##[section]Current Version Section"
+        echo "##[group]Get Current Version Group"
+        
+        echo "Major: $Major"
+        echo "Minor: $Minor"
+        echo buildNumber: $buildNumber
+        
+        echo "Version: $Version"
+        echo "FullVersion: $FullVersion"
+
+        echo "##[endgroup]Get Current Version Finished"
+      name: BashSetCurrentVersion
+
+
+  - job: UpdateCurrentVersion
+
+    displayName: Update Version ID
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    dependsOn: ['SetCurrentVersion']
+    variables:              
+      Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
+      Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
+      Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
+      FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - ${{ if eq(parameters.versionString, 'nextminor') }}:          
+      - bash: |
+          newMinor=$(( $(Minor) + 1 ))
+          newVersion=$(Major).$newMinor
+          newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
+          
+          echo "##vso[task.setvariable variable=Major]$Major"
+          echo "##vso[task.setvariable variable=Minor]$newMinor"
+          echo "##vso[task.setvariable variable=Version]$newVersion"
+          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+          ###########################################################################################################################################################
+          # sed -i "s/^minor=.*/minor=$newMinor/" src/backend/version.txt
+          # echo "##vso[command]Version TXT File"
+          # cat version.txt
+          ###########################################################################################################################################################
+
+        name: "BashUpdateCurrentVersion"
+    - ${{ if eq(parameters.versionString, 'nextmajor') }}:          
+
+      - bash: |
+          newMajor=$(( $(Minor) + 1 ))
+          newVersion=$newMajor.$(Minor)
+          newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
+          
+          echo "##vso[task.setvariable variable=Major]$newMajor"
+          echo "##vso[task.setvariable variable=Minor]$Minor"
+          echo "##vso[task.setvariable variable=Version]$newVersion"
+          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+          ###########################################################################################################################################################
+          # sed -i "s/^major=.*/major=$newMajor/" src/backend/version.txt
+          # echo "##vso[command]Version TXT File"
+          # cat version.txt
+          ###########################################################################################################################################################
+
+        name: "BashUpdateCurrentVersion"
+
+
 - stage: Update_Build_Tag_Scan_Push
   displayName: Update Version, Build, Tag and Push Images
   jobs:
