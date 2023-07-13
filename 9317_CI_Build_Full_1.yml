@@ -118,8 +118,12 @@ stages:
       clean: true
     - ${{ if eq(parameters.versionString, 'nextminor') }}:          
       - bash: |
-          newMinor=$(( $(Minor) + 1 ))
-          newVersion=$(Major).$newMinor
+          Minor=$(Minor) && Major=$(Major)
+          echo "Major: $Major, Minor:$Minor"
+          
+          newMinor=$((Minor + 1))
+          newVersion=$Major.$newMinor
+          
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
           
           echo "##vso[task.setvariable variable=Major]$Major"
@@ -136,8 +140,12 @@ stages:
     - ${{ if eq(parameters.versionString, 'nextmajor') }}:          
 
       - bash: |
-          newMajor=$(( $(Minor) + 1 ))
-          newVersion=$newMajor.$(Minor)
+          Minor=$(Minor) && Major=$(Major)
+          echo "Major: $Major, Minor:$Minor"
+          
+          newMajor=$((Major + 1))
+          newVersion=$newMajor.$Minor
+
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
           
           echo "##vso[task.setvariable variable=Major]$newMajor"
