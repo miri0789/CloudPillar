@@ -116,6 +116,16 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
+    - ${{ if eq(parameters.versionString, 'latest') }}:          
+      - bash: |
+          Minor=$(Minor) && Major=$(Major) && Version=$(Version)
+          newFullVersion=$Version.$(BuildNumber).$(TIMESTAMP)
+
+          echo "##vso[task.setvariable variable=Major]$Major"
+          echo "##vso[task.setvariable variable=Minor]$newMinor"
+          echo "##vso[task.setvariable variable=Version]$Version"
+          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+        name: "BashUpdateCurrentVersion"
     - ${{ if eq(parameters.versionString, 'nextminor') }}:          
       - bash: |
           Minor=$(Minor) && Major=$(Major)
@@ -186,8 +196,10 @@ stages:
       clean: true     
     - bash: |
         ImageName="backend_${{parameters.image}}"
-        FullVersion=$(Version)
-        FullVersion=$(FullVersion)
+        Minor=$(Minor) && Major=$(Major) && Version=$(Version)
+        newFullVersion=$Version.$(BuildNumber).$(TIMESTAMP)
+        echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"
+
         az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
         az account set --subscription $(ARM_SUBSCRIPTION_ID)
         echo "Azure Login Successfull"
@@ -196,14 +208,14 @@ stages:
         echo "Major: $(Major)     $Major"
         echo "Minor: $(Minor)     $Minor"
         echo "Version: $(Version)     $Version"
-        echo "FullVersion1: $(FullVersion)     $FullVersion"
+        echo "newFullVersion: $(newFullVersion)     $newFullVersion"
         
-        echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
-        sudo docker build -t "$(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion" --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
+        echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
+        sudo docker build -t "$(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion" --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
         ###########################################################################################################################################################
-        # sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
+        # sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
         ###########################################################################################################################################################
-        echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
+        echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
         ###########################################################################################################################################################
       name: "BuildTagDocker"
         
@@ -212,10 +224,10 @@ stages:
         FullVersion=$(FullVersion)
         
         ###########################################################################################################################################################
-        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
-        # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion
+        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion
+        # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion
         ###########################################################################################################################################################
-        echo "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion"
+        echo "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion"
         ###########################################################################################################################################################
 
       name: "TriggerTrivyScan"
@@ -224,10 +236,10 @@ stages:
         ImageName="backend_${{parameters.image}}"
         FullVersion=$(FullVersion)
         ###########################################################################################################################################################
-        # sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion
-        # docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion
+        # sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$newFullVersion
+        # docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$newFullVersion
         ###########################################################################################################################################################
-        echo "docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$FullVersion"
+        echo "docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$newFullVersion"
         ###########################################################################################################################################################
       name: "Push"
         
