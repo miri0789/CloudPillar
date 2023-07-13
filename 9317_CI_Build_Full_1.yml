@@ -122,6 +122,7 @@ stages:
           newVersion=$(Major).$newMinor
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
           
+          echo "##vso[task.setvariable variable=Major]$Major"
           echo "##vso[task.setvariable variable=Minor]$newMinor"
           echo "##vso[task.setvariable variable=Version]$newVersion"
           echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
@@ -131,7 +132,7 @@ stages:
           # cat version.txt
           ###########################################################################################################################################################
 
-        name: "BashSetCurrentVersion"
+        name: "BashUpdateCurrentVersion"
     - ${{ if eq(parameters.versionString, 'nextmajor') }}:          
 
       - bash: |
@@ -140,6 +141,7 @@ stages:
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
           
           echo "##vso[task.setvariable variable=Major]$newMajor"
+          echo "##vso[task.setvariable variable=Minor]$Minor"
           echo "##vso[task.setvariable variable=Version]$newVersion"
           echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
           ###########################################################################################################################################################
@@ -148,7 +150,7 @@ stages:
           # cat version.txt
           ###########################################################################################################################################################
 
-        name: "BashSetCurrentVersion"
+        name: "BashUpdateCurrentVersion"
 
   - job: BuildTagScanPush
     displayName: Build Tag Scan Push Image
@@ -157,10 +159,10 @@ stages:
       agent.name: aks-${{parameters.env}}-agent 
     dependsOn: ['UpdateCurrentVersion']
     variables:              
-      Major: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Major'] ]
-      Minor: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Minor'] ]
-      Version: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.Version'] ]
-      FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashSetCurrentVersion.FullVersion'] ]    
+      Major: $[ dependencies.SetCurrentVersion.outputs['BashUpdateCurrentVersion.Major'] ]
+      Minor: $[ dependencies.SetCurrentVersion.outputs['BashUpdateCurrentVersion.Minor'] ]
+      Version: $[ dependencies.SetCurrentVersion.outputs['BashUpdateCurrentVersion.Version'] ]
+      FullVersion: $[ dependencies.SetCurrentVersion.outputs['BashUpdateCurrentVersion.FullVersion'] ]    
     steps:
     - checkout: self
       persistCredentials: true
