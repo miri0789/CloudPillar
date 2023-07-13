@@ -160,10 +160,11 @@ stages:
           echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"          
 
           
-          echo "##vso[task.setvariable variable=Major]$Major"
-          echo "##vso[task.setvariable variable=Minor]$Minor"
-          echo "##vso[task.setvariable variable=Version]$Version"
-          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+          
+          echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
+          echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
+          echo "##vso[task.setvariable variable=Version;isoutput=true]$Version"
+          echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$newFullVersion"
           ###########################################################################################################################################################
           # sed -i "s/^major=.*/major=$newMajor/" src/backend/version.txt
           # echo "##vso[command]Version TXT File"
@@ -199,11 +200,7 @@ stages:
         az account set --subscription $(ARM_SUBSCRIPTION_ID)
         echo "Azure Login Successfull"
         sudo az acr login -n $(ACR_NAME)
-        echo "Build ${{parameters.image}} and Update Version Tag"
-        echo "Major: $(Major)     $Major"
-        echo "Minor: $(Minor)     $Minor"
-        echo "Version: $(Version)     $Version"
-        echo "newFullVersion: $(newFullVersion)     $newFullVersion"
+        echo "ACR Login Successfull"
         
         echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
         sudo docker build -t "$(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion" --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
