@@ -5,7 +5,6 @@ trigger:
 # - $(Build.SourceBranchName)
 - main
 
-
 # * Parameters
 parameters:
   - name: env
@@ -52,6 +51,11 @@ variables:
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
+
+# - group: images-vg
+
+
+
 
 stages:
 - stage: CI_Build
@@ -112,16 +116,33 @@ stages:
     - checkout: self
       persistCredentials: true
       clean: true
+    - ${{ if eq(parameters.versionString, 'latest') }}:          
+      - bash: |
+          
+          TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) && Version=$Major.$Minor 
+          newFullVersion=$Version.$BuildNumber.$TIMESTAMP
+          echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"
+
+          echo "##vso[task.setvariable variable=Major]$Major"
+          echo "##vso[task.setvariable variable=Minor]$Minor"
+          echo "##vso[task.setvariable variable=Version]$Version"
+          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+        name: "BashUpdateCurrentVersion"
     - ${{ if eq(parameters.versionString, 'nextminor') }}:          
       - bash: |
-          newMinor=$(( $(Minor) + 1 ))
-          newVersion=$(Major).$newMinor
-          newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
+          TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) 
           
-          echo "##vso[task.setvariable variable=Major]$Major"
-          echo "##vso[task.setvariable variable=Minor]$newMinor"
-          echo "##vso[task.setvariable variable=Version]$newVersion"
-          echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
+          Minor=$((Minor + 1)) && Version=$Major.$Minor 
+          newFullVersion=$Version.$BuildNumber.$TIMESTAMP
+          echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"          
+
+          
+          
+          
+          echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
+          echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
+          echo "##vso[task.setvariable variable=Version;isoutput=true]$Version"
+          echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$newFullVersion"
           ###########################################################################################################################################################
           # sed -i "s/^minor=.*/minor=$newMinor/" src/backend/version.txt
           # echo "##vso[command]Version TXT File"
@@ -132,13 +153,13 @@ stages:
     - ${{ if eq(parameters.versionString, 'nextmajor') }}:          
 
       - bash: |
-          newMajor=$(( $(Minor) + 1 ))
-          newVersion=$newMajor.$(Minor)
-          newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
-          
-          echo "##vso[task.setvariable variable=Major]$newMajor"
+          TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) && Version=$Major.$Minor 
+          newFullVersion=$Version.$BuildNumber.$TIMESTAMP
+          echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"                    
+
+          echo "##vso[task.setvariable variable=Major]$Major"
           echo "##vso[task.setvariable variable=Minor]$Minor"
-          echo "##vso[task.setvariable variable=Version]$newVersion"
+          echo "##vso[task.setvariable variable=Version]$Version"
           echo "##vso[task.setvariable variable=FullVersion]$newFullVersion"
           ###########################################################################################################################################################
           # sed -i "s/^major=.*/major=$newMajor/" src/backend/version.txt
@@ -148,45 +169,75 @@ stages:
 
         name: "BashUpdateCurrentVersion"
 
-
-- stage: Update_Build_Tag_Scan_Push
-  displayName: Update Version, Build, Tag and Push Images
-  jobs:
-
-  - job: Update_Version_Tag_Build_Image
-    displayName: Updating Version Label, Building and Tagging Images
+  - job: BuildTagScanPush
+    displayName: Build Tag Scan Push Image
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
-      # agent.name: iac-${{parameters.env}}-agent 
+    dependsOn: ['UpdateCurrentVersion']
+    variables:              
+      Major: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Major'] ]
+      Minor: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Minor'] ]
+      Version: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.Version'] ]
+      FullVersion: $[ dependencies.UpdateCurrentVersion.outputs['BashUpdateCurrentVersion.newFullVersion'] ]    
     steps:
     - checkout: self
       persistCredentials: true
-      clean: true
-    - task: Bash@3
-      displayName: Build & Tag Image
-      inputs:
-        targetType: inline
-        script: |
-          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-          az account set --subscription $(ARM_SUBSCRIPTION_ID)
-          echo "Azure Login Successfull"
-          sudo az acr login -n $(ACR_NAME)
-          echo "Updating ${{parameters.image}} Informational Version Label"
-          TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-          sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
-          
-    - task: Bash@3
-      displayName: Trviy Scan Image
-      inputs:
-        targetType: inline
-        script: |
-          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
-          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
+      clean: true     
+    - bash: |
+        ImageName="backend_${{parameters.image}}"
+        TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) && Version=$Major.$Minor 
+        newFullVersion=$Version.$BuildNumber.$TIMESTAMP
 
-    - task: Bash@3
-      displayName: Push Image to ACR
-      inputs:
-        targetType: inline
-        script: |
-          sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
+        echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"
+
+          
+        az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+        az account set --subscription $(ARM_SUBSCRIPTION_ID)
+        echo "Azure Login Successfull"
+        sudo az acr login -n $(ACR_NAME)
+        echo "Build ${{parameters.image}} and Update Version Tag"
+        echo "Major: $(Major)     $Major"
+        echo "Minor: $(Minor)     $Minor"
+        echo "Version: $(Version)     $Version"
+        echo "newFullVersion: $(newFullVersion)     $newFullVersion"
+        
+        echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
+        sudo docker build -t "$(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion" --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
+        ###########################################################################################################################################################
+        # sudo docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
+        ###########################################################################################################################################################
+        echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
+        ###########################################################################################################################################################
+      name: "BuildTagDocker"
+        
+    - bash: |
+        ImageName="backend_${{parameters.image}}"
+        TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) && Version=$Major.$Minor 
+        newFullVersion=$Version.$BuildNumber.$TIMESTAMP
+
+        echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"
+        ###########################################################################################################################################################
+        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion
+        # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion
+        ###########################################################################################################################################################
+        echo "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/$ImageName.dll:$newFullVersion"
+        ###########################################################################################################################################################
+
+      name: "TriggerTrivyScan"
+
+    - bash: |
+        ImageName="backend_${{parameters.image}}"
+        TIMESTAMP=$(TIMESTAMP) && BuildNumber=$(BuildNumber) && Major=$(Major) && Minor=$(Minor) && Version=$Major.$Minor 
+        newFullVersion=$Version.$BuildNumber.$TIMESTAMP
+
+        echo "Major: $Major, Minor:$Minor, newFullVersion:$newFullVersion"
+        ###########################################################################################################################################################
+        # sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$newFullVersion
+        # docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$newFullVersion
+        ###########################################################################################################################################################
+        echo "docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:$newFullVersion"
+        ###########################################################################################################################################################
+      name: "Push"
+        
+        # sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
