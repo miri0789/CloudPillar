@@ -142,7 +142,7 @@ stages:
       name: "UpdateCurrentVersion"
 
   - job: BuildTagScanPus
-    displayName: Update Version ID
+    displayName: Build, Tag, Scan, Pusg
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
