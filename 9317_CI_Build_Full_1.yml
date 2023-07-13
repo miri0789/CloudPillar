@@ -122,9 +122,14 @@ stages:
           echo "Major: $Major, Minor:$Minor"
           
           newMinor=$((Minor + 1))
+          echo "newMinor: $newMinor"
+
           newVersion=$Major.$newMinor
+          echo "newVersion: $newVersion"
           
           newFullVersion=$newVersion.$(BuildNumber).$(TIMESTAMP)
+
+          echo "newFullVersion: $newFullVersion"
           
           echo "##vso[task.setvariable variable=Major]$Major"
           echo "##vso[task.setvariable variable=Minor]$newMinor"
