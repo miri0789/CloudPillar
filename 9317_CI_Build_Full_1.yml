@@ -169,14 +169,18 @@ stages:
       clean: true     
     - bash: |
         ImageName="backend_${{parameters.image}}"
+        FullVersion=$(Version)
         FullVersion=$(FullVersion)
         az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
         az account set --subscription $(ARM_SUBSCRIPTION_ID)
         echo "Azure Login Successfull"
         sudo az acr login -n $(ACR_NAME)
         echo "Build ${{parameters.image}} and Update Version Tag"
-        echo "FullVersion1: $FullVersion"
-        echo "FullVersion1: $(FullVersion)"
+        echo "Major: $(Major)     $Major"
+        echo "Minor: $(Minor)     $Minor"
+        echo "Version: $(Version)     $Version"
+        echo "FullVersion1: $(FullVersion)     $FullVersion"
+        
         echo "docker build -t $(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}"
         sudo docker build -t "$(ACR_NAME).azurecr.io/$ImageName.dll:$FullVersion" --build-arg DLL=$ImageName.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
         ###########################################################################################################################################################
