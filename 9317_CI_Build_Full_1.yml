@@ -131,7 +131,7 @@ stages:
           # cat version.txt
           ###########################################################################################################################################################
 
-        name: "BashUpdateMinorVersion"
+        name: "BashSetCurrentVersion"
     - ${{ if eq(parameters.versionString, 'nextmajor') }}:          
 
       - bash: |
@@ -148,7 +148,7 @@ stages:
           # cat version.txt
           ###########################################################################################################################################################
 
-        name: "BashUpdateMajorVersion"
+        name: "BashSetCurrentVersion"
 
   - job: BuildTagScanPush
     displayName: Build Tag Scan Push Image
