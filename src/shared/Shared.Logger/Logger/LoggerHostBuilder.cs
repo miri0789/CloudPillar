@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
 
 namespace Shared.Logger
 {
@@ -43,5 +44,31 @@ namespace Shared.Logger
                 services.AddSingleton<LogLevelRefreshService>(new LogLevelRefreshService(configuration, _refresher, _logger));
                 services.AddHostedService(provider => provider.GetRequiredService<LogLevelRefreshService>());
             });
+
+        public WebApplicationBuilder CreateWebHostBuilder(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+
+            string connectionString = builder.Configuration.GetConnectionString("AppConfig");
+            builder.Configuration.AddAzureAppConfiguration(options =>
+                    options.Connect(connectionString)
+                    .Select("Logging", LabelFilter.Null)
+                    .ConfigureRefresh(refreshOptions =>
+                    {
+                        refreshOptions.Register("Log4Net:LogLevel:Default", refreshAll: true)
+                                      .Register("Log4Net:LogLevel:AppInsights", refreshAll: true)
+                                      .Register("Log4Net:LogLevel:Appenders", refreshAll: true)
+                                      .Register("Logging:LogLevel:RefreshInterval", refreshAll: true)
+                                      .Register("Logging:AppInsights:InstrumentationKey", refreshAll: false)
+                                      .Register("Logging:AppInsights:ConnectionString", refreshAll: false);
+
+                        _refresher = options.GetRefresher();
+                    }));
+            
+            builder.Services.AddSingleton<LogLevelRefreshService>(new LogLevelRefreshService(builder.Configuration, _refresher, _logger));
+            builder.Services.AddHostedService(provider => provider.GetRequiredService<LogLevelRefreshService>());
+
+            return builder;
+        }
     }
 }
