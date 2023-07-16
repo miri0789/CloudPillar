@@ -9,7 +9,7 @@
     <ProjectReference Include="..\infra\common\common.csproj" />    
   </ItemGroup>
   <PropertyGroup>
-    <InformationalVersion>1.0._BUILDNUM_._TIMESTAMP_</InformationalVersion>
+    <InformationalVersion>4.4.1.20230716114459</InformationalVersion>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

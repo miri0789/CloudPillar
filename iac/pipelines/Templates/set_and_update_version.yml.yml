@@ -1,0 +1,97 @@
+parameters:
+  - name: agentPool
+    type: string
+  - name: env
+    type: string
+  - name: versionString
+    type: string
+  - name: image
+    type: string
+
+jobs:
+- job: UpdateCurrentVersion
+  displayName: UpdateCurrentVersion
+  pool:
+    name: ${{ parameters.agentPool }}
+    agent.name: aks-${{ parameters.env }}-agent
+  steps:
+  - checkout: self
+    persistCredentials: true
+    clean: true
+    ref: refs/heads/$(Build.SourceBranchName)
+  - bash: |
+      echo "image: ${{ parameters.image }}"
+      cd CloudPillar/
+      git branch
+      tree ./
+      
+
+
+
+
+
+# parameters:
+#   - name: agentPool
+#     type: string
+#   - name: env
+#     type: string
+#   - name: versionString
+#     type: string
+
+# jobs:
+# - job: SetAndUpdateVersion
+#   displayName: Set and Update Version ID
+#   pool:
+#     name: ${{ parameters.agentPool }}
+#     agent.name: aks-${{ parameters.env }}-agent 
+#   steps:
+#   - checkout: self
+#     persistCredentials: true
+#     clean: true
+
+#   - bash: |
+#       buildNumber=$(BuildNumber) && timestamp=$(TIMESTAMP)
+      
+#       ###########################################################################################################################################################
+#       # Major=$(grep -oP '^major=\K\d+' src/backend/version.txt) && Minor=$(grep -oP '^minor=\K\d+' src/backend/version.txt)
+#       ###########################################################################################################################################################        
+#       Major=1 && Minor=0
+#       Version=$Major.$Minor && FullVersion=$Version.$buildNumber.$timestamp
+      
+#       echo "##[section]Current Version Section"
+#       echo "##[group]Get Current Version Group"
+      
+#       echo "Major: $Major"
+#       echo "Minor: $Minor"
+#       echo buildNumber: $buildNumber
+      
+#       echo "Version: $Version"
+#       echo "FullVersion: $FullVersion"
+
+#       echo "##[endgroup]Get Current Version Finished"
+      
+#       echo "##[section]Update Version Section"
+#       echo "##[group]Update Version Group"
+
+#       if [[ "${{ parameters.versionString }}" == "latest" ]]; then
+#         newFullVersion=$FullVersion
+#       elif [[ "${{ parameters.versionString }}" == "nextminor" ]]; then
+#         Minor=$((Minor + 1))
+#         newFullVersion=$Major.$Minor.$buildNumber.$timestamp
+#       elif [[ "${{ parameters.versionString }}" == "nextmajor" ]]; then
+#         Major=$((Major + 1))
+#         newFullVersion=$Major.0.$buildNumber.$timestamp
+#       fi
+      
+#       echo "Major: $Major"
+#       echo "Minor: $Minor"
+#       echo "newFullVersion: $newFullVersion"
+      
+#       echo "##vso[task.setvariable variable=Major;isoutput=true]$Major"
+#       echo "##vso[task.setvariable variable=Minor;isoutput=true]$Minor"
+#       echo "##vso[task.setvariable variable=Version;isoutput=true]$Version"
+#       echo "##vso[task.setvariable variable=FullVersion;isoutput=true]$newFullVersion"
+
+#       echo "##[endgroup]Update Version Finished"
+      
+#     name: BashSetAndUpdateVersion

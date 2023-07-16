@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <InformationalVersion>1.0._BUILDNUM_._TIMESTAMP_</InformationalVersion>
+    <InformationalVersion>4.4.1.20230716114459</InformationalVersion>
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
