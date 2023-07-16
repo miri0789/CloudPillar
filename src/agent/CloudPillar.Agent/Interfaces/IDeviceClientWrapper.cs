@@ -3,7 +3,12 @@
 namespace CloudPillar.Agent;
 public interface IDeviceClientWrapper
 {
-    DeviceClient CreateFromConnectionString(string deviceConnectionString, string transportType);
+    DeviceClient CreateDeviceClient();
     Task<Message> ReceiveAsync(CancellationToken cancellationToken, DeviceClient deviceClient);
 
+    string GetDeviceId();
+
+    TransportType GetTransportType();
+
+    Task SendEventAsync(Message message, DeviceClient deviceClient);
 }

@@ -1,6 +1,5 @@
 using System.Text;
 using Microsoft.Azure.Devices.Client;
-using Newtonsoft.Json.Linq;
 using shared.Entities.Messages;
 using CloudPillar.Agent.Interfaces;
 
@@ -17,6 +16,7 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
     private readonly string _deviceId;
 
     private readonly IFileDownloadHandler _fileDownloadHandler;
+    private readonly IDeviceClientWrapper _deviceClientWrapper;
 
     /// <summary>
     /// Gets a value indicating whether the subscription is active.
@@ -28,17 +28,14 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
     /// </summary>
     /// <param name="deviceClient">The DeviceClient associated with the device.</param>
     /// <param name="deviceId">The device identifier.</param>
-    public C2DSubscriptionHandler(ICommonHandler commonHandler, IFileDownloadHandler fileDownloadHandler, IEnvironmentsWrapper environmentsWrapper)
+    public C2DSubscriptionHandler(IDeviceClientWrapper deviceClientWrapper, IFileDownloadHandler fileDownloadHandler)
     {
-        ArgumentNullException.ThrowIfNull(commonHandler);
+        ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(fileDownloadHandler);
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
 
         _fileDownloadHandler = fileDownloadHandler;
-        string _deviceConnectionString = environmentsWrapper.deviceConnectionString;
-        TransportType _transportType = commonHandler.GetTransportType();
-        _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
-        _deviceId = commonHandler.GetDeviceIdFromConnectionString(_deviceConnectionString);
+        _deviceClient = deviceClientWrapper.CreateDeviceClient();
+        _deviceId = deviceClientWrapper.GetDeviceId();
     }
 
     /// <summary>
@@ -100,7 +97,7 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
 
             try
             {
-                receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);
+                receivedMessage = await _deviceClientWrapper.ReceiveAsync(cancellationToken,_deviceClient);
             }
             catch (Exception ex)
             {
