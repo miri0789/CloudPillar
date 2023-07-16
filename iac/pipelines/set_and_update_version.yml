@@ -18,8 +18,8 @@ jobs:
   - checkout: self
     persistCredentials: true
     clean: true
-    ref: refs/heads/$(Build.SourceBranchName)
   - bash: |
+      git checkout $(Build.SourceBranchName)
       echo "image: ${{ parameters.image }}"
       cd CloudPillar/
       git branch
