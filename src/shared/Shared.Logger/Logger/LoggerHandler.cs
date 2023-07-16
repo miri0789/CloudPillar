@@ -75,8 +75,6 @@ public class LoggerHandler : ILoggerHandler
         RefreshAppendersLogLevel("Debug");
         
         Log4netConfigurationValidator.ValidateConfiguration(this);
-
-        Info($"LoggerHandler constructor, app: {applicationName}");
     }
 
     public void Error(string message, params object[] args)
