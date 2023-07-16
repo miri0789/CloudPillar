@@ -27,6 +27,14 @@ parameters:
     - keyholder
     - mongowriter
     - twinlistener
+  - name: versionString
+    displayName: Select Major & Minor Verson
+    type: string
+    default: latest # 1.0
+    values:
+    - latest # 1.0
+    - nextminor # 1.1
+    - nextmajor #2.0
 
 variables:
 - group: arm-vg
