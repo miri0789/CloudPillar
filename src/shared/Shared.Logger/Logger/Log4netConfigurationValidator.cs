@@ -25,7 +25,7 @@ namespace Shared.Logger
                 var appenderType = appender.GetType();
 
                 // Validate conversion pattern
-                ILayout layout = null;
+                ILayout? layout = null;
 
                 var layoutProperty = appenderType.GetProperty("Layout");
                 if (layoutProperty?.CanRead == true)

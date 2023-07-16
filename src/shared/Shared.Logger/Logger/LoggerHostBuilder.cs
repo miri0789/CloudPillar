@@ -49,7 +49,7 @@ namespace Shared.Logger
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            string connectionString = builder.Configuration.GetConnectionString("AppConfig");
+            string? connectionString = builder.Configuration.GetConnectionString("AppConfig");
             builder.Configuration.AddAzureAppConfiguration(options =>
                     options.Connect(connectionString)
                     .Select("Logging", LabelFilter.Null)

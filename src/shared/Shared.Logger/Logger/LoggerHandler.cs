@@ -23,7 +23,7 @@ public class LoggerHandler : ILoggerHandler
 
     private bool m_hasHttpContext;
 
-    private readonly IHttpContextAccessor m_httpContextAccessor;
+    private readonly IHttpContextAccessor? m_httpContextAccessor;
 
     private Level? m_appInsightsLogLevel;
     
@@ -34,13 +34,13 @@ public class LoggerHandler : ILoggerHandler
     private ApplicationInsightsAppender? m_appInsightsAppender;
 
     public LoggerHandler(ILoggerHandlerFactory loggerFactory, string filename,
-                          string appInsightsKey = "", string log4netConfigFile = null,
-                          string applicationName = "", string connectionString = null) : this(loggerFactory,
+                          string? appInsightsKey = null, string? log4netConfigFile = null,
+                          string applicationName = "", string? connectionString = null) : this(loggerFactory,
                               null, loggerFactory.CreateLogger(filename), appInsightsKey, log4netConfigFile,
                               applicationName, connectionString, false)
     { }
 
-    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IHttpContextAccessor httpContextAccessor, ILog logger, string appInsightsKey = null, string log4netConfigFile = null, string applicationName = "", string connectionString = null, bool hasHttpContext = true)
+    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IHttpContextAccessor? httpContextAccessor, ILog logger, string? appInsightsKey = null, string? log4netConfigFile = null, string applicationName = "", string? connectionString = null, bool hasHttpContext = true)
     {
         ArgumentNullException.ThrowIfNull(logger);
         m_logger = logger;
@@ -132,7 +132,7 @@ public class LoggerHandler : ILoggerHandler
             {
                 formattedMessage = string.Format(message, args);
             }
-            catch (FormatException e)
+            catch (FormatException)
             {
                 formattedMessage = string.Join(Environment.NewLine, formattedMessage, "args:", string.Join(", ", args));
             }
@@ -209,7 +209,7 @@ public class LoggerHandler : ILoggerHandler
         TraceLogAppInsightsInternal(message, severityLevel, httpContexProperties);
     }
 
-    private void TraceLogAppInsightsInternal(string message, SeverityLevel severityLevel, IDictionary<string, string> properties = null)
+    private void TraceLogAppInsightsInternal(string message, SeverityLevel severityLevel, IDictionary<string, string>? properties = null)
     {
         if (null == properties)
         {
@@ -228,7 +228,7 @@ public class LoggerHandler : ILoggerHandler
            httpContexProperties);
     }
 
-    private void ExceptionLogAppInsightsInternal(Exception e, IDictionary<string, string> properties = null)
+    private void ExceptionLogAppInsightsInternal(Exception e, IDictionary<string, string>? properties = null)
     {
         if (null == properties)
         {

@@ -43,15 +43,15 @@ namespace Shared.Logger
 
     public class LogLevelOptions
     {
-        public LogLevelOptions(string appInsightsLevel, string appendersLevel, string defaultLevel)
+        public LogLevelOptions(string? appInsightsLevel, string? appendersLevel, string? defaultLevel)
         {
             AppInsights = appInsightsLevel;
             Appenders = appendersLevel;
             Default = defaultLevel;
         }
 
-        public string AppInsights { get; set; }
-        public string Appenders { get; set; }
-        public string Default { get; set; }
+        public string? AppInsights { get; set; }
+        public string? Appenders { get; set; }
+        public string? Default { get; set; }
     }
 }
