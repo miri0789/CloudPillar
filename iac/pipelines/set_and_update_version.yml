@@ -16,7 +16,7 @@ jobs:
     agent.name: aks-${{ parameters.env }}-agent
   steps:
   # - checkout: self
-  - checkout: git://CloudPillar/CloudPillar@$(Source.BranchName)
+  - checkout: git://CloudPillar/CloudPillar@$(Build.SourceBranchName)
     persistCredentials: true
     clean: true
   - bash: |
