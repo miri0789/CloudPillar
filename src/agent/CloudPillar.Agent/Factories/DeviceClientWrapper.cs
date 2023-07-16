@@ -1,7 +1,7 @@
 ﻿using CloudPillar.Agent.Interfaces;
 using Microsoft.Azure.Devices.Client;
 
-namespace CloudPillar.Agent;
+namespace CloudPillar.Agent.Factories;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
 

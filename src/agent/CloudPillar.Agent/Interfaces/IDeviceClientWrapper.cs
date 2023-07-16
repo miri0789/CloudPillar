@@ -1,6 +1,6 @@
 ﻿using Microsoft.Azure.Devices.Client;
 
-namespace CloudPillar.Agent;
+namespace CloudPillar.Agent.Interfaces;
 public interface IDeviceClientWrapper
 {
     DeviceClient CreateDeviceClient();

@@ -1,6 +1,6 @@
 using System.Text;
 using Moq;
-using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Factories;
 using CloudPillar.Agent.Interfaces;
 using System.Reflection;
 
