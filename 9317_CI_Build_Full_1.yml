@@ -1,9 +1,9 @@
 name: ci_build
 
 trigger:
+- main
 # - none
 # - $(Build.SourceBranchName)
-- main
 
 # * Parameters
 parameters:
