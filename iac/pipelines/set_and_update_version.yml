@@ -15,18 +15,35 @@ jobs:
     name: ${{ parameters.agentPool }}
     agent.name: aks-${{ parameters.env }}-agent
   steps:
-  - checkout: self
+  # - checkout: self
+  - checkout: git://CloudPillar/CloudPillar@$(Source.BranchName)
     persistCredentials: true
     clean: true
   - bash: |
-      git checkout $(Build.SourceBranchName)
       echo "image: ${{ parameters.image }}"
       cd CloudPillar/
       git branch
       tree ./
       
+# - job: UpdateCurrentVersion
+#   displayName: UpdateCurrentVersion
+#   pool:
+#     name: ${{ parameters.agentPool }}
+#     agent.name: aks-${{ parameters.env }}-agent
+#   steps:
+#   - checkout: self
+#     persistCredentials: true
+#     clean: true
+#   - bash: |
+#       git checkout $(Build.SourceBranchName)
+#       echo "image: ${{ parameters.image }}"
+#       cd CloudPillar/
+#       git branch
+#       tree ./
+      
+      
 
-
+# git://refs/heads/$(Build.SourceBranchName)
 
 
 
