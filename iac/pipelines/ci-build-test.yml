@@ -48,7 +48,7 @@ stages:
   displayName: 'Build and Scan Images'
   jobs:
   - ${{ if eq(parameters.image, 'all') }}:
-    - ${{ each image in parameters.values }}:
+    - ${{ each image in parameters.image }}:
       - ${{ if ne(image, 'all') }}:
         - template: set_and_update_version.yml
           parameters:
