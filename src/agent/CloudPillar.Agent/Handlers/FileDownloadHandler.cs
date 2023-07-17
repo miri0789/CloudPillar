@@ -31,7 +31,15 @@ public class FileDownloadHandler : IFileDownloadHandler
         await _D2CEventHandler.SendFirmwareUpdateEventAsync(fileName, actionGuid);
     }
 
-    public async Task HandleMessage(DownloadBlobChunkMessage blobChunk)
+    public async Task HandleMessage(BaseMessage message)
+    {
+        if (message is DownloadBlobChunkMessage blobChunk)
+        {
+            await HandleMessage(blobChunk);
+        }
+    }
+
+    private async Task HandleMessage(DownloadBlobChunkMessage blobChunk)
     {
         var file = _filesDownloads.FirstOrDefault(item => item.ActionGuid == blobChunk.ActionGuid && item.FileName == blobChunk.FileName);
         if (file == null)
