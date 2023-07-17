@@ -87,9 +87,9 @@ public class AgentEventProcessor : IEventProcessor
                 string iothubConnectionDeviceId = Environment.GetEnvironmentVariable(Constants.iothubConnectionDeviceId);
                 string? deviceId = eventData.SystemProperties[iothubConnectionDeviceId]?.ToString();
 
-                if (!String.IsNullOrEmpty(deviceId) && agentEvent.eventType != null)
+                if (!String.IsNullOrEmpty(deviceId) && agentEvent.EventType != null)
                 {
-                    switch (agentEvent.eventType)
+                    switch (agentEvent.EventType)
                     {
                         case EventType.FirmwareUpdateReady:
                             {
