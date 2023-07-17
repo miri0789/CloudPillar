@@ -5,7 +5,8 @@ using CloudPillar.Agent.Interfaces;
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
-        services.AddSingleton<IC2DSubscriptionHandler, C2DSubscriptionHandler>();
+        services.AddSingleton<IC2DEventHandler, C2DEventHandler>();
+        services.AddSingleton<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
         services.AddSingleton<IFileDownloadHandler, FileDownloadHandler>();
         services.AddSingleton<IFileStreamerFactory, FileStreamerFactory>();
         services.AddSingleton<ISignatureHandler, SignatureHandler>();
