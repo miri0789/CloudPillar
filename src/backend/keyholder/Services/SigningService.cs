@@ -1,9 +1,11 @@
-﻿using System.Security.Cryptography;
+﻿using System.Xml.Schema;
+using System.Security.Cryptography;
 using System.Text;
 using k8s;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json.Linq;
+using Shared.Logger;
 
 namespace keyholder;
 
@@ -17,10 +19,14 @@ public class SigningService : ISigningService
 {
     private ECDsa _signingPrivateKey;
     private readonly RegistryManager _registryManager;
+    private static ILoggerHandler _logger;
 
-    public SigningService()
+    public SigningService(ILoggerHandler logger)
     {
         _registryManager = RegistryManager.CreateFromConnectionString(Environment.GetEnvironmentVariable(Constants.iothubConnectionString));
+
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
     }
 
     public async Task Init()
@@ -31,7 +37,7 @@ public class SigningService : ISigningService
 
     private static async Task<ECDsa> GetSigningPrivateKeyAsync()
     {
-        Console.WriteLine("Loading signing crypto key...");
+        _logger.Info("Loading signing crypto key...");
         string? privateKeyPem = null;
         bool IsInCluster = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(Constants.kubernetesServiceHost));
         if (IsInCluster)
@@ -40,11 +46,11 @@ public class SigningService : ISigningService
             if (!string.IsNullOrEmpty(privateKeyPem))
             {
                 privateKeyPem = Encoding.UTF8.GetString(Convert.FromBase64String(privateKeyPem));
-                Console.WriteLine($"Key Base64 decoded layer 1");
+                _logger.Info($"Key Base64 decoded layer 1");
             }
             else
             {
-                Console.WriteLine("In kube run-time - loading crypto from the secret in the local namespace.");
+                _logger.Info("In kube run-time - loading crypto from the secret in the local namespace.");
                 string secretName = Environment.GetEnvironmentVariable(Constants.secretName);
                 string secretKey = Environment.GetEnvironmentVariable(Constants.secretKey);
 
@@ -57,7 +63,7 @@ public class SigningService : ISigningService
         }
         else
         {
-            Console.WriteLine("Not in kube run-time - loading crypto from the local storage.");
+            _logger.Info("Not in kube run-time - loading crypto from the local storage.");
             // Load the private key from a local file when running locally
             privateKeyPem = await File.ReadAllTextAsync("dbg/sign-privkey.pem");
         }
@@ -67,26 +73,26 @@ public class SigningService : ISigningService
 
     private static async Task<string> GetPrivateKeyFromK8sSecretAsync(string secretName, string secretKey, string? secretNamespace = null)
     {
-        Console.WriteLine($"GetPrivateKeyFromK8sSecretAsync {secretName}, {secretKey}, {secretNamespace}");
+        _logger.Debug($"GetPrivateKeyFromK8sSecretAsync {secretName}, {secretKey}, {secretNamespace}");
         var config = KubernetesClientConfiguration.BuildDefaultConfig();
         var k8sClient = new Kubernetes(config);
-        Console.WriteLine($"Got k8s client in namespace {config.Namespace}");
+        _logger.Debug($"Got k8s client in namespace {config.Namespace}");
 
         var ns = String.IsNullOrEmpty(secretNamespace) ? config.Namespace : secretNamespace;
         var secrets = await k8sClient.ListNamespacedSecretAsync(ns);
 
-        Console.WriteLine($"Secrets in namespace '{ns}':");
+        _logger.Debug($"Secrets in namespace '{ns}':");
         foreach (var secret in secrets.Items)
         {
-            Console.WriteLine($"- {secret.Metadata.Name}");
+            _logger.Debug($"- {secret.Metadata.Name}");
         }
 
         var targetSecret = await k8sClient.ReadNamespacedSecretAsync(secretName, ns);
-        Console.WriteLine($"Got k8s secret");
+        _logger.Debug($"Got k8s secret");
 
         if (targetSecret.Data.TryGetValue(secretKey, out var privateKeyBytes))
         {
-            Console.WriteLine($"Got k8s secret bytes");
+            _logger.Debug($"Got k8s secret bytes");
             return Encoding.UTF8.GetString(privateKeyBytes);
         }
 
@@ -95,7 +101,7 @@ public class SigningService : ISigningService
 
     private static ECDsa LoadPrivateKeyFromPem(string pemContent)
     {
-        Console.WriteLine($"Loading key from PEM...");
+        _logger.Debug($"Loading key from PEM...");
         var privateKeyContent = pemContent.Replace("-----BEGIN EC PRIVATE KEY-----", "")
                                         .Replace("-----END EC PRIVATE KEY-----", "")
                                         .Replace("-----BEGIN PRIVATE KEY-----", "")
@@ -104,11 +110,11 @@ public class SigningService : ISigningService
                                         .Replace("\r", "")
                                         .Trim();
         var privateKeyBytes = Convert.FromBase64String(privateKeyContent);
-        Console.WriteLine($"Key Base64 decoded");
+        _logger.Debug($"Key Base64 decoded");
         var keyReader = new ReadOnlySpan<byte>(privateKeyBytes);
         ECDsa ecdsa = ECDsa.Create();
         ecdsa.ImportPkcs8PrivateKey(keyReader, out _);
-        Console.WriteLine($"Imported private key");
+        _logger.Debug($"Imported private key");
         return ecdsa;
     }
 

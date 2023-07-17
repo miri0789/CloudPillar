@@ -3,6 +3,7 @@ using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Polly;
 using shared.Entities.Blob;
+using Shared.Logger;
 
 namespace blobstreamer.Services
 {
@@ -18,8 +19,9 @@ namespace blobstreamer.Services
     {
         private readonly CloudBlobContainer _container;
         private readonly ServiceClient _serviceClient;
+        private readonly ILoggerHandler _logger;
 
-        public BlobService()
+        public BlobService(ILoggerHandler logger)
         {
             string StorageConnectionString = Environment.GetEnvironmentVariable(Constants.storageConnectionString)!;
             string blobContainerName = Environment.GetEnvironmentVariable(Constants.blobContainerName);
@@ -29,6 +31,9 @@ namespace blobstreamer.Services
 
             string IotHubConnectionString = Environment.GetEnvironmentVariable(Constants.iothubConnectionString)!;
             _serviceClient = ServiceClient.CreateFromConnectionString(IotHubConnectionString);
+
+            ArgumentNullException.ThrowIfNull(logger);
+            _logger = logger;
         }
 
 
@@ -77,13 +82,13 @@ namespace blobstreamer.Services
 
                 var retryPolicy = Policy.Handle<Exception>()
                     .WaitAndRetryAsync(retryPolicyExponent, retryAttempt => TimeSpan.FromSeconds(Math.Pow(retryPolicyBaseDelay, retryAttempt)),
-                        (ex, time) => Console.WriteLine($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
+                        (ex, time) => _logger.Warn($"Failed to send message. Retrying in {time.TotalSeconds} seconds... ", ex));
                 await retryPolicy.ExecuteAsync(async () => await _serviceClient.SendAsync(deviceId, c2dMessage));
-                Console.WriteLine($"Blobstreamer SendMessage success. message title: {c2dMessage.MessageId}");
+                _logger.Info($"Blobstreamer SendMessage success. message title: {c2dMessage.MessageId}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Blobstreamer SendMessage failed. Message: {ex.Message}");
+                _logger.Warn($"Blobstreamer SendMessage failed.", ex);
             }
         }
 
