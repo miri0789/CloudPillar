@@ -67,6 +67,9 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     }
 
 
-
+    public async Task CompleteAsync(Message message, DeviceClient deviceClient)
+    {
+        await deviceClient.CompleteAsync(message);
+    }
 
 }

@@ -11,4 +11,6 @@ public interface IDeviceClientWrapper
     TransportType GetTransportType();
 
     Task SendEventAsync(Message message, DeviceClient deviceClient);
+
+    Task CompleteAsync(Message message, DeviceClient deviceClient);
 }
