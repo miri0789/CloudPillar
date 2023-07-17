@@ -13,13 +13,12 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         _environmentsWrapper = environmentsWrapper;
     }
 
-    public DeviceClient CreateDeviceClient()
+    public DeviceClient CreateDeviceClient(string connectionString)
     {
         try
         {
-            string _deviceConnectionString = _environmentsWrapper.deviceConnectionString;
             TransportType _transportType = GetTransportType();
-            var _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
+            var _deviceClient = DeviceClient.CreateFromConnectionString(connectionString, _transportType);
             return _deviceClient;
         }
         catch (Exception ex)
@@ -31,10 +30,9 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     }
 
 
-    public string GetDeviceId()
+    public string GetDeviceId(string connectionString)
     {
-        string _deviceConnectionString = _environmentsWrapper.deviceConnectionString;
-        var items = _deviceConnectionString.Split(';');
+        var items = connectionString.Split(';');
         foreach (var item in items)
         {
             if (item.StartsWith("DeviceId"))

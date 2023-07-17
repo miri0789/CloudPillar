@@ -18,9 +18,9 @@ public class C2DEventHandler : IC2DEventHandler
     }
 
 
-    public async Task CreateSubscribe(CancellationToken cancellationToken)
+    public async Task CreateSubscribe(CancellationToken cancellationToken, string connectionString)
     {
-        DeviceClient deviceClient = _deviceClientWrapper.CreateDeviceClient();
+        DeviceClient deviceClient = _deviceClientWrapper.CreateDeviceClient(connectionString);
         Console.WriteLine("Subscribing to C2D messages...");
 
         Task.Run(() => _C2DEventSubscriptionSession.ReceiveC2DMessagesAsync(deviceClient, cancellationToken), cancellationToken);

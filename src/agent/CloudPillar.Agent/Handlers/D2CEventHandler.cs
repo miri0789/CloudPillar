@@ -17,7 +17,7 @@ public class D2CEventHandler : ID2CEventHandler
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _deviceClientWrapper = deviceClientWrapper;
-        _deviceClient = deviceClientWrapper.CreateDeviceClient();
+        _deviceClient = deviceClientWrapper.CreateDeviceClient(environmentsWrapper.deviceConnectionString);
     }
 
     public async Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null)
