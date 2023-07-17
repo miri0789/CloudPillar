@@ -23,17 +23,17 @@ namespace Shared.Logger
             {
                 await _refresher.TryRefreshAsync();
                 
-                LogLevelOptions options = new LogLevelOptions(_configuration["Log4Net:LogLevel:AppInsights"],
-                                                              _configuration["Log4Net:LogLevel:Appenders"],
-                                                              _configuration["Log4Net:LogLevel:Default"]);
+                LogLevelOptions options = new LogLevelOptions(_configuration[LoggerConstants.LOG_LEVEL_APPINSIGHTS_CONFIG],
+                                                              _configuration[LoggerConstants.LOG_LEVEL_APPENDERS_CONFIG],
+                                                              _configuration[LoggerConstants.LOG_LEVEL_DEFAULT_CONFIG]);
 
-                var appInsightsLevelRefresh = options.AppInsights ?? options.Appenders ?? options.Default ?? "Debug";
-                var appendersLevelRefresh = options.Appenders ?? options.AppInsights ?? options.Default ?? "Debug";
+                var appInsightsLevelRefresh = options.AppInsights ?? options.Appenders ?? options.Default ?? LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD;
+                var appendersLevelRefresh = options.Appenders ?? options.AppInsights ?? options.Default ?? LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD;
 
                 _logger.RefreshAppInsightsLogLevel(appInsightsLevelRefresh);
                 _logger.RefreshAppendersLogLevel(appendersLevelRefresh);
 
-                var intervalStr = _configuration["Logging:LogLevel:RefreshInterval"];
+                var intervalStr = _configuration[LoggerConstants.LOG_LEVEL_INTERVAL_CONFIG];
                 double interval = Double.TryParse(intervalStr, out interval) ? interval : 15000;
   
                 await Task.Delay(TimeSpan.FromMilliseconds(interval), stoppingToken);  

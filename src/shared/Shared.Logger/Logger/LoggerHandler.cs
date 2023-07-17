@@ -79,8 +79,8 @@ public class LoggerHandler : ILoggerHandler
             }
         }
 
-        RefreshAppInsightsLogLevel("Debug");
-        RefreshAppendersLogLevel("Debug");
+        RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
+        RefreshAppendersLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
         
         Log4netConfigurationValidator.ValidateConfiguration(this);
     }

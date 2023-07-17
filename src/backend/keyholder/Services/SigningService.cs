@@ -24,6 +24,8 @@ public class SigningService : ISigningService
     public SigningService(ILoggerHandler logger)
     {
         _registryManager = RegistryManager.CreateFromConnectionString(Environment.GetEnvironmentVariable(Constants.iothubConnectionString));
+
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
     }
 

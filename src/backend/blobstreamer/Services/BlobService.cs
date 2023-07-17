@@ -32,6 +32,7 @@ namespace blobstreamer.Services
             string IotHubConnectionString = Environment.GetEnvironmentVariable(Constants.iothubConnectionString)!;
             _serviceClient = ServiceClient.CreateFromConnectionString(IotHubConnectionString);
 
+            ArgumentNullException.ThrowIfNull(logger);
             _logger = logger;
         }
 
@@ -81,13 +82,13 @@ namespace blobstreamer.Services
 
                 var retryPolicy = Policy.Handle<Exception>()
                     .WaitAndRetryAsync(retryPolicyExponent, retryAttempt => TimeSpan.FromSeconds(Math.Pow(retryPolicyBaseDelay, retryAttempt)),
-                        (ex, time) => _logger.Warn($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
+                        (ex, time) => _logger.Warn($"Failed to send message. Retrying in {time.TotalSeconds} seconds... ", ex));
                 await retryPolicy.ExecuteAsync(async () => await _serviceClient.SendAsync(deviceId, c2dMessage));
                 _logger.Info($"Blobstreamer SendMessage success. message title: {c2dMessage.MessageId}");
             }
             catch (Exception ex)
             {
-                _logger.Warn($"Blobstreamer SendMessage failed. Message: {ex.Message}");
+                _logger.Warn($"Blobstreamer SendMessage failed.", ex);
             }
         }
 

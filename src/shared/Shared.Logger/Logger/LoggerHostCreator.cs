@@ -37,12 +37,12 @@ namespace Shared.Logger
                     .Select("Log4Net", LabelFilter.Null)
                     .ConfigureRefresh(refreshOptions =>
                     {
-                        refreshOptions.Register("Log4Net:LogLevel:Default", refreshAll: true)
-                                      .Register("Log4Net:LogLevel:AppInsights", refreshAll: true)
-                                      .Register("Log4Net:LogLevel:Appenders", refreshAll: true)
-                                      .Register("Logging:LogLevel:RefreshInterval", refreshAll: true)
-                                      .Register("Logging:AppInsights:InstrumentationKey", refreshAll: false)
-                                      .Register("Logging:AppInsights:ConnectionString", refreshAll: false);
+                        refreshOptions.Register(LoggerConstants.LOG_LEVEL_DEFAULT_CONFIG, refreshAll: true)
+                                      .Register(LoggerConstants.LOG_LEVEL_APPINSIGHTS_CONFIG, refreshAll: true)
+                                      .Register(LoggerConstants.LOG_LEVEL_APPENDERS_CONFIG, refreshAll: true)
+                                      .Register(LoggerConstants.LOG_LEVEL_INTERVAL_CONFIG, refreshAll: true)
+                                      .Register(LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG, refreshAll: false)
+                                      .Register(LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG, refreshAll: false);
 
                         refresher = options.GetRefresher();
                     }));
