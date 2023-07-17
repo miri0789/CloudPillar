@@ -14,7 +14,7 @@ namespace Shared.Logger
     {
         public static void ValidateConfiguration(ILoggerHandler logger)
         {
-            var appenders = LogManager.GetRepository().GetAppenders();
+            var appenders = LogManager.GetRepository(Assembly.GetExecutingAssembly()).GetAppenders();
             
             foreach (var appender in appenders)
             {
@@ -22,6 +22,7 @@ namespace Shared.Logger
                 {
                     continue;
                 }
+                logger.Debug($"Validating appender {appender.Name}");
                 var appenderType = appender.GetType();
 
                 // Validate conversion pattern

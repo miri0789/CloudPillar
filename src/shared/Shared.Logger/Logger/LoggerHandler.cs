@@ -62,12 +62,20 @@ public class LoggerHandler : ILoggerHandler
                 m_appInsightsAppender.InstrumentationKey = appInsightsKey;
                 m_appInsightsAppender.ActivateOptions();
             }
+            else
+            {
+                Info("Cannot activate Application Insights: Instrumentation Key is null");
+            }
         }
         else
         {
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
                 m_telemetryClient = loggerFactory.CreateTelemetryClient(connectionString);
+            }
+            else
+            {
+                Info("Cannot activate Telemetry: Connection String is null");
             }
         }
 
