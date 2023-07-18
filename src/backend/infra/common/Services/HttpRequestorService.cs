@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
-using Shared.Logger;
 
 namespace common;
 
@@ -15,15 +14,11 @@ public class HttpRequestorService : IHttpRequestorService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ISchemaValidator _schemaValidator;
-    private readonly ILoggerHandler _logger;
 
-    public HttpRequestorService(IHttpClientFactory httpClientFactory, ISchemaValidator schemaValidator, ILoggerHandler logger)
+    public HttpRequestorService(IHttpClientFactory httpClientFactory, ISchemaValidator schemaValidator)
     {
         _httpClientFactory = httpClientFactory;
         _schemaValidator = schemaValidator;
-
-        ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
     }
 
     public async Task SendRequest(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default)

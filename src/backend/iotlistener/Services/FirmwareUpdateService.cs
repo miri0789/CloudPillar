@@ -1,7 +1,4 @@
-﻿using System.Security.Cryptography;
-using System;
-using System.Xml.Schema;
-using Microsoft.Azure.Storage.Blob;
+﻿using Microsoft.Azure.Storage.Blob;
 using common;
 using shared.Entities;
 using Shared.Logger;

@@ -2,7 +2,6 @@
 using System.Text.Json;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
-using Microsoft.AspNetCore.Builder;
 using shared.Entities;
 using shared.Entities.Enums;
 using Shared.Logger;
