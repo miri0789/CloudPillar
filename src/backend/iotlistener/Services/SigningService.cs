@@ -1,5 +1,6 @@
 ﻿using common;
 using shared.Entities;
+using Shared.Logger;
 
 namespace iotlistener;
 
@@ -13,10 +14,14 @@ public class SigningService : ISigningService
 
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly Uri _signingUrl;
-    public SigningService(IHttpRequestorService httpRequestorService)
+    private readonly ILoggerHandler _logger;
+    public SigningService(IHttpRequestorService httpRequestorService, ILoggerHandler logger)
     {
         _httpRequestorService = httpRequestorService;
         _signingUrl = new Uri(Environment.GetEnvironmentVariable(Constants.signingUrl)!);
+
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
     }
 
     public async Task CreateTwinKeySignature(string deviceId, SignEvent signEvent)
@@ -28,7 +33,7 @@ public class SigningService : ISigningService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"SigningService CreateTwinKeySignature failed. Message: {ex.Message}");
+            _logger.Error($"SigningService CreateTwinKeySignature failed.", ex);
             throw;
         }
     }

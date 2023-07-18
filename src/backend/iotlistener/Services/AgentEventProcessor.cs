@@ -2,8 +2,10 @@
 using System.Text.Json;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
+using Microsoft.AspNetCore.Builder;
 using shared.Entities;
 using shared.Entities.Enums;
+using Shared.Logger;
 
 namespace iotlistener;
 
@@ -12,11 +14,15 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
     private readonly string _partitionId;
+    private ILoggerHandler _logger;
 
-    public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService, string partitionId)
+    public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService, ILoggerHandler logger, string partitionId)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        
         _firmwareUpdateService = firmwareUpdateService;
         _signingService = signingService;
+        _logger = logger;
         _partitionId = partitionId;
     }
 
@@ -24,7 +30,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     {
         if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
         {
-            return new AgentEventProcessor(_firmwareUpdateService, _signingService);
+            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _logger);
         }
 
         return new NullEventProcessor();
@@ -34,35 +40,39 @@ public class AgentEventProcessor : IEventProcessor
 {
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
+    private readonly ILoggerHandler _logger;
 
-    public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService)
+    public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService, ISigningService signingService, ILoggerHandler logger)
     {
         _firmwareUpdateService = firmwareUpdateService;
         _signingService = signingService;
+
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
     }
 
     public Task OpenAsync(PartitionContext context)
     {
-        Console.WriteLine($"AgentEventProcessor initialized. Partition: '{context.PartitionId}'");
+        _logger.Info($"AgentEventProcessor initialized. Partition: '{context.PartitionId}'");
         return Task.CompletedTask;
     }
 
     public Task CloseAsync(PartitionContext context, CloseReason reason)
     {
-        Console.WriteLine($"AgentEventProcessor closing. Partition: '{context.PartitionId}', Reason: '{reason}'");
+        _logger.Info($"AgentEventProcessor closing. Partition: '{context.PartitionId}', Reason: '{reason}'");
         return Task.CompletedTask;
     }
 
     public Task ProcessErrorAsync(PartitionContext context, Exception error)
     {
-        Console.WriteLine($"AgentEventProcessor error on Partition: {context.PartitionId}, Error: {error}");
+        _logger.Error($"AgentEventProcessor error on Partition: {context.PartitionId}", error);
         return Task.CompletedTask;
     }
 
     // Process events received from the Event Hubs
     public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
     {
-        Console.WriteLine($"AgentEventProcessor ProcessEventsAsync. Partition: '{context.PartitionId}'.");
+        _logger.Info($"AgentEventProcessor ProcessEventsAsync. Partition: '{context.PartitionId}'.");
         foreach (var eventData in messages)
         {
             try
@@ -70,7 +80,7 @@ public class AgentEventProcessor : IEventProcessor
                 int.TryParse(Environment.GetEnvironmentVariable(Constants.messageTimeoutMinutes), out int messageTimeoutMinutes);
                 if (DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc > TimeSpan.FromMinutes(messageTimeoutMinutes))
                 {
-                    Console.WriteLine("Ignoring message older than 1 hour.");
+                    _logger.Info("Ignoring message older than 1 hour.");
                     continue;
                 }
 
@@ -80,7 +90,7 @@ public class AgentEventProcessor : IEventProcessor
                 string drainD2cQueues = Environment.GetEnvironmentVariable(Constants.drainD2cQueues);
                 if (agentEvent == null || !String.IsNullOrEmpty(drainD2cQueues))
                 {
-                    Console.WriteLine($"Draining on Partition: {context.PartitionId}, Event: {data}");
+                    _logger.Info($"Draining on Partition: {context.PartitionId}, Event: {data}");
                     continue;
                 }
 
@@ -109,7 +119,7 @@ public class AgentEventProcessor : IEventProcessor
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed parsing message on Partition: {context.PartitionId}, Error: {ex.Message} - Ignoring");
+                _logger.Error($"Failed parsing message on Partition: {context.PartitionId}, Error: {ex.Message} - Ignoring", ex);
             }
         }
         await context.CheckpointAsync();
