@@ -15,7 +15,9 @@
     <PackageReference Include="SharedEntities" Version="1.0.25" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" /> 
     <!-- 05/2023: This package has no known vulnerabilities. https://nuget.qite.be/feeds/Default/Swashbuckle.AspNetCore.SwaggerUI/versions/vulnerabilities -->
- 
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\shared\Shared.Logger\Shared.Logger.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,6 @@
 ﻿
-using CloudPillar.Agent.Interfaces;
-
-namespace CloudPillar.Agent.Factories;
-public class FileStreamerFactory : IFileStreamerFactory
+namespace CloudPillar.Agent.Wrappers;
+public class FileStreamerWrapper : IFileStreamerWrapper
 {
     public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {

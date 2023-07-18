@@ -1,7 +1,6 @@
-﻿using CloudPillar.Agent.Interfaces;
-using Microsoft.Azure.Devices.Client;
+﻿using Microsoft.Azure.Devices.Client;
 
-namespace CloudPillar.Agent.Factories;
+namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
 

@@ -1,4 +1,4 @@
-﻿namespace CloudPillar.Agent.Interfaces;
+﻿namespace CloudPillar.Agent.Wrappers;
 
 public interface IEnvironmentsWrapper
 {

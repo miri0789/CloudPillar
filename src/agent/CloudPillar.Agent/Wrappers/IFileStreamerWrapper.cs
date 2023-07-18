@@ -1,6 +1,6 @@
-﻿namespace CloudPillar.Agent.Interfaces;
+﻿namespace CloudPillar.Agent.Wrappers;
 
-public interface IFileStreamerFactory
+public interface IFileStreamerWrapper
 {
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 
