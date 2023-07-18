@@ -13,8 +13,6 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.5" />
     <PackageReference Include="Microsoft.Azure.Devices" Version="1.39.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\shared\Shared.Logger\Shared.Logger.csproj" />
+    <PackageReference Include="SharedLogger" Version="1.0.0" />
   </ItemGroup>
 </Project>
