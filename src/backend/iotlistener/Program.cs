@@ -35,13 +35,13 @@ class Program
             cts.Cancel();
         };
 
-        /*EventProcessorHost eventProcessorHost = new EventProcessorHost(
+        EventProcessorHost eventProcessorHost = new EventProcessorHost(
                 Guid.NewGuid().ToString(),
                 EventHubCompatiblePath,
                 PartitionReceiver.DefaultConsumerGroupName,
                 EventHubCompatibleEndpoint,
                 StorageConnectionString,
-                BlobContainerName);*/
+                BlobContainerName);
 
         var eventProcessorOptions = new EventProcessorOptions
         {
@@ -57,10 +57,10 @@ class Program
         var logger = app.Services.GetService<ILoggerHandler>();
         var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, logger, PartitionId);
 
-        //await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
+        await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 
         await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
 
-        //await eventProcessorHost.UnregisterEventProcessorAsync();
+        await eventProcessorHost.UnregisterEventProcessorAsync();
     }
 }
