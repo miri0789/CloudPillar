@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace CloudPillar.Agent.Interfaces;
+namespace CloudPillar.Agent.Handlers;
 
 
 public interface ISignatureHandler

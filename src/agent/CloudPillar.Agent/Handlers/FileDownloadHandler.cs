@@ -1,20 +1,20 @@
 ﻿using System.Diagnostics;
-using CloudPillar.Agent.Interfaces;
+using CloudPillar.Agent.Wrappers;
 using shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 
 public class FileDownloadHandler : IFileDownloadHandler
 {
-    private readonly IFileStreamerFactory _FileStreamerFactory;
+    private readonly IFileStreamerWrapper _FileStreamerWrapper;
     private readonly ID2CEventHandler _D2CEventHandler;
     private IList<FileDownload> _filesDownloads;
 
-    public FileDownloadHandler(IFileStreamerFactory FileStreamerFactory, ID2CEventHandler D2CEventHandler)
+    public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper, ID2CEventHandler D2CEventHandler)
     {
-        ArgumentNullException.ThrowIfNull(FileStreamerFactory);
+        ArgumentNullException.ThrowIfNull(FileStreamerWrapper);
         ArgumentNullException.ThrowIfNull(D2CEventHandler);
-        _FileStreamerFactory = FileStreamerFactory;
+        _FileStreamerWrapper = FileStreamerWrapper;
         _D2CEventHandler = D2CEventHandler;
         _filesDownloads = new List<FileDownload>();
     }
@@ -44,7 +44,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Stopwatch.Start();
             file.TotalBytes = blobChunk.FileSize;
         }
-        await _FileStreamerFactory.WriteChunkToFileAsync(filePath, blobChunk.Offset, blobChunk.Data);
+        await _FileStreamerWrapper.WriteChunkToFileAsync(filePath, blobChunk.Offset, blobChunk.Data);
 
         CalculateBytesDownloadedPercent(file, blobChunk.Data.Length, blobChunk.Offset);
 
@@ -77,7 +77,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         long endPosition = blobChunk.Offset + blobChunk.Data.Length;
         long startPosition = endPosition - (long)blobChunk.RangeSize;
-        var isEmptyRangeBytes = await _FileStreamerFactory.HasBytesAsync(filePath, startPosition, endPosition);
+        var isEmptyRangeBytes = await _FileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
             await _D2CEventHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);

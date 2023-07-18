@@ -1,7 +1,8 @@
 using System.Text;
+using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using shared.Entities.Messages;
-using CloudPillar.Agent.Interfaces;
+
 
 namespace CloudPillar.Agent.Handlers;
 

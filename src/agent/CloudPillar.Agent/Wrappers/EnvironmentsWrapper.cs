@@ -1,6 +1,4 @@
-﻿using CloudPillar.Agent.Interfaces;
-
-namespace CloudPillar.Agent.Factories;
+﻿namespace CloudPillar.Agent.Wrappers;
 public class EnvironmentsWrapper : IEnvironmentsWrapper
 {
     private const string _deviceConnectionString = "DEVICE_CONNECTION_STRING";
