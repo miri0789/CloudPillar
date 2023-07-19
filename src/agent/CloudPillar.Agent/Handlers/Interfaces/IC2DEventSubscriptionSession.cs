@@ -1,6 +1,6 @@
 using Microsoft.Azure.Devices.Client;
 
-namespace CloudPillar.Agent.Interfaces;
+namespace CloudPillar.Agent.Handlers;
 public interface IC2DEventSubscriptionSession
 {
     Task ReceiveC2DMessagesAsync(DeviceClient deviceClient, CancellationToken cancellationToken);
