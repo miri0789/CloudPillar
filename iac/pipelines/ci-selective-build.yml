@@ -50,9 +50,13 @@ stages:
           SourceBranch=$(Build.SourceBranchName)
           echo "Source Branch Name: $(Build.SourceBranchName)"
           echo "Source Branch Name: $SourceBranch"
-
           git fetch --all
+          git checkout $SourceBranch
+          
+          echo "11"
           git diff-tree --no-commit-id --name-only -r "$SourceBranch"
+          echo "12"
+          git diff-tree --no-commit-id --name-only -r $(Build.SourceBranchName)
           echo "============================"
           echo "============================"
           echo "============================"
