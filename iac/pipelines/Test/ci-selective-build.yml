@@ -40,9 +40,21 @@ stages:
       inputs:
         targetType: inline
         script: |
-          echo "Branch Name: $(Build.SourceBranchName)"
-          git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
+          SourceBranch=$(Build.SourceBranchName)
+          echo "Source Branch Name: $(Build.SourceBranchName)"
+          
+          git checkout $(Build.SourceBranchName)
+          CurrentBranch=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current Branch Name: $CurrentBranch"
+
           differences=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
+          echo "Differences: $differences"
+
+          printf "Tree:\n"
+          tree ./
+
+
+
 
 #   - bash: |
 #       git checkout $(Build.SourceBranchName)
