@@ -20,11 +20,12 @@ parameters:
 variables:
 - group: arm-vg
 
-# resources:
-#   repositories:
-#   - repository: CloudPillar
-#     name: self
-#     ref: $(Build.SourceBranchName)
+resources:
+  repositories:
+  - repository: CloudPillar
+    type: git
+    name: self
+    ref: $(Build.SourceBranchName)
 
 stages:
 - stage: Versioning
@@ -36,8 +37,8 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
     steps:
-    - checkout: self
-    # - checkout: CloudPillar
+    # - checkout: self
+    - checkout: CloudPillar
     # - checkout: git://CloudPillar@CloudPillar$(Build.SourceBranch)
       persistCredentials: true
       clean: true
