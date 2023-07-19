@@ -27,6 +27,9 @@ aks_backend_vm_custom_data = <<CUSTOM_DATA
 #!/bin/bash
 set -x
 echo "Writing token to file" >> /var/log/script.log
+sudo apt remove git -y
+sudo add-apt-repository ppa:git-core/ppa -y
+sudo apt-get update
 apt-get update -y && apt-get upgrade -y  && apt-get dist-upgrade -y 
 apt-get install git curl apt-transport-https ca-certificates software-properties-common -y
 wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg 
