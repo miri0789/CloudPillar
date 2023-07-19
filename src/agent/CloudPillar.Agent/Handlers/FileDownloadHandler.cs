@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using CloudPillar.Agent.Wrappers;
 using shared.Entities.Messages;
 
@@ -9,7 +8,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 {
     private readonly IFileStreamerWrapper _FileStreamerWrapper;
     private readonly ID2CEventHandler _D2CEventHandler;
-    private  readonly ConcurrentBag<FileDownload> _filesDownloads;
+    private IList<FileDownload> _filesDownloads;
 
     public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper, ID2CEventHandler D2CEventHandler)
     {
@@ -17,7 +16,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         ArgumentNullException.ThrowIfNull(D2CEventHandler);
         _FileStreamerWrapper = FileStreamerWrapper;
         _D2CEventHandler = D2CEventHandler;
-        _filesDownloads = new ConcurrentBag<FileDownload>();
+        _filesDownloads = new List<FileDownload>();
     }
 
     public async Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName)
@@ -45,7 +44,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var file = _filesDownloads.FirstOrDefault(item => item.ActionGuid == blobChunk.ActionGuid && item.FileName == blobChunk.FileName);
         if (file == null)
         {
-            throw new ArgumentException($"There is no active download for message {blobChunk.GetMessageId()}");
+            throw new InvalidOperationException($"There is no active download for message {blobChunk.GetMessageId()}");
         }
         var filePath = Path.Combine(file.Path, file.FileName);
         if (!file.Stopwatch.IsRunning)

@@ -17,16 +17,12 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         try
         {
             TransportType _transportType = GetTransportType();
-            var deviceClient = DeviceClient.CreateFromConnectionString(connectionString, _transportType);
-            if (deviceClient == null)
-            {
-                Console.WriteLine($"CreateDeviceClient FromConnectionString failed the device is null");
-            }
-            return deviceClient;
+            var _deviceClient = DeviceClient.CreateFromConnectionString(connectionString, _transportType);
+            return _deviceClient;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"CreateDeviceClient FromConnectionString failed {ex.Message}");
+            Console.WriteLine($"CreateFromConnectionString failed {ex.Message}");
             throw;
 
         }
