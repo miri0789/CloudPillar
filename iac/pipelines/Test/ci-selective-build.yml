@@ -26,8 +26,8 @@ stages:
 - stage: Versioning
   displayName: 'Versioning Update Process'
   jobs:
-  - job: Update_Version_Tag_Build_Image
-    displayName: Updating Version Label, Building and Tagging Images
+  - job: GetFileChanges
+    displayName: Getting Changed Files 
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
@@ -36,7 +36,7 @@ stages:
       persistCredentials: true
       clean: true
     - task: Bash@3
-      displayName: Build & Tag Image
+      displayName: Get Changed Files
       inputs:
         targetType: inline
         script: |
@@ -44,7 +44,13 @@ stages:
           git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
           differences=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
 
-
+#   - bash: |
+#       git checkout $(Build.SourceBranchName)
+#       echo "image: ${{ parameters.image }}"
+#       cd CloudPillar/
+#       git branch
+#       tree ./
+      
 
     # parameters:
     #     agentPool: $(AGENT_POOL)
