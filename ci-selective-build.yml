@@ -1,0 +1,46 @@
+
+name: ci_build
+
+trigger:
+- $(Build.SourceBranchName)
+
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+
+variables:
+- group: arm-vg
+# resources:
+# - repo: self
+#   ref: $(Build.SourceBranchName)
+stages:
+- stage: Versioning
+  displayName: 'Versioning Update Process'
+  jobs:
+  - job: Update_Version_Tag_Build_Image
+    displayName: Updating Version Label, Building and Tagging Images
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - task: Bash@3
+      displayName: Build & Tag Image
+      inputs:
+        targetType: inline
+        script: |
+          echo "Branch Name: $(Build.SourceBranchName)"
+          git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
+          differences=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
+
