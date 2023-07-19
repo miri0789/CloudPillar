@@ -58,8 +58,9 @@ stages:
           echo "Source Branch Name: $(Build.SourceBranchName)"
           echo "Current Branch Name: $CurrentBranch"
 
-          git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
-          differences=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
+          # git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
+          # git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
+          differences=$(git diff-tree --no-commit-id --name-only -r $CurrentBranch)
           echo "Differences: $differences"
 
           printf "Tree:\n"
