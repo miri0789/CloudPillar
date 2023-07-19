@@ -23,6 +23,19 @@ variables:
 # resources:
 # - repo: self
 #   ref: $(Build.SourceBranchName)
+
+
+resources:
+  repositories:
+  - repository: CloudPillar
+    type: git
+    name: CloudPillar/CloudPillar
+    ref: $(Build.SourceBranch)
+
+steps:
+- checkout: CloudPillar
+
+
 stages:
 - stage: Versioning
   displayName: 'Versioning Update Process'
@@ -33,8 +46,9 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
     steps:
+    - checkout: CloudPillar
     # - checkout: self
-    - checkout: git://CloudPillar@CloudPillar$(Build.SourceBranch)
+    # - checkout: git://CloudPillar@CloudPillar$(Build.SourceBranch)
       persistCredentials: true
       clean: true
     - task: Bash@3
