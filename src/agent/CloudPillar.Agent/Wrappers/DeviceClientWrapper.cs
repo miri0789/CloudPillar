@@ -18,8 +18,12 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         {
             string _deviceConnectionString = _environmentsWrapper.deviceConnectionString;
             TransportType _transportType = GetTransportType();
-            var _deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
-            return _deviceClient;
+            var deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
+            if (deviceClient == null)
+            {
+                Console.WriteLine($"CreateDeviceClient FromConnectionString failed the device is null");
+            }
+            return deviceClient;
         }
         catch (Exception ex)
         {

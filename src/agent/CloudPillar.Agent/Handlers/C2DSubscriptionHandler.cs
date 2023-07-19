@@ -102,7 +102,7 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, ex.Message);
+                Console.WriteLine($"{DateTime.Now}: Exception hit when receiving the message, ignoring it: {ex.Message}");
                 continue;
             }
 
@@ -117,15 +117,18 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
                         DownloadBlobChunkMessage downloadBlobChunkMessage = new DownloadBlobChunkMessage(receivedMessage);
                         _fileDownloadHandler.DownloadMessageDataAsync(downloadBlobChunkMessage);
                         break;
-                    default: break;
+                    
+                    default: 
+                        Console.WriteLine($"Recived message was not processed"); 
+                        break;
                 }
 
                 await _deviceClient.CompleteAsync(receivedMessage);
-                Console.WriteLine($"{0}: Recived message of type: {1} completed", DateTime.Now, messageType.ToString());
+                Console.WriteLine($"{DateTime.Now}: Recived message of type: {messageType.ToString()} completed");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, ex.Message);
+                Console.WriteLine($"{DateTime.Now}: Exception hit when parsing the message, ignoring it: {ex.Message}");
                 continue;
             }
         }
