@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Storage.Blob;
 using common;
 using shared.Entities;
+using Shared.Logger;
 
 namespace iotlistener;
 
@@ -13,10 +14,14 @@ public class FirmwareUpdateService : IFirmwareUpdateService
 {
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly Uri _blobStreamerUrl;
-    public FirmwareUpdateService(IHttpRequestorService httpRequestorService)
+    private ILoggerHandler _logger;
+    public FirmwareUpdateService(IHttpRequestorService httpRequestorService, ILoggerHandler logger)
     {
         _httpRequestorService = httpRequestorService;
         _blobStreamerUrl = new Uri(Environment.GetEnvironmentVariable(Constants.blobStreamerUrl)!);
+
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
     }
 
     public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)
@@ -36,7 +41,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
+            _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed.", ex);
             throw ex;
         }
     }
@@ -51,7 +56,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"FirmwareUpdateService GetBlobSize failed. Message: {ex.Message}");
+            _logger.Error($"FirmwareUpdateService GetBlobSize failed.", ex);
             throw ex;
         }
     }

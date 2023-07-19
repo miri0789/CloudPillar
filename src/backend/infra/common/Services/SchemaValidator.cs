@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using System.Collections.Concurrent;
 using System.IO;
+using Shared.Logger;
 
 public interface ISchemaValidator
 {
@@ -13,6 +14,12 @@ public class SchemaValidator : ISchemaValidator
 {
     private readonly ConcurrentDictionary<string, JSchema> SchemaCache = new ConcurrentDictionary<string, JSchema>();
     private readonly string basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "schema");
+    private readonly ILoggerHandler _logger;
+    public SchemaValidator(ILoggerHandler logger)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
+    }
     public bool ValidatePayloadSchema(string payload, string schemaPath, bool isRequest)
     {
         var path = Path.Combine(basePath, GetUriDirectionPath(isRequest), $"{schemaPath}.json");
@@ -23,7 +30,7 @@ public class SchemaValidator : ISchemaValidator
         {
             foreach (var errorMessage in errorMessages)
             {
-                Console.WriteLine(errorMessage);
+                _logger.Error(errorMessage);
             }
         }
 
