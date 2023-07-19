@@ -80,6 +80,19 @@ stages:
 
           tree $(Build.SourcesDirectory)
 
+
+          # Get the commit hash for the last merge commit
+          last_merge_commit=$(git log --merges -n 1 --pretty=format:"%H")
+
+          # Get the commit hash for the parent of the last merge commit
+          parent_of_last_merge=$(git rev-parse "${last_merge_commit}^")
+
+          # Get the list of files changed in the last merge commit
+          changed_files=$(git diff --name-only "${parent_of_last_merge}" "${last_merge_commit}")
+
+          # Print the list of changed files
+          echo "${changed_files}"
+
           # CurrentBranch=$(git symbolic-ref --short HEAD)
           # CurrentBranch2=$(git branch | sed -n '1{s/^* *//;p}')
           # CurrentBranch3=$(git branch --show-current)
