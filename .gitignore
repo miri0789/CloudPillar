@@ -13,3 +13,4 @@ src/agent/dotnet/CartoPatch*
 src/agent/dotnet/VelysPatch*
 **/tfplan
 **/.terraform*
+iac/pipelines/Test/archive.yml

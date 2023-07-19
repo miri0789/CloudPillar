@@ -1,0 +1,134 @@
+
+name: ci_build
+
+trigger:
+- $(Build.SourceBranchName)
+
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+
+variables:
+- group: arm-vg
+# resources:
+# - repo: self
+#   ref: $(Build.SourceBranchName)
+stages:
+- stage: Versioning
+  displayName: 'Versioning Update Process'
+  jobs:
+  - job: Update_Version_Tag_Build_Image
+    displayName: Updating Version Label, Building and Tagging Images
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - task: Bash@3
+      displayName: Build & Tag Image
+      inputs:
+        targetType: inline
+        script: |
+          echo "Branch Name: $(Build.SourceBranchName)"
+          git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
+          differences=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
+
+
+
+    # parameters:
+    #     agentPool: $(AGENT_POOL)
+    #     env: ${{ parameters.env }}
+    
+  # - template: get_version.yml
+  #   parameters:
+  #       agentPool: $(AGENT_POOL)
+  #       env: ${{ parameters.env }}
+    
+
+
+
+  # - template: get_version.yml
+  #     parameters:
+  #       agentPool: $(AGENT_POOL)
+  #       env: ${{ parameters.env }}
+        # versionString: ${{ parameters.versionString }}
+        # image: ${{ image }}
+
+
+
+
+
+
+
+  - ${{ if eq(parameters.image, 'all') }}:
+    - ${{ each image in parameters.image }}:
+      - ${{ if ne(image, 'all') }}:
+        - template: set_and_update_version.yml
+          parameters:
+            agentPool: $(AGENT_POOL)
+            env: ${{ parameters.env }}
+            versionString: ${{ parameters.versionString }}
+            image: ${{ image }}
+  - ${{ if ne(parameters.image, 'all') }}:
+    - template: set_and_update_version.yml
+      parameters:
+        agentPool: $(AGENT_POOL)
+        env: ${{ parameters.env }}
+        versionString: ${{ parameters.versionString }}
+        image: ${{ parameters.image }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
