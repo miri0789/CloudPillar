@@ -38,28 +38,40 @@ stages:
       displayName: Get Changed Files
       inputs:
         targetType: inline
-        script: |
-          
-          SourceBranch=$(Build.SourceBranchName)
-          CurrentBranch=$(git symbolic-ref --short HEAD)
-          CurrentBranch2=$(git branch | sed -n '1{s/^* *//;p}')
-          CurrentBranch3=$(git branch --show-current)
-          
+        script: |          
+          # CurrentBranch=$(git symbolic-ref --short HEAD)
+          # CurrentBranch2=$(git branch | sed -n '1{s/^* *//;p}')
+          # CurrentBranch3=$(git branch --show-current)
           # CurrentBranch=$(git rev-parse --abbrev-ref HEAD)
+          # echo "Current Branch Name: $CurrentBranch"
+          # echo "Current Branch Name2: $CurrentBranch2"
+          # echo "Current Branch Name3: $CurrentBranch3"
 
-
-
+          SourceBranch=$(Build.SourceBranchName)
           echo "Source Branch Name: $(Build.SourceBranchName)"
-          echo "Current Branch Name: $CurrentBranch"
-          echo "Current Branch Name2: $CurrentBranch2"
-          echo "Current Branch Name3: $CurrentBranch3"
+
+          git diff-tree --no-commit-id --name-only -r $SourceBranch
+          echo "============================"
+          echo "============================"
+          echo "============================"
+          git diff --name-only HEAD HEAD~1
+
+          echo Differences1:
+          Diff1=$(git diff-tree --no-commit-id --name-only -r $SourceBranch)
+          echo "Diff1: $Diff1"
+
+          echo Differences2:
+          Diff2=$(git diff --name-only HEAD HEAD~1)
+          echo "Diff2: $Diff2"
+          
+
+
 
           # git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
-          # git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
-          differences=$(git diff-tree --no-commit-id --name-only -r $CurrentBranch)
-          differences2=$(git diff-tree --no-commit-id --name-only -r $CurrentBranch2)
-          echo "Differences: $differences"
-          echo "Differences2: $differences2"
+          # differences=$(git diff-tree --no-commit-id --name-only -r $CurrentBranch)
+          # differences2=$(git diff-tree --no-commit-id --name-only -r $CurrentBranch2)
+          # echo "Differences: $differences"
+          # echo "Differences2: $differences2"
 
           printf "Tree:\n"
           tree ./
