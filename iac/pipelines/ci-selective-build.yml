@@ -58,58 +58,6 @@ stages:
 
 
 
-#   - bash: |
-#       git checkout $(Build.SourceBranchName)
-#       echo "image: ${{ parameters.image }}"
-#       cd CloudPillar/
-#       git branch
-#       tree ./
-      
-
-    # parameters:
-    #     agentPool: $(AGENT_POOL)
-    #     env: ${{ parameters.env }}
-    
-  # - template: get_version.yml
-  #   parameters:
-  #       agentPool: $(AGENT_POOL)
-  #       env: ${{ parameters.env }}
-    
-
-
-
-  # - template: get_version.yml
-  #     parameters:
-  #       agentPool: $(AGENT_POOL)
-  #       env: ${{ parameters.env }}
-        # versionString: ${{ parameters.versionString }}
-        # image: ${{ image }}
-
-
-
-
-
-
-
-  - ${{ if eq(parameters.image, 'all') }}:
-    - ${{ each image in parameters.image }}:
-      - ${{ if ne(image, 'all') }}:
-        - template: set_and_update_version.yml
-          parameters:
-            agentPool: $(AGENT_POOL)
-            env: ${{ parameters.env }}
-            versionString: ${{ parameters.versionString }}
-            image: ${{ image }}
-  - ${{ if ne(parameters.image, 'all') }}:
-    - template: set_and_update_version.yml
-      parameters:
-        agentPool: $(AGENT_POOL)
-        env: ${{ parameters.env }}
-        versionString: ${{ parameters.versionString }}
-        image: ${{ parameters.image }}
-
-
-
 
 
 
