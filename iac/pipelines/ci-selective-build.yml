@@ -3,7 +3,6 @@ name: ci_build
 
 trigger:
 - $(Build.SourceBranchName)
-# - "TestBranch"
 
 
 
@@ -20,16 +19,12 @@ parameters:
 
 variables:
 - group: arm-vg
+
 # resources:
-# - repo: self
-#   ref: $(Build.SourceBranchName)
-
-
-resources:
-  repositories:
-  - repository: CloudPillar
-    name: self
-    ref: $(Build.SourceBranchName)
+#   repositories:
+#   - repository: CloudPillar
+#     name: self
+#     ref: $(Build.SourceBranchName)
 
 stages:
 - stage: Versioning
@@ -41,8 +36,8 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
     steps:
-    - checkout: CloudPillar
-    # - checkout: self
+    - checkout: self
+    # - checkout: CloudPillar
     # - checkout: git://CloudPillar@CloudPillar$(Build.SourceBranch)
       persistCredentials: true
       clean: true
