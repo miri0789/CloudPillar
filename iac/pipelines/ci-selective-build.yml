@@ -41,12 +41,18 @@ stages:
         script: |
           
           SourceBranch=$(Build.SourceBranchName)
-          CurrentBranch=$(git rev-parse --abbrev-ref HEAD)
-          CurrentBranch2=$(git branch --show-current)
+          CurrentBranch=$(git symbolic-ref --short HEAD)
+          CurrentBranch2=$(git branch | sed -n '1{s/^* *//;p})
+          CurrentBranch3=$(git branch --show-current)
+          
+          # CurrentBranch=$(git rev-parse --abbrev-ref HEAD)
+
+
 
           echo "Source Branch Name: $(Build.SourceBranchName)"
           echo "Current Branch Name: $CurrentBranch"
           echo "Current Branch Name2: $CurrentBranch2"
+          echo "Current Branch Name3: $CurrentBranch3"
 
           # git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
           # git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
