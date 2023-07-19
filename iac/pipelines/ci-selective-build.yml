@@ -24,8 +24,9 @@ resources:
   repositories:
   - repository: CloudPillar
     type: git
-    name: self
-    ref: $(Build.SourceBranchName)
+    name: CloudPillar/CloudPillar
+    ref: $(Build.SourceBranch)
+
 
 stages:
 - stage: Versioning
