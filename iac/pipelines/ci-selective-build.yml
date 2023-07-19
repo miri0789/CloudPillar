@@ -49,20 +49,24 @@ stages:
 
           SourceBranch=$(Build.SourceBranchName)
           echo "Source Branch Name: $(Build.SourceBranchName)"
+          echo "Source Branch Name: $SourceBranch"
 
-          git diff-tree --no-commit-id --name-only -r $SourceBranch
+          git fetch --all
+          git diff-tree --no-commit-id --name-only -r "$SourceBranch"
           echo "============================"
           echo "============================"
           echo "============================"
           git diff --name-only HEAD HEAD~1
 
-          echo Differences1:
-          Diff1=$(git diff-tree --no-commit-id --name-only -r $SourceBranch)
-          echo "Diff1: $Diff1"
+          # echo Differences1:
+          # Diff1=$(git diff-tree --no-commit-id --name-only -r "$SourceBranch")
+          # echo "Diff1:"
+          # echo "$Diff1"
 
-          echo Differences2:
-          Diff2=$(git diff --name-only HEAD HEAD~1)
-          echo "Diff2: $Diff2"
+          # echo Differences2:
+          # Diff2=$(git diff --name-only HEAD HEAD~1)
+          # echo "Diff2"
+          # echo "$Diff2"
           
 
 
