@@ -28,9 +28,8 @@ variables:
 resources:
   repositories:
   - repository: CloudPillar
-    type: git
-    name: CloudPillar/CloudPillar
-    ref: $(Build.SourceBranch)
+    name: self
+    ref: $(Build.SourceBranchName)
 
 stages:
 - stage: Versioning
@@ -52,13 +51,14 @@ stages:
       inputs:
         targetType: inline
         script: |
-          SourceBranch=$(Build.SourceBranchName)
-          echo "Source Branch Name: $(Build.SourceBranchName)"
           
-          git checkout --force $(Build.SourceBranchName)
+          SourceBranch=$(Build.SourceBranchName)
           CurrentBranch=$(git rev-parse --abbrev-ref HEAD)
+
+          echo "Source Branch Name: $(Build.SourceBranchName)"
           echo "Current Branch Name: $CurrentBranch"
 
+          git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
           differences=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
           echo "Differences: $differences"
 
