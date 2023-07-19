@@ -42,7 +42,7 @@ stages:
           
           SourceBranch=$(Build.SourceBranchName)
           CurrentBranch=$(git symbolic-ref --short HEAD)
-          CurrentBranch2=$(git branch | sed -n '1{s/^* *//;p})
+          CurrentBranch2=$(git branch | sed -n '1{s/^* *//;p}')
           CurrentBranch3=$(git branch --show-current)
           
           # CurrentBranch=$(git rev-parse --abbrev-ref HEAD)
