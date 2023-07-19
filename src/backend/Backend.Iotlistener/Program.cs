@@ -7,6 +7,12 @@ using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Extensions.DependencyInjection;
 
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Builder;
+
+using Shared.Logger;
+
 class Program
 {
     public async static Task Main(string[] args)
@@ -18,9 +24,9 @@ class Program
         serviceCollection.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
         serviceCollection.AddScoped<ISigningService, SigningService>();
         serviceCollection.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+        var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
+        builder.Services.AddHttpClient();
 
-        serviceCollection.AddHttpClient();
-        var serviceProvider = serviceCollection.BuildServiceProvider();
         var cts = new CancellationTokenSource();
         AssemblyLoadContext.Default.Unloading += context =>
         {
@@ -50,7 +56,8 @@ class Program
 
         var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
         var signingService = serviceProvider.GetService<ISigningService>();
-        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, _envirementVariable, PartitionId);
+        var logger = app.Services.GetService<ILoggerHandler>();
+        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, _envirementVariable, logger, PartitionId);
 
         await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 

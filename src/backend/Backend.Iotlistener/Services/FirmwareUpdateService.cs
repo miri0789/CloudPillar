@@ -2,6 +2,7 @@
 using common;
 using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Models.Enums;
+using Shared.Logger;
 
 namespace Backend.Iotlistener.Services;
 
@@ -9,14 +10,18 @@ public class FirmwareUpdateService : IFirmwareUpdateService
 {
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-    public FirmwareUpdateService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper)
+    private readonly ILoggerHandler _logger;
+    public FirmwareUpdateService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper,
+     ILoggerHandler logger)
     {
         ArgumentNullException.ThrowIfNull(httpRequestorService);
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
+        ArgumentNullException.ThrowIfNull(logger);
 
+        _logger = logger;
         _environmentsWrapper = environmentsWrapper;
         _httpRequestorService = httpRequestorService;
-        
+
     }
 
     public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)
@@ -49,7 +54,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
+                _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
 
             }
         }
@@ -65,7 +70,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"FirmwareUpdateService GetBlobSize failed. Message: {ex.Message}");
+            _logger.Error($"FirmwareUpdateService GetBlobSize failed. Message: {ex.Message}");
             return null;
         }
     }
