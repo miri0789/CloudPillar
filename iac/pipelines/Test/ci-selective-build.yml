@@ -2,7 +2,8 @@
 name: ci_build
 
 trigger:
-- $(Build.SourceBranchName)
+# - $(Build.SourceBranchName)
+- "TestBranch"
 
 
 
@@ -32,7 +33,8 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
     steps:
-    - checkout: self
+    # - checkout: self
+    - checkout: git://CloudPillar@CloudPillar$(Build.SourceBranch)
       persistCredentials: true
       clean: true
     - task: Bash@3
@@ -43,7 +45,7 @@ stages:
           SourceBranch=$(Build.SourceBranchName)
           echo "Source Branch Name: $(Build.SourceBranchName)"
           
-          git checkout $(Build.SourceBranchName)
+          git checkout --force $(Build.SourceBranchName)
           CurrentBranch=$(git rev-parse --abbrev-ref HEAD)
           echo "Current Branch Name: $CurrentBranch"
 
@@ -89,22 +91,22 @@ stages:
 
 
 
-  - ${{ if eq(parameters.image, 'all') }}:
-    - ${{ each image in parameters.image }}:
-      - ${{ if ne(image, 'all') }}:
-        - template: set_and_update_version.yml
-          parameters:
-            agentPool: $(AGENT_POOL)
-            env: ${{ parameters.env }}
-            versionString: ${{ parameters.versionString }}
-            image: ${{ image }}
-  - ${{ if ne(parameters.image, 'all') }}:
-    - template: set_and_update_version.yml
-      parameters:
-        agentPool: $(AGENT_POOL)
-        env: ${{ parameters.env }}
-        versionString: ${{ parameters.versionString }}
-        image: ${{ parameters.image }}
+  # - ${{ if eq(parameters.image, 'all') }}:
+  #   - ${{ each image in parameters.image }}:
+  #     - ${{ if ne(image, 'all') }}:
+  #       - template: set_and_update_version.yml
+  #         parameters:
+  #           agentPool: $(AGENT_POOL)
+  #           env: ${{ parameters.env }}
+  #           versionString: ${{ parameters.versionString }}
+  #           image: ${{ image }}
+  # - ${{ if ne(parameters.image, 'all') }}:
+  #   - template: set_and_update_version.yml
+  #     parameters:
+  #       agentPool: $(AGENT_POOL)
+  #       env: ${{ parameters.env }}
+  #       versionString: ${{ parameters.versionString }}
+  #       image: ${{ parameters.image }}
 
 
 
