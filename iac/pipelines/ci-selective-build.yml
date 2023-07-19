@@ -2,8 +2,18 @@
 name: ci_build
 
 trigger:
-- $(Build.SourceBranchName)
-
+  batch: true
+  branches:
+    include:
+    - main
+    -testbranch
+  paths:
+    include:
+    - src/backend/*    
+# trigger:
+# - $(Build.SourceBranchName)
+# - source
+# - testbranch
 
 
 parameters:
@@ -34,11 +44,42 @@ stages:
     # - checkout: git://CloudPillar@CloudPillar$(Build.SourceBranch)
       persistCredentials: true
       clean: true
+      # clean: false
+
+    - task: PublishPipelineArtifact@1
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      
+
     - task: Bash@3
       displayName: Get Changed Files
       inputs:
         targetType: inline
         script: |          
+
+          SourceBranch=$(Build.SourceBranchName)
+          echo "Source Branch Name: $(Build.SourceBranchName)"
+          echo "Source Branch Name: $SourceBranch"
+          git fetch origin
+          git pull --all
+          git checkout $SourceBranch
+
+          echo "1"
+          echo "============================"
+          printf "$(Build.SourceVersion)~1 \n $(Build.SourceVersion)"
+          git diff --name-only $(Build.SourceVersion)~1 $(Build.SourceVersion)
+          echo "============================"
+
+          echo "2"
+          echo "============================"
+          git diff HEAD~1
+          echo "============================"
+
+
+          printf "Tree:\n"
+          # tree ./
+
+          tree $(Build.SourcesDirectory)
+
           # CurrentBranch=$(git symbolic-ref --short HEAD)
           # CurrentBranch2=$(git branch | sed -n '1{s/^* *//;p}')
           # CurrentBranch3=$(git branch --show-current)
@@ -47,22 +88,15 @@ stages:
           # echo "Current Branch Name2: $CurrentBranch2"
           # echo "Current Branch Name3: $CurrentBranch3"
 
-          SourceBranch=$(Build.SourceBranchName)
-          echo "Source Branch Name: $(Build.SourceBranchName)"
-          echo "Source Branch Name: $SourceBranch"
-          git fetch --all
-          git checkout $SourceBranch
-
-          echo "11"
-          git diff-tree --no-commit-id --name-only -r "$SourceBranch"
-          echo "12"
-          git diff-tree --no-commit-id --name-only -r $(Build.SourceBranchName)
-          echo "13"
-          git diff --name-only HEAD HEAD~1
+          # git diff-tree --no-commit-id --name-only -r "$SourceBranch"
+          # echo "12"
+          # git diff-tree --no-commit-id --name-only -r $(Build.SourceBranchName)
+          # echo "13"
+          # git diff --name-only HEAD HEAD~1
           
-          echo "============================"
-          echo "============================"
-          echo "============================"
+          # echo "============================"
+          # echo "============================"
+          # echo "============================"
 
           # echo Differences1:
           # Diff1=$(git diff-tree --no-commit-id --name-only -r "$SourceBranch")
@@ -83,8 +117,6 @@ stages:
           # echo "Differences: $differences"
           # echo "Differences2: $differences2"
 
-          printf "Tree:\n"
-          tree ./
 
 
 
