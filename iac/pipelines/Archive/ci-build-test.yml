@@ -1,0 +1,65 @@
+
+name: ci_build
+
+trigger:
+- $(Build.SourceBranchName)
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: blobstreamer
+    values:
+    - all
+    - analyzer
+    - beapi
+    - blobstreamer
+    - iotlistener
+    - keyholder
+    - mongowriter
+    - twinlistener
+  - name: versionString
+    displayName: Select Major & Minor Verson
+    type: string
+    default: latest # 1.0
+    values:
+    - latest # 1.0
+    - nextminor # 1.1
+    - nextmajor #2.0
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+# - group: images-vg
+
+stages:
+- stage: BuildScanPush
+  displayName: 'Build and Scan Images'
+  jobs:
+  - ${{ if eq(parameters.image, 'all') }}:
+    - ${{ each image in parameters.image }}:
+      - ${{ if ne(image, 'all') }}:
+        - template: set_and_update_version.yml
+          parameters:
+            agentPool: $(AGENT_POOL)
+            env: ${{ parameters.env }}
+            versionString: ${{ parameters.versionString }}
+            image: ${{ image }}
+  - ${{ if ne(parameters.image, 'all') }}:
+    - template: set_and_update_version.yml
+      parameters:
+        agentPool: $(AGENT_POOL)
+        env: ${{ parameters.env }}
+        versionString: ${{ parameters.versionString }}
+        image: ${{ parameters.image }}
