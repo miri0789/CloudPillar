@@ -45,53 +45,84 @@ stages:
       persistCredentials: true
       clean: true
       # clean: false
-
-    - task: PublishPipelineArtifact@1
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-      
-
     - task: Bash@3
       displayName: Get Changed Files
       inputs:
         targetType: inline
         script: |          
-
+          git branch
           SourceBranch=$(Build.SourceBranchName)
           echo "Source Branch Name: $(Build.SourceBranchName)"
-          echo "Source Branch Name: $SourceBranch"
           git fetch origin
-          git pull --all
           git checkout $SourceBranch
-
-          echo "1"
-          echo "============================"
-          printf "$(Build.SourceVersion)~1 \n $(Build.SourceVersion)"
-          git diff --name-only $(Build.SourceVersion)~1 $(Build.SourceVersion)
-          echo "============================"
-
-          echo "2"
-          echo "============================"
-          git diff HEAD~1
-          echo "============================"
-
-
-          printf "Tree:\n"
-          # tree ./
-
-          tree $(Build.SourcesDirectory)
-
-
-          # Get the commit hash for the last merge commit
-          last_merge_commit=$(git log --merges -n 1 --pretty=format:"%H")
-
-          # Get the commit hash for the parent of the last merge commit
-          parent_of_last_merge=$(git rev-parse "${last_merge_commit}^")
-
-          # Get the list of files changed in the last merge commit
-          changed_files=$(git diff --name-only "${parent_of_last_merge}" "${last_merge_commit}")
+          git pull --all
+          
 
           # Print the list of changed files
           echo "${changed_files}"
+          
+          echo "Get the commit hash for the last merge commit"
+          echo "================================================="
+          last_merge_commit=$(git log --merges -n 1 --pretty=format:"%H")
+          echo "last_merge_commit: $last_merge_commit"
+
+          echo "Get the commit hash for the parent of the last merge commit"
+          echo "================================================="
+          parent_of_last_merge=$(git rev-parse "${last_merge_commit}^")
+          echo "parent_of_last_merge: $parent_of_last_merge"
+
+
+          echo "Get the list of files changed in the last merge commit"
+          echo "================================================="
+          changed_files=$(git diff --name-only "${parent_of_last_merge}" "${last_merge_commit}")
+          echo "changed_files: $changed_files"
+
+
+
+    # - task: PublishPipelineArtifact@1
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      
+
+    # - task: Bash@3
+    #   displayName: Get Changed Files
+    #   inputs:
+    #     targetType: inline
+    #     script: |          
+
+    #       SourceBranch=$(Build.SourceBranchName)
+    #       echo "Source Branch Name: $(Build.SourceBranchName)"
+    #       echo "Source Branch Name: $SourceBranch"
+
+
+    #       echo "1"
+    #       echo "============================"
+    #       printf "$(Build.SourceVersion)~1 \n $(Build.SourceVersion)"
+    #       git diff --name-only $(Build.SourceVersion)~1 $(Build.SourceVersion)
+    #       echo "============================"
+
+    #       echo "2"
+    #       echo "============================"
+    #       git diff HEAD~1
+    #       echo "============================"
+
+
+    #       printf "Tree:\n"
+    #       # tree ./
+
+    #       tree $(Build.SourcesDirectory)
+
+
+    #       # Get the commit hash for the last merge commit
+    #       last_merge_commit=$(git log --merges -n 1 --pretty=format:"%H")
+
+    #       # Get the commit hash for the parent of the last merge commit
+    #       parent_of_last_merge=$(git rev-parse "${last_merge_commit}^")
+
+    #       # Get the list of files changed in the last merge commit
+    #       changed_files=$(git diff --name-only "${parent_of_last_merge}" "${last_merge_commit}")
+
+    #       # Print the list of changed files
+    #       echo "${changed_files}"
 
           # CurrentBranch=$(git symbolic-ref --short HEAD)
           # CurrentBranch2=$(git branch | sed -n '1{s/^* *//;p}')
