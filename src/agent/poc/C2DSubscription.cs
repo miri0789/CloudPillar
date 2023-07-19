@@ -88,9 +88,9 @@ namespace FirmwareUpdateAgent
                     {
                         receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);
                     }
-                    catch (Exception x)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x.Message);
+                        Console.WriteLine($"{DateTime.Now}: Exception hit when receiving the message, ignoring it: {ex.Message}");
                         continue;
                     }
 
@@ -117,9 +117,9 @@ namespace FirmwareUpdateAgent
                             // Mark the message as completed to remove it from the queue
                             await _deviceClient.CompleteAsync(receivedMessage);
                         }
-                        catch (Exception x)
+                        catch (Exception ex)
                         {
-                            Console.WriteLine("{0}: Exception hit when parsing the message, ignoring it: {1}", DateTime.Now, x.Message);
+                            Console.WriteLine($"{DateTime.Now}: Exception hit when parsing the message, ignoring it: {ex.Message}");
                             continue;
                         }
                     }
