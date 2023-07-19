@@ -2,8 +2,8 @@
 name: ci_build
 
 trigger:
-# - $(Build.SourceBranchName)
-- "TestBranch"
+- $(Build.SourceBranchName)
+# - "TestBranch"
 
 
 
@@ -31,10 +31,6 @@ resources:
     type: git
     name: CloudPillar/CloudPillar
     ref: $(Build.SourceBranch)
-
-steps:
-- checkout: CloudPillar
-
 
 stages:
 - stage: Versioning
