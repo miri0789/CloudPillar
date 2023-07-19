@@ -20,14 +20,6 @@ parameters:
 variables:
 - group: arm-vg
 
-resources:
-  repositories:
-  - repository: CloudPillar
-    type: git
-    name: CloudPillar/CloudPillar
-    ref: $(Build.SourceBranch)
-
-
 stages:
 - stage: Versioning
   displayName: 'Versioning Update Process'
@@ -38,8 +30,7 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent 
     steps:
-    # - checkout: self
-    - checkout: CloudPillar
+    - checkout: self
     # - checkout: git://CloudPillar@CloudPillar$(Build.SourceBranch)
       persistCredentials: true
       clean: true
@@ -51,14 +42,18 @@ stages:
           
           SourceBranch=$(Build.SourceBranchName)
           CurrentBranch=$(git rev-parse --abbrev-ref HEAD)
+          CurrentBranch2=$(git branch --show-current)
 
           echo "Source Branch Name: $(Build.SourceBranchName)"
           echo "Current Branch Name: $CurrentBranch"
+          echo "Current Branch Name2: $CurrentBranch2"
 
           # git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
           # git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)
           differences=$(git diff-tree --no-commit-id --name-only -r $CurrentBranch)
+          differences2=$(git diff-tree --no-commit-id --name-only -r $CurrentBranch2)
           echo "Differences: $differences"
+          echo "Differences2: $differences2"
 
           printf "Tree:\n"
           tree ./
