@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Text.Json.Serialization;
-using shared.Entities.Events;
+using Shared.Entities.Events;
 
 public class FirmwareUpdateEvent : AgentEvent
 {

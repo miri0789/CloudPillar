@@ -1,8 +1,8 @@
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
-using shared.Entities.Messages;
-
+using Shared.Entities.Messages;
+using Shared.Entities.Factories;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -19,6 +19,8 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
 
+    private readonly IMessagesFactory _messagesFactory;
+
     /// <summary>
     /// Gets a value indicating whether the subscription is active.
     /// </summary>
@@ -29,12 +31,15 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
     /// </summary>
     /// <param name="deviceClient">The DeviceClient associated with the device.</param>
     /// <param name="deviceId">The device identifier.</param>
-    public C2DSubscriptionHandler(IDeviceClientWrapper deviceClientWrapper, IFileDownloadHandler fileDownloadHandler)
+    public C2DSubscriptionHandler(IDeviceClientWrapper deviceClientWrapper, IFileDownloadHandler fileDownloadHandler,
+     IMessagesFactory messagesFactory)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(fileDownloadHandler);
+        ArgumentNullException.ThrowIfNull(messagesFactory);
 
         _fileDownloadHandler = fileDownloadHandler;
+        _messagesFactory = messagesFactory;
         _deviceClient = deviceClientWrapper.CreateDeviceClient();
         _deviceId = deviceClientWrapper.GetDeviceId();
     }
@@ -114,7 +119,7 @@ public class C2DSubscriptionHandler : IC2DSubscriptionHandler
                 switch (messageType)
                 {
                     case MessageType.DownloadChunk:
-                        DownloadBlobChunkMessage downloadBlobChunkMessage = new DownloadBlobChunkMessage(receivedMessage);
+                        DownloadBlobChunkMessage downloadBlobChunkMessage = _messagesFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                         _fileDownloadHandler.DownloadMessageDataAsync(downloadBlobChunkMessage);
                         break;
                     

@@ -32,8 +32,9 @@ class Program
         {
             cts.Cancel();
         };
+        var app = builder.Build();
 
-        var _envirementVariable = serviceProvider.GetService<IEnvironmentsWrapper>();
+        var _envirementVariable = app.Services.GetService<IEnvironmentsWrapper>();
 
         string? PartitionId = _envirementVariable.partitionId?.Split('-')?.Last();
 
@@ -53,9 +54,8 @@ class Program
             InvokeProcessorAfterReceiveTimeout = true,
         };
 
-
-        var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
-        var signingService = serviceProvider.GetService<ISigningService>();
+        var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
+        var signingService = app.Services.GetService<ISigningService>();
         var logger = app.Services.GetService<ILoggerHandler>();
         var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, _envirementVariable, logger, PartitionId);
 

@@ -1,4 +1,4 @@
-﻿using shared.Entities.Events;
+﻿using Shared.Entities.Events;
 
 namespace Backend.Iotlistener.Interfaces;
 

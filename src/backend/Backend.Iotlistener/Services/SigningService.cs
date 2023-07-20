@@ -1,6 +1,6 @@
 ﻿using common;
 using Backend.Iotlistener.Interfaces;
-using shared.Entities.Events;
+using Shared.Entities.Events;
 using Shared.Logger;
 
 namespace Backend.Iotlistener.Services;

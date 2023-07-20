@@ -2,7 +2,7 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using shared.Entities.Events;
+using Shared.Entities.Events;
 
 
 namespace CloudPillar.Agent.Handlers;

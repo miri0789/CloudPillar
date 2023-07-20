@@ -3,7 +3,7 @@ using System.Text.Json;
 using Backend.Iotlistener.Interfaces;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
-using shared.Entities.Events;
+using Shared.Entities.Events;
 using Shared.Logger;
 
 namespace Backend.Iotlistener.Services;
@@ -35,7 +35,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     {
         if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
         {
-            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _environmentsWrapper);
+            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _environmentsWrapper, _logger);
         }
 
         return new NullEventProcessor();
@@ -91,7 +91,7 @@ public class AgentEventProcessor : IEventProcessor
         {
             if (DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc > TimeSpan.FromMinutes(_environmentsWrapper.messageTimeoutMinutes))
             {
-                _logger.Warning($"Ignoring message older than {_environmentsWrapper.messageTimeoutMinutes} minutes.");
+                _logger.Warn($"Ignoring message older than {_environmentsWrapper.messageTimeoutMinutes} minutes.");
                 continue;
             }
             await HandleMessageData(eventData, !String.IsNullOrWhiteSpace(drainD2cQueues), context.PartitionId);
@@ -108,7 +108,7 @@ public class AgentEventProcessor : IEventProcessor
 
             if (agentEvent == null || isDrainMode)
             {
-                _logger.Warning($"Draining on Partition: {partitionId}, Event: {data}");
+                _logger.Warn($"Draining on Partition: {partitionId}, Event: {data}");
                 return;
             }
 
