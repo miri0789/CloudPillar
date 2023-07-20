@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace shared.Entities.Events;
+namespace Shared.Entities.Events;
 
 public enum EventType
 {

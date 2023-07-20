@@ -1,4 +1,4 @@
-﻿namespace shared.Entities.Events;
+﻿namespace Shared.Entities.Events;
 
 
 public class SignEvent : AgentEvent

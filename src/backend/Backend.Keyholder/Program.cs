@@ -1,5 +1,7 @@
 using Backend.Keyholder.Interfaces;
 using Backend.Keyholder.Services;
+using System.Reflection;
+using Shared.Logger;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?

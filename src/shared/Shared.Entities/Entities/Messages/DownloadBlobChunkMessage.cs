@@ -1,6 +1,6 @@
 using Microsoft.Azure.Devices.Client;
 
-namespace shared.Entities.Messages;
+namespace Shared.Entities.Messages;
 
 public class DownloadBlobChunkMessage : BaseMessage
 {
@@ -19,10 +19,6 @@ public class DownloadBlobChunkMessage : BaseMessage
     public DownloadBlobChunkMessage()
     {
         this.MessageType = MessageType.DownloadChunk;
-    }
-    public DownloadBlobChunkMessage(Message message) : base(message)
-    {
-        
     }
 }
 

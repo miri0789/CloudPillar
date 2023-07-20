@@ -2,7 +2,7 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Polly;
-using shared.Entities.Messages;
+using Shared.Entities.Messages;
 using Backend.BlobStreamer.Interfaces;
 
 namespace Backend.BlobStreamer.Services;

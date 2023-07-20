@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using CloudPillar.Agent.Wrappers;
-using shared.Entities.Messages;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -65,7 +65,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         else
         {
             //TODO report progress
-            if (blobChunk.RangeSize != null)
+            if (blobChunk?.RangeSize != null)
             {
                 await CheckFullRangeBytesAsync(blobChunk, filePath);
             }

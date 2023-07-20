@@ -7,6 +7,12 @@ using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Extensions.DependencyInjection;
 
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Builder;
+
+using Shared.Logger;
+
 class Program
 {
     public async static Task Main(string[] args)
@@ -18,16 +24,17 @@ class Program
         serviceCollection.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
         serviceCollection.AddScoped<ISigningService, SigningService>();
         serviceCollection.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+        var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
+        builder.Services.AddHttpClient();
 
-        serviceCollection.AddHttpClient();
-        var serviceProvider = serviceCollection.BuildServiceProvider();
         var cts = new CancellationTokenSource();
         AssemblyLoadContext.Default.Unloading += context =>
         {
             cts.Cancel();
         };
+        var app = builder.Build();
 
-        var _envirementVariable = serviceProvider.GetService<IEnvironmentsWrapper>();
+        var _envirementVariable = app.Services.GetService<IEnvironmentsWrapper>();
 
         string? PartitionId = _envirementVariable.partitionId?.Split('-')?.Last();
 
@@ -47,10 +54,10 @@ class Program
             InvokeProcessorAfterReceiveTimeout = true,
         };
 
-
-        var firmwareUpdateService = serviceProvider.GetService<IFirmwareUpdateService>();
-        var signingService = serviceProvider.GetService<ISigningService>();
-        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, _envirementVariable, PartitionId);
+        var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
+        var signingService = app.Services.GetService<ISigningService>();
+        var logger = app.Services.GetService<ILoggerHandler>();
+        var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, _envirementVariable, logger, PartitionId);
 
         await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 

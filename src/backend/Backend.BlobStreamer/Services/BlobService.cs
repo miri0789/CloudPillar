@@ -2,8 +2,10 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Polly;
-using shared.Entities.Messages;
+using Shared.Entities.Messages;
+using Shared.Entities.Factories;
 using Backend.BlobStreamer.Interfaces;
+using Shared.Logger;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -16,17 +18,23 @@ public class BlobService : IBlobService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ICloudStorageWrapper _cloudStorageWrapper;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IMessagesFactory _messagesFactory;
+    private readonly ILoggerHandler _logger;
 
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
-     IDeviceClientWrapper deviceClientWrapper)
+     IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessagesFactory messagesFactory)
     {
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         ArgumentNullException.ThrowIfNull(cloudStorageWrapper);
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
+        ArgumentNullException.ThrowIfNull(messagesFactory);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _environmentsWrapper = environmentsWrapper;
         _cloudStorageWrapper = cloudStorageWrapper;
         _deviceClientWrapper = deviceClientWrapper;
+        _messagesFactory = messagesFactory;
+        _logger = logger;
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
         _serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
@@ -66,7 +74,7 @@ public class BlobService : IBlobService
                 blobMessage.RangeSize = rangeSize;
             }
 
-            var c2dMessage = blobMessage.PrepareBlobMessage(_environmentsWrapper.messageExpiredMinutes);
+            var c2dMessage = _messagesFactory.PrepareBlobMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
             await SendMessage(c2dMessage, deviceId);
         }
     }
@@ -77,13 +85,13 @@ public class BlobService : IBlobService
         {
             var retryPolicy = Policy.Handle<Exception>()
                 .WaitAndRetryAsync(_environmentsWrapper.retryPolicyExponent, retryAttempt => TimeSpan.FromSeconds(Math.Pow(_environmentsWrapper.retryPolicyBaseDelay, retryAttempt)),
-                (ex, time) => Console.WriteLine($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
+                (ex, time) => _logger.Warn($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
             await retryPolicy.ExecuteAsync(async () => await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage));
-            Console.WriteLine($"Blobstreamer SendMessage success. message title: {c2dMessage.MessageId}");
+            _logger.Info($"Blobstreamer SendMessage success. message title: {c2dMessage.MessageId}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Blobstreamer SendMessage failed. Message: {ex.Message}");
+            _logger.Error($"Blobstreamer SendMessage failed. Message: {ex.Message}");
         }
     }
 

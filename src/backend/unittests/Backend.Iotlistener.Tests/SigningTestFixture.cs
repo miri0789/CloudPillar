@@ -2,7 +2,7 @@
 using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 using Moq;
-using shared.Entities.Events;
+using Shared.Entities.Events;
 
 namespace Backend.Iotlistener.Tests;
 public class SigningTestFixture

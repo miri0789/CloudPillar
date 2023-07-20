@@ -1,4 +1,6 @@
-﻿using shared.Entities.Messages;
+﻿using System;
+using System.Diagnostics;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 

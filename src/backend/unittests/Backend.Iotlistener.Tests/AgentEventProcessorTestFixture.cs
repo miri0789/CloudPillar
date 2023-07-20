@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using static Microsoft.Azure.EventHubs.EventData;
-using shared.Entities.Events;
+using Shared.Entities.Events;
 using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 
