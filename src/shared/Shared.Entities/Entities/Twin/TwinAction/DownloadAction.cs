@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.Azure.Devices;
 
-namespace CloudPillar.Agent.Entities.Twin;
+namespace Shared.Entities.Twin;
 
 public class DownloadAction : TwinAction
 {

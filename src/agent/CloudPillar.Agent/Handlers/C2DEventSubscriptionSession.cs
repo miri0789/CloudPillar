@@ -24,7 +24,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     }
 
 
-    public async Task ReceiveC2DMessagesAsync(DeviceClient deviceClient, CancellationToken cancellationToken)
+    public async Task ReceiveC2DMessagesAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -32,7 +32,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 
             try
             {
-                receivedMessage = await _deviceClientWrapper.ReceiveAsync(cancellationToken, deviceClient);
+                receivedMessage = await _deviceClientWrapper.ReceiveAsync(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -59,7 +59,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     await subscriber.HandleMessage(message);
                 }
 
-                await _deviceClientWrapper.CompleteAsync(receivedMessage, deviceClient);
+                await _deviceClientWrapper.CompleteAsync(receivedMessage);
                 Console.WriteLine($"{0}: Recived message of type: {1} completed", DateTime.Now, messageType.ToString());
             }
             catch (Exception ex)

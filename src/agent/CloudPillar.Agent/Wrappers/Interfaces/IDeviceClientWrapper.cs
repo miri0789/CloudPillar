@@ -1,18 +1,20 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
 
 namespace CloudPillar.Agent.Wrappers;
 public interface IDeviceClientWrapper
 {
-    DeviceClient CreateDeviceClient(string connectionString);
-    Task<Message> ReceiveAsync(CancellationToken cancellationToken, DeviceClient deviceClient);
+    Task<Message> ReceiveAsync(CancellationToken cancellationToken);
 
-    string GetDeviceId(string connectionString);
+    string GetDeviceId();
 
     TransportType GetTransportType();
 
-    Task SendEventAsync(Message message, DeviceClient deviceClient);
+    Task SendEventAsync(Message message);
 
-    Task GetTwinAsync(DeviceClient deviceClient);
+    Task CompleteAsync(Message message);
 
-    Task CompleteAsync(Message message, DeviceClient deviceClient);
+    Task<Twin> GetTwinAsync();
+
+    Task UpdateReportedPropertiesAsync(string key, object value);
 }

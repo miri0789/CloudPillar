@@ -1,4 +1,4 @@
-namespace CloudPillar.Agent.Entities.Twin;
+namespace Shared.Entities.Twin;
 
 public enum ResultCode
 {

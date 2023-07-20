@@ -12,8 +12,12 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<ID2CEventHandler, D2CEventHandler>();
         services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
         services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+        services.AddSingleton<ITwinHandler, TwinHandler>();
     })
     .Build();
+
+
+
 
 var signatureHandler = host.Services.GetService<ISignatureHandler>();
 signatureHandler.InitPublicKeyAsync();

@@ -1,9 +1,9 @@
 ﻿
-namespace CloudPillar.Agent.Entities.Twin;
+namespace Shared.Entities.Twin;
 
 public class TwinReport
 {
-   public string DeviceState { get; set; }
+   public DeviceStateType DeviceState { get; set; }
    public string AgentPlatform { get; set; }
 
    public ShellType[] SupportedShells { get; set; }

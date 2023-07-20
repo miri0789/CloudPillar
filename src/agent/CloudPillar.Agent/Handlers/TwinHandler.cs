@@ -1,41 +1,67 @@
-using System.Text;
+using System.Runtime.InteropServices;
+using Shared.Entities.Twin;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using Shared.Entities.Events;
 
 
 namespace CloudPillar.Agent.Handlers;
 
-public class TwinHandler
+public class TwinHandler: ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly DeviceClient _deviceClient;
-    public TwinHandler(IDeviceClientWrapper deviceClientWrapper, IEnvironmentsWrapper environmentsWrapper)
+    public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
+    IEnvironmentsWrapper environmentsWrapper)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
 
         _deviceClientWrapper = deviceClientWrapper;
-        _deviceClient = deviceClientWrapper.CreateDeviceClient(environmentsWrapper.deviceConnectionString);
+    }
+
+    public async Task GetTwinReport()
+    {
+        var twin = await _deviceClientWrapper.GetTwinAsync();
+        string reportJson = twin.Properties.Reported.ToJson();
+        var twinReport = JsonConvert.DeserializeObject<TwinReport>(reportJson);
     }
 
 
-        public static async Task UpdateDeviceState(DeviceClient deviceClient, string deviceState) 
+    public async Task UpdateDeviceState(DeviceStateType deviceState)
+    {
+        await _deviceClientWrapper.UpdateReportedPropertiesAsync("supportedShells", GetSupportedShells().ToArray());
+        await _deviceClientWrapper.UpdateReportedPropertiesAsync("agentPlatform", RuntimeInformation.OSDescription);
+        await _deviceClientWrapper.UpdateReportedPropertiesAsync("deviceState", deviceState);
+    }
+
+    private IEnumerable<ShellType> GetSupportedShells()
+    {
+        const string windowsBashPath = @"C:\Windows\System32\wsl.exe";
+        const string linuxPsPath1 = @"/usr/bin/pwsh";
+        const string linuxPsPath2 = @"/usr/local/bin/pwsh";
+
+        var supportedShells = new List<ShellType>();
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-                var currentTwin = await deviceClient.GetTwinAsync();
-
-                var desiredJObject = JObject.Parse(currentTwin.Properties.Desired.ToJson());
-                var reportedJObject = JObject.Parse(currentTwin.Properties.Reported.ToJson());
-
-                reportedJObject["deviceState"] = deviceState;
-                await UpdateReportedPropertiesAsync(deviceClient, "deviceState", deviceState);
-                string agentPlatform = RuntimeInformation.OSDescription;
-                reportedJObject["agentPlatform"] = agentPlatform;
-                await UpdateReportedPropertiesAsync(deviceClient, "agentPlatform", agentPlatform);
-                JArray shells = JArray.FromObject(GetSupportedShells());
-                reportedJObject["supportedShells"] = shells;
-                await UpdateReportedPropertiesAsync(deviceClient, "supportedShells", shells);
+            supportedShells.Add(ShellType.Cmd);
+            supportedShells.Add(ShellType.Powershell);
+            // Check if WSL is installed
+            if (File.Exists(windowsBashPath))
+            {
+                supportedShells.Add(ShellType.Bash);
+            }
         }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            supportedShells.Add(ShellType.Bash);
+
+            // Add PowerShell if it's installed on Linux or macOS
+            if (File.Exists(linuxPsPath1) || File.Exists(linuxPsPath2))
+            {
+                supportedShells.Add(ShellType.Powershell);
+            }
+        }
+        return supportedShells;
+    }
+
 
 }

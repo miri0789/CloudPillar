@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Messages;
 
