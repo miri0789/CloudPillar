@@ -10,7 +10,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     {
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _environmentsWrapper = environmentsWrapper;
-        TransportType _transportType = GetTransportType();
+        var _transportType = GetTransportType();
         try
         {
             _deviceClient = DeviceClient.CreateFromConnectionString(_environmentsWrapper.deviceConnectionString, _transportType);

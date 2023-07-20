@@ -3,5 +3,5 @@
 namespace CloudPillar.Agent.Handlers;
 public interface IMessageSubscriber
 {
-    Task HandleMessage(BaseMessage message);
+    Task HandleMessageAsync(BaseMessage message);
 }

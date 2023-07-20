@@ -7,5 +7,5 @@ namespace CloudPillar.Agent.Handlers;
 public interface IFileDownloadHandler: IMessageSubscriber
 {
     Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName);
-    Task HandleMessage(BaseMessage message);
+    Task HandleMessageAsync(BaseMessage message);
 }
