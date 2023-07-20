@@ -10,7 +10,6 @@ namespace CloudPillar.Agent.Handlers;
 public class D2CEventHandler : ID2CEventHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly DeviceClient _deviceClient;
 
     private const int kB = 1024;
     public D2CEventHandler(IDeviceClientWrapper deviceClientWrapper, IEnvironmentsWrapper environmentsWrapper)
@@ -18,7 +17,6 @@ public class D2CEventHandler : ID2CEventHandler
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _deviceClientWrapper = deviceClientWrapper;
-        _deviceClient = deviceClientWrapper.CreateDeviceClient(environmentsWrapper.deviceConnectionString);
     }
 
     public async Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null)
@@ -48,6 +46,6 @@ public class D2CEventHandler : ID2CEventHandler
     {
         var messageString = JsonConvert.SerializeObject(agentEvent);
         Message message = new Message(Encoding.ASCII.GetBytes(messageString));
-        await _deviceClient.SendEventAsync(message);
+        await _deviceClientWrapper.SendEventAsync(message);
     }
 }

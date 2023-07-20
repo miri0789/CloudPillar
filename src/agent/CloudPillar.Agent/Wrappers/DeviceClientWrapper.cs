@@ -3,39 +3,34 @@
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
-
+    private readonly DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
     private DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper)
     {
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _environmentsWrapper = environmentsWrapper;
-    }
-
-    public DeviceClient CreateDeviceClient(string connectionString)
-    {
+        TransportType _transportType = GetTransportType();
         try
         {
-            TransportType _transportType = GetTransportType();
-            var deviceClient = DeviceClient.CreateFromConnectionString(connectionString, _transportType);
-            if (deviceClient == null)
+            _deviceClient = DeviceClient.CreateFromConnectionString(_environmentsWrapper.deviceConnectionString, _transportType);
+            if (_deviceClient == null)
             {
                 Console.WriteLine($"CreateDeviceClient FromConnectionString failed the device is null");
+                throw new NullReferenceException();
             }
-            return deviceClient;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"CreateFromConnectionString failed {ex.Message}");
             throw;
-
         }
+
     }
 
-
-    public string GetDeviceId(string connectionString)
+    public string GetDeviceId()
     {
-        var items = connectionString.Split(';');
+        var items = _environmentsWrapper.deviceConnectionString.Split(';');
         foreach (var item in items)
         {
             if (item.StartsWith("DeviceId"))
@@ -56,21 +51,21 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             : TransportType.Amqp;
     }
 
-    public Task<Message> ReceiveAsync(CancellationToken cancellationToken, DeviceClient deviceClient)
+    public Task<Message> ReceiveAsync(CancellationToken cancellationToken)
     {
-        return deviceClient.ReceiveAsync(cancellationToken);
+        return _deviceClient.ReceiveAsync(cancellationToken);
     }
 
 
-    public async Task SendEventAsync(Message message, DeviceClient deviceClient)
+    public async Task SendEventAsync(Message message)
     {
-        await deviceClient.SendEventAsync(message);
+        await _deviceClient.SendEventAsync(message);
     }
 
 
-    public async Task CompleteAsync(Message message, DeviceClient deviceClient)
+    public async Task CompleteAsync(Message message)
     {
-        await deviceClient.CompleteAsync(message);
+        await _deviceClient.CompleteAsync(message);
     }
 
 }

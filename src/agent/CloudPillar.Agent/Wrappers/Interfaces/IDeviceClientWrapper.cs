@@ -3,14 +3,13 @@
 namespace CloudPillar.Agent.Wrappers;
 public interface IDeviceClientWrapper
 {
-    DeviceClient CreateDeviceClient(string connectionString);
-    Task<Message> ReceiveAsync(CancellationToken cancellationToken, DeviceClient deviceClient);
+    Task<Message> ReceiveAsync(CancellationToken cancellationToken);
 
-    string GetDeviceId(string connectionString);
+    string GetDeviceId();
 
     TransportType GetTransportType();
 
-    Task SendEventAsync(Message message, DeviceClient deviceClient);
+    Task SendEventAsync(Message message);
 
-    Task CompleteAsync(Message message, DeviceClient deviceClient);
+    Task CompleteAsync(Message message);
 }
