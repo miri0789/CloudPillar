@@ -1,7 +1,8 @@
 using System.Text;
 using Microsoft.Azure.Devices.Client;
-using shared.Entities.Messages;
+using Shared.Entities.Messages;
 using CloudPillar.Agent.Wrappers;
+using Shared.Entities.Factories;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -9,11 +10,15 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 {
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper, IFileDownloadHandler fileDownloadHandler)
+    private readonly IMessagesFactory _messagesFactory;
+    public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
+    IFileDownloadHandler fileDownloadHandler, IMessagesFactory messagesFactory)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(fileDownloadHandler);
+        ArgumentNullException.ThrowIfNull(messagesFactory);
 
+        _messagesFactory = messagesFactory;
         _deviceClientWrapper = deviceClientWrapper;
         _fileDownloadHandler = fileDownloadHandler;
     }
@@ -44,7 +49,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 switch (messageType)
                 {
                     case MessageType.DownloadChunk:
-                        message = new DownloadBlobChunkMessage(receivedMessage);
+                        message = _messagesFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                         subscriber = _fileDownloadHandler;
                         break;
                     default: break;
@@ -65,5 +70,5 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
         }
     }
 
-    
+
 }

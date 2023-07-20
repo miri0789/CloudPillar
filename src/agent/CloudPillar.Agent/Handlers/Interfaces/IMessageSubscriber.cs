@@ -1,4 +1,4 @@
-﻿using shared.Entities.Messages;
+﻿using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 public interface IMessageSubscriber
