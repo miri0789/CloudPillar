@@ -12,5 +12,7 @@ public interface IDeviceClientWrapper
 
     Task SendEventAsync(Message message, DeviceClient deviceClient);
 
+    Task GetTwinAsync(DeviceClient deviceClient);
+
     Task CompleteAsync(Message message, DeviceClient deviceClient);
 }

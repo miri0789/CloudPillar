@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace CloudPillar.Agent;
+namespace CloudPillar.Agent.Entities;
 public class FileDownload
 {
     public Guid ActionGuid { get; set; }
