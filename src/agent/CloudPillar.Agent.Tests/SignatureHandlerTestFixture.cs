@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
-using System.Text;
 using Moq;
-using CloudPillar.Agent.Services;
+using CloudPillar.Agent.Handlers;
+
 
 namespace CloudPillar.Agent.Tests;
 
@@ -19,7 +19,7 @@ public class SignatureHandlerTestFixture
     }
 
     [Test]
-    public async Task InitPublicKeyAsync_LoadsPublicKeyFromPem()
+    public async Task InitPublicKeyAsync_LoadsPublicKey_Success()
     {
         await _signatureHandler.InitPublicKeyAsync();
         _signatureHandler.GetType()
