@@ -18,7 +18,7 @@ public class TwinHandler: ITwinHandler
         _deviceClientWrapper = deviceClientWrapper;
     }
 
-    public async Task GetTwinReport()
+    public async Task GetTwinReportAsync()
     {
         var twin = await _deviceClientWrapper.GetTwinAsync();
         string reportJson = twin.Properties.Reported.ToJson();
@@ -26,7 +26,7 @@ public class TwinHandler: ITwinHandler
     }
 
 
-    public async Task UpdateDeviceState(DeviceStateType deviceState)
+    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState)
     {
         await _deviceClientWrapper.UpdateReportedPropertiesAsync("supportedShells", GetSupportedShells().ToArray());
         await _deviceClientWrapper.UpdateReportedPropertiesAsync("agentPlatform", RuntimeInformation.OSDescription);

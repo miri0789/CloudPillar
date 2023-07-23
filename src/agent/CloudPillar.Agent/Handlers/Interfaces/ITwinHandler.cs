@@ -4,7 +4,7 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface ITwinHandler
 {
-    Task GetTwinReport();
-    Task UpdateDeviceState(DeviceStateType deviceState);
+    Task GetTwinReportAsync();
+    Task UpdateDeviceStateAsync(DeviceStateType deviceState);
 
 }
