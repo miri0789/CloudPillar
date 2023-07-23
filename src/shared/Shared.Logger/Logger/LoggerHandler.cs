@@ -1,4 +1,5 @@
 ﻿using System.Web;
+using System.Reflection;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
@@ -16,9 +17,7 @@ public class LoggerHandler : ILoggerHandler
     private ILog m_logger;
 
     private ITelemetryClientWrapper? m_telemetryClient;
-
-    private ILoggerRepository m_repository;
-
+    
     private string m_applicationName;
 
     private bool m_hasHttpContext;
@@ -49,9 +48,9 @@ public class LoggerHandler : ILoggerHandler
         m_httpContextAccessor = httpContextAccessor;
 
         ArgumentNullException.ThrowIfNull(loggerFactory);
-        m_repository = loggerFactory.CreateLogRepository(log4netConfigFile);
+        loggerFactory.CreateLogRepository(log4netConfigFile);
 
-        m_appInsightsAppender = m_repository.GetAppenders().OfType<ApplicationInsightsAppender>().FirstOrDefault() as ApplicationInsightsAppender;
+        m_appInsightsAppender = LogManager.GetRepository(Assembly.GetExecutingAssembly()).GetAppenders().OfType<ApplicationInsightsAppender>().FirstOrDefault() as ApplicationInsightsAppender;
 
         m_applicationName = applicationName;
      
@@ -151,7 +150,7 @@ public class LoggerHandler : ILoggerHandler
 
     public void Flush()
     {
-        var appenders = m_repository.GetAppenders().OfType<BufferingAppenderSkeleton>();
+        var appenders = LogManager.GetRepository(Assembly.GetExecutingAssembly()).GetAppenders().OfType<BufferingAppenderSkeleton>();
 
         foreach (var appender in appenders)
         {
@@ -266,7 +265,7 @@ public class LoggerHandler : ILoggerHandler
             m_appInsightsAppender.ActivateOptions();
         }
                 
-        ((Hierarchy)m_repository).RaiseConfigurationChanged(EventArgs.Empty);
+        ((Hierarchy)LogManager.GetRepository(Assembly.GetExecutingAssembly())).RaiseConfigurationChanged(EventArgs.Empty);
 
         Info($"App Insights Log Level changed to {logLevel}"); 
 
@@ -289,13 +288,13 @@ public class LoggerHandler : ILoggerHandler
             return;
         }
 
-        var appenders = m_repository.GetAppenders().OfType<AppenderSkeleton>()
+        var appenders = LogManager.GetRepository(Assembly.GetExecutingAssembly()).GetAppenders().OfType<AppenderSkeleton>()
             .Where(a => !(a is ApplicationInsightsAppender));
 
         foreach (var appender in appenders)
         {
             appender.Threshold = level;
-            ((Hierarchy)m_repository).RaiseConfigurationChanged(EventArgs.Empty);
+            ((Hierarchy)LogManager.GetRepository(Assembly.GetExecutingAssembly())).RaiseConfigurationChanged(EventArgs.Empty);
             Info($"Appender {appender.Name} Log Level changed to {logLevel}");
         } 
                 
@@ -304,7 +303,7 @@ public class LoggerHandler : ILoggerHandler
 
     private Level? GetLevel(string logLevel)
     {
-        return m_repository.LevelMap[logLevel];
+        return LogManager.GetRepository(Assembly.GetExecutingAssembly()).LevelMap[logLevel];
     }
 
     public static SeverityLevel GetSeverityLevel(Level logLevel)
