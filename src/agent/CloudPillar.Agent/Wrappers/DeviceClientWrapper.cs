@@ -16,8 +16,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             _deviceClient = DeviceClient.CreateFromConnectionString(_environmentsWrapper.deviceConnectionString, _transportType);
             if (_deviceClient == null)
             {
-                Console.WriteLine($"CreateDeviceClient FromConnectionString failed the device is null");
-                throw new NullReferenceException();
+                throw new NullReferenceException("CreateDeviceClient FromConnectionString failed the device is null");
             }
         }
         catch (Exception ex)
@@ -39,7 +38,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             }
         }
 
-        throw new ArgumentException("DeviceId not found in the connection string.");
+        throw new ArgumentException("DeviceId not found in the connection string");
     }
 
 
