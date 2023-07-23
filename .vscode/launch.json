@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "buildAgent",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/agent/dotnet/bin/Debug/net7.0/jnjiotagent.dll",
+            "program": "${workspaceFolder}/src/agent/poc/bin/Debug/net7.0/jnjiotagent.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/agent/dotnet",
+            "cwd": "${workspaceFolder}/src/agent/poc",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {

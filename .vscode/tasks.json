@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/agent/dotnet/jnjiotagent.csproj",
+                "${workspaceFolder}/src/agent/poc/jnjiotagent.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -23,7 +23,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/src/agent/dotnet/jnjiotagent.csproj",
+                "${workspaceFolder}/src/agent/poc/jnjiotagent.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -37,7 +37,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/src/agent/dotnet/jnjiotagent.csproj"
+                "${workspaceFolder}/src/agent/poc/jnjiotagent.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
