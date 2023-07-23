@@ -33,6 +33,16 @@ public class LoggerHandler : ILoggerHandler
 
     private ApplicationInsightsAppender? m_appInsightsAppender;
 
+    private Dictionary<Level, SeverityLevel> m_levelMap = new Dictionary<Level, SeverityLevel>
+        {
+            { Level.Trace, SeverityLevel.Verbose },
+            { Level.Debug, SeverityLevel.Verbose },
+            { Level.Info, SeverityLevel.Information },
+            { Level.Warn, SeverityLevel.Warning },
+            { Level.Error, SeverityLevel.Error },
+            { Level.Critical, SeverityLevel.Critical }
+        };
+
     public LoggerHandler(ILoggerHandlerFactory loggerFactory, string filename,
                           string? appInsightsKey = null, string? log4netConfigFile = null,
                           string applicationName = "", string? connectionString = null) : this(loggerFactory,
@@ -307,19 +317,9 @@ public class LoggerHandler : ILoggerHandler
         return m_repository.LevelMap[logLevel];
     }
 
-    public static SeverityLevel GetSeverityLevel(Level logLevel)
+    private SeverityLevel GetSeverityLevel(Level logLevel)
     {
-        Dictionary<Level, SeverityLevel> levelMap = new Dictionary<Level, SeverityLevel>
-        {
-            { Level.Trace, SeverityLevel.Verbose },
-            { Level.Debug, SeverityLevel.Verbose },
-            { Level.Info, SeverityLevel.Information },
-            { Level.Warn, SeverityLevel.Warning },
-            { Level.Error, SeverityLevel.Error },
-            { Level.Critical, SeverityLevel.Critical }
-        };
-
-        return levelMap.TryGetValue(logLevel, out SeverityLevel severityLevel)
+        return m_levelMap.TryGetValue(logLevel, out SeverityLevel severityLevel)
             ? severityLevel
             : SeverityLevel.Verbose;
     }
