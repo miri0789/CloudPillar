@@ -1,11 +1,10 @@
-﻿using System;
-using System.Diagnostics;
+﻿using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 
 public interface IFileDownloadHandler: IMessageSubscriber
 {
-    Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName);
-    Task HandleMessage(BaseMessage message);
+    Task InitFileDownloadAsync(ActionToReport action);
+    Task HandleMessageAsync(BaseMessage message);
 }

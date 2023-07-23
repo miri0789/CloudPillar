@@ -6,7 +6,7 @@ using System.Reflection;
 using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Handlers;
-
+//TODO logs
 public class TwinHandler : ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
@@ -41,7 +41,7 @@ public class TwinHandler : ITwinHandler
             if (actionsToDo.Count() > 0)
             {
                 await _deviceClientWrapper.UpdateReportedPropertiesAsync(nameof(twinReport.ChangeSpec), twinReport.ChangeSpec);
-
+                await HandleTwinActions(actionsToDo);
             }
         }
 
@@ -54,7 +54,7 @@ public class TwinHandler : ITwinHandler
             switch (action.TwinAction.ActionName)
             {
                 case TwinActionType.SingularDownload:
-                    _fileDownloadHandler.InitFileDownloadAsync(action.TwinAction);
+                    _fileDownloadHandler.InitFileDownloadAsync(action);
                     break;
                 default:
                     break;
@@ -91,8 +91,8 @@ public class TwinHandler : ITwinHandler
                    .Where((item, index) => reportValue[index].Status == StatusType.Pending)
                    .Select((item, index) => new ActionToReport
                    {
-                       ArrayName = property.Name,
-                       index = index,
+                       TwinPartName = property.Name,
+                       TwinReportIndex = index,
                        TwinAction = item
                    }));
 

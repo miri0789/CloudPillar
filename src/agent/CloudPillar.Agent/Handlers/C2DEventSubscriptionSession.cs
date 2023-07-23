@@ -56,7 +56,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 }
                 if (subscriber != null)
                 {
-                    await subscriber.HandleMessage(message);
+                    await subscriber.HandleMessageAsync(message);
                 }
 
                 await _deviceClientWrapper.CompleteAsync(receivedMessage);
