@@ -10,32 +10,37 @@ namespace CloudPillar.Agent.Handlers;
 public class FileDownloadHandler : IFileDownloadHandler
 {
     private readonly IFileStreamerWrapper _FileStreamerWrapper;
-    private readonly ID2CEventHandler _D2CEventHandler;
+    private readonly ID2CEventHandler _d2CEventHandler;
+    private readonly ITwinHandler _twinHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
 
-    public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper, ID2CEventHandler D2CEventHandler)
+    public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper,
+            ID2CEventHandler d2CEventHandler,
+            ITwinHandler twinHandler)
     {
         ArgumentNullException.ThrowIfNull(FileStreamerWrapper);
-        ArgumentNullException.ThrowIfNull(D2CEventHandler);
+        ArgumentNullException.ThrowIfNull(d2CEventHandler);
+        ArgumentNullException.ThrowIfNull(twinHandler);
+
         _FileStreamerWrapper = FileStreamerWrapper;
-        _D2CEventHandler = D2CEventHandler;
+        _d2CEventHandler = d2CEventHandler;
+        _twinHandler = twinHandler;
         _filesDownloads = new ConcurrentBag<FileDownload>();
     }
 
     public async Task InitFileDownloadAsync(ActionToReport action)
     {
         if (action.TwinAction is DownloadAction)
-
         {
             var downloadAction = (DownloadAction)action.TwinAction;
             _filesDownloads.Add(new FileDownload()
             {
                 TwinAction = downloadAction,
-                TwinPartName=action.TwinPartName,
-                TwinReportIndex=action.TwinReportIndex,
+                TwinPartName = action.TwinPartName,
+                TwinReportIndex = action.TwinReportIndex,
                 Stopwatch = new Stopwatch()
             });
-            await _D2CEventHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, action.TwinAction.ActionGuid);
+            await _d2CEventHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, action.TwinAction.ActionGuid);
         }
     }
 
@@ -62,11 +67,10 @@ public class FileDownloadHandler : IFileDownloadHandler
             if (file.TotalBytesDownloaded == file.TotalBytes)
             {
                 file.Stopwatch.Stop();
-                //TODO report success
+                _twinHandler.UpdateReportAction(file.TwinReportIndex, file.TwinPartName, StatusType.Success, 100);
             }
             else
             {
-                //TODO report progress
                 if (blobChunk?.RangeSize != null)
                 {
                     await CheckFullRangeBytesAsync(blobChunk, filePath);
@@ -82,11 +86,12 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private void CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
     {
+        const double KB = 1024.0;
         file.TotalBytesDownloaded += bytesLength;
         double progressPercent = Math.Round((double)file.TotalBytesDownloaded / bytesLength * 100, 2);
-        double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / 1024.0; // in KiB/s
+        double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
         Console.WriteLine($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
-        //TODO report percent
+        _twinHandler.UpdateReportAction(file.TwinReportIndex, file.TwinPartName, StatusType.InProgress, (float)progressPercent);
     }
 
     private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath)
@@ -96,7 +101,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isEmptyRangeBytes = await _FileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
-            await _D2CEventHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
+            await _d2CEventHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
         }
     }
 }
