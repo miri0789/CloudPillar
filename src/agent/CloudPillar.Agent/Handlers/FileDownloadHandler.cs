@@ -64,8 +64,10 @@ public class FileDownloadHandler : IFileDownloadHandler
                     await CheckFullRangeBytesAsync(blobChunk, filePath);
                 }
             }
-        } else {
-        Console.WriteLine($"DownloadBlobChunkMessage HandlMessage message is not in suitable type");
+        }
+        else
+        {
+            Console.WriteLine($"DownloadBlobChunkMessage HandlMessage message is not in suitable type");
         }
 
     }
