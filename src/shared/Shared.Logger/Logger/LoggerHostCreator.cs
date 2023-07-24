@@ -33,7 +33,7 @@ namespace Shared.Logger
                                       .Register(LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG, refreshAll: false);
 
                         refresher = options.GetRefresher();
-                        await refresher.TryRefreshAsync();
+                        refresher.TryRefreshAsync();
                     }));
             appInsightsInstrumentationKey = builder.Configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
             appInsightsConnectionString = builder.Configuration[LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG];
