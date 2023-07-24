@@ -4,6 +4,9 @@ using Microsoft.Azure.Devices;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Moq;
+using Shared.Entities.Factories;
+using Shared.Entities.Messages;
+using Shared.Logger;
 using System.Reflection;
 
 namespace Backend.BlobStreamer.Tests
@@ -16,6 +19,8 @@ namespace Backend.BlobStreamer.Tests
         private Mock<IDeviceClientWrapper> _mockDeviceClientWrapper;
         private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
         private Mock<CloudBlockBlob> _mockBlockBlob;
+        private Mock<ILoggerHandler> _mockLoggerHandler;
+        private Mock<IMessagesFactory> _mockMessagesFactory;
         private IBlobService _blobService;
 
 
@@ -32,6 +37,8 @@ namespace Backend.BlobStreamer.Tests
             _mockCloudStorageWrapper = new Mock<ICloudStorageWrapper>();
             _mockDeviceClientWrapper = new Mock<IDeviceClientWrapper>();
             _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
+            _mockLoggerHandler = new Mock<ILoggerHandler>();
+            _mockMessagesFactory = new Mock<IMessagesFactory>();
             _mockEnvironmentsWrapper.Setup(c => c.retryPolicyExponent).Returns(3);
             _mockDeviceClientWrapper.Setup(c => c.CreateFromConnectionString(It.IsAny<string>()))
             .Returns(new ServiceClient());
@@ -39,7 +46,7 @@ namespace Backend.BlobStreamer.Tests
             _mockCloudStorageWrapper.Setup(c => c.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName)).ReturnsAsync(_mockBlockBlob.Object);
 
             _blobService = new BlobService(_mockEnvironmentsWrapper.Object,
-                _mockCloudStorageWrapper.Object, _mockDeviceClientWrapper.Object);
+                _mockCloudStorageWrapper.Object, _mockDeviceClientWrapper.Object, _mockLoggerHandler.Object, _mockMessagesFactory.Object);
 
         }
 
@@ -47,11 +54,13 @@ namespace Backend.BlobStreamer.Tests
         [Test]
         public async Task SendRangeByChunksAsync_ShouldSendBlobMessages()
         {
+            _mockMessagesFactory.Setup(b => b.PrepareBlobMessage(It.IsAny<DownloadBlobChunkMessage>(), It.IsAny<int>()));
             _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
 
             _mockDeviceClientWrapper.Setup(s => s.SendAsync(It.IsAny<ServiceClient>(), _deviceId, It.IsAny<Message>())).Returns(Task.CompletedTask);
             await _blobService.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid(), _rangeSize);
             _mockDeviceClientWrapper.Verify(s => s.SendAsync(It.IsAny<ServiceClient>(), _deviceId, It.IsAny<Message>()), Times.Exactly(4));
+            _mockMessagesFactory.Verify(s => s.PrepareBlobMessage(It.IsAny<DownloadBlobChunkMessage>(), It.IsAny<int>()), Times.Exactly(4));
         }
 
         [Test]

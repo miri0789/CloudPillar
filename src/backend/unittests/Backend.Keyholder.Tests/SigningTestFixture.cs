@@ -7,6 +7,7 @@ using k8s;
 using k8s.Models;
 using Microsoft.Azure.Devices.Shared;
 using Backend.Keyholder.Services;
+using Shared.Logger;
 
 namespace Backend.Keyholder.Tests;
 
@@ -18,20 +19,22 @@ public class SigningTestFixture
     private SigningService _signingService;
     private Mock<Kubernetes> _kubernetesMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
+    private Mock<ILoggerHandler> _mockLoggerHandler;
 
     [SetUp]
     public void Setup()
     {
         _registryManagerMock = new Mock<RegistryManager>();
+        _mockLoggerHandler = new Mock<ILoggerHandler>();
         _ecdsaMock = new Mock<ECDsa>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockEnvironmentsWrapper.Setup(c => c.iothubConnectionString).Returns("HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=");
         _mockEnvironmentsWrapper.Setup(c => c.signingPem).Returns("");
         _mockEnvironmentsWrapper.Setup(c => c.kubernetesServiceHost).Returns("your-kubernetes-service-host");
-        _mockEnvironmentsWrapper.Setup(c => c.secretName).Returns(null);
+        _mockEnvironmentsWrapper.Setup(c => c.secretName).Returns("");
         _mockEnvironmentsWrapper.Setup(c => c.secretKey).Returns("your-secret-key");
 
-        _signingService = new SigningService(_mockEnvironmentsWrapper.Object);
+        _signingService = new SigningService(_mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
         _signingService.GetType()
             .GetField("_registryManager", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
             .SetValue(_signingService, _registryManagerMock.Object);
