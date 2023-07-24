@@ -83,6 +83,7 @@ namespace FirmwareUpdateAgent
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     Message receivedMessage = null;
+                    
                     try
                     {
                         receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);
