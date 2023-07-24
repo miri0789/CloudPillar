@@ -5,23 +5,23 @@ namespace CloudPillar.Agent.Handlers;
 public class C2DEventHandler : IC2DEventHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly IC2DEventSubscriptionSession _C2DEventSubscriptionSession;
+    private readonly IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
 
-    public C2DEventHandler(IDeviceClientWrapper deviceClientWrapper, IC2DEventSubscriptionSession C2DEventSubscriptionSession)
+    public C2DEventHandler(IDeviceClientWrapper deviceClientWrapper, IC2DEventSubscriptionSession c2DEventSubscriptionSession)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(C2DEventSubscriptionSession);
+        ArgumentNullException.ThrowIfNull(c2DEventSubscriptionSession);
 
         _deviceClientWrapper = deviceClientWrapper;
-        _C2DEventSubscriptionSession = C2DEventSubscriptionSession;
+        _c2DEventSubscriptionSession = c2DEventSubscriptionSession;
     }
 
 
-    public async Task CreateSubscribe(CancellationToken cancellationToken, string connectionString)
+    public async Task CreateSubscribeAsync(CancellationToken cancellationToken, string connectionString)
     {
         Console.WriteLine("Subscribing to C2D messages...");
 
-        Task.Run(() => _C2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken), cancellationToken);
+        await Task.Run(() => _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken), cancellationToken);
     }
 
 }
