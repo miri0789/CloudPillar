@@ -56,7 +56,9 @@ public class SigningService : ISigningService
 
                 if (string.IsNullOrWhiteSpace(secretName) || string.IsNullOrWhiteSpace(secretKey))
                 {
-                    throw new InvalidOperationException("Private key secret name and secret key must be set.");
+                    var message = "Private key secret name and secret key must be set.";
+                    _logger.Error(message);
+                    throw new InvalidOperationException(message);
                 }
                 privateKeyPem = await GetPrivateKeyFromK8sSecretAsync(secretName, secretKey);
             }
@@ -96,7 +98,10 @@ public class SigningService : ISigningService
             return Encoding.UTF8.GetString(privateKeyBytes);
         }
 
-        throw new Exception("Private key not found in the Kubernetes secret.");
+        var message = "Private key not found in the Kubernetes secret.";
+        var ex = new Exception(message);
+        _logger.Error(message, ex);
+        throw ex;
     }
 
     private ECDsa LoadPrivateKeyFromPem(string pemContent)
@@ -132,7 +137,10 @@ public class SigningService : ISigningService
 
         if (keyElement == null)
         {
-            throw new ArgumentException("Invalid JSON path specified");
+            var message = "Invalid JSON path specified";
+            var ex = new ArgumentException(message);
+            _logger.Error(message, ex);
+            throw ex;
         }
 
         // Sign the value using the ES512 algorithm
