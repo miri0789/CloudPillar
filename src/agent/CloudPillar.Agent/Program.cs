@@ -27,6 +27,6 @@ var c2DEventHandler = host.Services.GetService<IC2DEventHandler>();
 c2DEventHandler.CreateSubscribeAsync(new CancellationToken());
 var twinHandler = host.Services.GetService<ITwinHandler>();
 twinHandler.UpdateDeviceStateAsync(DeviceStateType.Ready);
-twinHandler.HandleTwinActions();
+twinHandler.HandleTwinActionsAsync();
 
 host.Run();

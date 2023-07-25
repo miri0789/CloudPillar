@@ -67,7 +67,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     var actionToReport = await subscriber.HandleMessageAsync(message);
                     if (actionToReport != null)
                     {
-                        await _twinHandler.UpdateReportAction(actionToReport);
+                        await _twinHandler.UpdateReportActionAsync(actionToReport);
 
                     }
                 }

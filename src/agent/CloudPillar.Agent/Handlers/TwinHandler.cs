@@ -23,7 +23,7 @@ public class TwinHandler : ITwinHandler
         _fileDownloadHandler = fileDownloadHandler;
     }
 
-    public async Task HandleTwinActions()
+    public async Task HandleTwinActionsAsync()
     {
         try
         {
@@ -39,8 +39,8 @@ public class TwinHandler : ITwinHandler
                 if (actions?.Count() > 0)
                 {
                     Console.WriteLine($"HandleTwinActions {actions.Count()} actions to exec");
-                    await UpdateReportChangeSpec(twinReport.ChangeSpec);
-                    await HandleTwinActions(actions);
+                    await UpdateReportChangeSpecAsync(twinReport.ChangeSpec);
+                    await HandleTwinActionsAsync(actions);
                 }
             }
         }
@@ -51,7 +51,7 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    private async Task UpdateReportChangeSpec(TwinReportChangeSpec changeSpec)
+    private async Task UpdateReportChangeSpecAsync(TwinReportChangeSpec changeSpec)
     {
         var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
           Formatting.None,
@@ -66,7 +66,7 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    private async Task HandleTwinActions(IEnumerable<ActionToReport> actions)
+    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions)
     {
         try
         {
@@ -80,8 +80,10 @@ public class TwinHandler : ITwinHandler
                         break;
                     default:
                         Console.WriteLine($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionGuid}");
-                        break;
+                        continue;
                 }
+                action.Status = StatusType.InProgress;
+                await UpdateReportActionAsync(action);
             }
         }
         catch (Exception ex)
@@ -152,7 +154,7 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task InitReportDeviceParams()
+    public async Task InitReportDeviceParamsAsync()
     {
         try
         {
@@ -173,7 +175,7 @@ public class TwinHandler : ITwinHandler
         return char.ToLower(propertyName[0]) + propertyName.Substring(1);
     }
 
-    public async Task UpdateReportAction(ActionToReport actionToReport)
+    public async Task UpdateReportActionAsync(ActionToReport actionToReport)
     {
         try
         {
@@ -188,7 +190,7 @@ public class TwinHandler : ITwinHandler
                 Progress = actionToReport.Progress
             };
             reportProp.SetValue(twinReport.ChangeSpec.Patch, reportValue);
-            await UpdateReportChangeSpec(twinReport.ChangeSpec);
+            await UpdateReportChangeSpecAsync(twinReport.ChangeSpec);
             Console.WriteLine($"UpdateReportAction success. index: {actionToReport.TwinReportIndex} ,status: {actionToReport.Status}");
         }
         catch (Exception ex)
