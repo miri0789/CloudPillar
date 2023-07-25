@@ -4,6 +4,9 @@ using Microsoft.Azure.Devices;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Moq;
+using Shared.Entities.Factories;
+using Shared.Entities.Messages;
+using Shared.Logger;
 using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Messages;
@@ -39,7 +42,7 @@ namespace Backend.BlobStreamer.Tests
             _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
             _mockLogger = new Mock<ILoggerHandler>();
             _mockMessagesFactory = new Mock<IMessagesFactory>();
-
+            _mockMessagesFactory.Setup(c => c.PrepareBlobMessage(It.IsAny<BaseMessage>(), It.IsAny<int>())).Returns(new Message());
             _mockEnvironmentsWrapper.Setup(c => c.retryPolicyExponent).Returns(3);
             _mockDeviceClientWrapper.Setup(c => c.CreateFromConnectionString(It.IsAny<string>()))
             .Returns(new ServiceClient());

@@ -80,6 +80,11 @@ public class SigningService : ISigningService
         _logger.Debug($"Got k8s client in namespace {config.Namespace}");
 
         var ns = String.IsNullOrWhiteSpace(secretNamespace) ? config.Namespace : secretNamespace;
+        if (String.IsNullOrWhiteSpace(ns))
+        {
+            throw new Exception("k8s namespace not found.");
+        }
+
         var secrets = await k8sClient.ListNamespacedSecretAsync(ns);
 
         _logger.Debug($"Secrets in namespace '{ns}':");

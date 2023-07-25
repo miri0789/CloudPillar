@@ -5,6 +5,7 @@ using Backend.Iotlistener.Interfaces;
 using Microsoft.Azure.Storage.Blob;
 using Moq;
 using Shared.Entities.Events;
+using Shared.Logger;
 
 namespace Backend.Iotlistener.Tests;
 public class FirmwareUpdateTestFixture
@@ -12,6 +13,7 @@ public class FirmwareUpdateTestFixture
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
     private FirmwareUpdateService _firmwareUpdateService;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
+    private Mock<ILoggerHandler> _mockLoggerHandler;
     private Uri _blobStreamerUrl;
 
     private const string _deviceId = "testDevice";
@@ -26,12 +28,13 @@ public class FirmwareUpdateTestFixture
     public void Setup()
     {
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
+        _mockLoggerHandler = new Mock<ILoggerHandler>();
         _blobStreamerUrl = new Uri("http://example.com/");
         _mockEnvironmentsWrapper.Setup(f => f.blobStreamerUrl).Returns(_blobStreamerUrl.AbsoluteUri);
         _mockEnvironmentsWrapper.Setup(f => f.rangeCalculateType).Returns(Models.Enums.RangeCalculateType.Bytes);
         _mockEnvironmentsWrapper.Setup(f => f.rangeBytes).Returns(_rangeSize);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
-        _firmwareUpdateService = new FirmwareUpdateService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object);
+        _firmwareUpdateService = new FirmwareUpdateService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
 
     private void SetMockBlobProperties(long blobSize)

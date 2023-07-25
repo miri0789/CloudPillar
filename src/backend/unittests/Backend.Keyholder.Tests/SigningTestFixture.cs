@@ -25,6 +25,7 @@ public class SigningTestFixture
     public void Setup()
     {
         _registryManagerMock = new Mock<RegistryManager>();
+        _mockLoggerHandler = new Mock<ILoggerHandler>();
         _ecdsaMock = new Mock<ECDsa>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLogger = new Mock<ILoggerHandler>();
