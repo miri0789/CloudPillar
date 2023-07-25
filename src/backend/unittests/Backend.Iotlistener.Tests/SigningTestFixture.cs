@@ -49,7 +49,7 @@ public class SigningTestFixture
     }
 
     [Test]
-    public void CreateTwinKeySignature_ExceptionThrown_WrapsAndThrowsException()
+    public async Task CreateTwinKeySignature_ExceptionThrown_WrapsAndThrowsException()
     {
         SignEvent signEvent = new SignEvent
         {
@@ -61,11 +61,15 @@ public class SigningTestFixture
 
         _httpRequestorServiceMock
             .Setup(service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
-            .Throws<Exception>();
+            .ThrowsAsync(new Exception());
+
+        await _signingService.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
             service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
-            Times.Never
+            Times.Once
         );
+
+        _mockLoggerHandler.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("SigningService CreateTwinKeySignature failed.")), It.IsAny<Exception>()), Times.Once);
     }
 }

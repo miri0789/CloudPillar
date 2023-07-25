@@ -78,6 +78,27 @@ public class AgentEventProcessorTestFixture
     }
 
     [Test]
+    public async Task ProcessEventsAsync_SignTwinKeyMessage_CallSignTwinKey_ThrowError()
+    {
+        _signingServiceMock
+             .Setup(service => service.CreateTwinKeySignature(It.IsAny<string>(), It.IsAny<Shared.Entities.Events.SignEvent>()))
+             .ThrowsAsync(new Exception("Failed to create twin key signature"));
+
+        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
+        var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
+        {
+            CallBase = true
+        };
+
+        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+
+        _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Once);
+        _mockLoggerHandler.Verify(l => l.Error(
+            It.Is<string>(msg => msg.Contains($"Failed parsing message on Partition: 1, Error: Failed to create twin key signature - Ignoring")),
+            It.IsAny<object[]>()), Times.Once);
+    }
+
+    [Test]
     public async Task ProcessEventsAsync_DrainMode_NotCall()
     {
         _mockEnvironmentsWrapper.Setup(f => f.drainD2cQueues).Returns("drainD2cQueues");
@@ -90,6 +111,7 @@ public class AgentEventProcessorTestFixture
         await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
+        _mockLoggerHandler.Verify(l => l.Warn(It.Is<string>(msg => msg.Contains($"Draining on Partition: 1")), It.IsAny<object[]>()), Times.Once);
     }
 
     [Test]
@@ -106,6 +128,7 @@ public class AgentEventProcessorTestFixture
         await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
+        _mockLoggerHandler.Verify(l => l.Warn(It.Is<string>(msg => msg.Contains("Ignoring message older than 1 minutes.")), It.IsAny<object[]>()), Times.Once);
     }
 
 }
