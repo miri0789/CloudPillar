@@ -16,8 +16,7 @@ public class SigningService : ISigningService
     private ECDsa _signingPrivateKey;
     private readonly RegistryManager _registryManager;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-
-    private static ILoggerHandler _logger;
+    private readonly ILoggerHandler _logger;
 
     public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
