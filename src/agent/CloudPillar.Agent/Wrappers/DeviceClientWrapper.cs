@@ -7,7 +7,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     private readonly DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
-    private DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper)
+    public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper)
     {
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _environmentsWrapper = environmentsWrapper;
@@ -80,4 +80,5 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         updatedReportedProperties[key] = value;
         await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
     }
+
 }

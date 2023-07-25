@@ -4,6 +4,8 @@ using CloudPillar.Agent.Wrappers;
 using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Converters;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -29,7 +31,7 @@ public class TwinHandler : ITwinHandler
             string reportJson = twin.Properties.Reported.ToJson();
             var twinReport = JsonConvert.DeserializeObject<TwinReport>(reportJson);
             string desiredJson = twin.Properties.Desired.ToJson();
-            var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(reportJson);
+            var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(desiredJson);
 
             if (twinDesired.ChangeSpec != null)
             {
@@ -37,7 +39,7 @@ public class TwinHandler : ITwinHandler
                 if (actions?.Count() > 0)
                 {
                     Console.WriteLine($"HandleTwinActions {actions.Count()} actions to exec");
-                    await _deviceClientWrapper.UpdateReportedPropertiesAsync(nameof(twinReport.ChangeSpec), twinReport.ChangeSpec);
+                    await UpdateReportChangeSpec(twinReport.ChangeSpec);
                     await HandleTwinActions(actions);
                 }
             }
@@ -46,6 +48,21 @@ public class TwinHandler : ITwinHandler
         {
             Console.WriteLine($"HandleTwinActions failed: {ex.Message}");
         }
+
+    }
+
+    private async Task UpdateReportChangeSpec(TwinReportChangeSpec changeSpec)
+    {
+        var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
+          Formatting.None,
+          new JsonSerializerSettings
+          {
+              Converters = { new StringEnumConverter() },
+              Formatting = Formatting.Indented,
+              NullValueHandling = NullValueHandling.Ignore
+          }));
+        var changeSpecKey = LowerFirtLetter(nameof(TwinReport.ChangeSpec));
+        await _deviceClientWrapper.UpdateReportedPropertiesAsync(changeSpecKey, changeSpecJson);
 
     }
 
@@ -92,15 +109,16 @@ public class TwinHandler : ITwinHandler
                 if (desiredValue?.Length > 0)
                 {
                     var reportProp = typeof(TwinReportPatch).GetProperty(property.Name);
-                    var reportValue = (TwinActionReport[])reportProp.GetValue(twinReport.ChangeSpec.Patch) ?? new TwinActionReport[0];
+                    var reportValue = ((TwinActionReport[])reportProp.GetValue(twinReport.ChangeSpec.Patch)).ToList() ?? new List<TwinActionReport>();
 
-                    while (reportValue.Length < desiredValue.Length)
+                    while (reportValue.Count < desiredValue.Length)
                     {
-                        reportValue.ToList().Add(
+                        reportValue.Add(
                             new TwinActionReport() { Status = StatusType.Pending });
                     }
-                    reportProp.SetValue(twinReport.ChangeSpec.Patch, reportValue);
-                    actions.Concat(desiredValue
+
+                    reportProp.SetValue(twinReport.ChangeSpec.Patch, reportValue.ToArray());
+                    actions.AddRange(desiredValue
                        .Where((item, index) => reportValue[index].Status == StatusType.Pending)
                        .Select((item, index) => new ActionToReport
                        {
@@ -124,9 +142,8 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            await _deviceClientWrapper.UpdateReportedPropertiesAsync(nameof(TwinReport.SupportedShells), GetSupportedShells().ToArray());
-            await _deviceClientWrapper.UpdateReportedPropertiesAsync(nameof(TwinReport.AgentPlatform), RuntimeInformation.OSDescription);
-            await _deviceClientWrapper.UpdateReportedPropertiesAsync(nameof(TwinReport.DeviceState), deviceState);
+            var deviceStateKey = LowerFirtLetter(nameof(TwinReport.DeviceState));
+            await _deviceClientWrapper.UpdateReportedPropertiesAsync(deviceStateKey, deviceState);
             Console.WriteLine($"UpdateDeviceStateAsync success");
         }
         catch (Exception ex)
@@ -135,22 +152,44 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateReportAction(int index, string twinPartName, StatusType status, float progress)
+    public async Task InitReportDeviceParams()
+    {
+        try
+        {
+            var supportedShellsKey = LowerFirtLetter(nameof(TwinReport.SupportedShells));
+            await _deviceClientWrapper.UpdateReportedPropertiesAsync(supportedShellsKey, GetSupportedShells().ToArray());
+            var agentPlatformKey = LowerFirtLetter(nameof(TwinReport.AgentPlatform));
+            await _deviceClientWrapper.UpdateReportedPropertiesAsync(agentPlatformKey, RuntimeInformation.OSDescription);
+            Console.WriteLine($"InitReportDeviceParams success");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"InitReportDeviceParams failed: {ex.Message}");
+        }
+    }
+
+    private string LowerFirtLetter(string propertyName)
+    {
+        return char.ToLower(propertyName[0]) + propertyName.Substring(1);
+    }
+
+    public async Task UpdateReportAction(ActionToReport actionToReport)
     {
         try
         {
             var twin = await _deviceClientWrapper.GetTwinAsync();
             string reportJson = twin.Properties.Reported.ToJson();
             var twinReport = JsonConvert.DeserializeObject<TwinReport>(reportJson);
-            var reportProp = typeof(TwinReportPatch).GetProperty(twinPartName);
+            var reportProp = typeof(TwinReportPatch).GetProperty(actionToReport.TwinPartName);
             var reportValue = (TwinActionReport[])reportProp.GetValue(twinReport.ChangeSpec.Patch);
-            reportValue[index] = new TwinActionReport()
+            reportValue[actionToReport.TwinReportIndex] = new TwinActionReport()
             {
-                Status = status,
-                Progress = progress
+                Status = actionToReport.Status,
+                Progress = actionToReport.Progress
             };
             reportProp.SetValue(twinReport.ChangeSpec.Patch, reportValue);
-            Console.WriteLine($"UpdateReportAction success. index: {index} ,status: {status}");
+            await UpdateReportChangeSpec(twinReport.ChangeSpec);
+            Console.WriteLine($"UpdateReportAction success. index: {actionToReport.TwinReportIndex} ,status: {actionToReport.Status}");
         }
         catch (Exception ex)
         {

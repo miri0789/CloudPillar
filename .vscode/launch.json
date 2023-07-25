@@ -197,6 +197,7 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
+                "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=carto3ag1;SharedAccessKey=JP25Buy7v47bTIxm4umXnhGsku4keCqrz7qB+vEcmbo="
             },
             "stopAtEntry": false
         }

@@ -6,8 +6,10 @@ public class C2DEventHandler : IC2DEventHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
+    
 
-    public C2DEventHandler(IDeviceClientWrapper deviceClientWrapper, IC2DEventSubscriptionSession c2DEventSubscriptionSession)
+    public C2DEventHandler(IDeviceClientWrapper deviceClientWrapper,
+     IC2DEventSubscriptionSession c2DEventSubscriptionSession)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(c2DEventSubscriptionSession);
@@ -17,7 +19,7 @@ public class C2DEventHandler : IC2DEventHandler
     }
 
 
-    public async Task CreateSubscribeAsync(CancellationToken cancellationToken, string connectionString)
+    public async Task CreateSubscribeAsync(CancellationToken cancellationToken)
     {
         Console.WriteLine("Subscribing to C2D messages...");
 

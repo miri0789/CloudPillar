@@ -11,16 +11,21 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly IMessagesFactory _messagesFactory;
+    private readonly ITwinHandler _twinHandler;
     public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
-    IFileDownloadHandler fileDownloadHandler, IMessagesFactory messagesFactory)
+    IFileDownloadHandler fileDownloadHandler,
+     IMessagesFactory messagesFactory,
+     ITwinHandler twinHandler)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(fileDownloadHandler);
         ArgumentNullException.ThrowIfNull(messagesFactory);
+        ArgumentNullException.ThrowIfNull(twinHandler);
 
         _messagesFactory = messagesFactory;
         _deviceClientWrapper = deviceClientWrapper;
         _fileDownloadHandler = fileDownloadHandler;
+        _twinHandler = twinHandler;
     }
 
 
@@ -53,13 +58,18 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         message = _messagesFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                         subscriber = _fileDownloadHandler;
                         break;
-                    default: 
+                    default:
                         Console.WriteLine($"Recived message was not processed");
                         break;
                 }
                 if (subscriber != null)
                 {
-                    await subscriber.HandleMessageAsync(message);
+                    var actionToReport = await subscriber.HandleMessageAsync(message);
+                    if (actionToReport != null)
+                    {
+                        await _twinHandler.UpdateReportAction(actionToReport);
+
+                    }
                 }
 
                 await _deviceClientWrapper.CompleteAsync(receivedMessage);

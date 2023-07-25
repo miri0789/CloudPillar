@@ -5,6 +5,8 @@ public class ExecuteAction : TwinAction
 {
     public ShellType Shell;
     public string Command;
+    public string OnPause;
+    public string OnResume;
 
     public ExecuteAction()
     {

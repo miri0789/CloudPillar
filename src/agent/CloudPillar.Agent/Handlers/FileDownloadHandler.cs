@@ -11,20 +11,16 @@ public class FileDownloadHandler : IFileDownloadHandler
 {
     private readonly IFileStreamerWrapper _FileStreamerWrapper;
     private readonly ID2CEventHandler _d2CEventHandler;
-    private readonly ITwinHandler _twinHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
 
     public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper,
-            ID2CEventHandler d2CEventHandler,
-            ITwinHandler twinHandler)
+                               ID2CEventHandler d2CEventHandler)
     {
         ArgumentNullException.ThrowIfNull(FileStreamerWrapper);
         ArgumentNullException.ThrowIfNull(d2CEventHandler);
-        ArgumentNullException.ThrowIfNull(twinHandler);
 
         _FileStreamerWrapper = FileStreamerWrapper;
         _d2CEventHandler = d2CEventHandler;
-        _twinHandler = twinHandler;
         _filesDownloads = new ConcurrentBag<FileDownload>();
     }
 
@@ -44,7 +40,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
     }
 
-    public async Task HandleMessageAsync(BaseMessage message)
+    public async Task<ActionToReport?> HandleMessageAsync(BaseMessage message)
     {
         if (message is DownloadBlobChunkMessage blobChunk)
         {
@@ -62,12 +58,12 @@ public class FileDownloadHandler : IFileDownloadHandler
             }
             await _FileStreamerWrapper.WriteChunkToFileAsync(filePath, blobChunk.Offset, blobChunk.Data);
 
-            CalculateBytesDownloadedPercent(file, blobChunk.Data.Length, blobChunk.Offset);
+            file.Progress = CalculateBytesDownloadedPercent(file, blobChunk.Data.Length, blobChunk.Offset);
 
             if (file.TotalBytesDownloaded == file.TotalBytes)
             {
                 file.Stopwatch.Stop();
-                _twinHandler.UpdateReportAction(file.TwinReportIndex, file.TwinPartName, StatusType.Success, 100);
+                file.Status = StatusType.Success;
             }
             else
             {
@@ -75,23 +71,26 @@ public class FileDownloadHandler : IFileDownloadHandler
                 {
                     await CheckFullRangeBytesAsync(blobChunk, filePath);
                 }
+                file.Status = StatusType.InProgress;
             }
+            return file;
         }
         else
         {
             Console.WriteLine($"DownloadBlobChunkMessage HandlMessage message is not in suitable type");
         }
+        return null;
 
     }
 
-    private void CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
+    private float CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
     {
         const double KB = 1024.0;
         file.TotalBytesDownloaded += bytesLength;
         double progressPercent = Math.Round((double)file.TotalBytesDownloaded / bytesLength * 100, 2);
         double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
         Console.WriteLine($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
-        _twinHandler.UpdateReportAction(file.TwinReportIndex, file.TwinPartName, StatusType.InProgress, (float)progressPercent);
+        return (float)progressPercent;
     }
 
     private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath)
