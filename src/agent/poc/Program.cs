@@ -86,7 +86,14 @@ namespace FirmwareUpdateAgent
                     };
 
                     _httpListener = new HttpListener();
-                    _httpListener.Prefixes.Add("http://+:8099/");
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
+                        _httpListener.Prefixes.Add("http://+:8099/");
+                    }
+                    else
+                    {
+                        _httpListener.Prefixes.Add("http://localhost:8099/");
+                    }
                     _httpListener.Start();
 
                     // Add the initial Subscribe() call here

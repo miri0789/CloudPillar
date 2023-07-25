@@ -6,6 +6,7 @@ using static Microsoft.Azure.EventHubs.EventData;
 using Shared.Entities.Events;
 using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
+using Shared.Logger;
 
 namespace Backend.Iotlistener.Tests;
 
@@ -17,6 +18,8 @@ public class AgentEventProcessorTestFixture
     private Mock<IFirmwareUpdateService> _firmwareUpdateServiceMock;
     private Mock<ISigningService> _signingServiceMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
+    private Mock<ILoggerHandler> _mockLoggerHandler;
+
     private string _iothubConnectionDeviceId;
 
     [SetUp]
@@ -26,10 +29,11 @@ public class AgentEventProcessorTestFixture
         _firmwareUpdateServiceMock = new Mock<IFirmwareUpdateService>();
         _signingServiceMock = new Mock<ISigningService>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
+        _mockLoggerHandler = new Mock<ILoggerHandler>();
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(30);
         _mockEnvironmentsWrapper.Setup(f => f.iothubConnectionDeviceId).Returns(_iothubConnectionDeviceId);
         _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
-        _signingServiceMock.Object, _mockEnvironmentsWrapper.Object);
+        _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
 
     }
 
@@ -93,7 +97,7 @@ public class AgentEventProcessorTestFixture
     {
         var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(1);
-        _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object, _mockEnvironmentsWrapper.Object);
+        _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
