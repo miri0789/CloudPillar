@@ -12,7 +12,7 @@ public class DownloadAction : TwinAction
     
     public DownloadAction()
     {
-        this.ActionName = TwinActionType.SingularDownload;
+        this.Action = TwinActionType.SingularDownload;
     }
 }
 

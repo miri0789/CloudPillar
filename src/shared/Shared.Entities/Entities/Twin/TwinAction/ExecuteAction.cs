@@ -10,6 +10,6 @@ public class ExecuteAction : TwinAction
 
     public ExecuteAction()
     {
-        this.ActionName = TwinActionType.ExecuteOnce;
+        this.Action = TwinActionType.ExecuteOnce;
     }
 }

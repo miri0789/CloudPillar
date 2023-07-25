@@ -6,6 +6,7 @@ using System.Reflection;
 using CloudPillar.Agent.Entities;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -32,14 +33,16 @@ public class TwinHandler : ITwinHandler
             var twinReport = JsonConvert.DeserializeObject<TwinReport>(reportJson);
             string desiredJson = twin.Properties.Desired.ToJson();
             var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(desiredJson);
-
+var deserializedActions = JsonConvert.DeserializeObject<List<TwinReport>>(reportJson, new JsonSerializerSettings
+{
+    Converters = new List<JsonConverter> { new BaseActionConverter() }
+});
             if (twinDesired.ChangeSpec != null)
             {
-                var actions = GetActionsToExec(twinDesired, twinReport);
+                var actions = await GetActionsToExecAsync(twinDesired, twinReport);
                 if (actions?.Count() > 0)
                 {
                     Console.WriteLine($"HandleTwinActions {actions.Count()} actions to exec");
-                    await UpdateReportChangeSpecAsync(twinReport.ChangeSpec);
                     await HandleTwinActionsAsync(actions);
                 }
             }
@@ -57,6 +60,7 @@ public class TwinHandler : ITwinHandler
           Formatting.None,
           new JsonSerializerSettings
           {
+              ContractResolver = new CamelCasePropertyNamesContractResolver(),
               Converters = { new StringEnumConverter() },
               Formatting = Formatting.Indented,
               NullValueHandling = NullValueHandling.Ignore
@@ -72,7 +76,7 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
-                switch (action.TwinAction.ActionName)
+                switch (action.TwinAction.Action)
                 {
                     case TwinActionType.SingularDownload:
                         await _fileDownloadHandler.InitFileDownloadAsync(action);
@@ -92,16 +96,18 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    private IEnumerable<ActionToReport> GetActionsToExec(TwinDesired twinDesired, TwinReport twinReport)
+    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReport twinReport)
     {
         try
         {
+            var isReportChanged = false;
             var actions = new List<ActionToReport>();
             twinReport.ChangeSpec ??= new TwinReportChangeSpec();
             if (twinReport.ChangeSpec.Patch == null || twinReport.ChangeSpec.Id != twinDesired.ChangeSpec.Id)
             {
                 twinReport.ChangeSpec.Patch = new TwinReportPatch();
                 twinReport.ChangeSpec.Id = twinDesired.ChangeSpec.Id;
+                isReportChanged = true;
             }
 
             PropertyInfo[] properties = typeof(TwinPatch).GetProperties();
@@ -111,12 +117,13 @@ public class TwinHandler : ITwinHandler
                 if (desiredValue?.Length > 0)
                 {
                     var reportProp = typeof(TwinReportPatch).GetProperty(property.Name);
-                    var reportValue = ((TwinActionReport[])reportProp.GetValue(twinReport.ChangeSpec.Patch)).ToList() ?? new List<TwinActionReport>();
+                    var reportValue = ((TwinActionReport[])(reportProp.GetValue(twinReport.ChangeSpec.Patch) ?? new TwinActionReport[0])).ToList();
 
                     while (reportValue.Count < desiredValue.Length)
                     {
                         reportValue.Add(
                             new TwinActionReport() { Status = StatusType.Pending });
+                        isReportChanged = true;
                     }
 
                     reportProp.SetValue(twinReport.ChangeSpec.Patch, reportValue.ToArray());
@@ -130,6 +137,10 @@ public class TwinHandler : ITwinHandler
                        }));
 
                 }
+            }
+            if (isReportChanged)
+            {
+                await UpdateReportChangeSpecAsync(twinReport.ChangeSpec);
             }
             return actions;
         }
