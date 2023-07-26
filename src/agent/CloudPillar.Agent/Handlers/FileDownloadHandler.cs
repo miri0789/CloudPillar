@@ -24,35 +24,27 @@ public class FileDownloadHandler : IFileDownloadHandler
         _filesDownloads = new ConcurrentBag<FileDownload>();
     }
 
-    public async Task InitFileDownloadAsync(ActionToReport action)
+    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
     {
-        if (action.TwinAction is DownloadAction downloadAction)
+        _filesDownloads.Add(new FileDownload()
         {
-            _filesDownloads.Add(new FileDownload()
-            {
-                TwinAction = downloadAction,
-                TwinPartName = action.TwinPartName,
-                TwinReportIndex = action.TwinReportIndex,
-                Stopwatch = new Stopwatch()
-            });
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, action.TwinAction.ActionGuid);
-        }
-        else
-        {
-            Console.WriteLine($"InitFileDownloadAsync, no download action is receive, twin part {action.TwinPartName} index {action.TwinReportIndex}");
-        }
+            DownloadAction = downloadAction,
+            Report = actionToReport,
+            Stopwatch = new Stopwatch()
+        });
+        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionGuid);
     }
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
     {
 
-        var file = _filesDownloads.FirstOrDefault(item => item.TwinAction.ActionGuid == message.ActionGuid &&
-         item.TwinAction.Source == message.FileName);
+        var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionGuid == message.ActionGuid &&
+                                    item.DownloadAction.Source == message.FileName);
         if (file == null)
         {
             throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
         }
-        var filePath = Path.Combine(file.TwinAction.DestinationPath, file.TwinAction.Source);
+        var filePath = Path.Combine(file.DownloadAction.DestinationPath, file.DownloadAction.Source);
         if (!file.Stopwatch.IsRunning)
         {
             file.Stopwatch.Start();
@@ -60,12 +52,12 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         await _FileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
 
-        file.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
+        file.Report.TwinReport.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
 
         if (file.TotalBytesDownloaded == file.TotalBytes)
         {
             file.Stopwatch.Stop();
-            file.Status = StatusType.Success;
+            file.Report.TwinReport.Status = StatusType.Success;
         }
         else
         {
@@ -73,9 +65,9 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 await CheckFullRangeBytesAsync(message, filePath);
             }
-            file.Status = StatusType.InProgress;
+            file.Report.TwinReport.Status = StatusType.InProgress;
         }
-        return file;
+        return file.Report;
 
     }
 

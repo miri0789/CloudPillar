@@ -2,9 +2,10 @@
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Entities;
-public class FileDownload: ActionToReport
+public class FileDownload
 {    
-    public DownloadAction TwinAction { get; set; }
+    public ActionToReport Report { get; set; }
+    public DownloadAction DownloadAction { get; set; }
     public Stopwatch Stopwatch { get; set; }
     public long TotalBytesDownloaded { get; set; }
     public long TotalBytes { get; set; }

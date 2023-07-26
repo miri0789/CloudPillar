@@ -3,9 +3,10 @@ using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Entities;
 
-public class ActionToReport: TwinActionReported
+public class ActionToReport
 {
+    public TwinActionReported TwinReport { get; set; }
     public TwinAction TwinAction { get; set; }
-    public int TwinReportIndex { get; set; }
-    public string TwinPartName { get; set; }
+    public int ReportIndex { get; set; }
+    public string ReportPartName { get; set; }
 }

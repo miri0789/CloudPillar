@@ -80,8 +80,8 @@ public class TwinHandler : ITwinHandler
                 switch (action.TwinAction)
                 {
                     case DownloadAction downloadAction:
-                        tasks.Add(_fileDownloadHandler.InitFileDownloadAsync(action));
-                        action.Status = StatusType.InProgress;
+                        tasks.Add(_fileDownloadHandler.InitFileDownloadAsync(downloadAction, action));
+                        action.TwinReport.Status = StatusType.InProgress;
                         break;
 
                     case UploadAction uploadAction:
@@ -89,8 +89,8 @@ public class TwinHandler : ITwinHandler
                         break;
 
                     default:
-                        action.Status = StatusType.Failed;
-                        action.ResultCode = ResultCode.NotFound.ToString();
+                        action.TwinReport.Status = StatusType.Failed;
+                        action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
                         Console.WriteLine($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionGuid}");
                         break;
                 }
@@ -141,8 +141,8 @@ public class TwinHandler : ITwinHandler
                            .Where((item, index) => reportedValue[index].Status == StatusType.Pending)
                            .Select((item, index) => new ActionToReport
                            {
-                               TwinPartName = property.Name,
-                               TwinReportIndex = index,
+                               ReportPartName = property.Name,
+                               ReportIndex = index,
                                TwinAction = item
                            }));
 
@@ -204,15 +204,11 @@ public class TwinHandler : ITwinHandler
             var twin = await _deviceClient.GetTwinAsync();
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-            actionsToReported.ToList().ForEach(ActionToReport =>
+            actionsToReported.ToList().ForEach(actionToReport =>
             {
-                var reportedProp = typeof(TwinReportedPatch).GetProperty(ActionToReport.TwinPartName);
+                var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
                 var reportedValue = (TwinActionReported[])reportedProp.GetValue(twinReported.ChangeSpec.Patch);
-                reportedValue[ActionToReport.TwinReportIndex] = new TwinActionReported()
-                {
-                    Status = ActionToReport.Status,
-                    Progress = ActionToReport.Progress
-                };
+                reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
                 reportedProp.SetValue(twinReported.ChangeSpec.Patch, reportedValue);
             });
             await UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
