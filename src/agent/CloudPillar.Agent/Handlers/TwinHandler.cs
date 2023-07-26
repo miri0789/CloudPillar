@@ -9,7 +9,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 namespace CloudPillar.Agent.Handlers;
-
 public class TwinHandler : ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
@@ -32,11 +31,13 @@ public class TwinHandler : ITwinHandler
             string reportJson = twin.Properties.Reported.ToJson();
             var twinReport = JsonConvert.DeserializeObject<TwinReport>(reportJson);
             string desiredJson = twin.Properties.Desired.ToJson();
-            var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(desiredJson);
-var deserializedActions = JsonConvert.DeserializeObject<List<TwinReport>>(reportJson, new JsonSerializerSettings
-{
-    Converters = new List<JsonConverter> { new BaseActionConverter() }
-});
+            var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(desiredJson,
+                    new JsonSerializerSettings
+                    {
+                        Converters = new List<JsonConverter> {
+                            new TwinDesiredConverter(), new TwinActionConverter() }
+                    });
+                    
             if (twinDesired.ChangeSpec != null)
             {
                 var actions = await GetActionsToExecAsync(twinDesired, twinReport);
