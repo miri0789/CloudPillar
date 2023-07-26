@@ -63,7 +63,7 @@ stages:
   displayName: Test_Stage
   jobs:
   - job: Local_Repo
-    displayName: 'Print Local Repo'
+    displayName: Print Local Repo
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
