@@ -67,6 +67,12 @@ variables:
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
+- name: RepoName
+  value: $(Build.Repository.Name)
+- name: SourceBranchName
+  value: $(Build.SourceBranchName)
+- name: Files
+  value: $(git diff --name-only HEAD~1..HEAD)
 
 
 
@@ -85,12 +91,26 @@ stages:
       # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
         echo "ADO"
-        git diff --name-only HEAD master
+        FILES=$(git diff --name-only HEAD~1..HEAD)
+
+        #! Error fatal: ambiguous argument 'master': unknown revision or path not in the working tree.
+        #! Use '--' to separate paths from revisions, like this:
+        #!'git <command> [<revision>...] -- [<file>...]'
+
+        #! git diff --name-only HEAD master
 
         echo "ADO"
-        echo "Repo Name: $(Build.Repository.Name)"
-        echo "Source Branch Name: $(Build.SourceBranchName)"
-        echo "Changed Files Names and Path: $(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))"
+        echo "Repo Name: $(Build.Repository.Name)          $(RepoName))"
+        echo "Source Branch Name: $(Build.SourceBranchName)              $(SourceBranchName)"
+        echo "Changed Files Names and Path: ${FILES[@]}"
+        echo "Changed Files Names and Path2: $(Files)"
+
+
+        for file in "${Files[@]}"
+        do
+          echo $file
+        done     
+
       name: print_ado_repo
           
 - stage: Test2
@@ -107,18 +127,25 @@ stages:
     # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
         echo "Local"
-        REPO=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
-        BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
-        Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
+        REPO1=$(basename `git rev-parse --show-toplevel`) # Repo Name
+        REPO2=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
+        REPO3=$(git rev-parse --show-toplevel | awk -F/ '{print $NF}')
+        #! BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
+        #! Error fatal: ambiguous argument 'master': unknown revision or path not in the working tree.
+        #! Use '--' to separate paths from revisions, like this:
+        #!'git <command> [<revision>...] -- [<file>...]'
+        #! Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
 
         tree -L 2
         
         echo "Repo Name: $REPO"
+        echo "Repo2 Name: $REPO2"
+        echo "Repo3 Name: $REPO3"
         echo "Current Branch Name: $BRANCH"
         echo "Changed Files Names and Path: $Files"
       name: print_local_repo
 
-
+# git diff --name-only HEAD~1..HEAD
 
 
 
