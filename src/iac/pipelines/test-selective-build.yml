@@ -1,11 +1,26 @@
-name: selective_build
+name: selective_ci_$(Rev:.r)
+# name: selective_ci
 
+
+# 1. The branch trigger should be chnages in the current branch
 trigger:
-- none
-# - $(Build.SourceBranchName)
-# - main
+  batch: true
+  branches:
+    include:
+    - main
+    - test-selective-build
+    - TestBranch
+    - "*"
+    # - $(Build.SourceBranchName)
+    # - main
+    # - *
+  # paths:
+  #   include:
+  #   - src/backend/**/*.csproj
+# 2. The pipeline should be triggered on every change in the repository
+# pr: none
 
-# * Parameters
+
 parameters:
   - name: env
     displayName: Select Environment to deploy
@@ -17,6 +32,7 @@ parameters:
     - stg
     - prd
   - name: image
+
     displayName: Select Image to Build and Scan
     type: string
     default: iotlistener
@@ -52,25 +68,21 @@ variables:
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
 
-# - group: images-vg
-
-
 
 
 stages:
-- stage: CI_Build
-  displayName: CI Build Process
-
+- stage: Test
+  displayName: Test_Stage
   jobs:
-  - job: SetCurrentVersion
-    displayName: Set Current Version ID
+  - job: Local_Repo
+    displayName: Print Local Repo
     pool:
       name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent 
+      agent.name: aks-${{parameters.env}}-agent
     steps:
     - checkout: self
       persistCredentials: true
-      clean: true
+      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
-        echo "111111111111111111111111111"
-      name: BashSetCurrentVersion
+        echo "Local"
+      name: print_local_repo
