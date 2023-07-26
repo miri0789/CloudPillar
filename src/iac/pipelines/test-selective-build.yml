@@ -77,6 +77,7 @@ variables:
   value: $(git diff --name-only test-selective-build~1..test-selective-build)
   # value: $(git diff --name-only $SourceBranchName)~1..$SourceBranchName))
   # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
+  # git diff-tree --no-commit-id --name-only -r HEAD
 
 
 
@@ -97,6 +98,7 @@ stages:
     - bash: |
         pwd
         echo "Local"
+        git diff-tree --no-commit-id --name-only -r HEAD
         REPO=$(RepoName)
         BRANCH=$(SourceBranchName)
 
