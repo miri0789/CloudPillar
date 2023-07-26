@@ -22,11 +22,11 @@ public class TwinDesiredConverter : JsonConverter
                 Id = jsonObject.SelectToken("changeSpec.id")?.Value<string>(),
                 Patch = new TwinPatch()
                 {
-                    InstallSteps = jsonObject.SelectToken("changeSpec.patch.installSteps")?.ToObject<TwinAction[]>(serializer),
-                    PostInstallConfig = jsonObject.SelectToken("changeSpec.patch.postInstallConfig")?.ToObject<TwinAction[]>(serializer),
-                    PreInstallConfig = jsonObject.SelectToken("changeSpec.patch.preInstallConfig")?.ToObject<TwinAction[]>(serializer),
                     PreTransitConfig = jsonObject.SelectToken("changeSpec.patch.preTransitConfig")?.ToObject<TwinAction[]>(serializer),
-                    TransitPackage = jsonObject.SelectToken("changeSpec.patch.transitPackage")?.ToObject<TwinAction[]>(serializer)
+                    TransitPackage = jsonObject.SelectToken("changeSpec.patch.transitPackage")?.ToObject<TwinAction[]>(serializer),
+                    PreInstallConfig = jsonObject.SelectToken("changeSpec.patch.preInstallConfig")?.ToObject<TwinAction[]>(serializer),
+                    InstallSteps = jsonObject.SelectToken("changeSpec.patch.installSteps")?.ToObject<TwinAction[]>(serializer),
+                    PostInstallConfig = jsonObject.SelectToken("changeSpec.patch.postInstallConfig")?.ToObject<TwinAction[]>(serializer)
                 }
             }
         };
