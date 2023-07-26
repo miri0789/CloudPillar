@@ -209,7 +209,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionAndArgs_SendToLoggerFormattedError()
     {
-        var exception = new Exception("bla bla", new Exception("tra la la"));
+        var exception = new Exception("exception message", new Exception("exception details"));
         var error = string.Join(Environment.NewLine, string.Format("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12), exception);
 
         m_target.Error("{0} sent a letter to {1} at {2} O'clock!", exception, "Alice", "Bob", 12);
@@ -220,7 +220,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithException_SendToLoggerFormattedError()
     {
-        var exception = new Exception("bla bla", new Exception("tra la la"));
+        var exception = new Exception("exception message", new Exception("exception details"));
         var error = string.Join(Environment.NewLine, string.Format("Alice sent a letter to Bob at 12 O'clock!"), exception);
 
         m_target.Error("Alice sent a letter to Bob at 12 O'clock!", exception);
@@ -231,7 +231,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionAndHttpContext_SendExceptionWithoutArgsToAppInsights()
     {
-        var exception = new Exception("bla bla", new Exception("tra la la"));
+        var exception = new Exception("exception message", new Exception("exception details"));
 
         m_target.Error("Alice sent a letter to Bob at 12 O'clock!", exception);
 
@@ -241,7 +241,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionAndhHttpContextAndArgs_SendExceptionToAppInsights()
     {
-        var exception = new Exception("bla bla", new Exception("tra la la"));
+        var exception = new Exception("exception message", new Exception("exception details"));
 
         m_target.Error("{0} sent a letter to {1} at {2} O'clock!", exception, "Alice", "Bob", 12);
 
@@ -251,7 +251,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionAndHttpContext_SendPropertiesToAppInsights()
     {
-        var exception = new Exception("bla bla", new Exception("tra la la"));
+        var exception = new Exception("exception message", new Exception("exception details"));
         var expected = m_attributesDictionary;
 
         expected.Add("applicationName", m_appName);
@@ -266,7 +266,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionWithoutHttpContext_SendExceptionToAppInsights()
     {
-        var exception = new Exception("bla bla", new Exception("tra la la"));
+        var exception = new Exception("exception message", new Exception("exception details"));
         const string message = "Alice sent a letter to Bob at 12 O'clock!";
 
         m_targetWithoutHttp.Error(message, exception);
@@ -277,7 +277,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionWithoutHttpContext_SendPropertiesToAppInsights()
     {
-        var exception = new Exception("bla bla", new Exception("tra la la"));
+        var exception = new Exception("exception message", new Exception("exception details"));
         var expected = new Dictionary<string, string>
         {
             { "applicationName", m_appName }

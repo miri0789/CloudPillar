@@ -17,15 +17,14 @@ class Program
 {
     public async static Task Main(string[] args)
     {
-
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddSingleton<ISchemaValidator, SchemaValidator>();
-        serviceCollection.AddScoped<IHttpRequestorService, HttpRequestorService>();
-        serviceCollection.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
-        serviceCollection.AddScoped<ISigningService, SigningService>();
-        serviceCollection.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
         var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
+        
         builder.Services.AddHttpClient();
+        builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
+        builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
+        builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
+        builder.Services.AddScoped<ISigningService, SigningService>();
+        builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 
         var cts = new CancellationTokenSource();
         AssemblyLoadContext.Default.Unloading += context =>

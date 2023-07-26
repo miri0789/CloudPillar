@@ -1,15 +1,19 @@
 using NUnit.Framework;
+using Moq;
+using Shared.Logger;
 using common;
 
 [TestFixture]
 public class SchemaValidatorTestFixture
 {
     private SchemaValidator _validator;
+    private Mock<ILoggerHandler> _loggerHandlerMock;
 
     [SetUp]
     public void SetUp()
     {
-        _validator = new SchemaValidator();
+        _loggerHandlerMock = new Mock<ILoggerHandler>();
+        _validator = new SchemaValidator(_loggerHandlerMock.Object);
     }
 
     [Test]
@@ -34,6 +38,8 @@ public class SchemaValidatorTestFixture
         bool isValid = _validator.ValidatePayloadSchema(payload, schemaPath, isRequest);
 
         Assert.IsFalse(isValid);
+
+        _loggerHandlerMock.Verify(l => l.Error(It.IsAny<string>()), Times.Once);
     }
 
     

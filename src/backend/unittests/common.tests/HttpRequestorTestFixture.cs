@@ -2,6 +2,7 @@
 using Moq;
 using System.Net;
 using System.Text;
+using Shared.Logger;
 using common;
 
 namespace common.tests;
@@ -10,6 +11,7 @@ public class HttpRequestorTestFixture
     private IHttpRequestorService _httpRequestor;
     private Mock<ISchemaValidator> _validatorMock;
     private Mock<HttpClient> _httpClientMock;
+    private Mock<ILoggerHandler> _loggerHandlerMock;
     private string _testUrl = "https://example.com";
 
     [SetUp]
@@ -28,7 +30,9 @@ public class HttpRequestorTestFixture
         _validatorMock = new Mock<ISchemaValidator>();
         _validatorMock.Setup(v => v.ValidatePayloadSchema(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Returns(true);
 
-        _httpRequestor = new HttpRequestorService(httpClientFactoryMock.Object, _validatorMock.Object);
+        _loggerHandlerMock = new Mock<ILoggerHandler>();
+
+        _httpRequestor = new HttpRequestorService(httpClientFactoryMock.Object, _validatorMock.Object, _loggerHandlerMock.Object);
     }
 
     #region TestSendRequest
@@ -47,6 +51,8 @@ public class HttpRequestorTestFixture
         string url = "invalid url";
         async Task SendRequest() => await _httpRequestor.SendRequest(url, HttpMethod.Get);
         Assert.ThrowsAsync<System.InvalidOperationException>(SendRequest);
+        _loggerHandlerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("Invalid Url")), 
+           It.IsAny<System.InvalidOperationException>()), Times.Once);
     }
 
     #endregion
@@ -92,6 +98,9 @@ public class HttpRequestorTestFixture
 
         async Task SendRequest() => await _httpRequestor.SendRequest(_testUrl, HttpMethod.Post, requestData);
         Assert.ThrowsAsync<HttpRequestException>(SendRequest);
+        _loggerHandlerMock.Verify(l => l.Error(
+            It.Is<string>(msg => msg.Contains("The request data is not fit the schema")),
+            It.IsAny<System.Net.Http.HttpRequestException>()), Times.Once);
     }
 
     [Test]
@@ -107,6 +116,9 @@ public class HttpRequestorTestFixture
         _validatorMock.Setup(v => v.ValidatePayloadSchema(invalidResponseContent, It.IsAny<string>(), false))
             .Returns(false);
         Assert.ThrowsAsync<HttpRequestException>(() => _httpRequestor.SendRequest<object>(_testUrl, HttpMethod.Get));
+        _loggerHandlerMock.Verify(l => l.Error(
+            It.Is<string>(msg => msg.Contains("The reponse data is not fit the schema")),
+            It.IsAny<System.Net.Http.HttpRequestException>()), Times.Once);
     }
 
     #endregion
