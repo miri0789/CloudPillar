@@ -78,7 +78,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         else
         {
-            Console.WriteLine($"DownloadBlobChunkMessage HandlMessage message is not in suitable type");
+            Console.WriteLine("DownloadBlobChunkMessage HandlMessage message is not in suitable type");
         }
         return null;
 

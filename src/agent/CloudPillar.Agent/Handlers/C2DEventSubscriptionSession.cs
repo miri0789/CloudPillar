@@ -59,7 +59,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         subscriber = _fileDownloadHandler;
                         break;
                     default:
-                        Console.WriteLine($"Recived message was not processed");
+                        Console.WriteLine("Recived message was not processed");
                         break;
                 }
                 if (subscriber != null)
@@ -67,8 +67,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     var actionToReport = await subscriber.HandleMessageAsync(message);
                     if (actionToReport != null)
                     {
-                        await _twinHandler.UpdateReportActionAsync(actionToReport);
-
+                        await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                     }
                 }
 
