@@ -37,15 +37,13 @@ public class TwinHandler : ITwinHandler
                         Converters = new List<JsonConverter> {
                             new TwinDesiredConverter(), new TwinActionConverter() }
                     });
-                    
-            if (twinDesired.ChangeSpec != null)
+
+
+            var actions = await GetActionsToExecAsync(twinDesired, twinReport);
+            Console.WriteLine($"HandleTwinActions {actions.Count()} actions to exec");
+            if (actions?.Count() > 0)
             {
-                var actions = await GetActionsToExecAsync(twinDesired, twinReport);
-                if (actions?.Count() > 0)
-                {
-                    Console.WriteLine($"HandleTwinActions {actions.Count()} actions to exec");
-                    await HandleTwinActionsAsync(actions);
-                }
+                await HandleTwinActionsAsync(actions);
             }
         }
         catch (Exception ex)
@@ -77,16 +75,22 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
-                switch (action.TwinAction.Action)
+                switch (action.TwinAction)
                 {
-                    case TwinActionType.SingularDownload:
+                    case DownloadAction downloadAction:
                         await _fileDownloadHandler.InitFileDownloadAsync(action);
-                        Console.WriteLine($"HandleTwinAction, download file: {((DownloadAction)action.TwinAction).Source} {actions.Count()} init");
+                        Console.WriteLine($"HandleTwinAction, download file: {downloadAction.Source}init");
                         break;
+
+                    case UploadAction uploadAction:
+                        // Handle UploadAction
+                        break;
+
                     default:
                         Console.WriteLine($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionGuid}");
                         continue;
                 }
+
                 action.Status = StatusType.InProgress;
                 await UpdateReportActionAsync(action);
             }

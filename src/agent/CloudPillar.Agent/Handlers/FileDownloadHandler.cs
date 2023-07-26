@@ -26,9 +26,8 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(ActionToReport action)
     {
-        if (action.TwinAction is DownloadAction)
+        if (action.TwinAction is DownloadAction downloadAction)
         {
-            var downloadAction = (DownloadAction)action.TwinAction;
             _filesDownloads.Add(new FileDownload()
             {
                 TwinAction = downloadAction,
@@ -37,6 +36,8 @@ public class FileDownloadHandler : IFileDownloadHandler
                 Stopwatch = new Stopwatch()
             });
             await _d2CEventHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, action.TwinAction.ActionGuid);
+        } else {
+             Console.WriteLine($"InitFileDownloadAsync, no download action is recived, twin part {action.TwinPartName} index {action.TwinReportIndex}");
         }
     }
 
