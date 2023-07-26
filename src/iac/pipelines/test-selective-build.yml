@@ -102,8 +102,8 @@ stages:
         echo "Source Branch Name: $BRANCH"
 
         git fetch --all
-        git pull
         git checkout $BRANCH
+        git pull
         
         FILES=$(git diff --name-only HEAD~1..$(Build.SourceBranchName))
 
