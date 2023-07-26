@@ -74,14 +74,57 @@ variables:
 - name: SourceBranchName
   value: $(Build.SourceBranchName)
 - name: Files
-  value: $(git diff --name-only test-selective-build~1..test-selective-build)
-  # value: $(git diff --name-only $SourceBranchName)~1..$SourceBranchName))
+  value: $(git diff --name-only origin/main..test-selective-build)
+  # value: $(git diff --name-only origin/main..$(Build.SourceBranchName))
   # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
-  # git diff-tree --no-commit-id --name-only -r HEAD
+  # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
 
 
 
 stages:
+- stage: Test
+  displayName: Test_Stage
+  jobs:
+  - job: ADO_Repo
+    displayName: Print ADO Repo
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    steps:
+    - checkout: self
+      persistCredentials: true
+      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
+    - bash: |
+        pwd
+        git fetch --all
+        git merge-base origin/main $(SourceBranchName)
+        git checkout $BRANCH
+
+        FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
+
+        echo "Repo Name: $(RepoName)"
+        echo "Source Branch Name: $(SourceBranchName)"
+        echo "ADO"
+        echo "Changed Files Names and Path: ${FILES[@]}"
+        echo "Changed Files Names and Path2: $(Files)"
+
+        #! Error fatal: ambiguous argument 'master': unknown revision or path not in the working tree.
+        #! Use '--' to separate paths from revisions, like this:
+        #!'git <command> [<revision>...] -- [<file>...]'
+
+        #! git diff --name-only HEAD master
+
+        echo "ADO"
+
+
+
+        for file in "${Files[@]}"
+        do
+          echo $file
+        done     
+
+      name: print_ado_repo
+          
 - stage: Test2
   displayName: Test2_Stage
   jobs:
@@ -98,7 +141,6 @@ stages:
     - bash: |
         pwd
         echo "Local"
-        git diff-tree --no-commit-id --name-only -r HEAD
         REPO=$(RepoName)
         BRANCH=$(SourceBranchName)
 
@@ -106,15 +148,15 @@ stages:
         echo "Source Branch Name: $BRANCH"
 
         git fetch --all
+        git merge-base origin/main $(SourceBranchName)
         git checkout $BRANCH
-        git pull
-        
-        # FILES=$(git diff --name-only HEAD~1..$(SourceBranchName))
-        FILES1=$(git diff --name-only test-selective-build~1..test-selective-build)
-        FILES2=$(git diff --name-only $(SourceBranchName)~1..$(SourceBranchName))
 
-        echo "Changed Files Names and Path: ${FILES1[@]}"
-        echo "Changed Files Names and Path: ${FILES2[@]}"
+        FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
+
+        
+        FILES=$(git diff --name-only HEAD~1..$(Build.SourceBranchName))
+
+        echo "Changed Files Names and Path: ${FILES[@]}"
         echo "Changed Files Names and Path2: $(Files)"
         #! BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
         
