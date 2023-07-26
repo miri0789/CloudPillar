@@ -23,7 +23,7 @@ public class C2DEventHandler : IC2DEventHandler
     {
         Console.WriteLine("Subscribing to C2D messages...");
 
-        await Task.Run(() => _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken), cancellationToken);
+        await Task.Run(() => _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken));
     }
 
 }

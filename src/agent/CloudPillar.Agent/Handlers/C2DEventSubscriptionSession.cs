@@ -8,23 +8,23 @@ namespace CloudPillar.Agent.Handlers;
 
 public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 {
-    private readonly IFileDownloadHandler _fileDownloadHandler;
+    private readonly IMessageSubscriber _messageSubscriber;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly IMessagesFactory _messagesFactory;
     private readonly ITwinHandler _twinHandler;
     public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
-    IFileDownloadHandler fileDownloadHandler,
-     IMessagesFactory messagesFactory,
-     ITwinHandler twinHandler)
+                                       IMessageSubscriber messageSubscriber,
+                                       IMessagesFactory messagesFactory,
+                                       ITwinHandler twinHandler)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(fileDownloadHandler);
+        ArgumentNullException.ThrowIfNull(messageSubscriber);
         ArgumentNullException.ThrowIfNull(messagesFactory);
         ArgumentNullException.ThrowIfNull(twinHandler);
 
         _messagesFactory = messagesFactory;
         _deviceClientWrapper = deviceClientWrapper;
-        _fileDownloadHandler = fileDownloadHandler;
+        _messageSubscriber = messageSubscriber;
         _twinHandler = twinHandler;
     }
 
@@ -50,25 +50,16 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 const string messageTypeProp = "MessageType";
                 string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
                 MessageType.TryParse(receivedMessage.Properties[messageTypeProp], out MessageType messageType);
-                IMessageSubscriber subscriber = null;
-                BaseMessage message = null;
                 switch (messageType)
                 {
                     case MessageType.DownloadChunk:
-                        message = _messagesFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
-                        subscriber = _fileDownloadHandler;
+                        var message = _messagesFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
+                        var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
+                        await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;
                     default:
                         Console.WriteLine("Recived message was not processed");
                         break;
-                }
-                if (subscriber != null)
-                {
-                    var actionToReport = await subscriber.HandleMessageAsync(message);
-                    if (actionToReport != null)
-                    {
-                        await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
-                    }
                 }
 
                 await _deviceClientWrapper.CompleteAsync(receivedMessage);
