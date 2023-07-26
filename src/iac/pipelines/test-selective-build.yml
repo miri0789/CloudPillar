@@ -1,12 +1,13 @@
 name: selective_ci
 
 trigger:
-  # batch: true
-  branches:
-    include:
-    - main
-    - test-selective-build
-    - TestBranch
+- none
+  # # batch: true
+  # branches:
+  #   include:
+  #   - main
+  #   - test-selective-build
+  #   - TestBranch
 
 parameters:
   - name: env
