@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <InformationalVersion>1.0._BUILDNUM_._TIMESTAMP_</InformationalVersion>
+    <InformationalVersion>_MAJOR_._MINOR_._BUILDNUM_._TIMESTAMP_</InformationalVersion>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
