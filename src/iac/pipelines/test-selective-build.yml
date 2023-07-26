@@ -90,6 +90,7 @@ stages:
     steps:
     - checkout: self
       persistCredentials: true
+      clean: true
     # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
         pwd
@@ -101,6 +102,7 @@ stages:
         echo "Source Branch Name: $BRANCH"
 
         git fetch --all
+        git pull
         git checkout $BRANCH
         
         FILES=$(git diff --name-only HEAD~1..$(Build.SourceBranchName))
