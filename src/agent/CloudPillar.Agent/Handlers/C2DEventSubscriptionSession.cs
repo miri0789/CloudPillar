@@ -8,19 +8,20 @@ namespace CloudPillar.Agent.Handlers;
 
 public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 {
-    private readonly IFileDownloadHandler _fileDownloadHandler;
+    private readonly IMessageSubscriber _messageSubscriber;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly IMessagesFactory _messagesFactory;
     public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
-    IFileDownloadHandler fileDownloadHandler, IMessagesFactory messagesFactory)
+                                       IMessageSubscriber messageSubscriber, 
+                                       IMessagesFactory messagesFactory)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(fileDownloadHandler);
+        ArgumentNullException.ThrowIfNull(messageSubscriber);
         ArgumentNullException.ThrowIfNull(messagesFactory);
 
         _messagesFactory = messagesFactory;
         _deviceClientWrapper = deviceClientWrapper;
-        _fileDownloadHandler = fileDownloadHandler;
+        _messageSubscriber = messageSubscriber;
     }
 
 
@@ -45,21 +46,15 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 const string messageTypeProp = "MessageType";
                 string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
                 MessageType.TryParse(receivedMessage.Properties[messageTypeProp], out MessageType messageType);
-                IMessageSubscriber subscriber = null;
-                BaseMessage message = null;
                 switch (messageType)
                 {
                     case MessageType.DownloadChunk:
-                        message = _messagesFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
-                        subscriber = _fileDownloadHandler;
+                        var message = _messagesFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
+                        await _messageSubscriber.HandleDownloadMessageAsync(message);
                         break;
                     default: 
                         Console.WriteLine($"Recived message was not processed");
                         break;
-                }
-                if (subscriber != null)
-                {
-                    await subscriber.HandleMessageAsync(message);
                 }
 
                 await _deviceClientWrapper.CompleteAsync(receivedMessage);

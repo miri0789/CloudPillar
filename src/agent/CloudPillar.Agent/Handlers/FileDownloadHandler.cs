@@ -32,42 +32,35 @@ public class FileDownloadHandler : IFileDownloadHandler
         await _D2CEventHandler.SendFirmwareUpdateEventAsync(fileName, actionGuid);
     }
 
-    public async Task HandleMessageAsync(BaseMessage message)
+    public async Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
     {
-        if (message is DownloadBlobChunkMessage blobChunk)
+        var file = _filesDownloads.FirstOrDefault(item => item.ActionGuid == message.ActionGuid && item.FileName == message.FileName);
+        if (file == null)
         {
-            var file = _filesDownloads.FirstOrDefault(item => item.ActionGuid == blobChunk.ActionGuid && item.FileName == blobChunk.FileName);
-            if (file == null)
-            {
-                throw new ArgumentException($"There is no active download for message {blobChunk.GetMessageId()}");
-            }
-            var filePath = Path.Combine(file.Path, file.FileName);
-            if (!file.Stopwatch.IsRunning)
-            {
-                file.Stopwatch.Start();
-                file.TotalBytes = blobChunk.FileSize;
-            }
-            await _FileStreamerWrapper.WriteChunkToFileAsync(filePath, blobChunk.Offset, blobChunk.Data);
+            throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
+        }
+        var filePath = Path.Combine(file.Path, file.FileName);
+        if (!file.Stopwatch.IsRunning)
+        {
+            file.Stopwatch.Start();
+            file.TotalBytes = message.FileSize;
+        }
+        await _FileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
 
-            CalculateBytesDownloadedPercent(file, blobChunk.Data.Length, blobChunk.Offset);
+        CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
 
-            if (file.TotalBytesDownloaded == file.TotalBytes)
-            {
-                file.Stopwatch.Stop();
-                //TODO report success
-            }
-            else
-            {
-                //TODO report progress
-                if (blobChunk?.RangeSize != null)
-                {
-                    await CheckFullRangeBytesAsync(blobChunk, filePath);
-                }
-            }
+        if (file.TotalBytesDownloaded == file.TotalBytes)
+        {
+            file.Stopwatch.Stop();
+            //TODO report success
         }
         else
         {
-            Console.WriteLine($"DownloadBlobChunkMessage HandlMessage message is not in suitable type");
+            //TODO report progress
+            if (message?.RangeSize != null)
+            {
+                await CheckFullRangeBytesAsync(message, filePath);
+            }
         }
 
     }

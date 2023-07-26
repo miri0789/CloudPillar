@@ -3,5 +3,5 @@
 namespace CloudPillar.Agent.Handlers;
 public interface IMessageSubscriber
 {
-    Task HandleMessageAsync(BaseMessage message);
+    Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message);
 }

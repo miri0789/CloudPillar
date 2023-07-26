@@ -88,9 +88,9 @@ namespace FirmwareUpdateAgent
                     {
                         receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);
                     }
-                    catch (Exception ex)
+                    catch (Exception x)
                     {
-                        Console.WriteLine($"{DateTime.Now}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x.Message);
+                        Console.WriteLine("{0}: Exception hit when receiving the message, ignoring it: {1}", DateTime.Now, x.Message);
                         continue;
                     }
 
