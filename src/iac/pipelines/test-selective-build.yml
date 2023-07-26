@@ -1,14 +1,11 @@
-name: selective_ci
+name: selective_build
 
 trigger:
 - none
-  # # batch: true
-  # branches:
-  #   include:
-  #   - main
-  #   - test-selective-build
-  #   - TestBranch
+# - $(Build.SourceBranchName)
+# - main
 
+# * Parameters
 parameters:
   - name: env
     displayName: Select Environment to deploy
@@ -20,7 +17,6 @@ parameters:
     - stg
     - prd
   - name: image
-
     displayName: Select Image to Build and Scan
     type: string
     default: iotlistener
@@ -56,21 +52,25 @@ variables:
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
 
+# - group: images-vg
+
+
 
 
 stages:
-- stage: Test
-  displayName: Test_Stage
+- stage: CI_Build
+  displayName: CI Build Process
+
   jobs:
-  - job: Local_Repo
-    displayName: Print Local Repo
+  - job: SetCurrentVersion
+    displayName: Set Current Version ID
     pool:
       name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent
-      steps:
-      - checkout: self
-        persistCredentials: true
-      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
-      - bash: |
-          echo "Local"
-        name: print_local_repo
+      agent.name: aks-${{parameters.env}}-agent 
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
+    - bash: |
+        echo "111111111111111111111111111"
+      name: BashSetCurrentVersion
