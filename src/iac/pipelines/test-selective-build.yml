@@ -79,47 +79,6 @@ variables:
 
 
 stages:
-- stage: Test
-  displayName: Test_Stage
-  jobs:
-  - job: ADO_Repo
-    displayName: Print ADO Repo
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent
-    steps:
-    - checkout: self
-      persistCredentials: true
-      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
-    - bash: |
-        pwd
-        FILES=$(git diff --name-only HEAD~1..$(Build.SourceBranchName)) # Changed Files Names and Path
-
-        echo "Repo Name: $(RepoName)"
-        echo "Source Branch Name: $(SourceBranchName)"
-        echo "ADO"
-        echo "Changed Files Names and Path: ${FILES[@]}"
-        echo "Changed Files Names and Path2: $(Files)"
-        git fetch --all
-        git checkout $BRANCH
-
-        #! Error fatal: ambiguous argument 'master': unknown revision or path not in the working tree.
-        #! Use '--' to separate paths from revisions, like this:
-        #!'git <command> [<revision>...] -- [<file>...]'
-
-        #! git diff --name-only HEAD master
-
-        echo "ADO"
-
-
-
-        for file in "${Files[@]}"
-        do
-          echo $file
-        done     
-
-      name: print_ado_repo
-          
 - stage: Test2
   displayName: Test2_Stage
   jobs:
@@ -143,6 +102,11 @@ stages:
 
         git fetch --all
         git checkout $BRANCH
+        
+        FILES=$(git diff --name-only HEAD~1..$(Build.SourceBranchName))
+
+        echo "Changed Files Names and Path: ${FILES[@]}"
+        echo "Changed Files Names and Path2: $(Files)"
         #! BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
         
 
@@ -150,6 +114,9 @@ stages:
         #! Use '--' to separate paths from revisions, like this:
         #!'git <command> [<revision>...] -- [<file>...]'
         #! Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
-
-        # echo "Changed Files Names and Path: $Files"
+        echo "Local"
+        for file in "${Files[@]}"
+        do
+          echo $file
+        done             
       name: print_local_repo
