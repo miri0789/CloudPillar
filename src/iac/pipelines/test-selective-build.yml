@@ -74,8 +74,8 @@ stages:
 - stage: Test
   displayName: Test_Stage
   jobs:
-  - job: Local_Repo
-    displayName: Print Local Repo
+  - job: ADO_Repo
+    displayName: Print ADO Repo
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
@@ -84,5 +84,90 @@ stages:
       persistCredentials: true
       # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
+        echo "ADO"
+        git diff --name-only HEAD master
+
+        echo "ADO"
+        echo "Repo Name: $(Build.Repository.Name)"
+        echo "Source Branch Name: $(Build.SourceBranchName)"
+        echo "Changed Files Names and Path: $(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))"
+      name: print_ado_repo
+          
+- stage: Test2
+  displayName: Test2_Stage
+  jobs:
+  - job: Local_Repo
+    displayName: 'Print Local Repo'
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    steps:
+    - checkout: self
+      persistCredentials: true
+    # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
+    - bash: |
         echo "Local"
+        REPO=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
+        BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
+        Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
+
+        tree -L 2
+        
+        echo "Repo Name: $REPO"
+        echo "Current Branch Name: $BRANCH"
+        echo "Changed Files Names and Path: $Files"
       name: print_local_repo
+
+
+
+
+
+
+# - stage: Test3
+#   displayName: Test3_Stage
+#   jobs:
+#   - job:
+#     displayName:
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: aks-${{parameters.env}}-agent
+#       steps:
+#       - checkout: self
+#         persistCredentials: true
+
+
+
+
+
+
+
+
+
+
+
+
+
+# +N Condition for pipelines trigger type PR
+
+# condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+
+
+# +N Skipping Pipelines (Include in Commit)
+# [skip ci] or [ci skip]
+# skip-checks: true or skip-checks:true
+# [skip azurepipelines] or [azurepipelines skip]
+# [skip azpipelines] or [azpipelines skip]
+# [skip azp] or [azp skip]
+# ***NO_CI***
+
+# +N Wildcards
+# When specifying a branch, tag, or path, you may use an exact name or a wildcard. Wildcards patterns allow * to match zero or more characters and ? to match a single character.
+# "*" - matches everything (zero or more characters)
+# "?" - matches any single character
+# If you start your pattern with * in a YAML pipeline, you must wrap the pattern in quotes, like "*-releases".
+# For branches and tags:
+# A wildcard may appear anywhere in the pattern.
+# For paths:
+# In Azure DevOps Server 2022 and higher, including Azure DevOps Services, a wildcard may appear anywhere within a path pattern and you may use * or ?.
+# In Azure DevOps Server 2020 and lower, you may include * as the final character, but it doesn't do anything differently from specifying the directory name by itself. You may not include * in the middle of a path filter, and you may not use ?.
