@@ -13,7 +13,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IFileDownloadHandler, FileDownloadHandler>();
         services.AddSingleton<IFileStreamerWrapper, FileStreamerWrapper>();
         services.AddSingleton<ISignatureHandler, SignatureHandler>();
-        services.AddSingleton<ID2CEventHandler, D2CEventHandler>();
+        services.AddSingleton<ID2CMessengerHandler, D2CMessengerHandler>();
         services.AddSingleton<ITwinHandler, TwinHandler>();
         services.AddSingleton<IMessagesFactory, MessagesFactory>();
     })

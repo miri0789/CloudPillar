@@ -5,6 +5,6 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface IFileDownloadHandler: IMessageSubscriber
 {
-    Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName);
+    Task InitFileDownloadAsync(ActionToReport action);
     Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message);
 }

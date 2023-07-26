@@ -10,17 +10,17 @@ namespace CloudPillar.Agent.Handlers;
 public class FileDownloadHandler : IFileDownloadHandler
 {
     private readonly IFileStreamerWrapper _FileStreamerWrapper;
-    private readonly ID2CEventHandler _d2CEventHandler;
+    private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
 
     public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper,
-                               ID2CEventHandler d2CEventHandler)
+                               ID2CMessengerHandler d2CMessengerHandler)
     {
         ArgumentNullException.ThrowIfNull(FileStreamerWrapper);
-        ArgumentNullException.ThrowIfNull(d2CEventHandler);
+        ArgumentNullException.ThrowIfNull(d2CMessengerHandler);
 
         _FileStreamerWrapper = FileStreamerWrapper;
-        _d2CEventHandler = d2CEventHandler;
+        _d2CMessengerHandler = d2CMessengerHandler;
         _filesDownloads = new ConcurrentBag<FileDownload>();
     }
 
@@ -35,11 +35,11 @@ public class FileDownloadHandler : IFileDownloadHandler
                 TwinReportIndex = action.TwinReportIndex,
                 Stopwatch = new Stopwatch()
             });
-            await _d2CEventHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, action.TwinAction.ActionGuid);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, action.TwinAction.ActionGuid);
         }
         else
         {
-            Console.WriteLine($"InitFileDownloadAsync, no download action is recived, twin part {action.TwinPartName} index {action.TwinReportIndex}");
+            Console.WriteLine($"InitFileDownloadAsync, no download action is receive, twin part {action.TwinPartName} index {action.TwinReportIndex}");
         }
     }
 
@@ -96,7 +96,8 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isEmptyRangeBytes = await _FileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
-            await _d2CEventHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
         }
     }
+
 }
