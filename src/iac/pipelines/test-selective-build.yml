@@ -1,25 +1,12 @@
 name: selective_ci
 
-# name: selective_ci_$(Rev:.r)
-
-# 1. The branch trigger should be chnages in the current branch
 trigger:
-  batch: true
+  # batch: true
   branches:
     include:
     - main
     - test-selective-build
     - TestBranch
-    - "*"
-    # - $(Build.SourceBranchName)
-    # - main
-    # - *
-  # paths:
-  #   include:
-  #   - src/backend/**/*.csproj
-# 2. The pipeline should be triggered on every change in the repository
-# pr: none
-
 
 parameters:
   - name: env
