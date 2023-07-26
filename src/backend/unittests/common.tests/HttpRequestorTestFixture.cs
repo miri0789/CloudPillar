@@ -55,6 +55,23 @@ public class HttpRequestorTestFixture
            It.IsAny<System.InvalidOperationException>()), Times.Once);
     }
 
+    [Test]
+    public async Task SendRequest_ThrowsException()
+    {
+        _httpClientMock.Setup(c => c.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()))
+                       .ThrowsAsync(new HttpRequestException("Failed to send request.", null, HttpStatusCode.InternalServerError));
+        try
+        {
+            async Task SendRequest() => await _httpRequestor.SendRequest<string>(_testUrl, HttpMethod.Get);
+            Assert.ThrowsAsync<HttpRequestException>(SendRequest);
+        }
+        catch(HttpRequestException)
+        {
+            _loggerHandlerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains($"HTTP request failed with status code")),
+                It.IsAny<HttpRequestException>()), Times.Once);
+        }
+    }
+
     #endregion
 
     #region TestRequestTimeOut
