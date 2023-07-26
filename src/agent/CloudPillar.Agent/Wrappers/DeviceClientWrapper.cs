@@ -77,7 +77,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     public async Task UpdateReportedPropertiesAsync(string key, object value)
     {
         var updatedReportedProperties = new TwinCollection();
-        updatedReportedProperties[key] = value;
+        updatedReportedProperties[char.ToLower(key[0]) + key.Substring(1)] = value;
         await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
     }
 

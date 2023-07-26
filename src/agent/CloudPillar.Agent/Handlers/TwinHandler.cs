@@ -65,7 +65,7 @@ public class TwinHandler : ITwinHandler
               Formatting = Formatting.Indented,
               NullValueHandling = NullValueHandling.Ignore
           }));
-        var changeSpecKey = LowerFirtLetter(nameof(TwinReport.ChangeSpec));
+        var changeSpecKey = nameof(TwinReport.ChangeSpec);
         await _deviceClientWrapper.UpdateReportedPropertiesAsync(changeSpecKey, changeSpecJson);
 
     }
@@ -171,7 +171,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var deviceStateKey = LowerFirtLetter(nameof(TwinReport.DeviceState));
+            var deviceStateKey = nameof(TwinReport.DeviceState);
             await _deviceClientWrapper.UpdateReportedPropertiesAsync(deviceStateKey, deviceState);
             Console.WriteLine($"UpdateDeviceStateAsync success");
         }
@@ -185,9 +185,9 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var supportedShellsKey = LowerFirtLetter(nameof(TwinReport.SupportedShells));
+            var supportedShellsKey = nameof(TwinReport.SupportedShells);
             await _deviceClientWrapper.UpdateReportedPropertiesAsync(supportedShellsKey, GetSupportedShells().ToArray());
-            var agentPlatformKey = LowerFirtLetter(nameof(TwinReport.AgentPlatform));
+            var agentPlatformKey = nameof(TwinReport.AgentPlatform);
             await _deviceClientWrapper.UpdateReportedPropertiesAsync(agentPlatformKey, RuntimeInformation.OSDescription);
             Console.WriteLine("InitReportDeviceParams success");
         }
@@ -195,11 +195,6 @@ public class TwinHandler : ITwinHandler
         {
             Console.WriteLine($"InitReportDeviceParams failed: {ex.Message}");
         }
-    }
-
-    private string LowerFirtLetter(string propertyName)
-    {
-        return char.ToLower(propertyName[0]) + propertyName.Substring(1);
     }
 
     public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReport)
