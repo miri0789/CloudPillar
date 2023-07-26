@@ -13,15 +13,16 @@ public class TwinHandler : ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IFileDownloadHandler _fileDownloadHandler;
+    private readonly IEnumerable<ShellType> _supportedShells;
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
-    IFileDownloadHandler fileDownloadHandler)
+                       IFileDownloadHandler fileDownloadHandler)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(fileDownloadHandler);
 
         _deviceClient = deviceClientWrapper;
         _fileDownloadHandler = fileDownloadHandler;
-        
+        _supportedShells = GetSupportedShells();
     }
 
     public async Task HandleTwinActionsAsync()
@@ -186,7 +187,7 @@ public class TwinHandler : ITwinHandler
         try
         {
             var supportedShellsKey = nameof(TwinReported.SupportedShells);
-            await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, GetSupportedShells().ToArray());
+            await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells);
             var agentPlatformKey = nameof(TwinReported.AgentPlatform);
             await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, RuntimeInformation.OSDescription);
             Console.WriteLine("InitReportedDeviceParams success");
