@@ -74,7 +74,9 @@ variables:
 - name: SourceBranchName
   value: $(Build.SourceBranchName)
 - name: Files
-  value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
+  value: $(git diff --name-only test-selective-build~1..test-selective-build)
+  # value: $(git diff --name-only $SourceBranchName)~1..$SourceBranchName))
+  # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
 
 
 
@@ -105,9 +107,12 @@ stages:
         git checkout $BRANCH
         git pull
         
-        FILES=$(git diff --name-only HEAD~1..$(Build.SourceBranchName))
+        # FILES=$(git diff --name-only HEAD~1..$(SourceBranchName))
+        FILES1=$(git diff --name-only test-selective-build~1..test-selective-build)
+        FILES2=$(git diff --name-only $(SourceBranchName)~1..$(SourceBranchName))
 
-        echo "Changed Files Names and Path: ${FILES[@]}"
+        echo "Changed Files Names and Path: ${FILES1[@]}"
+        echo "Changed Files Names and Path: ${FILES2[@]}"
         echo "Changed Files Names and Path2: $(Files)"
         #! BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
         
