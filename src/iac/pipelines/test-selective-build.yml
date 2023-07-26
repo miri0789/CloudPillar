@@ -75,56 +75,58 @@ stages:
       steps:
       - checkout: self
         persistCredentials: true
-      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
       - bash: |
-          git diff --name-only HEAD master
+          git diff --name-only HEAD master        
+#       # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
+#       - bash: |
+#           git diff --name-only HEAD master
 
-          echo "ADO"
-          echo "Repo Name: $(Build.Repository.Name)"
-          echo "Source Branch Name: $(Build.SourceBranchName)"
-          echo "Changed Files Names and Path: $(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))"
-
-          
-          echo "Local"
-          REPO=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
-          BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
-          Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
-
-          tree -L 2
-          
-          echo "Repo Name: $REPO"
-          echo "Current Branch Name: $BRANCH"
-          echo "Changed Files Names and Path: $Files"
-
+#           echo "ADO"
+#           echo "Repo Name: $(Build.Repository.Name)"
+#           echo "Source Branch Name: $(Build.SourceBranchName)"
+#           echo "Changed Files Names and Path: $(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))"
 
           
+#           echo "Local"
+#           REPO=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
+#           BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
+#           Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
 
-
-
-
-- stage: Test2
-  displayName: Test2_Stage
-  jobs:
-  - job: ADO_Repo
-    displayName: 'Print ADO Repo'
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent
-      steps:
-      - checkout: self
-        persistCredentials: true
-      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
-      - bash: |
-          echo "Local"
-          REPO=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
-          BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
-          Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
-
-          tree -L 2
+#           tree -L 2
           
-          echo "Repo Name: $REPO"
-          echo "Current Branch Name: $BRANCH"
-          echo "Changed Files Names and Path: $Files"
+#           echo "Repo Name: $REPO"
+#           echo "Current Branch Name: $BRANCH"
+#           echo "Changed Files Names and Path: $Files"
+
+
+          
+
+
+
+
+# - stage: Test2
+#   displayName: Test2_Stage
+#   jobs:
+#   - job: ADO_Repo
+#     displayName: 'Print ADO Repo'
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: aks-${{parameters.env}}-agent
+#       steps:
+#       - checkout: self
+#         persistCredentials: true
+#       # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
+#       - bash: |
+#           echo "Local"
+#           REPO=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
+#           BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
+#           Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
+
+#           tree -L 2
+          
+#           echo "Repo Name: $REPO"
+#           echo "Current Branch Name: $BRANCH"
+#           echo "Changed Files Names and Path: $Files"
 
 
 
