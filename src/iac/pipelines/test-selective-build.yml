@@ -1,0 +1,145 @@
+# I need to develop a selective azure devops ci pipeline which triggered on every change in the repository and prints the changed files names and path to the console. 
+
+name: selective_ci_$(Rev:.r)
+
+# 1. The branch trigger should be chnages in the current branch
+trigger:
+  branches:
+    include:
+    - $(Build.SourceBranchName)
+    # - main
+    # - *
+
+# 2. The pipeline should be triggered on every change in the repository
+pr: none
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+  - name: image
+
+    displayName: Select Image to Build and Scan
+    type: string
+    default: iotlistener
+    values:
+    # - all
+    - analyzer
+    - beapi
+    - blobstreamer
+    - iotlistener
+    - keyholder
+    - mongowriter
+    - twinlistener
+  - name: versionString
+    displayName: Select Major & Minor Verson
+    type: string
+    default: latest # 1.0
+    values:
+    - latest # 1.0
+    - nextminor # 1.1
+    - nextmajor #2.0
+
+# * Variables
+variables:
+#* Variable Groups
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+
+#* Dynamic Variables
+- name: TIMESTAMP
+  value: $(date +%Y%m%d%H%M%S)
+- name: BuildNumber
+  value: $(git rev-list --count HEAD)
+
+
+
+stages:
+- stage: Test
+  displayName: Test_Stage
+  jobs:
+  - job: Local_Repo
+    displayName: 'Print Local Repo'
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - checkout: self
+        persistCredentials: true
+      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
+      - bash: |
+          git diff --name-only HEAD master
+
+          echo "ADO"
+          echo "Repo Name: $(Build.Repository.Name)"
+          echo "Source Branch Name: $(Build.SourceBranchName)"
+          echo "Changed Files Names and Path: $(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))"
+
+          
+          echo "Local"
+          REPO=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
+          BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
+          Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
+
+          tree -L 2
+          
+          echo "Repo Name: $REPO"
+          echo "Current Branch Name: $BRANCH"
+          echo "Changed Files Names and Path: $Files"
+
+
+          
+
+
+
+
+- stage: Test2
+  displayName: Test2_Stage
+  jobs:
+  - job: ADO_Repo
+    displayName: 'Print ADO Repo'
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - checkout: self
+        persistCredentials: true
+      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
+      - bash: |
+          echo "Local"
+          REPO=$(basename "$(git rev-parse --show-toplevel)") # Repo Name
+          BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
+          Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
+
+          tree -L 2
+          
+          echo "Repo Name: $REPO"
+          echo "Current Branch Name: $BRANCH"
+          echo "Changed Files Names and Path: $Files"
+
+
+
+
+
+
+
+# - stage: Test3
+#   displayName: Test3_Stage
+#   jobs:
+#   - job:
+#     displayName:
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: aks-${{parameters.env}}-agent
+#       steps:
+#       - checkout: self
+#         persistCredentials: true
