@@ -9,7 +9,7 @@ variables:
   imageName: 'edge_conquest'
   imageVersion: 'v0.7.1'
   registryName: 'iotimageacr'
-  dockerfilePath: '/src/edge/conquest/Dockerfile'
+  dockerfilePath: './Dockerfile'
   pipelineAcrConnection: 'iotacr'
 
 stages:
