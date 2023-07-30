@@ -26,7 +26,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
     {
-        _filesDownloads.Add(new FileDownload()
+        _filesDownloads.Add(new FileDownload
         {
             DownloadAction = downloadAction,
             Report = actionToReport,
