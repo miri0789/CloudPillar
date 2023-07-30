@@ -6,14 +6,14 @@ using common;
 [TestFixture]
 public class SchemaValidatorTestFixture
 {
-    private SchemaValidator _validator;
+    private SchemaValidator _target;
     private Mock<ILoggerHandler> _loggerHandlerMock;
 
     [SetUp]
     public void SetUp()
     {
         _loggerHandlerMock = new Mock<ILoggerHandler>();
-        _validator = new SchemaValidator(_loggerHandlerMock.Object);
+        _target = new SchemaValidator(_loggerHandlerMock.Object);
     }
 
     [Test]
@@ -23,7 +23,7 @@ public class SchemaValidatorTestFixture
         string schemaPath = "tests/test";
         bool isRequest = true;
 
-        bool isValid = _validator.ValidatePayloadSchema(payload, schemaPath, isRequest);
+        bool isValid = _target.ValidatePayloadSchema(payload, schemaPath, isRequest);
 
         Assert.IsTrue(isValid);
     }
@@ -35,7 +35,7 @@ public class SchemaValidatorTestFixture
         string schemaPath = "tests/test";
         bool isRequest = true;
 
-        bool isValid = _validator.ValidatePayloadSchema(payload, schemaPath, isRequest);
+        bool isValid = _target.ValidatePayloadSchema(payload, schemaPath, isRequest);
 
         Assert.IsFalse(isValid);
 

@@ -75,28 +75,24 @@ public class HttpRequestorService : IHttpRequestorService
         try
         {
             response = await client.SendAsync(request, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                string responseContent = await response.Content.ReadAsStringAsync();
-                var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
-                if (!isResponseValid)
-                {
-                    var msg = "The reponse data is not fit the schema";
-                    var e = new HttpRequestException(msg, null, System.Net.HttpStatusCode.Unauthorized);
-                    _logger.Error(msg, e);
-                    throw e;
-                }
-                TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
-                return result;
-            }
-            throw new Exception("HTTP response is not successful");
         }
         catch(Exception ex)
         {
-            var message = $"HTTP request failed with status code {response?.StatusCode}";
-            _logger.Error(message, ex);
+            _logger.Error(ex.Message, ex);
             throw ex;
         }
+
+        if (response.IsSuccessStatusCode)
+        {
+            string responseContent = await response.Content.ReadAsStringAsync();
+            var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
+            if (!isResponseValid)
+            {
+                throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
+            }
+            TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
+            return result;
+        }
+        throw new Exception($"HTTP request failed with status code {response?.StatusCode}");
     }
 }

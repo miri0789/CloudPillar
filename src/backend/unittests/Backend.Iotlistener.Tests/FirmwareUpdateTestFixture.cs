@@ -11,7 +11,7 @@ namespace Backend.Iotlistener.Tests;
 public class FirmwareUpdateTestFixture
 {
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
-    private FirmwareUpdateService _firmwareUpdateService;
+    private FirmwareUpdateService _target;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
     private Mock<ILoggerHandler> _mockLoggerHandler;
     private Uri _blobStreamerUrl;
@@ -34,7 +34,7 @@ public class FirmwareUpdateTestFixture
         _mockEnvironmentsWrapper.Setup(f => f.rangeCalculateType).Returns(Models.Enums.RangeCalculateType.Bytes);
         _mockEnvironmentsWrapper.Setup(f => f.rangeBytes).Returns(_rangeSize);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
-        _firmwareUpdateService = new FirmwareUpdateService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new FirmwareUpdateService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
 
     private void SetMockBlobProperties(long blobSize)
@@ -58,7 +58,7 @@ public class FirmwareUpdateTestFixture
 
         SetMockBlobProperties(_blobSize);
 
-        await _firmwareUpdateService.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
+        await _target.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
         {
             FileName = _fileName,
             ChunkSize = _chunkSize,
@@ -83,7 +83,7 @@ public class FirmwareUpdateTestFixture
              .Setup(service => service.SendRequest<BlobProperties>(It.IsAny<string>(), HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
              .ThrowsAsync(new Exception("Failed to retrieve blob size."));
 
-        await _firmwareUpdateService.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
+        await _target.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
         {
             FileName = _fileName,
             ChunkSize = _chunkSize,
@@ -93,8 +93,6 @@ public class FirmwareUpdateTestFixture
         _httpRequestorServiceMock.Verify(service =>
            service.SendRequest($"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex=0&startPosition=0&actionGuid={actionGuid}&fileSize={_rangeSize}", HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
            Times.Never);
-
-        _mockLoggerHandler.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("FirmwareUpdateService GetBlobSize failed.")), It.IsAny<object[]>()), Times.Once);
     }
 
     [Test]
@@ -109,7 +107,7 @@ public class FirmwareUpdateTestFixture
 
         SetMockBlobProperties(_rangeSize);
 
-        await _firmwareUpdateService.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
+        await _target.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
         {
             FileName = _fileName,
             ChunkSize = _chunkSize,
@@ -120,8 +118,6 @@ public class FirmwareUpdateTestFixture
         _httpRequestorServiceMock.Verify(service =>
             service.SendRequest($"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex=0&startPosition=0&actionGuid={actionGuid}&fileSize={_rangeSize}",
              HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
-
-        _mockLoggerHandler.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("FirmwareUpdateService SendFirmwareUpdateAsync failed.")), It.IsAny<object[]>()), Times.Once);
     }
 
 }

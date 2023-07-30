@@ -34,6 +34,8 @@ public class LoggerHandlerTestFixture
                 { LoggerConstants.SESSION_CASE_ID, "1.2.3.4" },
                 { LoggerConstants.SESSION_CORRELATION_ID, "12345" }
             };
+    private const string message = "Alice sent a letter to Bob at 12 O'clock!";
+    private const string exceptionMessage = "Exception message";
 
     [SetUp]
     public void Setup()
@@ -100,51 +102,41 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_FormattedMessageWithArgs_SendToLogger()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Error("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_logMock.Received(1).Error(expected);
+        m_logMock.Received(1).Error(message);
     }
 
     [Test]
     public void Error_FormattedMessageWithoutArgs_SendToLogger()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Error("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_logMock.Received(1).Error(expected);
+        m_logMock.Received(1).Error(message);
     }
 
     [Test]
     public void Error_WithHttpContext_SendMessageWithArgsToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Error("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Error_WithHttpContext_SendMessageWithoutArgsToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Error(message);
 
-        m_target.Error(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Error_WithHttpContext_SendErrorSeverityToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Error(message);
 
-        m_target.Error(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, SeverityLevel.Error, Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Error, Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
@@ -153,7 +145,6 @@ public class LoggerHandlerTestFixture
         var expected = m_attributesDictionary;
 
         expected.Add("applicationName", m_appName);
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
 
         m_target.Error(message);
 
@@ -164,31 +155,25 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithoutHttpContext_SendMessageWithArgsToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Error(message);
 
-        m_targetWithoutHttp.Error(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Error_WithoutHttpContext_SendMessageWithoutArgsToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Error(message);
 
-        m_targetWithoutHttp.Error(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Error_WithoutHttpContext_SendErrorSeverityToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Error(message);
 
-        m_targetWithoutHttp.Error(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, SeverityLevel.Error, Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Error, Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
@@ -198,8 +183,6 @@ public class LoggerHandlerTestFixture
         {
             { "applicationName", m_appName }
         };
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_targetWithoutHttp.Error(message);
 
         m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(),
@@ -209,7 +192,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionAndArgs_SendToLoggerFormattedError()
     {
-        var exception = new Exception("exception message", new Exception("exception details"));
+        var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
         var error = string.Join(Environment.NewLine, string.Format("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12), exception);
 
         m_target.Error("{0} sent a letter to {1} at {2} O'clock!", exception, "Alice", "Bob", 12);
@@ -220,10 +203,10 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithException_SendToLoggerFormattedError()
     {
-        var exception = new Exception("exception message", new Exception("exception details"));
-        var error = string.Join(Environment.NewLine, string.Format("Alice sent a letter to Bob at 12 O'clock!"), exception);
+        var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
+        var error = string.Join(Environment.NewLine, string.Format(message), exception);
 
-        m_target.Error("Alice sent a letter to Bob at 12 O'clock!", exception);
+        m_target.Error(message, exception);
 
         m_logMock.Received(1).Error(error);
     }
@@ -231,9 +214,9 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionAndHttpContext_SendExceptionWithoutArgsToAppInsights()
     {
-        var exception = new Exception("exception message", new Exception("exception details"));
+        var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
 
-        m_target.Error("Alice sent a letter to Bob at 12 O'clock!", exception);
+        m_target.Error(message, exception);
 
         m_telemetryClientWrapperMock.Received(1).TrackException(exception, Arg.Any<IDictionary<string, string>>());
     }
@@ -241,7 +224,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionAndhHttpContextAndArgs_SendExceptionToAppInsights()
     {
-        var exception = new Exception("exception message", new Exception("exception details"));
+        var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
 
         m_target.Error("{0} sent a letter to {1} at {2} O'clock!", exception, "Alice", "Bob", 12);
 
@@ -251,11 +234,10 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionAndHttpContext_SendPropertiesToAppInsights()
     {
-        var exception = new Exception("exception message", new Exception("exception details"));
+        var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
         var expected = m_attributesDictionary;
 
         expected.Add("applicationName", m_appName);
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
 
         m_target.Error(message, exception);
 
@@ -266,8 +248,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionWithoutHttpContext_SendExceptionToAppInsights()
     {
-        var exception = new Exception("exception message", new Exception("exception details"));
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
+        var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
 
         m_targetWithoutHttp.Error(message, exception);
 
@@ -277,13 +258,11 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Error_WithExceptionWithoutHttpContext_SendPropertiesToAppInsights()
     {
-        var exception = new Exception("exception message", new Exception("exception details"));
+        var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
         var expected = new Dictionary<string, string>
         {
             { "applicationName", m_appName }
         };
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_targetWithoutHttp.Error(message, exception);
 
         m_telemetryClientWrapperMock.Received(1).TrackException(Arg.Any<Exception>(),
@@ -296,51 +275,41 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Warn_FormattedMessageWithArgs_SendToLogger()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Warn("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_logMock.Received(1).Warn(expected);
+        m_logMock.Received(1).Warn(message);
     }
 
     [Test]
     public void Warn_FormattedMessageWithoutArgs_SendToLogger()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Warn("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_logMock.Received(1).Warn(expected);
+        m_logMock.Received(1).Warn(message);
     }
 
     [Test]
     public void Warn_WithHttpContext_SendMessageWithArgsToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Warn("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Warn_WithHttpContext_SendMessageWithoutArgsToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Warn(message);
 
-        m_target.Warn(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Warn_WithHttpContext_SendWarningSeverityToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Warn(message);
 
-        m_target.Warn(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, SeverityLevel.Warning, Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Warning, Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
@@ -349,7 +318,6 @@ public class LoggerHandlerTestFixture
         var expected = m_attributesDictionary;
 
         expected.Add("applicationName", m_appName);
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
 
         m_target.Warn(message);
 
@@ -362,31 +330,25 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Warn_WithoutHttpContext_SendMessageWithToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Warn(message);
 
-        m_targetWithoutHttp.Warn(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Warn_WithoutHttpContext_SendMessageWithoutToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Warn(message);
 
-        m_targetWithoutHttp.Warn(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Warn_WithoutHttpContext_SendWarningSeverityToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Warn(message);
 
-        m_targetWithoutHttp.Warn(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, SeverityLevel.Warning, Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Warning, Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
@@ -396,8 +358,6 @@ public class LoggerHandlerTestFixture
         {
             { "applicationName", m_appName }
         };
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_targetWithoutHttp.Warn(message);
 
         m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(),
@@ -409,51 +369,41 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Info_FormattedMessageWithArgs_SendToLogger()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Info("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_logMock.Received(1).Info(expected);
+        m_logMock.Received(1).Info(message);
     }
 
     [Test]
     public void Info_FormattedMessageWithoutArgs_SendToLogger()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Info("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_logMock.Received(1).Info(expected);
+        m_logMock.Received(1).Info(message);
     }
 
     [Test]
     public void Info_WithHttpContext_SendMessageWithToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Info(message);
 
-        m_target.Info(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Info_WithHttpContext_SendMessageWithoutToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Info(message);
 
-        m_target.Info(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Info_WithHttpContext_SendInformationSeverityToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Info(message);
 
-        m_target.Info(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, SeverityLevel.Information, Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Information, Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
@@ -462,7 +412,6 @@ public class LoggerHandlerTestFixture
         var expected = m_attributesDictionary;
 
         expected.Add("applicationName", m_appName);
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
 
         m_target.Info(message);
 
@@ -484,7 +433,6 @@ public class LoggerHandlerTestFixture
         var expected = m_attributesDictionary;
 
         expected.Add("applicationName", m_appName);
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
 
         m_target.Info(message);
 
@@ -497,31 +445,25 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Info_WithoutHttpContext_SendMessageWithToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Info(message);
 
-        m_targetWithoutHttp.Info(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Info_WithoutHttpContext_SendMessageWithoutToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Info(message);
 
-        m_targetWithoutHttp.Info(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Info_WithoutHttpContext_SendInformationSeverityToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Info(message);
 
-        m_targetWithoutHttp.Info(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, SeverityLevel.Information, Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Information, Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
@@ -531,8 +473,6 @@ public class LoggerHandlerTestFixture
         {
             { "applicationName", m_appName }
         };
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_targetWithoutHttp.Info(message);
 
         m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(),
@@ -544,51 +484,41 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Debug_FormattedMessageWithArgs_SendToLogger()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Debug("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_logMock.Received(1).Debug(expected);
+        m_logMock.Received(1).Debug(message);
     }
 
     [Test]
     public void Debug_FormattedMessageWithoutArgs_SendToLogger()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_target.Debug("{0} sent a letter to {1} at {2} O'clock!", "Alice", "Bob", 12);
 
-        m_logMock.Received(1).Debug(expected);
+        m_logMock.Received(1).Debug(message);
     }
 
     [Test]
     public void Debug_WithHttpContext_SendMessageWithToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Debug(message);
 
-        m_target.Debug(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Debug_WithHttpContext_SendMessageWithoutToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Debug(message);
 
-        m_target.Debug(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Debug_WithHttpContext_SendVerboseSeverityToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_target.Debug(message);
 
-        m_target.Debug(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, SeverityLevel.Verbose, Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Verbose, Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
@@ -597,7 +527,6 @@ public class LoggerHandlerTestFixture
         var expected = m_attributesDictionary;
 
         expected.Add("applicationName", m_appName);
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
 
         m_target.Debug(message);
 
@@ -610,31 +539,25 @@ public class LoggerHandlerTestFixture
     [Test]
     public void Debug_WithoutHttpContext_SendMessageWithToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Debug(message);
 
-        m_targetWithoutHttp.Debug(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Debug_WithoutHttpContext_SendMessageWithoutToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Debug(message);
 
-        m_targetWithoutHttp.Debug(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(), Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
     public void Debug_WithoutHttpContext_SendVerboseSeverityToAppInsights()
     {
-        const string expected = "Alice sent a letter to Bob at 12 O'clock!";
+        m_targetWithoutHttp.Debug(message);
 
-        m_targetWithoutHttp.Debug(expected);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(expected, SeverityLevel.Verbose, Arg.Any<IDictionary<string, string>>());
+        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Verbose, Arg.Any<IDictionary<string, string>>());
     }
 
     [Test]
@@ -644,8 +567,6 @@ public class LoggerHandlerTestFixture
         {
             { "applicationName", m_appName }
         };
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-
         m_targetWithoutHttp.Debug(message);
 
         m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(),
@@ -656,8 +577,6 @@ public class LoggerHandlerTestFixture
     [Test]
     public void RefreshAppInsightsLogLevel_LogMessage()
     {
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-        
         m_targetWithoutHttp.RefreshAppInsightsLogLevel("DEBUG");
 
         m_targetWithoutHttp.Debug(message);
@@ -667,9 +586,7 @@ public class LoggerHandlerTestFixture
 
     [Test]
     public void RefreshAppInsightsLogLevel_DoNotLogMessage()
-    {
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-        
+    { 
         m_targetWithoutHttp.RefreshAppInsightsLogLevel("WARN");
 
         m_targetWithoutHttp.Debug(message);
@@ -684,8 +601,6 @@ public class LoggerHandlerTestFixture
     [Test]
     public void RefreshAppendersLogLevel_LogMessage()
     {
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-        
         m_targetWithoutHttp.RefreshAppendersLogLevel("ERROR");
 
         m_targetWithoutHttp.Error(message);
@@ -695,9 +610,7 @@ public class LoggerHandlerTestFixture
 
     [Test]
     public void RefreshAppendersLogLevel_DoNotLogMessage()
-    {
-        const string message = "Alice sent a letter to Bob at 12 O'clock!";
-        
+    { 
         m_targetWithoutHttp.RefreshAppendersLogLevel("ERROR");
 
         m_targetWithoutHttp.Info(message);

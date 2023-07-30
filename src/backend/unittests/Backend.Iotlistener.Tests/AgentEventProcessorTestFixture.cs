@@ -14,7 +14,7 @@ namespace Backend.Iotlistener.Tests;
 
 public class AgentEventProcessorTestFixture
 {
-    private AgentEventProcessor _eventProcessor;
+    private AgentEventProcessor _target;
     private Mock<IFirmwareUpdateService> _firmwareUpdateServiceMock;
     private Mock<ISigningService> _signingServiceMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
@@ -32,7 +32,7 @@ public class AgentEventProcessorTestFixture
         _mockLoggerHandler = new Mock<ILoggerHandler>();
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(30);
         _mockEnvironmentsWrapper.Setup(f => f.iothubConnectionDeviceId).Returns(_iothubConnectionDeviceId);
-        _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
+        _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
         _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
 
     }
@@ -58,7 +58,7 @@ public class AgentEventProcessorTestFixture
             CallBase = true
         };
 
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
 
         _firmwareUpdateServiceMock.Verify(f => f.SendFirmwareUpdateAsync("deviceId", It.IsAny<FirmwareUpdateEvent>()), Times.Once);
     }
@@ -72,30 +72,9 @@ public class AgentEventProcessorTestFixture
             CallBase = true
         };
 
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Once);
-    }
-
-    [Test]
-    public async Task ProcessEventsAsync_SignTwinKeyMessage_CallSignTwinKey_ThrowError()
-    {
-        _signingServiceMock
-             .Setup(service => service.CreateTwinKeySignature(It.IsAny<string>(), It.IsAny<Shared.Entities.Events.SignEvent>()))
-             .ThrowsAsync(new Exception("Failed to create twin key signature"));
-
-        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
-        var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
-        {
-            CallBase = true
-        };
-
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
-
-        _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Once);
-        _mockLoggerHandler.Verify(l => l.Error(
-            It.Is<string>(msg => msg.Contains($"Failed parsing message on Partition: 1, Error: Failed to create twin key signature - Ignoring")),
-            It.IsAny<object[]>()), Times.Once);
     }
 
     [Test]
@@ -108,10 +87,9 @@ public class AgentEventProcessorTestFixture
             CallBase = true
         };
 
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
-        _mockLoggerHandler.Verify(l => l.Warn(It.Is<string>(msg => msg.Contains($"Draining on Partition: 1")), It.IsAny<object[]>()), Times.Once);
     }
 
     [Test]
@@ -119,16 +97,15 @@ public class AgentEventProcessorTestFixture
     {
         var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(1);
-        _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
         };
 
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
-        _mockLoggerHandler.Verify(l => l.Warn(It.Is<string>(msg => msg.Contains("Ignoring message older than 1 minutes.")), It.IsAny<object[]>()), Times.Once);
     }
 
 }

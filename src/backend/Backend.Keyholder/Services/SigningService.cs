@@ -102,10 +102,7 @@ public class SigningService : ISigningService
             return Encoding.UTF8.GetString(privateKeyBytes);
         }
 
-        var message = "Private key not found in the Kubernetes secret.";
-        var ex = new Exception(message);
-        _logger.Error(message, ex);
-        throw ex;
+        throw new Exception("Private key not found in the Kubernetes secret.");
     }
 
     private ECDsa LoadPrivateKeyFromPem(string pemContent)
@@ -141,10 +138,7 @@ public class SigningService : ISigningService
 
         if (keyElement == null)
         {
-            var message = "Invalid JSON path specified";
-            var ex = new ArgumentException(message);
-            _logger.Error(message, ex);
-            throw ex;
+            throw new ArgumentException("Invalid JSON path specified");
         }
 
         // Sign the value using the ES512 algorithm
