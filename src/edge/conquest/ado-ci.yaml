@@ -25,7 +25,7 @@ stages:
       displayName: 'Build and Push Image'
       inputs:
         command: 'buildAndPush'
-        repository: '$(registryName).azurecr.io/$(imageName):$(imageVersion)'
+        repository: '$(registryName).azurecr.io/$(imageName)'
         dockerfile: '$(dockerfilePath)'
         containerRegistry: '$(pipelineAcrConnection)'
         tags: '$(imageVersion)'
