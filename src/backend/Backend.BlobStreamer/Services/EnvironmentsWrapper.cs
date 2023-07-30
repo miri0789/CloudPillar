@@ -1,12 +1,12 @@
 ﻿namespace Backend.BlobStreamer.Services;
 public class EnvironmentsWrapper: IEnvironmentsWrapper
 {
-    private const string _storageConnectionString = "STORAGE_CONNECTION_STRING";
-    private const string _blobContainerName = "BLOB_CONTAINER_NAME";
-    private const string _iothubConnectionString = "IOTHUB_CONNECTION_STRING";
-    private const string _messageExpiredMinutes = "MESSAGE_EXPIRED_MINUTES";
-    private const string _retryPolicyBaseDelay = "RETRY_POLICY_BASE_DELAY";
-    private const string _retryPolicyExponent = "RETRY_POLICY_EXPONENT";
+    private const string _storageConnectionString = "StorageConnectionString";
+    private const string _blobContainerName = "BlobContainerName";
+    private const string _iothubConnectionString = "IothubConnectionString";
+    private const string _messageExpiredMinutes = "MessageExpiredMinutes";
+    private const string _retryPolicyBaseDelay = "RetryPolicyBaseDelay";
+    private const string _retryPolicyExponent = "RetryPolicyExponent";
 
     public string storageConnectionString
     {

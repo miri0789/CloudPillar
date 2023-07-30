@@ -4,11 +4,11 @@ namespace Backend.Keyholder.Services;
 public class EnvironmentsWrapper: IEnvironmentsWrapper
 {
 
-    private const string _kubernetesServiceHost = "KUBERNETES_SERVICE_HOST";
-    private const string _signingPem = "SIGNING_PEM";
-    private const string _secretName = "SECRET_NAME";
-    private const string _secretKey = "SECRET_KEY";
-    private const string _iothubConnectionString = "IOTHUB_CONNECTION_STRING";
+    private const string _kubernetesServiceHost = "KubernetesServiceHost";
+    private const string _signingPem = "SigningPem";
+    private const string _secretName = "SecretName";
+    private const string _secretKey = "SecretKey";
+    private const string _iothubConnectionString = "IothubConnectionString";
 
     public string kubernetesServiceHost
     {

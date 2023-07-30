@@ -3,21 +3,21 @@ using Backend.Iotlistener.Models.Enums;
 using Backend.Iotlistener.Interfaces;
 
 namespace Backend.Iotlistener.Services;
-public class EnvironmentsWrapper : IEnvironmentsWrapper
+public class EnvironmentsWrapper: IEnvironmentsWrapper
 {
-    public static readonly string _blobStreamerUrl = "BLOB_STREAMER_URL";
-    public static readonly string _signingUrl = "SIGNING_URL";
-    public static readonly string _rangeCalculateType = "RANGE_CALCULATE_TYPE";
-    public static readonly string _rangePercent = "RANGE_PERCENT";
-    public static readonly string _rangeBytes = "RANGE_BYTES";
-    public static readonly string _messageTimeoutMinutes = "MESSAGE_TIMEOUT_MINUTES";
-    public static readonly string _drainD2cQueues = "DRAIN_D2C_QUEUES";
-    public static readonly string _iothubConnectionDeviceId = "IOTHUB_CONNECTION_DEVICE_ID";
-    public static readonly string _iothubEventHubCompatiblePath = "IOTHUB_EVENT_HUB_COMPATIBLE_PATH";
-    public static readonly string _iothubEventHubCompatibleEndpoint = "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT";
-    public static readonly string _storageConnectionString = "STORAGE_CONNECTION_STRING";
-    public static readonly string _blobContainerName = "BLOB_CONTAINER_NAME";
-    public static readonly string _partitionId = "PARTITION_ID";
+    public static readonly string _blobStreamerUrl = "BlobStreamerUrl";
+    public static readonly string _signingUrl = "SigningUrl";
+    public static readonly string _rangeCalculateType = "RangeCalculateType";
+    public static readonly string _rangePercent = "RangePercent";
+    public static readonly string _rangeBytes = "RangeBytes";
+    public static readonly string _messageTimeoutMinutes = "MessageTimeoutMinutes";
+    public static readonly string _drainD2cQueues = "DrainD2cQueues";
+    public static readonly string _iothubConnectionDeviceId = "IothubConnectionDeviceId";
+    public static readonly string _iothubEventHubCompatiblePath = "IothubEventHubCompatiblePath";
+    public static readonly string _iothubEventHubCompatibleEndpoint = "IothubEventHubCompatibleEndpoint";
+    public static readonly string _storageConnectionString = "StorageConnectionString";
+    public static readonly string _blobContainerName = "BlobContainerName";
+    public static readonly string _partitionId = "PartitionId";
 
     public string blobStreamerUrl
     {
