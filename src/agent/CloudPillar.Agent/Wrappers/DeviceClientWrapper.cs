@@ -6,7 +6,12 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     private readonly DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
-    private DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper)
+    /// <summary>
+    /// Initializes a new instance of the DeviceClient class
+    /// </summary>
+    /// <param name="environmentsWrapper"></param>
+    /// <exception cref="NullReferenceException"></exception>
+    public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper)
     {
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _environmentsWrapper = environmentsWrapper;
@@ -27,6 +32,11 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
     }
 
+    /// <summary>
+    /// Extracts the device ID from the device connection string
+    /// </summary>
+    /// <returns>Device Id</returns>
+    /// <exception cref="ArgumentException"></exception>
     public string GetDeviceId()
     {
         var items = _environmentsWrapper.deviceConnectionString.Split(';');
@@ -50,18 +60,32 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             : TransportType.Amqp;
     }
 
+    /// <summary>
+    /// Asynchronously waits for a message to be received from the device.
+    /// after recived the message, need to exec CompleteAsync function to the message
+    /// </summary>
+    /// <param name="cancellationToken">used to cancel the operation if needed.</param>
+    /// <returns>a task that represents the asynchronous operation and contains a Message when received.</returns>
     public Task<Message> ReceiveAsync(CancellationToken cancellationToken)
     {
         return _deviceClient.ReceiveAsync(cancellationToken);
     }
 
-
+    /// <summary>
+    /// Asynchronously sends an event message to the device.
+    /// </summary>
+    /// <param name="message">The message object containing the data to be sent.</param>
+    /// <returns>a task representing the asynchronous operation.</returns>
     public async Task SendEventAsync(Message message)
     {
         await _deviceClient.SendEventAsync(message);
     }
 
-
+    /// <summary>
+    /// asynchronously completes the processing of a received message.
+    /// </summary>
+    /// <param name="message">the message object representing the received message to be completed.</param>
+    /// <returns>a task representing the asynchronous operation.</returns>
     public async Task CompleteAsync(Message message)
     {
         await _deviceClient.CompleteAsync(message);
