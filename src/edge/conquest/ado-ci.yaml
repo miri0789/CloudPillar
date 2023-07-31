@@ -1,7 +1,13 @@
 trigger:
-- main
-- conquest
-
+  branches:
+    include:
+    - main
+    - conquest
+  paths:
+    include:
+    - src/edge/conquest/*
+    exclude:
+    - '*'
 resources:
 - repo: self
 
