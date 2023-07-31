@@ -9,9 +9,6 @@ RUN apt update
 RUN apt install -y wget zip g++ make lua5.1 liblua5.1-0-dev lua-socket p7zip-full sudo
 RUN apt install -y gettext-base
 
-# Add a find command to locate the library
-# RUN find / -name "liblua5.1.so.0"
-
 # RUN ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so.0 /usr/lib/x86_64-linux-gnu/liblua5.1.so
 
 RUN wget http://natura-ingenium.nl/dicomserver/dicomserver150d.zip
