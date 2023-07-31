@@ -13,7 +13,7 @@ resources:
 
 variables:
   imageName: 'edge_conquest'
-  imageVersion: 'v0.7.2'
+  imageVersion: 'v0.7.3'
   registryName: 'iotimageacr'
   dockerfilePath: './src/edge/conquest/Dockerfile'
   pipelineAcrConnection: 'iotacr'
