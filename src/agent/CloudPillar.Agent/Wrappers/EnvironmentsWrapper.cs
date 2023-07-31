@@ -1,8 +1,8 @@
 ﻿namespace CloudPillar.Agent.Wrappers;
-public class EnvironmentsWrapper : IEnvironmentsWrapper
+public class EnvironmentsWrapper: IEnvironmentsWrapper
 {
-    private const string _deviceConnectionString = "DEVICE_CONNECTION_STRING";
-    private const string _transportType = "TRANSPORT_TYPE";
+    private const string _deviceConnectionString = "DeviceConnectionString";
+    private const string _transportType = "TransportType";
 
     public string deviceConnectionString
     {
