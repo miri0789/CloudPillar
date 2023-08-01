@@ -58,7 +58,7 @@ public class SigningTestFixture
     }
 
     [Test]
-    public async Task LoadPrivateKeyFromEnvirementVariable_ValidPrivateKey_InitECDsaInstance()
+    public async Task Init_ValidPrivateKeyFromEnvirementVariable_InitECDsaInstance()
     {
         InitKeyFromEnvirementVar();
         await _target.Init();

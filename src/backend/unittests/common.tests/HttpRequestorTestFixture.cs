@@ -97,7 +97,7 @@ public class HttpRequestorTestFixture
     }
 
     [Test]
-    public void SetTimeoutForHttpRequest_UsesDefaultTimeout()
+    public void SendRequest_SetTimeoutForHttpRequest_UsesDefaultTimeout()
     {
         _target.SendRequest<object>(_testUrl, HttpMethod.Get);
         Assert.That(_httpClientMock.Object.Timeout, Is.EqualTo(TimeSpan.FromSeconds(30)));
