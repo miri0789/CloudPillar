@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using log4net;
 using log4net.Repository;
+using log4net.Core;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
@@ -21,6 +23,7 @@ public class LoggerHandlerTestFixture
     private ILoggerHandlerFactory m_LoggerFactoryMock;
     private IHttpContextAccessor m_httpContextAccessorMock;
     private ILog m_logMock;
+    private ILog m_logMock2;
     private ITelemetryClientWrapper m_telemetryClientWrapperMock;
     private HttpRequest m_request;
     private Dictionary<string, string> m_attributesDictionary;
@@ -44,6 +47,10 @@ public class LoggerHandlerTestFixture
         m_LoggerFactoryMock = Substitute.For<ILoggerHandlerFactory>();
         var logRepositoryMock = Substitute.For<ILoggerRepository>();
         m_LoggerFactoryMock.CreateLogRepository(Arg.Any<string>()).Returns(logRepositoryMock);
+        m_LoggerFactoryMock.GetLevel("DEBUG").Returns(Level.Debug);
+        m_LoggerFactoryMock.GetLevel("INFO").Returns(Level.Info);
+        m_LoggerFactoryMock.GetLevel("WARN").Returns(Level.Warn);
+        m_LoggerFactoryMock.GetLevel("ERROR").Returns(Level.Error);
         m_request = InitMockRequest(m_headersDictionary, m_queryDictionary);
         m_httpContextAccessorMock = Substitute.For<IHttpContextAccessor>();
         var HttpContextMock = Substitute.For<HttpContext>();
@@ -53,8 +60,9 @@ public class LoggerHandlerTestFixture
         m_telemetryClientWrapperMock = Substitute.For<ITelemetryClientWrapper>();
         m_LoggerFactoryMock.CreateTelemetryClient(Arg.Any<string>()).Returns(m_telemetryClientWrapperMock);
         m_logMock = Substitute.For<ILog>();
+        m_logMock2 = Substitute.For<ILog>();
         m_target = CreateTarget(m_LoggerFactoryMock, m_httpContextAccessorMock, m_logMock, "appInsightKey", "log4net.config", m_appName, "connectionString");
-        m_targetWithoutHttp = CreateTarget(m_LoggerFactoryMock, null, m_logMock, "appInsightKey", "log4net.config", m_appName, "connectionString", false);
+        m_targetWithoutHttp = CreateTarget(m_LoggerFactoryMock, null, m_logMock2, "appInsightKey", "log4net.config", m_appName, "connectionString", false);
     }
 
     private void InitHeadersAndQueryParams()
@@ -597,7 +605,7 @@ public class LoggerHandlerTestFixture
             Arg.Any<IDictionary<string, string>>()
         );
     }
-
+   
     [Test]
     public void RefreshAppendersLogLevel_LogMessage()
     {
@@ -605,7 +613,7 @@ public class LoggerHandlerTestFixture
 
         m_targetWithoutHttp.Error(message);
 
-        m_logMock.Received(1).Error(message);
+        m_logMock2.Received(1).Error(message);
     }
 
     [Test]
@@ -613,9 +621,7 @@ public class LoggerHandlerTestFixture
     { 
         m_targetWithoutHttp.RefreshAppendersLogLevel("ERROR");
 
-        m_targetWithoutHttp.Info(message);
-
-        m_logMock.DidNotReceiveWithAnyArgs().Error(Arg.Any<string>());
+        m_LoggerFactoryMock.Received().RaiseConfigurationChanged(Arg.Any<EventArgs>());
     }
 
     [Test]
@@ -648,7 +654,7 @@ public class LoggerHandlerTestFixture
         
         m_targetWithoutHttp.RefreshAppendersLogLevel(logLevel);
 
-        m_logMock.Received(1).Warn(message);
+        m_logMock2.Received(1).Warn(message);
     }
 
     [Test]
@@ -658,7 +664,7 @@ public class LoggerHandlerTestFixture
         
         m_targetWithoutHttp.RefreshAppendersLogLevel(logLevel);
 
-        m_logMock.Received().Info(Arg.Is<string>(msg => msg.Contains($"Log Level changed to {logLevel}")));
+        m_logMock2.Received().Info(Arg.Is<string>(msg => msg.Contains($"Log Level changed to {logLevel}")));
     }
 
 }
