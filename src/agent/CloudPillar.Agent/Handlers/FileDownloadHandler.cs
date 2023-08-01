@@ -1,45 +1,50 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using CloudPillar.Agent.Wrappers;
+using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 
 public class FileDownloadHandler : IFileDownloadHandler
 {
     private readonly IFileStreamerWrapper _FileStreamerWrapper;
-    private readonly ID2CEventHandler _D2CEventHandler;
+    private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
 
-    public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper, ID2CEventHandler D2CEventHandler)
+    public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper,
+                               ID2CMessengerHandler d2CMessengerHandler)
     {
         ArgumentNullException.ThrowIfNull(FileStreamerWrapper);
-        ArgumentNullException.ThrowIfNull(D2CEventHandler);
+        ArgumentNullException.ThrowIfNull(d2CMessengerHandler);
+
         _FileStreamerWrapper = FileStreamerWrapper;
-        _D2CEventHandler = D2CEventHandler;
+        _d2CMessengerHandler = d2CMessengerHandler;
         _filesDownloads = new ConcurrentBag<FileDownload>();
     }
 
-    public async Task InitFileDownloadAsync(Guid actionGuid, string path, string fileName)
+    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
     {
-        _filesDownloads.Add(new FileDownload()
+        _filesDownloads.Add(new FileDownload
         {
-            ActionGuid = actionGuid,
-            Path = path ?? Directory.GetCurrentDirectory(),
-            FileName = fileName,
+            DownloadAction = downloadAction,
+            Report = actionToReport,
             Stopwatch = new Stopwatch()
         });
-        await _D2CEventHandler.SendFirmwareUpdateEventAsync(fileName, actionGuid);
+        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionGuid);
     }
 
-    public async Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
+    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
     {
-        var file = _filesDownloads.FirstOrDefault(item => item.ActionGuid == message.ActionGuid && item.FileName == message.FileName);
+
+        var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionGuid == message.ActionGuid &&
+                                    item.DownloadAction.Source == message.FileName);
         if (file == null)
         {
             throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
         }
-        var filePath = Path.Combine(file.Path, file.FileName);
+        var filePath = Path.Combine(file.DownloadAction.DestinationPath, file.DownloadAction.Source);
         if (!file.Stopwatch.IsRunning)
         {
             file.Stopwatch.Start();
@@ -47,31 +52,33 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         await _FileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
 
-        CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
+        file.Report.TwinReport.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
 
         if (file.TotalBytesDownloaded == file.TotalBytes)
         {
             file.Stopwatch.Stop();
-            //TODO report success
+            file.Report.TwinReport.Status = StatusType.Success;
         }
         else
         {
-            //TODO report progress
             if (message?.RangeSize != null)
             {
                 await CheckFullRangeBytesAsync(message, filePath);
             }
+            file.Report.TwinReport.Status = StatusType.InProgress;
         }
+        return file.Report;
 
     }
 
-    private void CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
+    private float CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
     {
+        const double KB = 1024.0;
         file.TotalBytesDownloaded += bytesLength;
         double progressPercent = Math.Round((double)file.TotalBytesDownloaded / bytesLength * 100, 2);
-        double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / 1024.0; // in KiB/s
+        double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
         Console.WriteLine($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
-        //TODO report percent
+        return (float)progressPercent;
     }
 
     private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath)
@@ -81,7 +88,8 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isEmptyRangeBytes = await _FileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
-            await _D2CEventHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
         }
     }
+
 }

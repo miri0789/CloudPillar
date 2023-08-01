@@ -1,4 +1,5 @@
-﻿using Shared.Entities.Messages;
+﻿using CloudPillar.Agent.Entities;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 public class MessageSubscriber : IMessageSubscriber
@@ -10,8 +11,8 @@ public class MessageSubscriber : IMessageSubscriber
         _fileDownloadHandler = fileDownloadHandler;
     }
 
-    public async Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
+    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
     {
-        await _fileDownloadHandler.HandleDownloadMessageAsync(message);
+        return await _fileDownloadHandler.HandleDownloadMessageAsync(message);
     }
 }

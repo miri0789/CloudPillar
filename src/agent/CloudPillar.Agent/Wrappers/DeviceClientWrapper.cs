@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
@@ -89,6 +90,19 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     public async Task CompleteAsync(Message message)
     {
         await _deviceClient.CompleteAsync(message);
+    }
+
+    public async Task<Twin> GetTwinAsync()
+    {
+        var twin = await _deviceClient.GetTwinAsync();
+        return twin;
+    }
+
+    public async Task UpdateReportedPropertiesAsync(string key, object value)
+    {
+        var updatedReportedProperties = new TwinCollection();
+        updatedReportedProperties[char.ToLower(key[0]) + key.Substring(1)] = value;
+        await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
     }
 
 }
