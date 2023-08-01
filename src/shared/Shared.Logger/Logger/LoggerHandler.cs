@@ -92,10 +92,36 @@ public class LoggerHandler : ILoggerHandler
             }
         }
 
+        // Add Console Appender if not configured
+        if (FindAppender<ConsoleAppender>() == null)
+        {
+            var hierarchy = ((log4net.Core.ILoggerWrapper)m_logger).Logger.Repository as log4net.Repository.Hierarchy.Hierarchy;
+            if (hierarchy != null)
+            {
+                hierarchy.Root.AddAppender(CreateConsoleAppender());
+                m_loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
+            }
+        }
+
         RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
         RefreshAppendersLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
         
         Log4netConfigurationValidator.ValidateConfiguration(this);
+    }
+
+    public static ConsoleAppender CreateConsoleAppender()
+    {
+        ConsoleAppender appender = new ConsoleAppender();
+        appender.Name = "ConsoleAppender";
+
+        log4net.Layout.PatternLayout layout = new log4net.Layout.PatternLayout();
+        layout.ConversionPattern = "%date [%-3thread] %-5level - %message%newline";
+        layout.ActivateOptions();
+
+        appender.Layout = layout;
+        appender.ActivateOptions();
+
+        return appender;
     }
 
     public T? FindAppender<T>() where T : IAppender
