@@ -17,7 +17,7 @@ public class BlobService : IBlobService
     private readonly ServiceClient _serviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ICloudStorageWrapper _cloudStorageWrapper;
-    private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IDeviceClientWrapper _deviceClient;
     private readonly IMessagesFactory _messagesFactory;
     private readonly ILoggerHandler _logger;
 
@@ -32,12 +32,12 @@ public class BlobService : IBlobService
 
         _environmentsWrapper = environmentsWrapper;
         _cloudStorageWrapper = cloudStorageWrapper;
-        _deviceClientWrapper = deviceClientWrapper;
+        _deviceClient = deviceClientWrapper;
         _messagesFactory = messagesFactory;
         _logger = logger;
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
-        _serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
+        _serviceClient = _deviceClient.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
     }
 
 
@@ -86,7 +86,7 @@ public class BlobService : IBlobService
             var retryPolicy = Policy.Handle<Exception>()
                 .WaitAndRetryAsync(_environmentsWrapper.retryPolicyExponent, retryAttempt => TimeSpan.FromSeconds(Math.Pow(_environmentsWrapper.retryPolicyBaseDelay, retryAttempt)),
                 (ex, time) => _logger.Warn($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
-            await retryPolicy.ExecuteAsync(async () => await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage));
+            await retryPolicy.ExecuteAsync(async () => await _deviceClient.SendAsync(_serviceClient, deviceId, c2dMessage));
             _logger.Info($"Blobstreamer SendMessage success. message title: {c2dMessage.MessageId}");
         }
         catch (Exception ex)

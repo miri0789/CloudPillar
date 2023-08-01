@@ -7,24 +7,22 @@ using Shared.Entities.Events;
 
 namespace CloudPillar.Agent.Handlers;
 
-public class D2CEventHandler : ID2CEventHandler
+public class D2CMessengerHandler : ID2CMessengerHandler
 {
-    private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly DeviceClient _deviceClient;
+    private readonly IDeviceClientWrapper _deviceClient;
 
     private const int kB = 1024;
-    public D2CEventHandler(IDeviceClientWrapper deviceClientWrapper, IEnvironmentsWrapper environmentsWrapper)
+    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, IEnvironmentsWrapper environmentsWrapper)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        _deviceClientWrapper = deviceClientWrapper;
-        _deviceClient = deviceClientWrapper.CreateDeviceClient();
+        _deviceClient = deviceClientWrapper;
     }
 
     public async Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
-        int chunkSize = _deviceClientWrapper.GetTransportType() switch
+        int chunkSize = _deviceClient.GetTransportType() switch
         {
             TransportType.Mqtt => 32 * kB,
             TransportType.Amqp => 64 * kB,
