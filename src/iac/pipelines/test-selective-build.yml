@@ -32,7 +32,6 @@ parameters:
     - stg
     - prd
   - name: image
-
     displayName: Select Image to Build and Scan
     type: string
     default: iotlistener
@@ -74,7 +73,7 @@ variables:
 - name: SourceBranchName
   value: $(Build.SourceBranchName)
 - name: DockerBasePath
-  value: src/
+  value: src/backend
   # value: src/backend
   # value: $(git diff --name-only origin/main..$(Build.SourceBranchName))
   # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
@@ -124,13 +123,23 @@ stages:
 
         git diff --name-only origin/main..$(SourceBranchName) | while read -r file; do
           filename=$(basename "$file")
+          lower_filename=$(echo "$filename" | tr '[:upper:]' '[:lower:]')
           if [[ $file == *$DOCKER_BASE_PATH* ]]; then
             echo -e "\n\n"
-            echo "YES!!!!!!!!!!!!!!! $file contains $DOCKER_BASE_PATH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" # GPT Change
+            echo "YES!!!!!!!!!!!!!!! $file contains $DOCKER_BASE_PATH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" 
             echo "File Changed: $filename"
+            # Check if filename as lower string contain the image name as lower string
+            IMAGE=$(image)
+            
+            if [[ $lower_filename == *$IMAGE.csproj ]]; then
+              echo "YES ! $filename contains $IMAGE" 
+            else
+              echo "NO ! $filename does not contain $IMAGE" 
+            fi
           else
-            echo "NO ! $file does not contain $DOCKER_BASE_PATH" # GPT Change
+            echo "NO ! $file does not contain $DOCKER_BASE_PATH" 
         fi
         done
 
       name: print_ado_repo
+          
