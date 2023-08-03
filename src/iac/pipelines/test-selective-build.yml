@@ -117,24 +117,20 @@ stages:
         echo "${FILES[@]}"
         # echo "Changed Files Names and Path2: $(Files)"
 
-        DockerBasePath=$(echo $(Build.Repository.LocalPath)/src/backend) 
-        echo $DockerBasePath
+        # DockerBasePath=$(echo $(Build.Repository.LocalPath)/src/backend) 
+        DOCKER_BASE_PATH=$(DockerBasePath) 
+        echo $DOCKER_BASE_PATH
         echo -e "\n========================================\n\t File By File1\n========================================\n"
 
         git diff --name-only origin/main..$(SourceBranchName) | while read -r file; do
           filename=$(basename "$file")
-          if [[ $file == *$DockerBasePath* ]]; then
-            echo "$filename contains $DockerBasePath !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" # GPT Change
+          if [[ $file == *$DOCKER_BASE_PATH* ]]; then
+            echo -e "\n\n"
+            echo "YES!!!!!!!!!!!!!!! $file contains $DOCKER_BASE_PATH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" # GPT Change
+            echo "File Changed: $filename"
           else
-            echo "$filename does not contain $DockerBasePath" # GPT Change
+            echo "NO ! $file does not contain $DOCKER_BASE_PATH" # GPT Change
         fi
         done
-
-        echo -e "\n\n========================================\n\t File By File2\n========================================\n"
-        for file in "${Files[@]}"
-        do
-          echo $file
-        done     
-        echo -e "\n========================================\n\t ADO Finished\n========================================\n"
 
       name: print_ado_repo
