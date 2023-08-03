@@ -69,8 +69,8 @@ variables:
   value: $(git rev-list --count HEAD)
 - name: RepoName
   value: $(Build.Repository.Name)
-- name: RepoName2
-  value: $(git config --get remote.origin.url | sed 's/.*\///')
+# - name: RepoName2
+#   value: $(git config --get remote.origin.url | sed 's/.*\///')
 - name: SourceBranchName
   value: $(Build.SourceBranchName)
 - name: DockerBasePath
@@ -95,29 +95,37 @@ stages:
       persistCredentials: true
       # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
-        pwd
+        
+        echo -e "\n========================================\n\t ADO Started\n========================================\n"        
+        echo "Repo Name: $(RepoName)"
+        echo "Source Branch Name: $(SourceBranchName)"
+        echo -e "Path: $pwd\n"
+        echo -e "Local Path: $(Build.Repository.LocalPath)\n"
+        echo -e "Docker Base Path: $(DockerBasePath)\n"
+
+        
+        
+        echo pwd
         git fetch --all
         git merge-base origin/main $(SourceBranchName)
         git checkout $BRANCH
 
         FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
 
-        echo "Repo Name: $(RepoName)"
-        echo "Source Branch Name: $(SourceBranchName)"
-        echo "ADO"
         echo "Changed Files Names and Path: ${FILES[@]}"
-        echo "Changed Files Names and Path2: $(Files)"
+        # echo "Changed Files Names and Path2: $(Files)"
 
 
 
-        echo "ADO"
 
 
 
+        echo -e "\n========================================\n\t File By File\n========================================\n"
         for file in "${Files[@]}"
         do
           echo $file
         done     
+        echo -e "\n========================================\n\t ADO Finished\n========================================\n"
 
       name: print_ado_repo
           
@@ -135,14 +143,16 @@ stages:
       clean: true
     # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
-        echo -e "\n\nLocal\n======================================="
-        pwd
-        
+        echo -e "\n========================================\n\t Local Started\n========================================\n"
         REPO=$(RepoName)
         BRANCH=$(SourceBranchName)
+        echo -e "Repo Name: $REPO\n"
+        echo -e "Branch Name: $BRANCH\n"
+        echo -e "Path: $pwd\n"
+        echo -e "Local Path: $(Build.Repository.LocalPath)\n"
+        echo -e "Docker Base Path: $(DockerBasePath)\n"
 
-        echo -e "\n\tRepo Name: $REPO,\n\tSource Branch Name: $BRANCH"
-
+        
         git fetch --all
         git merge-base origin/main $(SourceBranchName)
         git checkout $BRANCH
@@ -152,7 +162,9 @@ stages:
 
         FILES=($(git diff --name-only origin/main..$(SourceBranchName)))
         echo "Changed Files Names and Path: ${FILES[@]}"
-        echo -e "\n\nDocker Base Path: $DockerBasePath\n"
+        # echo -e "\n\nDocker Base Path: $(DockerBasePath)\n"
+        DockerBasePath=$(echo $(Build.Repository.LocalPath)/src/backend)
+        echo -e "\n========================================\n\t File By File\n========================================\n"
         for file in "${Files[@]}"
         do
           echo "FILE: $file"
@@ -162,5 +174,5 @@ stages:
             echo "$file does not contain $DockerBasePath"
           fi
         done
-
+        echo -e "\n========================================\n\t Local Finished\n========================================\n"
       name: print_local_repo
