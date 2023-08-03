@@ -167,7 +167,7 @@ stages:
 
 
         # convert the space separated string to array
-        IFS=' ' read -r -a array <<< "$FILES"
+        IFS='\n' read -r -a array <<< "$FILES"
 
 
         echo -e "\n========================================\n\t File By File\n========================================\n"
