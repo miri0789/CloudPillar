@@ -139,7 +139,7 @@ stages:
             fi
           else
             # echo "NO ! $file does not contain $DOCKER_BASE_PATH" 
-        fi
+          fi
         done
 
       name: print_ado_repo
