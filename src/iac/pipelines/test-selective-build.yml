@@ -101,24 +101,25 @@ stages:
         echo "Repo Name: $(RepoName)"
         echo "Source Branch Name: $(SourceBranchName)"
         echo -e "Path: $pwd\n"
+        echo $pwd
         echo -e "Local Path: $(Build.Repository.LocalPath)\n"
         echo -e "Docker Base Path: $(DockerBasePath)\n"
 
         
         
-        echo pwd
         git fetch --all
         git merge-base origin/main $(SourceBranchName)
         git checkout $BRANCH
 
         FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
 
-        echo "Changed Files Names and Path: ${FILES[@]}"
+        echo -e "\n\nChanged Files Names and Path: \n----------------------------------------------------\n"
+        echo "${FILES[@]}"
         # echo "Changed Files Names and Path2: $(Files)"
 
         DockerBasePath=$(echo $(Build.Repository.LocalPath)/src/backend) 
         echo $DockerBasePath
-    
+        echo -e "\n========================================\n\t File By File1\n========================================\n"
 
         git diff --name-only origin/main..$(SourceBranchName) | while read -r file; do
           filename=$(basename "$file")
@@ -129,7 +130,7 @@ stages:
         fi
         done
 
-        echo -e "\n========================================\n\t File By File\n========================================\n"
+        echo -e "\n\n========================================\n\t File By File2\n========================================\n"
         for file in "${Files[@]}"
         do
           echo $file
@@ -138,61 +139,3 @@ stages:
 
       name: print_ado_repo
           
-- stage: Test2
-  displayName: Test2_Stage
-  jobs:
-  - job: Local_Repo
-    displayName: 'Print Local Repo'
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
-    # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
-    - bash: |
-        echo -e "\n========================================\n\t Local Started\n========================================\n"
-        REPO=$(RepoName)
-        BRANCH=$(SourceBranchName)
-        echo -e "Repo Name: $REPO\n"
-        echo -e "Branch Name: $BRANCH\n"
-        echo -e "Path: $pwd\n"
-        echo -e "Local Path: $(Build.Repository.LocalPath)\n"
-        echo -e "Docker Base Path: $(DockerBasePath)\n"
-
-        
-        git fetch --all
-        git merge-base origin/main $(SourceBranchName)
-        git checkout $BRANCH
-
-        # FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
-        # echo "Changed Files Names and Path: ${FILES[@]}"
-
-
-
-
-
-        DockerBasePath=$(echo $(Build.Repository.LocalPath)/src/backend) 
-        echo $DockerBasePath
-        FILES=$(git diff --name-only origin/main..$(SourceBranchName)) 
-
-        echo "Changed Files Names and Path: ${FILES[@]}"
-
-        # convert the space separated string to array
-        # IFS=$'\n' read -r -a array <<< "$FILES" 
-        IFS='\n' read -r -a array <<< "$FILES"
-        echo -e "\n========================================\n\t File By File1\n========================================\n"
-        for file in "${array[@]}"
-        do
-          if [[ $file == *$DockerBasePath* ]]; then
-            echo "$file contains $DockerBasePath" 
-          else
-            echo "$file does not contain $DockerBasePath" 
-          fi
-        done
-
-        echo -e "\n========================================\n\t File By File2\n========================================\n"
-
-        echo -e "\n========================================\n\t Local Finished\n========================================\n"
-      name: print_local_repo
