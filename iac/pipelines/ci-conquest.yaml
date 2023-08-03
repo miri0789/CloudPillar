@@ -35,3 +35,9 @@ stages:
         dockerfile: '$(dockerfilePath)'
         containerRegistry: '$(pipelineAcrConnection)'
         tags: '$(imageVersion)'
+    - task: Bash@3
+      displayName: Trviy Scan Image
+      inputs:
+        targetType: inline
+        script: |
+          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(pipelineAcrConnection).azurecr.io/$(imageName):$(imageVersion)
