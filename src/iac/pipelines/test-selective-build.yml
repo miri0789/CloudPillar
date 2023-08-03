@@ -74,7 +74,8 @@ variables:
 - name: SourceBranchName
   value: $(Build.SourceBranchName)
 - name: DockerBasePath
-  value: $(Build.Repository.LocalPath)/src/backend
+  value: src/
+  # value: src/backend
   # value: $(git diff --name-only origin/main..$(Build.SourceBranchName))
   # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
   # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
@@ -118,9 +119,11 @@ stages:
         DockerBasePath=$(echo $(Build.Repository.LocalPath)/src/backend) 
         echo $DockerBasePath
     
+
         git diff --name-only origin/main..$(SourceBranchName) | while read -r file; do
+          filename=$(basename "$file")
           if [[ $file == *$DockerBasePath* ]]; then
-            echo "$file contains $DockerBasePath" # GPT Change
+            echo "$filename contains $DockerBasePath !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" # GPT Change
           else
             echo "$file does not contain $DockerBasePath" # GPT Change
         fi
@@ -177,7 +180,7 @@ stages:
         echo "Changed Files Names and Path: ${FILES[@]}"
 
         # convert the space separated string to array
-        IFS=$'\n' read -r -a array <<< "$FILES" 
+        # IFS=$'\n' read -r -a array <<< "$FILES" 
         IFS='\n' read -r -a array <<< "$FILES"
         echo -e "\n========================================\n\t File By File1\n========================================\n"
         for file in "${array[@]}"
@@ -190,14 +193,6 @@ stages:
         done
 
         echo -e "\n========================================\n\t File By File2\n========================================\n"
-        for file in "${array[@]}"
-        do
-          echo "FILE: $file"
-          if [[ $file == *$DockerBasePath* ]]; then
-            echo "$file contains $DockerBasePath"
-          else
-            echo "$file does not contain $DockerBasePath"
-          fi
-        done
+
         echo -e "\n========================================\n\t Local Finished\n========================================\n"
       name: print_local_repo
