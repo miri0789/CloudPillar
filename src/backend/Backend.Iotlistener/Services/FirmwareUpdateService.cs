@@ -3,6 +3,7 @@ using common;
 using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Models.Enums;
 using Shared.Logger;
+using Backend.Iotlistener.Models;
 
 namespace Backend.Iotlistener.Services;
 
@@ -39,14 +40,14 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 if (data.EndPosition != null)
                 {
                     rangeSize = (long)data.EndPosition - data.StartPosition;
-                    string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionGuid={data.ActionGuid}&fileSize={blobSize}";
+                    string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionId={data.ActionId}&fileSize={blobSize}";
                     requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
                 }
                 else
                 {
                     for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
                     {
-                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionGuid={data.ActionGuid}&fileSize={blobSize}";
+                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
                         requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
                     }
                 }
@@ -65,7 +66,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         try
         {
             string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/metadata?fileName={fileName}";
-            BlobProperties fileMetadata = await _httpRequestorService.SendRequest<BlobProperties>(requestUrl, HttpMethod.Get);
+            var fileMetadata = await _httpRequestorService.SendRequest<BlobData>(requestUrl, HttpMethod.Get);
             return fileMetadata.Length;
         }
         catch (Exception ex)
