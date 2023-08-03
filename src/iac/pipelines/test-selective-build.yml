@@ -73,8 +73,8 @@ variables:
   value: $(git config --get remote.origin.url | sed 's/.*\///')
 - name: SourceBranchName
   value: $(Build.SourceBranchName)
-- name: Files
-  value: $(git diff --name-only origin/main..test-selective-build)
+- name: DockerBasePath
+  value: $(Build.Repository.LocalPath)/src/backend
   # value: $(git diff --name-only origin/main..$(Build.SourceBranchName))
   # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
   # value: $(git diff --name-only HEAD~1..$(Build.SourceBranchName))
@@ -108,11 +108,7 @@ stages:
         echo "Changed Files Names and Path: ${FILES[@]}"
         echo "Changed Files Names and Path2: $(Files)"
 
-        #! Error fatal: ambiguous argument 'master': unknown revision or path not in the working tree.
-        #! Use '--' to separate paths from revisions, like this:
-        #!'git <command> [<revision>...] -- [<file>...]'
 
-        #! git diff --name-only HEAD master
 
         echo "ADO"
 
@@ -139,35 +135,32 @@ stages:
       clean: true
     # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
+        echo -e "\n\nLocal\n======================================="
         pwd
-        echo "Local"
+        
         REPO=$(RepoName)
         BRANCH=$(SourceBranchName)
 
-        echo "Repo Name: $REPO"
-        echo "Source Branch Name: $BRANCH"
+        echo -e "\n\tRepo Name: $REPO,\n\tSource Branch Name: $BRANCH"
 
         git fetch --all
         git merge-base origin/main $(SourceBranchName)
         git checkout $BRANCH
 
-        FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
+        # FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
+        # echo "Changed Files Names and Path: ${FILES[@]}"
 
-        
-        FILES=$(git diff --name-only HEAD~1..$(Build.SourceBranchName))
-
+        FILES=($(git diff --name-only origin/main..$(SourceBranchName)))
         echo "Changed Files Names and Path: ${FILES[@]}"
-        echo "Changed Files Names and Path2: $(Files)"
-        #! BRANCH=$(git rev-parse --abbrev-ref HEAD) # Current Branch Name
-        
-
-        #! Error fatal: ambiguous argument 'master': unknown revision or path not in the working tree.
-        #! Use '--' to separate paths from revisions, like this:
-        #!'git <command> [<revision>...] -- [<file>...]'
-        #! Files=$(git diff HEAD HEAD~ --name-only) # Changed Files Names and Path
-        echo "Local"
+        echo -e "\n\nDocker Base Path: $DockerBasePath\n"
         for file in "${Files[@]}"
         do
-          echo $file
-        done             
+          echo "FILE: $file"
+          if [[ $file == *$DockerBasePath* ]]; then
+            echo "$file contains $DockerBasePath"
+          else
+            echo "$file does not contain $DockerBasePath"
+          fi
+        done
+
       name: print_local_repo
