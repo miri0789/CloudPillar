@@ -160,12 +160,18 @@ stages:
         # FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
         # echo "Changed Files Names and Path: ${FILES[@]}"
 
-        FILES=($(git diff --name-only origin/main..$(SourceBranchName)))
+        FILES=$(git diff --name-only origin/main..$(SourceBranchName))
         echo "Changed Files Names and Path: ${FILES[@]}"
         # echo -e "\n\nDocker Base Path: $(DockerBasePath)\n"
         DockerBasePath=$(echo $(Build.Repository.LocalPath)/src/backend)
+
+
+        # convert the space separated string to array
+        IFS=' ' read -r -a array <<< "$FILES"
+
+
         echo -e "\n========================================\n\t File By File\n========================================\n"
-        for file in "${Files[@]}"
+        for file in "${array[@]}"
         do
           echo "FILE: $file"
           if [[ $file == *$DockerBasePath* ]]; then
