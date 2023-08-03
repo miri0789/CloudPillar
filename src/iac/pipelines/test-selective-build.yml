@@ -9,8 +9,8 @@ trigger:
     include:
     - main
     - test-selective-build
-    # - TestBranch
-    # - "*"
+    - TestBranch
+    - "*"
     # - $(Build.SourceBranchName)
     # - main
     # - *
