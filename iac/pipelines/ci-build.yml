@@ -23,8 +23,8 @@ parameters:
     # - all
     - analyzer
     - beapi
-    - BlobStreamer
-    - Iotlistener
+    - blobstreamer
+    - iotlistener
     - keyholder
     - mongowriter
     - twinlistener
@@ -61,21 +61,21 @@ stages:
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
           sudo az acr login -n $(ACR_NAME)
-          echo "Updating ${{lower(parameters.image)}} Informational Version Label"
-          TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/Backend.${{parameters.image}}/Backend.${{parameters.image}}.csproj
-          sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{lower(parameters.image)}}.dll --build-arg DLL=backend_${{lower(parameters.image)}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/Backend.${{parameters.image}}
+          echo "Updating ${{parameters.image}} Informational Version Label"
+          TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+          sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
           
     - task: Bash@3
       displayName: Trviy Scan Image
       inputs:
         targetType: inline
         script: |
-          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{lower(parameters.image)}}.dll:latest
-          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{lower(parameters.image)}}.dll:latest
+          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
+          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
 
     - task: Bash@3
       displayName: Push Image to ACR
       inputs:
         targetType: inline
         script: |
-          sudo docker push $(ACR_NAME).azurecr.io/backend_${{lower(parameters.image)}}.dll:latest
+          sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
