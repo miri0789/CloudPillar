@@ -78,4 +78,4 @@ stages:
       inputs:
         targetType: inline
         script: |
-          sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
+          sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image.lower()}}.dll:latest
