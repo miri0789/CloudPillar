@@ -96,12 +96,13 @@ stages:
       # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
     - bash: |
         
-        echo -e "\n========================================\n\t ADO Started\n========================================\n"        
+        echo -e "\n========================================\n\t ADO Started\n========================================"        
         echo "Repo Name: $(RepoName)"
         echo "Source Branch Name: $(SourceBranchName)"
+        
         echo -e "Path: $PWD\n"
-        echo $PWD
         echo -e "Local Path: $(Build.Repository.LocalPath)\n"
+        
         echo -e "Docker Base Path: $(DockerBasePath)\n"
 
         
@@ -112,26 +113,37 @@ stages:
 
         FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
 
-        echo -e "\n\nChanged Files Names and Path: \n----------------------------------------------------\n"
+        echo -e "\n\nChanged Files Names and Path: \n----------------------------------------------------"
         echo "${FILES[@]}"
         # echo "Changed Files Names and Path2: $(Files)"
 
         # DockerBasePath=$(echo $(Build.Repository.LocalPath)/src/backend) 
         DOCKER_BASE_PATH=$(DockerBasePath) 
-        echo $DOCKER_BASE_PATH
-        echo -e "\n========================================\n\t File By File1\n========================================\n"
+        echo -e "Docker Base Path: $DOCKER_BASE_PATH"
+        echo -e "\n========================================\n\t File By File1\n========================================"
 
         git diff --name-only origin/main..$(SourceBranchName) | while read -r file; do
           filename=$(basename "$file")
           lower_filename=$(echo "$filename" | tr '[:upper:]' '[:lower:]')
           if [[ $file == *$DOCKER_BASE_PATH* ]]; then
             echo -e "\n\n"
-            echo "File Changed: $filename"
             # Check if filename as lower string contain the image name as lower string
             IMAGE="${{parameters.image}}"
-            echo "Image Name: $IMAGE"
             if [[ $lower_filename == *$IMAGE.csproj ]]; then
-              echo "YES ! $filename contains $IMAGE" 
+              
+              echo "YES ! $file contains $IMAGE" 
+              echo "File Changed: $filename"
+              echo "Image Name: $IMAGE"
+              
+              IMAGE_PATH=$filename
+              file_path_without_filename=$(dirname "$file")
+              az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+              az account set --subscription $(ARM_SUBSCRIPTION_ID)
+              echo "Azure Login Successfull"
+              sudo az acr login -n $(ACR_NAME)
+              echo "Updating ${{parameters.image}} Informational Version Label"
+              TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+              sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./$file_path_without_filename
             else
               :
             fi
@@ -141,3 +153,4 @@ stages:
         done
 
       name: print_ado_repo
+          
