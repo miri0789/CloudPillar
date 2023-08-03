@@ -100,8 +100,8 @@ stages:
         echo -e "\n========================================\n\t ADO Started\n========================================\n"        
         echo "Repo Name: $(RepoName)"
         echo "Source Branch Name: $(SourceBranchName)"
-        echo -e "Path: $pwd\n"
-        echo $pwd
+        echo -e "Path: $PWD\n"
+        echo $PWD
         echo -e "Local Path: $(Build.Repository.LocalPath)\n"
         echo -e "Docker Base Path: $(DockerBasePath)\n"
 
@@ -126,7 +126,7 @@ stages:
           if [[ $file == *$DockerBasePath* ]]; then
             echo "$filename contains $DockerBasePath !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" # GPT Change
           else
-            echo "$file does not contain $DockerBasePath" # GPT Change
+            echo "$filename does not contain $DockerBasePath" # GPT Change
         fi
         done
 
@@ -138,4 +138,3 @@ stages:
         echo -e "\n========================================\n\t ADO Finished\n========================================\n"
 
       name: print_ado_repo
-          
