@@ -127,13 +127,14 @@ stages:
           filename=$(basename "$file")
           lower_filename=$(echo "$filename" | tr '[:upper:]' '[:lower:]')
           echo "Check if $file has $DOCKER_BASE_PATH"
+          lower_file=$(echo "$file" | tr '[:upper:]' '[:lower:]')
           if [[ $file == *$DOCKER_BASE_PATH* ]]; then
             echo -e "\n\n"
             # Check if filename as lower string contain the image name as lower string
             IMAGE="${{parameters.image}}"
             echo "IMAGE: $IMAGE"
             echo "File: $file"
-            if [[ $file == *$IMAGE*.csproj ]]; then
+            if [[ $lower_file == *$IMAGE*.csproj ]]; then
               
               echo "YES ! $file contains $IMAGE" 
               echo "File Changed: $filename"
