@@ -147,8 +147,13 @@ stages:
               echo "Azure Login Successfull"
               sudo az acr login -n $(ACR_NAME)
               echo "Updating ${{parameters.image}} Informational Version Label"
-              TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-              sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./$file_path_without_filename
+              TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --cunt HEAD) && Major=1 && Minor=0
+              TAG=$Major.$Minor.$BuildNumber.$TIMESTAMP
+              sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
+              sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./$file_path_without_filename
+              # sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}} --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./$file_path_without_filename
+              sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG
+              sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG
             else
               :
             fi
