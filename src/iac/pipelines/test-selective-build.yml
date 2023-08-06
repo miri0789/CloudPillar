@@ -126,11 +126,14 @@ stages:
         git diff --name-only origin/main..$BRANCH | while read -r file; do
           filename=$(basename "$file")
           lower_filename=$(echo "$filename" | tr '[:upper:]' '[:lower:]')
+          echo "Check if $file has $DOCKER_BASE_PATH"
           if [[ $file == *$DOCKER_BASE_PATH* ]]; then
             echo -e "\n\n"
             # Check if filename as lower string contain the image name as lower string
             IMAGE="${{parameters.image}}"
-            if [[ $file == *$IMAGE.csproj ]]; then
+            echo "IMAGE: $IMAGE"
+            echo "File: $file"
+            if [[ $file == *$IMAGE*.csproj ]]; then
               
               echo "YES ! $file contains $IMAGE" 
               echo "File Changed: $filename"
