@@ -107,11 +107,12 @@ stages:
 
         
         
+        BRANCH=$(SourceBranchName)
         git fetch --all
-        git merge-base origin/main $(SourceBranchName)
+        git merge-base origin/main $BRANCH
         git checkout $BRANCH
 
-        FILES=$(git diff --name-only origin/main..$(SourceBranchName)) # Changed Files Names and Path
+        FILES=$(git diff --name-only origin/main..$BRANCH) # Changed Files Names and Path
 
         echo -e "\n\nChanged Files Names and Path: \n----------------------------------------------------"
         echo "${FILES[@]}"
@@ -122,7 +123,7 @@ stages:
         echo -e "Docker Base Path: $DOCKER_BASE_PATH"
         echo -e "\n========================================\n\t File By File1\n========================================"
 
-        git diff --name-only origin/main..$(SourceBranchName) | while read -r file; do
+        git diff --name-only origin/main..$BRANCH | while read -r file; do
           filename=$(basename "$file")
           lower_filename=$(echo "$filename" | tr '[:upper:]' '[:lower:]')
           if [[ $file == *$DOCKER_BASE_PATH* ]]; then
