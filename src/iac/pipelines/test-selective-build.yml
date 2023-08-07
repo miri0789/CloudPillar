@@ -90,8 +90,6 @@ stages:
   jobs:
   - job: ADO_Repo
     displayName: Test_Stage_0
-    variables:
-      BuildNumberNew: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 0)]
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
@@ -102,14 +100,15 @@ stages:
     - bash: |
         echo -e "\n========================================\n\t Testing\n========================================"        
         echo -e "\n----------------------Testing Build Number\n----------------------"
+        Version=$(major).$(minor)
+        echo "Version: $Version"
+        TAG="$Version.$(GitBuildNumber).$(TIME)"
+
         echo "Git Build: $(GitBuildNumber)"
         echo "BuildNumber: $(BuildNumber)"
         echo 'Build.BuildNumber: $(Build.BuildNumber)'
         echo "Patch: $(patch)"
         echo "$(Build.DefinitionName)_$(TIMESTAMP)$(Rev:r)"
-        Version=$(major).$(minor)
-        echo $Version
-        TAG="$(major).$(minor).$(GitBuildNumber).$(TIME)"
         echo "TAG: $TAG"
 
     
@@ -153,6 +152,10 @@ stages:
         DOCKER_BASE_PATH=$(DockerBasePath) 
         echo -e "Docker Base Path: $DOCKER_BASE_PATH"
         echo -e "\n========================================\n\t File By File1\n========================================"
+        Version=$(major).$(minor)
+        echo "Version: $Version"
+        TAG="$Version.$(GitBuildNumber).$(TIME)"
+
 
         git diff --name-only origin/main..$BRANCH | while read -r file; do
           filename=$(basename "$file")
@@ -178,8 +181,6 @@ stages:
               echo "Azure Login Successfull"
               sudo az acr login -n $(ACR_NAME)
               echo "Updating ${{parameters.image}} Informational Version Label"
-              TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && Major=1 && Minor=0
-              TAG="$Major.$Minor.$BuildNumber.$TIMESTAMP"
               echo "TAG: $TAG"
               # sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
               ## sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./$file_path_without_filename
