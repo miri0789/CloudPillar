@@ -107,7 +107,7 @@ stages:
         echo 'Build.BuildNumber: $(Build.BuildNumber)'
         echo "Patch: $(patch)"
         echo "$(Build.DefinitionName)_$(TIMESTAMP)$(Rev:r)"
-        TAG="$(major).$(minor).$(TIME).$(BuildNumber)"
+        TAG="$(major).$(minor).$(GitBuildNumber).$(TIME)"
         echo "TAG: $TAG"
 
     
