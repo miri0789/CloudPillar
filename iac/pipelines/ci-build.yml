@@ -78,17 +78,22 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent    
     displayName: Retrieve Image Information
+    variables:
+      selectedImage: ${{ parameters.image }}
+      imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+      registryName: $(registryName)
+      pipelineAcrConnection: $(pipelineAcrConnection)    
     steps:
     - template: templates/images-template.yml
       parameters:
-        selectedImage: ${{ parameters.image }}
-        imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+        selectedImage: $(selectedImage)
+        imageVersion: $(imageVersion)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)        
     - template: 'templates/build.yml' # Include the template as a job
       parameters:
-        selectedImage: ${{ parameters.image }}
-        imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+        selectedImage: $(selectedImage)
+        imageVersion: $(imageVersion)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)
   - job: PrintImageInfo
