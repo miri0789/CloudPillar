@@ -3,7 +3,6 @@ parameters:
   pipelineAcrConnection: ''
   selectedImage: ''  
   imageVersion: ''
-  basePath: ''
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
