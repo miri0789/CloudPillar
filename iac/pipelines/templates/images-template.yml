@@ -1,58 +1,57 @@
 parameters:
   registryName: ''
   pipelineAcrConnection: ''
-  basePath: ''
-  dockerFilePath: ''
   selectedImage: ''  
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
-    imageFolder: analyzer
+    imagePath: src/backend/analyzer
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: beapi
     imageName: 'backend_beapi'
-    imageFolder: beapi
+    imagePath: src/backend/beapi
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: infra
     imageName: 'backend_infra'
-    imageFolder: infra
+    imagePath: src/backend/infra
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: mongowriter
     imageName: 'backend_mongowriter'
-    imageFolder: mongowriter
+    imagePath: src/backend/mongowriter
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: twinlistener
     imageName: 'backend_twinlistener'
-    imageFolder: twinlistener
+    imagePath: src/backend/twinlistener
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: unittests
     imageName: 'backend_unittests'
-    imageFolder: unittests
+    imagePath: src/backend/unittests
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: blobstreamer
     imageName: 'backend_blobstreamer'
-    imageFolder: Backend.BlobStreamer
+    imagePath: src/backend/Backend.BlobStreamer
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: iotlistener
     imageName: 'backend_iotlistener'
-    imageFolder: Backend.IoTListener
+    imagePath: src/backend/Backend.IoTListener
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: keyholder
     imageName: 'backend_keyholder'
-    imageFolder: Backend.KeyHolder
+    imagePath: src/backend/Backend.KeyHolder
+    dockerFilePath: src/backend/infra/build/Dockerfile
     imageVersion: ''
   - name: edge_conquest
     imageName: 'edge_conquest'
-    # imagePath: './src/edge/conquest/'
+    imagePath: './src/edge/conquest/'
     # imageVersion: 'v0.7.3'
-    # dockerFilePath: './src/edge/conquest/Dockerfile'
+    dockerFilePath: './src/edge/conquest/Dockerfile'
   
-steps:
-- ${{ each img in parameters.images }}:
-  - ${{ if eq(parameters.selectedImage, img.name) }}:
-    - script: |
-        echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
-        echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
-        echo "##vso[task.setvariable variable=imagePath;]${{ parameters.basePath }}/${{ img.imageFolder }}"
-        echo "##vso[task.setvariable variable=dockerFilePath;]${{ parameters.dockerFilePath }}"
-      displayName: 'Set Image Information Variables for ${{ img.name }}'
+
