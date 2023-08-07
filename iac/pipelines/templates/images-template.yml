@@ -44,7 +44,7 @@ parameters:
   - name: edge_conquest
     imageName: 'edge_conquest'
     imagePath: './src/edge/conquest/'
-    # imageVersion: 'v0.7.3'
+    imageVersion: 'v0.7.3'
     dockerFilePath: './src/edge/conquest/Dockerfile'
   
 steps:
@@ -52,13 +52,13 @@ steps:
   - ${{ if eq(parameters.selectedImage, img.name) }}:
     - script: |
         # IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}} && BASE_PATH=${{ parameters.basePath}}
-        echo "name=${{ img.name }}" > ${{ parameters.basePath }}/${{img.name}}_info.txt
-        echo "imageName=${{ img.imageName }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
-        echo "imageVersion=${{ parameters.imageVersion }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
-        echo "imagePath=${{ img.imagePath }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
-        echo "dockerFilePath=${{ img.dockerFilePath }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
+        echo "name=${{ img.name }}" > ./src/${{img.name}}_info.txt
+        echo "imageName=${{ img.imageName }}" >> ./src/${{img.name}}_info.txt
+        echo "imageVersion=${{ parameters.imageVersion }}" >> ./src/${{img.name}}_info.txt
+        echo "imagePath=${{ img.imagePath }}" >> ./src/${{img.name}}_info.txt
+        echo "dockerFilePath=${{ img.dockerFilePath }}" >> ./src/${{img.name}}_info.txt
       name: setImageInfo # Assign a name to this step
-    - publish: $(System.DefaultWorkingDirectory)/${{ parameters.basePath }}/${{img.name}}_info.txt
+    - publish: $(System.DefaultWorkingDirectory)/./src/${{img.name}}_info.txt
       artifact: ${{img.name}}_info
       display: Publish ${{img.name}} Artifact
       
