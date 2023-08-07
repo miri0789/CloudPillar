@@ -3,53 +3,34 @@ parameters:
   imagePath: ''
   dockerFilePath: ''
   imageVersion: ''
-  imagePath: ''
   pipelineAcrConnection: ''
   registryName: ''
   AGENT_POOL: ''
   AGENT_NAME: ''
 
 
-resources:
-- repo: self
-variables:
-- group: arm-vg
-- group: iac-backend-vg
-- group: aks-backend-vg
-- group: backend-secrets-vg
+
+# variables:
+# - group: arm-vg
+# - group: iac-backend-vg
+# - group: aks-backend-vg
+# - group: backend-secrets-vg
 
 - stage: BuildScanPush
-  displayName: Build, Tag, Scan, and Push
-  jobs:
-  - job: BuildAndPushJob
-    displayName: Build and Push Job
+  - job: RetrieveImageInfo
     pool:
-      name: ${{ parameters.AGENT_POOL }}
-      agent.name: ${{ parameters.AGENT_NAME }}
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent    
+    displayName: Retrieve Image Information
+    # condition: ne('${{ parameters.image }}', 'edge_conquest')
+    condition: ne('${{ parameters.image }}', 'all')
     steps:
-    - task: Docker@2
-      displayName: 'Build Image'
-      inputs:
-        command: 'build'
-        repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
-        dockerfile: '${{ parameters.dockerFilePath }}'
-        buildContext: '${{ parameters.imagePath }}'
-        tags: '${{ parameters.imageVersion }}'
-
-    # - script: |
-    #     docker tag ${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}:${{ parameters.imageVersion }} ${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}:${{ parameters.imageVersion }}
-    #   displayName: 'Tag Image'
-
-    # - script: |
-    #     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-    #     -v $(System.DefaultWorkingDirectory):/root/.cache/ aquasec/trivy \
-    #     ${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}:${{ parameters.imageVersion }}
-    #   displayName: 'Trivy Scan'
-
-    # - task: Docker@2
-    #   displayName: 'Push Image'
-    #   inputs:
-    #     command: 'push'
-    #     repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
-    #     containerRegistry: '${{ parameters.pipelineAcrConnection }}'
-    #     tags: '${{ parameters.imageVersion }}'
+    # - checkout: self
+    #   persistCredentials: true
+    #   clean: true    
+    - template: 'templates/images-template.yml'
+      parameters:
+        selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
+        imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)
