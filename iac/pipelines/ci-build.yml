@@ -66,7 +66,7 @@ stages:
       agent.name: aks-${{parameters.env}}-agent # Using the pool defined in parameters
     displayName: Retrieve Image Information
     steps:
-    - ${{ each img in parameters['templates/images-template'].images }}:
+    - ${{ each img in parameters['templates/images-template.yml'].images }}:
       - ${{ if or(eq(parameters.image, 'all'), eq(parameters.image, img.name)) }}:
         - script: |
             echo "${{ img.imageName }} ${{ img.imageVersion }} ${{ img.imagePath }} ${{ img.dockerFilePath }}}}"
