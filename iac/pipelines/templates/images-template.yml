@@ -58,8 +58,8 @@ steps:
 - ${{ each img in parameters.images }}:
   - ${{ if eq(parameters.selectedImage, img.name) }}:
     - script: |
-        echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
-        echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
-        echo "##vso[task.setvariable variable=imagePath;]${{ img.imagePath }}"
-        echo "##vso[task.setvariable variable=dockerFilePath;]${{ img.dockerFilePath }}"
+        echo "##vso[task.setvariable variable=NewImageName;]${{ img.imageName }}"
+        echo "##vso[task.setvariable variable=NewImageVersion;]${{ img.imageVersion }}"
+        echo "##vso[task.setvariable variable=NewImagePath;]${{ img.imagePath }}"
+        echo "##vso[task.setvariable variable=NewDockerFilePath;]${{ img.dockerFilePath }}"
       displayName: 'Set Image Information Variables for ${{ img.name }}'
