@@ -72,23 +72,35 @@ stages:
 
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
+  condition: ne(parameters.selectedImage, 'all')
+  variables:
+    imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+
   jobs:
-  - job: RetrieveImageInfo
-    displayName: Retrieve Image Information
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent    
-    variables:
-      selectedImage: ${{ parameters.image }}
-      imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-    steps:
-    - template: templates/images-template.yml
-      parameters:
-        selectedImage: $(selectedImage)
-        imageVersion: $(imageVersion)
-        registryName: $(registryName)
-        pipelineAcrConnection: $(pipelineAcrConnection)        
-    - script: echo "$(selectedImage) $(imageVersion) $(registryName) $(pipelineAcrConnection)"
+  - template: templates/images-template.yml
+    parameters:
+      registryName: $(registryName)
+      pipelineAcrConnection: $(pipelineAcrConnection)
+      selectedImage: ${{ parameters.image}}
+      imageVersion: $(imageVersion)
+
+  #       pipelineAcrConnection: $(pipelineAcrConnection)          
+  # - job: RetrieveImageInfo
+  #   displayName: Retrieve Image Information
+  #   pool:
+  #     name: $(AGENT_POOL)
+  #     agent.name: aks-${{parameters.env}}-agent    
+  #   variables:
+  #     selectedImage: ${{ parameters.image }}
+  #     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+  #   steps:
+  #   - template: templates/images-template.yml
+  #     parameters:
+  #       selectedImage: $(selectedImage)
+  #       imageVersion: $(imageVersion)
+  #       registryName: $(registryName)
+  #       pipelineAcrConnection: $(pipelineAcrConnection)        
+  #   - script: echo "$(selectedImage) $(imageVersion) $(registryName) $(pipelineAcrConnection)"
 
   - job: BuildImage
     dependsOn: RetrieveImageInfo
