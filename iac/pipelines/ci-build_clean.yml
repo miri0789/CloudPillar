@@ -37,6 +37,12 @@ parameters:
     - all
 
 variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+- group: images-vg
+
   # -name: isMain
     # value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
 # - name: isAuto
