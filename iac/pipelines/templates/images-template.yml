@@ -46,22 +46,18 @@ parameters:
     imageVersion: 'v0.7.3'
     dockerFilePath: './src/edge/conquest/Dockerfile'
   
-jobs:
-- job: RetrieveImageInfo
-  steps:
-  - checkout: self
-    persistCredentials: true
-    clean: true
-  - ${{ each img in parameters.images }}:
-    - ${{ if and(eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
-      - script: |
-          echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
-          echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
-          echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
-          echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
-        name: setImageInfo
-  variables:
-    setImageInfo: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo']
+steps:
+- checkout: self
+  persistCredentials: true
+  clean: true
+- ${{ each img in parameters.images }}:
+  - ${{ if eq(parameters.selectedImage, img.name) }}:
+    - script: |
+        echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
+        echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
+        echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
+        echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
+      name: setImageInfo
 
     # - script: |
     #     # echo "name=${{ img.name }}" > $(Pipeline.Workspace)/${{img.name}}_info.txt
