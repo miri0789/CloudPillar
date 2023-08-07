@@ -82,11 +82,31 @@ variables:
 
 
 stages:
-- stage: Test
-  displayName: Test_Stage
+- stage: Test0
+  displayName: Test_Stage_0
   jobs:
   - job: ADO_Repo
-    displayName: Print ADO Repo
+    displayName: Test_Stage_0
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    steps:
+    - checkout: self
+      persistCredentials: true
+      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
+    - bash: |
+        echo -e "\n========================================\n\t Testing\n========================================"        
+        echo -e "\n----------------------Testing Build Number\n----------------------"
+        GitBuild=$(git rev-list --count HEAD)
+        ADOBuild=$(Rev:.r)
+        echo "Git Build: $GitBuild"
+        echo "ADO Build: $ADOBuild"
+    
+- stage: Test1
+  displayName: Test_Stage_1
+  jobs:
+  - job: ADO_Repo
+    displayName: Selective Build
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
@@ -147,14 +167,14 @@ stages:
               echo "Azure Login Successfull"
               sudo az acr login -n $(ACR_NAME)
               echo "Updating ${{parameters.image}} Informational Version Label"
-              TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --cunt HEAD) && Major=1 && Minor=0
+              TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && Major=1 && Minor=0
               TAG="$Major.$Minor.$BuildNumber.$TIMESTAMP"
               echo "TAG: $TAG"
               # sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-              sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./$file_path_without_filename
+              ## sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./$file_path_without_filename
               # sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}} --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./$file_path_without_filename
-              sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG
-              sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG
+              ## sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG
+              ## sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}:$TAG
             else
               :
             fi
