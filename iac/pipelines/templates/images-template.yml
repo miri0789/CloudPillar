@@ -58,7 +58,7 @@ steps:
         echo "imagePath=${{ img.imagePath }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
         echo "dockerFilePath=${{ img.dockerFilePath }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
       name: setImageInfo # Assign a name to this step
-    - publish: ${{ parameters.basePath }}/${{img.name}}_info.txt
+    - publish: $(System.DefaultWorkingDirectory)/${{ parameters.basePath }}/${{img.name}}_info.txt
       artifact: ${{img.name}}_info
       
     # - script: |
