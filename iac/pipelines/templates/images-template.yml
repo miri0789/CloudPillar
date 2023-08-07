@@ -1,4 +1,4 @@
-parameters:
+variables:
   major: $(grep -oP '^major=\K\d+' src/backend/version.txt)
   minor: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
   TIME: $(date +%Y%m%d%H%M%S)
@@ -11,49 +11,49 @@ parameters:
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
-    imagePath: ${{ parameters.basePath}}/analyzer
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)analyzer
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: beapi
     imageName: 'backend_beapi'
-    imagePath: ${{ parameters.basePath}}/beapi
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)beapi
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: infra
     imageName: 'backend_infra'
-    imagePath: ${{ parameters.basePath}}/infra
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)infra
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: mongowriter
     imageName: 'backend_mongowriter'
-    imagePath: ${{ parameters.basePath}}/mongowriter
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)mongowriter
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: twinlistener
     imageName: 'backend_twinlistener'
-    imagePath: ${{ parameters.basePath}}/twinlistener
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)twinlistener
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: unittests
     imageName: 'backend_unittests'
-    imagePath: ${{ parameters.basePath}}/unittests
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)unittests
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: blobstreamer
     imageName: 'backend_blobstreamer'
-    imagePath: ${{ parameters.basePath}}/Backend.BlobStreamer
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)Backend.BlobStreamer
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: iotlistener
     imageName: 'backend_iotlistener'
-    imagePath: ${{ parameters.basePath}}/Backend.IoTListener
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)Backend.IoTListener
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: keyholder
     imageName: 'backend_keyholder'
-    imagePath: ${{ parameters.basePath}}/Backend.KeyHolder
-    imageVersion: ${{ parameters.major }}.${{ parameter.minor }}.${{ parameters.GitBuildNumber }}.${{ parameters.TIME }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imagePath: $(basePath)Backend.KeyHolder
+    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: edge_conquest
     imageName: 'edge_conquest'
     imagePath: './src/edge/conquest/'
