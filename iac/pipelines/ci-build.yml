@@ -82,6 +82,11 @@ stages:
         pipelineAcrConnection: $(pipelineAcrConnection)
   - job: PrintImageInfo
     dependsOn: RetrieveImageInfo
+    variables:
+      imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+      dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]    
     steps:
     - template: templates/images-template.yml
     - script: |
@@ -90,6 +95,21 @@ stages:
         echo "Image Path: $(imagePath)"
         echo "Docker File Path: $(dockerFilePath)"
       displayName: 'Print Image Information'
+    - template: templates/build-tag-scan-push-template.yml
+      variables:
+        imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+        imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+        imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+        dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]    
+      parameters:
+        imageName: $(imageName)
+        imageVersion: $(imageVersion)
+        imagePath: $(imagePath)
+        dockerFilePath: $(dockerFilePath)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)    
+        # selectedImage: ${{ parameters.image }}
+    
     
     # pool:
     #   name: $(AGENT_POOL)
