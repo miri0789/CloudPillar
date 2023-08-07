@@ -103,7 +103,6 @@ stages:
         echo "registryName: $(registryName)
       displayName: 'Print Image Information'
     - template: templates/build-tag-scan-push-template.yml
-      dependsOn: RetrieveImageInfo
       parameters:
         imageName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]"
         imageVersion: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]"
