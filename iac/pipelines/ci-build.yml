@@ -74,7 +74,19 @@ stages:
         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
         basePath: $(basePath)
         dockerFilePath: $(basePath)/$(dockerFilePath)
-
+  - job: PrintImageInfo
+    dependsOn: RetrieveImageInfo
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    displayName: Print Image Information
+    steps:
+    - script: |
+        echo "Image Name: $(imageName)"
+        echo "Image Version: $(imageVersion)"
+        echo "Image Path: $(imagePath)"
+        echo "Docker File Path: $(dockerFilePath)"
+      displayName: 'Print Image Information Variables'
 
 
   #   - ${{ each img in template('templates/images-templates.yml').parameters.images }}:
