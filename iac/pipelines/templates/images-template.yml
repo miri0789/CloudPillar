@@ -68,7 +68,7 @@ jobs:
           echo "##vso[task.setvariable variable=pipelineAcrConnection;isOutput=true]${{ parameters.pipelineAcrConnection }}"
           echo "ImageName:${{ img.imageName }}"
           echo "ImageVersion:${{ parameters.imageVersion }}"
-        name: setImageInfo ${{ img.name }} 
+        name: setImageInfo 
       # env:
       #   imageName: $(imageName)
       #   imageVersion: $(imageVersion)
