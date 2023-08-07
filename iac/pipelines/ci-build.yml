@@ -5,7 +5,10 @@ trigger:
   batch: true
   branches:
     include:
-    - "*"
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
 
 
 variables:
@@ -15,10 +18,10 @@ variables:
 - group: backend-secrets-vg
 # - group: images-vg
 
-- name: basePath
-  value: src/backend
-- name: dockerFile
-  value: infra/build/Dockerfile
+# - name: basePath
+  # value: src/backend
+# - name: dockerFile
+  # value: infra/build/Dockerfile
 - name: major
   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 - name: minor
@@ -29,8 +32,8 @@ variables:
   value: $(git rev-list --count HEAD)
 - name: registryName
   value: 'iotimageacr'
-- name: dockerfilePath
-  value: './src/edge/conquest/Dockerfile'
+# - name: dockerfilePath
+#   value: './src/edge/conquest/Dockerfile'
 - name: pipelineAcrConnection
   value: 'iotacr'
 
@@ -58,15 +61,12 @@ parameters:
     - keyholder
     - mongowriter
     - twinlistener    
-    # - edge_conquest
+    - edge_conquest
 
-resources:
-- repo: self
 
 stages:
-- stage: BuildSpecificImage
-  displayName: Build Specific Image
-  condition: ne('${{ parameters.image }}', 'all')
+- stage: BuildScanPush
+  displayName: Build Tag Scan Push Image
   jobs:
   - job: RetrieveImageInfo
     pool:
@@ -79,8 +79,8 @@ stages:
       parameters:
         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-        basePath: $(basePath)
-
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)
   - job: PrintImageInfo
     dependsOn: RetrieveImageInfo
     pool:
@@ -92,13 +92,54 @@ stages:
       artifact: ${{ parameters.image }}_info    
       displayName: Download ${{ parameters.image }} Info Artifact
     - script: |
-          echo $(Pipeline.Workspace)
-          source source $(System.DefaultWorkingDirectory)/$(basePath)/${{ parameters.image}}_info.txt
+          echo $(System.DefaultWorkingDirectory) 
+          source $(System.DefaultWorkingDirectory)/./src/${{parameters.image}}_info.txt
           echo "Image Name: $imageName"
           echo "Image Version: $imageVersion"
           echo "Image Path: $imagePath"
           echo "Docker File Path: $dockerFilePath"
       displayName: 'Print Image Information Variables'      
+
+# - stage: BuildSpecificImage
+#   displayName: Build Specific Image
+#   condition: ne('${{ parameters.image }}', 'all')
+#   jobs:
+#   - job: RetrieveImageInfo
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: aks-${{parameters.env}}-agent    
+#     displayName: Retrieve Image Information
+#     condition: ne('${{ parameters.image }}', 'edge_conquest')
+#     steps:
+#     - template: 'templates/images-template.yml'
+#       parameters:
+#         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
+#         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+#         basePath: $(basePath)
+
+#   - job: PrintImageInfo
+#     dependsOn: RetrieveImageInfo
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: aks-${{parameters.env}}-agent
+#     displayName: Print Image Information
+#     steps:
+#     - download: current
+#       artifact: ${{ parameters.image }}_info    
+#       displayName: Download ${{ parameters.image }} Info Artifact
+#     - script: |
+#           echo $(Pipeline.Workspace)
+#           source source $(System.DefaultWorkingDirectory)/$(basePath)/${{ parameters.image}}_info.txt
+#           echo "Image Name: $imageName"
+#           echo "Image Version: $imageVersion"
+#           echo "Image Path: $imagePath"
+#           echo "Docker File Path: $dockerFilePath"
+#       displayName: 'Print Image Information Variables'      
+
+
+
+
+
     # - script: |
     #     echo "Image Name: $(RetrieveImageInfo.setImageInfo.NewImageName)"
     #     echo "Image Version: $(RetrieveImageInfo.setImageInfo.NewImageVersion)"
