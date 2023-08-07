@@ -87,12 +87,21 @@ stages:
       agent.name: aks-${{parameters.env}}-agent
     displayName: Print Image Information
     steps:
+    - download: current
+      artifact: ${{ parameters.image }}_imageInfo    
     - script: |
-        echo "Image Name: $(RetrieveImageInfo.setImageInfo.NewImageName)"
-        echo "Image Version: $(RetrieveImageInfo.setImageInfo.NewImageVersion)"
-        echo "Image Path: $(RetrieveImageInfo.setImageInfo.NewImagePath)"
-        echo "Docker File Path: $(RetrieveImageInfo.setImageInfo.NewDockerFilePath)"
-      displayName: 'Print Image Information Variables'
+          source imageInfo.txt
+          echo "Image Name: $imageName"
+          echo "Image Version: $imageVersion"
+          echo "Image Path: $imagePath"
+          echo "Docker File Path: $dockerFilePath"
+      displayName: 'Print Image Information Variables'      
+    # - script: |
+    #     echo "Image Name: $(RetrieveImageInfo.setImageInfo.NewImageName)"
+    #     echo "Image Version: $(RetrieveImageInfo.setImageInfo.NewImageVersion)"
+    #     echo "Image Path: $(RetrieveImageInfo.setImageInfo.NewImagePath)"
+    #     echo "Docker File Path: $(RetrieveImageInfo.setImageInfo.NewDockerFilePath)"
+    #   displayName: 'Print Image Information Variables'
   #   - ${{ each img in template('templates/images-templates.yml').parameters.images }}:
   #     - ${{ if eq(parameters.image, img.name) }}:
   #       - script: |
