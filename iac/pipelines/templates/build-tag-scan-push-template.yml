@@ -22,12 +22,12 @@ steps:
   clean: true
 - template: 'images-template.yml'
   parameters:
-    imageName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]"
-    imageVersion: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]"
-    imagePath: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]"
-    dockerFilePath: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]"
-    registryName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]"
-    pipelineAcrConnection: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]"
+    imageName: "$[ parameters.imageName }}"
+    imageVersion: "$[ parameters.imageVersion }}"
+    imagePath: "$[ parameters.imagePath }}"
+    dockerFilePath: "$[ parameters.dockerFilePath }}"
+    registryName: "$[ parameters.registryName }}"
+    pipelineAcrConnection: "$[ parameters.pipelineAcrConnection }}"
     selectedImage: ${{ parameters.image }}
 - task: Bash@3
   inputs:
