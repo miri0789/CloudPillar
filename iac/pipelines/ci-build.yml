@@ -67,15 +67,40 @@ parameters:
 
 
 stages:
+
+
+
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   jobs:
-  - template: 'templates/images-template.yml' # Include the template as a job
-    parameters:
-      selectedImage: ${{ parameters.image }}
-      imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-      registryName: $(registryName)
-      pipelineAcrConnection: $(pipelineAcrConnection)
+  - job: RetrieveImageInfo
+    displayName: Retrieve Image Information
+    steps:
+    - template: templates/images-template.yml
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent    
+      parameters:
+        selectedImage: ${{ parameters.image }}
+        imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)        
+    - template: 'templates/build.yml' # Include the template as a job
+      parameters:
+        selectedImage: ${{ parameters.image }}
+        imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)
+  - job: PrintImageInfo
+    dependsOn: RetrieveImageInfo
+    variables:
+      imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+      dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
+      registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
+      pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]      
+    
   # - job: RetrieveImageInfo
     # condition: ne('${{ parameters.image }}', 'all')
     # displayName: Retrieve Image Information
