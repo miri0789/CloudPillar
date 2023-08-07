@@ -57,12 +57,6 @@ steps:
         echo "imageVersion=${{ parameters.imageVersion }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
         echo "imagePath=${{ img.imagePath }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
         echo "dockerFilePath=${{ img.dockerFilePath }}" >> ${{ parameters.basePath }}/${{img.name}}_info.txt
-
-        # echo "imageName=${{ img.imageName }}" > $BASE_PATH/${{img.name}}.txt
-        # echo "imageVersion=${{ parameters.imageVersion }}" >> $BASE_PATH/${{img.name}}.txt
-        # echo "imagePath=${{ img.imagePath }}" >> $BASE_PATH/${{img.name}}.txt
-        # echo "dockerFilePath=${{ img.dockerFilePath }}" >> $BASE_PATH/${{img.name}}_info.txt
-      displayName: 'Set Image Information Variables for ${{ img.name }}'
       name: setImageInfo # Assign a name to this step
     - publish: ${{ parameters.basePath }}/${{img.name}}_info.txt
       artifact: ${{img.name}}_info
