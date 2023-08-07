@@ -48,17 +48,11 @@ parameters:
     # dockerFilePath: './src/edge/conquest/Dockerfile'
   
 steps:
-- script: |
-    selectedImage='${{ parameters.selectedImage }}'
-    basePath='${{ parameters.basePath }}'
-    dockerFilePath='${{ parameters.dockerFilePath }}'
-    # Iterate through the images and set variables for the selected image
-    for image in "${{ parameters.images }}"; do
-      if [ "$selectedImage" == "${{ image.name }}" ]; then
-        echo "##vso[task.setvariable variable=imageName;]${{ image.imageName }}"
-        echo "##vso[task.setvariable variable=imageVersion;]${{ image.imageVersion }}"
-        echo "##vso[task.setvariable variable=imagePath;]${basePath}/${{ image.imageFolder }}"
-        echo "##vso[task.setvariable variable=dockerFilePath;]${dockerFilePath}"
-      fi
-    done
-  displayName: 'Set Image Information Variables'
+- ${{ each img in parameters.images }}:
+  - ${{ if eq(parameters.selectedImage, img.name) }}:
+    - script: |
+        echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
+        echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
+        echo "##vso[task.setvariable variable=imagePath;]${{ parameters.basePath }}/${{ img.imageFolder }}"
+        echo "##vso[task.setvariable variable=dockerFilePath;]${{ parameters.dockerFilePath }}"
+      displayName: 'Set Image Information Variables for ${{ img.name }}'
