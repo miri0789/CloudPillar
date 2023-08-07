@@ -1,0 +1,36 @@
+parameters:
+  imageName: ''
+  imagePath: ''
+  dockerfilePath: ''
+  imageVersion: ''
+  pipelineAcrConnection: ''
+  registryName: ''
+# variables:
+# - group: arm-vg
+# - group: iac-backend-vg
+# - group: aks-backend-vg
+# - group: backend-secrets-vg
+
+
+steps:
+- script: |
+    az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+    az account set --subscription $(ARM_SUBSCRIPTION_ID)
+    echo "Azure Login Successfull"
+    sudo az acr login -n $(ACR_NAME)
+    echo "Updating ${{parameters.image}} Informational Version Label"
+    # sed -i "s/\(<InformationalVersion>\).*\(<\/InformationalVersion>\)/\1${{ parameters.imageVersion }}\2/g" src/backend/${{parameters.imagePath}}/${{parameters.imagePath}}.csproj
+    echo "Building ${{ parameters.imageName }}:${{ parameters.imageVersuib }}..."
+    sudo docker build -t $(ACR_NAME).azurecr.io/${{parameters.imageName}}:${{ parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}:${{ parameters.imageVersion}}.dll -f ./${{ parameters.dockerfilePath}} ./src/backend/${{parameters.imagePath}}
+  displayName: 'Build ${{ parameters.imageName }}:${{ parameters.imageVersion}}'
+
+- script: |
+    echo "Scanning ${{ parameters.imageName }}:${{ parameters.imageVersion }}..."
+    sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/${{parameters.imageName}:${{ parameters.imageVersion}}
+  displayName: 'Scan ${{ parameters.imageName }}'
+
+- script: |
+    echo "Pushing ${{ parameters.imageName }}..."
+    docker push registry
+    sudo docker push $(ACR_NAME).azurecr.io/${{ parameters.imageName }}:${{ parameters.imageVersion}}
+  displayName: 'Push ${{ parameters.imageName }}:${{ parameters.imageVersion}}'
