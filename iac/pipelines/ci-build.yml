@@ -96,16 +96,11 @@ stages:
         echo "Docker File Path: $(dockerFilePath)"
       displayName: 'Print Image Information'
     - template: templates/build-tag-scan-push-template.yml
-      variables:
+      parameters:
         imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
         imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
         imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
         dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]    
-      parameters:
-        imageName: $(imageName)
-        imageVersion: $(imageVersion)
-        imagePath: $(imagePath)
-        dockerFilePath: $(dockerFilePath)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)    
         # selectedImage: ${{ parameters.image }}
