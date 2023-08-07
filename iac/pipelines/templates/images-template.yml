@@ -1,60 +1,57 @@
 variables:
-  major: $(grep -oP '^major=\K\d+' src/backend/version.txt)
-  minor: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
-  TIME: $(date +%Y%m%d%H%M%S)
-  registryName: iotimageacr
-  GitBuildNumber: $(git rev-list --count HEAD)  
-  pipelineAcrConnection: iotacr
-  basePath: src/backend/
-  dockerFilePath: infra/build/Dockerfile
+  registryName: ''
+  pipelineAcrConnection: ''
+  basePath: ''
+  dockerFilePath: ''
   selectedImage: ''  
+  imageVersion: ''
 
 parameters:
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
-    imagePath: $(basePath)analyzer
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/analyzer
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: beapi
     imageName: 'backend_beapi'
-    imagePath: $(basePath)beapi
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/beapi
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: infra
     imageName: 'backend_infra'
-    imagePath: $(basePath)infra
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/infra
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: mongowriter
     imageName: 'backend_mongowriter'
-    imagePath: $(basePath)mongowriter
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/mongowriter
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: twinlistener
     imageName: 'backend_twinlistener'
-    imagePath: $(basePath)twinlistener
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/twinlistener
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: unittests
     imageName: 'backend_unittests'
-    imagePath: $(basePath)unittests
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/unittests
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: blobstreamer
     imageName: 'backend_blobstreamer'
-    imagePath: $(basePath)Backend.BlobStreamer
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/Backend.BlobStreamer
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: iotlistener
     imageName: 'backend_iotlistener'
-    imagePath: $(basePath)Backend.IoTListener
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/Backend.IoTListener
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: keyholder
     imageName: 'backend_keyholder'
-    imagePath: $(basePath)Backend.KeyHolder
-    imageVersion: $(major).${{ parameter.minor }}.$(GitBuildNumber).$(TIME)
+    imagePath: $(basePath)/Backend.KeyHolder
+    imageVersion: $(imageVersion)
     dockerFilePath: $(basePath)/$(dockerFilePath)
   - name: edge_conquest
     imageName: 'edge_conquest'
