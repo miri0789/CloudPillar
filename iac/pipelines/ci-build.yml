@@ -106,6 +106,7 @@ stages:
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)    
         # selectedImage: ${{ parameters.image }}
+      displayName: 'Build Scan Push'
     
     
     # pool:
