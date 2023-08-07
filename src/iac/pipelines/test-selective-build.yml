@@ -9,7 +9,7 @@ trigger:
     include:
     - main
     - test-selective-build
-    - TestBranch
+    - testselbuild
     - "*"
     # - $(Build.SourceBranchName)
     # - main
@@ -75,9 +75,9 @@ variables:
 - name: DockerBasePath
   value: src/backend
 - name: major
-  value: 1
+  value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 - name: minor
-  value: 1
+  value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
 - name: patch
   value: $[counter(variables['build.reason'], 0)]  
 # $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 100)]  
@@ -107,6 +107,8 @@ stages:
         echo 'Build.BuildNumber: $(Build.BuildNumber)'
         echo "Patch: $(patch)"
         echo "$(Build.DefinitionName)_$(TIMESTAMP)$(Rev:r)"
+        Version=$(major).$(minor)
+        echo $Version
         TAG="$(major).$(minor).$(GitBuildNumber).$(TIME)"
         echo "TAG: $TAG"
 
