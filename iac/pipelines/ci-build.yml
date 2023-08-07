@@ -89,7 +89,7 @@ stages:
     displayName: Print Image Information
     steps:
     - download: current
-      artifact: ${{ parameters.image }}_ImageInfo    
+      artifact: ${{ parameters.image }}_info    
     - script: |
           echo $(Pipeline.Workspace)
           source source $(Pipeline.Workspace)/$(basePath)/${{ parameters.image }}_info.txt
