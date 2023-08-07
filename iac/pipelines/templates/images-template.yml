@@ -74,7 +74,7 @@ steps:
         dockerFilePath: $(dockerFilePath)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)        
-      name: setImageInfo
+      name: setImageInfo ${{ img.name }} 
 
     # - script: |
     #     # echo "name=${{ img.name }}" > $(Pipeline.Workspace)/${{img.name}}_info.txt
