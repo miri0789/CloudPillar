@@ -83,37 +83,26 @@ stages:
         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)
-  - job: PrintImageInfo
-    dependsOn: RetrieveImageInfo
-    variables:
-      imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-      dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
-      registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
-      pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
-    steps:
-    - template: templates/images-template.yml
-    - script: |
-        echo "Image Name: $(imageName)"
-        echo "Image Version: $(imageVersion)"
-        echo "Image Path: $(imagePath)"
-        echo "Docker File Path: $(dockerFilePath)"
-        echo "pipelineAcrConnection: $(pipelineAcrConnection)
-        echo "registryName: $(registryName)
-      displayName: 'Print Image Information'
-    - template: templates/build-tag-scan-push-template.yml
+    - template: templates/build.yml
       parameters:
-        imageName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]"
-        imageVersion: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]"
-        imagePath: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]"
-        dockerFilePath: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]"
-        registryName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]"
-        pipelineAcrConnection: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]"
-        selectedImage: ${{ parameters.image }}
+        imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+        imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+        imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+        dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)
       # displayName: 'Build Scan Push'
     
-    
+  # - job: PrintImageInfo
+  #   dependsOn: RetrieveImageInfo
+  #   variables:
+  #     imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+  #     imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+  #     imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+  #     dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
+  #     registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
+  #     pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
+  #   steps:    
     # pool:
     #   name: $(AGENT_POOL)
     #   agent.name: aks-${{parameters.env}}-agent
