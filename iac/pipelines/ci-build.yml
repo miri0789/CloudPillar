@@ -70,13 +70,12 @@ stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   jobs:
-   - template: 'templates/images-template.yml'
-     parameters:
-       selectedImage: ${{ parameters.image }}
-       imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-       registryName: $(registryName)
-       pipelineAcrConnection: $(pipelineAcrConnection)
-
+  - template: 'templates/images-template.yml' # Include the template as a job
+    parameters:
+      selectedImage: ${{ parameters.image }}
+      imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+      registryName: $(registryName)
+      pipelineAcrConnection: $(pipelineAcrConnection)
   # - job: RetrieveImageInfo
     # condition: ne('${{ parameters.image }}', 'all')
     # displayName: Retrieve Image Information
