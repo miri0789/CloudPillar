@@ -90,9 +90,10 @@ stages:
     steps:
     - download: current
       artifact: ${{ parameters.image }}_info    
+      displayName: Download ${{ parameters.image }} Info Artifact
     - script: |
           echo $(Pipeline.Workspace)
-          source source $(Pipeline.Workspace)/$(basePath)/${{ parameters.image }}_info.txt
+          source source $(System.DefaultWorkingDirectory)/${{ parameters.basePath }}/${{img.name}}_info.txt/$(basePath)/${{ parameters.image }}_info.txt
           echo "Image Name: $imageName"
           echo "Image Version: $imageVersion"
           echo "Image Path: $imagePath"
