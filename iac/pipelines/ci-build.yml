@@ -57,22 +57,30 @@ resources:
 - repo: self
 
 stages:
-- stage: BuildImage
-  displayName: Build Image(s)
+- stage: BuildSpecificImage
+  displayName: Build Specific Image
+  condition: ne('${{ parameters.image }}', 'all')
   jobs:
   - job: RetrieveImageInfo
     pool:
       name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent # Using the pool defined in parameters
+      agent.name: aks-${{parameters.env}}-agent    
     displayName: Retrieve Image Information
     steps:
-    - ${{ each img in parameters['iac/pipelines/templates/images-template.yml'].images }}:
-      - ${{ if or(eq(parameters.image, 'all'), eq(parameters.image, img.name)) }}:
-        - script: |
-            echo "${{ img.imageName }} ${{ img.imageVersion }} ${{ img.imagePath }} ${{ img.dockerFilePath }}}}"
-            echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
-            echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
-            echo "##vso[task.setvariable variable=imagePath;]${{ img.imagePath }}"
-            echo "##vso[task.setvariable variable=dockerFilePath;]${{ img.dockerFilePath }}"
-            echo "$(imageName) $(imageVersion) $(imagePath) $(dockerfilePath)"
-          displayName: 'Set Image Information Variables for ${{ img.name }}'
+    - template: templates/images-template.yml
+      parameters:
+        selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
+
+  - job: PrintImageInfo
+    dependsOn: RetrieveImageInfo
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    displayName: Print Image Information
+    steps:
+    - script: |
+        echo "Image Name: $(imageName)"
+        echo "Image Version: $(imageVersion)"
+        echo "Image Path: $(imagePath)"
+        echo "Docker File Path: $(dockerFilePath)"
+      displayName: 'Print Image Information Variables'
