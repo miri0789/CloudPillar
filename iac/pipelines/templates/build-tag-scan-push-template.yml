@@ -21,7 +21,6 @@ steps:
   persistCredentials: true
   clean: true
 - template: 'images-template.yml'
-  dependsOn: RetrieveImageInfo  
   parameters:
     imageName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]"
     imageVersion: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]"
@@ -31,13 +30,6 @@ steps:
     pipelineAcrConnection: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]"
     selectedImage: ${{ parameters.image }}
 - task: Bash@3
-  variables:
-    imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-    imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-    imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-    dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
-    registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
-    pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
   inputs:
     targetType: 'inline'
     script: |
