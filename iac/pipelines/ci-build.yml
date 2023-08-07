@@ -87,25 +87,38 @@ stages:
         pipelineAcrConnection: $(pipelineAcrConnection)
   - job: PrintImageInfo
     dependsOn: RetrieveImageInfo
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent
-    displayName: Print Image Information
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true    
-    - download: current
-      artifact: ${{ parameters.image }}_info    
-      displayName: Download ${{ parameters.image }}_info Artifact
-    - download: current
-      artifact: ${{ parameters.image }}_info_sapce    
-      displayName: Download ${{ parameters.image }}_info Artifact
-      condition: ne('${{ parameters.image }}', 'all')
-    - script: ls -la $(Pipeline.Workspace)/src/
-      displayName: 'List files in src directory space'
-    - script: ls -la $(Build.ArtifactStagingDirectory)
-      displayName: 'List files in artifact directory'
+    variables:
+      imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+      dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]
+    steps:    
+    - script: |
+        echo "Image Name: $(imageName)"
+        echo "Image Version: $(imageVersion)"
+        echo "Image Path: $(imagePath)"
+        echo "Docker File Path: $(dockerFilePath)"
+      displayName: 'Display Image Information'
+    
+    # pool:
+    #   name: $(AGENT_POOL)
+    #   agent.name: aks-${{parameters.env}}-agent
+    # displayName: Print Image Information
+    # steps:
+    # - checkout: self
+    #   persistCredentials: true
+    #   clean: true    
+    # - download: current
+    #   artifact: ${{ parameters.image }}_info    
+    #   displayName: Download ${{ parameters.image }}_info Artifact
+    # - download: current
+    #   artifact: ${{ parameters.image }}_info_sapce    
+    #   displayName: Download ${{ parameters.image }}_info Artifact
+    #   condition: ne('${{ parameters.image }}', 'all')
+    # - script: ls -la $(Pipeline.Workspace)/src/
+    #   displayName: 'List files in src directory space'
+    # - script: ls -la $(Build.ArtifactStagingDirectory)
+    #   displayName: 'List files in artifact directory'
     # - script: cat $(System.DefaultWorkingDirectory)/${{ parameters.image }}_info/${{ parameters.image }}_info.txt
       # displayName: 'Display Image Information'
 
