@@ -32,4 +32,13 @@ parameters:
     imageVersion: 'v0.7.3'
     imagePath: './src/edge/conquest/'
     dockerfilePath: './src/edge/conquest/Dockerfile'
-  
+
+steps:
+- ${{ each img in parameters.images }}:
+  - ${{ if eq(parameters.selectedImage, img.name) }}:
+    - script: |
+        echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
+        echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
+        echo "##vso[task.setvariable variable=imagePath;]${{ img.imagePath }}"
+        echo "##vso[task.setvariable variable=dockerFilePath;]${{ img.dockerFilePath }}"
+      displayName: 'Set Image Information Variables for ${{ img.name }}'
