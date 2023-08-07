@@ -4,53 +4,43 @@ parameters:
   basePath: ''
   dockerFilePath: ''
   selectedImage: ''  
-  imageVersion: ''
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
-    imagePath: ${{ parameters.basePath }}/analyzer
-    imageVersion: ${{ parameters.imageVersion }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: analyzer
+    imageVersion: ''
   - name: beapi
     imageName: 'backend_beapi'
-    imagePath: ${{ parameters.basePath }}/beapi
-    imageVersion: ${{ parameters.imageVersion }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: beapi
+    imageVersion: ''
   - name: infra
     imageName: 'backend_infra'
-    imagePath: ${{ parameters.basePath }}/infra
-    imageVersion: ${{ parameters.imageVersion }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: infra
+    imageVersion: ''
   - name: mongowriter
     imageName: 'backend_mongowriter'
-    imagePath: ${{ parameters.basePath }}/mongowriter
-    imageVersion: ${{ parameters.imageVersion }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: mongowriter
+    imageVersion: ''
   - name: twinlistener
     imageName: 'backend_twinlistener'
-    imagePath: ${{ parameters.basePath }}/twinlistener
-    imageVersion: ${{ parameters.imageVersion }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: twinlistener
+    imageVersion: ''
   - name: unittests
     imageName: 'backend_unittests'
-    imagePath: ${{ parameters.basePath }}/unittests
-    imageVersion: ${{ parameters.imageVersion }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: unittests
+    imageVersion: ''
   - name: blobstreamer
     imageName: 'backend_blobstreamer'
-    imagePath: ${{ parameters.basePath }}/Backend.BlobStreamer
-    imageVersion: ${{ parameters.imageVersion }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: Backend.BlobStreamer
+    imageVersion: ''
   - name: iotlistener
     imageName: 'backend_iotlistener'
-    imagePath: ${{ parameters.basePath }}/Backend.IoTListener
-    imageVersion: ${{ parameters.imageVersion }}
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: Backend.IoTListener
+    imageVersion: ''
   - name: keyholder
     imageName: 'backend_keyholder'
-    imagePath: ${{ parameters.basePath }}/Backend.KeyHolder
-
-    dockerFilePath: ${{ parameters.basePath }}/${{ parameters.dockerFilePath }}
+    imageFolder: Backend.KeyHolder
+    imageVersion: ''
   - name: edge_conquest
     imageName: 'edge_conquest'
     # imagePath: './src/edge/conquest/'
@@ -58,11 +48,17 @@ parameters:
     # dockerFilePath: './src/edge/conquest/Dockerfile'
   
 steps:
-- ${{ each img in parameters.images }}:
-  - ${{ if eq(parameters.selectedImage, img.name) }}:
-    - script: |
-        echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
-        echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
-        echo "##vso[task.setvariable variable=imagePath;]${{ img.imagePath }}"
-        echo "##vso[task.setvariable variable=dockerFilePath;]${{ img.dockerFilePath }}"
-      displayName: 'Set Image Information Variables for ${{ img.name }}'
+- script: |
+    selectedImage='${{ parameters.selectedImage }}'
+    basePath='${{ parameters.basePath }}'
+    dockerFilePath='${{ parameters.dockerFilePath }}'
+    # Iterate through the images and set variables for the selected image
+    for image in "${{ parameters.images }}"; do
+      if [ "$selectedImage" == "${{ image.name }}" ]; then
+        echo "##vso[task.setvariable variable=imageName;]${{ image.imageName }}"
+        echo "##vso[task.setvariable variable=imageVersion;]${{ image.imageVersion }}"
+        echo "##vso[task.setvariable variable=imagePath;]${basePath}/${{ image.imageFolder }}"
+        echo "##vso[task.setvariable variable=dockerFilePath;]${dockerFilePath}"
+      fi
+    done
+  displayName: 'Set Image Information Variables'
