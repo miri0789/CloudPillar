@@ -73,7 +73,8 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent    
     displayName: Retrieve Image Information
-    condition: ne('${{ parameters.image }}', 'edge_conquest')
+    # condition: ne('${{ parameters.image }}', 'edge_conquest')
+    condition: ne('${{ parameters.image }}', 'all')
     steps:
     - checkout: self
       persistCredentials: true
