@@ -10,7 +10,7 @@ trigger:
 variables:
 - name: basePath
   value: src/backend/
-- name: dockerFile:  
+- name: dockerFile 
   value: infra/build/Dockerfile
 - name: major
   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
