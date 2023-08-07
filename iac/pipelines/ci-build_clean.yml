@@ -69,20 +69,12 @@ stages:
       registryName: 'iotimageacr'
       dockerfilePath: './src/edge/conquest/Dockerfile'
       pipelineAcrConnection: 'iotacr'
-      stages:
-      - stage: Build
-        displayName: Build and push
-        jobs:  
-        - job: Build
-          displayName: Build
-          pool:
-            vmImage: 'ubuntu-latest'
-          steps:
-          - task: Docker@2
-            displayName: 'Build and Push Image'
-            inputs:
-              command: 'buildAndPush'
-              repository: '$(registryName).azurecr.io/$(imageName)'
-              dockerfile: '$(dockerfilePath)'
-              containerRegistry: '$(pipelineAcrConnection)'
-              tags: '$(imageVersion)'
+    steps: # Changed from stages to steps
+      - task: Docker@2
+        displayName: 'Build and Push Image'
+        inputs:
+          command: 'buildAndPush'
+          repository: '$(registryName).azurecr.io/$(imageName)'
+          dockerfile: '$(dockerfilePath)'
+          containerRegistry: '$(pipelineAcrConnection)'
+          tags: '$(imageVersion)'
