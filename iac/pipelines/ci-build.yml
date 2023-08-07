@@ -79,6 +79,7 @@ stages:
       parameters:
         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+        basePath: $(basePath)
 
   - job: PrintImageInfo
     dependsOn: RetrieveImageInfo
@@ -88,9 +89,9 @@ stages:
     displayName: Print Image Information
     steps:
     - download: current
-      artifact: ${{ parameters.image }}_imageInfo    
+      artifact: ${{ parameters.image }}_ImageInfo    
     - script: |
-          source imageInfo.txt
+          source source $(Pipeline.Workspace)/$(basePath)/${{ parameters.image }}.txt
           echo "Image Name: $imageName"
           echo "Image Version: $imageVersion"
           echo "Image Path: $imagePath"
