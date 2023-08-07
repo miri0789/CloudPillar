@@ -67,7 +67,7 @@ stages:
       agent.name: aks-${{parameters.env}}-agent    
     displayName: Retrieve Image Information
     steps:
-    - template: templates/images-templates.yml
+    - template: 'templates/images-templates.yml'
       parameters:
         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
     - ${{ each img in template('templates/images-templates.yml').parameters.images }}:
