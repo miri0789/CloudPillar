@@ -91,6 +91,7 @@ stages:
     - download: current
       artifact: ${{ parameters.image }}_ImageInfo    
     - script: |
+          echo $(Pipeline.Workspace)
           source source $(Pipeline.Workspace)/$(basePath)/${{ parameters.image }}_info.txt
           echo "Image Name: $imageName"
           echo "Image Version: $imageVersion"
