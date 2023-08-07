@@ -37,6 +37,8 @@ variables:
 - name: pipelineAcrConnection
   value: 'iotacr'
 
+resources:
+- repo: self
 
 parameters:
   - name: env
