@@ -20,23 +20,24 @@ steps:
 - checkout: self
   persistCredentials: true
   clean: true
-  condition: ne('${{ parameters.image }}', 'all')
-    - template: 'templates/images-template.yml'
-      parameters:
-        selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
-        imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-        registryName: $(registryName)
-        pipelineAcrConnection: $(pipelineAcrConnection)
-    - task: Bash@3
-      inputs:
-        targetType: 'inline'
-        script: |
-          echo 'selectedImage: ${{ parameters.imageName }}'
-          echo 'imageVersion: ${{ parameters.imageVersion }}'
-          echo 'imagePath: ${{ parameters.imagePath }}'
-          echo 'imagePath: ${{ parameters.imagePath }}'
-          echo 'registryName: ${{ parameters.registry }}'
-          echo 'pipelineAcrConnection: ${{ parameters.pipelineAcrConnection }}'
+  - template: 'templates/images-template.yml'
+    condition: ne('${{ parameters.image }}', 'all')
+    parameters:
+      selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
+      imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+      registryName: $(registryName)
+      pipelineAcrConnection: $(pipelineAcrConnection)
+  - task: Bash@3
+    condition: ne('${{ parameters.image }}', 'all')
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo 'selectedImage: ${{ parameters.imageName }}'
+        echo 'imageVersion: ${{ parameters.imageVersion }}'
+        echo 'imagePath: ${{ parameters.imagePath }}'
+        echo 'imagePath: ${{ parameters.imagePath }}'
+        echo 'registryName: ${{ parameters.registry }}'
+        echo 'pipelineAcrConnection: ${{ parameters.pipelineAcrConnection }}'
 
       name: printParameters
       
