@@ -51,10 +51,14 @@ steps:
   - ${{ if eq(parameters.selectedImage, img.name) }}:
     - script: |
         IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ img.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}}
-        echo "##vso[task.setvariable variable=NewImageName;isOutput=true]$IMAGE_NAME"
-        echo "##vso[task.setvariable variable=NewImageVersion;isOutput=true]$IMAGE_VERSION"
-        echo "##vso[task.setvariable variable=NewImagePath;isOutput=true]$IMAGE_PATH"
-        echo "##vso[task.setvariable variable=NewDockerFilePath;isOutput=true]$DOCKER_FILE"
+        echo "##vso[task.setvariable variable=NewImageName;isoutput=true]$IMAGE_NAME"
+        echo "##vso[task.setvariable variable=NewImageVersion;isoutput=true]$IMAGE_VERSION"
+        echo "##vso[task.setvariable variable=NewImagePath;isoutput=true]$IMAGE_PATH"
+        echo "##vso[task.setvariable variable=NewDockerFilePath;isoutput=true]$DOCKER_FILE"
       displayName: 'Set Image Information Variables for ${{ img.name }}'
       name: setImageInfo # Assign a name to this step
-
+      outputs:
+        NewImageName: $(NewImageName)
+          NewImageVersion: $(NewImageVersion)
+          NewImagePath: $(NewImagePath)
+          NewDockerFilePath: $(NewDockerFilePath)
