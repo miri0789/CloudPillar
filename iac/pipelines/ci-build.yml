@@ -74,12 +74,12 @@ stages:
   displayName: Build Tag Scan Push Image
   jobs:
   - job: RetrieveImageInfo
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent    
     displayName: Retrieve Image Information
     steps:
     - template: templates/images-template.yml
-      pool:
-        name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent    
       parameters:
         selectedImage: ${{ parameters.image }}
         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
