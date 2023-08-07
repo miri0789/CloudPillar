@@ -7,7 +7,14 @@ trigger:
     include:
     - "*"
 
+
 variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+# - group: images-vg
+
 - name: basePath
   value: src/backend
 - name: dockerFile
