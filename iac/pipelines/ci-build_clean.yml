@@ -27,22 +27,22 @@ parameters:
     - dev
     - stg
     - prd    
-- name: image
-  displayName: Select Image to Build and Scan
-  type: string
-  default: all
-  values:
-  - analyzer
-  - beapi
-  - blobstreamer
-  - iotlistener
-  - keyholder
-  - mongowriter
-  - twinlistener    
-  - edge_conquest
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: all
+    values:
+    - analyzer
+    - beapi
+    - blobstreamer
+    - iotlistener
+    - keyholder
+    - mongowriter
+    - twinlistener    
+    - edge_conquest
 
+- template: templates/images-template.yml
 # - template: templates/images-template.yml
-- template: images-template.yml
 
 
 stages:
