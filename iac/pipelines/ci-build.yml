@@ -68,23 +68,6 @@ stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   jobs:
-  - job: RetrieveImageInfo
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent    
-    displayName: Retrieve Image Information
-    # condition: ne('${{ parameters.image }}', 'edge_conquest')
-    condition: ne('${{ parameters.image }}', 'all')
-    steps:
-    # - checkout: self
-    #   persistCredentials: true
-    #   clean: true    
-    - template: 'templates/images-template.yml'
-      parameters:
-        selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
-        imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-        registryName: $(registryName)
-        pipelineAcrConnection: $(pipelineAcrConnection)
   - job: PrintImageInfo
     dependsOn: RetrieveImageInfo
     variables:
@@ -92,13 +75,14 @@ stages:
       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
       imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
       dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]
-    steps:    
+    steps:
+    - template: templates/images-template.yml
     - script: |
         echo "Image Name: $(imageName)"
         echo "Image Version: $(imageVersion)"
         echo "Image Path: $(imagePath)"
         echo "Docker File Path: $(dockerFilePath)"
-      displayName: 'Display Image Information'
+      displayName: 'Print Image Information'
     
     # pool:
     #   name: $(AGENT_POOL)
