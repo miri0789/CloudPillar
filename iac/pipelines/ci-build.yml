@@ -86,16 +86,20 @@ stages:
   - job: BuildImage
     variables:
       imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-      # imageVersion: "$[ parameters.imageVersion }}"
-      # imagePath: "$[ parameters.imagePath }}"
-      # dockerFilePath: "$[ parameters.dockerFilePath }}"
-      # registryName: "$[ parameters.registryName }}"
-      # pipelineAcrConnection: "$[ parameters.pipelineAcrConnection }}"      
-    displayName: Build Image
+      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+      dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]
+      # registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
+      # pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
+    displayName: "Build Image $(imageName)"
     dependsOn: RetrieveImageInfo
     steps:
-    - script: |
-        echo "imageName: $(imageName)"
+    - template: templates/build.yml
+      parameters:
+        imageName: $(imageName)
+        imageVersion: $(imageVersion)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)      
         
     #     echo "imageName=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]"
     #     echo "imageVersion=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]"
