@@ -57,7 +57,7 @@ steps:
         echo "dockerFilePath=${{ img.dockerFilePath }} > ${{ img.imagePath }}/ImageInfo.txt"
       displayName: 'Set Image Information Variables for ${{ img.name }}'
       name: setImageInfo # Assign a name to this step
-    - publish: ${{ img.name}}.txt
+    - publish: ${{ img.imagePath }}/ImageInfo.txt
       artifact: ${{img.name}}_imageInfo      
   
     # - script: |
