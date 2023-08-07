@@ -83,7 +83,6 @@ stages:
   - job: PrintImageInfo
     dependsOn: RetrieveImageInfo
     steps:
-    steps:
     - template: templates/images-template.yml
     - script: |
         echo "Image Name: $(imageName)"
