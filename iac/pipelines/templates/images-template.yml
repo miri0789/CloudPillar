@@ -51,27 +51,35 @@ steps:
   persistCredentials: true
   clean: true
 - ${{ each img in parameters.images }}:
-  - ${{ if eq(parameters.selectedImage, img.name) }}:
+  - ${{ if eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
     - script: |
-        echo "name=${{ img.name }}" > $(Pipeline.Workspace)/${{img.name}}_info.txt
-        # echo "imageName=${{ img.imageName }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
-        # echo "imageVersion=${{ parameters.imageVersion }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
-        # echo "imagePath=${{ img.imagePath }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
-        # echo "dockerFilePath=${{ img.dockerFilePath }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
-        cat $(Pipeline.Workspace)/src/${{img.name}}_info.txt
-      name: setImageInfo # Assign a name to this step
-    - task: CopyFiles@2
-      displayName: 'Copy scripts'
-      inputs:
-        contents: '$(Pipeline.Workspace)/${{img.name}}_info.txt'
-        targetFolder: '$(Build.ArtifactStagingDirectory)'
-    - publish: $(Pipeline.Workspace)/${{img.name}}_info.txt
-      displayName: 'Publish ${{img.name}} Artifact'
-      artifact: ${{img.name}}_info_space
-    - publish: $(Build.ArtifactStagingDirectory)/${{img.name}}_info.txt
-      displayName: 'Publish ${{img.name}} Artifact'
-      artifact: ${{img.name}}_info
+        echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
+        echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
+        echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
+        echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
+      name: setImageInfo  
+
+
     # - script: |
+    #     # echo "name=${{ img.name }}" > $(Pipeline.Workspace)/${{img.name}}_info.txt
+    #     # echo "imageName=${{ img.imageName }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
+    #     # echo "imageVersion=${{ parameters.imageVersion }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
+    #     # echo "imagePath=${{ img.imagePath }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
+    #     # echo "dockerFilePath=${{ img.dockerFilePath }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
+    #     cat $(Pipeline.Workspace)/src/${{img.name}}_info.txt
+    #   name: setImageInfo # Assign a name to this step
+    # - task: CopyFiles@2
+    #   displayName: 'Copy scripts'
+    #   inputs:
+    #     contents: '$(Pipeline.Workspace)/${{img.name}}_info.txt'
+    #     targetFolder: '$(Build.ArtifactStagingDirectory)'
+    # - publish: $(Pipeline.Workspace)/${{img.name}}_info.txt
+    #   displayName: 'Publish ${{img.name}} Artifact'
+    #   artifact: ${{img.name}}_info_space
+    # - publish: $(Build.ArtifactStagingDirectory)/${{img.name}}_info.txt
+    #   displayName: 'Publish ${{img.name}} Artifact'
+    #   artifact: ${{img.name}}_info
+    # # - script: |
     #     IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}}
     #     echo "##vso[task.setvariable variable=NewImageName;isoutput=true]$IMAGE_NAME"
     #     echo "##vso[task.setvariable variable=NewImageVersion;isoutput=true]$IMAGE_VERSION"
