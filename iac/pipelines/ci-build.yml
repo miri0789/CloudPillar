@@ -81,8 +81,6 @@ stages:
     variables:
       selectedImage: ${{ parameters.image }}
       imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-      registryName: $(registryName)
-      pipelineAcrConnection: $(pipelineAcrConnection)    
     steps:
     - template: templates/images-template.yml
       parameters:
@@ -103,8 +101,8 @@ stages:
       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
       imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
       dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
-      registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
-      pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]      
+      # registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
+      # pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]      
     
   # - job: RetrieveImageInfo
     # condition: ne('${{ parameters.image }}', 'all')
