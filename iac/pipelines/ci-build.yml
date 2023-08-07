@@ -101,6 +101,9 @@ stages:
       condition: ne('${{ parameters.image }}', 'all')
     - script: ls -la $(System.DefaultWorkingDirectory)/src/
       displayName: 'List files in src directory'
+    - script: cat $(System.DefaultWorkingDirectory)/src/${{ parameters.image }}_info.txt
+      displayName: 'Display Image Information'
+
 
     # - script: |
     #       echo $(System.DefaultWorkingDirectory) 
