@@ -84,11 +84,19 @@ stages:
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)
   - job: BuildImage
+    variables:
+      imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      # imageVersion: "$[ parameters.imageVersion }}"
+      # imagePath: "$[ parameters.imagePath }}"
+      # dockerFilePath: "$[ parameters.dockerFilePath }}"
+      # registryName: "$[ parameters.registryName }}"
+      # pipelineAcrConnection: "$[ parameters.pipelineAcrConnection }}"      
     displayName: Build Image
     dependsOn: RetrieveImageInfo
     steps:
     - script: |
-        echo "imageName: ${{ parameters.imageName }}"
+        echo "imageName: $(imageName)"
+        
     #     echo "imageName=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]"
     #     echo "imageVersion=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]"
     #     echo "imagePath=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]"
