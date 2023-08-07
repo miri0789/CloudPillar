@@ -92,9 +92,9 @@ stages:
       artifact: ${{ parameters.image }}_info    
       displayName: Download ${{ parameters.image }}_info Artifact
       condition: ne('${{ parameters.image }}', 'all')
-    - script: |
-            cat $(System.DefaultWorkingDirectory)/src/${{ parameters.image }}_info.txt
-      displayName: Display Image Information      
+    - script: ls -la $(System.DefaultWorkingDirectory)/src/
+      displayName: 'List files in src directory'
+
     # - script: |
     #       echo $(System.DefaultWorkingDirectory) 
     #       pwd
