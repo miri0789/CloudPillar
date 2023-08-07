@@ -39,8 +39,8 @@ parameters:
 variables:
   # -name: isMain
     # value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
-- name: isAuto
-  value: $[eq('${{ image }}', 'all')]
+# - name: isAuto
+  # value: $[eq('${{ image }}', 'all')]
 - name: TIME
   value: $(date +%Y%m%d%H%M%S)
 - name: GitBuildNumber
@@ -55,40 +55,44 @@ variables:
 
 
 stages:
+- stage: BuildSpecificImage
+  displayName: Build Specific Image
+  condition: ne('${{ parameters.image }}', 'all')
+  pool:
+    name: $(AGENT_POOL)
+    agent.name: aks-${{parameters.env}}-agent
+  jobs:
+  - job: Manual_Build
+    displayName: Build ${{ parameters.image }}
+    steps:
+    - script: echo "Manual Building ${{ parameters.image }}" # Replace with your build command
+  - job: Manual_Scan
+    displayName: Scan ${{ parameters.image }}
+    steps:
+    - script: echo "Manual Scanning ${{ parameters.image }}" # Replace with your scan command
+  - job: Manual_Push
+    displayName: Push ${{ parameters.image }}
+    steps:
+    - script: echo "Manual Pushing ${{ parameters.image }}" # Replace with your push command
 
 
-- ${{ each img in parameters.image }}:
-  - ${{ if eq(parameters.image, 'all') }}: # If "all" is selected, build all images
-    - ${{ if ne(img, 'all') }}: # Exclude 'all' option
-      - stage: Auto_Build_Push_${{ parameters.image }}
-        displayName: Auto Build and Push ${{ parameters.image }}
-        jobs:
-        - job: Auto_Build
-          displayName: Build ${{ parameters.image }}
-          steps:
-          - script: echo "Auto Building ${{ parameters.image }}" # Replace with your build command
-        - job: Auto_Scan
-          displayName: Scan ${{ parameters.image }}
-          steps:
-          - script: echo "Auto Scanning ${{ parameters.image }}" # Replace with your scan command
-        - job: Auto_Push
-          displayName: Push ${{ parameters.image }}
-          steps:
-          - script: echo "Auto Pushing ${{ parameters.image }}" # Replace with your push command
-  - ${{ if ne(parameters.image, 'all') }}: # If a specific image is selected, build only that image
-    - ${{ if eq(parameters.image, img) }}:
-      - stage: Manual_Build_Push_${{ parameters.image }}
-        displayName: Manual_Build and Push ${{ parameters.image }}
-        jobs:
-        - job: Manual_Build
-          displayName: Build ${{ parameters.image }}
-          steps:
-          - script: echo "Manual Building ${{ parameters.image }}" # Replace with your build command
-        - job: Manual_Scan
-          displayName: Scan ${{ parameters.image }}
-          steps:
-          - script: echo "Manual Scanning ${{ parameters.image }}" # Replace with your scan command
-        - job: Manual_Push
-          displayName: Push ${{ parameters.image }}
-          steps:
-          - script: echo "Manual Pushing ${{ parameters.image }}" # Replace with your push command
+- stage: BuildAllImages
+  displayName: Build All Images
+  condition: eq('${{ parameters.image }}', 'all')
+  pool:
+    name: $(AGENT_POOL)
+    agent.name: aks-${{parameters.env}}-agent
+  jobs:
+  # Jobs to build all images except "all"
+  - job: Auto_Build
+    displayName: Build ${{ parameters.image }}
+    steps:
+    - script: echo "Auto Building ${{ parameters.image }}" # Replace with your build command
+  - job: Auto_Scan
+    displayName: Scan ${{ parameters.image }}
+    steps:
+    - script: echo "Auto Scanning ${{ parameters.image }}" # Replace with your scan command
+  - job: Auto_Push
+    displayName: Push ${{ parameters.image }}
+    steps:
+    - script: echo "Auto Pushing ${{ parameters.image }}" # Replace with your push command
