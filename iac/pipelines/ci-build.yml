@@ -89,7 +89,9 @@ stages:
       imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
       imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-      dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]    
+      dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
+      registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
+      pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
     steps:
     - template: templates/images-template.yml
     - script: |
@@ -97,15 +99,18 @@ stages:
         echo "Image Version: $(imageVersion)"
         echo "Image Path: $(imagePath)"
         echo "Docker File Path: $(dockerFilePath)"
+        echo "pipelineAcrConnection: $(pipelineAcrConnection)
+        echo "registryName: $(registryName)
       displayName: 'Print Image Information'
     - template: templates/build-tag-scan-push-template.yml
+      dependsOn: RetrieveImageInfo
       parameters:
-        imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-        imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-        imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-        dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]    
-        registryName: $(registryName)
-        pipelineAcrConnection: $(pipelineAcrConnection)    
+        imageName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]"
+        imageVersion: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]"
+        imagePath: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]"
+        dockerFilePath: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]"
+        registryName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]"
+        pipelineAcrConnection: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]"
         # selectedImage: ${{ parameters.image }}
       # displayName: 'Build Scan Push'
     
