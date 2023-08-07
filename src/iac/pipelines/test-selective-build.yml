@@ -62,9 +62,9 @@ variables:
 - group: backend-secrets-vg
 
 #* Dynamic Variables
-- name: TIMESTAMP
+- name: TIME
   value: $(date +%Y%m%d%H%M%S)
-- name: BuildNumber
+- name: GitBuildNumber
   value: $(git rev-list --count HEAD)
 - name: RepoName
   value: $(Build.Repository.Name)
@@ -77,7 +77,7 @@ variables:
 - name: major
   value: 1
 - name: minor
-  value: $[counter(variables['major'], 100)]
+  value: 1
 - name: patch
   value: $[counter(variables['build.reason'], 0)]  
 # $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 100)]  
@@ -91,7 +91,7 @@ stages:
   - job: ADO_Repo
     displayName: Test_Stage_0
     variables:
-      BuildNumberNew: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 100)]
+      BuildNumberNew: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 0)]
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
@@ -102,20 +102,12 @@ stages:
     - bash: |
         echo -e "\n========================================\n\t Testing\n========================================"        
         echo -e "\n----------------------Testing Build Number\n----------------------"
-        GitBuild=$(git rev-list --count HEAD)
-        ADOBuild=$(Rev:r)
-        echo "Git Build: $GitBuild"
+        echo "Git Build: $(GitBuildNumber)"
         echo "BuildNumber: $(BuildNumber)"
-        echo "ADO Build: $ADOBuild"
-        echo "Rev Number: $(Rev:r)"
-        echo "Rev Number2: $(Rev:.r)"
-        echo "BuildDefinitionName: $(BuildDefinitionName)"
-        echo "Time: $(TIMESTAMP)"
         echo 'Build.BuildNumber: $(Build.BuildNumber)'
-        echo "Build Number New: $(BuildNumberNew)"
         echo "Patch: $(patch)"
-        echo "$(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:r)"
-        TAG=$(major).$(minor).$(TIMESTMAP).$(BuildNumber)
+        echo "$(Build.DefinitionName)_$(TIMESTAMP)$(Rev:r)"
+        TAG="$(major).$(minor).$(TIME).$(BuildNumber)"
         echo "TAG: $TAG"
 
     
