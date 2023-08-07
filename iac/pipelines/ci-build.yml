@@ -76,9 +76,9 @@ stages:
     # condition: ne('${{ parameters.image }}', 'edge_conquest')
     condition: ne('${{ parameters.image }}', 'all')
     steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true    
+    # - checkout: self
+    #   persistCredentials: true
+    #   clean: true    
     - template: 'templates/images-template.yml'
       parameters:
         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
