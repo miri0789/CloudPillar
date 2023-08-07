@@ -56,21 +56,22 @@ resources:
 - repo: self
 
 stages:
-- stage: BuildSpecificImage
-  displayName: Build Specific Image
-  condition: ne('${{ parameters.image }}', 'all')
+- stage: BuildImage
+  displayName: Build Image(s)
   jobs:
   - job: RetrieveImageInfo
     pool:
       name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent    
+      agent.name: aks-${{parameters.env}}-agent # Using the pool defined in parameters
     displayName: Retrieve Image Information
     steps:
-    - ${{ each img in templates.images-template.parameters.images }}:
-      - ${{ if eq(parameters.image, img.name) }}:
+    - ${{ each img in parameters['templates/images-template'].images }}:
+      - ${{ if or(eq(parameters.image, 'all'), eq(parameters.image, img.name)) }}:
         - script: |
             echo "${{ img.imageName }} ${{ img.imageVersion }} ${{ img.imagePath }} ${{ img.dockerFilePath }}}}"
             echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
             echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
             echo "##vso[task.setvariable variable=imagePath;]${{ img.imagePath }}"
-          displayName: 'Set Image Information Variables'
+            echo "##vso[task.setvariable variable=dockerFilePath;]${{ img.dockerFilePath }}"
+            echo "$(imageName) $(imageVersion) $(imagePath) $(dockerfilePath)"
+          displayName: 'Set Image Information Variables for ${{ img.name }}'
