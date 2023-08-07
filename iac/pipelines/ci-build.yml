@@ -91,18 +91,21 @@ stages:
     - download: current
       artifact: ${{ parameters.image }}_info    
       displayName: Download ${{ parameters.image }}_info Artifact
-    - script: |
-          echo $(System.DefaultWorkingDirectory) 
-          pwd
-          ls $(System.DefaultWorkingDirectory)/src 
-          # cat $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
-          # cat $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
-          # source $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
-          # echo "Image Name: $imageName"
-          # echo "Image Version: $imageVersion"
-          # echo "Image Path: $imagePath"
-          # echo "Docker File Path: $dockerFilePath"
-      displayName: 'Print Image Information Variables'      
+      - script: |
+          cat $(System.DefaultWorkingDirectory)/${{ parameters.basePath }}/${{ parameters.image }}_info.txt
+        displayName: Display Image Information      
+    # - script: |
+    #       echo $(System.DefaultWorkingDirectory) 
+    #       pwd
+    #       ls $(System.DefaultWorkingDirectory)/src 
+    #       # cat $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
+    #       # cat $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
+    #       # source $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
+    #       # echo "Image Name: $imageName"
+    #       # echo "Image Version: $imageVersion"
+    #       # echo "Image Path: $imagePath"
+    #       # echo "Docker File Path: $dockerFilePath"
+      # displayName: 'Print Image Information Variables'      
 
 # - stage: BuildSpecificImage
 #   displayName: Build Specific Image
