@@ -27,7 +27,6 @@ parameters:
     type: string
     default: all
     values:
-    - all
     - analyzer
     - beapi
     - blobstreamer
@@ -35,6 +34,7 @@ parameters:
     - keyholder
     - mongowriter
     - twinlistener    
+    - all
 
 variables:
   # -name: isMain
@@ -55,38 +55,40 @@ variables:
 
 
 stages:
+
+
 - ${{ each img in parameters.image }}:
   - ${{ if eq(parameters.image, 'all') }}: # If "all" is selected, build all images
     - ${{ if ne(img, 'all') }}: # Exclude 'all' option
-      - stage: Auto_Build_Push_${{ img }}
-        displayName: Auto Build and Push ${{ img }}
+      - stage: Auto_Build_Push_${{ parameters.image }}
+        displayName: Auto Build and Push ${{ parameters.image }}
         jobs:
         - job: Auto_Build
-          displayName: Build ${{ img }}
+          displayName: Build ${{ parameters.image }}
           steps:
-          - script: echo "Auto Building ${{ img }}" # Replace with your build command
+          - script: echo "Auto Building ${{ parameters.image }}" # Replace with your build command
         - job: Auto_Scan
-          displayName: Scan ${{ img }}
+          displayName: Scan ${{ parameters.image }}
           steps:
-          - script: echo "Auto Scanning ${{ img }}" # Replace with your scan command
+          - script: echo "Auto Scanning ${{ parameters.image }}" # Replace with your scan command
         - job: Auto_Push
-          displayName: Push ${{ img }}
+          displayName: Push ${{ parameters.image }}
           steps:
-          - script: echo "Auto Pushing ${{ img }}" # Replace with your push command
+          - script: echo "Auto Pushing ${{ parameters.image }}" # Replace with your push command
   - ${{ if ne(parameters.image, 'all') }}: # If a specific image is selected, build only that image
     - ${{ if eq(parameters.image, img) }}:
-      - stage: Manual_Build_Push_${{ img }}
-        displayName: Manual_Build and Push ${{ img }}
+      - stage: Manual_Build_Push_${{ parameters.image }}
+        displayName: Manual_Build and Push ${{ parameters.image }}
         jobs:
         - job: Manual_Build
-          displayName: Build ${{ img }}
+          displayName: Build ${{ parameters.image }}
           steps:
-          - script: echo "Manual Building ${{ img }}" # Replace with your build command
+          - script: echo "Manual Building ${{ parameters.image }}" # Replace with your build command
         - job: Manual_Scan
-          displayName: Scan ${{ img }}
+          displayName: Scan ${{ parameters.image }}
           steps:
-          - script: echo "Manual Scanning ${{ img }}" # Replace with your scan command
+          - script: echo "Manual Scanning ${{ parameters.image }}" # Replace with your scan command
         - job: Manual_Push
-          displayName: Push ${{ img }}
+          displayName: Push ${{ parameters.image }}
           steps:
-          - script: echo "Manual Pushing ${{ img }}" # Replace with your push command
+          - script: echo "Manual Pushing ${{ parameters.image }}" # Replace with your push command
