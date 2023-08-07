@@ -68,13 +68,21 @@ stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   jobs:
+  - job: RetrieveImageInfo
+    displayName: Retrieve Image Information
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    steps:
+    - template: 'templates/images-template.yml' # Include the template as steps
+      parameters:
+        selectedImage: ${{ parameters.image }}
+        imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)
   - job: PrintImageInfo
     dependsOn: RetrieveImageInfo
-    variables:
-      imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-      dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]
+    steps:
     steps:
     - template: templates/images-template.yml
     - script: |
