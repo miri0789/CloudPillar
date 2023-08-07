@@ -93,7 +93,7 @@ stages:
       displayName: Download ${{ parameters.image }} Info Artifact
     - script: |
           echo $(System.DefaultWorkingDirectory) 
-          source $(System.DefaultWorkingDirectory)/./src/${{parameters.image}}_info.txt
+          source $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
           echo "Image Name: $imageName"
           echo "Image Version: $imageVersion"
           echo "Image Path: $imagePath"
