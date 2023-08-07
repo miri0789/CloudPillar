@@ -10,12 +10,23 @@ trigger:
 variables:
 - name: basePath
   value: src/backend/
-- name: dockerFile 
+- name: dockerFile
   value: infra/build/Dockerfile
 - name: major
   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 - name: minor
   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: TIME
+  value: $(date +%Y%m%d%H%M%S)
+- name: GitBuildNumber
+  value: $(git rev-list --count HEAD)
+- name: registryName
+  value: 'iotimageacr'
+- name: dockerfilePath
+  value: './src/edge/conquest/Dockerfile'
+- name: pipelineAcrConnection
+  value: 'iotacr'
+
 
 parameters:
   - name: env
@@ -27,49 +38,51 @@ parameters:
     - dev
     - stg
     - prd    
-  - name: image
-    displayName: Select Image to Build and Scan
-    type: string
-    default: all
-    values:
-    - analyzer
-    - beapi
-    - blobstreamer
-    - iotlistener
-    - keyholder
-    - mongowriter
-    - twinlistener    
-    - edge_conquest
+- name: image
+  displayName: Select Image to Build and Scan
+  type: string
+  default: all
+  values:
+  - analyzer
+  - beapi
+  - blobstreamer
+  - iotlistener
+  - keyholder
+  - mongowriter
+  - twinlistener    
+  - edge_conquest
 
-- template: templates/images-template.yml
-# - template: images-template.yml
-
+resources:
+- repo: self
 
 stages:
 - stage: BuildSpecificImage
   displayName: Build Specific Image
   condition: ne('${{ parameters.image }}', 'all')
   jobs:
-  - job: Manual_Build
-    displayName: Build ${{ image }}
-    steps:
-    - script: echo "Manual Building ${{ image }}" # Replace with your build command
-  - job: Manual_Scan
-    displayName: Scan ${{ image }}
-    steps:
-    - script: echo "Manual Scanning ${{ image }}" # Replace with your scan command
-  - job: Manual_Push
-    displayName: Push ${{ image }}
-    steps:
-    - script: echo "Manual Pushing ${{ image }}" # Replace with your push command
-
-- stage: BuildAllImages
-  displayName: Build All Images
-  condition: eq('${{ parameters.image }}', 'all')
-  jobs:
-    # Add the jobs to build, scan, and push all images
-    - ${{ each image in parameters.images }}:
-      - script: |
-          echo "Building ${{ image.name }}" # Replace with your build command
-          echo "Path: ${{ image.path }}" # Path to the image
-          # Add scan and push commands as needed
+  - job: ConquestManualBuildTagScanPush
+    condition: eq('${{ parameters.image }}', 'edge_conquest')    
+      displayName: Build, Tag, Scan, and Push
+      variables:
+        imageName: 'edge_conquest'
+        imageVersion: 'v0.7.3'
+        registryName: 'iotimageacr'
+        dockerfilePath: './src/edge/conquest/Dockerfile'
+        pipelineAcrConnection: 'iotacr'
+        stages:
+        - stage: Build
+          displayName: Build and push
+          jobs:  
+          - job: Build
+            displayName: Build
+            pool:
+              vmImage: 'ubuntu-latest'
+            steps:
+            - task: Docker@2
+              displayName: 'Build and Push Image'
+              inputs:
+                command: 'buildAndPush'
+                repository: '$(registryName).azurecr.io/$(imageName)'
+                dockerfile: '$(dockerfilePath)'
+                containerRegistry: '$(pipelineAcrConnection)'
+                tags: '$(imageVersion)'
