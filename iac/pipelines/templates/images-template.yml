@@ -8,6 +8,8 @@ variables:
   basePath: src/backend/
   dockerFilePath: infra/build/Dockerfile
   selectedImage: ''  
+
+parameters:
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
