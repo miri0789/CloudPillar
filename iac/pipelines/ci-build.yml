@@ -71,6 +71,7 @@ stages:
   displayName: Build Tag Scan Push Image
   jobs:
   - job: RetrieveImageInfo
+    condition: ne('${{ parameters.image }}', 'all')
     displayName: Retrieve Image Information
     pool:
       name: $(AGENT_POOL)
