@@ -92,7 +92,7 @@ stages:
       artifact: ${{ parameters.image }}_info    
       displayName: Download ${{ parameters.image }}_info Artifact
     - script: |
-            cat $(System.DefaultWorkingDirectory)/${{ parameters.basePath }}/${{ parameters.image }}_info.txt
+            cat $(System.DefaultWorkingDirectory)/src/${{ parameters.image }}_info.txt
       displayName: Display Image Information      
     # - script: |
     #       echo $(System.DefaultWorkingDirectory) 
