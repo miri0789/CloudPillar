@@ -73,13 +73,6 @@ stages:
   - job: RetrieveImageInfo
     condition: ne('${{ parameters.image }}', 'all')
     displayName: Retrieve Image Information
-    outputs:
-      setImageInfo.imageName: $(imageName)
-      setImageInfo.imageVersion: $(imageVersion)
-      setImageInfo.imagePath: $(imagePath)
-      setImageInfo.dockerFilePath: $(dockerFilePath)
-      setImageInfo.registryName: $(registryName)
-      setImageInfo.pipelineAcrConnection: $(pipelineAcrConnection)   
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
@@ -90,6 +83,8 @@ stages:
         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)
+        
+    # - script: echo 
   # - job: BuildImage
   #   variables:
   #     imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
