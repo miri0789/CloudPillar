@@ -72,7 +72,7 @@ stages:
 
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
-  condition: ne(parameters.selectedImage, 'all')
+  condition: ne(parameters.image, 'all')
   variables:
     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
 
