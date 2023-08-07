@@ -7,25 +7,25 @@ trigger:
     include:
     - "*"
 
-# variables:
-# - name: basePath
-#   value: src/backend/
-# - name: dockerFile
-#   value: infra/build/Dockerfile
-# - name: major
-#   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
-# - name: minor
-#   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
-# - name: TIME
-#   value: $(date +%Y%m%d%H%M%S)
-# - name: GitBuildNumber
-#   value: $(git rev-list --count HEAD)
-# - name: registryName
-#   value: 'iotimageacr'
-# - name: dockerfilePath
-#   value: './src/edge/conquest/Dockerfile'
-# - name: pipelineAcrConnection
-#   value: 'iotacr'
+variables:
+- name: basePath
+  value: src/backend
+- name: dockerFile
+  value: infra/build/Dockerfile
+- name: major
+  value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
+- name: minor
+  value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: TIME
+  value: $(date +%Y%m%d%H%M%S)
+- name: GitBuildNumber
+  value: $(git rev-list --count HEAD)
+- name: registryName
+  value: 'iotimageacr'
+- name: dockerfilePath
+  value: './src/edge/conquest/Dockerfile'
+- name: pipelineAcrConnection
+  value: 'iotacr'
 
 
 parameters:
@@ -66,10 +66,17 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent    
     displayName: Retrieve Image Information
+    condition: ne('${{ parameters.image }}', 'edge_conquest')
     steps:
     - template: 'templates/images-template.yml'
       parameters:
         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
+        imageVersion:$(major).$(minor).$(GitBuildNumber).$(TIME)
+        basePath: $(basePath)
+        dockerFilePath: $(basePath)/$(dockerFilePath)
+
+
+
   #   - ${{ each img in template('templates/images-templates.yml').parameters.images }}:
   #     - ${{ if eq(parameters.image, img.name) }}:
   #       - script: |
