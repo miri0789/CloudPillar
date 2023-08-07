@@ -50,15 +50,26 @@ steps:
 - ${{ each img in parameters.images }}:
   - ${{ if eq(parameters.selectedImage, img.name) }}:
     - script: |
-        IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}}
-        echo "##vso[task.setvariable variable=NewImageName;isoutput=true]$IMAGE_NAME"
-        echo "##vso[task.setvariable variable=NewImageVersion;isoutput=true]$IMAGE_VERSION"
-        echo "##vso[task.setvariable variable=NewImagePath;isoutput=true]$IMAGE_PATH"
-        echo "##vso[task.setvariable variable=NewDockerFilePath;isoutput=true]$DOCKER_FILE"
+        # IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}}
+        echo "imageName=${{ img.imageName }} > $ {{ img.name }}.txt"
+        echo "imageVersion=${{ img.imageVersion }} > $ {{ img.name }}.txt"
+        echo "imagePath=${{ img.imagePath }} > $ {{ img.name }}.txt"
+        echo "dockerFilePath=${{ img.dockerFilePath }} > $ {{ img.name }}.txt"
       displayName: 'Set Image Information Variables for ${{ img.name }}'
       name: setImageInfo # Assign a name to this step
-      outputs:
-        NewImageName: $(NewImageName)
-          NewImageVersion: $(NewImageVersion)
-          NewImagePath: $(NewImagePath)
-          NewDockerFilePath: $(NewDockerFilePath)
+    - publish: ${{ img.name}}.txt
+      artifact: ${{img.name}}_imageInfo      
+  
+    # - script: |
+    #     IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}}
+    #     echo "##vso[task.setvariable variable=NewImageName;isoutput=true]$IMAGE_NAME"
+    #     echo "##vso[task.setvariable variable=NewImageVersion;isoutput=true]$IMAGE_VERSION"
+    #     echo "##vso[task.setvariable variable=NewImagePath;isoutput=true]$IMAGE_PATH"
+    #     echo "##vso[task.setvariable variable=NewDockerFilePath;isoutput=true]$DOCKER_FILE"
+    #   displayName: 'Set Image Information Variables for ${{ img.name }}'
+    #   name: setImageInfo # Assign a name to this step
+    #   outputs:
+    #     NewImageName: $(NewImageName)
+    #       NewImageVersion: $(NewImageVersion)
+    #       NewImagePath: $(NewImagePath)
+    #       NewDockerFilePath: $(NewDockerFilePath)
