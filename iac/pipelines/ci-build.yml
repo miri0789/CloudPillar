@@ -111,7 +111,7 @@ stages:
         dockerFilePath: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]"
         registryName: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]"
         pipelineAcrConnection: "$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]"
-        # selectedImage: ${{ parameters.image }}
+        selectedImage: ${{ parameters.image }}
       # displayName: 'Build Scan Push'
     
     
