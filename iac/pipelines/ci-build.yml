@@ -79,7 +79,7 @@ stages:
       setImageInfo.imagePath: $(imagePath)
       setImageInfo.dockerFilePath: $(dockerFilePath)
       setImageInfo.registryName: $(registryName)
-      setImageInfo.pipelineAcrConnection: $(pipelineAcrConnection)    
+      setImageInfo.pipelineAcrConnection: $(pipelineAcrConnection)   
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
