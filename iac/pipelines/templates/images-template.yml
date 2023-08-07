@@ -2,52 +2,44 @@ parameters:
   registryName: ''
   pipelineAcrConnection: ''
   selectedImage: ''  
+  imageVersion: ''
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
     imagePath: src/backend/analyzer
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: beapi
     imageName: 'backend_beapi'
     imagePath: src/backend/beapi
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: infra
     imageName: 'backend_infra'
     imagePath: src/backend/infra
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: mongowriter
     imageName: 'backend_mongowriter'
     imagePath: src/backend/mongowriter
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: twinlistener
     imageName: 'backend_twinlistener'
     imagePath: src/backend/twinlistener
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: unittests
     imageName: 'backend_unittests'
     imagePath: src/backend/unittests
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: blobstreamer
     imageName: 'backend_blobstreamer'
     imagePath: src/backend/Backend.BlobStreamer
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: iotlistener
     imageName: 'backend_iotlistener'
     imagePath: src/backend/Backend.IoTListener
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: keyholder
     imageName: 'backend_keyholder'
     imagePath: src/backend/Backend.KeyHolder
     dockerFilePath: src/backend/infra/build/Dockerfile
-    imageVersion: ''
   - name: edge_conquest
     imageName: 'edge_conquest'
     imagePath: './src/edge/conquest/'
