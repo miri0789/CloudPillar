@@ -91,7 +91,7 @@ stages:
       dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]
       # registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
       # pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
-    displayName: "Build Image $(imageName)"
+    displayName: Build Image $(imageName)
     dependsOn: RetrieveImageInfo
     steps:
     - template: templates/build.yml
