@@ -88,12 +88,11 @@ stages:
     displayName: Print Image Information
     steps:
     - script: |
-        echo "Image Name: $(dependencies.RetrieveImageInfo.outputs['setImageInfo.NewImageName'])"
-        echo "Image Version: $(dependencies.RetrieveImageInfo.outputs['setImageInfo.NewImageVersion'])"
-        echo "Image Path: $(dependencies.RetrieveImageInfo.outputs['setImageInfo.NewImagePath'])"
-        echo "Docker File Path: $(dependencies.RetrieveImageInfo.outputs['setImageInfo.NewDockerFilePath'])"
+        echo "Image Name: $(RetrieveImageInfo.setImageInfo.NewImageName)"
+        echo "Image Version: $(RetrieveImageInfo.setImageInfo.NewImageVersion)"
+        echo "Image Path: $(RetrieveImageInfo.setImageInfo.NewImagePath)"
+        echo "Docker File Path: $(RetrieveImageInfo.setImageInfo.NewDockerFilePath)"
       displayName: 'Print Image Information Variables'
-
   #   - ${{ each img in template('templates/images-templates.yml').parameters.images }}:
   #     - ${{ if eq(parameters.image, img.name) }}:
   #       - script: |
