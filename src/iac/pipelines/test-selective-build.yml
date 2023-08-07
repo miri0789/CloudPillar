@@ -1,4 +1,4 @@
-name: selective_ci_$(Rev:.r)
+name: selective_ci$(Rev:_r)
 # name: selective_ci
 
 
@@ -85,11 +85,12 @@ variables:
 
 
 stages:
-- stage: Test0
+- stage: TestStage
   displayName: Test_Stage_0
   jobs:
-  - job: ADO_Repo
-    displayName: Test_Stage_0
+  - job: TestJob1
+    displayName: Test_Stage_1
+    condition: always()
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
@@ -101,7 +102,6 @@ stages:
         echo -e "\n========================================\n\t Testing\n========================================"        
         echo -e "\n----------------------Testing Build Number\n----------------------"
         Version=$(major).$(minor)
-        echo "Version: $Version"
         TAG="$Version.$(GitBuildNumber).$(TIME)"
 
         echo "Git Build: $(GitBuildNumber)"
@@ -109,9 +109,38 @@ stages:
         echo 'Build.BuildNumber: $(Build.BuildNumber)'
         echo "Patch: $(patch)"
         echo "$(Build.DefinitionName)_$(TIMESTAMP)$(Rev:r)"
+        echo "Version: $Version"
         echo "TAG: $TAG"
 
-    
+
+
+- stage: GetImages
+  displayName: Get_Changed_Images
+  jobs:
+  - job: Get_Changed_Files
+    displayName: Get Changed Files
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    steps:
+    - checkout: self
+      persistCredentials: true
+      # This Step will print the Repo Name, Source Branch Name (from ADO), Current Branch Name (Locally), changed files names and path to the console
+    - bash: |        
+        BRANCH=$(SourceBranchName)
+        git fetch --all
+        git merge-base origin/main $BRANCH
+        git checkout $BRANCH
+        FILES=$(git diff --name-only origin/main..$BRANCH)
+        echo "${FILES[@]}"
+        
+      displayName: Get Changed Files
+
+
+
+
+
+
 - stage: Test1
   displayName: Test_Stage_1
   jobs:
