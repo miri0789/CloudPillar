@@ -60,6 +60,13 @@ steps:
         echo "##vso[task.setvariable variable=registryName;isOutput=true]${{ parameters.registryName }}"
         echo "##vso[task.setvariable variable=pipelineAcrConnection;isOutput=true]${{ parameters.pipelineAcrConnection }}"
         echo "ImageName:${{ img.imageName }}"
+      env:
+        imageName: $(imageName)
+        imageVersion: $(imageVersion)
+        imagePath: $(imagePath)
+        dockerFilePath: $(dockerFilePath)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)        
       name: setImageInfo
 
     # - script: |
