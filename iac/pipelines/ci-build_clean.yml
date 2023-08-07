@@ -74,10 +74,12 @@ stages:
     - script: echo "Manual Building ${{ parameters.image }}" # Replace with your build command
   - job: Manual_Scan
     displayName: Scan ${{ parameters.image }}
+    dependsOn: Manual_Build
     steps:
     - script: echo "Manual Scanning ${{ parameters.image }}" # Replace with your scan command
   - job: Manual_Push
     displayName: Push ${{ parameters.image }}
+    dependsOn: Manual_Scan
     steps:
     - script: echo "Manual Pushing ${{ parameters.image }}" # Replace with your push command
 
@@ -96,9 +98,11 @@ stages:
     - script: echo "Auto Building ${{ parameters.image }}" # Replace with your build command
   - job: Auto_Scan
     displayName: Scan ${{ parameters.image }}
+    dependsOn: Auto_Build
     steps:
     - script: echo "Auto Scanning ${{ parameters.image }}" # Replace with your scan command
   - job: Auto_Push
     displayName: Push ${{ parameters.image }}
+    dependsOn: Auto_Scan
     steps:
     - script: echo "Auto Pushing ${{ parameters.image }}" # Replace with your push command
