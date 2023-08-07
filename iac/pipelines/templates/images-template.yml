@@ -51,13 +51,13 @@ steps:
   - ${{ if eq(parameters.selectedImage, img.name) }}:
     - script: |
         # IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}} && BASE_PATH=${{ parameters.basePath}}
-        echo "name=${{ img.name }}" > ./src/${{img.name}}_info.txt
-        echo "imageName=${{ img.imageName }}" >> ./src/${{img.name}}_info.txt
-        echo "imageVersion=${{ parameters.imageVersion }}" >> ./src/${{img.name}}_info.txt
-        echo "imagePath=${{ img.imagePath }}" >> ./src/${{img.name}}_info.txt
-        echo "dockerFilePath=${{ img.dockerFilePath }}" >> ./src/${{img.name}}_info.txt
+        echo "name=${{ img.name }}" > $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
+        echo "imageName=${{ img.imageName }}" >> $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
+        echo "imageVersion=${{ parameters.imageVersion }}" >> $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
+        echo "imagePath=${{ img.imagePath }}" >> $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
+        echo "dockerFilePath=${{ img.dockerFilePath }}" >> $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
       name: setImageInfo # Assign a name to this step
-    - publish: $(System.DefaultWorkingDirectory)/./src/${{img.name}}_info.txt
+    - publish: $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
       artifact: ${{img.name}}_info
       displayName: Publish ${{img.name}} Artifact
       
