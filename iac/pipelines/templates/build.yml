@@ -11,7 +11,7 @@ steps:
   displayName: 'Build Image'
   inputs:
     command: 'build'
-    repository: '$(registryName).azurecr.io/$(imageName)'
-    dockerfile: '$(dockerfilePath)'
-    containerRegistry: '$(pipelineAcrConnection)'
-    tags: '$(imageVersion)'    
+    repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
+    dockerfile: '${{ parameters.dockerFilePath }}'
+    containerRegistry: '${{ parameters.pipelineAcrConnection }}'
+    tags: '${{ parameters.imageVersion }}'
