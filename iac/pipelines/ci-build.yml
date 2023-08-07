@@ -94,7 +94,7 @@ stages:
     - script: |
           echo $(System.DefaultWorkingDirectory) 
           pwd
-          ls cat $(System.DefaultWorkingDirectory)/src 
+          ls $(System.DefaultWorkingDirectory)/src 
           # cat $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
           # cat $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
           # source $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
