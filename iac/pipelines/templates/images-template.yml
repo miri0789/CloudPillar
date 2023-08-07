@@ -53,17 +53,17 @@ steps:
 - ${{ each img in parameters.images }}:
   - ${{ if eq(parameters.selectedImage, img.name) }}:
     - script: |
-        echo "name=${{ img.name }}" > $(Pipeline.Workspace)/src/${{img.name}}_info.txt
-        echo "imageName=${{ img.imageName }}" >> $(Pipeline.Workspace)/src/${{img.name}}_info.txt
-        echo "imageVersion=${{ parameters.imageVersion }}" >> $(Pipeline.Workspace)/src/${{img.name}}_info.txt
-        echo "imagePath=${{ img.imagePath }}" >> $(Pipeline.Workspace)/src/${{img.name}}_info.txt
-        echo "dockerFilePath=${{ img.dockerFilePath }}" >> $(Pipeline.Workspace)/src/${{img.name}}_info.txt
+        echo "name=${{ img.name }}" > $(Pipeline.Workspace)/${{img.name}}_info.txt
+        # echo "imageName=${{ img.imageName }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
+        # echo "imageVersion=${{ parameters.imageVersion }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
+        # echo "imagePath=${{ img.imagePath }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
+        # echo "dockerFilePath=${{ img.dockerFilePath }}" >> $(Pipeline.Workspace)/${{img.name}}_info.txt
         cat $(Pipeline.Workspace)/src/${{img.name}}_info.txt
       name: setImageInfo # Assign a name to this step
     - task: CopyFiles@2
       displayName: 'Copy scripts'
       inputs:
-        contents: '$(Pipeline.Workspace)/src/${{img.name}}_info.txt'
+        contents: '$(Pipeline.Workspace)/${{img.name}}_info.txt'
         targetFolder: '$(Build.ArtifactStagingDirectory)'
     - publish: $(Pipeline.Workspace)/${{img.name}}_info.txt
       displayName: 'Publish ${{img.name}} Artifact'
