@@ -51,10 +51,10 @@ steps:
   - ${{ if eq(parameters.selectedImage, img.name) }}:
     - script: |
         # IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}}
-        echo "imageName=${{ img.imageName }} > ${{ img.name }}.txt"
-        echo "imageVersion=${{ img.imageVersion }} > ${{ img.name }}.txt"
-        echo "imagePath=${{ img.imagePath }} > ${{ img.name }}.txt"
-        echo "dockerFilePath=${{ img.dockerFilePath }} > ${{ img.name }}.txt"
+        echo "imageName=${{ img.imageName }} > ${{ img.imagePath }}/${{ img.name }}.txt"
+        echo "imageVersion=${{ parameters.imageVersion }} > ${{ img.imagePath }}/${{ img.name }}.txt"
+        echo "imagePath=${{ img.imagePath }} > ${{ img.imagePath }}/${{ img.name }}.txt"
+        echo "dockerFilePath=${{ img.dockerFilePath }} > ${{ img.imagePath }}/${{ img.name }}.txt"
       displayName: 'Set Image Information Variables for ${{ img.name }}'
       name: setImageInfo # Assign a name to this step
     - publish: ${{ img.name}}.txt
