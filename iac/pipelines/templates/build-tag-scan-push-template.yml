@@ -16,11 +16,11 @@ parameters:
 # - group: aks-backend-vg
 # - group: backend-secrets-vg
 
-- steps: 
-    condition: ne('${{ parameters.image }}', 'all')
-    # - checkout: self
-    #   persistCredentials: true
-    #   clean: true    
+steps:
+- checkout: self
+  persistCredentials: true
+  clean: true
+  condition: ne('${{ parameters.image }}', 'all')
     - template: 'templates/images-template.yml'
       parameters:
         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
