@@ -1,4 +1,11 @@
 # File: templates/build.yml
+parameters:
+  imageName: ''
+  imageVersion: ''
+  imagePath: ''
+  dockerFilePath: ''
+  registryName: ''
+  pipelineAcrConnection: ''
 steps:
 - task: Docker@2
   displayName: 'Build Image'
