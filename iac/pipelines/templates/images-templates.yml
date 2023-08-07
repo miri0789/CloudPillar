@@ -1,0 +1,35 @@
+parameters:
+  images:
+  - name: analyzer
+    imageName: 'backend_analyzer'
+    imagePath: analyzer
+  - name: beapi
+    imageName: 'backend_beapi'
+    imagePath: beapi
+  - name: infra
+    imageName: 'backend_infra'
+    imagePath: infra
+  - name: mongowriter
+    imageName: 'backend_mongowriter'
+    imagePath: mongowriter
+  - name: twinlistener
+    imageName: 'backend_twinlistener'
+    imagePath: twinlistener
+  - name: unittests
+    imageName: 'backend_unittests'
+    imagePath: unittests
+  - name: blobstreamer
+    imageName: 'backend_blobstreamer'
+    imagePath: Backend.BlobStreamer
+  - name: iotlistener
+    imageName: 'backend_iotlistener'
+    imagePath: Backend.IoTListener
+  - name: keyholder
+    imageName: 'backend_keyholder'
+    imagePath: Backend.KeyHolder
+  - name: edge_conquest
+    imageName: 'edge_conquest'
+    imageVersion: 'v0.7.3'
+    imagePath: './src/edge/conquest/'
+    dockerfilePath: './src/edge/conquest/Dockerfile'
+  
