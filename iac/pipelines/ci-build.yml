@@ -98,11 +98,16 @@ stages:
     - download: current
       artifact: ${{ parameters.image }}_info    
       displayName: Download ${{ parameters.image }}_info Artifact
+    - download: current
+      artifact: ${{ parameters.image }}_info_sapce    
+      displayName: Download ${{ parameters.image }}_info Artifact
       condition: ne('${{ parameters.image }}', 'all')
-    - script: ls -la $(System.DefaultWorkingDirectory)/src/
-      displayName: 'List files in src directory'
-    - script: cat $(System.DefaultWorkingDirectory)/${{ parameters.image }}_info/${{ parameters.image }}_info.txt
-      displayName: 'Display Image Information'
+    - script: ls -la $(Pipeline.Workspace)/src/
+      displayName: 'List files in src directory space'
+    - script: ls -la $(Build.ArtifactStagingDirectory)
+      displayName: 'List files in artifact directory'
+    # - script: cat $(System.DefaultWorkingDirectory)/${{ parameters.image }}_info/${{ parameters.image }}_info.txt
+      # displayName: 'Display Image Information'
 
 
     # - script: |
