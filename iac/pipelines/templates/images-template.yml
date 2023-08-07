@@ -60,10 +60,14 @@ steps:
         echo "dockerFilePath=${{ img.dockerFilePath }}" >> $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
         cat $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
       name: setImageInfo # Assign a name to this step
-    - publish: $(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt
+    - task: CopyFiles@2
+      displayName: 'Copy scripts'
+      inputs:
+        contents: '$(System.DefaultWorkingDirectory)/src/${{img.name}}_info.txt'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - publish: $(Build.ArtifactStagingDirectory)/${{img.name}}_info.txt
       displayName: 'Publish ${{img.name}} Artifact'
       artifact: ${{img.name}}_info
-
     # - script: |
     #     IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}}
     #     echo "##vso[task.setvariable variable=NewImageName;isoutput=true]$IMAGE_NAME"
