@@ -16,7 +16,8 @@ parameters:
 # - group: aks-backend-vg
 # - group: backend-secrets-vg
 
-- stage: BuildScanPush
+- steps: 
+  displayName: BuildScanPush
   - job: RetrieveImageInfo
     pool:
       name: $(AGENT_POOL)
