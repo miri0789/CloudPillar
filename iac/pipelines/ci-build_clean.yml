@@ -42,7 +42,7 @@ parameters:
     - edge_conquest
 
 - template: templates/images-template.yml
-# - template: templates/images-template.yml
+# - template: images-template.yml
 
 
 stages:
