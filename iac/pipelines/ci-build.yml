@@ -43,6 +43,7 @@ parameters:
     type: string
     default: all
     values:
+    - all
     - analyzer
     - beapi
     - blobstreamer
