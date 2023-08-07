@@ -21,14 +21,12 @@ steps:
   persistCredentials: true
   clean: true
 - template: 'templates/images-template.yml'
-  condition: ne('${{ parameters.image }}', 'all')
   parameters:
     selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
     registryName: $(registryName)
     pipelineAcrConnection: $(pipelineAcrConnection)
 - task: Bash@3
-  condition: ne('${{ parameters.image }}', 'all')
   inputs:
     targetType: 'inline'
     script: |
