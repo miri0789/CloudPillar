@@ -58,7 +58,7 @@ stages:
 - ${{ each img in parameters.image }}:
   - ${{ if eq(parameters.image, 'all') }}: # If "all" is selected, build all images
     - ${{ if ne(img, 'all') }}: # Exclude 'all' option
-      - stage: Auto_Build_Push_${{ img }
+      - stage: Auto_Build_Push_${{ img }}
         displayName: Auto Build and Push ${{ img }}
         jobs:
         - job: Auto_Build
