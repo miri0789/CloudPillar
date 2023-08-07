@@ -1,0 +1,92 @@
+# 1. My pipelin
+
+
+name: selective_ci_$(Rev:r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - test-selective-build
+    - testselbuild
+    - "*"
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: all
+    values:
+    - all
+    - analyzer
+    - beapi
+    - blobstreamer
+    - iotlistener
+    - keyholder
+    - mongowriter
+    - twinlistener    
+
+variables:
+  # -name: isMain
+    # value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+- name: isAuto
+  value: $[eq('${{ image }}', 'all')]
+- name: TIME
+  value: $(date +%Y%m%d%H%M%S)
+- name: GitBuildNumber
+  value: $(git rev-list --count HEAD)
+- name: major
+  value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
+- name: minor
+  value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: ChosenImage
+  value: 'iotlistener'
+
+
+
+stages:
+- ${{ each img in parameters.image }}:
+  - ${{ if eq(parameters.image, 'all') }}: # If "all" is selected, build all images
+    - ${{ if ne(img, 'all') }}: # Exclude 'all' option
+      - stage: Auto_Build_Push_${{ img }
+        displayName: Auto Build and Push ${{ img }}
+        jobs:
+        - job: Auto_Build
+          displayName: Build ${{ img }}
+          steps:
+          - script: echo "Auto Building ${{ img }}" # Replace with your build command
+        - job: Auto_Scan
+          displayName: Scan ${{ img }}
+          steps:
+          - script: echo "Auto Scanning ${{ img }}" # Replace with your scan command
+        - job: Auto_Push
+          displayName: Push ${{ img }}
+          steps:
+          - script: echo "Auto Pushing ${{ img }}" # Replace with your push command
+  - ${{ if ne(parameters.image, 'all') }}: # If a specific image is selected, build only that image
+    - ${{ if eq(parameters.image, img) }}:
+      - stage: Manual_Build_Push_${{ img }}
+        displayName: Manual_Build and Push ${{ img }}
+        jobs:
+        - job: Manual_Build
+          displayName: Build ${{ img }}
+          steps:
+          - script: echo "Manual Building ${{ img }}" # Replace with your build command
+        - job: Manual_Scan
+          displayName: Scan ${{ img }}
+          steps:
+          - script: echo "Manual Scanning ${{ img }}" # Replace with your scan command
+        - job: Manual_Push
+          displayName: Push ${{ img }}
+          steps:
+          - script: echo "Manual Pushing ${{ img }}" # Replace with your push command
