@@ -8,7 +8,7 @@ parameters:
   pipelineAcrConnection: ''
 steps:
 - task: Docker@2
-  displayName: 'Build Image'
+  displayName: 'Build Image ${{ parameters.imageName }}'
   inputs:
     command: 'build'
     repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
