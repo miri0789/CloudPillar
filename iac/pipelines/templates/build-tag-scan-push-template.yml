@@ -17,15 +17,7 @@ parameters:
 # - group: backend-secrets-vg
 
 - steps: 
-  displayName: BuildScanPush
-  - job: RetrieveImageInfo
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent    
-    displayName: Retrieve Image Information
-    # condition: ne('${{ parameters.image }}', 'edge_conquest')
     condition: ne('${{ parameters.image }}', 'all')
-    steps:
     # - checkout: self
     #   persistCredentials: true
     #   clean: true    
@@ -35,3 +27,16 @@ parameters:
         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo 'selectedImage: ${{ parameters.imageName }}'
+          echo 'imageVersion: ${{ parameters.imageVersion }}'
+          echo 'imagePath: ${{ parameters.imagePath }}'
+          echo 'imagePath: ${{ parameters.imagePath }}'
+          echo 'registryName: ${{ parameters.registry }}'
+          echo 'pipelineAcrConnection: ${{ parameters.pipelineAcrConnection }}'
+
+      name: printParameters
+      
