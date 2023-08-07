@@ -36,6 +36,9 @@ variables:
 #   value: './src/edge/conquest/Dockerfile'
 - name: pipelineAcrConnection
   value: 'iotacr'
+- name: isSelectedImageAll
+  value: ${{ eq(parameters.image, 'all') }}
+
 
 resources:
 - repo: self
@@ -72,7 +75,7 @@ stages:
 
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
-  condition: ne(parameters.image, 'all')
+  condition: eq(variables.isSelectedImageAll, false)
   variables:
     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
 
