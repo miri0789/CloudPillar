@@ -67,9 +67,17 @@ stages:
       agent.name: aks-${{parameters.env}}-agent    
     displayName: Retrieve Image Information
     steps:
-    - template: templates/images-template.yml
+    - template: templates/images-templates.yml
       parameters:
         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
+    - ${{ each img in template('templates/images-templates.yml').parameters.images }}:
+      - ${{ if eq(parameters.image, img.name) }}:
+        - script: |
+            echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
+            echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
+            echo "##vso[task.setvariable variable=imagePath;]${{ img.imagePath }}"
+            echo "##vso[task.setvariable variable=dockerFilePath;]${{ img.dockerFilePath }}"
+          displayName: 'Set Image Information Variables for ${{ img.name }}'        
 
   - job: PrintImageInfo
     dependsOn: RetrieveImageInfo
