@@ -59,7 +59,7 @@ steps:
       name: setImageInfo # Assign a name to this step
     - publish: $(System.DefaultWorkingDirectory)/./src/${{img.name}}_info.txt
       artifact: ${{img.name}}_info
-      display: Publish ${{img.name}} Artifact
+      displayName: Publish ${{img.name}} Artifact
       
     # - script: |
     #     IMAGE_NAME=${{ img.imageName }} && IMAGE_VERSION==${{ parameters.imageVersion }} && IMAGE_PATH=${{ img.imagePath }} && DOCKER_FILE=${{ img.dockerFilePath}}
