@@ -86,8 +86,6 @@ stages:
       pipelineAcrConnection: $(pipelineAcrConnection)
       selectedImage: ${{ parameters.image}}
       imageVersion: $(imageVersion)
-
-  #       pipelineAcrConnection: $(pipelineAcrConnection)          
   # - job: RetrieveImageInfo
   #   displayName: Retrieve Image Information
   #   pool:
@@ -103,7 +101,7 @@ stages:
   #       imageVersion: $(imageVersion)
   #       registryName: $(registryName)
   #       pipelineAcrConnection: $(pipelineAcrConnection)        
-  #   - script: echo "$(selectedImage) $(imageVersion) $(registryName) $(pipelineAcrConnection)"
+    
 
   - job: BuildImage
     dependsOn: RetrieveImageInfo
