@@ -66,10 +66,6 @@ variables:
   value: $(date +%Y%m%d%H%M%S)
 - name: BuildNumber
   value: $(git rev-list --count HEAD)
-- name: RevNumber
-  value: $(Rev:.r)
-- name: RevNumber2
-  value: $(Rev:r)
 - name: RepoName
   value: $(Build.Repository.Name)
 # - name: RepoName2
@@ -102,12 +98,12 @@ stages:
         echo -e "\n========================================\n\t Testing\n========================================"        
         echo -e "\n----------------------Testing Build Number\n----------------------"
         GitBuild=$(git rev-list --count HEAD)
-        ADOBuild="$(Rev:.r)"
+        ADOBuild=$(Rev:r)
         echo "Git Build: $GitBuild"
-        echo "$BuildNumber: $(BuildNumber)"
+        echo "BuildNumber: $(BuildNumber)"
         echo "ADO Build: $ADOBuild"
-        echo "Rev Number: $(RevNumber)
-        echo "Rev Number2: $(RevNumber2)
+        echo "Rev Number: $(Rev:r)"
+        echo "Rev Number2: $(Rev:.r)"
         echo "BuildDefinitionName: $(BuildDefinitionName)"
         echo "Time: $(TIMESTAMP)"
         echo 'Build.BuildNumber: $(Build.BuildNumber)'
