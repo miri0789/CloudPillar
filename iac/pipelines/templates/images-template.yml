@@ -59,6 +59,7 @@ steps:
   - ${{ if and(eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
 
     - script: |
+        echo "##vso[task.setvariable variable=image;isOutput=true]${{ img.name }}"
         echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
         echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
         echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
