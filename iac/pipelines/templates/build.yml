@@ -7,11 +7,12 @@ parameters:
   registryName: ''
   pipelineAcrConnection: ''
 steps:
-- task: Docker@2
-  displayName: 'Build Image ${{ parameters.imageName }}'
-  inputs:
-    command: 'build'
-    repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
-    dockerfile: '${{ parameters.dockerFilePath }}'
-    containerRegistry: '${{ parameters.pipelineAcrConnection }}'
-    tags: '${{ parameters.imageVersion }}'
+- script: echo ${{ parameters.imageName }}
+# - task: Docker@2
+#   displayName: 'Build Image ${{ parameters.imageName }}'
+#   inputs:
+#     command: 'build'
+#     repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
+#     dockerfile: '${{ parameters.dockerFilePath }}'
+#     containerRegistry: '${{ parameters.pipelineAcrConnection }}'
+#     tags: '${{ parameters.imageVersion }}'
