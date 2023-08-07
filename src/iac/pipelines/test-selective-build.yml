@@ -1,4 +1,4 @@
-name: selective_ci$(Rev:_r)
+name: selective_ci$_(Rev:r)
 # name: selective_ci
 
 
