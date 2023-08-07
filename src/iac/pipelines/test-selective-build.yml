@@ -74,14 +74,10 @@ variables:
   value: $(Build.SourceBranchName)
 - name: DockerBasePath
   value: src/backend
-
 - name: major
   value: 1
 - name: minor
   value: $[counter(variables['major'], 100)]
-
-- name BuildNumberNew
-  value: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 100)]
 - name: patch
   value: $[counter(variables['build.reason'], 0)]  
 # $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 100)]  
@@ -94,6 +90,8 @@ stages:
   jobs:
   - job: ADO_Repo
     displayName: Test_Stage_0
+    variables:
+      BuildNumberNew: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 100)]
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
