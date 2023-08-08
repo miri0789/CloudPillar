@@ -358,6 +358,10 @@ stages:
             fi            
     
             echo -e "\n\n"
+            echo "Clean Old Imaged"
+            docker image prune -a --force
+            docker image ls
+            
             echo "Processing image: $imgName"
             echo "Image Version: $imageVersion"
             echo ""
