@@ -61,15 +61,15 @@ parameters:
     type: string
     default: all
     values:
+    - beapi
+    - edge_conquest
+    - iotlistener
     - all
     - analyzer
-    - beapi
     - blobstreamer
-    - iotlistener
     - keyholder
     - mongowriter
     - twinlistener    
-    - edge_conquest
 
 
 
@@ -119,9 +119,15 @@ stages:
           agent.name: aks-${{parameters.env}}-agent
         steps:
         - script: |
-            echo "Debugging BuildImage variables:"
-            echo "imageName: $(imageName)"
-            echo "imageVersion: $(imageVersion)"
+            echo "##[group]BuildImageVars"
+            echo "##[command]imageName:\t $(imageName)"
+            echo "##[command]imageVersion:\t $(imageVersion)"
+            echo "##[warning]imageVersion:\t $(imageVersion)"
+            echo "##[warning]imageName:\t $(imageName)"
+            echo "##[endgroup]"        
+          #   echo "Debugging BuildImage variables:"
+          #   echo "imageName: $(imageName)"
+          #   echo "imageVersion: $(imageVersion)"
           name: DebugPrint
         - template: templates/build.yml
           parameters:
@@ -148,9 +154,12 @@ stages:
         #   value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
         steps:
         - script: |
-            echo "Debugging BuildImage variables:"
-            echo "imageName: $(imageName)"
-            echo "imageVersion: $(imageVersion)"    
+            echo "##[group]ScanImageVars"
+            echo "##[command]imageName:\t $(imageName)"
+            echo "##[command]imageVersion:\t $(imageVersion)"
+            echo "##[warning]imageVersion:\t $(imageVersion)"
+            echo "##[warning]imageName:\t $(imageName)"
+            echo "##[endgroup]"            
           name: DebugPrint
         - template: templates/scan.yml
           parameters:
@@ -166,9 +175,12 @@ stages:
           agent.name: aks-${{parameters.env}}-agent
         steps:
         - script: |
-            echo "Debugging BuildImage variables:"
-            echo "imageName: $(imageName)"
-            echo "imageVersion: $(imageVersion)"    
+            echo "##[group]PushImageVars"
+            echo "##[command]imageName:\t $(imageName)"
+            echo "##[command]imageVersion:\t $(imageVersion)"
+            echo "##[warning]imageVersion:\t $(imageVersion)"
+            echo "##[warning]imageName:\t $(imageName)"
+            echo "##[endgroup]"            
           name: DebugPrint    
         - template: templates/push.yml
           parameters:
@@ -220,9 +232,12 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:
       - script: |
-          echo "Debugging BuildImage variables:"
-          echo "imageName: $(imageName)"
-          echo "imageVersion: $(imageVersion)"
+          echo "##[group]BuildImageVars"
+          echo "##[command]imageName:\t $(imageName)"
+          echo "##[command]imageVersion:\t $(imageVersion)"
+          echo "##[warning]imageVersion:\t $(imageVersion)"
+          echo "##[warning]imageName:\t $(imageName)"
+          echo "##[endgroup]"        
         name: DebugPrint
       - template: templates/build.yml
         parameters:
@@ -249,9 +264,12 @@ stages:
       #   value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
       steps:
       - script: |
-          echo "Debugging BuildImage variables:"
-          echo "imageName: $(imageName)"
-          echo "imageVersion: $(imageVersion)"    
+          echo "##[group]ScanImageVars"
+          echo "##[command]imageName:\t $(imageName)"
+          echo "##[command]imageVersion:\t $(imageVersion)"
+          echo "##[warning]imageVersion:\t $(imageVersion)"
+          echo "##[warning]imageName:\t $(imageName)"
+          echo "##[endgroup]"            
         name: DebugPrint
       - template: templates/scan.yml
         parameters:
@@ -267,9 +285,12 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:
       - script: |
-          echo "Debugging BuildImage variables:"
-          echo "imageName: $(imageName)"
-          echo "imageVersion: $(imageVersion)"    
+          echo "##[group]PushImageVars"
+          echo "##[command]imageName:\t $(imageName)"
+          echo "##[command]imageVersion:\t $(imageVersion)"
+          echo "##[warning]imageVersion:\t $(imageVersion)"
+          echo "##[warning]imageName:\t $(imageName)"
+            echo "##[endgroup]"        
         name: DebugPrint    
       - template: templates/push.yml
         parameters:
