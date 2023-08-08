@@ -170,7 +170,7 @@ stages:
 
 - ${{ if ne(parameters.image, 'all') }}:
   - stage: ProcessSingleImage_${{ parameters.image }}
-    displayName: Retrieve _${{ parameters.image }} Information
+    displayName: Retrieve ${{ parameters.image }} Information
     variables:
     - name: imageVersion
       value: $(major).$(minor).$(GitBuildNumber).$(TIME)
