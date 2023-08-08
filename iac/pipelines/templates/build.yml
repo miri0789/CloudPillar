@@ -1,0 +1,34 @@
+# File: templates/build.yml
+parameters:
+  imageName: ''
+  imageVersion: ''
+  imagePath: ''
+  dockerFilePath: ''
+  registryName: ''  
+  pipelineAcrConnection: ''
+
+steps:
+- task: Bash@3
+  # displayName: Build & Tag Image
+  displayName: 'Build & Tag ${{ parameters.imageName }}'
+  inputs:
+    targetType: inline
+    script: |
+      az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+      az account set --subscription $(ARM_SUBSCRIPTION_ID)
+      echo "Azure Login Successfull"
+      az acr login -n $(ACR_NAME)
+      echo "registryName: ${{ parameters.registryName }}"
+      echo "imageName: ${{ parameters.imageName }}"
+      echo "imageVersion: ${{ parameters.imageVersion }}"
+      echo "dockerFilePath: ${{ parameters.dockerFilePath }}"
+      echo "imagePath: ${{ parameters.imagePath }}"
+      echo "registryName: $(registryName)"
+      echo "imageName: $(imageName)"
+      echo "imageVersion: $(imageVersion)"
+      echo "dockerFilePath: $(dockerFilePath)"
+      echo "imagePath: $(imagePath)"
+      echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}"
+      sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" ${{parameters.imagePath}}/*.csproj
+      docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
+    name: buildImage      
