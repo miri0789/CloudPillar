@@ -144,7 +144,7 @@ stages:
     - GetSingleImage
     condition: eq(variables['isSelectedImageAll'], false)
     variables:
-      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images']
+      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
       imageName: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imageName'] ]
       imageVersion: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imageVersion'] ]
       imagePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imagePath'] ]
