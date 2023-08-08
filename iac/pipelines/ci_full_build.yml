@@ -160,7 +160,8 @@ stages:
       - template: templates/clean.yml   
 
     - job: BuildTagImage
-      dependsOn: CleanImages
+      dependsOn: 
+      - CleanImages
       displayName: Build and Tag Image
       pool:
         name: $(AGENT_POOL)
@@ -175,7 +176,9 @@ stages:
           registryName: $(registryName)
 
     - job: ScanImage
-      dependsOn: BuildTagImage
+      dependsOn: 
+      - CleanImages
+      - BuildTagImage
       displayName: Scan Image 
       pool:
         name: $(AGENT_POOL)
@@ -188,7 +191,10 @@ stages:
           registryName: $(registryName)
 
     - job: PushImage
-      dependsOn: ScanImage
+      dependsOn: 
+      - CleanImages
+      - BuildTagImage
+      - ScanImage
       displayName: Push Image 
       pool:
         name: $(AGENT_POOL)
