@@ -7,43 +7,43 @@ parameters:
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
-    imagePath: '$(Pipeline.Workspace)/src/backend/analyzer/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/analyzer/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: beapi
     imageName: 'backend_beapi'
-    imagePath: '$(Pipeline.Workspace)/src/backend/beapi/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/beapi/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: infra
     imageName: 'backend_infra'
-    imagePath: '$(Pipeline.Workspace)/src/backend/infra/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/infra/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: mongowriter
     imageName: 'backend_mongowriter'
-    imagePath: '$(Pipeline.Workspace)/src/backend/mongowriter/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/mongowriter/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: twinlistener
     imageName: 'backend_twinlistener'
-    imagePath: '$(Pipeline.Workspace)/src/backend/twinlistener/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/twinlistener/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: unittests
     imageName: 'backend_unittests'
-    imagePath: '$(Pipeline.Workspace)/src/backend/unittests/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/unittests/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: blobstreamer
     imageName: 'backend_blobstreamer'
-    imagePath: '$(Pipeline.Workspace)/src/backend/Backend.BlobStreamer/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/Backend.BlobStreamer/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: iotlistener
     imageName: 'backend_iotlistener'
-    imagePath: '$(Pipeline.Workspace)/src/backend/Backend.IoTListener/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/Backend.IoTListener/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: keyholder
     imageName: 'backend_keyholder'
-    imagePath: '$(Pipeline.Workspace)/src/backend/Backend.KeyHolder/'
-    dockerFilePath: '$(Pipeline.Workspace)/src/backend/infra/build/Dockerfile'
+    imagePath: './src/backend/Backend.KeyHolder/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: edge_conquest
     imageName: 'edge_conquest'
-    imagePath: 'src/edge/conquest/'
+    imagePath: './src/edge/conquest/'
     imageVersion: 'v0.7.3'
     dockerFilePath: './src/edge/conquest/Dockerfile'
 
