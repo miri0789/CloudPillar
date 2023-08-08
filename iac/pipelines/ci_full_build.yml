@@ -151,7 +151,7 @@ stages:
       images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
     jobs:
       - ${{ if eq(variables.isSelectedImageAll, 'true') }}:
-        - ${{ each image in json(variables.images) }}:
+        - ${{ each image in $(images) }}:
           - job: BuildTag_${{ image.name }}
             displayName: Build and Tag ${{ image.name }}
             variables:
