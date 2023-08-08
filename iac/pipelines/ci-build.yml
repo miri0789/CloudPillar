@@ -94,8 +94,8 @@ stages:
 
   - job: BuildImageJob  
     displayName: Build ${{parameters.image}} Image
-    # dependsOn:
-    # - CleanImages
+    dependsOn:
+    - CleanImages
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
