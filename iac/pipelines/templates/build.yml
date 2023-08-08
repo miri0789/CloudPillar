@@ -12,7 +12,8 @@ parameters:
 
 steps:
 - task: Bash@3
-  displayName: Build & Tag Image
+  # displayName: Build & Tag Image
+  displayName: 'Build & Tag Image ${{ parameters.imageName }}'
   inputs:
     targetType: inline
     script: |
