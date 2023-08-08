@@ -12,6 +12,7 @@ parameters:
 
 steps:
 - script: echo $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+  displayName: Build Image
 
 # - job: BuildImage
 #   dependsOn: RetrieveImageInfo
