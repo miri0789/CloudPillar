@@ -110,11 +110,11 @@ stages:
     - template: templates/build.yml
       parameters:
         imageName: $(imageName)
-        # imageVersion: $(imageVersion)
-        # imagePath: $(imagePath)
-        # dockerFilePath: $(dockerFilePath)
-        # registryName: $(registryName)
-        # pipelineAcrConnection: $(pipelineAcrConnection)
+        imageVersion: $(imageVersion)
+        imagePath: $(imagePath)
+        dockerFilePath: $(dockerFilePath)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)
         # pool:
         #   name: $(AGENT_POOL)
         #   agent.name: aks-${{parameters.env}}-agent  
