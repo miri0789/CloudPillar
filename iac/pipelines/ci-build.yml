@@ -95,10 +95,9 @@ stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   condition: eq(variables.isSelectedImageAll, false)
-  dependsOn:
-  - RetrieveImageInfo  
+  dependsOn: RetrieveImageInfo  
   jobs:
-  - job: BuildImage  
+  - job: BuildImageJob  
     displayName: Build ${{parameters.image}} Image
     # dependsOn:
     # - CleanImages
@@ -107,8 +106,8 @@ stages:
       agent.name: aks-${{parameters.env}}-agent
     variables:
     - name: imageName
-      # value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
-      value: $[ dependencies.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+      # value: $[ dependencies.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
     - name: imageVersion
       value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
     - name: imagePath
@@ -125,6 +124,7 @@ stages:
       # dockerFilePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ] 
     steps:
     - script: |
+        echo "Debugging BuildImage variables:"
         echo "imageName: $(imageName)"
         echo "imageVersion: $(imageVersion)"
     - template: templates/build.yml
@@ -135,8 +135,8 @@ stages:
         dockerFilePath: $(dockerFilePath)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)
-  - job: ScanImage 
-    dependsOn: BuildImage 
+  - job: ScanImageJob
+    dependsOn: BuildImageJob 
     displayName: Scan ${{parameters.image}} Image 
     pool:
       name: $(AGENT_POOL)
@@ -157,9 +157,9 @@ stages:
         imageVersion: $(imageVersion)
         registryName: $(registryName)
 
-  - job: PushImage  
+  - job: PushImageJob  
     displayName: Push ${{parameters.image}} Image 
-    dependsOn: ScanImage
+    dependsOn: ScanImageJob
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
