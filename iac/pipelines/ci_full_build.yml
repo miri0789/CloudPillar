@@ -71,35 +71,35 @@ parameters:
     - mongowriter
     - twinlistener    
 
-
-- stage: GetImages
-  jobs:
-  - job: GetImagesJob
-    steps:
-    - task: Bash@3
-      name: getImagesInfo
-      inputs:
-        targetType: 'inline'
-        script: |
-          # Read the images.json file and set its contents as a variable
-          images=$(cat ./src/backend/images.json)
-          echo "##vso[task.setvariable variable=images;isOutput=true]$images"
-          echo "##vso[task.setvariable variable=images]$images"
-      displayName: Set Images as Variable
-
-- ${{ if ne(parameters.image, 'all') }}:
-  - stage: GetSingleImage
-    dependsOn: GetImages
+stages:
+  - stage: GetImages
     jobs:
-    - job: GetSingleImageJob
-      variables:
-      - name: images
-        value: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+    - job: GetImagesJob
       steps:
-      - ${{ each img in variables['images'] }}:
-        script: |
-          echo $(img.name)
-          echo $(img.dockerFilePath)
+      - task: Bash@3
+        name: getImagesInfo
+        inputs:
+          targetType: 'inline'
+          script: |
+            # Read the images.json file and set its contents as a variable
+            images=$(cat ./src/backend/images.json)
+            echo "##vso[task.setvariable variable=images;isOutput=true]$images"
+            echo "##vso[task.setvariable variable=images]$images"
+        displayName: Set Images as Variable
+
+  - ${{ if ne(parameters.image, 'all') }}:
+    - stage: GetSingleImage
+      dependsOn: GetImages
+      jobs:
+      - job: GetSingleImageJob
+        variables:
+        - name: images
+          value: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+        steps:
+        - ${{ each img in variables['images'] }}:
+          script: |
+            echo $(img.name)
+            echo $(img.dockerFilePath)
 
 
     #   - task: Bash@3
