@@ -21,7 +21,8 @@ steps:
         az account set --subscription $(ARM_SUBSCRIPTION_ID)
         echo "Azure Login Successfull"
         sudo az acr login -n $(ACR_NAME)
-        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
+        docker image ls
+        sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
         # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.imageName}}:${{parameters.imageVersion}}
         # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
         # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $(imageName):$(imageVersion)
