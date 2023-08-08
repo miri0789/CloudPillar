@@ -48,31 +48,28 @@ parameters:
     dockerFilePath: './src/edge/conquest/Dockerfile'
 
 
-jobs:
-- job: RetrieveImageInfo
-  pool: ${{parameters.pool}}
-  displayName: Retrieve Image Information
-  steps:
-  - checkout: self
-    persistCredentials: true
-    clean: true
-  - ${{ each img in parameters.images }}:
-    - ${{ if eq(parameters.selectedImage, img.name) }}:
-    # - ${{ if and(eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
 
-      - script: |
-          echo "##vso[task.setvariable variable=image;isOutput=true]${{ img.name }}"
-          echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
-          echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
-          echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
-          echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
-          echo "##vso[task.setvariable variable=registryName;isOutput=true]${{ parameters.registryName }}"
-          echo "##vso[task.setvariable variable=pipelineAcrConnection;isOutput=true]${{ parameters.pipelineAcrConnection }}"
-          echo "ImageName:${{ img.imageName }}"
-          echo "ImageVersion:${{ parameters.imageVersion }}"
-        name: setImageInfo
-        outputs:
-          setImageInfo.imageName: $(setImageInfo.imageName)        
+steps:
+- checkout: self
+  persistCredentials: true
+  clean: true
+- ${{ each img in parameters.images }}:
+  - ${{ if eq(parameters.selectedImage, img.name) }}:
+  # - ${{ if and(eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
+
+    - script: |
+        echo "##vso[task.setvariable variable=image;isOutput=true]${{ img.name }}"
+        echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
+        echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
+        echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
+        echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
+        echo "##vso[task.setvariable variable=registryName;isOutput=true]${{ parameters.registryName }}"
+        echo "##vso[task.setvariable variable=pipelineAcrConnection;isOutput=true]${{ parameters.pipelineAcrConnection }}"
+        echo "ImageName:${{ img.imageName }}"
+        echo "ImageVersion:${{ parameters.imageVersion }}"
+      name: setImageInfo
+      outputs:
+        setImageInfo.imageName: $(setImageInfo.imageName)        
       # env:
       #   imageName: $(imageName)
       #   imageVersion: $(imageVersion)
