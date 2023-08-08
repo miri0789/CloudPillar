@@ -12,7 +12,8 @@ parameters:
 
 steps:
 - task: Bash@3
-  displayName: Scan Image
+  # displayName: Scan Image
+  displayName: 'Scan Image Image ${{ parameters.imageName }}'
   inputs:
     targetType: inline
     script: |
