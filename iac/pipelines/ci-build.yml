@@ -93,6 +93,13 @@ stages:
   dependsOn: 
   - RetrieveImageInfo
   jobs:
+  - job: CleanDocker  
+    displayName: Clean Images & Containers
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    steps:
+    - template: templates/clean.yml      
   - job: BuildImage  
     displayName: Build ${{parameters.image}} Image
     pool:
