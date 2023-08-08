@@ -51,14 +51,16 @@ jobs:
   pool:
     name: $(AGENT_POOL)
     agent.name: aks-${{parameters.env}}-agent          
+
   displayName: Retrieve Image Information  
   steps:
   - ${{ each img in parameters.images }}:
     - ${{ if eq(parameters.selectedImage, img.name) }}:
     # - ${{ if and(eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
       - task: Bash@3
-      #   displayName: Push Image
-        displayName: 'Set ${{ parameters.imageName }} Info'
+        displayName: 'Set ${{ img.imageName }} Info'
+        outputs:
+          setImageInfo: ${{ variables }}
         inputs:
           targetType: inline
           script: |
@@ -69,27 +71,25 @@ jobs:
             echo "ImageVersion:  ${{ parameters.imageVersion }}"
             echo "registryName:  ${{ parameters.registryName }}"
             echo "ImagePath:  ${{ img.imagePath }}"
-
             echo "dockerFilePath:  ${{ img.dockerFilePath }}"
             echo "Setting Variables:"
             echo "Image Name: ${{ img.imageName }}"
-            echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
-            echo "##vso[task.setvariable variable=name;isOutput=true]${{ img.name }}"
-            echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
-            echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
-            echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
-            echo "##vso[task.setvariable variable=registryName;isOutput=true]${{ parameters.registryName }}"
-            echo "##vso[task.setvariable variable=pipelineAcrConnection;isOutput=true]${{ parameters.pipelineAcrConnection }}"
+            # echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
+            # echo "##vso[task.setvariable variable=name;isOutput=true]${{ img.name }}"
+            # echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
+            # echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
+            # echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
+            # echo "##vso[task.setvariable variable=registryName;isOutput=true]${{ parameters.registryName }}"
+            # echo "##vso[task.setvariable variable=pipelineAcrConnection;isOutput=true]${{ parameters.pipelineAcrConnection }}"
 
-            # echo "##vso[task.setvariable variable=imageName]${{ img.imageName }}" # set as a pipeline variable
-            # echo "##vso[task.setvariable variable=imageVersion]${{ parameters.imageVersion }}"
-            # echo "##vso[task.setvariable variable=image]${{ img.name }}"
-            # echo "##vso[task.setvariable variable=imageName]${{ img.imageName }}"
-            # echo "##vso[task.setvariable variable=imageVersion]${{ parameters.imageVersion }}"
-            # echo "##vso[task.setvariable variable=imagePath]${{ img.imagePath }}"
-            # echo "##vso[task.setvariable variable=dockerFilePath]${{ img.dockerFilePath }}"
-            # echo "##vso[task.setvariable variable=registryName]${{ parameters.registryName }}"
-            # echo "##vso[task.setvariable variable=pipelineAcrConnection]${{ parameters.pipelineAcrConnection }}"
+            echo "##vso[task.setvariable variable=imageName]${{ img.imageName }}"
+            echo "##vso[task.setvariable variable=name]${{ img.name }}"
+            echo "##vso[task.setvariable variable=imageVersion]${{ parameters.imageVersion }}"
+            echo "##vso[task.setvariable variable=imagePath]${{ img.imagePath }}"
+            echo "##vso[task.setvariable variable=dockerFilePath]${{ img.dockerFilePath }}"
+            echo "##vso[task.setvariable variable=registryName]${{ parameters.registryName }}"
+            echo "##vso[task.setvariable variable=pipelineAcrConnection]${{ parameters.pipelineAcrConnection }}"
+
           name: setImageInfo
       # env:
       #   imageName: $(imageName)
