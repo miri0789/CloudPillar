@@ -84,7 +84,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            images=$(cat ./src/backend/images.json | base64 -w 0)
+            images=$(cat ./src/backend/images.json | jq -c .) # Compact JSON
             echo "##vso[task.setvariable variable=images;isOutput=true]$images"
             echo "##vso[task.setvariable variable=images]$images"
         displayName: Set Images as Variable
@@ -98,8 +98,7 @@ stages:
         images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
       steps:
       - script: |
-          imagesBase64='${{ variables.images }}'
-          imagesJson=$(echo "$imagesBase64" | base64 --decode) # Base64 decode
+          imagesJson='${{ variables.images }}'
           echo "Images JSON"
           echo "$imagesJson"
           for imgName in $(echo "${imagesJson}" | jq -r '.[].name'); do
