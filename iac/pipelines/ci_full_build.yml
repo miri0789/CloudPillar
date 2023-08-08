@@ -162,7 +162,7 @@ stages:
     - job: BuildTag_$(imageName)
       displayName: Build and Tag $(imageName)
       steps:
-      - template: template/build.yml
+      - template: templates/build.yml
         parameters:
           imageName: $(imageName)
           imageVersion: $(imageVersion)
@@ -173,7 +173,7 @@ stages:
     - job: Scan_$(imageName)
       displayName: Scan Image $(imageName)
       steps:
-      - template: template/scan.yml
+      - template: templates/scan.yml
         parameters:
           imageName: $(imageName)
           imageVersion: $(imageVersion)
@@ -182,7 +182,7 @@ stages:
     - job: Push_$(imageName)
       displayName: Push Image $(imageName)
       steps:
-      - template: template/push.yml
+      - template: templates/push.yml
         parameters:
           imageName: $(imageName)
           imageVersion: $(imageVersion)
