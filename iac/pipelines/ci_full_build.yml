@@ -97,11 +97,23 @@ stages:
         - name: images
           value: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
         steps:
-        - ${{ each img in variables['images'] }}:
-          - script: |
-              echo $(img.name)
-              echo $(img.dockerFilePath)
-
+        - script: |
+            images='$(images)'
+            images=$(echo "$images" | jq '.')
+            for img in $(echo "$images" | jq -r '.[] | @base64'); do
+              _jq() {
+                echo ${img} | base64 --decode | jq -r ${1}
+              }
+              
+              imgName=$(_jq '.name')
+              dockerFilePath=$(_jq '.dockerFilePath')
+              
+              if [ "$imgName" == "${{ parameters.image }}" ]; then
+                echo "Processing image: $imgName"
+                echo "Docker File Path: $dockerFilePath"
+                # Further processing logic here
+              fi
+            done
 
     #   - task: Bash@3
     #     name: getSingleImagesInfo
