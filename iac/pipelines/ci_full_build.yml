@@ -327,14 +327,15 @@ stages:
       images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
 
     jobs:
-    - job: CleanImages
-      displayName: Clean Images & Containers
+    - job: All
+      displayName: Clean Tag Scan Push Images
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:
+
       - template: templates/clean.yml   
-    - job: BuildImages
+    - job: GetImage
       displayName: Build ${{parameters.image}} Image
       dependsOn:
       - CleanImages
@@ -343,15 +344,36 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:
       - script: |    
-          echo "images"
-          # echo "$(images)"
-          echo '$(images)' | jq '.[]'
-          images=$(echo '$(images)' | jq '.[]')
-          for image in $images; do
-            echo "Processing image: $image"
-            # Perform actions on each image here
+          imagesJson='$(images)'
+          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+          echo "$imagesJson"
+          echo -e "\n\n"
+          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${img} | base64 --decode | jq -r ${1}
+            }
+            imgName=$(_jq '.name')
+            if [ "$imgName" == "${{ parameters.image }}" ]; then
+              imageName=$(_jq '.imageName')
+              imagePath=$(_jq '.imagePath')
+              dockerFilePath=$(_jq '.dockerFilePath')
+              imageVersion=$(_jq '.imageVersion')
+              if [ "$imgName" != "edge_conquest" ]; then
+                imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+              fi            
+              echo "Processing image: $imgName"
+              echo "Image Version: $imageVersion"
+              echo "##vso[task.setvariable variable=$imgName_imageName]$imageName"
+              echo "##vso[task.setvariable variable=$imgName_imageVersion]$imageVersion"
+              echo "##vso[task.setvariable variable=$imgName_imagePath]$imagePath"
+              echo "##vso[task.setvariable variable=$imgName_dockerFilePath]$dockerFilePath"
+
+              echo "##vso[task.setvariable variable=$imgName_imageName;isOutput=true]$imageName"
+              echo "##vso[task.setvariable variable=$imgName_imageVersion;isOutput=true]$imageVersion"
+              echo "##vso[task.setvariable variable=$imgName_imagePath;isOutput=true]$imagePath"
+              echo "##vso[task.setvariable variable=$imgName_dockerFilePath;isOutput=true]$dockerFilePath"        
+            fi
           done
-        name: BuildImage
 
 
 #     - job: CleanImages
