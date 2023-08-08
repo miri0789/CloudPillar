@@ -75,19 +75,19 @@ parameters:
 
 stages:
 - ${{ if eq(parameters.image, 'all') }}:
-  - stage: ProcessImage_${{ img.name }}
-    displayName: Retrieve ${{ img.name }} Information
-    variables:
-    - name: imageVersion
-      value: $(major).$(minor).$(GitBuildNumber).$(TIME)
-    jobs:
-    - template: templates/images-template.yml
-      parameters:
-        registryName: $(registryName)
-        pipelineAcrConnection: $(pipelineAcrConnection)
-        selectedImage: ${{ img.name }}
-        imageVersion: $(imageVersion)
   - ${{ each img in parameters.images }}:
+    - stage: ProcessImage_${{ img.name }}
+      displayName: Retrieve ${{ img.name }} Information
+      variables:
+      - name: imageVersion
+        value: $(major).$(minor).$(GitBuildNumber).$(TIME)
+      jobs:
+      - template: templates/images-template.yml
+        parameters:
+          registryName: $(registryName)
+          pipelineAcrConnection: $(pipelineAcrConnection)
+          selectedImage: ${{ img.name }}
+          imageVersion: $(imageVersion)
     - stage: CleanBuildScanPush
       displayName: Build Tag Scan Push Image
       dependsOn: 
