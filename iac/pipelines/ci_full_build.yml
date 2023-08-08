@@ -84,9 +84,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            # Read the images.json file and set its contents as a variable
-            echo "$(System.DefaultWorkingDirectory)"
-            images=$(cat ./src/backend/images.json)
+            images=$(cat ./src/backend/images.json | base64 -w 0) # Base64 encode
             echo "##vso[task.setvariable variable=images;isOutput=true]$images"
             echo "##vso[task.setvariable variable=images]$images"
         displayName: Set Images as Variable
@@ -100,16 +98,13 @@ stages:
         images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
       steps:
       - script: |
-          imagesJson='${{ variables.images }}'
+          imagesBase64='${{ variables.images }}'
+          imagesJson=$(echo "$imagesBase64" | base64 --decode) # Base64 decode
           echo "Images JSON"
           echo "$imagesJson"
-          for row in $(echo "${imagesJson}" | jq -c -r '.[] | @base64'); do
-            _jq() {
-              echo ${row} | base64 --decode | jq -r ${1}
-            }
-            imgName=$(_jq '.name')
-            imageVersion=$(_jq '.imageVersion')
+          for imgName in $(echo "${imagesJson}" | jq -r '.[].name'); do
             if [ "$imgName" == "${{ parameters.image }}" ]; then
+              imageVersion=$(echo "${imagesJson}" | jq -r --arg imgName "$imgName" '.[] | select(.name == $imgName) | .imageVersion')
               if [ "$imgName" != "edge_conquest" ]; then
                 imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
               fi
@@ -118,6 +113,17 @@ stages:
               # Further processing logic here
             fi
           done
+
+
+
+
+
+
+
+
+
+
+
         #   semi_images=$(cat ./src/backend/images.json)
         #   json=$(cat src/backend/images.json)
         #   images='${{ variables.images }}'
