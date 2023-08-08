@@ -92,8 +92,7 @@ stages:
   condition: eq(variables.isSelectedImageAll, false)
   dependsOn: RetrieveImageInfo
   jobs:
-  - job: BuildImage
-    dependsOn: RetrieveImageInfo  
+  - job: BuildImage  
     displayName: Build Image  
     pool:
       name: $(AGENT_POOL)
