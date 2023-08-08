@@ -333,19 +333,17 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:
       - template: templates/clean.yml   
-    
-    - ${{ each image in variables.images }}:
-      - job: BuildImages
-        displayName: Build ${{parameters.image}} Image
-        dependsOn:
-        - CleanImages
-        pool:
-          name: $(AGENT_POOL)
-          agent.name: aks-${{parameters.env}}-agent
-        steps:
-        - script: |    
-            echo "image"
-            echo "$(image)"
+    - job: BuildImages
+      displayName: Build ${{parameters.image}} Image
+      dependsOn:
+      - CleanImages
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - script: |    
+          echo "image"
+          echo "$(image)"
 
 
 
