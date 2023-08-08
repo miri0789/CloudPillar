@@ -14,8 +14,10 @@ steps:
         docker rm $(docker ps -a -q) --force    
         docker image prune -a --force
 
+        echo "Containers: "
         docker ps -a
-
+        echo -e "\n\n"
+        echo "Images: "
         docker image ls
 
 
