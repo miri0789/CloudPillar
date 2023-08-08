@@ -71,9 +71,16 @@ jobs:
             echo "dockerFilePath:  ${{ img.dockerFilePath }}"
             echo "Setting Variables:"
             echo "Image Name: ${{ img.imageName }}"
+            if [ "${{ img.name }}" == "edge_conquest" ]; then
+              echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ img.imageVersion }}"
+              echo "##vso[task.setvariable variable=imageVersion]${{ img.imageVersion }}"
+            else
+              echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
+              echo "##vso[task.setvariable variable=imageVersion]${{ parameters.imageVersion }}"
+            fi
+
             echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
             echo "##vso[task.setvariable variable=name;isOutput=true]${{ img.name }}"
-            echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
             echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
             echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
             echo "##vso[task.setvariable variable=registryName;isOutput=true]${{ parameters.registryName }}"
@@ -81,7 +88,6 @@ jobs:
 
             echo "##vso[task.setvariable variable=imageName]${{ img.imageName }}"
             echo "##vso[task.setvariable variable=name]${{ img.name }}"
-            echo "##vso[task.setvariable variable=imageVersion]${{ parameters.imageVersion }}"
             echo "##vso[task.setvariable variable=imagePath]${{ img.imagePath }}"
             echo "##vso[task.setvariable variable=dockerFilePath]${{ img.dockerFilePath }}"
             echo "##vso[task.setvariable variable=registryName]${{ parameters.registryName }}"
