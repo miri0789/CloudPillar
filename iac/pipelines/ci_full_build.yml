@@ -42,8 +42,7 @@ variables:
   # value: 'iotimageacr'
 - name: isSelectedImageAll
   value: ${{ eq(parameters.image, 'all') }}
-- name: selectedImage
-  value: ${{ parameters.image }}
+
 
 
 
@@ -88,14 +87,14 @@ stages:
             echo "##vso[task.setvariable variable=images;isOutput=true]$images"
             echo "##vso[task.setvariable variable=images]$images"
 
-            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n\n"
+            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$images"
             echo -e "\n\n"
         displayName: Set Images as Variable
   
   - stage: GetSingleImage
     dependsOn: GetImages
-    condition: ne('$(selectedImage)', 'all')  
+    condition: ne(variables.selectedImage, 'all')  
     jobs:
     - job: GetSingleImageJob
       variables:
@@ -103,7 +102,7 @@ stages:
       steps:
       - script: |
           imagesJson='$(images)'
-          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n\n"
+          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
           echo "$imagesJson"
           echo -e "\n\n"
           for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
