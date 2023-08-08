@@ -1,0 +1,88 @@
+parameters:
+  registryName: ''
+  pipelineAcrConnection: ''
+  selectedImage: ''  
+  imageVersion: ''
+  images:
+  - name: analyzer
+    imageName: 'backend_analyzer'
+    imagePath: './src/backend/analyzer/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: beapi
+    imageName: 'backend_beapi'
+    imagePath: './src/backend/beapi/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: infra
+    imageName: 'backend_infra'
+    imagePath: './src/backend/infra/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: mongowriter
+    imageName: 'backend_mongowriter'
+    imagePath: './src/backend/mongowriter/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: twinlistener
+    imageName: 'backend_twinlistener'
+    imagePath: './src/backend/twinlistener/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: unittests
+    imageName: 'backend_unittests'
+    imagePath: './src/backend/unittests/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: blobstreamer
+    imageName: 'backend_blobstreamer'
+    imagePath: './src/backend/Backend.BlobStreamer/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: iotlistener
+    imageName: 'backend_iotlistener'
+    imagePath: './src/backend/Backend.Iotlistener/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: keyholder
+    imageName: 'backend_keyholder'
+    imagePath: './src/backend/Backend.Keyholder/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: edge_conquest
+    imageName: 'edge_conquest'
+    imagePath: './src/edge/conquest/'
+    imageVersion: 'v0.7.3'
+    dockerFilePath: './src/edge/conquest/Dockerfile'
+
+jobs:
+- job: RetrieveImageInfoJob
+  pool:
+    name: $(AGENT_POOL)
+    agent.name: aks-${{parameters.env}}-agent          
+  displayName: Retrieve Image Information  
+  steps:
+  - ${{ each img in parameters.images }}:
+    - ${{ if eq(parameters.selectedImage, img.name) }}:
+    # - ${{ if and(eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
+      - task: Bash@3
+        displayName: 'Set ${{ img.imageName }} Info'
+        name: setImageInfo
+        inputs:
+          targetType: inline
+          script: |
+            echo "Selected Image: ${{ parameters.selectedImage }}"
+            echo "Image Name in Loop: ${{ img.name }}"          
+            echo "ImageName:  ${{ img.imageName }}"
+            echo "registryName:  ${{ parameters.registryName }}"
+            echo "ImageVersion:  ${{ parameters.imageVersion }}"
+            echo "ImagePath:  ${{ img.imagePath }}"
+            echo "dockerFilePath:  ${{ img.dockerFilePath }}"
+            echo "Setting Variables:"
+            echo "Image Name: ${{ img.imageName }}"
+            echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
+            echo "##vso[task.setvariable variable=name;isOutput=true]${{ img.name }}"
+            echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
+            echo "##vso[task.setvariable variable=imagePath;isOutput=true]${{ img.imagePath }}"
+            echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]${{ img.dockerFilePath }}"
+            echo "##vso[task.setvariable variable=registryName;isOutput=true]${{ parameters.registryName }}"
+            echo "##vso[task.setvariable variable=pipelineAcrConnection;isOutput=true]${{ parameters.pipelineAcrConnection }}"
+
+            echo "##vso[task.setvariable variable=imageName]${{ img.imageName }}"
+            echo "##vso[task.setvariable variable=name]${{ img.name }}"
+            echo "##vso[task.setvariable variable=imageVersion]${{ parameters.imageVersion }}"
+            echo "##vso[task.setvariable variable=imagePath]${{ img.imagePath }}"
+            echo "##vso[task.setvariable variable=dockerFilePath]${{ img.dockerFilePath }}"
+            echo "##vso[task.setvariable variable=registryName]${{ parameters.registryName }}"
+            echo "##vso[task.setvariable variable=pipelineAcrConnection]${{ parameters.pipelineAcrConnection }}"
