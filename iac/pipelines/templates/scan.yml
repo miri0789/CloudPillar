@@ -21,7 +21,11 @@ steps:
         az account set --subscription $(ARM_SUBSCRIPTION_ID)
         echo "Azure Login Successfull"
         sudo az acr login -n $(ACR_NAME)
-        sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
+        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
+        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.imageName}}:${{parameters.imageVersion}}
+        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
+        # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $(imageName):$(imageVersion)
+
         #   sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.imageName}}/${{parameters.imageName}}.csproj
     #   sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.imageName}}.dll --build-arg DLL=backend_${{parameters.imageName}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.imageName}}
 
