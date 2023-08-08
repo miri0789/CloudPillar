@@ -77,32 +77,36 @@ stages:
   - name: imageVersion
     value: $(major).$(minor).$(GitBuildNumber).$(TIME)
   jobs:
-  - template: templates/images-template.yml
-    parameters:
-      registryName: $(registryName)
-      pipelineAcrConnection: $(pipelineAcrConnection)
-      selectedImage: ${{ parameters.image }}
-      imageVersion: $(imageVersion)
-      pool:
-        name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent
-
-- stage: BuildScanPush
-  displayName: Build Tag Scan Push Image
-  condition: eq(variables.isSelectedImageAll, false)
-  jobs:
+  - job: RetrieveImageInfoJob
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent          
+    displayName: Retrieve Image Information  
+    steps:
+    - template: templates/images-template.yml
+      parameters:
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)
+        selectedImage: ${{ parameters.image }}
+        imageVersion: $(imageVersion)
   - job: CleanImages
     displayName: Clean Images & Containers
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
     steps:
-    - template: templates/clean.yml      
+    - template: templates/clean.yml              
+
+- stage: BuildScanPush
+  displayName: Build Tag Scan Push Image
+  condition: eq(variables.isSelectedImageAll, false)
+  dependsOn:
+  - RetrieveImageInfo  
+  jobs:
   - job: BuildImage  
     displayName: Build ${{parameters.image}} Image
-    dependsOn:
-    - CleanImages
-    - RetrieveImageInfo    
+    # dependsOn:
+    # - CleanImages
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
