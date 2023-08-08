@@ -131,7 +131,7 @@ stages:
       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
       imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
       dockerFiePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
-      steps:
-      - script: |
-          echo $(imageName)
+    steps:
+    - script: |
+        echo $(imageName)
     
