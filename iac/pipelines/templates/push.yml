@@ -21,8 +21,6 @@ steps:
       echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}"
       docker push ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
     name: pushImage
-    #   sudo docker push ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
-    #   sudo docker push ${{ parameters.registryName }}.azurecr.io/${{parameters.image}}:${{parameters.imageVersion}}
 
 # - task: Docker@2
 #   displayName: 'Push Image ${{ parameters.imageName }}'
