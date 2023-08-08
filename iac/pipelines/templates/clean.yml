@@ -10,19 +10,9 @@ steps:
   inputs:
     targetType: inline
     script: |
-      # Stop all containers
-      docker stop $(docker ps -a -q)
-      # Remove all containers
-      docker rm $(docker ps -a -q)
-      # Remove all images
-      docker image prune -a
-
-      # Show Docker Containers
-      docker ps -a
-      # Show Docker Images
-      docker image ls
-
-    
+        docker stop $(docker ps -a -q) --force
+        docker rm $(docker ps -a -q) --force    
+        docker image prune -a --force
 
 
 
