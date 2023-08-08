@@ -72,7 +72,7 @@ parameters:
 stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
-  condition: eq(variables.isSelectedImageAll, false)
+  condition: eq(variables.isSelectedImageAll, true)
   variables:
     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
   jobs:
