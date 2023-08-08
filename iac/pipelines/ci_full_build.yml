@@ -85,6 +85,7 @@ stages:
           targetType: 'inline'
           script: |
             # Read the images.json file and set its contents as a variable
+            echo "$(System.DefaultWorkingDirectory)"
             images=$(cat ./src/backend/images.json)
             echo "##vso[task.setvariable variable=images;isOutput=true]$images"
             echo "##vso[task.setvariable variable=images]$images"
