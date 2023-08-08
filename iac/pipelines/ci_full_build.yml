@@ -343,8 +343,11 @@ stages:
       steps:
       - script: |    
           echo "image"
-          echo "$(image)"
-
+          echo "$(images)"
+          for image in $images; do
+            echo "Processing image: $image"
+            # Perform actions on each image here
+          done
 
 
 
