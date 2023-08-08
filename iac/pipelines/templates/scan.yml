@@ -24,7 +24,7 @@ steps:
       echo "Images"
       docker image ls | grep ${{parameters.imageName}}
       echo "${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}"
-      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.imageName}}:${{parameters.imageVersion}}
     name: scanImage
 
         # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
