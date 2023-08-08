@@ -145,22 +145,23 @@ stages:
         imageVersion: $(imageVersion)
         registryName: $(registryName)
 
-  # - job: PushImage  
-  #   displayName: Push ${{parameters.image}} Image 
-  #   dependsOn: ScanImage
-  #   pool:
-  #     name: $(AGENT_POOL)
-  #     agent.name: aks-${{parameters.env}}-agent
-  #   variables:
-  #   - name: imageName
-  #     value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
-  #   - name: imageVersion
-  #     value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
-  #   - name: imagePath
-  #     value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
-  #   - name: dockerFilePath
-  #     value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
-  #   steps:    
+  - job: PushImage  
+    displayName: Push ${{parameters.image}} Image 
+    dependsOn: ScanImage
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    variables:
+    - name: imageName
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+    - name: imageVersion
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
+    - name: imagePath
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
+    - name: dockerFilePath
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
+    steps:
+      - script: echo "Push Image Commented"   
   #   - template: templates/push.yml
   #     parameters:
   #       imageName: $(imageName)
