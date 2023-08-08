@@ -94,26 +94,27 @@ stages:
       jobs:
       - job: GetSingleImageJob
         variables:
-        - name: images
-          value: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+          images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
         steps:
         - script: |
-            images='$(images)'
-            images=$(echo "$images" | jq '.')
-            for img in $(echo "$images" | jq -r '.[] | @base64'); do
+            images='${{ variables.images }}'
+            imagesJson=$(echo "$images" | jq '.')
+            for row in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
               _jq() {
-                echo ${img} | base64 --decode | jq -r ${1}
+                echo ${row} | base64 --decode | jq -r ${1}
               }
-              
               imgName=$(_jq '.name')
-              dockerFilePath=$(_jq '.dockerFilePath')
-              
               if [ "$imgName" == "${{ parameters.image }}" ]; then
+                imageVersion=$(_jq '.imageVersion')
+                if [ "$imgName" != "edge_conquest" ]; then
+                  imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+                fi
                 echo "Processing image: $imgName"
-                echo "Docker File Path: $dockerFilePath"
+                echo "Image Version: $imageVersion"
                 # Further processing logic here
               fi
             done
+          displayName: Get Single Image Info
 
     #   - task: Bash@3
     #     name: getSingleImagesInfo
