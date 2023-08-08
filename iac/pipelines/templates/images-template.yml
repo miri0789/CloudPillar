@@ -3,6 +3,7 @@ parameters:
   pipelineAcrConnection: ''
   selectedImage: ''  
   imageVersion: ''
+  pool: ''
   images:
   - name: analyzer
     imageName: 'backend_analyzer'
@@ -49,6 +50,7 @@ parameters:
 
 jobs:
 - job: RetrieveImageInfo
+  pool: ${{parameters.pool}}
   displayName: Retrieve Image Information
   steps:
   - checkout: self
