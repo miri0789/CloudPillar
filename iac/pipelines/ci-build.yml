@@ -79,16 +79,13 @@ stages:
   - job: RetrieveImageInfo
     displayName: Retrieve Image Information
     variables:
-      image: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.image'] ]
+      selectedImage: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.image'] ]
       imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-      registryName: $(registryName)
-      pipelineAcrConnection: $(pipelineAcrConnection)
-      selectedImage: $(selectedImage)       
     steps:
       - template: templates/images-template.yml
         parameters:
-          image: $(image)
+          selectedImage: $(selectedImage)
           imageName: $(imageName)
           imageVersion: $(imageVersion)
           registryName: $(registryName)
