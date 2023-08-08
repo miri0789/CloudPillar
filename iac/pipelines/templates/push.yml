@@ -18,7 +18,7 @@ steps:
       echo "Azure Login Successfull"
       sudo az acr login -n $(ACR_NAME)
       # sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.imageName}}/${{parameters.imageName}}.csproj
-      echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}"
+      echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}"
       docker push ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
     name: pushImage
     #   sudo docker push ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
