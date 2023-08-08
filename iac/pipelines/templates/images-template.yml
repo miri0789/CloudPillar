@@ -54,7 +54,6 @@ jobs:
     name: $(AGENT_POOL)
     agent.name: aks-${{parameters.env}}-agent          
   displayName: Retrieve Image Information
-  variables:
   steps:
   - checkout: self
     persistCredentials: true
