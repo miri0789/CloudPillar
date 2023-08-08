@@ -92,21 +92,23 @@ stages:
   condition: eq(variables.isSelectedImageAll, false)
   dependsOn: RetrieveImageInfo
   jobs:
-  - job: BuildImage
-    displayName: Build Image
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent
-    variables:
+  - template: templates/build.yml
+  # - job: BuildImage
+    # displayName: Build Image
+    # pool:
+      # name: $(AGENT_POOL)
+      # agent.name: aks-${{parameters.env}}-agent
+    # variables:
       # imageName: $[ dependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
-       imageName: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+      #  imageName: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
       # imageVersion: $[ dependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
       # imagePath: $[ dependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
       # dockerFiePath: $[ dependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ] 
-    steps:
-    - script: |
-        echo "ImageName: $(imageName)"
-      displayName: Image Build
+    # steps:
+
+    # - script: |
+    #     echo "ImageName: $(imageName)"
+    #   displayName: Image Build
 
 
 
