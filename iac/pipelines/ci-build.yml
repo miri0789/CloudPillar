@@ -98,13 +98,13 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
     variables:
-      imageName:  $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      imageName: $[ dependencies.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
       imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
       dockerFiePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
     steps:
     - script: |
-        echo $(imageName)
+        echo "ImageName: $(imageName)"
 
 
 
