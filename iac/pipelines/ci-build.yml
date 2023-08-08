@@ -90,7 +90,8 @@ stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   condition: eq(variables.isSelectedImageAll, false)
-  dependsOn: RetrieveImageInfo
+  dependsOn: 
+  - RetrieveImageInfo
   jobs:
   - job: BuildImage  
     displayName: Build Image  
@@ -107,6 +108,7 @@ stages:
       # imagePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
       # dockerFilePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ] 
     steps:
+    - script: echo $(imageName)
     - template: templates/build.yml
       parameters:
         imageName: $(imageName)
