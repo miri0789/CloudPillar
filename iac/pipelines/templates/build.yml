@@ -6,9 +6,12 @@ parameters:
   dockerFilePath: ''
   registryName: ''
   pipelineAcrConnection: ''
+  pool: ''
+  
 jobs:
 - job: BuildImage
   dependsOn: RetrieveImageInfo
+  pool: ${{parameters.pool}}
   displayName: Retrieve Image Information
   variables:
     imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
