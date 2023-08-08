@@ -100,7 +100,10 @@ stages:
       steps:
       - script: |
           semi_images=$(cat ./src/backend/images.json)
+          json=$(cat src/backend/images.json)
           images='${{ variables.images }}'
+          echo "images"
+          echo "$images"
           imagesJson=$(echo "$images" | jq '.')
           echo "Images JSON"
           echo $imagesJson
