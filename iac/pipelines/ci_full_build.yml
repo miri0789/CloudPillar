@@ -75,6 +75,7 @@ stages:
   - stage: GetImages
     jobs:
     - job: GetImagesJob
+      displayName: Get Images Job
       steps:
       - task: Bash@3
         name: getImagesInfo
