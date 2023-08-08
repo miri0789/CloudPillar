@@ -6,7 +6,7 @@
 steps:
 - task: Bash@3
   # displayName: Build & Tag Image
-  displayName: 'Clean Images & Containers'
+  displayName: 'Clean Images'
   inputs:
     targetType: inline
     script: |
