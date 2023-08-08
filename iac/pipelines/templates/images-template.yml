@@ -49,7 +49,7 @@ parameters:
 
 
 jobs:
-- job: RetrieveImageInfo
+- job: RetrieveImageInfoJob
   pool:
     name: $(AGENT_POOL)
     agent.name: aks-${{parameters.env}}-agent          
