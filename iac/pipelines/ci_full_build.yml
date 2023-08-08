@@ -72,8 +72,6 @@ parameters:
     - twinlistener    
 
 
-
-stages:
 - stage: GetImages
   jobs:
   - job: GetImagesJob
@@ -84,21 +82,59 @@ stages:
         targetType: 'inline'
         script: |
           # Read the images.json file and set its contents as a variable
-          images=$(cat path/to/images.json)
+          images=$(cat ./src/backend/images.json)
           echo "##vso[task.setvariable variable=images;isOutput=true]$images"
           echo "##vso[task.setvariable variable=images]$images"
       displayName: Set Images as Variable
 
-- ${{ if eq(parameters.image, 'all') }}:
-  - ${{ each img in variables['images'] }}:
-  - stage: ProcessAllImages
+- ${{ if ne(parameters.image, 'all') }}:
+  - stage: GetSingleImage
     dependsOn: GetImages
+    jobs:
+    - job: GetSingleImageJob
       variables:
-      - name: imageVersion
-        value: ${{ if eq(img.name, 'edge_conquest') }}:
-          ${{ img.imageVersion }}
-        ${{ if ne(img.name, 'edge_conquest') }}:
-          $(major).$(minor).$(GitBuildNumber).$(TIME)    
+      - name: images
+        value: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+      steps:
+      - ${{ each img in variables['images'] }}:
+        script: |
+          echo $(img.name)
+          echo $(img.dockerFilePath)
+
+
+    #   - task: Bash@3
+    #     name: getSingleImagesInfo
+    #     inputs:
+    #       targetType: 'inline'
+    #       script: |
+    # - ${{ if eq(parameters.selectedImage, img.name) }}:            
+    #     displayName: Set Images as Variable
+  
+
+# - stage: ProcessAllImages
+#   dependsOn: GetImages
+#   variables:
+#   - name: images
+#     value: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+#   jobs:
+#   - job: ProcessImagesJob
+#     steps:
+#     - ${{ each img in variables['images'] }}:
+#       - script: |
+#           if [ "${{ img.name }}" == "edge_conquest" ]; then
+#             imageVersion=${{ img.imageVersion }}
+#           else
+#             imageVersion=$(major).$(minor).$(GitBuildNumber).$(TIME)
+#           fi
+#           # Your processing logic here using $imageVersion, ${{ img.imageName }}, etc.
+#         displayName: Process Image ${{ img.name }}
+
+
+
+
+
+
+
     # variables:
     # - name: images
     #   value: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]      
