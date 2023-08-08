@@ -1,0 +1,35 @@
+# File: templates/push.yml
+parameters:
+  imageName: ''
+  imageVersion: ''
+  imagePath: ''
+  dockerFilePath: ''
+  registryName: ''
+  pipelineAcrConnection: ''
+  pool: ''
+
+  
+
+steps:
+- task: Bash@3
+#   displayName: Push Image
+  displayName: 'Push Image ${{ parameters.imageName }}'
+  inputs:
+    targetType: inline
+    script: |
+      az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+      az account set --subscription $(ARM_SUBSCRIPTION_ID)
+      echo "Azure Login Successfull"
+      sudo az acr login -n $(ACR_NAME)
+      # sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.imageName}}/${{parameters.imageName}}.csproj
+      echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}"
+      sudo docker push ${{ parameters.registryName }}.azurecr.io/${{parameters.image}}:${{parameters.imageVersion}}
+
+# - task: Docker@2
+#   displayName: 'Push Image ${{ parameters.imageName }}'
+#   inputs:
+#     command: 'push'
+#     repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
+#     dockerfile: '${{ parameters.dockerFilePath }}'
+#     containerRegistry: '${{ parameters.pipelineAcrConnection }}'
+#     tags: '${{ parameters.imageVersion }}'  
