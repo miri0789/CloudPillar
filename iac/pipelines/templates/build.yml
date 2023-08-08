@@ -19,8 +19,8 @@ jobs:
     imageVersion: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
     imagePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
     dockerPath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerPath'] ] 
-steps:
-- script: echo $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+  steps:
+  - script: echo $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
 
 # - job: BuildImage
 #   dependsOn: RetrieveImageInfo
