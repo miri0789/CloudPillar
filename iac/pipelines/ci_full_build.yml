@@ -135,7 +135,7 @@ stages:
               # Further processing logic here
             fi
           done
-        name: getSingleImagesInfo
+        name: getSingleImageInfo
 
   - stage: CleanBuildScanPush
     displayName: Build Tag Scan Push Image
@@ -145,10 +145,10 @@ stages:
     condition: eq(variables['isSelectedImageAll'], false)
     variables:
       images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images']
-      imageName: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImagesInfo.imageName'] ]
-      imageVersion: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImagesInfo.imageVersion'] ]
-      imagePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImagesInfo.imagePath'] ]
-      dockerFilePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImagesInfo.dockerFilePath'] ]      
+      imageName: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imageName'] ]
+      imageVersion: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imageVersion'] ]
+      imagePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imagePath'] ]
+      dockerFilePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.dockerFilePath'] ]      
 
     jobs:
     - job: CleanImages
