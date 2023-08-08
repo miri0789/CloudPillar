@@ -101,7 +101,8 @@ stages:
       agent.name: aks-${{parameters.env}}-agent
     variables:
     - name: imageName
-      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+      value: $[ dependencies.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+      # value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
       # value: $[ dependencies.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
     - name: imageVersion
       value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
