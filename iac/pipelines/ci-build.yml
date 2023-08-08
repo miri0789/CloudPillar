@@ -91,6 +91,7 @@ stages:
     steps:
     - template: templates/clean.yml              
 
+
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   condition: eq(variables.isSelectedImageAll, false)
