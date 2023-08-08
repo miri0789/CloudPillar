@@ -94,7 +94,7 @@ stages:
   - RetrieveImageInfo
   jobs:
   - job: BuildImage  
-    displayName: Build Image  
+    displayName: Build Image  ${{parameters.image}}
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
@@ -115,9 +115,6 @@ stages:
       # imagePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
       # dockerFilePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ] 
     steps:
-    # - script: |
-    #     echo $(imageName)
-    #   displayName: Echo Image
     - template: templates/build.yml
       parameters:
         imageName: $(imageName)
@@ -126,11 +123,40 @@ stages:
         dockerFilePath: $(dockerFilePath)
         registryName: $(registryName)
         pipelineAcrConnection: $(pipelineAcrConnection)
+  - job: ScanImage  
+    displayName: Scan Image ${{parameters.image}}
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    variables:
+    - name: imageName
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+    - name: imageVersion
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
+    - name: imagePath
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
+    - name: dockerFilePath
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
     - template: templates/scan.yml
       parameters:
         imageName: $(imageName)
         imageVersion: $(imageVersion)
         registryName: $(registryName)
+
+  - job: PushImage  
+    displayName: Push Image ${{parameters.image}}
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    variables:
+    - name: imageName
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+    - name: imageVersion
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
+    - name: imagePath
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
+    - name: dockerFilePath
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
     - template: templates/push.yml
       parameters:
         imageName: $(imageName)
