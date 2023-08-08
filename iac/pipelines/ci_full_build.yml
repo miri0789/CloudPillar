@@ -161,7 +161,7 @@ stages:
 
     - job: BuildTagImage
       dependsOn: CleanImages
-      displayName: Build and Tag ${{ variables.imageName }}
+      displayName: Build and Tag Image
       steps:
       - template: templates/build.yml
         parameters:
@@ -173,7 +173,7 @@ stages:
 
     - job: ScanImage
       dependsOn: BuildTagImage
-      displayName: Scan Image $(imageName)
+      displayName: Scan Image 
       steps:
       - template: templates/scan.yml
         parameters:
@@ -183,7 +183,7 @@ stages:
 
     - job: PushImage
       dependsOn: ScanImage
-      displayName: Push Image $(imageName)
+      displayName: Push Image 
       steps:
       - template: templates/push.yml
         parameters:
