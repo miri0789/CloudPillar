@@ -71,6 +71,8 @@ jobs:
           echo "ImageName:${{ img.imageName }}"
           echo "ImageVersion:${{ parameters.imageVersion }}"
         name: setImageInfo
+        outputs:
+          setImageInfo.imageName: $(setImageInfo.imageName)        
       # env:
       #   imageName: $(imageName)
       #   imageVersion: $(imageVersion)
