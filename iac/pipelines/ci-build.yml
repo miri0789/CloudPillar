@@ -77,18 +77,12 @@ stages:
   - name: imageVersion
     value: $(major).$(minor).$(GitBuildNumber).$(TIME)
   jobs:
-  - job: RetrieveImageInfoJob
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent          
-    displayName: Retrieve Image Information  
-    steps:
-    - template: templates/images-template.yml
-      parameters:
-        registryName: $(registryName)
-        pipelineAcrConnection: $(pipelineAcrConnection)
-        selectedImage: ${{ parameters.image }}
-        imageVersion: $(imageVersion)
+  - template: templates/images-template.yml
+    parameters:
+      registryName: $(registryName)
+      pipelineAcrConnection: $(pipelineAcrConnection)
+      selectedImage: ${{ parameters.image }}
+      imageVersion: $(imageVersion)
   - job: CleanImages
     displayName: Clean Images & Containers
     pool:
