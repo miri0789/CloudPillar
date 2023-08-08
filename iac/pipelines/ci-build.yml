@@ -101,6 +101,12 @@ stages:
     variables:
     - name: imageName
       value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+    - name: imageVersion
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
+    - name: imagePath
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
+    - name: dockerFilePath
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
       # imageName: $(imageName)
       # imageVersion: $(imageVersion)
       # imagePath: $(imagePath)
@@ -109,17 +115,17 @@ stages:
       # imagePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
       # dockerFilePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ] 
     steps:
-    - script: |
-        echo $(imageName)
-      displayName: Echo Image
+    # - script: |
+    #     echo $(imageName)
+    #   displayName: Echo Image
     - template: templates/build.yml
       parameters:
         imageName: $(imageName)
-        # imageVersion: $(imageVersion)
-        # imagePath: $(imagePath)
-        # dockerFilePath: $(dockerFilePath)
-        # registryName: $(registryName)
-        # pipelineAcrConnection: $(pipelineAcrConnection)
+        imageVersion: $(imageVersion)
+        imagePath: $(imagePath)
+        dockerFilePath: $(dockerFilePath)
+        registryName: $(registryName)
+        pipelineAcrConnection: $(pipelineAcrConnection)
         # pool:
         #   name: $(AGENT_POOL)
         #   agent.name: aks-${{parameters.env}}-agent  
