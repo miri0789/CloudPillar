@@ -70,34 +70,56 @@ parameters:
 
 
 stages:
-
-
-
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   condition: eq(variables.isSelectedImageAll, false)
   variables:
     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-
   jobs:
-  - template: templates/images-template.yml
-    parameters:
+  - job: RetrieveImageInfo
+    displayName: Retrieve Image Information
+    variables:
+      image: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.image'] ]
+      imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
       registryName: $(registryName)
       pipelineAcrConnection: $(pipelineAcrConnection)
-      selectedImage: ${{ parameters.image}}
-      imageVersion: $(imageVersion)
-      pool:
-        name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent          
-  - template: templates/build.yml
-    parameters:
-      imageName: $(imageName)
-      imageVersion: $(imageVersion)
-      registryName: $(registryName)
-      pipelineAcrConnection: $(pipelineAcrConnection)
-      pool:
-        name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent          
+      selectedImage: $(selectedImage)       
+    steps:
+      - template: templates/images-template.yml
+        parameters:
+          image: $(image)
+          imageName: $(imageName)
+          imageVersion: $(imageVersion)
+          registryName: $(registryName)
+          pipelineAcrConnection: $(pipelineAcrConnection)
+          selectedImage: $(selectedImage)       
+
+# - stage: BuildScanPush
+#   displayName: Build Tag Scan Push Image
+#   condition: eq(variables.isSelectedImageAll, false)
+#   variables:
+#     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+
+#   jobs:
+#   - template: templates/images-template.yml
+#     parameters:
+#       registryName: $(registryName)
+#       pipelineAcrConnection: $(pipelineAcrConnection)
+#       selectedImage: ${{ parameters.image}}
+#       imageVersion: $(imageVersion)
+#       pool:
+#         name: $(AGENT_POOL)
+#         agent.name: aks-${{parameters.env}}-agent          
+#   - template: templates/build.yml
+#     parameters:
+#       imageName: $(imageName)
+#       imageVersion: $(imageVersion)
+#       registryName: $(registryName)
+#       pipelineAcrConnection: $(pipelineAcrConnection)
+#       pool:
+#         name: $(AGENT_POOL)
+#         agent.name: aks-${{parameters.env}}-agent          
 
 
   # - job: RetrieveImageInfo
@@ -117,20 +139,20 @@ stages:
   #       pipelineAcrConnection: $(pipelineAcrConnection)        
     
 
-  - job: BuildImage
-    dependsOn: RetrieveImageInfo
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent
-    steps:
-    - template: 'templates/build.yml' # Include the template as a job
-      parameters:
-        image: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.image'] ]
-        imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-        imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-        registryName: $(registryName)
-        pipelineAcrConnection: $(pipelineAcrConnection)
-        selectedImage: $(selectedImage)
+  # - job: BuildImage
+  #   dependsOn: RetrieveImageInfo
+  #   pool:
+  #     name: $(AGENT_POOL)
+  #     agent.name: aks-${{parameters.env}}-agent
+  #   steps:
+  #   - template: 'templates/build.yml' # Include the template as a job
+  #     parameters:
+  #       image: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.image'] ]
+  #       imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+  #       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+  #       registryName: $(registryName)
+  #       pipelineAcrConnection: $(pipelineAcrConnection)
+  #       selectedImage: $(selectedImage)
 
   # - job: PrintImageInfo
   #   dependsOn: RetrieveImageInfo
