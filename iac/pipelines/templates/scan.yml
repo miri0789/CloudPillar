@@ -17,10 +17,6 @@ steps:
   inputs:
     targetType: inline
     script: |
-      az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-      az account set --subscription $(ARM_SUBSCRIPTION_ID)
-      echo "Azure Login Successfull"
-      az acr login -n $(ACR_NAME)
       echo "Images"
       docker image ls | grep ${{parameters.imageName}}
       echo "${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}"
