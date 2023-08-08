@@ -101,20 +101,29 @@ stages:
           imagesJson='$(images)'
           echo "Images JSON"
           echo "$imagesJson"
-          # if echo "$imagesJson" | jq '.' > /dev/null; then # Check if valid JSON
-          #   imgName=$(echo "${imagesJson}" | jq -r --arg imgName "${{ parameters.image }}" '.[] | select(.name == $imgName) | .name')
-          #   imageVersion=$(echo "${imagesJson}" | jq -r --arg imgName "${{ parameters.image }}" '.[] | select(.name == $imgName) | .imageVersion')
-          #   if [ "$imgName" != "edge_conquest" ] && [ ! -z "$imgName" ]; then
-          #     imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
-          #   fi
-          #   echo "Processing image: $imgName"
-          #   echo "Image Version: $imageVersion"
-          #   # Further processing logic here
-          # else
-          #   echo "Invalid JSON"
-          # fi
+          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${img} | base64 --decode | jq -r ${1}
+            }
+            imgName=$(_jq '.name')
+            if [ "$imgName" == "${{ parameters.image }}" ]; then
+              imageName=$(_jq '.imageName')
+              imagePath=$(_jq '.imagePath')
+              dockerFilePath=$(_jq '.dockerFilePath')
+              imageVersion=$(_jq '.imageVersion')
+              if [ "$imgName" != "edge_conquest" ]; then
+                imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+              fi
+              echo "Processing image: $imgName"
+              echo "Image Version: $imageVersion"
+              echo "##vso[task.setvariable variable=imageName]$imageName"
+              echo "##vso[task.setvariable variable=imageVersion]$imageVersion"
+              echo "##vso[task.setvariable variable=imagePath]$imagePath"
+              echo "##vso[task.setvariable variable=dockerFilePath]$dockerFilePath"
+              # Further processing logic here
+            fi
+          done
         name: SingleImage
-
 
 
 
