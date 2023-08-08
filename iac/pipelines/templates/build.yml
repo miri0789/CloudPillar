@@ -54,7 +54,9 @@ steps:
 
 
       # cat ${{parameters.imagePath}}/*.csproj | grep "Info"
-      docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
+      # docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
+      docker build -t ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
+      docker images | grep ${{parameters.imageName}}      
 
 
 - task: Docker@2
