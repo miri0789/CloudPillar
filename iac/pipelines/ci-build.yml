@@ -16,12 +16,7 @@ variables:
 - group: iac-backend-vg
 - group: aks-backend-vg
 - group: backend-secrets-vg
-# - group: images-vg
 
-# - name: basePath
-  # value: src/backend
-# - name: dockerFile
-  # value: infra/build/Dockerfile
 - name: major
   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 - name: minor
