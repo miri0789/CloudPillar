@@ -1,0 +1,35 @@
+# File: templates/clean.yml
+parameters:
+  imageName: ''
+  imageVersion: ''
+  imagePath: ''
+  dockerFilePath: ''
+  registryName: ''
+  pipelineAcrConnection: ''
+  pool: ''
+
+  
+
+steps:
+- task: Bash@3
+  # displayName: Build & Tag Image
+  displayName: 'Clean Old Images'
+  inputs:
+    targetType: inline
+    script: |
+      echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}"
+      # Stop all containers
+      docker stop $(docker ps -a -q)
+      # Remove all containers
+      docker rm $(docker ps -a -q)
+      # Remove all images
+      docker image prune -a
+    
+
+
+
+
+
+    #   docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
+      # sudo docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
+      # sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
