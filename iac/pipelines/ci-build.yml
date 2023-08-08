@@ -78,9 +78,6 @@ stages:
       pipelineAcrConnection: $(pipelineAcrConnection)
       selectedImage: ${{ parameters.image }}
       imageVersion: $(imageVersion)
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent      
 
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
