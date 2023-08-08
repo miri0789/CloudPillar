@@ -90,8 +90,6 @@ stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   condition: eq(variables.isSelectedImageAll, false)
-  dependsOn: 
-  - RetrieveImageInfo
   jobs:
   - job: CleanImages
     displayName: Clean Images & Containers
@@ -104,6 +102,7 @@ stages:
     displayName: Build ${{parameters.image}} Image
     dependsOn:
     - CleanImages
+    - RetrieveImageInfo    
     pool:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
