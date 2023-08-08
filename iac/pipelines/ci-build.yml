@@ -95,7 +95,9 @@ stages:
   - job: BuildImage
     dependsOn: RetrieveImageInfo  
     displayName: Build Image  
-    pool: ${{parameters.pool}} 
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
     variables:
       imageName: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
       imageVersion: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
