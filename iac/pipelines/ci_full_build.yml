@@ -172,9 +172,9 @@ stages:
         echo "imageVersion: $(imageVersion)"    
       name: DebugPrint    
     - script: echo "Push Image Commented"   
-  #   - template: templates/push.yml
-  #     parameters:
-  #       imageName: $(imageName)
-  #       imageVersion: $(imageVersion)
-  #       registryName: $(registryName)
+    - template: templates/push.yml
+      parameters:
+        imageName: $(imageName)
+        imageVersion: $(imageVersion)
+        registryName: $(registryName)
 
