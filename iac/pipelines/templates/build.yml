@@ -63,10 +63,11 @@ steps:
   condition: eq('${{ parameters.imageName }}', 'edge_conquest') 
   inputs:
     command: 'build'
-    repository: '${{ parameters.registryName }}..azurecr.io/${{ parameters.imageName }}.'
-    dockerfile: '${{ parameters.dockerFilePath }}.'
-    containerRegistry: '${{ parameters.pipelineAcrConnection }}.'
-    tags: '${{ parameters.imageVersion }}.'
+    repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
+    dockerfile: '${{ parameters.dockerFilePath }}'
+    containerRegistry: '${{ parameters.pipelineAcrConnection }}'
+    tags: '${{ parameters.imageVersion }}'
+
 
 
 
