@@ -11,7 +11,8 @@ parameters:
   
 
 steps:
-- script: echo $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+- script: |
+    echo ImageName: ${{ parameters.imageName}}
   displayName: Build Image
 
 # - job: BuildImage
