@@ -333,14 +333,6 @@ stages:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:
-
-      # - template: templates/clean.yml   
-    - job: GetImage
-      displayName: Build ${{parameters.image}} Image
-      pool:
-        name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent
-      steps:
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
@@ -361,6 +353,8 @@ stages:
               fi            
               echo "Processing image: $imgName"
               echo "Image Version: $imageVersion"
+              - template: templates/build.yml
+
               echo "##vso[task.setvariable variable=$imgName_imageName]$imageName"
               echo "##vso[task.setvariable variable=$imgName_imageVersion]$imageVersion"
               echo "##vso[task.setvariable variable=$imgName_imagePath]$imagePath"
