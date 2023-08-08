@@ -71,6 +71,39 @@ parameters:
 
 stages:
 
+stages:
+- stage: RetrieveImageInfo
+  displayName: Retrieve Image Information
+  jobs:
+  - template: templates/images-template.yml
+    parameters:
+      registryName: $(registryName)
+      pipelineAcrConnection: $(pipelineAcrConnection)
+      selectedImage: ${{ parameters.image }}
+      imageVersion: $(imageVersion)
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+
+- stage: BuildScanPush
+  displayName: Build Tag Scan Push Image
+  condition: eq(variables.isSelectedImageAll, false)
+  dependsOn: RetrieveImageInfo
+  jobs:
+  - job: BuildImage
+    displayName: Build Image
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
+    variables:
+      imageName:  $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+      dockerFiePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
+    steps:
+    - script: |
+        echo $(imageName)
+
 
 
 - stage: BuildScanPush
