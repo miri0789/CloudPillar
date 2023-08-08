@@ -12,7 +12,7 @@ parameters:
 
 steps:
 - task: Bash@3
-  displayName: Build & Tag Image
+  displayName: Scan Image
   inputs:
     targetType: inline
     script: |
