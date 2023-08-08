@@ -105,33 +105,33 @@ stages:
 
 
 
-- stage: BuildScanPush
-  displayName: Build Tag Scan Push Image
-  condition: eq(variables.isSelectedImageAll, false)
-  variables:
-    imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-  jobs:
-  - template: templates/images-template.yml
-    parameters:
-      registryName: $(registryName)
-      pipelineAcrConnection: $(pipelineAcrConnection)
-      selectedImage: ${{ parameters.image}}
-      imageVersion: $(imageVersion)
-      pool:
-        name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent    
-  - job: RetrieveImageInfo
-    condition: ne('${{ parameters.image }}', 'all')
-    displayName: Retrieve Image Information
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent
-    variables:
-      imageName:  $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-      dockerFiePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
-    steps:
-    - script: |
-        echo $(imageName)
+# - stage: BuildScanPush
+#   displayName: Build Tag Scan Push Image
+#   condition: eq(variables.isSelectedImageAll, false)
+#   variables:
+#     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
+#   jobs:
+#   - template: templates/images-template.yml
+#     parameters:
+#       registryName: $(registryName)
+#       pipelineAcrConnection: $(pipelineAcrConnection)
+#       selectedImage: ${{ parameters.image}}
+#       imageVersion: $(imageVersion)
+#       pool:
+#         name: $(AGENT_POOL)
+#         agent.name: aks-${{parameters.env}}-agent    
+#   - job: RetrieveImageInfo
+#     condition: ne('${{ parameters.image }}', 'all')
+#     displayName: Retrieve Image Information
+#     pool:
+#       name: $(AGENT_POOL)
+#       agent.name: aks-${{parameters.env}}-agent
+#     variables:
+#       imageName:  $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+#       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+#       imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+#       dockerFiePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
+#     steps:
+#     - script: |
+#         echo $(imageName)
     
