@@ -11,14 +11,6 @@ parameters:
   
 
 steps:
-# - script: |
-#     echo ImageName: ${{ parameters.imageName}}
-#     echo imageVersion: ${{ parameters.imageVersion}}
-#     echo imagePath: ${{ parameters.imagePath}}
-#     echo dockerFilePath: ${{ parameters.dockerFilePath}}
-#     echo registryName: ${{ parameters.registryName}}
-#     echo pipelineAcrConnection: ${{ parameters.pipelineAcrConnection}}
-#   displayName: Build Image
 - task: Docker@2
   displayName: 'Build Image ${{ parameters.imageName }}'
   inputs:
@@ -27,28 +19,3 @@ steps:
     dockerfile: '${{ parameters.dockerFilePath }}'
     containerRegistry: '${{ parameters.pipelineAcrConnection }}'
     tags: '${{ parameters.imageVersion }}'  
-
-# - job: BuildImage
-#   dependsOn: RetrieveImageInfo
-#   pool: ${{parameters.pool}}
-#   displayName: Retrieve Image Information
-#   variables:
-#     imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-#     imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-#     imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-#     dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]       
-#     registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
-#     pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
-#   steps:
-#   - checkout: self
-#     persistCredentials: true
-#     clean: true
-#     - script: echo ${{ parameters.imageName }}
-# - task: Docker@2
-#   displayName: 'Build Image ${{ parameters.imageName }}'
-#   inputs:
-#     command: 'build'
-#     repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
-#     dockerfile: '${{ parameters.dockerFilePath }}'
-#     containerRegistry: '${{ parameters.pipelineAcrConnection }}'
-#     tags: '${{ parameters.imageVersion }}'
