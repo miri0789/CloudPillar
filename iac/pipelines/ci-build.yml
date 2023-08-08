@@ -70,264 +70,36 @@ parameters:
 
 
 stages:
+
+
+
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   condition: eq(variables.isSelectedImageAll, false)
   variables:
     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
   jobs:
+  - template: templates/images-template.yml
+    parameters:
+      registryName: $(registryName)
+      pipelineAcrConnection: $(pipelineAcrConnection)
+      selectedImage: ${{ parameters.image}}
+      imageVersion: $(imageVersion)
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent    
   - job: RetrieveImageInfo
+    condition: ne('${{ parameters.image }}', 'all')
+    displayName: Retrieve Image Information
     pool:
       name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent          
-    displayName: Retrieve Image Information
+      agent.name: aks-${{parameters.env}}-agent
     variables:
-      selectedImage: ${{ parameters.image}}
-      # imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-      # imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-    steps:
-      - template: templates/images-template.yml
-        parameters:
-          registryName: $(registryName)
-          pipelineAcrConnection: $(pipelineAcrConnection)
-          selectedImage: $(selectedImage)
-          imageVersion: $(imageVersion)
-          pool:
-            name: $(AGENT_POOL)
-            agent.name: aks-${{parameters.env}}-agent                    
-
-
-# - stage: BuildScanPush
-#   displayName: Build Tag Scan Push Image
-#   condition: eq(variables.isSelectedImageAll, false)
-#   variables:
-#     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-
-#   jobs:
-#   - template: templates/images-template.yml
-#     parameters:
-#       registryName: $(registryName)
-#       pipelineAcrConnection: $(pipelineAcrConnection)
-#       selectedImage: ${{ parameters.image}}
-#       imageVersion: $(imageVersion)
-#       pool:
-#         name: $(AGENT_POOL)
-#         agent.name: aks-${{parameters.env}}-agent          
-#   - template: templates/build.yml
-#     parameters:
-#       imageName: $(imageName)
-#       imageVersion: $(imageVersion)
-#       registryName: $(registryName)
-#       pipelineAcrConnection: $(pipelineAcrConnection)
-#       pool:
-#         name: $(AGENT_POOL)
-#         agent.name: aks-${{parameters.env}}-agent          
-
-
-  # - job: RetrieveImageInfo
-  #   displayName: Retrieve Image Information
-  #   pool:
-  #     name: $(AGENT_POOL)
-  #     agent.name: aks-${{parameters.env}}-agent    
-  #   variables:
-  #     selectedImage: ${{ parameters.image }}
-  #     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-  #   steps:
-  #   - template: templates/images-template.yml
-  #     parameters:
-  #       selectedImage: $(selectedImage)
-  #       imageVersion: $(imageVersion)
-  #       registryName: $(registryName)
-  #       pipelineAcrConnection: $(pipelineAcrConnection)        
+      imageName:  $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+      imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+      dockerFiePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
+      steps:
+      - script: |
+          echo $(imageName)
     
-
-  # - job: BuildImage
-  #   dependsOn: RetrieveImageInfo
-  #   pool:
-  #     name: $(AGENT_POOL)
-  #     agent.name: aks-${{parameters.env}}-agent
-  #   steps:
-  #   - template: 'templates/build.yml' # Include the template as a job
-  #     parameters:
-  #       image: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.image'] ]
-  #       imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-  #       imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-  #       registryName: $(registryName)
-  #       pipelineAcrConnection: $(pipelineAcrConnection)
-  #       selectedImage: $(selectedImage)
-
-  # - job: PrintImageInfo
-  #   dependsOn: RetrieveImageInfo
-  #   variables:
-  #     imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-  #     imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-  #     imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-  #     dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
-  #     # registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
-  #     # pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]      
-    
-  # - job: RetrieveImageInfo
-    # condition: ne('${{ parameters.image }}', 'all')
-    # displayName: Retrieve Image Information
-    # pool:
-    #   name: $(AGENT_POOL)
-    #   agent.name: aks-${{parameters.env}}-agent
-    # steps:
-    # - template: 'templates/images-template.yml' # Include the template as steps
-    #   parameters:
-    #     selectedImage: ${{ parameters.image }}
-    #     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-    #     registryName: $(registryName)
-    #     pipelineAcrConnection: $(pipelineAcrConnection)
-
-    # - script: echo 
-  # - job: BuildImage
-  #   variables:
-  #     imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-  #     imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-  #     imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-  #     dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]
-  #     # registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
-  #     # pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
-  #   displayName: Build Image $(imageName)
-  #   dependsOn: RetrieveImageInfo
-  #   steps:
-  #   - template: templates/build.yml
-  #     parameters:
-  #       imageName: '${{variabimageName)
-  #       imageVersion: $(imageVersion)
-  #       registryName: $(registryName)
-  #       pipelineAcrConnection: $(pipelineAcrConnection)      
-        
-    #     echo "imageName=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]"
-    #     echo "imageVersion=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]"
-    #     echo "imagePath=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]"
-    #     echo "dockerFilePath=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]"
-    #     echo "registryName=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]"
-    #     echo "pipelineAcrConnection=$[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]"
-    #   displayName: 'Set Build Parameters'
-    #   name: buildParams
-    # - template: templates/build.yml
-    #   parameters:
-    #     imageName: $(imageName)
-    #     imageVersion: $(imageVersion)
-    #     imagePath: $(imagePath)
-    #     dockerFilePath: $(dockerFilePath)
-    #     registryName: $(registryName)
-    #     pipelineAcrConnection: $(pipelineAcrConnection)
-    #   # displayName: 'Build Scan Push'
-    
-  # - job: PrintImageInfo
-  #   dependsOn: RetrieveImageInfo
-  #   variables:
-  #     imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-  #     imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-  #     imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-  #     dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ] 
-  #     registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
-  #     pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
-  #   steps:    
-    # pool:
-    #   name: $(AGENT_POOL)
-    #   agent.name: aks-${{parameters.env}}-agent
-    # displayName: Print Image Information
-    # steps:
-    # - checkout: self
-    #   persistCredentials: true
-    #   clean: true    
-    # - download: current
-    #   artifact: ${{ parameters.image }}_info    
-    #   displayName: Download ${{ parameters.image }}_info Artifact
-    # - download: current
-    #   artifact: ${{ parameters.image }}_info_sapce    
-    #   displayName: Download ${{ parameters.image }}_info Artifact
-    #   condition: ne('${{ parameters.image }}', 'all')
-    # - script: ls -la $(Pipeline.Workspace)/src/
-    #   displayName: 'List files in src directory space'
-    # - script: ls -la $(Build.ArtifactStagingDirectory)
-    #   displayName: 'List files in artifact directory'
-    # - script: cat $(System.DefaultWorkingDirectory)/${{ parameters.image }}_info/${{ parameters.image }}_info.txt
-      # displayName: 'Display Image Information'
-
-
-    # - script: |
-    #       echo $(System.DefaultWorkingDirectory) 
-    #       pwd
-    #       ls $(System.DefaultWorkingDirectory)/src 
-    #       # cat $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
-    #       # cat $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
-    #       # source $(System.DefaultWorkingDirectory)/src/${{parameters.image}}_info.txt
-    #       # echo "Image Name: $imageName"
-    #       # echo "Image Version: $imageVersion"
-    #       # echo "Image Path: $imagePath"
-    #       # echo "Docker File Path: $dockerFilePath"
-      # displayName: 'Print Image Information Variables'      
-
-# - stage: BuildSpecificImage
-#   displayName: Build Specific Image
-#   condition: ne('${{ parameters.image }}', 'all')
-#   jobs:
-#   - job: RetrieveImageInfo
-#     pool:
-#       name: $(AGENT_POOL)
-#       agent.name: aks-${{parameters.env}}-agent    
-#     displayName: Retrieve Image Information
-#     condition: ne('${{ parameters.image }}', 'edge_conquest')
-#     steps:
-#     - template: 'templates/images-template.yml'
-#       parameters:
-#         selectedImage: ${{ parameters.image }} # Pass the selected image as a parameter
-#         imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
-#         basePath: $(basePath)
-
-#   - job: PrintImageInfo
-#     dependsOn: RetrieveImageInfo
-#     pool:
-#       name: $(AGENT_POOL)
-#       agent.name: aks-${{parameters.env}}-agent
-#     displayName: Print Image Information
-#     steps:
-#     - download: current
-#       artifact: ${{ parameters.image }}_info    
-#       displayName: Download ${{ parameters.image }} Info Artifact
-#     - script: |
-#           echo $(Pipeline.Workspace)
-#           source source $(System.DefaultWorkingDirectory)/$(basePath)/${{ parameters.image}}_info.txt
-#           echo "Image Name: $imageName"
-#           echo "Image Version: $imageVersion"
-#           echo "Image Path: $imagePath"
-#           echo "Docker File Path: $dockerFilePath"
-#       displayName: 'Print Image Information Variables'      
-
-
-
-
-
-    # - script: |
-    #     echo "Image Name: $(RetrieveImageInfo.setImageInfo.NewImageName)"
-    #     echo "Image Version: $(RetrieveImageInfo.setImageInfo.NewImageVersion)"
-    #     echo "Image Path: $(RetrieveImageInfo.setImageInfo.NewImagePath)"
-    #     echo "Docker File Path: $(RetrieveImageInfo.setImageInfo.NewDockerFilePath)"
-    #   displayName: 'Print Image Information Variables'
-  #   - ${{ each img in template('templates/images-templates.yml').parameters.images }}:
-  #     - ${{ if eq(parameters.image, img.name) }}:
-  #       - script: |
-  #           echo "##vso[task.setvariable variable=imageName;]${{ img.imageName }}"
-  #           echo "##vso[task.setvariable variable=imageVersion;]${{ img.imageVersion }}"
-  #           echo "##vso[task.setvariable variable=imagePath;]${{ img.imagePath }}"
-  #           echo "##vso[task.setvariable variable=dockerFilePath;]${{ img.dockerFilePath }}"
-  #         displayName: 'Set Image Information Variables for ${{ img.name }}'        
-
-  # - job: PrintImageInfo
-  #   dependsOn: RetrieveImageInfo
-  #   pool:
-  #     name: $(AGENT_POOL)
-  #     agent.name: aks-${{parameters.env}}-agent
-  #   displayName: Print Image Information
-  #   steps:
-  #   - script: |
-  #       echo "Image Name: $(imageName)"
-  #       echo "Image Version: $(imageVersion)"
-  #       echo "Image Path: $(imagePath)"
-  #       echo "Docker File Path: $(dockerFilePath)"
-  #     displayName: 'Print Image Information Variables'
