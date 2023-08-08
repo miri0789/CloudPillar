@@ -343,8 +343,10 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:
       - script: |    
-          echo "image"
-          echo "$(images)"
+          echo "images"
+          # echo "$(images)"
+          echo '$(images)' | jq '.[]'
+          images=$(echo '$(images)' | jq '.[]')
           for image in $images; do
             echo "Processing image: $image"
             # Perform actions on each image here
