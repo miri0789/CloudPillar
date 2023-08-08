@@ -53,7 +53,7 @@ steps:
   # - ${{ if and(eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
     - task: Bash@3
     #   displayName: Push Image
-      displayName: 'Push ${{ parameters.imageName }}'
+      displayName: 'Set ${{ parameters.imageName }} Info'
       inputs:
         targetType: inline
         script: |
