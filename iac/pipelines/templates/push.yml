@@ -2,11 +2,7 @@
 parameters:
   imageName: ''
   imageVersion: ''
-  imagePath: ''
-  dockerFilePath: ''
   registryName: ''
-  pipelineAcrConnection: ''
-  pool: ''
 
   
 
