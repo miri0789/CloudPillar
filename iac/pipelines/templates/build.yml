@@ -29,6 +29,30 @@ steps:
       echo "dockerFilePath: $(dockerFilePath)"
       echo "imagePath: $(imagePath)"
       echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}"
-      sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" ${{parameters.imagePath}}/*.csproj
+      
+      echo -e "\n\n"
+      echo -e "================================================\n\tPre Info Version\n================================================"
+      find ${{parameters.imagePath}} -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+      
+      echo -e "\n\n"
+      echo -e "================================================\n\tInit Tag\n================================================"
+      echo -e "\n\n"
+      echo -e "================================================\n\tInit Tag\n================================================"
+      INIT_TAG="_MAJOR_._MINOR_._BUILDNUM_._TIMESTAMP_"
+      echo "INIT TAG = $INIT_TAG"
+      find ${{parameters.imagePath}} -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+
+      # find ${{parameters.imagePath}} -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${INIT_TAG}/g" {} \;
+
+      echo -e "\n\n"
+      echo -e "================================================\n\tUpdated Tag\n================================================"
+      # sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" ${{parameters.imagePath}}/*.csproj
+      TAG="${{parameters.imageVersion}}"
+      echo "TAG: $TAG"
+      find ${{parameters.imagePath}} -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+
+      # find src/backend -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
+
+      cat ${{parameters.imagePath}}/*.csproj | grep "Info"
       docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
     name: buildImage      
