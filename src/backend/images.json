@@ -68,6 +68,6 @@
         "imageName": "edge_conquest",
         "imagePath": "./src/edge/conquest/",
         "imageVersion": "v0.7.3",
-        "dockerFilePath": "./src/edge/conquest/Dockerfile",
+        "dockerFilePath": "./src/edge/conquest/Dockerfile"
     }
 ]
