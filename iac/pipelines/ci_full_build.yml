@@ -160,7 +160,7 @@ stages:
       - template: templates/clean.yml   
 
     - job: BuildTag_$(imageName)
-      displayName: Build and Tag ${{ image.name }}
+      displayName: Build and Tag $(imageName)
       steps:
       - template: template/build.yml
         parameters:
@@ -171,7 +171,7 @@ stages:
           registryName: $(registryName)
 
     - job: Scan_$(imageName)
-      displayName: Scan Image ${{ image.name }}
+      displayName: Scan Image $(imageName)
       steps:
       - template: template/scan.yml
         parameters:
@@ -180,7 +180,7 @@ stages:
           registryName: $(registryName)
 
     - job: Push_$(imageName)
-      displayName: Push Image ${{ image.name }}
+      displayName: Push Image $(imageName)
       steps:
       - template: template/push.yml
         parameters:
