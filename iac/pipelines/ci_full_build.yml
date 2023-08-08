@@ -9,7 +9,15 @@ trigger:
     - $(Build.SourceBranchName)
     exclude:
     - '*'
+  paths:
+    include:
+    - src/edge/conquest/*
+    - src/backned/*
+    exclude:
+    - '*'    
 
+resources:
+- repo: self
 
 variables:
 - group: arm-vg
@@ -30,13 +38,13 @@ variables:
 # - name: dockerfilePath
 #   value: './src/edge/conquest/Dockerfile'
 - name: pipelineAcrConnection
-  value: 'iotimageacr'
+  value: 'iotacr'
+  # value: 'iotimageacr'
 - name: isSelectedImageAll
   value: ${{ eq(parameters.image, 'all') }}
 
 
-resources:
-- repo: self
+
 
 parameters:
   - name: env
