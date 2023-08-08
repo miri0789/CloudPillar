@@ -159,7 +159,7 @@ stages:
       steps:
       - template: templates/clean.yml   
 
-    - job: BuildTag_${{ image.name }}
+    - job: BuildTag_$(imageName)
       displayName: Build and Tag ${{ image.name }}
       steps:
       - template: template/build.yml
@@ -170,7 +170,7 @@ stages:
           dockerFilePath: $(dockerFilePath)
           registryName: $(registryName)
 
-    - job: Scan_${{ image.name }}
+    - job: Scan_$(imageName)
       displayName: Scan Image ${{ image.name }}
       steps:
       - template: template/scan.yml
@@ -179,7 +179,7 @@ stages:
           imageVersion: $(imageVersion)
           registryName: $(registryName)
 
-    - job: Push_${{ image.name }}
+    - job: Push_$(imageName)
       displayName: Push Image ${{ image.name }}
       steps:
       - template: template/push.yml
