@@ -92,28 +92,23 @@ stages:
   
   - stage: GetSingleImage
     dependsOn: GetImages
-    condition: ne(variables.selectedImage, 'all')
+    condition: ne('${{ parameters.image }}', 'all')  
     jobs:
     - job: GetSingleImageJob
       variables:
         images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
       steps:
       - script: |
-          semi_images=$(cat ./src/backend/images.json)
-          json=$(cat src/backend/images.json)
-          images='${{ variables.images }}'
-          echo "images"
-          echo "$images"
-          imagesJson=$(echo "$images" | jq '.')
+          imagesJson='${{ variables.images }}'
           echo "Images JSON"
-          echo $imagesJson
-          for row in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+          echo "$imagesJson"
+          for row in $(echo "${imagesJson}" | jq -c -r '.[] | @base64'); do
             _jq() {
               echo ${row} | base64 --decode | jq -r ${1}
             }
             imgName=$(_jq '.name')
+            imageVersion=$(_jq '.imageVersion')
             if [ "$imgName" == "${{ parameters.image }}" ]; then
-              imageVersion=$(_jq '.imageVersion')
               if [ "$imgName" != "edge_conquest" ]; then
                 imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
               fi
@@ -122,7 +117,30 @@ stages:
               # Further processing logic here
             fi
           done
-        displayName: Get Single Image Info
+        #   semi_images=$(cat ./src/backend/images.json)
+        #   json=$(cat src/backend/images.json)
+        #   images='${{ variables.images }}'
+        #   echo "images"
+        #   echo "$images"
+        #   imagesJson=$(echo "$images" | jq '.')
+        #   echo "Images JSON"
+        #   echo $imagesJson
+        #   for row in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+        #     _jq() {
+        #       echo ${row} | base64 --decode | jq -r ${1}
+        #     }
+        #     imgName=$(_jq '.name')
+        #     if [ "$imgName" == "${{ parameters.image }}" ]; then
+        #       imageVersion=$(_jq '.imageVersion')
+        #       if [ "$imgName" != "edge_conquest" ]; then
+        #         imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+        #       fi
+        #       echo "Processing image: $imgName"
+        #       echo "Image Version: $imageVersion"
+        #       # Further processing logic here
+        #     fi
+        #   done
+        # displayName: Get Single Image Info
 
     #   - task: Bash@3
     #     name: getSingleImagesInfo
