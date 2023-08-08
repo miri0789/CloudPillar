@@ -353,7 +353,7 @@ stages:
               fi            
               echo "Processing image: $imgName"
               echo "Image Version: $imageVersion"
-              - template: templates/build.yml
+              # - template: templates/build.yml
 
               echo "##vso[task.setvariable variable=$imgName_imageName]$imageName"
               echo "##vso[task.setvariable variable=$imgName_imageVersion]$imageVersion"
