@@ -62,6 +62,8 @@ jobs:
         inputs:
           targetType: inline
           script: |
+            echo "Selected Image: ${{ parameters.selectedImage }}"
+            echo "Image Name in Loop: ${{ img.name }}"          
             echo "ImageName:  ${{ img.imageName }}"
             echo "registryName:  ${{ parameters.selectedImage }}"
             echo "ImageVersion:  ${{ parameters.imageVersion }}"
@@ -69,7 +71,8 @@ jobs:
             echo "ImagePath:  ${{ img.imagePath }}"
 
             echo "dockerFilePath:  ${{ img.dockerFilePath }}"
-
+            echo "Setting Variables:"
+            echo "Image Name: ${{ img.imageName }}"
             echo "##vso[task.setvariable variable=imageName;isOutput=true]${{ img.imageName }}"
             echo "##vso[task.setvariable variable=name;isOutput=true]${{ img.name }}"
             echo "##vso[task.setvariable variable=imageVersion;isOutput=true]${{ parameters.imageVersion }}"
