@@ -99,6 +99,7 @@ stages:
         images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
       steps:
       - script: |
+          semi_images=$(cat ./src/backend/images.json)
           images='${{ variables.images }}'
           imagesJson=$(echo "$images" | jq '.')
           echo "Images JSON"
