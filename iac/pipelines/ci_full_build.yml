@@ -98,9 +98,9 @@ stages:
           value: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
         steps:
         - ${{ each img in variables['images'] }}:
-          script: |
-            echo $(img.name)
-            echo $(img.dockerFilePath)
+          - script: |
+              echo $(img.name)
+              echo $(img.dockerFilePath)
 
 
     #   - task: Bash@3
