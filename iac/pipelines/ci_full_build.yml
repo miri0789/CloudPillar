@@ -101,17 +101,21 @@ stages:
           imagesJson='${{ variables.images }}'
           echo "Images JSON"
           echo "$imagesJson"
-          for imgName in $(echo "${imagesJson}" | jq -r '.[].name'); do
-            if [ "$imgName" == "${{ parameters.image }}" ]; then
-              imageVersion=$(echo "${imagesJson}" | jq -r --arg imgName "$imgName" '.[] | select(.name == $imgName) | .imageVersion')
-              if [ "$imgName" != "edge_conquest" ]; then
-                imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+          if echo "$imagesJson" | jq '.' > /dev/null; then # Check if valid JSON
+            for imgName in $(echo "${imagesJson}" | jq -r '.[].name'); do
+              if [ "$imgName" == "${{ parameters.image }}" ]; then
+                imageVersion=$(echo "${imagesJson}" | jq -r --arg imgName "$imgName" '.[] | select(.name == $imgName) | .imageVersion')
+                if [ "$imgName" != "edge_conquest" ]; then
+                  imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+                fi
+                echo "Processing image: $imgName"
+                echo "Image Version: $imageVersion"
+                # Further processing logic here
               fi
-              echo "Processing image: $imgName"
-              echo "Image Version: $imageVersion"
-              # Further processing logic here
-            fi
-          done
+            done
+          else
+            echo "Invalid JSON"
+          fi
         name: SingleImage
 
 
