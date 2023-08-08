@@ -42,6 +42,8 @@ variables:
   # value: 'iotimageacr'
 - name: isSelectedImageAll
   value: ${{ eq(parameters.image, 'all') }}
+- name: selectedImage
+  value: ${{ parameters.image }}
 
 
 
@@ -90,7 +92,7 @@ stages:
   
   - stage: GetSingleImage
     dependsOn: GetImages
-    condition: ne(parameters.image, 'all')
+    condition: ne(variables.selectedImage, 'all')
     jobs:
     - job: GetSingleImageJob
       variables:
