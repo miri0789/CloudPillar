@@ -11,6 +11,8 @@ steps:
 - task: Bash@3
   # displayName: Build & Tag Image
   displayName: 'Build & Tag ${{ parameters.imageName }}'
+  name: buildImage      
+  condition: ne('${{ parameters.imageName }}', 'edge_conquest')
   inputs:
     targetType: inline
     script: |
@@ -53,4 +55,29 @@ steps:
 
       # cat ${{parameters.imagePath}}/*.csproj | grep "Info"
       docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
-    name: buildImage      
+
+
+- task: Docker@2
+  displayName: 'Dcoker Build & Tag ${{ parameters.imageName }}'
+  name: dockerBuildImage     
+  condition: eq('${{ parameters.imageName }}', 'edge_conquest') 
+  inputs:
+    command: 'build'
+    repository: '${{ parameters.registryName }}..azurecr.io/${{ parameters.imageName }}.'
+    dockerfile: '${{ parameters.dockerFilePath }}.'
+    containerRegistry: '${{ parameters.pipelineAcrConnection }}.'
+    tags: '${{ parameters.imageVersion }}.'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
