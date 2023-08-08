@@ -130,13 +130,12 @@ stages:
       parameters:
         imageName: $(imageName)
         imageVersion: $(imageVersion)
-        imagePath: $(imagePath)
-        dockerFilePath: $(dockerFilePath)
         registryName: $(registryName)
-        pipelineAcrConnection: $(pipelineAcrConnection)
-        # pool:
-        #   name: $(AGENT_POOL)
-        #   agent.name: aks-${{parameters.env}}-agent  
+    - template: templates/push.yml
+      parameters:
+        imageName: $(imageName)
+        imageVersion: $(imageVersion)
+        registryName: $(registryName)
 
   # - job: BuildImage
     # displayName: Build Image
