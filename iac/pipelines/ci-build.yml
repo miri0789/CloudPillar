@@ -72,7 +72,7 @@ parameters:
 stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
-  condition: eq(variables.isSelectedImageAll, true)
+  condition: eq(variables.isSelectedImageAll, false)
   variables:
     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
   jobs:
@@ -82,7 +82,7 @@ stages:
       agent.name: aks-${{parameters.env}}-agent          
     displayName: Retrieve Image Information
     variables:
-      selectedImage: $${{ parameters.image}}
+      selectedImage: ${{ parameters.image}}
       # imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
       # imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
     steps:
