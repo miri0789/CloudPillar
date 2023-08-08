@@ -162,6 +162,9 @@ stages:
     - job: BuildTagImage
       dependsOn: CleanImages
       displayName: Build and Tag Image
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent      
       steps:
       - template: templates/build.yml
         parameters:
@@ -174,6 +177,9 @@ stages:
     - job: ScanImage
       dependsOn: BuildTagImage
       displayName: Scan Image 
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
       steps:
       - template: templates/scan.yml
         parameters:
@@ -184,6 +190,9 @@ stages:
     - job: PushImage
       dependsOn: ScanImage
       displayName: Push Image 
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
       steps:
       - template: templates/push.yml
         parameters:
