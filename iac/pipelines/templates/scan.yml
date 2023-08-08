@@ -3,10 +3,6 @@ parameters:
   imageName: ''
   imageVersion: ''
   registryName: ''
-#   imagePath: ''
-#   dockerFilePath: ''
-  # pipelineAcrConnection: ''
-  # pool: ''
 
   
 
@@ -22,11 +18,11 @@ steps:
       docker image ls | grep ${{parameters.imageName}}
       echo "${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}"
       docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
+    name: scanImage
       # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.imageName}}:${{parameters.imageVersion}}
       # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
       # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
       # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/backend_${{parameters.image}}.dll:latest
-    name: scanImage
 
         # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
         # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.imageName}}:${{parameters.imageVersion}}
