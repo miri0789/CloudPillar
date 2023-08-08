@@ -73,6 +73,9 @@ parameters:
 stages:
 - stage: RetrieveImageInfo
   displayName: Retrieve Image Information
+  variables:
+  - name: imageVersion
+    value: $(major).$(minor).$(GitBuildNumber).$(TIME)
   jobs:
   - template: templates/images-template.yml
     parameters:
