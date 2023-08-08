@@ -91,7 +91,7 @@ stages:
   
   - stage: GetSingleImage
     dependsOn: GetImages
-    condition: ne('${{ parameters.image }}', 'all')  
+    condition: ne('selectedImage)', 'all')  
     jobs:
     - job: GetSingleImageJob
       variables:
