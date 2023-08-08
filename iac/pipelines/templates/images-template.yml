@@ -48,9 +48,6 @@ parameters:
 
 
 steps:
-- checkout: self
-  persistCredentials: true
-  clean: true
 - ${{ each img in parameters.images }}:
   - ${{ if eq(parameters.selectedImage, img.name) }}:
   # - ${{ if and(eq(parameters.selectedImage, img.name), ne(parameters.selectedImage, 'all')) }}:
