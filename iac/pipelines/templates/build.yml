@@ -29,7 +29,7 @@ steps:
       echo "dockerFilePath: $(dockerFilePath)"
       echo "imagePath: $(imagePath)"
       echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}"
-      sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.imageName}}/${{parameters.imageName}}.csproj
+      sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" ${{parameters.imagePath}}/*.csproj
       docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
     name: buildImage      
 
