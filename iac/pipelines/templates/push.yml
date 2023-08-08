@@ -9,7 +9,7 @@ parameters:
 steps:
 - task: Bash@3
 #   displayName: Push Image
-  displayName: 'Push Image ${{ parameters.imageName }}'
+  displayName: 'Push ${{ parameters.imageName }}'
   inputs:
     targetType: inline
     script: |
