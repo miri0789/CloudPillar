@@ -100,6 +100,7 @@ stages:
     condition: eq(variables['isSelectedImageAll'], false)
     jobs:
     - job: GetSingleImageJob
+      displayName: Get Single Image Job
       variables:
         images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
       steps:
@@ -348,7 +349,7 @@ stages:
             echo "Processing image: $image"
             # Perform actions on each image here
           done
-
+        name: BuildImage
 
 
 #     - job: CleanImages
