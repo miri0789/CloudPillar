@@ -317,6 +317,37 @@ stages:
       #   #     echo -e "\n\n"
       #   #     if [ "$(isSelectedImageAll)" != "true" ]; then
 
+  - stage: CleanBuildScanPushAll
+    displayName: Build Tag Scan Push All Images
+    dependsOn: 
+    - GetImages
+    condition: eq(variables['isSelectedImageAll'], true)
+    variables:
+      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+
+    jobs:
+    - job: CleanImages
+      displayName: Clean Images & Containers
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - template: templates/clean.yml   
+    
+    - ${{ each image in variables.images }}:
+      - job: BuildImages
+        displayName: Build ${{parameters.image}} Image
+        dependsOn:
+        - CleanImages
+        pool:
+          name: $(AGENT_POOL)
+          agent.name: aks-${{parameters.env}}-agent
+        steps:
+        - script: |    
+            echo "image"
+            echo "$(image)"
+
+
 
 
 #     - job: CleanImages
