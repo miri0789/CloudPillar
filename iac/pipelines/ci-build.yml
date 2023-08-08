@@ -113,6 +113,7 @@ stages:
       value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
     - name: dockerFilePath
       value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
+
       # imageName: $(imageName)
       # imageVersion: $(imageVersion)
       # imagePath: $(imagePath)
@@ -121,6 +122,9 @@ stages:
       # imagePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
       # dockerFilePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ] 
     steps:
+    - script: |
+        echo "imageName: $(imageName)"
+        echo "imageVersion: $(imageVersion)"
     - template: templates/build.yml
       parameters:
         imageName: $(imageName)
