@@ -110,8 +110,6 @@ stages:
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
           echo "$imagesJson"
           echo -e "\n\n"
-
-          if [ "$(isSelectedImageAll)" != "true" ]; then
           for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
             _jq() {
               echo ${img} | base64 --decode | jq -r ${1}
@@ -131,6 +129,11 @@ stages:
               echo "##vso[task.setvariable variable=imageVersion]$imageVersion"
               echo "##vso[task.setvariable variable=imagePath]$imagePath"
               echo "##vso[task.setvariable variable=dockerFilePath]$dockerFilePath"
+
+              echo "##vso[task.setvariable variable=imageName;isOutput=true]$imageName"
+              echo "##vso[task.setvariable variable=imageVersion;isOutput=true]$imageVersion"
+              echo "##vso[task.setvariable variable=imagePath;isOutput=true]$imagePath"
+              echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]$dockerFilePath"
               # Further processing logic here
             fi
           done
@@ -138,7 +141,210 @@ stages:
 
 
 
+  - stage: CleanBuildScanPush
+    displayName: Build Tag Scan Push Image
+    dependsOn: 
+    - GetImages
+    - GetSingleImage
+    condition: eq(variables['isSelectedImageAll'], true)
+    variables:
+      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+    jobs:
+      - ${{ if eq(variables.isSelectedImageAll, 'true') }}:
+        - ${{ each image in json(variables.images) }}:
+          - job: BuildTag_${{ image.name }}
+            displayName: Build and Tag ${{ image.name }}
+            variables:
+              imageName: ${{ image.imageName }}
+              imageVersion: ${{ image.imageVersion }}
+              imagePath: ${{ image.imagePath }}
+              dockerFilePath: ${{ image.dockerFilePath }}            
+            steps:
+            - template: template/build.yml
+              parameters:
+                imageName: $(imageName)
+                imageVersion: $(imageVersion)
+                imagePath: $(imagePath)
+                dockerFilePath: $(dockerFilePath)
+                registryName: $(registryName)
+                pipelineAcrConnection: $(pipelineAcrConnection)
+          - job: Scan_${{ image.name }}
+            displayName: Scan Image ${{ image.name }}
+            variables:
+              imageName: ${{ image.imageName }}
+              imageVersion: ${{ image.imageVersion }}
+              imagePath: ${{ image.imagePath }}
+            steps:
+            - template: template/scan.yml
+              parameters:
+                imageName: $(imageName)
+                imageVersion: $(imageVersion)
+                registryName: $(registryName)
+          - job: Push_${{ image.name }}
+            displayName: Push Image ${{ image.name }}
+            variables:
+              imageName: ${{ image.imageName }}
+              imageVersion: ${{ image.imageVersion }}
+              imagePath: ${{ image.imagePath }}
+            steps:
+            - template: template/push.yml
+              parameters:
+                imageName: $(imageName)
+                imageVersion: $(imageVersion)
+                registryName: $(registryName)
 
+
+    # - job: CleanImages
+    #   displayName: Clean Images & Containers
+    #   pool:
+    #     name: $(AGENT_POOL)
+    #     agent.name: aks-${{parameters.env}}-agent
+    #   steps:
+    #   - template: templates/clean.yml              
+    # - job: IterateImages
+    #   steps:
+    #   - script: |
+    #       imagesJson='$(images)'
+    #       echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+    #       echo "$imagesJson"
+    #       echo -e "\n\n"
+    #       for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+    #         _jq() {
+    #           echo ${img} | base64 --decode | jq -r ${1}
+    #         }
+    #         imgName=$(_jq '.name')
+
+
+
+    # - job: BuildImageJob  
+    #   displayName: Build ${{parameters.image}} Image
+    #   dependsOn:
+    #   - CleanImages
+    #   pool:
+    #     name: $(AGENT_POOL)
+    #     agent.name: aks-${{parameters.env}}-agent
+    #   steps:
+    #   - script: |
+    #       echo "##[group]BuildImageVars"
+    #       echo "##[command]imageName:\t $(imageName)"
+    #       echo "##[command]imageVersion:\t $(imageVersion)"
+    #       echo "##[warning]imageVersion:\t $(imageVersion)"
+    #       echo "##[warning]imageName:\t $(imageName)"
+    #       echo "##[endgroup]"        
+    #     name: DebugPrint
+    #   - template: templates/build.yml
+    #     parameters:
+    #       imageName: $(imageName)
+    #       imageVersion: $(imageVersion)
+    #       imagePath: $(imagePath)
+    #       dockerFilePath: $(dockerFilePath)
+    #       registryName: $(registryName)
+    #       pipelineAcrConnection: "$(pipelineAcrConnection)"
+
+
+    #   # steps:
+    #   # - script: |
+    #   #     imagesJson='$(images)'
+    #   #     echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+    #   #     echo "$imagesJson"
+    #   #     echo -e "\n\n"
+    #   #     if [ "$(isSelectedImageAll)" != "true" ]; then
+
+
+#     - job: CleanImages
+#       displayName: Clean Images & Containers
+#       pool:
+#         name: $(AGENT_POOL)
+#         agent.name: aks-${{parameters.env}}-agent
+#       steps:
+#       - template: templates/clean.yml              
+
+#     - job: BuildImageJob  
+#       displayName: Build ${{parameters.image}} Image
+#       dependsOn:
+#       - CleanImages
+#       pool:
+#         name: $(AGENT_POOL)
+#         agent.name: aks-${{parameters.env}}-agent
+#       steps:
+#       - script: |
+#           echo "##[group]BuildImageVars"
+#           echo "##[command]imageName:\t $(imageName)"
+#           echo "##[command]imageVersion:\t $(imageVersion)"
+#           echo "##[warning]imageVersion:\t $(imageVersion)"
+#           echo "##[warning]imageName:\t $(imageName)"
+#           echo "##[endgroup]"        
+#         name: DebugPrint
+#       - template: templates/build.yml
+#         parameters:
+#           imageName: $(imageName)
+#           imageVersion: $(imageVersion)
+#           imagePath: $(imagePath)
+#           dockerFilePath: $(dockerFilePath)
+#           registryName: $(registryName)
+#           pipelineAcrConnection: "$(pipelineAcrConnection)"
+#     - job: ScanImageJob
+#       dependsOn: BuildImageJob 
+#       displayName: Scan ${{parameters.image}} Image 
+#       pool:
+#         name: $(AGENT_POOL)
+#         agent.name: aks-${{parameters.env}}-agent
+#       # variables:
+#       # - name: imageName
+#       #   value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+#       # - name: imageVersion
+#       #   value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
+#       # - name: imagePath
+#       #   value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
+#       # - name: dockerFilePath
+#       #   value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
+#       steps:
+#       - script: |
+#           echo "##[group]ScanImageVars"
+#           echo "##[command]imageName:\t $(imageName)"
+#           echo "##[command]imageVersion:\t $(imageVersion)"
+#           echo "##[warning]imageVersion:\t $(imageVersion)"
+#           echo "##[warning]imageName:\t $(imageName)"
+#           echo "##[endgroup]"            
+#         name: DebugPrint
+#       - template: templates/scan.yml
+#         parameters:
+#           imageName: $(imageName)
+#           imageVersion: $(imageVersion)
+#           registryName: $(registryName)
+
+#     - job: PushImageJob  
+#       displayName: Push ${{parameters.image}} Image 
+#       dependsOn: ScanImageJob
+#       pool:
+#         name: $(AGENT_POOL)
+#         agent.name: aks-${{parameters.env}}-agent
+#       steps:
+#       - script: |
+#           echo "##[group]PushImageVars"
+#           echo "##[command]imageName:\t $(imageName)"
+#           echo "##[command]imageVersion:\t $(imageVersion)"
+#           echo "##[warning]imageVersion:\t $(imageVersion)"
+#           echo "##[warning]imageName:\t $(imageName)"
+#             echo "##[endgroup]"        
+#         name: DebugPrint    
+#       - template: templates/push.yml
+#         parameters:
+#           imageName: $(imageName)
+#           imageVersion: $(imageVersion)
+#           registryName: $(registryName)
+
+
+
+    # variables:
+    # - name: imageName
+    #   value: $[ stageDependencies.ProcessImage_${{ img.name }}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imageName'] ]
+    # - name: imageVersion
+    #   value: $[ stageDependencies.ProcessImage_${{ img.name }}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imageVersion'] ]
+    # - name: imagePath
+    #   value: $[ stageDependencies.ProcessImage_${{ img.name }}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imagePath'] ]
+    # - name: dockerFilePath
+    #   value: $[ stageDependencies.ProcessImage_${{ img.name }}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.dockerFilePath'] ]      
 
 
 
@@ -176,6 +382,10 @@ stages:
     #     displayName: Set Images as Variable
   
 
+
+
+
+  
 # - stage: ProcessAllImages
 #   dependsOn: GetImages
 #   variables:
