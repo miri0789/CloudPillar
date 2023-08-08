@@ -184,16 +184,16 @@ stages:
   - stage: CleanBuildScanPush
     displayName: Build Tag Scan Push Image
     dependsOn: 
-    - ProcessImage_${{ parameters.image }}  
+    - ProcessSingleImage_${{ parameters.image }}  
     variables:
     - name: imageName
-      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imageName'] ]
+      value: $[ stageDependencies.ProcessSingleImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imageName'] ]
     - name: imageVersion
-      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imageVersion'] ]
+      value: $[ stageDependencies.ProcessSingleImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imageVersion'] ]
     - name: imagePath
-      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imagePath'] ]
+      value: $[ stageDependencies.ProcessSingleImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imagePath'] ]
     - name: dockerFilePath
-      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.dockerFilePath'] ]      
+      value: $[ stageDependencies.ProcessSingleImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.dockerFilePath'] ]      
     jobs:
     - job: CleanImages
       displayName: Clean Images & Containers
