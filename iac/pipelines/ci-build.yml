@@ -90,7 +90,6 @@ stages:
           imageVersion: $(imageVersion)
           registryName: $(registryName)
           pipelineAcrConnection: $(pipelineAcrConnection)
-          selectedImage: $(selectedImage)       
 
 # - stage: BuildScanPush
 #   displayName: Build Tag Scan Push Image
