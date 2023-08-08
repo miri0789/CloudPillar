@@ -77,19 +77,25 @@ stages:
     imageVersion: $(major).$(minor).$(GitBuildNumber).$(TIME)
   jobs:
   - job: RetrieveImageInfo
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent          
     displayName: Retrieve Image Information
     variables:
-      selectedImage: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.image'] ]
-      imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-      imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+      selectedImage: $${{ parameters.image}}
+      # imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+      # imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
     steps:
       - template: templates/images-template.yml
         parameters:
-          selectedImage: $(selectedImage)
-          imageName: $(imageName)
-          imageVersion: $(imageVersion)
           registryName: $(registryName)
           pipelineAcrConnection: $(pipelineAcrConnection)
+          selectedImage: $(selectedImage)
+          imageVersion: $(imageVersion)
+          pool:
+            name: $(AGENT_POOL)
+            agent.name: aks-${{parameters.env}}-agent                    
+
 
 # - stage: BuildScanPush
 #   displayName: Build Tag Scan Push Image
