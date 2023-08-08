@@ -30,7 +30,7 @@ variables:
 # - name: dockerfilePath
 #   value: './src/edge/conquest/Dockerfile'
 - name: pipelineAcrConnection
-  value: 'iotacr'
+  value: 'iotimageacr'
 - name: isSelectedImageAll
   value: ${{ eq(parameters.image, 'all') }}
 
