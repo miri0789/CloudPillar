@@ -7,10 +7,10 @@ trigger:
   batch: true
   branches:
     include:
-    - main
-    - test-selective-build
-    - testselbuild
-    - "*"
+    # - main
+    # - test-selective-build
+    # - testselbuild
+    # - "*"
     # - $(Build.SourceBranchName)
     # - main
     # - *
