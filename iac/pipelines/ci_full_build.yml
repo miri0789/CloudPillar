@@ -231,7 +231,7 @@ stages:
           imagePath: $(imagePath)
           dockerFilePath: $(dockerFilePath)
           registryName: $(registryName)
-          pipelineAcrConnection: $(pipelineAcrConnection)
+          pipelineAcrConnection: "$(pipelineAcrConnection)"
     - job: ScanImageJob
       dependsOn: BuildImageJob 
       displayName: Scan ${{parameters.image}} Image 
