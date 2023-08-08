@@ -366,7 +366,7 @@ stages:
 
             echo -e "\n\n"
             echo -e "================================================\n\tUpdated Tag\n================================================"
-            TAG="${{parameters.imageVersion}}"
+            TAG="$imageVersion"
             echo "TAG: $TAG"
             find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
             find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
