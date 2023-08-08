@@ -99,8 +99,8 @@ stages:
       name: $(AGENT_POOL)
       agent.name: aks-${{parameters.env}}-agent
     variables:
-      -name: imageName
-        value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+    - name: imageName
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
       # imageName: $(imageName)
       # imageVersion: $(imageVersion)
       # imagePath: $(imagePath)
