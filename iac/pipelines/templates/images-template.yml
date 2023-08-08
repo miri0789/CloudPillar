@@ -35,7 +35,7 @@ parameters:
     dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: iotlistener
     imageName: 'backend_iotlistener'
-    imagePath: './src/backend/Backend.IoTListener/'
+    imagePath: './src/backend/Backend.Iotlistener/'
     dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: keyholder
     imageName: 'backend_keyholder'
