@@ -9,11 +9,11 @@ parameters:
   pool: ''
 
   
-# jobs:
-# - job: BuildImage
-#   dependsOn: RetrieveImageInfo
-#   displayName: Retrieve Image Information  
-#   pool: ${{parameters.pool}}  
+jobs:
+- job: BuildImage
+  dependsOn: RetrieveImageInfo  
+  displayName: Retrieve Image Information  
+  pool: ${{parameters.pool}}  
 steps:
 - script: echo $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
 
