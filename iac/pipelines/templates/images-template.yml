@@ -39,7 +39,7 @@ parameters:
     dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: keyholder
     imageName: 'backend_keyholder'
-    imagePath: './src/backend/Backend.KeyHolder/'
+    imagePath: './src/backend/Backend.Keyholder/'
     dockerFilePath: './src/backend/infra/build/Dockerfile'
   - name: edge_conquest
     imageName: 'edge_conquest'
