@@ -82,7 +82,8 @@ stages:
 - stage: BuildScanPush
   displayName: Build Tag Scan Push Image
   condition: eq(variables.isSelectedImageAll, false)
-  dependsOn: RetrieveImageInfo  
+  dependsOn: 
+  - RetrieveImageInfo  
   jobs:
   - job: CleanImages
     displayName: Clean Images & Containers
@@ -101,15 +102,14 @@ stages:
       agent.name: aks-${{parameters.env}}-agent
     variables:
     - name: imageName
-      value: $[ dependencies.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
-      # value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
-      # value: $[ dependencies.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+      value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
     - name: imageVersion
       value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
     - name: imagePath
       value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
     - name: dockerFilePath
       value: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerFilePath'] ]
+
 
       # imageName: $(imageName)
       # imageVersion: $(imageVersion)
