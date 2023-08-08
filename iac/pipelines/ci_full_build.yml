@@ -354,15 +354,15 @@ stages:
             echo "Image Version: $imageVersion"
             # - template: templates/build.yml
 
-            echo "##vso[task.setvariable variable=$imgName_imageName]$imageName"
-            echo "##vso[task.setvariable variable=$imgName_imageVersion]$imageVersion"
-            echo "##vso[task.setvariable variable=$imgName_imagePath]$imagePath"
-            echo "##vso[task.setvariable variable=$imgName_dockerFilePath]$dockerFilePath"
+            # echo "##vso[task.setvariable variable=$imgName_imageName]$imageName"
+            # echo "##vso[task.setvariable variable=$imgName_imageVersion]$imageVersion"
+            # echo "##vso[task.setvariable variable=$imgName_imagePath]$imagePath"
+            # echo "##vso[task.setvariable variable=$imgName_dockerFilePath]$dockerFilePath"
 
-            echo "##vso[task.setvariable variable=$imgName_imageName;isOutput=true]$imageName"
-            echo "##vso[task.setvariable variable=$imgName_imageVersion;isOutput=true]$imageVersion"
-            echo "##vso[task.setvariable variable=$imgName_imagePath;isOutput=true]$imagePath"
-            echo "##vso[task.setvariable variable=$imgName_dockerFilePath;isOutput=true]$dockerFilePath"        
+            # echo "##vso[task.setvariable variable=$imgName_imageName;isOutput=true]$imageName"
+            # echo "##vso[task.setvariable variable=$imgName_imageVersion;isOutput=true]$imageVersion"
+            # echo "##vso[task.setvariable variable=$imgName_imagePath;isOutput=true]$imagePath"
+            # echo "##vso[task.setvariable variable=$imgName_dockerFilePath;isOutput=true]$dockerFilePath"        
           done
         name: Build
 
