@@ -73,7 +73,10 @@ parameters:
     - twinlistener    
 
 stages:
-  - stage: GetImages
+
+
+
+  - stage: GetImages # Stage 1
     jobs:
     - job: GetImagesJob
       displayName: Get Images Job
@@ -92,9 +95,11 @@ stages:
             echo -e "\n\n"
         displayName: Set Images as Variable
   
-  - stage: GetSingleImage
+
+
+  - stage: GetSingleImage # Stage 2
     dependsOn: GetImages
-    condition: ne(variables.selectedImage, 'all')  
+    condition: eq(variables['isSelectedImageAll'], false)
     jobs:
     - job: GetSingleImageJob
       variables:
@@ -105,6 +110,8 @@ stages:
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
           echo "$imagesJson"
           echo -e "\n\n"
+
+          if [ "$(isSelectedImageAll)" != "true" ]; then
           for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
             _jq() {
               echo ${img} | base64 --decode | jq -r ${1}
