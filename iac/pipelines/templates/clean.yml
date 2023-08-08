@@ -1,12 +1,5 @@
 # File: templates/clean.yml
-parameters:
-  imageName: ''
-  imageVersion: ''
-  imagePath: ''
-  dockerFilePath: ''
-  registryName: ''
-  pipelineAcrConnection: ''
-  pool: ''
+
 
   
 
@@ -17,13 +10,18 @@ steps:
   inputs:
     targetType: inline
     script: |
-      echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}"
       # Stop all containers
       docker stop $(docker ps -a -q)
       # Remove all containers
       docker rm $(docker ps -a -q)
       # Remove all images
       docker image prune -a
+
+      # Show Docker Containers
+      docker ps -a
+      # Show Docker Images
+      docker image ls
+
     
 
 
