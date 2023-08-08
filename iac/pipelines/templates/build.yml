@@ -12,8 +12,13 @@ parameters:
 jobs:
 - job: BuildImage
   dependsOn: RetrieveImageInfo  
-  displayName: Retrieve Image Information  
-  pool: ${{parameters.pool}}  
+  displayName: Build Image  
+  pool: ${{parameters.pool}} 
+  variables:
+    imageName: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageName'] ]
+    imageVersion: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imageVersion'] ]
+    imagePath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.imagePath'] ]
+    dockerPath: $[ stageDependencies.RetrieveImageInfo.RetrieveImageInfoJob.outputs['setImageInfo.dockerPath'] ] 
 steps:
 - script: echo $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
 
