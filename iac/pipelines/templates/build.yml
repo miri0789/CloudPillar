@@ -7,24 +7,32 @@ parameters:
   registryName: ''
   pipelineAcrConnection: ''
   pool: ''
+
   
 jobs:
 - job: BuildImage
   dependsOn: RetrieveImageInfo
-  pool: ${{parameters.pool}}
-  displayName: Retrieve Image Information
-  variables:
-    imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
-    imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
-    imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
-    dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]       
-    registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
-    pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
+  displayName: Retrieve Image Information  
+  pool: ${{parameters.pool}}  
   steps:
-  - checkout: self
-    persistCredentials: true
-    clean: true
-    - script: echo ${{ parameters.imageName }}
+    - script: echo $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+
+# - job: BuildImage
+#   dependsOn: RetrieveImageInfo
+#   pool: ${{parameters.pool}}
+#   displayName: Retrieve Image Information
+#   variables:
+#     imageName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageName'] ]
+#     imageVersion: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imageVersion'] ]
+#     imagePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.imagePath'] ]
+#     dockerFilePath: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.dockerFilePath'] ]       
+#     registryName: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.registryName'] ]
+#     pipelineAcrConnection: $[ dependencies.RetrieveImageInfo.outputs['setImageInfo.pipelineAcrConnection'] ]
+#   steps:
+#   - checkout: self
+#     persistCredentials: true
+#     clean: true
+#     - script: echo ${{ parameters.imageName }}
 # - task: Docker@2
 #   displayName: 'Build Image ${{ parameters.imageName }}'
 #   inputs:
