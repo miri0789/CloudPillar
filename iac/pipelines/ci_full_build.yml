@@ -98,7 +98,7 @@ stages:
         images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
       steps:
       - script: |
-          imagesJson='${{ variables.images }}'
+          imagesJson='$(images)'
           echo "Images JSON"
           echo "$imagesJson"
           # if echo "$imagesJson" | jq '.' > /dev/null; then # Check if valid JSON
