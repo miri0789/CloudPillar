@@ -68,8 +68,8 @@ parameters:
 stages:
 - ${{ if eq(parameters.image, 'all') }}:
   - ${{ each img in parameters.images }}:
-    - stage: ProcessImage_${{ img.name }}}
-      displayName: Retrieve _${{ img.name }}} Information
+    - stage: ProcessImage_${{ img.name }}
+      displayName: Retrieve ${{ img.name }} Information
       variables:
       - name: imageVersion
         value: $(major).$(minor).$(GitBuildNumber).$(TIME)
@@ -83,16 +83,16 @@ stages:
     - stage: CleanBuildScanPush
       displayName: Build Tag Scan Push Image
       dependsOn: 
-      - ProcessImage_${{ img.name }}}  
+      - ProcessImage_${{ img.name }}  
       variables:
       - name: imageName
-        value: $[ stageDependencies.ProcessImage_${{ img.name }}}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imageName'] ]
+        value: $[ stageDependencies.ProcessImage_${{ img.name }}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imageName'] ]
       - name: imageVersion
-        value: $[ stageDependencies.ProcessImage_${{ img.name }}}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imageVersion'] ]
+        value: $[ stageDependencies.ProcessImage_${{ img.name }}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imageVersion'] ]
       - name: imagePath
-        value: $[ stageDependencies.ProcessImage_${{ img.name }}}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imagePath'] ]
+        value: $[ stageDependencies.ProcessImage_${{ img.name }}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.imagePath'] ]
       - name: dockerFilePath
-        value: $[ stageDependencies.ProcessImage_${{ img.name }}}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.dockerFilePath'] ]      
+        value: $[ stageDependencies.ProcessImage_${{ img.name }}.RetrieveInfo_${{ img.name }}.outputs['setImageInfo.dockerFilePath'] ]      
       jobs:
       - job: CleanImages
         displayName: Clean Images & Containers
@@ -169,8 +169,8 @@ stages:
             registryName: $(registryName)
 
 - ${{ if ne(parameters.image, 'all') }}:
-  - stage: ProcessSingleImage_${{ parameters.image }}}
-    displayName: Retrieve _${{ parameters.image }}} Information
+  - stage: ProcessSingleImage_${{ parameters.image }}
+    displayName: Retrieve _${{ parameters.image }} Information
     variables:
     - name: imageVersion
       value: $(major).$(minor).$(GitBuildNumber).$(TIME)
@@ -184,16 +184,16 @@ stages:
   - stage: CleanBuildScanPush
     displayName: Build Tag Scan Push Image
     dependsOn: 
-    - ProcessImage_${{ parameters.image }}}  
+    - ProcessImage_${{ parameters.image }}  
     variables:
     - name: imageName
-      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imageName'] ]
+      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imageName'] ]
     - name: imageVersion
-      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imageVersion'] ]
+      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imageVersion'] ]
     - name: imagePath
-      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imagePath'] ]
+      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.imagePath'] ]
     - name: dockerFilePath
-      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.dockerFilePath'] ]      
+      value: $[ stageDependencies.ProcessImage_${{ parameters.image }}.RetrieveInfo_${{ parameters.image }}.outputs['setImageInfo.dockerFilePath'] ]      
     jobs:
     - job: CleanImages
       displayName: Clean Images & Containers
