@@ -18,6 +18,12 @@ trigger:
 resources:
 - repo: self
 
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+
 - name: major
   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 - name: minor
@@ -30,6 +36,8 @@ resources:
   value: 'iotimageacr'
 - name: pipelineAcrConnection
   value: 'iotacr'
+- name: isSelectedImageAll
+  value: ${{ eq(parameters.image, 'all') }}
 
 
 parameters:
