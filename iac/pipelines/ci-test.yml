@@ -64,7 +64,7 @@ parameters:
     - keyholder
     - mongowriter
     - twinlistener    
-  - images:
+  images:
     - name: analyzer
       imageName: 'backend_analyzer'
       imagePath: './src/backend/analyzer/'
