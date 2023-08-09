@@ -1,0 +1,136 @@
+name: ci_test_pipeline_$(Rev:r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
+  paths:
+    include:
+    - src/edge/conquest/*
+    - src/backned/*
+    exclude:
+    - '*'    
+
+resources:
+- repo: self
+
+- name: major
+  value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
+- name: minor
+  value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: TIME
+  value: $(date +%Y%m%d%H%M%S)
+- name: GitBuildNumber
+  value: $(git rev-list --count HEAD)
+- name: registryName
+  value: 'iotimageacr'
+- name: pipelineAcrConnection
+  value: 'iotacr'
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd    
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: all
+    values:
+    - beapi
+    - edge_conquest
+    - iotlistener
+    - all
+    - analyzer
+    - blobstreamer
+    - keyholder
+    - mongowriter
+    - twinlistener    
+  images:
+  - name: analyzer
+    imageName: 'backend_analyzer'
+    imagePath: './src/backend/analyzer/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: beapi
+    imageName: 'backend_beapi'
+    imagePath: './src/backend/beapi/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: infra
+    imageName: 'backend_infra'
+    imagePath: './src/backend/infra/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: mongowriter
+    imageName: 'backend_mongowriter'
+    imagePath: './src/backend/mongowriter/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: twinlistener
+    imageName: 'backend_twinlistener'
+    imagePath: './src/backend/twinlistener/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: unittests
+    imageName: 'backend_unittests'
+    imagePath: './src/backend/unittests/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: blobstreamer
+    imageName: 'backend_blobstreamer'
+    imagePath: './src/backend/Backend.BlobStreamer/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: iotlistener
+    imageName: 'backend_iotlistener'
+    imagePath: './src/backend/Backend.Iotlistener/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: keyholder
+    imageName: 'backend_keyholder'
+    imagePath: './src/backend/Backend.Keyholder/'
+    dockerFilePath: './src/backend/infra/build/Dockerfile'
+  - name: edge_conquest
+    imageName: 'edge_conquest'
+    imagePath: './src/edge/conquest/'
+    imageVersion: 'v0.7.3'
+    dockerFilePath: './src/edge/conquest/Dockerfile'
+
+
+stages:
+stages:
+- stage: ProcessImages
+  displayName: Process Images
+  jobs:
+  - job: ProcessSelectedImages
+    displayName: Process Selected Images
+    steps:
+    # Determine if "all" or specific image is selected
+    - ${{ if eq(parameters.image, 'all') }}:
+      # If "all" is selected, iterate through all images specified in parameters.images
+      - ${{ each img in parameters.images }}:
+        # Exclude the "all" image if it's part of the list
+        - ${{ if ne(img.name, 'all') }}:
+          - template: templates/clean_build_scan_push.yml
+            parameters:
+              imageName: ${{ img.imageName }}
+              imageVersion: ${{ img.imageVersion }}
+              imagePath: ${{ img.imagePath }}
+              dockerFilePath: ${{ img.dockerFilePath }}
+              registryName: $(registryName)  
+              pipelineAcrConnection: $(pipelineAcrConnection)              
+    - ${{ if ne(parameters.image, 'all') }}:
+      # If specific image is selected, find and use the selected image's information
+      - ${{ each img in parameters.images }}:
+        - ${{ if eq(img.name, parameters.image) }}:
+          - template: templates/clean_build_scan_push.yml
+            parameters:
+              imageName: ${{ img.imageName }}
+              imageVersion: ${{ img.imageVersion }}
+              imagePath: ${{ img.imagePath }}
+              dockerFilePath: ${{ img.dockerFilePath }}
+              registryName: $(registryName)  
+              pipelineAcrConnection: $(pipelineAcrConnection)
