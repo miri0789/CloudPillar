@@ -99,7 +99,6 @@ parameters:
       imageVersion: 'v0.7.3'
       dockerFilePath: './src/edge/conquest/Dockerfile'
 
-
 stages:
 - stage: ProcessImages
   displayName: Process Images
@@ -107,29 +106,25 @@ stages:
   - job: ProcessSelectedImages
     displayName: Process Selected Images
     steps:
-    # Determine if "all" or specific image is selected
-    - ${{ if eq(parameters.image, 'all') }}:
-      # If "all" is selected, iterate through all images specified in parameters.images
-      - ${{ each img in parameters.images }}:
-        # Exclude the "all" image if it's part of the list
-        - ${{ if ne(img.name, 'all') }}:
-          - template: templates/clean_build_scan_push.yml
-            parameters:
-              imageName: ${{ img.imageName }}
-              imageVersion: ${{ img.imageVersion }}
-              imagePath: ${{ img.imagePath }}
-              dockerFilePath: ${{ img.dockerFilePath }}
-              registryName: $(registryName)  
-              pipelineAcrConnection: $(pipelineAcrConnection)              
-    - ${{ if ne(parameters.image, 'all') }}:
-      # If specific image is selected, find and use the selected image's information
-      - ${{ each img in parameters.images }}:
-        - ${{ if eq(img.name, parameters.image) }}:
-          - template: templates/clean_build_scan_push.yml
-            parameters:
-              imageName: ${{ img.imageName }}
-              imageVersion: ${{ img.imageVersion }}
-              imagePath: ${{ img.imagePath }}
-              dockerFilePath: ${{ img.dockerFilePath }}
-              registryName: $(registryName)  
-              pipelineAcrConnection: $(pipelineAcrConnection)
+      - ${{ if eq(parameters.image, 'all') }}:
+          - ${{ each img in parameters.images }}:
+              - ${{ if ne(img.name, 'all') }}:
+                - template: templates/clean_build_scan_push.yml
+                  parameters:
+                    imageName: ${{ img.imageName }}
+                    imageVersion: ${{ img.imageVersion }}
+                    imagePath: ${{ img.imagePath }}
+                    dockerFilePath: ${{ img.dockerFilePath }}
+                    registryName: $(registryName)
+                    pipelineAcrConnection: $(pipelineAcrConnection)
+      - ${{ if ne(parameters.image, 'all') }}:
+          - ${{ each img in parameters.images }}:
+              - ${{ if eq(img.name, parameters.image) }}:
+                - template: templates/clean_build_scan_push.yml
+                  parameters:
+                    imageName: ${{ img.imageName }}
+                    imageVersion: ${{ img.imageVersion }}
+                    imagePath: ${{ img.imagePath }}
+                    dockerFilePath: ${{ img.dockerFilePath }}
+                    registryName: $(registryName)
+                    pipelineAcrConnection: $(pipelineAcrConnection)
