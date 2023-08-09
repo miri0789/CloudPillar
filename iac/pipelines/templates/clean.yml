@@ -10,7 +10,7 @@ steps:
   inputs:
     targetType: inline
     script: |
-        docker stop $(docker ps -a -q) --force
+        docker stop $(docker ps -a -q)
         docker rm $(docker ps -a -q) --force    
         docker image prune -a --force
 
