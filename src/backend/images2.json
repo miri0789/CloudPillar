@@ -1,0 +1,63 @@
+{
+    "analyzer": {
+        "imageName": "backend_analyzer",
+        "imagePath": "./src/backend/analyzer/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+
+    },
+    "beapi": {
+        "imageName": "backend_beapi",
+        "imagePath": "./src/backend/beapi/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    "infra": {
+        "imageName": "backend_infra",
+        "imagePath": "./src/backend/infra/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    "mongowriter": {
+        "imageName": "backend_mongowriter",
+        "imagePath": "./src/backend/mongowriter/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    "twinlistener": {
+        "imageName": "backend_twinlistener",
+        "imagePath": "./src/backend/twinlistener/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    "unittests": {
+        "imageName": "backend_unittests",
+        "imagePath": "./src/backend/unittests/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    "blobstreamer": {
+        "imageName": "backend_blobstreamer",
+        "imagePath": "./src/backend/Backend.BlobStreamer/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    "iotlistener": {
+        "imageName": "backend_iotlistener",
+        "imagePath": "./src/backend/Backend.Iotlistener/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    "keyholder": {
+        "imageName": "backend_keyholder",
+        "imagePath": "./src/backend/Backend.Keyholder/",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    "edge_conquest": {
+        "imageName": "edge_conquest",
+        "imagePath": "./src/edge/conquest/",
+        "imageVersion": "v0.7.3",
+        "dockerFilePath": "./src/edge/conquest/Dockerfile"
+    }
+}
