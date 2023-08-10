@@ -69,63 +69,62 @@ variables:
 - name: isSelectedImageAll
   value: ${{ eq(parameters.image, 'all') }}
 
+pool:
+  name: $(AGENT_POOL)
+  agent.name: aks-${{parameters.env}}-agent
 
 
+# stages:
+# - stage: GetImagesInfoStage
+#   displayName: Get Images Info
+#   jobs:
+#   - job: GetImagesInfoJob
+#     displayName: Get Images Info Job
+#     steps:
+#     - task: Bash@3
+#       name: GetImagesInfoTask
+#       inputs:
+#         targetType: 'inline'
+#         script: |
+#           images=$(cat ./src/backend/images.json | jq -c .)
+#           imagesJson='$(images)'
+#           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+#           echo "$imagesJson"
+#           echo -e "\n\n"
+#           for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+#             _jq() {
+#               echo ${img} | base64 --decode | jq -r ${1}
+#             }
+#             name=$(_jq '.name')
+#             if [ "$name" == "${{ parameters.image }}" ]; then
+#               imageName=$(_jq '.imageName')
+#               imagePath=$(_jq '.imagePath')
+#               dockerFilePath=$(_jq '.dockerFilePath')
+#               imageVersion=$(_jq '.imageVersion')
+#               if [ "$name" != "edge_conquest" ]; then
+#                 imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+#               fi
+#               echo "Processing image: $name"
+#               echo "Image Version: $imageVersion"
+#               echo "##vso[task.setvariable variable=$name_imageName]$imageName"
+#               echo "##vso[task.setvariable variable=$name_imageVersion]$imageVersion"
 
 
-
-
-stages:
-- stage: GetImagesInfoStage
-  displayName: Get Images Info
-  jobs:
-  - job: GetImagesInfoJob
-    displayName: Get Images Info Job
-    steps:
-    - task: Bash@3
-      name: GetImagesInfoTask
-      inputs:
-        targetType: 'inline'
-        script: |
-          images=$(cat ./src/backend/images.json | jq -c .)
-          imagesJson='$(images)'
-          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
-          echo "$imagesJson"
-          echo -e "\n\n"
-          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
-            _jq() {
-              echo ${img} | base64 --decode | jq -r ${1}
-            }
-            name=$(_jq '.name')
-            if [ "$name" == "${{ parameters.image }}" ]; then
-              imageName=$(_jq '.imageName')
-              imagePath=$(_jq '.imagePath')
-              dockerFilePath=$(_jq '.dockerFilePath')
-              imageVersion=$(_jq '.imageVersion')
-              if [ "$name" != "edge_conquest" ]; then
-                imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
-              fi
-              echo "Processing image: $name"
-              echo "Image Version: $imageVersion"
-              echo "##vso[task.setvariable variable=$name_imageName]$imageName"
-              echo "##vso[task.setvariable variable=$name_imageVersion]$imageVersion"
-
-
-- stage: BuildImageStage
-  displayName: Build Image 
-  dependsOn: GetImagesInfoStage
-  variables:
-    name: "${{parameters.image}}"
-  jobs:
-  - variables:
-      image_name: $[ stageDependencies.GetImagesInfoStage.GetImagesInfoJob.outputs['GetImagesInfoTask.' + variables.name + '_imageName'] ]
-    script: |
-      echo "$(image_name)"
-      echo "$image_name"
-      echo "${{variables.image_name}}"
-  # - template: template/clean-build-scan-push.yml
-  #   parameters:
-  #     image: ${{ image }}
+# - stage: BuildImageStage
+#   displayName: Build Image 
+#   dependsOn: GetImagesInfoStage
+#   variables:
+#     name: "${{parameters.image}}"
+#   jobs:
+#   - variables:
+#       image_name: $[ stageDependencies.GetImagesInfoStage.GetImagesInfoJob.outputs['GetImagesInfoTask.' + variables.name + '_imageName'] ]
+#     script: |
+#       echo "$(image_name)"
+#       echo "$image_name"
+#       echo "${{variables.image_name}}"
+#   # - template: template/clean-build-scan-push.yml
+#   #   parameters:
+#   #     image: ${{ image }}
 
 
 
