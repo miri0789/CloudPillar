@@ -5,6 +5,13 @@ parameters:
 
 
 steps:
+
+jobs:
+- job: ${{ parameters.image.name }}
+  displayName: Build and push ${{ parameters.image.name }}
+  pool:
+    name: $(AGENT_POOL)
+    agent.name: aks-${{parameters.env}}-agent
 - task: Bash@3
     displayName: 'Clean Images'
     inputs:
@@ -19,13 +26,23 @@ steps:
         echo -e "\n\n"
         echo "Images: "
         docker image ls
-jobs:
-- job: ${{ parameters.image.name }}
-  displayName: Build and push ${{ parameters.image.name }}
-  pool:
-    name: $(AGENT_POOL)
-    agent.name: aks-${{parameters.env}}-agent
-  inputs:
-    targetType: inline
-    script: |
-      echo "Building image ${{ parameters.image.imageName }}:${{ parameters.image.imageVersion }}"
+
+
+# - task: Bash@3
+#     displayName: 'Clean Images'
+#     inputs:
+#     targetType: inline
+#     script: |
+#         docker stop $(docker ps -a -q) --force
+#         docker rm $(docker ps -a -q) --force    
+#         docker image prune -a --force
+
+#         echo "Containers: "
+#         docker ps -a
+#         echo -e "\n\n"
+#         echo "Images: "
+#         docker image ls
+#   inputs:
+#     targetType: inline
+#     script: |
+#       echo "Building image ${{ parameters.image.imageName }}:${{ parameters.image.imageVersion }}"
