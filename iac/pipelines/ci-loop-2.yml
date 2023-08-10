@@ -117,7 +117,7 @@ stages:
   variables:
     name: "${{parameters.image}}"
   jobs:
-    variables:
+  - variables:
       image_name: $[ stageDependencies.GetImagesInfoStage.GetImagesInfoJob.outputs['GetImagesInfoTask.' + variables.name] ]
   - template: template/clean-build-scan-push.yml
     condition: eq(variables['isSelectedImageAll'], false) 
