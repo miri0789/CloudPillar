@@ -66,93 +66,169 @@ variables:
   value: 'iotimageacr'
 - name: pipelineAcrConnection
   value: 'iotacr'  
+- name: isSelectedImageAll
+  value: ${{ eq(parameters.image, 'all') }}
 
-- name: images
-  value: '[
-    {
-        
-        "name": "analyzer",
-        "imageName": "backend_analyzer",
-        "imagePath": "./src/backend/analyzer/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "beapi",
-        "imageName": "backend_beapi",
-        "imagePath": "./src/backend/beapi/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "infra",
-        "imageName": "backend_infra",
-        "imagePath": "./src/backend/infra/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "mongowriter",
-        "imageName": "backend_mongowriter",
-        "imagePath": "./src/backend/mongowriter/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "twinlistener",
-        "imageName": "backend_twinlistener",
-        "imagePath": "./src/backend/twinlistener/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "unittests",
-        "imageName": "backend_unittests",
-        "imagePath": "./src/backend/unittests/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "blobstreamer",
-        "imageName": "backend_blobstreamer",
-        "imagePath": "./src/backend/Backend.BlobStreamer/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "iotlistener",
-        "imageName": "backend_iotlistener",
-        "imagePath": "./src/backend/Backend.Iotlistener/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "keyholder",
-        "imageName": "backend_keyholder",
-        "imagePath": "./src/backend/Backend.Keyholder/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "edge_conquest",
-        "imageName": "edge_conquest",
-        "imagePath": "./src/edge/conquest/",
-        "imageVersion": "v0.7.3",
-        "dockerFilePath": "./src/edge/conquest/Dockerfile"
-    }
-]'
+
+
+
 
 
 
 stages:
-- stage: Build
-  displayName: Build stage
+- stage: GetImagesInfoStage
+  displayName: Get Images Info
   jobs:
-  # loop through the images variable and pass each image object to the template file as a parameter
-  - ${{ each image in fromJson(variables['images']) }}:
-    # check if the image name matches the user input or the user input is 'all'
-    - ${{ if eq(parameters['image'], image.name) }}:
-      # use the template file that contains the task that uses the image object details as parameters
-      - template: template/clean-build-scan-push.yml
-        parameters:
-          image: ${{ image }}
+  - job: GetImagesInfoJob
+    displayName: Get Images Info Job
+    steps:
+    - task: Bash@3
+      name: GetImagesInfoTask
+      inputs:
+        targetType: 'inline'
+        script: |
+          images=$(cat ./src/backend/images.json | jq -c .)
+          imagesJson='$(images)'
+          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+          echo "$imagesJson"
+          echo -e "\n\n"
+          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${img} | base64 --decode | jq -r ${1}
+            }
+            name=$(_jq '.name')
+            if [ "$name" == "${{ parameters.image }}" ]; then
+              imageName=$(_jq '.imageName')
+              imagePath=$(_jq '.imagePath')
+              dockerFilePath=$(_jq '.dockerFilePath')
+              imageVersion=$(_jq '.imageVersion')
+              if [ "$name" != "edge_conquest" ]; then
+                imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+              fi
+              echo "Processing image: $name"
+              echo "Image Version: $imageVersion"
+              echo "##vso[task.setvariable variable=$name_imageName]$imageName"
+              echo "##vso[task.setvariable variable=$name_imageVersion]$imageVersion"
+
+
+- stage: BuildImageStage
+  displayName: Build Image 
+  dependsOn: GetImagesInfoStage
+  variables:
+    name: "${{parameters.image}}"
+  jobs:
+    variables:
+      image_name: $[ stageDependencies.GetImagesInfoStage.GetImagesInfoJob.outputs['GetImagesInfoTask.' + variables.name] ]
+  - template: template/clean-build-scan-push.yml
+    condition: eq(variables['isSelectedImageAll'], false) 
+    parameters:
+      image: ${{ image }}
+
+
+
+
+
+
+
+# - stage: Build
+#   displayName: Build stage
+#   jobs:
+
+  # # loop through the images variable and pass each image object to the template file as a parameter
+  # - ${{ each image in fromJson(variables['images']) }}:
+  #   # check if the image name matches the user input or the user input is 'all'
+  #   - ${{ if eq(parameters['image'], image.name) }}:
+  #     # use the template file that contains the task that uses the image object details as parameters
+  #     - template: template/clean-build-scan-push.yml
+  #       parameters:
+  #         image: ${{ image }}
+# - name: images
+#   value: '[
+#     {
+        
+#         "name": "analyzer",
+#         "imageName": "backend_analyzer",
+#         "imagePath": "./src/backend/analyzer/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "beapi",
+#         "imageName": "backend_beapi",
+#         "imagePath": "./src/backend/beapi/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "infra",
+#         "imageName": "backend_infra",
+#         "imagePath": "./src/backend/infra/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "mongowriter",
+#         "imageName": "backend_mongowriter",
+#         "imagePath": "./src/backend/mongowriter/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "twinlistener",
+#         "imageName": "backend_twinlistener",
+#         "imagePath": "./src/backend/twinlistener/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "unittests",
+#         "imageName": "backend_unittests",
+#         "imagePath": "./src/backend/unittests/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "blobstreamer",
+#         "imageName": "backend_blobstreamer",
+#         "imagePath": "./src/backend/Backend.BlobStreamer/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "iotlistener",
+#         "imageName": "backend_iotlistener",
+#         "imagePath": "./src/backend/Backend.Iotlistener/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "keyholder",
+#         "imageName": "backend_keyholder",
+#         "imagePath": "./src/backend/Backend.Keyholder/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "edge_conquest",
+#         "imageName": "edge_conquest",
+#         "imagePath": "./src/edge/conquest/",
+#         "imageVersion": "v0.7.3",
+#         "dockerFilePath": "./src/edge/conquest/Dockerfile"
+#     }
+# ]'
+
+
+
+# stages:
+# - stage: Build
+#   displayName: Build stage
+#   jobs:
+
+  # # loop through the images variable and pass each image object to the template file as a parameter
+  # - ${{ each image in fromJson(variables['images']) }}:
+  #   # check if the image name matches the user input or the user input is 'all'
+  #   - ${{ if eq(parameters['image'], image.name) }}:
+  #     # use the template file that contains the task that uses the image object details as parameters
+  #     - template: template/clean-build-scan-push.yml
+  #       parameters:
+  #         image: ${{ image }}
