@@ -97,6 +97,7 @@ It is crucial to note that this project does not involve any changes or interven
 However, it is worth mentioning that the accompanied software, upon a software update or patch, may perform an implicit firmware update to the medical device itself. This process is governed by the applying patch; it is the responsibility of the patch creators to decide on, develop, and test this update to apply the firmware correctly.
 
 ![cpscope.png](https://dev.azure.com/BiosenseWebsterIs/406183ba-3dd5-432c-9edd-d043d7895385/_apis/git/repositories/3b2d526a-a627-4443-a338-7d054264b1c3/Items?path=/.attachments/image-5baeb4a9-d255-4009-b3bc-f55fa882e1ee.png&download=false&resolveLfs=true&%24format=octetStream&api-version=5.0-preview.1&sanitize=true&versionDescriptor.version=wikiMaster)
+![image.png](/.attachments/image-9684b0e5-84bb-4226-be1d-a836675903c5.png)
 
 # 2. System Overview
 ## 2.1. Product Description
