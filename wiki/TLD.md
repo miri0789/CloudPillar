@@ -96,7 +96,7 @@ It is crucial to note that this project does not involve any changes or interven
 
 However, it is worth mentioning that the accompanied software, upon a software update or patch, may perform an implicit firmware update to the medical device itself. This process is governed by the applying patch; it is the responsibility of the patch creators to decide on, develop, and test this update to apply the firmware correctly.
 
-![cpscope.png](https://dev.azure.com/BiosenseWebsterIs/406183ba-3dd5-432c-9edd-d043d7895385/_apis/git/repositories/3b2d526a-a627-4443-a338-7d054264b1c3/Items?path=/.attachments/image-5baeb4a9-d255-4009-b3bc-f55fa882e1ee.png&download=false&resolveLfs=true&%24format=octetStream&api-version=5.0-preview.1&sanitize=true&versionDescriptor.version=wikiMaster)
+![cpscope.png](.attachments/cpscope.png)
 
 # 2. System Overview
 ## 2.1. Product Description
@@ -1828,8 +1828,10 @@ This detailed breakdown of the messages and the relevant components within the b
 ### 14.1.3. Key Milestones and Timelines
 (Content here)
 
-## 14.2. Next Stage: CP Patients Data (CPD)
-![image.png](/.attachments/image-8c01acc7-86f7-4e00-b5fc-b7c33e2f6469.png)### 14.2.1. CPD Objectives (High Level)
+## 14.2. Next Stage: CP Clinical Data (CPD)
+![image.png](.attachments/cpclinical.png)
+
+### 14.2.1. CPD Objectives (High Level)
 (Content here)
 
 ### 14.2.2. Anticipated Challenges and Strategies
@@ -1841,10 +1843,10 @@ This detailed breakdown of the messages and the relevant components within the b
 ### 14.3.2. Integration with Azure IoT Edge
 (Content here)
 ### 14.3.3. Substage A. CPE Connected Mode
-![image.png](/.attachments/image-a7dd9c50-0965-428a-8b72-ecd59f5fac61.png)
+![image.png](.attachments/cpeconnected.png)
 ### 14.3.3. Substage B. CPE Disconnected Mode
-![image.png](/.attachments/image-4549ef11-e174-4d1a-9366-0b0c123d6564.png)
-![image.png](/.attachments/image-232538d3-f242-4606-9187-5bd8e2a6584e.png)
+![image.png](.attachments/cpedisconnected.png)
+![image.png](.attachments/cpediconnected-sync.png)
 ### 14.3.3. CPE Compatible Hardware
 
 ## 14.4. High-Level Transition Strategy between Stages
