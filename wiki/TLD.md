@@ -1617,6 +1617,7 @@ This detailed breakdown of the messages and the relevant components within the b
 
 - **5.2.1.2. Desired Properties Management**: Management of desired properties, including pulling and subscription mechanisms.
 - **5.2.1.3. Device-to-Cloud (D2C) Messaging**: Handling of delivery for D2C messages.
+- **5.2.1.3. Cloud-to-Device (C2D) Messaging**: Handling of delivery for C2D messages.
 
 #### 5.2.2. Data Processing and Storage
 - **5.2.2.1. Log Writing and Telemetry Processing**: Integration with MongoWriter to store logs and telemetry.
