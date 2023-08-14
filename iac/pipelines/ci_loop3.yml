@@ -145,15 +145,16 @@ variables:
 
 resources:
 - repo: self
-pool:
-  name: $(AGENT_POOL)
-  agent.name: aks-${{parameters.env}}-agent
+
 
 stages:
 - stage: GetImages
   displayName: Get_Changed_Images
   jobs:
   - job: SetChangedImages
+    pool:
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent  
     displayName: Set Changed Images
     
     steps:
