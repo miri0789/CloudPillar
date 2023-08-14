@@ -1,0 +1,217 @@
+
+name: ci_full_test_$(Rev:r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
+  paths:
+    include:
+    - src/edge/conquest/*
+    - src/backned/*
+    exclude:
+    - '*'    
+
+resources:
+- repo: self
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+
+# - name: major
+#   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
+# - name: minor
+#   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: TIME
+  value: $(date +%Y%m%d%H%M%S)
+- name: GitBuildNumber
+  value: $(git rev-list --count HEAD)
+- name: registryName
+  value: 'iotimageacr'
+# - name: dockerfilePath
+#   value: './src/edge/conquest/Dockerfile'
+- name: pipelineAcrConnection
+  value: 'iotacr'
+  # value: 'iotimageacr'
+- name: isSelectedImageAll
+  value: ${{ eq(parameters.image, 'all') }}
+
+
+
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd    
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: all
+    values:
+    - beapi
+    - edge_conquest
+    - iotlistener
+    - all
+    - analyzer
+    - blobstreamer
+    - keyholder
+    - mongowriter
+    - twinlistener    
+
+stages:
+
+
+
+  - stage: GetImages # Stage 1
+    jobs:
+    - job: GetImagesJob
+      displayName: Get Images Job
+      steps:
+      - task: Bash@3
+        name: getImagesInfo
+        inputs:
+          targetType: 'inline'
+          script: |
+            images=$(cat ./src/backend/images.json | jq -c .) # Compact JSON
+            echo "##vso[task.setvariable variable=images;isOutput=true]$images"
+            echo "##vso[task.setvariable variable=images]$images"
+
+            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
+            echo "$images"
+            echo -e "\n\n"
+        displayName: Set Images as Variable
+
+  - stage: GetSingleImage # Stage 2
+    dependsOn: GetImages
+    condition: eq(variables['isSelectedImageAll'], false)
+    jobs:
+    - job: GetSingleImageJob
+      displayName: Get Single Image Job
+      variables:
+        images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+      steps:
+      - script: |
+          imagesJson='$(images)'
+          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+          echo "$imagesJson"
+          echo -e "\n\n"
+          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${img} | base64 --decode | jq -r ${1}
+            }
+            imgName=$(_jq '.name')
+            if [ "$imgName" == "${{ parameters.image }}" ]; then
+              imageName=$(_jq '.imageName')
+              imagePath=$(_jq '.imagePath')
+              dockerFilePath=$(_jq '.dockerFilePath')
+              imageVersion=$(_jq '.imageVersion')
+              if [ "$imgName" != "edge_conquest" ]; then
+                imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+              fi
+              echo "Processing image: $imgName"
+              echo "Image Version: $imageVersion"
+              echo "##vso[task.setvariable variable=imageName]$imageName"
+              echo "##vso[task.setvariable variable=imageVersion]$imageVersion"
+              echo "##vso[task.setvariable variable=imagePath]$imagePath"
+              echo "##vso[task.setvariable variable=dockerFilePath]$dockerFilePath"
+
+              echo "##vso[task.setvariable variable=imageName;isOutput=true]$imageName"
+              echo "##vso[task.setvariable variable=imageVersion;isOutput=true]$imageVersion"
+              echo "##vso[task.setvariable variable=imagePath;isOutput=true]$imagePath"
+              echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]$dockerFilePath"
+              # Further processing logic here
+            fi
+          done
+        name: getSingleImageInfo
+
+  - stage: CleanBuildScanPush
+    displayName: Build Tag Scan Push Image
+    dependsOn: 
+    - GetImages
+    - GetSingleImage
+    condition: eq(variables['isSelectedImageAll'], false)
+    variables:
+      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+      imageName: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imageName'] ]
+      imageVersion: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imageVersion'] ]
+      imagePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imagePath'] ]
+      dockerFilePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.dockerFilePath'] ]      
+
+    jobs:
+    - job: CleanImages
+      variables:
+      displayName: Clean Images & Containers
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - template: templates/clean.yml
+
+
+    - job: BuildTagImage
+      dependsOn: 
+      - CleanImages
+      displayName: Build and Tag Image
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent      
+      steps:
+      - script: |
+          oldMajor=$(echo $(imageVersion) | cut -d '.' -f 1)
+          oldMinor=$(echo $(imageVersion) | cut -d '.' -f 2)
+          oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
+          oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
+          newVersion=$major.$minor.$(GitBuildNumber).$(TIME)      
+      - template: templates/build.yml
+        parameters:
+          imageName: $(imageName)
+          imageVersion: $(newVersion)
+          imagePath: $(imagePath)
+          dockerFilePath: $(dockerFilePath)
+          registryName: $(registryName)
+          pipelineAcrConnection: $(pipelineAcrConnection)
+
+    - job: ScanImage
+      dependsOn: 
+      - CleanImages
+      - BuildTagImage
+      displayName: Scan Image 
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - template: templates/scan.yml
+        parameters:
+          imageName: $(imageName)
+          imageVersion: $(newVersion)
+          registryName: $(registryName)
+
+    - job: PushImage
+      dependsOn: 
+      - CleanImages
+      - BuildTagImage
+      - ScanImage
+      displayName: Push Image 
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - template: templates/push.yml
+        parameters:
+          imageName: $(imageName)
+          imageVersion: $(newVersion)
+          registryName: $(registryName)
