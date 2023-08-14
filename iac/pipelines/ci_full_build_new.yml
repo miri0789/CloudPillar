@@ -214,3 +214,91 @@ stages:
           imageName: $(imageName)
           imageVersion: $(newVersion)
           registryName: $(registryName)
+
+
+
+
+
+
+
+
+
+
+
+  - stage: CleanBuildScanPushAll
+    displayName: Build Tag Scan Push All Images
+    dependsOn: 
+    - GetImages
+    condition: eq(variables['isSelectedImageAll'], true)
+    variables:
+      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+
+    jobs:
+    - job: All
+      displayName: Clean Tag Scan Push All Images
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:      
+      - script: |    
+          imagesJson='$(images)'
+          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+          echo "$imagesJson"
+          echo -e "\n\n"
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+          az acr login -n $(ACR_NAME)
+  
+          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${img} | base64 --decode | jq -r ${1}
+            }
+            imgName=$(_jq '.name')
+            imageName=$(_jq '.imageName')
+            imagePath=$(_jq '.imagePath')
+            dockerFilePath=$(_jq '.dockerFilePath')
+            imageVersion=$(_jq '.imageVersion')
+            ACR_NAME=$(ACR_NAME)
+            if [ "$imgName" != "edge_conquest" ]; then
+              imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+            fi            
+    
+            oldMajor=$(echo $(imageVersion) | cut -d '.' -f 1)
+            oldMinor=$(echo $(imageVersion) | cut -d '.' -f 2)
+            oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
+            oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
+            newVersion=$major.$minor.$(GitBuildNumber).$(TIME)
+
+            echo -e "\n\n"
+            echo "Clean Old Imaged"
+            docker image prune -a --force
+            docker image ls
+            
+            echo "Processing image: $imgName"
+            echo "Image Version: $newVersion"
+            echo ""
+            echo -e "================================================\n\tBase Info Version\n================================================"
+            find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'            
+
+            echo -e "\n\n"
+            echo -e "================================================\n\tUpdated Tag\n================================================"
+            TAG="$newVersion"
+            echo "TAG: $TAG"
+            find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
+            find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+
+            echo -e "\n\n"
+            echo -e "================================================\n\tDocker Build - \n================================================"
+            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath  $imagePath
+            docker images | grep $imageName       
+            
+            echo -e "\n\n"
+            echo -e "================================================\n\tDocker Scan - \n================================================"            
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $ACR_NAME.azurecr.io/$imageName:$newVersion
+
+            echo -e "\n\n"
+            echo -e "================================================\n\tDocker Push - \n================================================"            
+            docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
+          done
+        name: BuildTagScanPush
