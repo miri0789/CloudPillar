@@ -1,1 +1,216 @@
+
+name: ci_loop_test_$(Rev:r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
+  paths:
+    include:
+    - src/edge/conquest/*
+    - src/backned/*
+    exclude:
+    - '*'    
+
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd    
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: all
+    values:
+    - beapi
+    - edge_conquest
+    - iotlistener
+    - all
+    - analyzer
+    - blobstreamer
+    - keyholder
+    - mongowriter
+    - twinlistener    
+
+
+
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+
+# - name: major
+#   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
+# - name: minor
+#   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: TIME
+  value: $(date +%Y%m%d%H%M%S)
+- name: GitBuildNumber
+  value: $(git rev-list --count HEAD)
+- name: registryName
+  value: 'iotimageacr'
+- name: pipelineAcrConnection
+  value: 'iotacr'  
+- name: isSelectedImageAll
+  value: ${{ eq(parameters.image, 'all') }}
+# - name: pipeline_images
+#   value: []
+# #   value: '[
+# #     {
+        
+# #         "name": "analyzer",
+# #         "imageName": "backend_analyzer",
+# #         "imagePath": "./src/backend/analyzer/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "beapi",
+# #         "imageName": "backend_beapi",
+# #         "imagePath": "./src/backend/beapi/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "infra",
+# #         "imageName": "backend_infra",
+# #         "imagePath": "./src/backend/infra/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "mongowriter",
+# #         "imageName": "backend_mongowriter",
+# #         "imagePath": "./src/backend/mongowriter/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "twinlistener",
+# #         "imageName": "backend_twinlistener",
+# #         "imagePath": "./src/backend/twinlistener/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "unittests",
+# #         "imageName": "backend_unittests",
+# #         "imagePath": "./src/backend/unittests/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "blobstreamer",
+# #         "imageName": "backend_blobstreamer",
+# #         "imagePath": "./src/backend/Backend.BlobStreamer/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "iotlistener",
+# #         "imageName": "backend_iotlistener",
+# #         "imagePath": "./src/backend/Backend.Iotlistener/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "keyholder",
+# #         "imageName": "backend_keyholder",
+# #         "imagePath": "./src/backend/Backend.Keyholder/",
+# #         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+# #         "imageVersion": "1.0.0.0"
+# #     },
+# #     {
+# #         "name": "edge_conquest",
+# #         "imageName": "edge_conquest",
+# #         "imagePath": "./src/edge/conquest/",
+# #         "imageVersion": "v0.7.3",
+# #         "dockerFilePath": "./src/edge/conquest/Dockerfile"
+# #     }
+# # ]'
+
+
+resources:
+- repo: self
+
+
+stages:
+- stage: GetImages
+  displayName: Get_Changed_Images
+  jobs:
+  - job: SetChangedImages
+    pool:
+    name: $(AGENT_POOL)
+    agent.name: aks-${{parameters.env}}-agent
+    displayName: Set Changed Images
+    
+    steps:
+    - checkout: self
+      persistCredentials: true
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Get the list of changed files        
+          BRANCH=$(SourceBranchName)
+          git fetch --all
+          git merge-base origin/main $BRANCH
+          git checkout $BRANCH          
+          CHANGED_FILES=$(git diff --name-only origin/main..$BRANCH)
+
+          # Read the images2.json file
+          images=$(cat ./src/backend/images2.json | jq -c .)
+
+          # Loop through the changed files
+          while read -r file; do
+            filename=$(basename "$file")
+            lower_filename=$(echo "$filename" | tr '[:upper:]' '[:lower:]')
+
+            # Loop through the images in the images2.json file
+            for image in $(echo "${images}" | jq -r 'keys[]'); do
+              # Get the image object
+              image_obj=$(echo $images | jq -c --arg image $image '.[$image]')
+
+              # Get the image properties
+              name=$(echo $image_obj | jq -r '.name')
+              imageName=$(echo $image_obj | jq -r '.imageName')
+              imagePath=$(echo $image_obj | jq -r '.imagePath')
+              dockerFilePath=$(echo $image_obj | jq -r '.dockerFilePath')
+              imageVersion=$(echo $image_obj | jq -r '.imageVersion')
+
+              # Extract the major and minor version numbers from the imageVersion variable
+              oldMajor=$(echo $imageVersion | cut -d '.' -f 1)
+              oldMinor=$(echo $imageVersion | cut -d '.' -f 2)
+              oldBuild=$(echo $imageVersion | cut -d '.' -f 3)
+              oldTime=$(echo $imageVersion | cut -d '.' -f 3)
+              newVersion=$major.$minor.$(GitBuildNumber).$(TIME)
+
+              # Check if the file is in the image path
+              if [[ $file == *$imagePath* ]]; then
+                echo "File Changed: $filename"
+                echo "Image Name: $imageName"
+                echo "Image Version: $imageVersion"
+                echo "Image Path: $imagePath"
+                echo "Docker File Path: $dockerFilePath"
+
+                az account set --subscription $(ARM_SUBSCRIPTION_ID)
+                echo "Azure Login Successfull"
+                sudo az acr login -n $(ACR_NAME)            
+                sudo docker build -t $(ACR_NAME).azurecr.io/$imageName --build-arg DLL=$imageName.dll -f $dockerFilePath ./$imagePath
+              fi
+            done
           done <<< "$CHANGED_FILES"
