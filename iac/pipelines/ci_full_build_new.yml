@@ -32,7 +32,8 @@ variables:
 - name: TIME
   value: $(date +%Y%m%d%H%M%S)
 - name: GitBuildNumber
-  value: $(Rev:r)
+  value: $(Build.BuildNumber)
+  # value: $(Rev:r)
   # value: $(git rev-list --count HEAD)
 - name: registryName
   value: 'iotimageacr'
