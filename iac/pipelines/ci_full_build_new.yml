@@ -264,10 +264,10 @@ stages:
             #   imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
             # fi        
             echo $(imageVersion) 
-            major=$(echo $(imageVersion) | cut -d '.' -f 1)
-            minor=$(echo $(imageVersion) | cut -d '.' -f 2)
-            oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
-            oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
+            major=$(echo $imageVersion | cut -d '.' -f 1)
+            minor=$(echo $imageVersion | cut -d '.' -f 2)
+            oldBuild=$(echo $imageVersion | cut -d '.' -f 3)
+            oldTime=$(echo $imageVersion | cut -d '.' -f 3)
             
             newVersion=$major.$minor.$(GitBuildNumber).$(TIME)
 
