@@ -324,14 +324,21 @@ stages:
       steps:      
       - task: PowerShell@2
         inputs:
-          targetType: 'filePath' 
+          targetType: 'inline' 
           workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
-          filePath: './publish.ps1'
-      - task: PowerShell@2
-        inputs:
-          targetType: 'filePath' 
-          workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
-          filePath: 'ls ./publish/'
+          filePath: './src/agent/poc/publish.ps1'
+          script: pwd
+
+      # - task: PowerShell@2
+      #   inputs:
+      #     targetType: 'filePath' 
+      #     workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
+      #     filePath: './src/agent/poc/publish.ps1'
+      # - task: PowerShell@2
+      #   inputs:
+      #     targetType: 'filePath' 
+      #     workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
+      #     filePath: 'ls ./publish/'
 
 
 
