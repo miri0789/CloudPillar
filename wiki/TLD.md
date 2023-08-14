@@ -1258,6 +1258,9 @@ Security is paramount in any healthcare system, and the following sections detai
 
 For Windows endpoints, our approach to secure key management focuses on utilizing Cryptography Next Generation (CNG) with Key Storage Providers (KSP), allowing the integration with TPM 1.2. This ensures the protection of keys, certificates, and other secrets, leveraging the hardware-based security provided by TPM.
 
+#### 5.1.4.5.1. Referense TPM support
+CloudPillar Agent is embracing TPM 1.2 implemented as in CARTO machines based on DELL PRECISION Tower 5810
+
 #### 5.1.4.5.1. CNG and KSP Overview
 
 CNG encompasses the Windows KSP and provides a flexible cryptographic platform that allows you to create, store, and manage cryptographic keys. It enables the following key functionalities:
