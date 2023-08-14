@@ -16,7 +16,7 @@ This TLD document will further delve into the product's system design, data flow
 
 This document adheres to the following conventions to ensure consistency and readability:
 
-1. **Technical Terminology**: All technical terms, acronyms, and abbreviations are defined when first used. For instance, "CPC (Cloud Platform for Cybersecurity)" is defined at the first mention, and thereafter referred to as "CPC". 
+1. **Technical Terminology**: All technical terms, acronyms, and abbreviations are defined when first used. For instance, "CPC (CloudPillar for Cybersecurity)" is defined at the first mention, and thereafter referred to as "CPC". 
 
 2. **Section Headers**: Each section of this document begins with a header. Main sections are marked with a single hash (#), sub-sections with two hashes (##), and so on. The headers provide a clear structure and enable easy navigation through the document.
 
@@ -39,7 +39,9 @@ The following table defines the key terms and acronyms used throughout this docu
 
 | Term / Acronym | Definition |
 | --- | --- |
-| CPC | Cloud Platform for Cybersecurity |
+| CPC | **C**loud**P**illar for **C**ybersecurity |
+| CPD | **C**loud**P**illar for clinical **D**ata |
+| CPE | **C**loud**P**illar for **E**dge |
 | IoT | Internet of Things |
 | TLD | Top-Level Design |
 | AMQP | Advanced Message Queuing Protocol |
@@ -49,6 +51,11 @@ The following table defines the key terms and acronyms used throughout this docu
 | AKS | Azure Kubernetes Service |
 | DPS | Device Provisioning Service |
 | ISO 27001 | International Standard for Information Security Management Systems |
+| ISMS | Information Security Management System |
+| C2D | Refers to Cloud to Device messaging in Azure IoT |
+| D2C | Refers to Device to Cloud messaging in Azure IoT |
+| JSON| JavaScript Object Notation                  |
+| CD  | Continuous Deployment/Delivery (in CI/CD)    |
 
 Please refer to this table if you encounter any unfamiliar term or acronym in the document.
 
@@ -197,7 +204,7 @@ The Backend and the Agent work together to enable the seamless integration of me
 
 ## 3.1. Architecture Principles
 
-The architecture for the Cloud Platform for Connected Health Devices (CPC) is designed with the following key principles:
+The architecture for the CloudPillar for Cybersecurity of Connected Health Devices (CPC) is designed with the following key principles:
 
 1. **Resilient Networking with Store-and-Forward Protocols**: Given the intermittent nature of network connections in hospital settings and firewalls blocking incoming connections, a store-and-forward protocol is used. This allows devices to store data locally and forward it to the cloud when the network connection is available, thereby ensuring data reliability and robustness.
 
@@ -475,7 +482,7 @@ The data that MongoWriter processes comes from several sources, including IoTLis
 
 The sequential writing of data is of high importance in our system, as it helps maintain the correct order of operations and events. This is particularly crucial for the system's logs, where the sequence of events can aid in troubleshooting and system analysis. MongoWriter is designed to respect this sequential order of data when performing write operations.
 
-MongoWriter writes to the Version_Logs_Telemetry MongoDB database, aptly named as it stores version information, system logs, and telemetry data from IoT devices. To interact with MongoDB, MongoWriter utilizes the MongoDB .NET driver, which provides robust, native functionalities to connect and perform operations on MongoDB databases.
+MongoWriter writes to the Version_Logs_Telemetry MongoDB collections, aptly named as it stores version information, system logs, and telemetry data from IoT devices. To interact with MongoDB, MongoWriter utilizes the MongoDB .NET driver, which provides robust, native functionalities to connect and perform operations on MongoDB databases.
 
 When designing a system with high volumes of data like ours, handling peak times and preventing overloads is critical. Therefore, an autoscaling strategy for MongoWriter should be considered. Kubernetes supports autoscaling of deployments based on CPU and memory usage. However, considering MongoWriter's workload, a custom metric such as the length of the Azure Service Bus queue could be a more accurate indicator of load. Kubernetes allows autoscaling based on custom metrics, which can be utilized for this purpose.
 
@@ -1258,6 +1265,9 @@ Security is paramount in any healthcare system, and the following sections detai
 
 ![Windows Certificate Store Options](.images/certstoreopts.png)
 For Windows endpoints, our approach to secure key management focuses on utilizing Cryptography Next Generation (CNG) with Key Storage Providers (KSP), allowing the integration with TPM 1.2. This ensures the protection of keys, certificates, and other secrets, leveraging the hardware-based security provided by TPM.
+
+#### 5.1.4.5.1. Referense TPM support
+CloudPillar Agent is embracing TPM 1.2 implemented as in CARTO machines based on DELL PRECISION Tower 5810
 
 #### 5.1.4.5.1. CNG and KSP Overview
 
