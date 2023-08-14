@@ -1,3 +1,4 @@
+[[_TOC_]]
 
 # 1. Introduction
 ## 1.1. Purpose of the Document
