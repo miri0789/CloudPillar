@@ -96,7 +96,7 @@ It is crucial to note that this project does not involve any changes or interven
 
 However, it is worth mentioning that the accompanied software, upon a software update or patch, may perform an implicit firmware update to the medical device itself. This process is governed by the applying patch; it is the responsibility of the patch creators to decide on, develop, and test this update to apply the firmware correctly.
 
-![cpscope.png](.attachments/cpscope.png)
+![cpscope.png](.images/cpscope.png)
 
 # 2. System Overview
 ## 2.1. Product Description
@@ -1256,6 +1256,7 @@ Security is paramount in any healthcare system, and the following sections detai
 
 ### 5.1.4.5. Secure Key Management for Windows Endpoints
 
+![Windows Certificate Store Options](.images/certstoreopts.png)
 For Windows endpoints, our approach to secure key management focuses on utilizing Cryptography Next Generation (CNG) with Key Storage Providers (KSP), allowing the integration with TPM 1.2. This ensures the protection of keys, certificates, and other secrets, leveraging the hardware-based security provided by TPM.
 
 #### 5.1.4.5.1. CNG and KSP Overview
@@ -1569,7 +1570,7 @@ When resolving actions in the Device Twin, the Agent will support specifying fil
 - The Agent will exactly replicate the API supported by VELYS DSP solution, to simplify the integration effort.
 - The API specification is in the attached OpenAPI json specification.
 [Device Agent v1 API - Digital Surgery Platform Help - Confluence (jnj.com)](https://confluence.jnj.com/pages/viewpage.action?spaceKey=VAXJ&title=Device%20Agent%20v1%20API)
-[dspagent.json](/.attachments/dspagent-8fd836ae-d614-4b50-b486-788823520b11.json)
+[dspagent.json](/.images/dspagent-8fd836ae-d614-4b50-b486-788823520b11.json)
 - To clarify, in addition to the Swagger above, the API and the Agent must support both remote and disk-on-key artifacts installation and collection.
 
 ### 5.2. Backend Functional Requirements
@@ -1830,7 +1831,7 @@ This detailed breakdown of the messages and the relevant components within the b
 (Content here)
 
 ## 14.2. Next Stage: CP Clinical Data (CPD)
-![image.png](.attachments/cpclinical.png)
+![image.png](.images/cpclinical.png)
 
 ### 14.2.1. CPD Objectives (High Level)
 (Content here)
@@ -1844,10 +1845,10 @@ This detailed breakdown of the messages and the relevant components within the b
 ### 14.3.2. Integration with Azure IoT Edge
 (Content here)
 ### 14.3.3. Substage A. CPE Connected Mode
-![image.png](.attachments/cpeconnected.png)
+![image.png](.images/cpeconnected.png)
 ### 14.3.3. Substage B. CPE Disconnected Mode
-![image.png](.attachments/cpedisconnected.png)
-![image.png](.attachments/cpediconnected-sync.png)
+![image.png](.images/cpedisconnected.png)
+![image.png](.images/cpediconnected-sync.png)
 ### 14.3.3. CPE Compatible Hardware
 
 ## 14.4. High-Level Transition Strategy between Stages
