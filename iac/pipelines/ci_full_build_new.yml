@@ -308,3 +308,25 @@ stages:
             docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
           done
         name: BuildTagScanPush
+
+
+
+  - stage: ArtifactBuild
+    displayName: Build Publish Artifacts
+    variables:
+      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+    jobs:
+    - job: Build Powershell Artifacts
+      displayName: Clean Tag Scan Push All Images
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:      
+      - task: PowerShell@2
+        inputs:
+          targetType: 'filePath'
+          filePath: './src/agent/CloudPillar.Agent/publish.ps1'
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: 'ls ./src/agent/CloudPillar.Agent/publish/'
