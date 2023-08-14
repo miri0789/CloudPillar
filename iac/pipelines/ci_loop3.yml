@@ -153,8 +153,8 @@ stages:
   jobs:
   - job: SetChangedImages
     pool:
-    name: $(AGENT_POOL)
-    agent.name: aks-${{parameters.env}}-agent
+      name: $(AGENT_POOL)
+      agent.name: aks-${{parameters.env}}-agent
     displayName: Set Changed Images
     
     steps:
