@@ -196,7 +196,7 @@ The Backend and the Agent work together to enable the seamless integration of me
 
 ## 3.1. Architecture Principles
 
-The architecture for the Cloud Platform for Connected Health Devices (CPC) is designed with the following key principles:
+The architecture for the CloudPillar for Cybersecurity of Connected Health Devices (CPC) is designed with the following key principles:
 
 1. **Resilient Networking with Store-and-Forward Protocols**: Given the intermittent nature of network connections in hospital settings and firewalls blocking incoming connections, a store-and-forward protocol is used. This allows devices to store data locally and forward it to the cloud when the network connection is available, thereby ensuring data reliability and robustness.
 
