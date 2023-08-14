@@ -174,7 +174,7 @@ stages:
           oldMinor=$(echo $(imageVersion) | cut -d '.' -f 2)
           oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
           oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
-          newVersion=$major.$minor.$(GitBuildNumber).$(TIME)      
+          newVersion=$(major).$(minor).$(GitBuildNumber).$(TIME)      
       - template: templates/build.yml
         parameters:
           imageName: $(imageName)
@@ -268,7 +268,8 @@ stages:
             oldMinor=$(echo $(imageVersion) | cut -d '.' -f 2)
             oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
             oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
-            newVersion=$major.$minor.$(GitBuildNumber).$(TIME)
+            
+            newVersion=$(major).$(minor).$(GitBuildNumber).$(TIME)
 
             echo -e "\n\n"
             echo "Clean Old Imaged"
