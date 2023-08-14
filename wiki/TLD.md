@@ -474,7 +474,7 @@ The data that MongoWriter processes comes from several sources, including IoTLis
 
 The sequential writing of data is of high importance in our system, as it helps maintain the correct order of operations and events. This is particularly crucial for the system's logs, where the sequence of events can aid in troubleshooting and system analysis. MongoWriter is designed to respect this sequential order of data when performing write operations.
 
-MongoWriter writes to the Version_Logs_Telemetry MongoDB database, aptly named as it stores version information, system logs, and telemetry data from IoT devices. To interact with MongoDB, MongoWriter utilizes the MongoDB .NET driver, which provides robust, native functionalities to connect and perform operations on MongoDB databases.
+MongoWriter writes to the Version_Logs_Telemetry MongoDB collections, aptly named as it stores version information, system logs, and telemetry data from IoT devices. To interact with MongoDB, MongoWriter utilizes the MongoDB .NET driver, which provides robust, native functionalities to connect and perform operations on MongoDB databases.
 
 When designing a system with high volumes of data like ours, handling peak times and preventing overloads is critical. Therefore, an autoscaling strategy for MongoWriter should be considered. Kubernetes supports autoscaling of deployments based on CPU and memory usage. However, considering MongoWriter's workload, a custom metric such as the length of the Azure Service Bus queue could be a more accurate indicator of load. Kubernetes allows autoscaling based on custom metrics, which can be utilized for this purpose.
 
