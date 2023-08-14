@@ -40,6 +40,8 @@ The following table defines the key terms and acronyms used throughout this docu
 | Term / Acronym | Definition |
 | --- | --- |
 | CPC | CloudPillar for Cybersecurity |
+| CPD | CloudPillar for clinical Data |
+| CPE | CloudPillar for Edge |
 | IoT | Internet of Things |
 | TLD | Top-Level Design |
 | AMQP | Advanced Message Queuing Protocol |
