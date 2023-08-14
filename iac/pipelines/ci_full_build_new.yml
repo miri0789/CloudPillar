@@ -260,9 +260,9 @@ stages:
             dockerFilePath=$(_jq '.dockerFilePath')
             imageVersion=$(_jq '.imageVersion')
             ACR_NAME=$(ACR_NAME)
-            if [ "$imgName" != "edge_conquest" ]; then
-              imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
-            fi        
+            # if [ "$imgName" != "edge_conquest" ]; then
+            #   imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+            # fi        
             echo $(imageVersion) 
             major=$(echo $(imageVersion) | cut -d '.' -f 1)
             minor=$(echo $(imageVersion) | cut -d '.' -f 2)
