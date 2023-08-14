@@ -49,6 +49,9 @@ The following table defines the key terms and acronyms used throughout this docu
 | AKS | Azure Kubernetes Service |
 | DPS | Device Provisioning Service |
 | ISO 27001 | International Standard for Information Security Management Systems |
+| ISMS | Information Security Management System |
+| C2D | Refers to Cloud to Device messaging in Azure IoT |
+| D2C | Refers to Device to Cloud messaging in Azure IoT |
 
 Please refer to this table if you encounter any unfamiliar term or acronym in the document.
 
