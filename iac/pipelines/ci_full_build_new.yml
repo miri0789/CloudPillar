@@ -316,8 +316,8 @@ stages:
     variables:
       images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
     jobs:
-    - job: Build Powershell Artifacts
-      displayName: Clean Tag Scan Push All Images
+    - job: BuildPSArtifacts
+      displayName: Build Powershell Artifacts
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
