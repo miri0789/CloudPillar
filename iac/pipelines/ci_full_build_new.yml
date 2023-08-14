@@ -220,14 +220,6 @@ stages:
 
 
 
-
-
-
-
-
-
-
-
   - stage: CleanBuildScanPushAll
     displayName: Build Tag Scan Push All Images
     dependsOn: 
@@ -327,7 +319,7 @@ stages:
           targetType: 'inline' 
           workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
           filePath: './src/agent/poc/publish.ps1'
-          script: pwd
+          script: ./publish.ps1 && ls ./publish
 
       # - task: PowerShell@2
       #   inputs:
