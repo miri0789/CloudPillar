@@ -1,0 +1,16 @@
+[
+    {
+        "name": "agent",
+        "artifactName": "agent",
+        "buildPath": "./src/agent/CloudPillar.Agent/",
+        "version": "1.0.0.0"
+
+    },
+    {
+        "name": "agent_poc",
+        "artifactName": "agent_poc",
+        "buildPath": "./src/agent/poc",
+        "version": "1.0.0.0"
+
+    }
+]
