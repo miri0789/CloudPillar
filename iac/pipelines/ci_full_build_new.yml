@@ -170,11 +170,11 @@ stages:
         agent.name: aks-${{parameters.env}}-agent      
       steps:
       - script: |
-          oldMajor=$(echo $(imageVersion) | cut -d '.' -f 1)
-          oldMinor=$(echo $(imageVersion) | cut -d '.' -f 2)
+          major=$(echo $(imageVersion) | cut -d '.' -f 1)
+          minor=$(echo $(imageVersion) | cut -d '.' -f 2)
           oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
           oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
-          newVersion=$(major).$(minor).$(GitBuildNumber).$(TIME)      
+          newVersion=$major.$minor.$(GitBuildNumber).$(TIME)      
       - template: templates/build.yml
         parameters:
           imageName: $(imageName)
@@ -264,12 +264,12 @@ stages:
               imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
             fi            
     
-            oldMajor=$(echo $(imageVersion) | cut -d '.' -f 1)
-            oldMinor=$(echo $(imageVersion) | cut -d '.' -f 2)
+            major=$(echo $(imageVersion) | cut -d '.' -f 1)
+            minor=$(echo $(imageVersion) | cut -d '.' -f 2)
             oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
             oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
             
-            newVersion=$(major).$(minor).$(GitBuildNumber).$(TIME)
+            newVersion=$major.$minor.$(GitBuildNumber).$(TIME)
 
             echo -e "\n\n"
             echo "Clean Old Imaged"
@@ -286,8 +286,10 @@ stages:
             echo -e "================================================\n\tUpdated Tag\n================================================"
             TAG="$newVersion"
             echo "TAG: $TAG"
-            find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
-            find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+            if [ "$imageName" != *edge_conquest* ]; then      
+              find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
+              find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+            fi    
 
             echo -e "\n\n"
             echo -e "================================================\n\tDocker Build - \n================================================"
