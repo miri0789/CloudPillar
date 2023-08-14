@@ -170,7 +170,7 @@ stages:
         agent.name: aks-${{parameters.env}}-agent      
       steps:
       - script: |
-          echo $(imageVersion) | cut -d '.' -f 1
+          echo $(imageVersion)
           # major=$(echo $(imageVersion) | cut -d '.' -f 1)
           # minor=$(echo $(imageVersion) | cut -d '.' -f 2)
           # oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
