@@ -170,52 +170,50 @@ stages:
       - script: |
           echo $(imageVersion)
           major=$(echo $(imageVersion) | cut -d '.' -f 1)
-          echo "Major:"
-          echo $major
-          # minor=$(echo $(imageVersion) | cut -d '.' -f 2)
-          # oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
-          # oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
-          # newVersion=$major.$minor.$(GitBuildNumber).$(TIME)      
+          minor=$(echo $(imageVersion) | cut -d '.' -f 2)
+          oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
+          oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
+          newVersion=$major.$minor.$(GitBuildNumber).$(TIME)      
 
-  #     - template: templates/build.yml
-  #       parameters:
-  #         imageName: $(imageName)
-  #         imageVersion: $(newVersion)
-  #         imagePath: $(imagePath)
-  #         dockerFilePath: $(dockerFilePath)
-  #         registryName: $(registryName)
-  #         pipelineAcrConnection: $(pipelineAcrConnection)
+      - template: templates/build.yml
+        parameters:
+          imageName: $(imageName)
+          imageVersion: $(newVersion)
+          imagePath: $(imagePath)
+          dockerFilePath: $(dockerFilePath)
+          registryName: $(registryName)
+          pipelineAcrConnection: $(pipelineAcrConnection)
 
-  #   - job: ScanImage
-  #     dependsOn: 
-  #     - CleanImages
-  #     - BuildTagImage
-  #     displayName: Scan Image 
-  #     pool:
-  #       name: $(AGENT_POOL)
-  #       agent.name: aks-${{parameters.env}}-agent
-  #     steps:
-  #     - template: templates/scan.yml
-  #       parameters:
-  #         imageName: $(imageName)
-  #         imageVersion: $(newVersion)
-  #         registryName: $(registryName)
+    - job: ScanImage
+      dependsOn: 
+      - CleanImages
+      - BuildTagImage
+      displayName: Scan Image 
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - template: templates/scan.yml
+        parameters:
+          imageName: $(imageName)
+          imageVersion: $(newVersion)
+          registryName: $(registryName)
 
-  #   - job: PushImage
-  #     dependsOn: 
-  #     - CleanImages
-  #     - BuildTagImage
-  #     - ScanImage
-  #     displayName: Push Image 
-  #     pool:
-  #       name: $(AGENT_POOL)
-  #       agent.name: aks-${{parameters.env}}-agent
-  #     steps:
-  #     - template: templates/push.yml
-  #       parameters:
-  #         imageName: $(imageName)
-  #         imageVersion: $(newVersion)
-  #         registryName: $(registryName)
+    - job: PushImage
+      dependsOn: 
+      - CleanImages
+      - BuildTagImage
+      - ScanImage
+      displayName: Push Image 
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:
+      - template: templates/push.yml
+        parameters:
+          imageName: $(imageName)
+          imageVersion: $(newVersion)
+          registryName: $(registryName)
 
 
 
@@ -265,45 +263,45 @@ stages:
             if [ "$imgName" != "edge_conquest" ]; then
               imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
             fi        
-            echo $(imageVersion) | cut -d '.' -f 1    
-  #           major=$(echo $(imageVersion) | cut -d '.' -f 1)
-  #           minor=$(echo $(imageVersion) | cut -d '.' -f 2)
-  #           oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
-  #           oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
+            echo $(imageVersion) 
+            major=$(echo $(imageVersion) | cut -d '.' -f 1)
+            minor=$(echo $(imageVersion) | cut -d '.' -f 2)
+            oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
+            oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
             
-  #           newVersion=$major.$minor.$(GitBuildNumber).$(TIME)
+            newVersion=$major.$minor.$(GitBuildNumber).$(TIME)
 
-  #           echo -e "\n\n"
-  #           echo "Clean Old Imaged"
-  #           docker image prune -a --force
-  #           docker image ls
+            echo -e "\n\n"
+            echo "Clean Old Imaged"
+            docker image prune -a --force
+            docker image ls
             
-  #           echo "Processing image: $imgName"
-  #           echo "Image Version: $newVersion"
-  #           echo ""
-  #           echo -e "================================================\n\tBase Info Version\n================================================"
-  #           find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'            
+            echo "Processing image: $imgName"
+            echo "Image Version: $newVersion"
+            echo ""
+            echo -e "================================================\n\tBase Info Version\n================================================"
+            find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'            
 
-  #           echo -e "\n\n"
-  #           echo -e "================================================\n\tUpdated Tag\n================================================"
-  #           TAG="$newVersion"
-  #           echo "TAG: $TAG"
-  #           if [ "$imageName" != *edge_conquest* ]; then      
-  #             find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
-  #             find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
-  #           fi    
+            echo -e "\n\n"
+            echo -e "================================================\n\tUpdated Tag\n================================================"
+            TAG="$newVersion"
+            echo "TAG: $TAG"
+            if [ "$imageName" != *edge_conquest* ]; then      
+              find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
+              find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+            fi    
 
-  #           echo -e "\n\n"
-  #           echo -e "================================================\n\tDocker Build - \n================================================"
-  #           docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath  $imagePath
-  #           docker images | grep $imageName       
+            echo -e "\n\n"
+            echo -e "================================================\n\tDocker Build - \n================================================"
+            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath  $imagePath
+            docker images | grep $imageName       
             
-  #           echo -e "\n\n"
-  #           echo -e "================================================\n\tDocker Scan - \n================================================"            
-  #           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $ACR_NAME.azurecr.io/$imageName:$newVersion
+            echo -e "\n\n"
+            echo -e "================================================\n\tDocker Scan - \n================================================"            
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $ACR_NAME.azurecr.io/$imageName:$newVersion
 
-  #           echo -e "\n\n"
-  #           echo -e "================================================\n\tDocker Push - \n================================================"            
-  #           docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
-  #         done
-  #       name: BuildTagScanPush
+            echo -e "\n\n"
+            echo -e "================================================\n\tDocker Push - \n================================================"            
+            docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
+          done
+        name: BuildTagScanPush
