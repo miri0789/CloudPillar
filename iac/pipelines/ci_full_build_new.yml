@@ -153,7 +153,6 @@ stages:
 
     jobs:
     - job: CleanImages
-      variables:
       displayName: Clean Images & Containers
       pool:
         name: $(AGENT_POOL)
