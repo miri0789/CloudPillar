@@ -15,7 +15,7 @@ This TLD document will further delve into the product's system design, data flow
 
 This document adheres to the following conventions to ensure consistency and readability:
 
-1. **Technical Terminology**: All technical terms, acronyms, and abbreviations are defined when first used. For instance, "CPC (Cloud Platform for Cybersecurity)" is defined at the first mention, and thereafter referred to as "CPC". 
+1. **Technical Terminology**: All technical terms, acronyms, and abbreviations are defined when first used. For instance, "CPC (CloudPillar for Cybersecurity)" is defined at the first mention, and thereafter referred to as "CPC". 
 
 2. **Section Headers**: Each section of this document begins with a header. Main sections are marked with a single hash (#), sub-sections with two hashes (##), and so on. The headers provide a clear structure and enable easy navigation through the document.
 
