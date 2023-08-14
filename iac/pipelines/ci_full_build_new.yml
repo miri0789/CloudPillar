@@ -324,9 +324,11 @@ stages:
       steps:      
       - task: PowerShell@2
         inputs:
-          targetType: 'filePath'
-          filePath: './src/agent/CloudPillar.Agent/publish.ps1'
+          targetType: 'filePath' 
+          workingDirectory: $(Build.SourcesDirectory)/src/agent/CloudPillar.Agent
+          filePath: './publish.ps1'
       - task: PowerShell@2
         inputs:
-          targetType: 'inline'
-          script: 'ls ./src/agent/CloudPillar.Agent/publish/'
+          targetType: 'filePath' 
+          workingDirectory: $(Build.SourcesDirectory)/src/agent/CloudPillar.Agent
+          filePath: 'ls ./publish/'
