@@ -38,7 +38,7 @@ The following table defines the key terms and acronyms used throughout this docu
 
 | Term / Acronym | Definition |
 | --- | --- |
-| CPC | Cloud Platform for Cybersecurity |
+| CPC | CloudPillar for Cybersecurity |
 | IoT | Internet of Things |
 | TLD | Top-Level Design |
 | AMQP | Advanced Message Queuing Protocol |
