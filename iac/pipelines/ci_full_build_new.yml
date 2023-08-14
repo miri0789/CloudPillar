@@ -227,45 +227,45 @@ stages:
 
 
 
-  # - stage: CleanBuildScanPushAll
-  #   displayName: Build Tag Scan Push All Images
-  #   dependsOn: 
-  #   - GetImages
-  #   condition: eq(variables['isSelectedImageAll'], true)
-  #   variables:
-  #     images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+  - stage: CleanBuildScanPushAll
+    displayName: Build Tag Scan Push All Images
+    dependsOn: 
+    - GetImages
+    condition: eq(variables['isSelectedImageAll'], true)
+    variables:
+      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
 
-  #   jobs:
-  #   - job: All
-  #     displayName: Clean Tag Scan Push All Images
-  #     pool:
-  #       name: $(AGENT_POOL)
-  #       agent.name: aks-${{parameters.env}}-agent
-  #     steps:      
-  #     - script: |    
-  #         imagesJson='$(images)'
-  #         echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
-  #         echo "$imagesJson"
-  #         echo -e "\n\n"
-  #         az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-  #         az account set --subscription $(ARM_SUBSCRIPTION_ID)
-  #         echo "Azure Login Successfull"
-  #         az acr login -n $(ACR_NAME)
+    jobs:
+    - job: All
+      displayName: Clean Tag Scan Push All Images
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:      
+      - script: |    
+          imagesJson='$(images)'
+          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+          echo "$imagesJson"
+          echo -e "\n\n"
+          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+          az account set --subscription $(ARM_SUBSCRIPTION_ID)
+          echo "Azure Login Successfull"
+          az acr login -n $(ACR_NAME)
   
-  #         for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
-  #           _jq() {
-  #             echo ${img} | base64 --decode | jq -r ${1}
-  #           }
-  #           imgName=$(_jq '.name')
-  #           imageName=$(_jq '.imageName')
-  #           imagePath=$(_jq '.imagePath')
-  #           dockerFilePath=$(_jq '.dockerFilePath')
-  #           imageVersion=$(_jq '.imageVersion')
-  #           ACR_NAME=$(ACR_NAME)
-  #           if [ "$imgName" != "edge_conquest" ]; then
-  #             imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
-  #           fi            
-    
+          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${img} | base64 --decode | jq -r ${1}
+            }
+            imgName=$(_jq '.name')
+            imageName=$(_jq '.imageName')
+            imagePath=$(_jq '.imagePath')
+            dockerFilePath=$(_jq '.dockerFilePath')
+            imageVersion=$(_jq '.imageVersion')
+            ACR_NAME=$(ACR_NAME)
+            if [ "$imgName" != "edge_conquest" ]; then
+              imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+            fi        
+            echo $(imageVersion) | cut -d '.' -f 1    
   #           major=$(echo $(imageVersion) | cut -d '.' -f 1)
   #           minor=$(echo $(imageVersion) | cut -d '.' -f 2)
   #           oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
