@@ -1,0 +1,236 @@
+
+name: ci_loop_test_$(Rev:r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
+  paths:
+    include:
+    - src/edge/conquest/*
+    - src/backned/*
+    exclude:
+    - '*'    
+
+
+
+parameters:
+  - name: env
+    displayName: Select Environment to deploy
+    type: string
+    default: dev
+    values:
+    - tst
+    - dev
+    - stg
+    - prd    
+  - name: image
+    displayName: Select Image to Build and Scan
+    type: string
+    default: all
+    values:
+    - beapi
+    - edge_conquest
+    - iotlistener
+    - all
+    - analyzer
+    - blobstreamer
+    - keyholder
+    - mongowriter
+    - twinlistener    
+
+
+
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+
+# - name: major
+#   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
+# - name: minor
+#   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
+- name: TIME
+  value: $(date +%Y%m%d%H%M%S)
+- name: GitBuildNumber
+  value: $(git rev-list --count HEAD)
+- name: registryName
+  value: 'iotimageacr'
+- name: pipelineAcrConnection
+  value: 'iotacr'  
+- name: isSelectedImageAll
+  value: ${{ eq(parameters.image, 'all') }}
+- name: images
+  value: []
+#   value: '[
+#     {
+        
+#         "name": "analyzer",
+#         "imageName": "backend_analyzer",
+#         "imagePath": "./src/backend/analyzer/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "beapi",
+#         "imageName": "backend_beapi",
+#         "imagePath": "./src/backend/beapi/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "infra",
+#         "imageName": "backend_infra",
+#         "imagePath": "./src/backend/infra/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "mongowriter",
+#         "imageName": "backend_mongowriter",
+#         "imagePath": "./src/backend/mongowriter/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "twinlistener",
+#         "imageName": "backend_twinlistener",
+#         "imagePath": "./src/backend/twinlistener/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "unittests",
+#         "imageName": "backend_unittests",
+#         "imagePath": "./src/backend/unittests/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "blobstreamer",
+#         "imageName": "backend_blobstreamer",
+#         "imagePath": "./src/backend/Backend.BlobStreamer/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "iotlistener",
+#         "imageName": "backend_iotlistener",
+#         "imagePath": "./src/backend/Backend.Iotlistener/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "keyholder",
+#         "imageName": "backend_keyholder",
+#         "imagePath": "./src/backend/Backend.Keyholder/",
+#         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+#         "imageVersion": "1.0.0.0"
+#     },
+#     {
+#         "name": "edge_conquest",
+#         "imageName": "edge_conquest",
+#         "imagePath": "./src/edge/conquest/",
+#         "imageVersion": "v0.7.3",
+#         "dockerFilePath": "./src/edge/conquest/Dockerfile"
+#     }
+# ]'
+
+
+resources:
+- repo: self
+pool:
+  name: $(AGENT_POOL)
+  agent.name: aks-${{parameters.env}}-agent
+
+
+stages:
+
+- stage: GetImages
+  displayName: Get_Changed_Images
+  jobs:
+  - job: SetChangedImages
+    displayName: Set Changed Images
+    
+    steps:
+    
+    - checkout: self
+      persistCredentials: true
+    
+    - bash: |        
+        # BRANCH=$(SourceBranchName)
+        # git fetch --all
+        # git merge-base origin/main $BRANCH
+        # git checkout $BRANCH
+        # CHANGED_FILES=$(git diff --name-only origin/main..$BRANCH)
+        # git diff --name-only origin/main..$BRANCH | while read -r file; do
+        # images=$(cat ./src/backend/images2.json | jq -c .)
+        # git diff --name-only origin/main..$BRANCH | while read -r file; do
+        # echo "${CHANGED_FILES[@]}"
+
+
+
+        images=$(cat ./src/backend/images2.json | jq -c .)
+        
+        # Get the list of changed files
+        CHANGED_FILES=$(git diff --name-only origin/main..$BRANCH)
+
+        # Initialize the pipeline images list variable
+        pipeline_images=()
+
+        # Loop through the images in the images2.json file
+        for image in $(echo $images | jq -r 'keys[]'); do
+            # Get the image object
+            image_obj=$(echo $images | jq -c --arg image $image '.[$image]')
+
+            # Get the image path
+            image_path=$(echo $image_obj | jq -r '.imagePath')
+
+            # Check if the image path is in the changed files
+            if [[ $CHANGED_FILES == *"$image_path"* ]]; then
+                # Add the image object to the pipeline images list variable
+                pipeline_images+=("$image_obj")
+            fi
+        done
+        # Set the pipeline variable with the pipeline images list variable
+        echo "##vso[task.setvariable variable=images;isOutput=true]${pipeline_images[@]}"
+        
+      name: SetImages
+      displayName: Set pipeline variable with images
+
+- job: BuildScanPush
+  dependsOn: SetPipelineVariable
+  strategy:
+    matrix:
+      ${{ each image in variables['images'] }}:
+        ${{ image.imageName }}:
+          imageName: ${{ image.imageName }}
+          imagePath: ${{ image.imagePath }}
+          dockerFilePath: ${{ image.dockerFilePath }}
+          imageVersion: ${{ image.imageVersion }}
+  steps:
+  - task: Docker@2
+    displayName: 'Build Docker Image'
+    inputs:
+      command: build
+      dockerfile: $(dockerFilePath)
+      tags: |
+        $(imageName):$(imageVersion)
+
+  - task: Docker@2
+    displayName: 'Scan Docker Image'
+    inputs:
+      command: scan
+      imageName: $(imageName):$(imageVersion)
+
+  - task: Docker@2
+    displayName: 'Push Docker Image'
+    inputs:
+      command: push
+      imageName: $(imageName):$(imageVersion)
