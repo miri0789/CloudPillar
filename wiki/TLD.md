@@ -52,6 +52,8 @@ The following table defines the key terms and acronyms used throughout this docu
 | ISMS | Information Security Management System |
 | C2D | Refers to Cloud to Device messaging in Azure IoT |
 | D2C | Refers to Device to Cloud messaging in Azure IoT |
+| JSON| JavaScript Object Notation                  |
+| CD  | Continuous Deployment/Delivery (in CI/CD)    |
 
 Please refer to this table if you encounter any unfamiliar term or acronym in the document.
 
