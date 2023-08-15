@@ -318,7 +318,7 @@ stages:
         inputs:
           targetType: 'inline' 
           workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
-          filePath: './src/agent/poc/publish.ps1'
+          # filePath: './src/agent/poc/publish.ps1'
           script: ./publish.ps1 && ls ./publish
 
       # - task: PowerShell@2
