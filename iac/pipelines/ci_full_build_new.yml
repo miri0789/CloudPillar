@@ -331,6 +331,16 @@ stages:
           containerRegistry: '$(pipelineAcrConnection)'
           tags: 'build'
 
+      - task: Docker@2
+        displayName: 'Dcoker Build & Tag Agent POC'
+        name: dockerBuildImage     
+        inputs:
+          command: 'build'
+          repository: '$(registryName).azurecr.io/agent_poc'
+          dockerfile: './src/agent/poc/Dockerfile'
+          containerRegistry: '$(pipelineAcrConnection)'
+          tags: 'build'
+
 
 
 
