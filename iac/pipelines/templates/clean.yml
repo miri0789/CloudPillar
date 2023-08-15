@@ -13,6 +13,7 @@ steps:
         docker stop $(docker ps -a -q) --force
         docker rm $(docker ps -a -q) --force    
         docker image prune -a --force
+        # docker system prune --force
 
         echo "Containers: "
         docker ps -a
