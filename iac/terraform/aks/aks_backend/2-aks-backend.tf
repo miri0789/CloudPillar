@@ -188,7 +188,7 @@ resource "azurerm_linux_virtual_machine" "aks_backend_vm" {
     network_interface_ids = [
         azurerm_network_interface.aks_backend_vm.id,
     ]
-    size                = "Standard_B2s"
+    size                = "Standard_B2ms"
     computer_name  = "aks-${var.env}-backend-vm"
     admin_username = "azureuser"
     disable_password_authentication = true
@@ -209,7 +209,7 @@ resource "azurerm_linux_virtual_machine" "aks_backend_vm" {
     os_disk {
         caching              = "ReadWrite"
         storage_account_type = "Standard_LRS"
-        disk_size_gb = 256
+        // disk_size_gb = 256
     }
     /* depends_on = [azurerm_marketplace_agreement.ubuntu] */
     /* custom_data = filebase64("${path.module}/iac-vm-init.sh") */
