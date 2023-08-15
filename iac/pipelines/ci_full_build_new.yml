@@ -309,7 +309,7 @@ stages:
       images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
     jobs:
     - job: BuildPSArtifacts
-      displayName: Build Powershell Artifacts
+      displayName: Build Agent Artifacts
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
@@ -322,14 +322,21 @@ stages:
       #     script: ./publish.ps1 && ls ./publish
 
       - task: Docker@2
-        displayName: 'Dcoker Build & Tag Agent POC'
+        displayName: 'Docker Build & Tag Agent POC'
         name: dockerBuildImage     
         inputs:
           command: 'build'
           repository: '$(registryName).azurecr.io/agent_poc'
           dockerfile: './src/agent/poc/Dockerfile'
           containerRegistry: '$(pipelineAcrConnection)'
-          tags: 'build'
+          tags: 'aux-build'
+
+      - script: |
+          CONTAINER_ID=$(docker create $(registryName).azurecr.io/agent_poc:aux-build)
+          docker cp $CONTAINER_ID:./cloudpillar.zip .
+          docker rm $CONTAINER_ID
+        displayName: 'Extract cloudpillar.zip from Image'
+
 
       # - task: Docker@2
       #   displayName: 'Dcoker Build & Tag Agent POC'
