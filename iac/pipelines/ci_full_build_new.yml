@@ -321,6 +321,25 @@ stages:
           # filePath: './src/agent/poc/publish.ps1'
           script: ./publish.ps1 && ls ./publish
 
+      - task: Docker@2
+        displayName: 'Dcoker Build & Tag Agent POC'
+        name: dockerBuildImage     
+        inputs:
+          command: 'build'
+          repository: '$(registryName).azurecr.io/agent_poc'
+          dockerfile: './src/agent/poc/Dockerfile'
+          containerRegistry: '$(pipelineAcrConnection)'
+
+
+
+
+
+# CONTAINER_ID=$(docker create IMAGE_NAME) 
+# && docker cp $CONTAINER_ID:/path/to/file/in/image /path/to/local/directory 
+# && docker rm $CONTAINER_ID
+
+
+
       # - task: PowerShell@2
       #   inputs:
       #     targetType: 'filePath' 
