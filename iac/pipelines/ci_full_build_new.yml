@@ -329,6 +329,7 @@ stages:
           repository: '$(registryName).azurecr.io/agent_poc'
           dockerfile: './src/agent/poc/Dockerfile'
           containerRegistry: '$(pipelineAcrConnection)'
+          tags: 'build'
 
 
 
