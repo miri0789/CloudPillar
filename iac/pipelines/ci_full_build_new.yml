@@ -331,7 +331,16 @@ stages:
           containerRegistry: '$(pipelineAcrConnection)'
           tags: 'aux-build'
 
+      - task: Docker@2
+        displayName: 'Push Image to ACR'
+        inputs:
+          command: 'push'
+          repository: '$(registryName).azurecr.io/agent_poc'
+          tags: 'aux-build'
+          containerRegistry: '$(pipelineAcrConnection)'
+
       - script: |
+          docker pull $(registryName).azurecr.io/agent_poc:aux-build
           CONTAINER_ID=$(docker create $(registryName).azurecr.io/agent_poc:aux-build)
           docker cp $CONTAINER_ID:./cloudpillar.zip .
           docker rm $CONTAINER_ID
