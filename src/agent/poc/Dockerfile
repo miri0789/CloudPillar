@@ -11,7 +11,7 @@ RUN pwsh ./publish.ps1
 FROM mcr.microsoft.com/dotnet/runtime:7.0
 WORKDIR /app
 COPY --from=build /app .
-COPY --from=build ./agent/poc/publish/cloudpillar.zip .
+COPY --from=build ./src/agent/poc/publish/cloudpillar.zip .
 
 # Set the entrypoint for the application
 ENTRYPOINT ["dotnet", "jnjiotagent.dll"]
