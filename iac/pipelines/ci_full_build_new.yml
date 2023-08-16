@@ -346,9 +346,9 @@ stages:
           containerRegistry: '$(pipelineAcrConnection)'
 
       - script: |
-          docker pull $(registryName).azurecr.io/agent_poc:aux-build
-          CONTAINER_ID=$(docker create $(registryName).azurecr.io/agent_poc:aux-build)
-          docker cp $CONTAINER_ID:./cloudpillar.zip /path/to/local/directory
+          docker pull iotimageacr.azurecr.io/agent_poc:aux-build
+          CONTAINER_ID=$(docker create iotimageacr.azurecr.io/agent_poc:aux-build)
+          docker cp $CONTAINER_ID:./cloudpillar.zip .
           docker rm $CONTAINER_ID
         displayName: 'Extract cloudpillar.zip from Image'
 
