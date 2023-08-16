@@ -331,7 +331,7 @@ stages:
 
       - script: |
           CONTAINER_ID=$(docker create agent_poc:aux-build)
-          docker cp $CONTAINER_ID:/cloudpillar.zip .
+          docker cp $CONTAINER_ID:./cloudpillar.zip .
           docker rm $CONTAINER_ID
           pwd
           ls -al 
