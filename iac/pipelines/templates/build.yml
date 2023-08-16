@@ -1,0 +1,86 @@
+# File: templates/build.yml
+parameters:
+  imageName: ''
+  imageVersion: ''
+  imagePath: ''
+  dockerFilePath: ''
+  registryName: ''  
+  pipelineAcrConnection: ''
+
+steps:
+- task: Bash@3
+  # displayName: Build & Tag Image
+  displayName: 'Build & Tag ${{ parameters.imageName }}'
+  name: buildImage      
+  condition: ne('${{ parameters.imageName }}', 'edge_conquest')
+  inputs:
+    targetType: inline
+    script: |
+      az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+      az account set --subscription $(ARM_SUBSCRIPTION_ID)
+      echo "Azure Login Successfull"
+      az acr login -n $(ACR_NAME)
+      echo "registryName: ${{ parameters.registryName }}"
+      echo "imageName: ${{ parameters.imageName }}"
+      echo "imageVersion: ${{ parameters.imageVersion }}"
+      echo "dockerFilePath: ${{ parameters.dockerFilePath }}"
+      echo "imagePath: ${{ parameters.imagePath }}"
+      echo "registryName: $(registryName)"
+      echo "imageName: $(imageName)"
+      echo "imageVersion: $(imageVersion)"
+      echo "dockerFilePath: $(dockerFilePath)"
+      echo "imagePath: $(imagePath)"
+      echo "${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}"
+      
+      echo -e "\n\n"
+      echo -e "================================================\n\tBase Info Version\n================================================"
+      find ${{parameters.imagePath}} -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+      
+      # echo -e "\n\n"
+      # echo -e "================================================\n\tInit Tag\n================================================"
+      # INIT_TAG="_MAJOR_._MINOR_._BUILDNUM_._TIMESTAMP_"
+      # echo "INIT TAG = $INIT_TAG"
+      # find ${{parameters.imagePath}} -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+
+      # find ${{parameters.imagePath}} -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${INIT_TAG}/g" {} \;
+
+      echo -e "\n\n"
+      echo -e "================================================\n\tUpdated Tag\n================================================"
+      # sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" ${{parameters.imagePath}}/*.csproj
+      TAG="${{parameters.imageVersion}}"
+      echo "TAG: $TAG"
+      find ${{parameters.imagePath}} -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
+      find ${{parameters.imagePath}} -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+
+
+      # cat ${{parameters.imagePath}}/*.csproj | grep "Info"
+      # docker build -t ${{ parameters.registryName }}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} --build-arg DLL=${{parameters.imageName}}.dll --label "version=${{parameters.imageVersion}}" --label "name=${{parameters.imageName}}" -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
+      docker build -t ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}} -f ${{parameters.dockerFilePath}} ${{parameters.imagePath}}
+      docker images | grep ${{parameters.imageName}}      
+
+
+- task: Docker@2
+  displayName: 'Dcoker Build & Tag ${{ parameters.imageName }}'
+  name: dockerBuildImage     
+  condition: eq('${{ parameters.imageName }}', 'edge_conquest') 
+  inputs:
+    command: 'build'
+    repository: '${{ parameters.registryName }}.azurecr.io/${{ parameters.imageName }}'
+    dockerfile: '${{ parameters.dockerFilePath }}'
+    containerRegistry: '${{ parameters.pipelineAcrConnection }}'
+    tags: '${{ parameters.imageVersion }}'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

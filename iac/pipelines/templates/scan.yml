@@ -1,0 +1,21 @@
+# File: templates/scan.yml
+parameters:
+  imageName: ''
+  imageVersion: ''
+  registryName: ''
+
+  
+
+steps:
+- task: Bash@3
+  # displayName: Scan Image
+  displayName: 'Scan ${{ parameters.imageName }}'
+  inputs:
+    targetType: inline
+    script: |
+      echo "Scan: ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}"
+      echo "Image"
+      docker image ls | grep ${{parameters.imageName}}
+      echo "${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}"
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${{parameters.registryName}}.azurecr.io/${{parameters.imageName}}:${{parameters.imageVersion}}
+    name: scanImage
