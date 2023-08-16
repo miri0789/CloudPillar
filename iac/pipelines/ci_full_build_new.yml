@@ -304,7 +304,7 @@ stages:
 
 
   - stage: ArtifactBuild
-    displayName: Build Publish Artifacts
+    displayName: Build Agent Artifacts
     variables:
       images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
     jobs:
@@ -332,23 +332,16 @@ stages:
           tags: 'aux-build'
 
       - task: Docker@2
-        displayName: 'Push Image to ACR'
+        displayName: 'Docker Build & Tag Agent POC'
         inputs:
-          command: 'push'
-          repository: '$(registryName).azurecr.io/agent_poc'
+          command: 'build'
+          repository: 'agent_poc'
+          dockerfile: './src/agent/poc/Dockerfile'
           tags: 'aux-build'
-          containerRegistry: '$(pipelineAcrConnection)'
-
-      - task: Docker@2
-        displayName: 'Login to ACR'
-        inputs:
-          command: 'login'
-          containerRegistry: '$(pipelineAcrConnection)'
 
       - script: |
-          docker pull iotimageacr.azurecr.io/agent_poc:aux-build
-          CONTAINER_ID=$(docker create iotimageacr.azurecr.io/agent_poc:aux-build)
-          docker cp $CONTAINER_ID:./cloudpillar.zip .
+          CONTAINER_ID=$(docker create agent_poc:aux-build)
+          docker cp $CONTAINER_ID:./cloudpillar.zip /path/to/local/directory
           docker rm $CONTAINER_ID
         displayName: 'Extract cloudpillar.zip from Image'
 
