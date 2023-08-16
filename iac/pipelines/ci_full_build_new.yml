@@ -334,7 +334,7 @@ stages:
       - task: PublishBuildArtifacts@1
         displayName: 'Publish cloudpillar.zip to Artifacts'
         inputs:
-          pathtoPublish: './cloudpillar-poc-1.0.$[variable.GitBuildNumber].$[variable.TIME].zip' # Path to the zip file on the agent machine
+          pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).${variable.TIME}.zip' # Path to the zip file on the agent machine
           # pathtoPublish: './cloudpillar.zip' # Path to the zip file on the agent machine
           artifactName: 'cloudpillar' # Name for the artifact
           publishLocation: 'Container' # Publish to Azure Pipelines
