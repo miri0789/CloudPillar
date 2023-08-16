@@ -292,20 +292,11 @@ stages:
           done
         name: BuildTagScanPush
 
-
-
-
-
-
-
-
     - job: BuildPSArtifacts
       displayName: Build Agent Artifacts
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
-      dependsOn: 
-      - GetImages
       variables:
         images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
       steps:      
