@@ -1,5 +1,5 @@
 
-name: ci_full_test_$(Rev:r)
+name: ci_full_build_$(Rev:r)
 
 trigger:
   batch: true
