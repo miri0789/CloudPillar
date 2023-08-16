@@ -29,7 +29,7 @@ variables:
 #   value: $(grep -oP '^major=\K\d+' src/backend/version.txt)
 # - name: minor
 #   value: $(grep -oP '^minor=\K\d+' src/backend/version.txt)
-- name: TIME
+- name: TIMELABEL
   value: $(date +%Y%m%d%H%M%S)
 - name: GitBuildNumber
   value: $(Build.BuildId)
@@ -123,7 +123,7 @@ stages:
               dockerFilePath=$(_jq '.dockerFilePath')
               imageVersion=$(_jq '.imageVersion')
               # if [ "$imgName" != "edge_conquest" ]; then
-              #   # imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+              #   # imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIMELABEL)"
               # fi
               echo "##vso[task.setvariable variable=imageName]$imageName"
               echo "##vso[task.setvariable variable=imageVersion]$imageVersion"
@@ -176,7 +176,7 @@ stages:
           minor=$(echo $(imageVersion) | cut -d '.' -f 2)
           oldBuild=$(echo $(imageVersion) | cut -d '.' -f 3)
           oldTime=$(echo $(imageVersion) | cut -d '.' -f 3)
-          newVersion=$major.$minor.$(GitBuildNumber).$(TIME)      
+          newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)      
 
       - template: templates/build.yml
         parameters:
@@ -256,7 +256,7 @@ stages:
             imageVersion=$(_jq '.imageVersion')
             ACR_NAME=$(ACR_NAME)
             # if [ "$imgName" != "edge_conquest" ]; then
-            #   imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIME)"
+            #   imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIMELABEL)"
             # fi        
             echo $(imageVersion) 
             major=$(echo $imageVersion | cut -d '.' -f 1)
@@ -264,7 +264,7 @@ stages:
             oldBuild=$(echo $imageVersion | cut -d '.' -f 3)
             oldTime=$(echo $imageVersion | cut -d '.' -f 3)
             
-            newVersion=$major.$minor.$(GitBuildNumber).$(TIME)
+            newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)
 
             echo -e "\n\n"
             echo "Clean Old Imaged"
@@ -327,14 +327,14 @@ stages:
           CONTAINER_ID=$(docker create agent_poc:aux-build)
           docker cp $CONTAINER_ID:/app/cloudpillar.zip .
           docker rm $CONTAINER_ID
-          mv ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).$(TIME).zip
-          ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).$(TIME).zip
+          mv ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).$(TIMELABEL).zip
+          ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).$(TIMELABEL).zip
         displayName: 'Extract cloudpillar.zip from Image'
 
       - task: PublishBuildArtifacts@1
         displayName: 'Publish cloudpillar.zip to Artifacts'
         inputs:
-          pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).${variable.TIME}.zip' # Path to the zip file on the agent machine
+          pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).$(TIMELABEL).zip' # Path to the zip file on the agent machine
           # pathtoPublish: './cloudpillar.zip' # Path to the zip file on the agent machine
           artifactName: 'cloudpillar' # Name for the artifact
           publishLocation: 'Container' # Publish to Azure Pipelines
