@@ -314,12 +314,6 @@ stages:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:      
-      # - task: PowerShell@2
-      #   inputs:
-      #     targetType: 'inline' 
-      #     workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
-      #     # filePath: './src/agent/poc/publish.ps1'
-      #     script: ./publish.ps1 && ls ./publish
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
@@ -333,52 +327,7 @@ stages:
           CONTAINER_ID=$(docker create agent_poc:aux-build)
           docker cp $CONTAINER_ID:/app/cloudpillar.zip .
           docker rm $CONTAINER_ID
-          pwd
-          ls -al 
+          ls -al ./cloudpillar.zip
+          mv ./cloudpillar.zip ./cloudpillar-1.0.$(GitBuildNumber).$(TIME)
         displayName: 'Extract cloudpillar.zip from Image'
 
-
-      # - task: Docker@2
-      #   displayName: 'Dcoker Build & Tag Agent POC'
-      #   name: dockerBuildImage     
-      #   inputs:
-      #     command: 'build'
-      #     repository: '$(registryName).azurecr.io/agent_poc'
-      #     dockerfile: './src/agent/poc/Dockerfile'
-      #     containerRegistry: '$(pipelineAcrConnection)'
-      #     tags: 'build'
-
-
-
-
-
-# CONTAINER_ID=$(docker create IMAGE_NAME) 
-# && docker cp $CONTAINER_ID:/path/to/file/in/image /path/to/local/directory 
-# && docker rm $CONTAINER_ID
-
-
-
-      # - task: PowerShell@2
-      #   inputs:
-      #     targetType: 'filePath' 
-      #     workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
-      #     filePath: './src/agent/poc/publish.ps1'
-      # - task: PowerShell@2
-      #   inputs:
-      #     targetType: 'filePath' 
-      #     workingDirectory: $(Build.SourcesDirectory)/src/agent/poc
-      #     filePath: 'ls ./publish/'
-
-
-
-
-      # - task: PowerShell@2
-      #   inputs:
-      #     targetType: 'filePath' 
-      #     workingDirectory: $(Build.SourcesDirectory)/src/agent/CloudPillar.Agent
-      #     filePath: './publish.ps1'
-      # - task: PowerShell@2
-      #   inputs:
-      #     targetType: 'filePath' 
-      #     workingDirectory: $(Build.SourcesDirectory)/src/agent/CloudPillar.Agent
-      #     filePath: 'ls ./publish/'
