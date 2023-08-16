@@ -209,6 +209,7 @@ resource "azurerm_linux_virtual_machine" "aks_backend_vm" {
     os_disk {
         caching              = "ReadWrite"
         storage_account_type = "Standard_LRS"
+        disk_size_gb = 100
     }
     /* depends_on = [azurerm_marketplace_agreement.ubuntu] */
     /* custom_data = filebase64("${path.module}/iac-vm-init.sh") */
