@@ -294,7 +294,7 @@ stages:
 
     - job: BuildPSArtifacts
       displayName: Build Agent Artifacts
-      dependOn: All
+      dependsOn: All
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
