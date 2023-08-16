@@ -329,6 +329,6 @@ stages:
           docker rm $CONTAINER_ID
           ls -al ./cloudpillar.zip
           mv ./cloudpillar.zip ./cloudpillar-1.0.$(GitBuildNumber).$(TIME)
-          ls -al ./cloudpillar.zip
+          ls -al 
         displayName: 'Extract cloudpillar.zip from Image'
 
