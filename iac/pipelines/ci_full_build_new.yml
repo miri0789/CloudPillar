@@ -327,8 +327,13 @@ stages:
           CONTAINER_ID=$(docker create agent_poc:aux-build)
           docker cp $CONTAINER_ID:/app/cloudpillar.zip .
           docker rm $CONTAINER_ID
-          ls -al ./cloudpillar.zip
           mv ./cloudpillar.zip ./cloudpillar-1.0.$(GitBuildNumber).$(TIME)
-          ls -al 
+          ls -al ./cloudpillar-1.0.$(GitBuildNumber).$(TIME).zip
         displayName: 'Extract cloudpillar.zip from Image'
 
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish cloudpillar.zip to Artifacts'
+        inputs:
+          pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).$(TIME)' # Path to the zip file on the agent machine
+          artifactName: 'cloudpillar_agent_poc_1.0.$(GitBuildNumber).$(TIME)' # Name for the artifact
+          publishLocation: 'Container' # Publish to Azure Pipelines
