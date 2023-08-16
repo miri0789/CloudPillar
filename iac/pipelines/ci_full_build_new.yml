@@ -341,8 +341,9 @@ stages:
 
       - script: |
           CONTAINER_ID=$(docker create agent_poc:aux-build)
-          docker cp $CONTAINER_ID:./cloudpillar.zip /path/to/local/directory
+          docker cp $CONTAINER_ID:./cloudpillar.zip .
           docker rm $CONTAINER_ID
+          ls -al ./cloudpillar.zip
         displayName: 'Extract cloudpillar.zip from Image'
 
 
