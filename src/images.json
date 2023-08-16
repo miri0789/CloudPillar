@@ -80,8 +80,10 @@
     {
         "name": "agent",
         "imageName": "agent",
-        "imagePath": "./src/agent/poc/CloudPillar.Agent",
+        "imagePath": "./src/agent/CloudPillar.Agent",
         "imageVersion": "1.0.0.0",
         "dockerFilePath": "./src/agent/poc/Dockerfile"
     }
 ]
+
+
