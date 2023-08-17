@@ -69,12 +69,5 @@
         "imagePath": "./src/edge/conquest/",
         "imageVersion": "v0.7.3",
         "dockerFilePath": "./src/edge/conquest/Dockerfile"
-    },
-    {
-        "name": "agent_poc",
-        "imageName": "agent_poc",
-        "imagePath": "./src/agent/poc/",
-        "imageVersion": "1.0.0.0",
-        "dockerFilePath": "./src/agent/poc/Dockerfile"
     }
 ]
