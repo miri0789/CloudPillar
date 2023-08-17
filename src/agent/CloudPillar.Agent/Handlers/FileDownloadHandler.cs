@@ -32,13 +32,13 @@ public class FileDownloadHandler : IFileDownloadHandler
             Report = actionToReport,
             Stopwatch = new Stopwatch()
         });
-        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionGuid);
+        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionId);
     }
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
     {
 
-        var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionGuid == message.ActionGuid &&
+        var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionId == message.ActionId &&
                                     item.DownloadAction.Source == message.FileName);
         if (file == null)
         {
@@ -51,7 +51,6 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.TotalBytes = message.FileSize;
         }
         await _FileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
-
         file.Report.TwinReport.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
 
         if (file.TotalBytesDownloaded == file.TotalBytes)
@@ -63,7 +62,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             if (message?.RangeSize != null)
             {
-                await CheckFullRangeBytesAsync(message, filePath);
+                //  await CheckFullRangeBytesAsync(message, filePath);
             }
             file.Report.TwinReport.Status = StatusType.InProgress;
         }
@@ -75,7 +74,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         const double KB = 1024.0;
         file.TotalBytesDownloaded += bytesLength;
-        double progressPercent = Math.Round((double)file.TotalBytesDownloaded / bytesLength * 100, 2);
+        double progressPercent = Math.Round(file.TotalBytesDownloaded / (double)file.TotalBytes * 100, 2);
         double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
         Console.WriteLine($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
         return (float)progressPercent;
@@ -88,7 +87,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isEmptyRangeBytes = await _FileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionGuid, startPosition, endPosition);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, startPosition, endPosition);
         }
     }
 

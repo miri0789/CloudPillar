@@ -75,14 +75,12 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var tasks = new List<Task>();
             foreach (var action in actions)
             {
                 switch (action.TwinAction)
                 {
                     case DownloadAction downloadAction:
-                        tasks.Add(_fileDownloadHandler.InitFileDownloadAsync(downloadAction, action));
-                        action.TwinReport.Status = StatusType.InProgress;
+                        await _fileDownloadHandler.InitFileDownloadAsync(downloadAction, action);
                         break;
 
                     case UploadAction uploadAction:
@@ -92,12 +90,13 @@ public class TwinHandler : ITwinHandler
                     default:
                         action.TwinReport.Status = StatusType.Failed;
                         action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
-                        Console.WriteLine($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionGuid}");
+                        Console.WriteLine($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
+                //TODO : queue - FIFO
+                // https://dev.azure.com/BiosenseWebsterIs/CloudPillar/_backlogs/backlog/CloudPillar%20Team/Epics/?workitem=9782
+                await UpdateReportActionAsync(new List<ActionToReport>() { action });
             }
-            await UpdateReportActionAsync(actions);
-            await Task.WhenAll(tasks);
         }
         catch (Exception ex)
         {
@@ -139,13 +138,14 @@ public class TwinHandler : ITwinHandler
 
                         reportedProp.SetValue(twinReported.ChangeSpec.Patch, reportedValue.ToArray());
                         actions.AddRange(desiredValue
-                           .Where((item, index) => reportedValue[index].Status == StatusType.Pending)
                            .Select((item, index) => new ActionToReport
                            {
                                ReportPartName = property.Name,
                                ReportIndex = index,
-                               TwinAction = item
-                           }));
+                               TwinAction = item,
+                               TwinReport = new TwinActionReported() { Status = StatusType.Pending }
+                           })
+                           .Where((item, index) => reportedValue[index].Status == StatusType.Pending));
 
                     }
                 }

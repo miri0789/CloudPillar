@@ -19,7 +19,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _deviceClient = deviceClientWrapper;
     }
 
-    public async Task SendFirmwareUpdateEventAsync(string fileName, Guid actionGuid, long? startPosition = null, long? endPosition = null)
+    public async Task SendFirmwareUpdateEventAsync(string fileName, string actionId, long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClient.GetTransportType() switch
@@ -36,7 +36,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             ChunkSize = chunkSize,
             StartPosition = startPosition ?? 0,
             EndPosition = endPosition,
-            ActionGuid = actionGuid
+            ActionId = actionId
         };
 
         await SendMessageAsync(firmwareUpdateEvent);
