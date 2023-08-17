@@ -80,7 +80,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            images=$(cat ./src/backend/images.json | jq -c .) # Compact JSON
+            images=$(cat ./src/images.json | jq -c .) # Compact JSON
             echo "##vso[task.setvariable variable=images;isOutput=true]$images"
             echo "##vso[task.setvariable variable=images]$images"
 
