@@ -249,7 +249,7 @@ stages:
             # if [ "$imgName" != "edge_conquest" ]; then
             #   imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIMELABEL)"
             # fi        
-            echo $(imageVersion) 
+            echo $imageVersion
             major=$(echo $imageVersion | cut -d '.' -f 1)
             minor=$(echo $imageVersion | cut -d '.' -f 2)
             oldBuild=$(echo $imageVersion | cut -d '.' -f 3)
@@ -279,7 +279,11 @@ stages:
 
             echo -e "\n\n"
             echo -e "================================================\n\tDocker Build - \n================================================"
-            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath  $imagePath
+            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath
+            if [ $? -ne 0 ]; then
+              echo "Docker Build Failed"
+              exit 1
+            fi
             docker images | grep $imageName       
             
             echo -e "\n\n"
