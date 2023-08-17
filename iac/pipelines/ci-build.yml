@@ -295,6 +295,7 @@ stages:
 
     - job: BuildPSArtifacts
       displayName: Build Agent POC Artifacts
+      dependOn: All
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
@@ -329,7 +330,6 @@ stages:
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
-        dependOn: getAgentPoCImageInfo
         condition: succeeded()
         inputs:
           command: 'build'
@@ -350,7 +350,6 @@ stages:
 
       - task: PublishBuildArtifacts@1
         displayName: 'Publish cloudpillar.zip to Artifacts'
-        dependOn: extractAgentPoCZip
         condition: succeeded()
         inputs:
           pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).zip' # Path to the zip file on the agent machine
