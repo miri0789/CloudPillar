@@ -293,29 +293,52 @@ stages:
         name: BuildTagScanPush
 
 
-
-  - stage: ArtifactBuild
-    displayName: Build Agent Artifacts
-    variables:
-      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
-    jobs:
     - job: BuildPSArtifacts
-      displayName: Build Agent Artifacts
+      displayName: Build Agent POC Artifacts
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:      
+      - script: |
+          imagesJson='$(images)'
+          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
+          echo "$imagesJson"
+          echo -e "\n\n"
+          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${img} | base64 --decode | jq -r ${1}
+            }
+            imgName=$(_jq '.name')
+            if [ "$imgName" == "agent_poc" ]; then
+              imageName=$(_jq '.imageName')
+              imagePath=$(_jq '.imagePath')
+              dockerFilePath=$(_jq '.dockerFilePath')
+              imageVersion=$(_jq '.imageVersion')
+              # if [ "$imgName" != "edge_conquest" ]; then
+              #   # imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIMELABEL)"
+              # fi
+
+              echo "##vso[task.setvariable variable=imageName;isOutput=true]$imageName"
+              echo "##vso[task.setvariable variable=imageVersion;isOutput=true]$imageVersion"
+              echo "##vso[task.setvariable variable=imagePath;isOutput=true]$imagePath"
+              echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]$dockerFilePath"
+              # Further processing logic here
+            fi
+          done
+        name: getAgentPoCImageInfo
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
         inputs:
           command: 'build'
-          repository: 'agent_poc'
-          dockerfile: './src/agent/poc/Dockerfile'
-          tags: 'aux-build'
+          repository: '$(getAgentPoCImageInfo.imageName)'
+          dockerfile: '$(getAgentPoCImageInfo.dockerFilePath)'
+          tags: '$(getAgentPoCImageInfo.imageVersion)'
 
       - script: |
-          CONTAINER_ID=$(docker create agent_poc:aux-build)
+          IMAGE_NAME=$(getAgentPoCImageInfo.imageName)
+          IMAGE_VERSION=$(getAgentPoCImageInfo.imageVersion)
+          CONTAINER_ID=$(docker create $IMAGE_NAME:$IMAGE_VERSION)
           docker cp $CONTAINER_ID:/app/cloudpillar.zip .
           docker rm $CONTAINER_ID
           mv ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).zip

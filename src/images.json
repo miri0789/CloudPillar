@@ -74,7 +74,7 @@
         "name": "agent_poc",
         "imageName": "agent_poc",
         "imagePath": "./src/agent/poc/",
-        "imageVersion": "aux-build",
+        "imageVersion": "1.0.0.0",
         "dockerFilePath": "./src/agent/poc/Dockerfile"
     }
 ]
