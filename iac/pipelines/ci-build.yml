@@ -70,13 +70,13 @@ stages:
 
 
 
-  - stage: GetImages # Stage 1
+  - stage: GetBackendImagesJsonStage # Stage 1
     jobs:
-    - job: GetImagesJob
-      displayName: Get Images Job
+    - job: GetBackendImagesJsonJob
+      displayName: Get Backend Images Json
       steps:
       - task: Bash@3
-        name: getImagesInfo
+        name: SetBackendImagesJson
         inputs:
           targetType: 'inline'
           script: |
@@ -87,16 +87,16 @@ stages:
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$images"
             echo -e "\n\n"
-        displayName: Set Images as Variable
+        displayName: Set Backend Images Json as Variable
 
-  - stage: GetSingleImage # Stage 2
-    dependsOn: GetImages
+  - stage: GetSingleBackendImageStage # Stage 2
+    dependsOn: GetBackendImagesJsonStage
     condition: eq(variables['isSelectedImageAll'], false)
     jobs:
-    - job: GetSingleImageJob
-      displayName: Get Single Image Job
+    - job: GetSingleBackendImageJob
+      displayName: Get Single Backend Image Job
       variables:
-        images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+        images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
       steps:
       - script: |
           imagesJson='$(images)'
@@ -128,24 +128,24 @@ stages:
               # Further processing logic here
             fi
           done
-        name: getSingleImageInfo
+        name: SetSingleBackendImagesJson
 
-  - stage: CleanBuildScanPush
+  - stage: CleanBuildScanPushSingleBackendImageStage
     displayName: Build Tag Scan Push Image
     dependsOn: 
-    - GetImages
-    - GetSingleImage
+    - GetBackendImagesJsonStage
+    - GetSingleBackendImageStage
     condition: eq(variables['isSelectedImageAll'], false)
     variables:
-      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
-      imageName: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imageName'] ]
-      imageVersion: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imageVersion'] ]
-      imagePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.imagePath'] ]
-      dockerFilePath: $[ stageDependencies.GetSingleImage.GetSingleImageJob.outputs['getSingleImageInfo.dockerFilePath'] ]      
+      images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
+      imageName: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageName'] ]
+      imageVersion: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageVersion'] ]
+      imagePath: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imagePath'] ]
+      dockerFilePath: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.dockerFilePath'] ]      
 
     jobs:
-    - job: CleanImages
-      displayName: Clean Images & Containers
+    - job: CleanAllDockerImagesJob
+      displayName: Clean All Docker Images & Containers
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
@@ -153,10 +153,10 @@ stages:
       - template: templates/clean.yml
 
 
-    - job: BuildTagImage
+    - job: BuildTagSignleBackendImageJob
       dependsOn: 
-      - CleanImages
-      displayName: Build and Tag Image
+      - CleanAllDockerImagesJob
+      displayName: Build and Tag Single Backend Image
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent      
@@ -178,11 +178,11 @@ stages:
           registryName: $(registryName)
           pipelineAcrConnection: $(pipelineAcrConnection)
 
-    - job: ScanImage
+    - job: ScanSignleBackendImage
       dependsOn: 
-      - CleanImages
-      - BuildTagImage
-      displayName: Scan Image 
+      - CleanAllDockerImagesJob
+      - BuildTagSignleBackendImageJob
+      displayName: Scan Single Backend Image 
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
@@ -193,12 +193,12 @@ stages:
           imageVersion: $(newVersion)
           registryName: $(registryName)
 
-    - job: PushImage
+    - job: PushSignleBackendImageJob
       dependsOn: 
-      - CleanImages
-      - BuildTagImage
-      - ScanImage
-      displayName: Push Image 
+      - CleanAllDockerImagesJob
+      - BuildTagSignleBackendImageJob
+      - ScanSignleBackendImage
+      displayName: Push Single Backend Image 
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
@@ -211,13 +211,13 @@ stages:
 
 
 
-  - stage: CleanBuildScanPushAll
-    displayName: Build Tag Scan Push All Images
+  - stage: CleanBuildScanPushAllBackendImagesStage
+    displayName: Build Tag Scan Push All Backend Images
     dependsOn: 
-    - GetImages
+    - GetBackendImagesJsonStage
     condition: eq(variables['isSelectedImageAll'], true)
     variables:
-      images: $[ stageDependencies.GetImages.GetImagesJob.outputs['getImagesInfo.images'] ]
+      images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
 
     jobs:
     - job: All
