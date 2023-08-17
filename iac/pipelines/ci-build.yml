@@ -294,66 +294,43 @@ stages:
             echo -e "================================================\n\tDocker Push - \n================================================"            
             docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
           done
-        name: BuildTagScanPush
+        name: BuildTagScanPushBackendImages
 
 
-    - job: BuildPSArtifacts
+  - stage: BuildAgentPoCArtifactsStage
+    displayName: Build Agent POC Artifacts
+    condition: eq(variables['isSelectedImageAll'], true)
+
+    - job: BuildAgentPoCArtifactsJob
       displayName: Build Agent POC Artifacts
-      dependsOn: All
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:      
-      - script: |
-          imagesJson='$(images)'
-          echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
-          echo "$imagesJson"
-          echo -e "\n\n"
-          for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
-            _jq() {
-              echo ${img} | base64 --decode | jq -r ${1}
-            }
-            imgName=$(_jq '.name')
-            if [ "$imgName" == "agent_poc" ]; then
-              imageName=$(_jq '.imageName')
-              imagePath=$(_jq '.imagePath')
-              dockerFilePath=$(_jq '.dockerFilePath')
-              imageVersion=$(_jq '.imageVersion')
-              # if [ "$imgName" != "edge_conquest" ]; then
-              #   # imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIMELABEL)"
-              # fi
-
-              echo "##vso[task.setvariable variable=imageName;isOutput=true]$imageName"
-              echo "##vso[task.setvariable variable=imageVersion;isOutput=true]$imageVersion"
-              echo "##vso[task.setvariable variable=imagePath;isOutput=true]$imagePath"
-              echo "##vso[task.setvariable variable=dockerFilePath;isOutput=true]$dockerFilePath"
-              # Further processing logic here
-            fi
-          done
-        name: getAgentPoCImageInfo
+    
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
         condition: succeeded()
         inputs:
           command: 'build'
-          repository: '$(getAgentPoCImageInfo.imageName)'
-          dockerfile: '$(getAgentPoCImageInfo.dockerFilePath)'
-          tags: '$(getAgentPoCImageInfo.imageVersion)'
+          repository: agent_poc
+          dockerfile: './src/agent/poc/Dockerfile'
+          tags: 'aux-build'
 
       - script: |
-          IMAGE_NAME=$(getAgentPoCImageInfo.imageName)
-          IMAGE_VERSION=$(getAgentPoCImageInfo.imageVersion)
+          IMAGE_NAME=aget_poc
+          IMAGE_VERSION=aux-build
           CONTAINER_ID=$(docker create $IMAGE_NAME:$IMAGE_VERSION)
           docker cp $CONTAINER_ID:/app/cloudpillar.zip .
           docker rm $CONTAINER_ID
           mv ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
           ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
-        name: extractAgentPoCZip
-        displayName: 'Extract POC cloudpillar.zip from Image'
+        name: ExtractAgentPoCZip
+        displayName: 'Extract POC cloudpillar-poc-1.0.$(GitBuildNumber).zip from Image'
 
       - task: PublishBuildArtifacts@1
-        displayName: 'Publish cloudpillar.zip to Artifacts'
+        displayName: 'Publish cloudpillar-poc-1.0.$(GitBuildNumber).zip to Artifacts'
         condition: succeeded()
         inputs:
           pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).zip' # Path to the zip file on the agent machine
