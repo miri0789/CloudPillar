@@ -48,7 +48,11 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             try
             {
                 const string messageTypeProp = "MessageType";
-                MessageType.TryParse(receivedMessage.Properties[messageTypeProp], out MessageType messageType);
+                MessageType? messageType = null;
+                if (Enum.TryParse(receivedMessage.Properties[messageTypeProp], out MessageType parsedMessageType))
+                {
+                    messageType = parsedMessageType;
+                }
                 switch (messageType)
                 {
                     case MessageType.DownloadChunk:
