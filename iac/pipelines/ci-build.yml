@@ -329,6 +329,8 @@ stages:
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
+        dependOn: getAgentPoCImageInfo
+        condition: succeeded()
         inputs:
           command: 'build'
           repository: '$(getAgentPoCImageInfo.imageName)'
@@ -343,10 +345,13 @@ stages:
           docker rm $CONTAINER_ID
           mv ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
           ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
+        name: extractAgentPoCZip
         displayName: 'Extract POC cloudpillar.zip from Image'
 
       - task: PublishBuildArtifacts@1
         displayName: 'Publish cloudpillar.zip to Artifacts'
+        dependOn: extractAgentPoCZip
+        condition: succeeded()
         inputs:
           pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).zip' # Path to the zip file on the agent machine
           # pathtoPublish: './cloudpillar.zip' # Path to the zip file on the agent machine
