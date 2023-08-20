@@ -228,6 +228,12 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:   
       - task: NuGetAuthenticate@1
+      - task: NuGetCommand@2
+        inputs:
+          command: 'restore'
+          restoreSolution: './src/backend/infra/common/*.sln'
+          feedsToUse: 'select'
+          vstsFeed: '406183ba-3dd5-432c-9edd-d043d7895385/dfd343f3-68a8-4e4a-aeab-7a0e01bd4c24'
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
