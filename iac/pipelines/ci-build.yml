@@ -227,6 +227,8 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:   
       - task: NuGetAuthenticate@1
+        inputs:
+          nuGetServiceConnections: 'CloudPillarFeed'
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
