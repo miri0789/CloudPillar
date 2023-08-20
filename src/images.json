@@ -26,5 +26,12 @@
         "imagePath": "./src/backend/Backend.Keyholder/",
         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
         "imageVersion": "1.0.0.0"
+    },
+    {
+        "name": "edge_conquest",
+        "imageName": "edge_conquest",
+        "imagePath": "./src/edge/conquest/",
+        "imageVersion": "v0.7.3",
+        "dockerFilePath": "./src/edge/conquest/Dockerfile"
     }
 ]

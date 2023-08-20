@@ -13,6 +13,7 @@ trigger:
     include:
     - src/edge/conquest/*
     - src/backned/*
+    - src/agent/*
     exclude:
     - '*'    
 
@@ -71,11 +72,15 @@ stages:
 
 
   - stage: GetBackendImagesJsonStage # Stage 1
+  - stage: GetBackendImagesJsonStage # Stage 1
     jobs:
+    - job: GetBackendImagesJsonJob
+      displayName: Get Backend Images Json
     - job: GetBackendImagesJsonJob
       displayName: Get Backend Images Json
       steps:
       - task: Bash@3
+        name: SetBackendImagesJson
         name: SetBackendImagesJson
         inputs:
           targetType: 'inline'
@@ -88,14 +93,20 @@ stages:
             echo "$images"
             echo -e "\n\n"
         displayName: Set Backend Images Json as Variable
+        displayName: Set Backend Images Json as Variable
 
+  - stage: GetSingleBackendImageStage # Stage 2
+    dependsOn: GetBackendImagesJsonStage
   - stage: GetSingleBackendImageStage # Stage 2
     dependsOn: GetBackendImagesJsonStage
     condition: eq(variables['isSelectedImageAll'], false)
     jobs:
     - job: GetSingleBackendImageJob
       displayName: Get Single Backend Image Job
+    - job: GetSingleBackendImageJob
+      displayName: Get Single Backend Image Job
       variables:
+        images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
         images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
       steps:
       - script: |
@@ -129,10 +140,14 @@ stages:
             fi
           done
         name: SetSingleBackendImagesJson
+        name: SetSingleBackendImagesJson
 
+  - stage: CleanBuildScanPushSingleBackendImageStage
   - stage: CleanBuildScanPushSingleBackendImageStage
     displayName: Build Tag Scan Push Image
     dependsOn: 
+    - GetBackendImagesJsonStage
+    - GetSingleBackendImageStage
     - GetBackendImagesJsonStage
     - GetSingleBackendImageStage
     condition: eq(variables['isSelectedImageAll'], false)
@@ -142,8 +157,15 @@ stages:
       imageVersion: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageVersion'] ]
       imagePath: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imagePath'] ]
       dockerFilePath: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.dockerFilePath'] ]      
+      images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
+      imageName: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageName'] ]
+      imageVersion: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageVersion'] ]
+      imagePath: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imagePath'] ]
+      dockerFilePath: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.dockerFilePath'] ]      
 
     jobs:
+    - job: CleanAllDockerImagesJob
+      displayName: Clean All Docker Images & Containers
     - job: CleanAllDockerImagesJob
       displayName: Clean All Docker Images & Containers
       pool:
@@ -154,7 +176,10 @@ stages:
 
 
     - job: BuildTagSignleBackendImageJob
+    - job: BuildTagSignleBackendImageJob
       dependsOn: 
+      - CleanAllDockerImagesJob
+      displayName: Build and Tag Single Backend Image
       - CleanAllDockerImagesJob
       displayName: Build and Tag Single Backend Image
       pool:
@@ -179,7 +204,11 @@ stages:
           pipelineAcrConnection: $(pipelineAcrConnection)
 
     - job: ScanSignleBackendImage
+    - job: ScanSignleBackendImage
       dependsOn: 
+      - CleanAllDockerImagesJob
+      - BuildTagSignleBackendImageJob
+      displayName: Scan Single Backend Image 
       - CleanAllDockerImagesJob
       - BuildTagSignleBackendImageJob
       displayName: Scan Single Backend Image 
@@ -194,7 +223,12 @@ stages:
           registryName: $(registryName)
 
     - job: PushSignleBackendImageJob
+    - job: PushSignleBackendImageJob
       dependsOn: 
+      - CleanAllDockerImagesJob
+      - BuildTagSignleBackendImageJob
+      - ScanSignleBackendImage
+      displayName: Push Single Backend Image 
       - CleanAllDockerImagesJob
       - BuildTagSignleBackendImageJob
       - ScanSignleBackendImage
@@ -211,8 +245,8 @@ stages:
 
 
 
-  - stage: CleanBuildScanPushAllBackendImagesStage
-    displayName: Build Tag Scan Push All Backend Images
+  - stage: CleanBuildScanPushAllBackendImagesStageBackendImagesStage
+    displayName: Build Tag Scan Push All Backend Backend Images
     dependsOn: 
     - GetBackendImagesJsonStage
     condition: eq(variables['isSelectedImageAll'], true)
@@ -250,6 +284,7 @@ stages:
             #   imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIMELABEL)"
             # fi        
             echo $imageVersion
+            echo $imageVersion
             major=$(echo $imageVersion | cut -d '.' -f 1)
             minor=$(echo $imageVersion | cut -d '.' -f 2)
             oldBuild=$(echo $imageVersion | cut -d '.' -f 3)
@@ -284,6 +319,11 @@ stages:
               echo "Docker Build Failed"
               exit 1
             fi
+            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath
+            if [ $? -ne 0 ]; then
+              echo "Docker Build Failed"
+              exit 1
+            fi
             docker images | grep $imageName       
             
             echo -e "\n\n"
@@ -294,9 +334,14 @@ stages:
             echo -e "================================================\n\tDocker Push - \n================================================"            
             docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
           done
-        name: BuildTagScanPushBackendImages
+        name: BuildTagScanPushBackendImagesBackendImages
 
 
+  - stage: BuildAgentPoCArtifactsStage
+    displayName: Build Agent POC Artifacts
+    condition: eq(variables['isSelectedImageAll'], true)
+    jobs:
+    - job: BuildAgentPoCArtifactsJob
   - stage: BuildAgentPoCArtifactsStage
     displayName: Build Agent POC Artifacts
     condition: eq(variables['isSelectedImageAll'], true)
@@ -308,12 +353,16 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:      
     
+    
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
         condition: succeeded()
         inputs:
           command: 'build'
+          repository: agent_poc
+          dockerfile: './src/agent/poc/Dockerfile'
+          tags: 'aux-build'
           repository: agent_poc
           dockerfile: './src/agent/poc/Dockerfile'
           tags: 'aux-build'
@@ -328,9 +377,11 @@ stages:
           ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
         name: ExtractAgentPoCZip
         displayName: 'Extract POC cloudpillar-poc-1.0.$(GitBuildNumber).zip from Image'
+        name: ExtractAgentPoCZip
+        displayName: 'Extract POC cloudpillar-poc-1.0.$(GitBuildNumber).zip from Image'
 
       - task: PublishBuildArtifacts@1
-        displayName: 'Publish cloudpillar-poc-1.0.$(GitBuildNumber).zip to Artifacts'
+        displayName: 'Publish cloudpillar-poc-1.0.$(GitBuildNumber)-poc-1.0.$(GitBuildNumber).zip to Artifacts'
         condition: succeeded()
         inputs:
           pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).zip' # Path to the zip file on the agent machine
