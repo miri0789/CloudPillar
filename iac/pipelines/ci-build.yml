@@ -286,6 +286,7 @@ stages:
             FEED_ACCESSTOKEN="$VSS_NUGET_ACCESSTOKEN"
             echo "FEED_ACCESSTOKEN: $FEED_ACCESSTOKEN"
             echo "VSS_NUGET_ACCESSTOKEN: $VSS_NUGET_ACCESSTOKEN"
+            echo "##vso[task.setvariable variable=FEED_ACCESSTOKEN;issecret=true]$FEED_ACCESSTOKEN"
             docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath --build-arg FEED_ACCESSTOKEN=$FEED_ACCESSTOKEN
             if [ $? -ne 0 ]; then
               echo "Docker Build Failed"
