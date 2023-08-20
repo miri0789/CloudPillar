@@ -230,15 +230,6 @@ stages:
       steps:   
       - task: NuGetAuthenticate@1
         displayName: 'Authenticate to NuGet'
-
-      - task: Docker@0
-        displayName: 'build container'
-        inputs:
-          command: 'build'
-          Dockerfile: 'src/backend/infra/common/build/Dockerfile'
-          buildContext: 'src'
-          buildArguments: |
-            FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
@@ -292,7 +283,8 @@ stages:
 
             echo -e "\n\n"
             echo -e "================================================\n\tDocker Build - \n================================================"
-            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+            FEED_ACCESSTOKEN="$VSS_NUGET_ACCESSTOKEN"
+            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath --build-arg FEED_ACCESSTOKEN="$FEED_ACCESSTOKEN"
             if [ $? -ne 0 ]; then
               echo "Docker Build Failed"
               exit 1
