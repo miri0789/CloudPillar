@@ -1,38 +1,9 @@
 [
     {
-        "name": "analyzer",
-        "imageName": "backend_analyzer",
-        "imagePath": "./src/backend/analyzer/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-
-    },
-    {
-        "name": "beapi",
-        "imageName": "backend_beapi",
-        "imagePath": "./src/backend/beapi/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
         "name": "infra",
         "imageName": "backend_infra_common",
         "imagePath": "./src/backend/infra/common",
         "dockerFilePath": "./src/backend/infra/common/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "mongowriter",
-        "imageName": "backend_mongowriter",
-        "imagePath": "./src/backend/mongowriter/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "twinlistener",
-        "imageName": "backend_twinlistener",
-        "imagePath": "./src/backend/twinlistener/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },
     {
@@ -55,12 +26,5 @@
         "imagePath": "./src/backend/Backend.Keyholder/",
         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
         "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "edge_conquest",
-        "imageName": "edge_conquest",
-        "imagePath": "./src/edge/conquest/",
-        "imageVersion": "v0.7.3",
-        "dockerFilePath": "./src/edge/conquest/Dockerfile"
     }
 ]
