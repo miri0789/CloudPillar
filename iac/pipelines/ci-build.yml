@@ -228,6 +228,16 @@ stages:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:   
+      - task: NuGetAuthenticate@1
+        displayName: 'Authenticate to NuGet'
+
+      - task: Docker@0
+        displayName: 'build container'
+        inputs:
+          command: 'build'
+          Dockerfile: '**/Dockerfile'
+          buildArguments: |
+            FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
