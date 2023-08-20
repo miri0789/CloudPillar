@@ -16,9 +16,9 @@
     },
     {
         "name": "infra",
-        "imageName": "backend_infra",
-        "imagePath": "./src/backend/infra/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "imageName": "backend_infra_common",
+        "imagePath": "./src/backend/infra/common",
+        "dockerFilePath": "./src/backend/infra/common/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },
     {
@@ -32,13 +32,6 @@
         "name": "twinlistener",
         "imageName": "backend_twinlistener",
         "imagePath": "./src/backend/twinlistener/",
-        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "unittests",
-        "imageName": "backend_unittests",
-        "imagePath": "./src/backend/unittests/",
         "dockerFilePath": "./src/backend/infra/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },
