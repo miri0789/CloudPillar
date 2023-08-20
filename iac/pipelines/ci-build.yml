@@ -232,6 +232,7 @@ stages:
           restoreSolution: '**/*.sln'
           feedsToUse: 'select'
           vstsFeed: '406183ba-3dd5-432c-9edd-d043d7895385/dfd343f3-68a8-4e4a-aeab-7a0e01bd4c24'
+          noCache: true
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
