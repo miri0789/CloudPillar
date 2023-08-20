@@ -81,7 +81,6 @@ stages:
       steps:
       - task: Bash@3
         name: SetBackendImagesJson
-        name: SetBackendImagesJson
         inputs:
           targetType: 'inline'
           script: |
@@ -92,7 +91,6 @@ stages:
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$images"
             echo -e "\n\n"
-        displayName: Set Backend Images Json as Variable
         displayName: Set Backend Images Json as Variable
 
   - stage: GetSingleBackendImageStage # Stage 2
@@ -106,7 +104,6 @@ stages:
     - job: GetSingleBackendImageJob
       displayName: Get Single Backend Image Job
       variables:
-        images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
         images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
       steps:
       - script: |
@@ -140,7 +137,6 @@ stages:
             fi
           done
         name: SetSingleBackendImagesJson
-        name: SetSingleBackendImagesJson
 
   - stage: CleanBuildScanPushSingleBackendImageStage
   - stage: CleanBuildScanPushSingleBackendImageStage
@@ -152,11 +148,6 @@ stages:
     - GetSingleBackendImageStage
     condition: eq(variables['isSelectedImageAll'], false)
     variables:
-      images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
-      imageName: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageName'] ]
-      imageVersion: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageVersion'] ]
-      imagePath: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imagePath'] ]
-      dockerFilePath: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.dockerFilePath'] ]      
       images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
       imageName: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageName'] ]
       imageVersion: $[ stageDependencies.GetSingleBackendImageStage.GetSingleBackendImageJob.outputs['SetSingleBackendImagesJson.imageVersion'] ]
@@ -178,8 +169,6 @@ stages:
     - job: BuildTagSignleBackendImageJob
     - job: BuildTagSignleBackendImageJob
       dependsOn: 
-      - CleanAllDockerImagesJob
-      displayName: Build and Tag Single Backend Image
       - CleanAllDockerImagesJob
       displayName: Build and Tag Single Backend Image
       pool:
@@ -209,9 +198,6 @@ stages:
       - CleanAllDockerImagesJob
       - BuildTagSignleBackendImageJob
       displayName: Scan Single Backend Image 
-      - CleanAllDockerImagesJob
-      - BuildTagSignleBackendImageJob
-      displayName: Scan Single Backend Image 
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
@@ -225,10 +211,6 @@ stages:
     - job: PushSignleBackendImageJob
     - job: PushSignleBackendImageJob
       dependsOn: 
-      - CleanAllDockerImagesJob
-      - BuildTagSignleBackendImageJob
-      - ScanSignleBackendImage
-      displayName: Push Single Backend Image 
       - CleanAllDockerImagesJob
       - BuildTagSignleBackendImageJob
       - ScanSignleBackendImage
@@ -363,9 +345,6 @@ stages:
           repository: agent_poc
           dockerfile: './src/agent/poc/Dockerfile'
           tags: 'aux-build'
-          repository: agent_poc
-          dockerfile: './src/agent/poc/Dockerfile'
-          tags: 'aux-build'
 
       - script: |
           IMAGE_NAME=aget_poc
@@ -377,14 +356,11 @@ stages:
           ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
         name: ExtractAgentPoCZip
         displayName: 'Extract POC cloudpillar-poc-1.0.$(GitBuildNumber).zip from Image'
-        name: ExtractAgentPoCZip
-        displayName: 'Extract POC cloudpillar-poc-1.0.$(GitBuildNumber).zip from Image'
 
       - task: PublishBuildArtifacts@1
         displayName: 'Publish cloudpillar-poc-1.0.$(GitBuildNumber)-poc-1.0.$(GitBuildNumber).zip to Artifacts'
         condition: succeeded()
         inputs:
           pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).zip' # Path to the zip file on the agent machine
-          # pathtoPublish: './cloudpillar.zip' # Path to the zip file on the agent machine
           artifactName: 'cloudpillar' # Name for the artifact
           publishLocation: 'Container' # Publish to Azure Pipelines
