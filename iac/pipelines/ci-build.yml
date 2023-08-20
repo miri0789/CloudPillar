@@ -235,7 +235,7 @@ stages:
         displayName: 'build container'
         inputs:
           command: 'build'
-          Dockerfile: '**/Dockerfile'
+          Dockerfile: 'src/backend/infra/common/build/Dockerfile'
           buildArguments: |
             FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
       - script: |    
