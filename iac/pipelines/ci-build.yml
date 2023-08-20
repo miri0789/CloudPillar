@@ -228,15 +228,6 @@ stages:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:   
-      - task: NuGetAuthenticate@1
-      - script: sudo apt-get install -y mono-complete
-        displayName: 'Install Mono'
-      - task: NuGetCommand@2
-        inputs:
-          command: 'restore'
-          restoreSolution: './src/backend/infra/common/*.sln'
-          feedsToUse: 'select'
-          vstsFeed: '406183ba-3dd5-432c-9edd-d043d7895385/dfd343f3-68a8-4e4a-aeab-7a0e01bd4c24'
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
@@ -290,12 +281,7 @@ stages:
 
             echo -e "\n\n"
             echo -e "================================================\n\tDocker Build - \n================================================"
-            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath
-            if [ $? -ne 0 ]; then
-              echo "Docker Build Failed"
-              exit 1
-            fi
-            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath
+            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
             if [ $? -ne 0 ]; then
               echo "Docker Build Failed"
               exit 1
