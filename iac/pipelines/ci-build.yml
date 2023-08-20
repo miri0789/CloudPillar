@@ -280,6 +280,8 @@ stages:
             fi    
 
             echo -e "\n\n"
+            echo -e "mmmmmmmmmm"
+            echo -e $(VSS_NUGET_ACCESSTOKEN)
             echo -e "================================================\n\tDocker Build - \n================================================"
             docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
             if [ $? -ne 0 ]; then
