@@ -96,8 +96,6 @@ stages:
     jobs:
     - job: GetSingleBackendImageJob
       displayName: Get Single Backend Image Job
-    - job: GetSingleBackendImageJob
-      displayName: Get Single Backend Image Job
       variables:
         images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
       steps:
@@ -149,8 +147,6 @@ stages:
     jobs:
     - job: CleanAllDockerImagesJob
       displayName: Clean All Docker Images & Containers
-    - job: CleanAllDockerImagesJob
-      displayName: Clean All Docker Images & Containers
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
@@ -158,7 +154,6 @@ stages:
       - template: templates/clean.yml
 
 
-    - job: BuildTagSignleBackendImageJob
     - job: BuildTagSignleBackendImageJob
       dependsOn: 
       - CleanAllDockerImagesJob
