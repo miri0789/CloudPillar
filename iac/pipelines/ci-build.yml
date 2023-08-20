@@ -284,7 +284,9 @@ stages:
             echo -e "\n\n"
             echo -e "================================================\n\tDocker Build - \n================================================"
             FEED_ACCESSTOKEN="$VSS_NUGET_ACCESSTOKEN"
-            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath --build-arg FEED_ACCESSTOKEN="$FEED_ACCESSTOKEN"
+            echo "FEED_ACCESSTOKEN: $FEED_ACCESSTOKEN"
+            echo "VSS_NUGET_ACCESSTOKEN: $VSS_NUGET_ACCESSTOKEN"
+            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath --build-arg FEED_ACCESSTOKEN=$FEED_ACCESSTOKEN
             if [ $? -ne 0 ]; then
               echo "Docker Build Failed"
               exit 1
