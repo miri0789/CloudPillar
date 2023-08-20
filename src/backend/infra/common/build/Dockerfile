@@ -7,6 +7,7 @@ WORKDIR /app
 # Copy the .csproj file and restore the dependencies
 COPY *.csproj ./
 RUN dotnet restore
+RUN dotnet restore --configfile nuget.config "./common.csproj"
 
 # Copy the rest of the source code
 COPY . ./
