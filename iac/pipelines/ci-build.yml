@@ -231,7 +231,7 @@ stages:
         inputs:
           restoreSolution: '**\*.sln'
           feedsToUse: config
-          nugetConfigPath: 'NuGet.config'
+          nugetConfigPath: '*\nuget.config'
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
