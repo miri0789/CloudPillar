@@ -314,11 +314,6 @@ stages:
     condition: eq(variables['isSelectedImageAll'], true)
     jobs:
     - job: BuildAgentPoCArtifactsJob
-  - stage: BuildAgentPoCArtifactsStage
-    displayName: Build Agent POC Artifacts
-    condition: eq(variables['isSelectedImageAll'], true)
-    jobs:
-    - job: BuildAgentPoCArtifactsJob
       displayName: Build Agent POC Artifacts
       pool:
         name: $(AGENT_POOL)
