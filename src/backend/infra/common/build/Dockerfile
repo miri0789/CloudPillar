@@ -8,7 +8,7 @@ WORKDIR /app
 COPY *.csproj ./
 COPY nuget.config ./
 ARG FEED_ACCESSTOKEN
-ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{`"endpointCredentials`": [{`"endpoint`":`"https://fabrikam.pkgs.visualstudio.com/_packaging/MyGreatFeed/nuget/v3/index.json`", `"username`":`"docker`", `"password`":`"${FEED_ACCESSTOKEN}`"}]}"
+ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://fabrikam.pkgs.visualstudio.com/_packaging/MyGreatFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
 RUN dotnet restore
 
 # Copy the rest of the source code
