@@ -36,8 +36,6 @@ variables:
   value: 'iotacr'
 - name: isSelectedImageAll
   value: ${{ eq(parameters.image, 'all') }}
-- name: FeedURL
-  value: https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json
 
 
 
@@ -69,6 +67,8 @@ parameters:
     - twinlistener    
 
 stages:
+
+
 
   - stage: GetBackendImagesJsonStage # Stage 1
     jobs:
@@ -225,11 +225,7 @@ stages:
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
-      steps:
-        
-      - script: dotnet restore --source $(FeedURL)  # Restore NuGet packages from the specified source
-        displayName: 'Restore NuGet Packages'
-
+      steps:      
       - script: |    
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
