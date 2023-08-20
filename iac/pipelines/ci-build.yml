@@ -229,6 +229,9 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:   
       - task: NuGetAuthenticate@1
+      - script: |
+        sudo apt-get install -y mono-complete
+        displayName: 'Install Mono'
       - task: NuGetCommand@2
         inputs:
           command: 'restore'
