@@ -72,10 +72,7 @@ stages:
 
 
   - stage: GetBackendImagesJsonStage # Stage 1
-  - stage: GetBackendImagesJsonStage # Stage 1
     jobs:
-    - job: GetBackendImagesJsonJob
-      displayName: Get Backend Images Json
     - job: GetBackendImagesJsonJob
       displayName: Get Backend Images Json
       steps:
@@ -93,8 +90,6 @@ stages:
             echo -e "\n\n"
         displayName: Set Backend Images Json as Variable
 
-  - stage: GetSingleBackendImageStage # Stage 2
-    dependsOn: GetBackendImagesJsonStage
   - stage: GetSingleBackendImageStage # Stage 2
     dependsOn: GetBackendImagesJsonStage
     condition: eq(variables['isSelectedImageAll'], false)
@@ -139,11 +134,8 @@ stages:
         name: SetSingleBackendImagesJson
 
   - stage: CleanBuildScanPushSingleBackendImageStage
-  - stage: CleanBuildScanPushSingleBackendImageStage
     displayName: Build Tag Scan Push Image
     dependsOn: 
-    - GetBackendImagesJsonStage
-    - GetSingleBackendImageStage
     - GetBackendImagesJsonStage
     - GetSingleBackendImageStage
     condition: eq(variables['isSelectedImageAll'], false)
@@ -193,7 +185,6 @@ stages:
           pipelineAcrConnection: $(pipelineAcrConnection)
 
     - job: ScanSignleBackendImage
-    - job: ScanSignleBackendImage
       dependsOn: 
       - CleanAllDockerImagesJob
       - BuildTagSignleBackendImageJob
@@ -208,7 +199,6 @@ stages:
           imageVersion: $(newVersion)
           registryName: $(registryName)
 
-    - job: PushSignleBackendImageJob
     - job: PushSignleBackendImageJob
       dependsOn: 
       - CleanAllDockerImagesJob
