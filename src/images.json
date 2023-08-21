@@ -2,7 +2,7 @@
     {
         "name": "iotlistener",
         "imageName": "backend_iotlistener",
-        "imagePath": "./src/backend/Backend.Iotlistener/",
+        "imagePath": "./src/backend",
         "dockerFilePath": "./src/backend/Backend.Iotlistener/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },

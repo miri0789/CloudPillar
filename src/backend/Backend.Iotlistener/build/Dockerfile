@@ -5,9 +5,9 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 
 # Copy the .csproj file and restore the dependencies
-COPY *.csproj ./
-COPY nuget.config ./
-COPY ./infra/common/common.csproj ./common
+COPY Backend.Iotlistener/*.csproj ./
+COPY Backend.Iotlistener/nuget.config ./
+COPY infra/common/common.csproj ./common
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
