@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy the .csproj file and restore the dependencies
 COPY Backend.Iotlistener/*.csproj ./
 COPY Backend.Iotlistener/nuget.config ./
-COPY infra/common/common.csproj ./common
+COPY infra/common/common.csproj ./infra/common
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
