@@ -23,5 +23,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:7.0
 
 
 ARG DLL
+RUN echo $DLL
 # Set the entrypoint to run the application
 ENTRYPOINT ["dotnet", "${DLL}"]
