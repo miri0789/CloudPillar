@@ -228,8 +228,6 @@ stages:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:   
-      - task: NuGetAuthenticate@1
-        displayName: 'Authenticate to NuGet'
       - script: |   
           imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
@@ -253,7 +251,7 @@ stages:
             # if [ "$imgName" != "edge_conquest" ]; then
             #   imageVersion="$(major).$(minor).$(GitBuildNumber).$(TIMELABEL)"
             # fi        
-            echo $imageVersion
+            echo $(imageVersion)
             major=$(echo $imageVersion | cut -d '.' -f 1)
             minor=$(echo $imageVersion | cut -d '.' -f 2)
             oldBuild=$(echo $imageVersion | cut -d '.' -f 3)
