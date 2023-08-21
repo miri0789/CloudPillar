@@ -8,12 +8,12 @@ WORKDIR /app
 COPY Backend.Iotlistener/*.csproj ./Backend.Iotlistener
 COPY Backend.Iotlistener/nuget.config ./Backend.Iotlistener
 COPY infra/common/common.csproj ./infra/common
-RUN dotnet nuget locals all --clear
-RUN dotnet restore
 
 # Copy the rest of the source code
 COPY . ./
 WORKDIR /app/Backend.Iotlistener
+RUN dotnet nuget locals all --clear
+RUN dotnet restore
 
 # Build the application for release
 RUN dotnet publish -c Release -o out
