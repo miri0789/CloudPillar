@@ -1,5 +1,12 @@
 [
     {
+        "name": "iotlistener",
+        "imageName": "backend_iotlistener",
+        "imagePath": "./src/backend/Backend.Iotlistener/",
+        "dockerFilePath": "./src/backend/Backend.Iotlistener/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    {
         "name": "infra",
         "imageName": "backend_infra_common",
         "imagePath": "./src/backend/infra/common",
@@ -11,13 +18,6 @@
         "imageName": "backend_blobstreamer",
         "imagePath": "./src/backend/Backend.BlobStreamer/",
         "dockerFilePath": "./src/backend/Backend.BlobStreamer/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
-        "name": "iotlistener",
-        "imageName": "backend_iotlistener",
-        "imagePath": "./src/backend/Backend.Iotlistener/",
-        "dockerFilePath": "./src/backend/Backend.Iotlistener/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },
     {
