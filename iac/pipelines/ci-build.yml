@@ -283,7 +283,7 @@ stages:
             echo -e "================================================\n\tDocker Build - \n================================================"
             
             echo "========================"
-            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath"
+            docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath
             if [ $? -ne 0 ]; then
               echo "Docker Build Failed"
               exit 1
