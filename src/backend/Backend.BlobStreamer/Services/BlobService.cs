@@ -47,15 +47,16 @@ public class BlobService : IBlobService
         return blockBlob.Properties;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, Guid actionGuid, long fileSize)
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, long fileSize)
     {
         CloudBlockBlob blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
-
-        for (long offset = startPosition, chunkIndex = 0; offset < rangeSize + startPosition; offset += chunkSize, chunkIndex++)
+        chunkSize = GetMaxChunkSize(chunkSize);
+        for (long offset = startPosition, chunkIndex = 0; offset < rangeSize + startPosition && offset < fileSize; offset += chunkSize, chunkIndex++)
         {
-            long bytesRemaining = rangeSize + startPosition - offset;
-            int length = bytesRemaining > chunkSize ? chunkSize : (int)bytesRemaining;
-            byte[] data = new byte[length];
+            var rangeEndSize = rangeSize + startPosition > fileSize ? fileSize : rangeSize + startPosition;
+            var bytesRemaining = rangeEndSize - offset;
+            var length = bytesRemaining > chunkSize ? chunkSize : (int)bytesRemaining;
+            var data = new byte[length];
             await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
 
             var blobMessage = new DownloadBlobChunkMessage()
@@ -64,19 +65,29 @@ public class BlobService : IBlobService
                 ChunkIndex = (int)chunkIndex,
                 Offset = offset,
                 FileName = fileName,
-                ActionGuid = actionGuid,
+                ActionId = ActionId,
                 FileSize = fileSize,
                 Data = data
             };
 
             if (offset + chunkSize >= rangeSize + startPosition)
             {
-                blobMessage.RangeSize = rangeSize;
+                blobMessage.RangeSize = rangeEndSize;
             }
 
             var c2dMessage = _messagesFactory.PrepareBlobMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
             await SendMessage(c2dMessage, deviceId);
         }
+    }
+
+    private int GetMaxChunkSize(int chunkSize)
+    {
+        const int maxEncodedChunkSize = 65535;
+        const int reservedOverhead = 500;
+        const double reservedOverheadPercent = 3.0 / 4.0;
+        int maxChunkSizeBeforeEncoding = (int)((maxEncodedChunkSize - reservedOverhead) * reservedOverheadPercent);
+        chunkSize = Math.Min(chunkSize, maxChunkSizeBeforeEncoding);
+        return chunkSize;
     }
 
     private async Task SendMessage(Message c2dMessage, string deviceId)

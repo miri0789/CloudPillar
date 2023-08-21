@@ -48,7 +48,6 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             try
             {
                 const string messageTypeProp = "MessageType";
-                string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
                 MessageType.TryParse(receivedMessage.Properties[messageTypeProp], out MessageType messageType);
                 switch (messageType)
                 {
@@ -61,14 +60,16 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         Console.WriteLine("Receive  message was not processed");
                         break;
                 }
-
-                await _deviceClient.CompleteAsync(receivedMessage);
                 Console.WriteLine($"{DateTime.Now}: Receive message of type: {messageType.ToString()} completed");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"{DateTime.Now}: Exception hit when parsing the message, ignoring it: {ex.Message}");
                 continue;
+            }
+            finally
+            {
+                await _deviceClient.CompleteAsync(receivedMessage);
             }
         }
     }

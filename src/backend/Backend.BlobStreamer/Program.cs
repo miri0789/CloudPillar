@@ -2,6 +2,7 @@ using Backend.BlobStreamer.Services;
 using Backend.BlobStreamer.Interfaces;
 using System.Reflection;
 using Shared.Logger;
+using Shared.Entities.Factories;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -12,6 +13,7 @@ var builder = LoggerHostCreator.Configure("blobstreamer", WebApplication.CreateB
 builder.Services.AddSingleton<ICloudStorageWrapper, CloudStorageWrapper>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddSingleton<IMessagesFactory, MessagesFactory>();
 builder.Services.AddScoped<IBlobService, BlobService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();

@@ -11,5 +11,5 @@ public enum EventType
 public class AgentEvent
 {
     public EventType EventType { get; set; }
-    public Guid ActionGuid { get; set; }
+    public string ActionId { get; set; }
 }
