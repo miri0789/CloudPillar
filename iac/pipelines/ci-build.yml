@@ -18,23 +18,18 @@ trigger:
     exclude:
     - '*'    
 
-resources:
-- repo: self
-  jobs:
-    - job: GetBackendImagesJsonJob
-      displayName: Get Backend Images Json
-      steps:
-      - task: NuGetAuthenticate@1
-        displayName: 'Authenticate to NuGet'
+steps:
+  - task: NuGetAuthenticate@1
+    displayName: 'Authenticate to NuGet'
 
-      - task: Docker@0
-        displayName: 'build container'
-        inputs:
-          command: 'build'
-          Dockerfile: 'src/backend/infra/common/build/Dockerfile'
-          buildContext: 'src'
-          buildArguments: |
-            FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+  - task: Docker@0
+    displayName: 'build container'
+    inputs:
+      command: 'build'
+      Dockerfile: 'src/backend/infra/common/build/Dockerfile'
+      buildContext: 'src'
+      buildArguments: |
+        FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
 # variables:
 # - group: arm-vg
 # - group: iac-backend-vg
