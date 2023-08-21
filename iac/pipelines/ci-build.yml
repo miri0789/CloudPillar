@@ -26,8 +26,7 @@ steps:
     displayName: 'build container'
     inputs:
       command: 'build'
-      Dockerfile: 'src/backend/infra/common/build/Dockerfile'
-      buildContext: 'src'
+      Dockerfile: 'src/backend/infra/common/Dockerfile'
       buildArguments: |
         FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
 # variables:

@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Copy the .csproj file and restore the dependencies
 COPY src/backend/infra/common/*.csproj ./
+COPY src/backend/infra/common/nuget.config ./
 ARG FEED_ACCESSTOKEN
 ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://fabrikam.pkgs.visualstudio.com/_packaging/MyGreatFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
 RUN echo $VSS_NUGET_EXTERNAL_FEED_ENDPOINTS
