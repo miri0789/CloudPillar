@@ -20,7 +20,6 @@ trigger:
 
 resources:
 - repo: self
-- stage: GetBackendImagesJsonStage # Stage 1
   jobs:
     - job: GetBackendImagesJsonJob
       displayName: Get Backend Images Json
