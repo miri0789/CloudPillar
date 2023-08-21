@@ -16,16 +16,11 @@ RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
 # Build the application for release
-RUN dotnet publish -c Release -o out
+RUN dotnet publish -c Release -o /app/out
 
 # Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 
-# Set the working directory
-WORKDIR /app
-
-# Copy the build output from the previous stage
-COPY --from=out /app/out .
 
 ARG DLL
 # Set the entrypoint to run the application
