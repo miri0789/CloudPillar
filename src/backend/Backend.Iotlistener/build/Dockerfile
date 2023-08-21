@@ -5,14 +5,15 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 
 # Copy the .csproj file and restore the dependencies
-COPY Backend.Iotlistener/*.csproj ./
-COPY Backend.Iotlistener/nuget.config ./
+COPY Backend.Iotlistener/*.csproj ./Backend.Iotlistener
+COPY Backend.Iotlistener/nuget.config ./Backend.Iotlistener
 COPY infra/common/common.csproj ./infra/common
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
 # Copy the rest of the source code
 COPY . ./
+WORKDIR /app/Backend.Iotlistener
 
 # Build the application for release
 RUN dotnet publish -c Release -o out
