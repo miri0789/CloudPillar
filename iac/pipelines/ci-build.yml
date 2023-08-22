@@ -310,23 +310,7 @@ stages:
       pool:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
-      steps:      
-    
-    trigger:
-- main
-
-pool:
-  vmImage: 'ubuntu-latest'
-
-jobs:
-- job: BuildAndPublish
-  steps:
-  - task: UseDotNet@2
-    inputs:
-      packageType: 'sdk'
-      version: '3.1.x'
-      installationPath: $(Agent.ToolsDirectory)/dotnet
-
+      steps:
       - script: docker build -t your-docker-image-name .
         displayName: 'Build Docker Image'
 
@@ -340,7 +324,7 @@ jobs:
       #     TargetFolder: $(Pipeline.Workspace)/artifacts
       #   displayName: 'Copy Artifact'
 
-      -- task: PublishBuildArtifacts@1
+      - task: PublishBuildArtifacts@1
         displayName: 'Publish Artifact: cloudpillar'
         inputs:
           PathtoPublish: $(Pipeline.Workspace)/cloudpillar.zip
