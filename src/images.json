@@ -7,13 +7,6 @@
         "imageVersion": "1.0.0.0"
     },
     {
-        "name": "infra",
-        "imageName": "backend_infra_common",
-        "imagePath": "./src/backend/infra/common",
-        "dockerFilePath": "./src/backend/infra/common/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
         "name": "blobstreamer",
         "imageName": "backend_blobstreamer",
         "imagePath": "./src/backend/Backend.BlobStreamer/",

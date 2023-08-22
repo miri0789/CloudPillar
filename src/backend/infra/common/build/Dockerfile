@@ -25,6 +25,5 @@ WORKDIR /app
 # Copy the build output from the previous stage
 COPY --from=build /app/out .
 
-ARG DLL
 # Set the entrypoint to run the application
-ENTRYPOINT ["dotnet", "${DLL}"]
+ENTRYPOINT ["dotnet", "common.dll"]

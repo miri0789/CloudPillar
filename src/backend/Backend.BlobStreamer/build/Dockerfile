@@ -14,17 +14,15 @@ RUN dotnet restore
 COPY . ./
 
 # Build the application for release
-RUN dotnet publish -c Release -o out
+RUN dotnet build "Backend.BlobStreamer.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Backend.BlobStreamer.csproj" -c Release -o /app/publish
+
 
 # Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 
-# Set the working directory
 WORKDIR /app
-
-# Copy the build output from the previous stage
-COPY --from=build /app/out .
-
-ARG DLL
-# Set the entrypoint to run the application
-ENTRYPOINT ["dotnet", "${DLL}"]
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Backend.BlobStreamer.dll"]
