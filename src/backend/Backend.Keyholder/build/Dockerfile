@@ -5,14 +5,15 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 
 # Copy the .csproj file and restore the dependencies
-COPY backend/Backend.Keyholder/*.csproj ./
-COPY nuget.config ./
+COPY backend/Backend.Keyholder/*.csproj Backend.Keyholder/
+COPY nuget.config Backend.Keyholder/
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
 
-# Copy the rest of the source code
-COPY . ./
+
+COPY . .
+WORKDIR /src/Backend.Keyholder
 
 # Build the application for release
 RUN dotnet build Backend.Keyholder.csproj -c Release -o /app/build

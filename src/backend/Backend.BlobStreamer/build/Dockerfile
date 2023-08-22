@@ -5,13 +5,14 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 
 # Copy the .csproj file and restore the dependencies
-COPY backend/Backend.BlobStreamer/*.csproj ./
-COPY nuget.config ./
+COPY backend/Backend.BlobStreamer/*.csproj Backend.BlobStreamer/
+COPY nuget.config Backend.BlobStreamer/
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
-# Copy the rest of the source code
-COPY . ./
+
+COPY . .
+WORKDIR /src/Backend.BlobStreamer
 
 # Build the application for release
 RUN dotnet build Backend.BlobStreamer.csproj -c Release -o /app/build

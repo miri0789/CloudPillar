@@ -1,16 +1,16 @@
 [
     {
-        "name": "blobstreamer",
-        "imageName": "backend_blobstreamer",
-        "imagePath": "./src",
-        "dockerFilePath": "./src/backend/Backend.BlobStreamer/build/Dockerfile",
-        "imageVersion": "1.0.0.0"
-    },
-    {
         "name": "iotlistener",
         "imageName": "backend_iotlistener",
         "imagePath": "./src",
         "dockerFilePath": "./src/backend/Backend.Iotlistener/build/Dockerfile",
+        "imageVersion": "1.0.0.0"
+    },
+    {
+        "name": "blobstreamer",
+        "imageName": "backend_blobstreamer",
+        "imagePath": "./src",
+        "dockerFilePath": "./src/backend/Backend.BlobStreamer/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },
     {
