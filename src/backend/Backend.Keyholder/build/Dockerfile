@@ -10,7 +10,9 @@ COPY nuget.config ./
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
+
 # Copy the rest of the source code
+COPY . ./
 
 # Build the application for release
 RUN dotnet build "Backend.Keyholder.csproj" -c Release -o /app/build
