@@ -1,7 +1,5 @@
 
 name: ci_full_build_$(Rev:r)
-pool:
-  vmImage: 'ubuntu-latest'
 trigger:
   batch: true
   branches:
