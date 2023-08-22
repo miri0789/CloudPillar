@@ -816,18 +816,31 @@ Managing the Agent's states and transitions is imperative for both efficient ope
 **Defined States and Descriptions**:
 
 **PROVISIONING**: The Agent is undergoing Provisional Authentication. During this state, it establishes an initial connection with the backend and awaits full access permissions.
+
 **READY**: The Agent has successfully completed both Provisional and Permanent Authentication. It's now fully authenticated and prepared to handle all functionalities.
+
 **BUSY**: The Agent recognizes that the device is preoccupied with its primary functions, thereby limiting or deferring the Agent's operations to avoid any hindrance.
+
 **PATCH_INTRANSIT**: The Agent is in the process of downloading a patch – be it for the device application or for the local endpoint security software.
+
 **PATCH_READY**: The downloaded patch is now available on the device and is prepared for installation but hasn't been applied yet.
+
 **PATCH_WAITCONFIRM**: The Agent is awaiting a confirmation signal (either from the backend or the device user) to apply the downloaded patch.
+
 **PATCH_APPLYING**: The Agent has received the necessary confirmations and is currently applying the patch.
+
 **UPDATE_INTRANSIT**: The Agent is downloading a complete firmware update for the device.
+
 **UPDATE_READY**: The full firmware update is downloaded and is set for installation but hasn't been executed yet.
+
 **UPDATE_WAITCONFIRM**: The Agent awaits a confirmation to apply the comprehensive firmware update.
+
 **UPDATE_APPLYING**: Post-confirmation, the Agent is actively updating the device's firmware.
+
 **UPLOAD_INTRANSIT**: The Agent is transmitting logs or any relevant data to the backend.
+
 **ACTION_INPROGRESS**: The Agent is currently processing an instruction received from the backend, translating it into tangible actions on the device.
+
 #### 5.1.2.1. Functional Implications of Each State:
 
 - **State Transitions**: Transitions between states are primarily triggered by specific events or commands arriving via the local API.
