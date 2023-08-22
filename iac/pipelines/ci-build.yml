@@ -312,18 +312,52 @@ stages:
         agent.name: aks-${{parameters.env}}-agent
       steps:      
     
-    
+    trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+- job: BuildAndPublish
+  steps:
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '3.1.x'
+      installationPath: $(Agent.ToolsDirectory)/dotnet
+
+      - script: docker build -t your-docker-image-name .
+        displayName: 'Build Docker Image'
+
+      - script: docker run --rm -v $(Pipeline.Workspace):/workspace your-docker-image-name pwsh -File './src/agent/poc/publish.ps1'
+        displayName: 'Run Docker Container'
+
+      # - task: CopyFiles@2
+      #   inputs:
+      #     SourceFolder: $(Pipeline.Workspace)/publish
+      #     Contents: 'cloudpillar.zip'
+      #     TargetFolder: $(Pipeline.Workspace)/artifacts
+      #   displayName: 'Copy Artifact'
+
+      -- task: PublishBuildArtifacts@1
+        displayName: 'Publish Artifact: cloudpillar'
+        inputs:
+          PathtoPublish: $(Pipeline.Workspace)/cloudpillar.zip
+          ArtifactName: 'cloudpillar'
+          condition: succeeded()
+          publishLocation: 'Container' # Publish to Azure Pipelines
+
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
         condition: succeeded()
         inputs:
           command: 'build'
-          repository: agent_poc
           dockerfile: './src/agent/poc/Dockerfile'
 
       - script: |
-          docker run -v agent_poc:/data alpine cp /cloudpillar.zip /cloudpillar-poc-1.0.$(GitBuildNumber).zip
+          docker run -v $(Pipeline.Workspace):/data alpine cp ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
         displayName: 'Copy cloudpillar.zip from Docker container to pipeline workspace'
 
       - task: PublishBuildArtifacts@1
