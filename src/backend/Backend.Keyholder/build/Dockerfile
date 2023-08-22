@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /src
 
 # Copy the .csproj file and restore the dependencies
 COPY backend/Backend.Keyholder/*.csproj backend/Backend.Keyholder/
