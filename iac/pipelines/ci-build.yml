@@ -329,7 +329,7 @@ stages:
           CONTAINER_ID=$(docker create $IMAGE_NAME:$IMAGE_VERSION)
           docker cp $CONTAINER_ID:/app/cloudpillar.zip .
           docker rm $CONTAINER_ID
-          mv ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
+          mv ./app/cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
           ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
         name: ExtractAgentPoCZip
         displayName: 'Extract POC cloudpillar-poc-1.0.$(GitBuildNumber).zip from Image'
