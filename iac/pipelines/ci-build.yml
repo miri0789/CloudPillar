@@ -321,10 +321,9 @@ stages:
           command: 'build'
           repository: agent_poc
           dockerfile: './src/agent/poc/Dockerfile'
-          tags: 'aux-build'
 
       - script: |
-          docker run -v $(Pipeline.Workspace):/data alpine cp /app/cloudpillar.zip /data/cloudpillar-poc-1.0.$(GitBuildNumber).zip
+          docker run -v agent_poc:/data alpine cp /app/cloudpillar.zip /data/cloudpillar-poc-1.0.$(GitBuildNumber).zip
         displayName: 'Copy cloudpillar.zip from Docker container to pipeline workspace'
 
       - task: PublishBuildArtifacts@1
