@@ -311,35 +311,27 @@ stages:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:      
-    
-    
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
-        condition: succeeded()
         inputs:
           command: 'build'
-          repository: agent_poc
+          repository: 'agent_poc'
           dockerfile: './src/agent/poc/Dockerfile'
           tags: 'aux-build'
 
       - script: |
-          cho -e "================================================\n\tList current directory - \n================================================"
-          ls -al  # List current directory contents before moving the file
-          # IMAGE_NAME=aget_poc
-          # IMAGE_VERSION=aux-build
-          # CONTAINER_ID=$(docker create $IMAGE_NAME:$IMAGE_VERSION)
-          # docker cp $CONTAINER_ID:/app/cloudpillar.zip .
-          # docker rm $CONTAINER_ID
-          # mv ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
-          # ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
-        name: ExtractAgentPoCZip
-        displayName: 'Extract POC cloudpillar-poc-1.0.$(GitBuildNumber).zip from Image'
+          CONTAINER_ID=$(docker create agent_poc:aux-build)
+          docker cp $CONTAINER_ID:/app/cloudpillar.zip .
+          docker rm $CONTAINER_ID
+          mv ./cloudpillar.zip ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
+          ls -al ./cloudpillar-poc-1.0.$(GitBuildNumber).zip
+        displayName: 'Extract POC cloudpillar.zip from Image'
 
       - task: PublishBuildArtifacts@1
-        displayName: 'Publish cloudpillar-poc-1.0.$(GitBuildNumber)-poc-1.0.$(GitBuildNumber).zip to Artifacts'
-        condition: succeeded()
+        displayName: 'Publish cloudpillar.zip to Artifacts'
         inputs:
           pathtoPublish: './cloudpillar-poc-1.0.$(GitBuildNumber).zip' # Path to the zip file on the agent machine
+          # pathtoPublish: './cloudpillar.zip' # Path to the zip file on the agent machine
           artifactName: 'cloudpillar' # Name for the artifact
           publishLocation: 'Container' # Publish to Azure Pipelines
