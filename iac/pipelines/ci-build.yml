@@ -317,7 +317,7 @@ stages:
         inputs:
           command: 'build'
           repository: 'agent_poc'
-          dockerfile: './src/agent/poc/Dockerfile'
+          dockerfile: './src/agent/CloudPillar.Agent/Dockerfile'
           buildContext: 'src'
           tags: 'aux-build'
 
