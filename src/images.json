@@ -2,21 +2,21 @@
     {
         "name": "iotlistener",
         "imageName": "backend_iotlistener",
-        "imagePath": "./src/backend",
+        "imagePath": "./src",
         "dockerFilePath": "./src/backend/Backend.Iotlistener/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },
     {
         "name": "blobstreamer",
         "imageName": "backend_blobstreamer",
-        "imagePath": "./src/backend/Backend.BlobStreamer/",
+        "imagePath": "./src",
         "dockerFilePath": "./src/backend/Backend.BlobStreamer/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },
     {
         "name": "keyholder",
         "imageName": "backend_keyholder",
-        "imagePath": "./src/backend/Backend.Keyholder/",
+        "imagePath": "./src",
         "dockerFilePath": "./src/backend/Backend.Keyholder/build/Dockerfile",
         "imageVersion": "1.0.0.0"
     },
