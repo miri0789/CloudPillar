@@ -324,7 +324,7 @@ stages:
           tags: 'aux-build'
 
       - script: |
-          cho -e "================================================\n\tList current directory - \n================================================"
+          echo -e "================================================\n\tList current directory - \n================================================"
           ls -al  # List current directory contents before moving the file
         name: ExtractAgentPoCZip
         displayName: 'Extract POC cloudpillar-poc-1.0.$(GitBuildNumber).zip from Image'
