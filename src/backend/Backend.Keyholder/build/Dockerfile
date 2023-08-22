@@ -7,13 +7,11 @@ WORKDIR /app
 # Copy the .csproj file and restore the dependencies
 COPY backend/Backend.Keyholder/*.csproj backend/Backend.Keyholder/
 COPY nuget.config backend/Backend.Keyholder/
-RUN dotnet nuget locals all --clear
-RUN dotnet restore
-
-
 
 COPY . .
 WORKDIR /src/backend/Backend.Keyholder
+RUN dotnet nuget locals all --clear
+RUN dotnet restore
 
 # Build the application for release
 RUN dotnet build Backend.Keyholder.csproj -c Release -o /app/build

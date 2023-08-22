@@ -7,12 +7,11 @@ WORKDIR /app
 # Copy the .csproj file and restore the dependencies
 COPY backend/Backend.BlobStreamer/*.csproj backend/Backend.BlobStreamer/
 COPY nuget.config backend/Backend.BlobStreamer/
-RUN dotnet nuget locals all --clear
-RUN dotnet restore
-
 
 COPY . .
 WORKDIR /src/backend/Backend.BlobStreamer
+RUN dotnet nuget locals all --clear
+RUN dotnet restore
 
 # Build the application for release
 RUN dotnet build Backend.BlobStreamer.csproj -c Release -o /app/build
