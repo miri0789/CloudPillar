@@ -7,7 +7,7 @@ WORKDIR /src
 # Copy the .csproj file and restore the dependencies
 COPY backend/Backend.Iotlistener/*.csproj Backend.Iotlistener/
 COPY nuget.config Backend.Iotlistener/
-COPY backend/infra/common/common.csproj infra/common
+COPY backend/infra/common/common.csproj infra/common/
 
 COPY . .
 WORKDIR /src/Backend.Iotlistener
