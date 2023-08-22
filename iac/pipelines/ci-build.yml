@@ -305,31 +305,12 @@ stages:
     displayName: Build Agent POC Artifacts
     condition: eq(variables['isSelectedImageAll'], true)
     jobs:
-    - job: BuildAgentPoCArtifactsJob
-      displayName: Build Agent POC Artifacts
-      pool:
-        name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent
-      steps:
-
-      - script: docker run --rm -v $(Pipeline.Workspace):/workspace your-docker-image-name pwsh -File './src/agent/poc/publish.ps1'
-        displayName: 'Run Docker Container'
-
-      # - task: CopyFiles@2
-      #   inputs:
-      #     SourceFolder: $(Pipeline.Workspace)/publish
-      #     Contents: 'cloudpillar.zip'
-      #     TargetFolder: $(Pipeline.Workspace)/artifacts
-      #   displayName: 'Copy Artifact'
-
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish Artifact: cloudpillar'
-        inputs:
-          PathtoPublish: $(Pipeline.Workspace)/cloudpillar.zip
-          ArtifactName: 'cloudpillar'
-          condition: succeeded()
-          publishLocation: 'Container' # Publish to Azure Pipelines
-
+    
+      - pwsh: ./src/agent/poc/publish.ps1
+      - script: |
+          cho -e "================================================\n\tList current directory - \n================================================"
+          ls -al  # List current directory contents before moving the file
+      
 
       - task: Docker@2
         displayName: 'Docker Build & Tag Agent POC'
