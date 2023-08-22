@@ -311,8 +311,6 @@ stages:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:
-      - script: docker build -t your-docker-image-name .
-        displayName: 'Build Docker Image'
 
       - script: docker run --rm -v $(Pipeline.Workspace):/workspace your-docker-image-name pwsh -File './src/agent/poc/publish.ps1'
         displayName: 'Run Docker Container'
