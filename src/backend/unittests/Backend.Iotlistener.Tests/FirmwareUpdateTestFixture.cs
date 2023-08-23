@@ -73,7 +73,11 @@ public class FirmwareUpdateTestFixture
                 Times.Once);
         }
     }
-
+    private string BuildBlobRangeUrl(Uri blobStreamerUrl, string deviceId, string fileName, int chunkSize, int rangeSize, Guid actionGuid)
+    {
+        return $"{blobStreamerUrl.AbsoluteUri}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition=0&actionGuid={actionGuid}&fileSize={rangeSize}";
+    }
+    
     [Test]
     public async Task SendFirmwareUpdateAsync_GetBlobSizeFails_ThrowsException()
     {
@@ -90,10 +94,13 @@ public class FirmwareUpdateTestFixture
             StartPosition = 0,
             ActionGuid = actionGuid
         });
+        string blobRangeUrl = new BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionGuid);
         _httpRequestorServiceMock.Verify(service =>
-           service.SendRequest($"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex=0&startPosition=0&actionGuid={actionGuid}&fileSize={_rangeSize}", HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+           service.SendRequest(blobRangeUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
            Times.Never);
     }
+
+
 
     [Test]
     public async Task SendFirmwareUpdateAsync_RequestFails_ThrowsException()

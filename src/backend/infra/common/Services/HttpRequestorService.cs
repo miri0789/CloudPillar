@@ -45,9 +45,7 @@ public class HttpRequestorService : IHttpRequestorService
         }
         catch(System.InvalidOperationException ex)
         {
-            var msg = "Invalid Url";
-            _logger.Error(msg, ex);
-            throw ex;
+            throw new InvalidOperationException("Invalid Url",ex);
         }
             
         if (requestData != null)
@@ -56,10 +54,7 @@ public class HttpRequestorService : IHttpRequestorService
             var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
             if (!isRequestValid)
             {
-                var msg = "The request data is not fit the schema";
-                var e = new HttpRequestException(msg, null, System.Net.HttpStatusCode.BadRequest);
-                _logger.Error(msg, e);
-                throw e;
+                throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
             }
             request.Content = new StringContent(serializedData, Encoding.UTF8, "application/json");
         }
@@ -72,17 +67,9 @@ public class HttpRequestorService : IHttpRequestorService
         }
 
         HttpResponseMessage? response = null;
-        try
-        {
-            response = await client.SendAsync(request, cancellationToken);
-        }
-        catch(Exception ex)
-        {
-            _logger.Error(ex.Message, ex);
-            throw ex;
-        }
+        response = await client.SendAsync(request, cancellationToken);
 
-        if (response.IsSuccessStatusCode)
+        if (response?.IsSuccessStatusCode)
         {
             string responseContent = await response.Content.ReadAsStringAsync();
             var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
