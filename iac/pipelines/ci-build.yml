@@ -313,7 +313,7 @@ stages:
             echo -e "\n\n"
         displayName: Set Agent Images Json as Variable
         
-      - ${{ each item in variables.agentJsonContent }}:
+      - ${{ each item in $agentJsonContent }}:
         - ${{ if eq(parameters.agent, item.name) }}:
               - task: Docker@2
                 displayName: 'Docker Build & Tag $(item.name)'
