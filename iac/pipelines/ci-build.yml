@@ -306,7 +306,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            $agentJsonContent=$(cat ./iac/pipelines/pipelines-data/agent-images.json | jq -c .) # Compact JSON
+            agentJsonContent=$(cat ./iac/pipelines/pipelines-data/agent-images.json | jq -c .) # Compact JSON
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$agentJsonContent"
             echo -e "\n\n"
@@ -318,7 +318,8 @@ stages:
           displayName: Build Agent POC Artifacts
           dependsOn: GetAgentImagesJsonStage
           variables:
-             agentJsonContent: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.agentJsonContent'] ]  
+             agentJsonContent: $[ dependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.agentJsonContent'] ]
+
           steps:      
             - ${{ each item in variables.agentJsonContent }}:
               - ${{ if eq(parameters.agent, item.name) }}:
