@@ -20,11 +20,11 @@ class Program
         var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
         
         builder.Services.AddHttpClient();
-        builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
+        builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
         builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
         builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
         builder.Services.AddScoped<ISigningService, SigningService>();
-        builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+        builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 
         var cts = new CancellationTokenSource();
         AssemblyLoadContext.Default.Unloading += context =>
