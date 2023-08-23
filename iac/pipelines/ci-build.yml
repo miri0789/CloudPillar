@@ -307,13 +307,13 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            agentJsonContent=$(cat ./iac/pipelines/pipelines-data/agent-images.json | jq -c .) # Compact JSON
+            $agentJsonContent=$(cat ./iac/pipelines/pipelines-data/agent-images.json | jq -c .) # Compact JSON
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$agentJsonContent"
             echo -e "\n\n"
         displayName: Set Agent Images Json as Variable
         
-      - ${{ each item in $agentJsonContent }}:
+      - ${{ each item in variables.agentJsonContent }}:
         - ${{ if eq(parameters.agent, item.name) }}:
               - task: Docker@2
                 displayName: 'Docker Build & Tag $(item.name)'
