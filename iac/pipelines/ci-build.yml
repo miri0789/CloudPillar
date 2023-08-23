@@ -304,7 +304,7 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              $agentJsonContent = Get-Content -Path ./iac/piplines/piplines-data/agent-images.json -Raw | ConvertFrom-Json
+              $agentJsonContent = Get-Content -Path iac/piplines/piplines-data/agent-images.json -Raw | ConvertFrom-Json
               Write-Output "##vso[task.setvariable variable=jsonContent;isOutput=true]$jsonContent"
           displayName: 'Load JSON Content'
 
