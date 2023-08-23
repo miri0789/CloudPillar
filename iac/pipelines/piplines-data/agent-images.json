@@ -1,0 +1,12 @@
+[
+    {
+        "name": "poc",
+        "imageVersion": "1.0",
+        "dockerFilePath": "./src/agent/poc/Dockerfile"
+    },
+    {
+        "name": "agent_project",
+        "imageVersion": "1.0",
+        "dockerFilePath": "./src/agent/CloudPillar.Agent/Dockerfile"
+    }
+]
