@@ -100,6 +100,8 @@ public class FirmwareUpdateTestFixture
            Times.Never);
     }
 
+
+
     [Test]
     public async Task SendFirmwareUpdateAsync_RequestFails_ThrowsException()
     {
