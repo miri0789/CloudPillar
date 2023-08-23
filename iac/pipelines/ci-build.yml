@@ -296,14 +296,13 @@ stages:
   #         done
   #       name: BuildTagScanPushBackendImages
 
-  - stage: BuildAgentArtifactsStage
-    displayName: Build Agent Artifacts Stage
+  - stage: GetAgentImagesJsonStage
     jobs:
-    - job: BuildAgentPoCArtifactsJob
-      displayName: Build Agent POC Artifacts
+    - job: GetAgentImagesJsonStage
+      displayName: Get Agent Images Json
       steps:
       - task: Bash@3
-        name: SetBackendImagesJson
+        name: SetAgentImagesJson
         inputs:
           targetType: 'inline'
           script: |
@@ -311,30 +310,40 @@ stages:
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$agentJsonContent"
             echo -e "\n\n"
-        displayName: Set Agent Images Json as Variable
-        
-      - ${{ each item in variables.agentJsonContent }}:
-        - ${{ if eq(parameters.agent, item.name) }}:
-          - task: Docker@2
-            displayName: 'Docker Build & Tag $(item.name)'
-            inputs:
-              command: 'build'
-              repository: $(item.name)
-              dockerfile: $(item.dockerFilePath)
-              buildContext: 'src'
-              tags: 'aux-build'
+        displayName: Set Agent Images Json as Variable  
 
-          - script: |
-              CONTAINER_ID=$(docker create $(item.name):aux-build)
-              docker cp $CONTAINER_ID:/app/cloudpillar.zip .
-              docker rm $CONTAINER_ID
-              mv ./cloudpillar.zip ./cloudpillar-$(item.name)-1.0.$(GitBuildNumber).zip
-              ls -al ./cloudpillar-poc-$(item.imageVersion).$(GitBuildNumber).zip
-            displayName: 'Extract POC cloudpillar.zip from Image'
+  - stage: BuildAgentArtifactsStage
+    jobs:
+        - job: BuildAgentPoCArtifactsJob
+          displayName: Build Agent POC Artifacts
+          variables:
+             agentJsonContent: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonStage.outputs['SetAgentImagesJson.agentJsonContent'] ]
+          pool:
+            name: $(AGENT_POOL)
+            agent.name: aks-${{parameters.env}}-agent         
+            steps:      
+              - ${{ each item in variables.agentJsonContent }}:
+                - ${{ if eq(parameters.agent, item.name) }}:
+                  - task: Docker@2
+                    displayName: 'Docker Build & Tag $(item.name)'
+                    inputs:
+                      command: 'build'
+                      repository: $(item.name)
+                      dockerfile: $(item.dockerFilePath)
+                      buildContext: 'src'
+                      tags: 'aux-build'
 
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish cloudpillar.zip to Artifacts'
-            inputs:
-              pathtoPublish: './cloudpillar-$(item.name)-$(item.imageVersion).$(GitBuildNumber).zip' # Path to the zip file on the agent machine
-              artifactName: 'cloudpillar' # Name for the artifact
-              publishLocation: 'Container' # Publish to Azure Pipelines
+                  - script: |
+                      CONTAINER_ID=$(docker create $(item.name):aux-build)
+                      docker cp $CONTAINER_ID:/app/cloudpillar.zip .
+                      docker rm $CONTAINER_ID
+                      mv ./cloudpillar.zip ./cloudpillar-$(item.name)-1.0.$(GitBuildNumber).zip
+                      ls -al ./cloudpillar-poc-$(item.imageVersion).$(GitBuildNumber).zip
+                    displayName: 'Extract POC cloudpillar.zip from Image'
+
+                  - task: PublishBuildArtifacts@1
+                    displayName: 'Publish cloudpillar.zip to Artifacts'
+                    inputs:
+                      pathtoPublish: './cloudpillar-$(item.name)-$(item.imageVersion).$(GitBuildNumber).zip' # Path to the zip file on the agent machine
+                      artifactName: 'cloudpillar' # Name for the artifact
+                      publishLocation: 'Container' # Publish to Azure Pipelines
