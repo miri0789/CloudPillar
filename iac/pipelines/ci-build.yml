@@ -295,14 +295,18 @@ stages:
   #           docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
   #         done
   #       name: BuildTagScanPushBackendImages
-
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: |
-        $agentJsonContent = Get-Content -Path ./iac/piplines-data/agent-images.json -Raw | ConvertFrom-Json
-        Write-Output "##vso[task.setvariable variable=jsonContent;isOutput=true]$jsonContent"
-    displayName: 'Load JSON Content'
+  - stage: GetAgentImagesJsonStage # Stage 1
+    jobs:
+      - job: GetAgentImagesJsonStage
+        displayName: Get Agent Images Json Stage
+        steps:
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              $agentJsonContent = Get-Content -Path ./iac/piplines-data/agent-images.json -Raw | ConvertFrom-Json
+              Write-Output "##vso[task.setvariable variable=jsonContent;isOutput=true]$jsonContent"
+          displayName: 'Load JSON Content'
 
   - ${{ each item in variables.agentJsonContent }}:
     - ${{ if eq(parameters.agent, item.name) }}:
