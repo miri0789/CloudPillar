@@ -123,7 +123,7 @@ public class FirmwareUpdateTestFixture
             StartPosition = 0,
             ActionGuid = actionGuid
         });
-        string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionGuid, _rangeSize);
+         blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionGuid, _rangeSize);
         _httpRequestorServiceMock.Verify(service =>
             service.SendRequest(blobRangeUrl,
              HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
