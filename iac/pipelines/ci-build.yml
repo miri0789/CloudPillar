@@ -300,10 +300,12 @@ stages:
       - job: GetAgentImagesJsonStage
         displayName: Get Agent Images Json Stage
         steps:
+          
         - task: PowerShell@2
           inputs:
             targetType: 'inline'
             script: |
+              ls -R $(System.DefaultWorkingDirectory)
               $jsonPath = "$(System.DefaultWorkingDirectory)/iac/piplines/piplines-data/agent-images.json"
               $agentJsonContent = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json
               Write-Output "##vso[task.setvariable variable=jsonContent;isOutput=true]$jsonContent"
