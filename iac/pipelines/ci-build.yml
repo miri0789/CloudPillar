@@ -324,8 +324,9 @@ stages:
         images: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.images'] ]
       steps:
       - script: |
+          imagesJson='$(images)'
           echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
-          echo -e "${images}"
+          echo -e "${imagesJson}"
           for image in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
             _jq() {
               echo ${image} | base64 --decode | jq -r ${1}
