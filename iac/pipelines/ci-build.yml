@@ -316,13 +316,12 @@ stages:
         displayName: Set Backend Images Json as Variable
 
   - stage: GetSingleBackendImageStage # Stage 2
-    dependsOn: GetBackendImagesJsonStage
-    condition: eq(variables['isSelectedAllBackendImages'], false)
+    dependsOn: GetAgentImagesJsonStage
     jobs:
     - job: GetSingleBackendImageJob
       displayName: Get Single Backend Image Job
       variables:
-        images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
+        images: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.images'] ]
       steps:
       - script: |
           imagesJson='$(images)'
