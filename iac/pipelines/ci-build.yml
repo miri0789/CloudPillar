@@ -109,12 +109,8 @@ stages:
         name: AcrLogin
 
       - ${{each item in parameters.backendImage}}:
-        - script: |   
+        - script: |    
             imagesJson='$(images)'
-            echo -e "\n\n===================================================================\n\tImages JSON\n===================================================================\n"
-            echo "$imagesJson"
-            echo -e "\n\n"
-    
             for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
               _jq() {
                 echo ${img} | base64 --decode | jq -r ${1}
