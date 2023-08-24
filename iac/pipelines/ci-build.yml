@@ -334,6 +334,7 @@ stages:
               }
               imgName=$(_jq '.name')
               if [ "$imgName" == "${{ item }}" ]; then
+                echo -e "${imgName}"
                 echo "##vso[task.setvariable variable=imageName]$(_jq '.name')"
                 echo "##vso[task.setvariable variable=dockerFilePath]$(_jq '.dockerFilePath')"
                 echo "##vso[task.setvariable variable=imageVersion]$(_jq '.imageVersion')"
@@ -345,7 +346,7 @@ stages:
         
         - task: Docker@2
           condition: eq(variables.processedImage, true)
-          displayName: 'Docker Build & Tag $(imageName)'
+          displayName: Docker Build & Tag '$(imageName)'
           inputs:
             command: 'build'
             repository: $(imageName)
