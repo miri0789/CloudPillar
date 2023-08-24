@@ -312,6 +312,8 @@ stages:
             echo "$agentJsonContent"
             echo -e "\n\n"
         displayName: Set Agent Images Json as Variable  
+        outputs:
+          agentJsonContent: ${{ steps.SetAgentImagesJson.outputs['agentJsonContent'] }}
 
   - stage: BuildAgentArtifactsStage
     jobs:
