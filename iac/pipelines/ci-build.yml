@@ -101,6 +101,11 @@ stages:
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
           az acr login -n $(ACR_NAME)
+
+          echo -e "\n\n"
+          echo "Clean Old Imaged"
+          docker image prune -a --force
+          docker image ls
         name: AcrLogin
 
       - ${{each item in parameters.backendImage}}:
@@ -126,11 +131,6 @@ stages:
                 minor=$(echo $imageVersion | cut -d '.' -f 2)
                 
                 newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)
-
-                echo -e "\n\n"
-                echo "Clean Old Imaged"
-                docker image prune -a --force
-                docker image ls
                 
                 echo "Processing image: $imgName"
                 echo "Image Version: $newVersion"
@@ -150,7 +150,6 @@ stages:
                 echo -e "\n\n"
                 echo -e "================================================\n\tDocker Build - \n================================================"
                 
-                echo "========================"
                 docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath
                 if [ $? -ne 0 ]; then
                   echo "Docker Build Failed"
