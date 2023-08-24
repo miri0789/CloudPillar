@@ -330,12 +330,13 @@ stages:
               _jq() {
                 echo ${image} | base64 --decode | jq -r ${1}
               }
-              echo "##vso[task.setvariable variable=processedImage]false"
+              # echo -e "=================????==========!!!!!!!!================================"
               echo "##vso[task.setvariable variable=imageName]$(_jq '.name')"
               # echo -e "=================????================================"
               echo -e "${imageName}"
               # echo -e "=================????!!!!!!!!================================"
               echo -e "${item}"
+              echo "##vso[task.setvariable variable=processedImage]false"
               if [ "$imageName" == "${{ item }}" ]; then
                 echo -e "==================!!!!==============================="
                 echo -e "${imageName}"
