@@ -49,7 +49,7 @@ parameters:
   - name: backendImage
     displayName: Select Backend Image to Build and Scan
     type: object
-    values:
+    default:
     - edge_conquest
     - iotlistener
     - blobstreamer
