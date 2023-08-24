@@ -14,7 +14,7 @@ COPY . .
 WORKDIR /src/backend/${DLL}
 RUN echo "Current working directory: $(pwd)"
 RUN pwd
-RUN ls -la
+RUN ls -la /src/backend/${DLL}
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
