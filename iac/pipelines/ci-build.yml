@@ -325,6 +325,7 @@ stages:
       steps:
       - script: |
           for image in $(echo "$images" | jq -r '.[]'); do
+            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "Processing image: $image"
             # Execute a task for each image
             echo "##vso[task.setvariable variable=currentImage]$image"
