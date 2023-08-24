@@ -4,6 +4,7 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 # Set the working directory
 WORKDIR /app
 ARG DLL
+RUN echo "DLL argument value: $DLL"
 # Copy the .csproj file and restore the dependencies
 COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY nuget.config backend/${DLL}/
