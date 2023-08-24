@@ -306,7 +306,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            images=$(cat ./iac/pipelines/pipelines-data/backend-images.json | jq -c .) # Compact JSON
+            images=$(cat ./iac/pipelines/pipelines-data/agent-images.json | jq -c .) # Compact JSON
             echo "##vso[task.setvariable variable=images;isOutput=true]$images"
             echo "##vso[task.setvariable variable=images]$images"
 
