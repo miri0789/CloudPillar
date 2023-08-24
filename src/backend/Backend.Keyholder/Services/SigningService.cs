@@ -37,36 +37,25 @@ public class SigningService : ISigningService
     private async Task<ECDsa> GetSigningPrivateKeyAsync()
     {
         _logger.Info("Loading signing crypto key...");
-        string? privateKeyPem = null;
-        bool IsInCluster = !string.IsNullOrWhiteSpace(_environmentsWrapper.kubernetesServiceHost);
-        if (IsInCluster)
+        string privateKeyPem = _environmentsWrapper.signingPem;
+        if (!string.IsNullOrWhiteSpace(privateKeyPem))
         {
-            privateKeyPem = _environmentsWrapper.signingPem;
-            if (!string.IsNullOrWhiteSpace(privateKeyPem))
-            {
-                privateKeyPem = Encoding.UTF8.GetString(Convert.FromBase64String(privateKeyPem));
-                _logger.Info($"Key Base64 decoded layer 1");
-            }
-            else
-            {
-                _logger.Info("In kube run-time - loading crypto from the secret in the local namespace.");
-                string secretName = _environmentsWrapper.secretName;
-                string secretKey = _environmentsWrapper.secretKey;
-
-                if (string.IsNullOrWhiteSpace(secretName) || string.IsNullOrWhiteSpace(secretKey))
-                {
-                    var message = "Private key secret name and secret key must be set.";
-                    _logger.Error(message);
-                    throw new InvalidOperationException(message);
-                }
-                privateKeyPem = await GetPrivateKeyFromK8sSecretAsync(secretName, secretKey);
-            }
+            privateKeyPem = Encoding.UTF8.GetString(Convert.FromBase64String(privateKeyPem));
+            _logger.Info($"Key Base64 decoded layer 1");
         }
         else
         {
-            _logger.Info("Not in kube run-time - loading crypto from the local storage.");
-            // Load the private key from a local file when running locally
-            privateKeyPem = await File.ReadAllTextAsync("dbg/sign-privkey.pem");
+            _logger.Info("In kube run-time - loading crypto from the secret in the local namespace.");
+            string secretName = _environmentsWrapper.secretName;
+            string secretKey = _environmentsWrapper.secretKey;
+
+            if (string.IsNullOrWhiteSpace(secretName) || string.IsNullOrWhiteSpace(secretKey))
+            {
+                var message = "Private key secret name and secret key must be set.";
+                _logger.Error(message);
+                throw new InvalidOperationException(message);
+            }
+            privateKeyPem = await GetPrivateKeyFromK8sSecretAsync(secretName, secretKey);
         }
 
         return LoadPrivateKeyFromPem(privateKeyPem);
