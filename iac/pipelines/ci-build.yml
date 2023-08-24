@@ -327,20 +327,13 @@ stages:
       - ${{each item in parameters.agent}}:
         - script: |
             imagesJson='$(images)'
+            echo "##vso[task.setvariable variable=processedImage]false"
             for image in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
               _jq() {
                 echo ${image} | base64 --decode | jq -r ${1}
               }
               imgName=$(_jq '.name')
-              echo -e "=================????==========!!!!!!!!================================"
-              echo -e "=================????================================"
-              echo -e "${imgName}"
-              echo -e "=================????!!!!!!!!================================"
-              echo -e "${{ item }}"
-              echo "##vso[task.setvariable variable=processedImage]false"
               if [ "$imgName" == "${{ item }}" ]; then
-                echo -e "==================!!!!==============================="
-                echo -e "${imgName}"
                 echo "##vso[task.setvariable variable=imageName]$(_jq '.name')"
                 echo "##vso[task.setvariable variable=dockerFilePath]$(_jq '.dockerFilePath')"
                 echo "##vso[task.setvariable variable=imageVersion]$(_jq '.imageVersion')"
