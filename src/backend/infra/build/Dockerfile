@@ -44,9 +44,6 @@ WORKDIR /src/backend/Backend.BlobStreamer
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
-# Build the application for release
-RUN dotnet build Backend.BlobStreamer.csproj -c Release -o /app/build
-
 FROM build AS publish
 RUN dotnet publish Backend.BlobStreamer.csproj -c Release -o /app/publish
 
