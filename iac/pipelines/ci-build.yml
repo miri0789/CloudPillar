@@ -315,17 +315,20 @@ stages:
             echo -e "\n\n"
         displayName: Set Backend Images Json as Variable
 
-  - stage: GetSingleBackendImageStage # Stage 2
+  - stage: BuildAgentArtifactsStage
     dependsOn: GetAgentImagesJsonStage
     jobs:
-    - job: GetSingleBackendImageJob
+    - job: BuildAgentArtifactsJob
       displayName: Get Single Backend Image Job
       variables:
         images: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.images'] ]
       steps:
-      - script: |
-          imagesJson='$(images)'
-          echo "==========="
+      - ${{ each item in variables.images }}:
+        - ${{ if eq(parameters.agent, item.name) }}:
+          - script: |
+              imagesJson='$(images)'
+              echo "==========="
+              echo $item
   #         script: |
   #           images=$(cat ./iac/pipelines/pipelines-data/agent-images.json | jq -c .) # Compact JSON
   #           echo "##vso[task.setvariable variable=agentJsonContent;isOutput=true]$images"
