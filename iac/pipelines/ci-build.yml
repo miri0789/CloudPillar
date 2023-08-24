@@ -227,8 +227,8 @@ stages:
             CONTAINER_ID=$(docker create $(imageName):aux-build)
             docker cp $CONTAINER_ID:/app/cloudpillar.zip .
             docker rm $CONTAINER_ID
-            mv ./cloudpillar.zip ./cloudpillar-$(imageName)-1.0.$(imageVersion).$(GitBuildNumber).zip
-            ls -al ./cloudpillar-$(imageName)-1.0.$(imageVersion).$(GitBuildNumber).zip
+            mv ./cloudpillar.zip ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
+            ls -al ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
           condition: eq(variables.processedImage, true)
           displayName: 'Extract POC cloudpillar.zip from Image'
 
@@ -236,6 +236,6 @@ stages:
           condition: eq(variables.processedImage, true)
           displayName: 'Publish cloudpillar.zip to Artifacts'
           inputs:
-            pathtoPublish: './cloudpillar-$(imageName)-1.0.$(imageVersion).$(GitBuildNumber).zip'
+            pathtoPublish: ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
             artifactName: 'cloudpillar'
             publishLocation: 'Container'
