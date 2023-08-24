@@ -94,12 +94,12 @@ public class AgentEventProcessor : IEventProcessor
                 _logger.Warn($"Ignoring message older than {_environmentsWrapper.messageTimeoutMinutes} minutes.");
                 continue;
             }
-            await HandleMessageData(eventData, !String.IsNullOrWhiteSpace(drainD2cQueues), context.PartitionId);
+            await HandleMessageAsync(eventData, !String.IsNullOrWhiteSpace(drainD2cQueues), context.PartitionId);
         }
         await context.CheckpointAsync();
     }
 
-    private async Task HandleMessageData(EventData eventData, bool isDrainMode, string partitionId)
+    private async Task HandleMessageAsync(EventData eventData, bool isDrainMode, string partitionId)
     {
         try
         {

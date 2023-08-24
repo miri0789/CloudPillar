@@ -15,7 +15,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         if (File.Exists(filePath))
         {
-           File.Delete(filePath);
+            File.Delete(filePath);
         }
     }
 
@@ -34,5 +34,5 @@ public class FileStreamerWrapper : IFileStreamerWrapper
             return Array.IndexOf(buffer, (byte)0) == -1;
         }
     }
-    
+
 }

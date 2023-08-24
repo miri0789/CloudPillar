@@ -90,10 +90,13 @@ public class HttpRequestorService : IHttpRequestorService
         if (response!= null && response.IsSuccessStatusCode)
         {
             string responseContent = await response.Content.ReadAsStringAsync();
-            var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
-            if (!isResponseValid)
+            if (!String.IsNullOrWhiteSpace(responseContent))
             {
-                throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
+                var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
+                if (!isResponseValid)
+                {
+                    throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
+                }
             }
             TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
             return result;
