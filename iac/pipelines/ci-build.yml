@@ -102,6 +102,7 @@ stages:
           echo "Azure Login Successfull"
           az acr login -n $(ACR_NAME)
         name: AcrLogin
+
       - ${{each item in parameters.backendImage}}:
         - script: |   
             imagesJson='$(images)'
@@ -166,7 +167,7 @@ stages:
                 docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
               fi
             done
-        name: BuildTagScanPushBackendImages
+          name: BuildTagScanPushBackendImages
 
 
 
