@@ -326,7 +326,8 @@ stages:
         
       - ${{each item in parameters.agent}}:
         - script: |
-            for image in $(echo "${images}" | jq -r '.[] | @base64'); do
+            imagesJson='$(images)'
+            for image in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
               _jq() {
                 echo ${image} | base64 --decode | jq -r ${1}
               }
