@@ -9,6 +9,8 @@ RUN echo "DLL argument value: $DLL"
 COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY nuget.config backend/${DLL}/
 
+# Copy the rest of the source code
+COPY . .
 WORKDIR /src/backend/${DLL}
 RUN echo "Current working directory: $(pwd)"
 RUN pwd
@@ -16,11 +18,9 @@ RUN ls -la
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
-# Copy the rest of the source code
-COPY . .
 
 # Build the application for release
-RUN dotnet publish -c Release -o out
+RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 
 # Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
@@ -32,5 +32,5 @@ WORKDIR /app
 COPY --from=build /app/out .
 
 # Set the entrypoint to run the application
-ENTRYPOINT ["dotnet", "${DLL}"]
+ENTRYPOINT ["dotnet", "${DLL}.dll"]
 
