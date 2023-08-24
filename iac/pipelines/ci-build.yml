@@ -331,13 +331,13 @@ stages:
             _jq() {
               echo ${image} | base64 --decode | jq -r ${1}
             }
-            imgName=$(_jq '.name')
-            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
-            echo -e "${image}"
+            echo -e "\n\n===================================================================\n\tImage Name\n===================================================================\n"
             echo -e "${imgName}"
             echo "Processing image: $image"
             # Execute a task for each image
-            echo "##vso[task.setvariable variable=currentImage]$image"
+            echo "##vso[task.setvariable variable=imageName]$(_jq '.name')"
+            echo "##vso[task.setvariable variable=dockerFilePath]$(_jq '.dockerFilePath')"
+            echo "##vso[task.setvariable variable=imageVersion]$imageVersion"
             echo "##vso[task.setvariable variable=processedImage]true"
             # Add more tasks here, each using the current image
           done
@@ -346,20 +346,20 @@ stages:
       
       - task: Docker@2
         condition: eq(variables.processedImage, true)
-        displayName: 'Docker Build & Tag $(variables.currentImage.name)'
+        displayName: 'Docker Build & Tag $(variables.imageName)'
         inputs:
           command: 'build'
-          repository: $(variables.currentImage.name)
-          dockerfile: $(variables.currentImage.dockerFilePath)
+          repository: $(variables.imageName)
+          dockerfile: $(variables.dockerFilePath)
           buildContext: 'src'
           tags: 'aux-build'
 
       - script: |
-          CONTAINER_ID=$(docker create $(variables.currentImage.name):aux-build)
+          CONTAINER_ID=$(docker create $(variables.imageName):aux-build)
           docker cp $CONTAINER_ID:/app/cloudpillar.zip .
           docker rm $CONTAINER_ID
-          mv ./cloudpillar.zip ./cloudpillar-$(variables.currentImage.name)-1.0.$(GitBuildNumber).zip
-          ls -al ./cloudpillar-poc-$(variables.currentImage.imageVersion).$(GitBuildNumber).zip
+          mv ./cloudpillar.zip ./cloudpillar-$(variables.imageName)-1.0.$(GitBuildNumber).zip
+          ls -al ./cloudpillar-poc-$(variables.imageVersion).$(GitBuildNumber).zip
         condition: eq(variables.processedImage, true)
         displayName: 'Extract POC cloudpillar.zip from Image'
 
@@ -367,7 +367,7 @@ stages:
         condition: eq(variables.processedImage, true)
         displayName: 'Publish cloudpillar.zip to Artifacts'
         inputs:
-          pathtoPublish: './cloudpillar-$(variables.currentImage.name)-$(variables.currentImage.imageVersion).$(GitBuildNumber).zip' # Path to the zip file on the agent machine
+          pathtoPublish: './cloudpillar-$(variables.imageName)-$(variables.imageVersion).$(GitBuildNumber).zip' # Path to the zip file on the agent machine
           artifactName: 'cloudpillar' # Name for the artifact
           publishLocation: 'Container' # Publish to Azure Pipelines
 
