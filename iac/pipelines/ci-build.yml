@@ -50,10 +50,10 @@ parameters:
     displayName: Select Backend Image to Build and Scan
     type: object
     default:
-    - edge_conquest
-    - iotlistener
     - blobstreamer
-    - keyholder       
+    - keyholder
+    - edge_conquest
+    - iotlistener       
   - name: agent
     displayName: Select Agent Project
     type: object
