@@ -121,6 +121,7 @@ stages:
                 imagePath=$(_jq '.imagePath')
                 dockerFilePath=$(_jq '.dockerFilePath')
                 imageVersion=$(_jq '.imageVersion')
+                projectName=$(_jq '.projectName')
                 ACR_NAME=$(ACR_NAME)     
                 echo $(imageVersion)
                 major=$(echo $imageVersion | cut -d '.' -f 1)
@@ -146,7 +147,8 @@ stages:
                 echo -e "\n\n"
                 echo -e "================================================\n\tDocker Build - \n================================================"
                 
-                docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath
+                docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath \
+                --build-arg DLL=$projectName
                 if [ $? -ne 0 ]; then
                   echo "Docker Build Failed"
                   exit 1
@@ -227,8 +229,9 @@ stages:
             CONTAINER_ID=$(docker create $(imageName):aux-build)
             docker cp $CONTAINER_ID:/app/cloudpillar.zip .
             docker rm $CONTAINER_ID
-            mv ./cloudpillar.zip ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
-            ls -al ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
+            newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)
+            mv ./cloudpillar.zip ./cloudpillar-$(newVersion).zip
+            ls -al ./cloudpillar-$(newVersion).zip
           condition: eq(variables.processedImage, true)
           displayName: 'Extract POC cloudpillar.zip from Image'
 
