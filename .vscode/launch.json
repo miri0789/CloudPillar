@@ -201,6 +201,20 @@
                 "DeviceConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=m_try4;SharedAccessKey=3o/DWlR/LQ+E3zS4oRIxnnZr5NK51FIVeRv23cN3+H0="
             },
             "stopAtEntry": false
+        },
+        {
+            "name": "Cloud Pillar Agent API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildCloudPillarAgentAPI",
+            "program": "${workspaceFolder}/src/agent/CloudPillar.Agent.API/bin/Debug/net7.0/CloudPillar.Agent.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent.API",
+            "console": "internalConsole",
+            "env": {
+                "DeviceConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=m_try4;SharedAccessKey=3o/DWlR/LQ+E3zS4oRIxnnZr5NK51FIVeRv23cN3+H0="
+            },
+            "stopAtEntry": false
         }
     ]
 }
