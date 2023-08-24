@@ -10,6 +10,9 @@ COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY nuget.config backend/${DLL}/
 
 WORKDIR /src/backend/${DLL}
+RUN echo "Current working directory: $(pwd)"
+RUN pwd
+RUN ls -la
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
