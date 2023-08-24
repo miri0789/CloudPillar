@@ -323,7 +323,7 @@ stages:
       variables:
         images: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.images'] ]
       steps:
-      - ${{ each item in variables.images }}:
+      - ${{ each item in $(images) }}:
         - ${{ if eq(parameters.agent, item.name) }}:
           - script: |
               imagesJson='$(images)'
