@@ -5,8 +5,8 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 ARG DLL
 # Copy the .csproj file and restore the dependencies
-COPY backend/${DLL}/*.csproj ${DLL}/
-COPY nuget.config ${DLL}/
+COPY backend/${DLL}/*.csproj backend/${DLL}/
+COPY nuget.config backend/${DLL}/
 
 WORKDIR /src/backend/${DLL}
 RUN dotnet nuget locals all --clear
