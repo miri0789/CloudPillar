@@ -326,22 +326,16 @@ stages:
         
       - ${{each item in parameters.agent}}:
         - script: |
-            imagesJson='$(images)'
-            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
-            echo -e "${imagesJson}"
-            for image in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+            for image in $(echo "${images}" | jq -r '.[] | @base64'); do
               _jq() {
                 echo ${image} | base64 --decode | jq -r ${1}
               }
-              echo -e "\n\n===================================================================\n\tImage Name\n===================================================================\n"
-              echo -e "${imgName}"
-              echo "Processing image: $imgName"
-              # Execute a task for each image
               echo "##vso[task.setvariable variable=imageName]$(_jq '.name')"
-              echo "##vso[task.setvariable variable=dockerFilePath]$(_jq '.dockerFilePath')"
-              echo "##vso[task.setvariable variable=imageVersion]$(_jq '.imageVersion')"
-              echo "##vso[task.setvariable variable=processedImage]true"
-              # Add more tasks here, each using the current image
+              if [ "$imageName" == "${{ item }}" ]; then
+                echo "##vso[task.setvariable variable=dockerFilePath]$(_jq '.dockerFilePath')"
+                echo "##vso[task.setvariable variable=imageVersion]$(_jq '.imageVersion')"
+                echo "##vso[task.setvariable variable=processedImage]true"
+              fi
             done
           displayName: Loop Through agent images and Execute Tasks
         
