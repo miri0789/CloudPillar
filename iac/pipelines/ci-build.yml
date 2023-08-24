@@ -319,7 +319,7 @@ stages:
         displayName: Build Agent POC Artifacts
         dependsOn: GetAgentImagesJsonStage
         variables:
-           agentJsonContent: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.agentJsonContent'] ] 
+          agentJsonContent: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.agentJsonContent'] ] 
         steps:      
           - ${{ each item in variables.agentJsonContent }}:
             - ${{ if eq(parameters.agent, item.name) }}:
