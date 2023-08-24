@@ -346,20 +346,20 @@ stages:
       
       - task: Docker@2
         condition: eq(variables.processedImage, true)
-        displayName: 'Docker Build & Tag $(variables.imageName)'
+        displayName: 'Docker Build & Tag $(imageName)'
         inputs:
           command: 'build'
-          repository: $(variables.imageName)
-          dockerfile: $(variables.dockerFilePath)
+          repository: $(imageName)
+          dockerfile: $(dockerFilePath)
           buildContext: 'src'
           tags: 'aux-build'
 
       - script: |
-          CONTAINER_ID=$(docker create $(variables.imageName):aux-build)
+          CONTAINER_ID=$(docker create $(imageName):aux-build)
           docker cp $CONTAINER_ID:/app/cloudpillar.zip .
           docker rm $CONTAINER_ID
-          mv ./cloudpillar.zip ./cloudpillar-$(variables.imageName)-1.0.$(GitBuildNumber).zip
-          ls -al ./cloudpillar-poc-$(variables.imageVersion).$(GitBuildNumber).zip
+          mv ./cloudpillar.zip ./cloudpillar-$(imageName)-1.0.$(GitBuildNumber).zip
+          ls -al ./cloudpillar-poc-$(imageVersion).$(GitBuildNumber).zip
         condition: eq(variables.processedImage, true)
         displayName: 'Extract POC cloudpillar.zip from Image'
 
@@ -367,7 +367,7 @@ stages:
         condition: eq(variables.processedImage, true)
         displayName: 'Publish cloudpillar.zip to Artifacts'
         inputs:
-          pathtoPublish: './cloudpillar-$(variables.imageName)-$(variables.imageVersion).$(GitBuildNumber).zip' # Path to the zip file on the agent machine
+          pathtoPublish: './cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).zip' # Path to the zip file on the agent machine
           artifactName: 'cloudpillar' # Name for the artifact
           publishLocation: 'Container' # Publish to Azure Pipelines
 
