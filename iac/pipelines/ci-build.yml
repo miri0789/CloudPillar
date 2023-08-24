@@ -308,7 +308,6 @@ stages:
           script: |
             images=$(cat ./iac/pipelines/pipelines-data/agent-images.json | jq -c .) # Compact JSON
             echo "##vso[task.setvariable variable=images;isOutput=true]$images"
-            echo "##vso[task.setvariable variable=images]$images"
 
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$images"
