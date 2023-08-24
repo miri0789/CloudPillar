@@ -167,7 +167,7 @@ stages:
                 docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
               fi
             done
-          displayName: Build Tag & Scan & Push Backend Images: ${{ item }}
+          displayName: Build Tag & Scan & Push Backend Images ${{ item }}
 
 
 
@@ -220,7 +220,7 @@ stages:
         
         - task: Docker@2
           condition: eq(variables.processedImage, true)
-          displayName: Docker Build & Tag: ${{ item }}
+          displayName: Docker Build & Tag ${{ item }}
           inputs:
             command: 'build'
             repository: $(imageName)
