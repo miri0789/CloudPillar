@@ -1,0 +1,33 @@
+[
+    {
+        "name": "iotlistener",
+        "imageName": "backend_iotlistener",
+        "imagePath": "./src",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "projectName":"Backend.Iotlistener",
+        "imageVersion": "1.0"
+    },
+    {
+        "name": "blobstreamer",
+        "imageName": "backend_blobstreamer",
+        "imagePath": "./src",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "projectName":"Backend.BlobStreamer",
+        "imageVersion": "1.0"
+    },
+    {
+        "name": "keyholder",
+        "imageName": "backend_keyholder",
+        "imagePath": "./src",
+        "dockerFilePath": "./src/backend/infra/build/Dockerfile",
+        "projectName":"Backend.Keyholder",
+        "imageVersion": "1.0"
+    },
+    {
+        "name": "edge_conquest",
+        "imageName": "edge_conquest",
+        "imagePath": "./src/edge/conquest/",
+        "imageVersion": "v0.7.3",
+        "dockerFilePath": "./src/edge/conquest/Dockerfile"
+    }
+]
