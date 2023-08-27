@@ -235,7 +235,7 @@ stages:
             CONTAINER_ID=$(docker create $(imageName):aux-build)
             docker cp $CONTAINER_ID:/app/cloudpillar.zip .
             docker rm $CONTAINER_ID
-            newVersion=$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL)
+            newVersion=$(imageName)-$(imageVersion)
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$newVersion"
             echo -e "\n\n"
@@ -248,6 +248,6 @@ stages:
           condition: eq(variables.processedImage, true)
           displayName: 'Publish cloudpillar.zip to Artifacts'
           inputs:
-            pathtoPublish: ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
+            pathtoPublish: ./cloudpillar-$(imageName)-$(imageVersion).zip
             artifactName: 'cloudpillar'
             publishLocation: 'Container'
