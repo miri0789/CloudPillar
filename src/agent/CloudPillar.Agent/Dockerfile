@@ -1,15 +1,7 @@
 # First stage: Build the application
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
-SHELL ["pwsh", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-
-# Install the cred provider
-# By default, Nano Server runs as ContainerUser. In order to install the cred provider as ContainerUser, an explicit temp directory must be created
-WORKDIR /temp
-ENV TMP=C:\temp
-RUN Invoke-WebRequest https://aka.ms/install-artifacts-credprovider.ps1 -OutFile installcredprovider.ps1; `
-    .\installcredprovider.ps1; `
-    del installcredprovider.ps1
+RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/master/helpers/installcredprovider.sh  | sh
 
 WORKDIR /src
 
