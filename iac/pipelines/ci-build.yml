@@ -213,7 +213,12 @@ stages:
               fi
             done
           displayName: Extract image parameters for running tasks
-        
+        - script: |
+            newVersion=$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL)
+            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
+            echo "$newVersion"
+
+
         - task: Docker@2
           condition: eq(variables.processedImage, true)
           displayName: Docker Build & Tag ${{ item }}
@@ -231,7 +236,7 @@ stages:
             newVersion=$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL)
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$newVersion"
-            echo "==============="
+            echo -e "\n\n"
             mv ./cloudpillar.zip ./cloudpillar-$(newVersion).zip
             ls -al ./cloudpillar-$(newVersion).zip
           condition: eq(variables.processedImage, true)
