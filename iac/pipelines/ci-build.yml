@@ -151,7 +151,7 @@ stages:
                 echo -e "================================================\n\tDocker Build - \n================================================"
                 
                 docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath \
-                --build-arg DLL=$(projectName),FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+                --build-arg DLL=$projectName --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
                 if [ $? -ne 0 ]; then
                   echo "Docker Build Failed"
                   exit 1
