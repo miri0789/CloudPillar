@@ -217,6 +217,8 @@ stages:
             newVersion=$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL)
             echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
             echo "$newVersion"
+          condition: eq(variables.processedImage, true)
+          displayName: '111Extract POC cloudpillar.zip from Image '
 
 
         - task: Docker@2
