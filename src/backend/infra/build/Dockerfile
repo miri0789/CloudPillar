@@ -13,12 +13,7 @@ WORKDIR /src/backend/${DLL}
 RUN dotnet nuget locals all --clear
 RUN dotnet restore
 
-
-# Build the application for release
-RUN dotnet build ${DLL}.csproj -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app/publish
 
 
 # Use the official .NET Core Runtime image as the base image for the final stage
