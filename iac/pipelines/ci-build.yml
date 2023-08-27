@@ -220,13 +220,14 @@ stages:
           condition: eq(variables.processedImage, true)
           displayName: Docker Build & Tag ${{ item }}
           inputs:
-            command: 'build'
+            command: build
             repository: $(imageName)
             dockerfile: $(dockerFilePath)
-            buildContext: 'src'
-            tags: 'aux-build'
+            buildContext: src
+            tags: aux-build
+            arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
             buildArguments: |
-              FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+              
 
         - script: |
             CONTAINER_ID=$(docker create $(imageName):aux-build)
