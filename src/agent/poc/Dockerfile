@@ -1,15 +1,9 @@
 # First stage: Build the application
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
-RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/master/helpers/installcredprovider.sh  | sh
-
 WORKDIR /src
-COPY agent/poc/*.csproj agent/poc/
-COPY . .
+COPY agent/poc/* agent/poc/
 WORKDIR /src/agent/poc
-
-ARG FEED_ACCESSTOKEN
-ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
 
 RUN dotnet restore
 RUN dotnet publish -c Release -o /app

@@ -58,8 +58,8 @@ parameters:
     displayName: Select Agent Project
     type: object
     default:
-    - agent_project   
-    - poc   
+    - agent   
+    - pocagent   
 
 stages:
 
