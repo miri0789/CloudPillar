@@ -9,4 +9,5 @@ public interface ITwinHandler
     Task HandleTwinActionsAsync();
     Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReport);
     Task InitReportDeviceParamsAsync();
+    Task<string> GetTwinJsonAsync();
 }

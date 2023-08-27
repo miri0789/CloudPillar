@@ -16,16 +16,16 @@ builder.Services.AddCors(options =>
                        .AllowAnyMethod();
             });
         });
-// builder.Services.AddSingleton<IC2DEventHandler, C2DEventHandler>();
-// builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
-// builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
-// builder.Services.AddSingleton<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
-// builder.Services.AddSingleton<IMessageSubscriber, MessageSubscriber>();
-// builder.Services.AddSingleton<IMessagesFactory, MessagesFactory>();
-// builder.Services.AddSingleton<ITwinHandler, TwinHandler>();
-// builder.Services.AddSingleton<IFileDownloadHandler, FileDownloadHandler>();
-// builder.Services.AddSingleton<IFileStreamerWrapper, FileStreamerWrapper>();
-// builder.Services.AddSingleton<ID2CMessengerHandler, D2CMessengerHandler>();
+// builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
+// builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
+// builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
+// builder.Services.AddScoped<IMessagesFactory, MessagesFactory>();
+builder.Services.AddScoped<ITwinHandler, TwinHandler>();
+builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
+builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
+builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 
 
 

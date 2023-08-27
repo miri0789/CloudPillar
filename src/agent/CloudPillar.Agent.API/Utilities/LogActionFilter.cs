@@ -16,7 +16,7 @@ public class LogActionFilter : IActionFilter
     public void OnActionExecuting(ActionExecutingContext context)
     {
         // Log information when an action is entered.
-        _logger.Error($"Entering action '{context.ActionDescriptor.DisplayName}'");
+        _logger.Info($"Entering action '{context.ActionDescriptor.DisplayName}'");
     }
 
     public void OnActionExecuted(ActionExecutedContext context)

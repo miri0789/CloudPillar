@@ -221,6 +221,20 @@ public class TwinHandler : ITwinHandler
 
     }
 
+    public async Task<string> GetTwinJsonAsync()
+    {
+        try
+        {
+            var twin = await _deviceClient.GetTwinAsync();
+            return twin.ToJson();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GetTwinJsonAsync failed: {ex.Message}");
+            return null;            
+        }
+    }
+
     private IEnumerable<ShellType> GetSupportedShells()
     {
         const string windowsBashPath = @"C:\Windows\System32\wsl.exe";
