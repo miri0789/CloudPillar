@@ -214,6 +214,8 @@ stages:
             done
           displayName: Extract image parameters for running tasks
         
+        - task: NuGetAuthenticate@1
+          displayName: 'Authenticate to NuGet'
         
         - task: Docker@2
           condition: eq(variables.processedImage, true)
@@ -224,6 +226,8 @@ stages:
             dockerfile: $(dockerFilePath)
             buildContext: 'src'
             tags: 'aux-build'
+            buildArguments: |
+              FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
 
         - script: |
             CONTAINER_ID=$(docker create $(imageName):aux-build)
