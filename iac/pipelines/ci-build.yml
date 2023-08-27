@@ -27,7 +27,7 @@ variables:
 
 
 - name: TIMELABEL
-  value: $(date +%Y%m%d%H%M%S)
+  value: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
 - name: GitBuildNumber
   value: $(Build.BuildId)
 - name: registryName
@@ -233,7 +233,7 @@ stages:
             CONTAINER_ID=$(docker create $(imageName):aux-build)
             docker cp $CONTAINER_ID:/app/cloudpillar.zip .
             docker rm $CONTAINER_ID
-            newVersion=$(imageName)-$(imageVersion).$(GitBuildNumber).$(Build.StartTime)
+            newVersion=$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL)
             mv ./cloudpillar.zip ./cloudpillar-$(newVersion).zip
             ls -al ./cloudpillar-$(newVersion).zip
           condition: eq(variables.processedImage, true)
@@ -243,6 +243,6 @@ stages:
           condition: eq(variables.processedImage, true)
           displayName: 'Publish cloudpillar.zip to Artifacts'
           inputs:
-            pathtoPublish: ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(Build.StartTime).zip
+            pathtoPublish: ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
             artifactName: 'cloudpillar'
             publishLocation: 'Container'
