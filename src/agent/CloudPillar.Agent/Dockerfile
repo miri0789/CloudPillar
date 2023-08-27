@@ -5,14 +5,9 @@ WORKDIR /src
 COPY agent/CloudPillar.Agent/*.csproj agent/CloudPillar.Agent/
 COPY nuget.config agent/CloudPillar.Agent/
 
-RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/master/helpers/installcredprovider.sh  | sh
-
-
 COPY . .
 WORKDIR /src/agent/CloudPillar.Agent
 RUN dotnet nuget locals all --clear
-ARG FEED_ACCESSTOKEN
-ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
 
 RUN dotnet restore
 RUN dotnet publish -c Release -o /app
