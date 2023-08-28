@@ -9,21 +9,21 @@ using Newtonsoft.Json;
 public class D2CMessengerHandlerTestFixture
 {
 
-    private Mock<IDeviceClientWrapper> _dviceClientMock;
-    private ID2CMessengerHandler _d2CMessengerHandler;
+    private Mock<IDeviceClientWrapper> _deviceClientMock;
+    private ID2CMessengerHandler _target;
 
-    private const string fileName = "fileName.txt";
-    private const string actionId = "action123";
-    private const long startPosition = 10;
-    private const long endPosition = 20;
+    private const string FILE_NAME = "fileName.txt";
+    private const string ACTION_ID = "action123";
+    private const long START_POSITION = 10;
+    private const long END_POSITION = 20;
     private const int KB = 1024;
 
     [SetUp]
     public void Setup()
     {
-        _dviceClientMock = new Mock<IDeviceClientWrapper>();
+        _deviceClientMock = new Mock<IDeviceClientWrapper>();
 
-        _d2CMessengerHandler = new D2CMessengerHandler(_dviceClientMock.Object);
+        _target = new D2CMessengerHandler(_deviceClientMock.Object);
 
     }
 
@@ -33,12 +33,27 @@ public class D2CMessengerHandlerTestFixture
     [TestCase((TransportType)100, 32 * KB)] // Unknown transport type
     public async Task SendFirmwareUpdateEventAsync_ByTransportType_SendCorrectChunkSize(TransportType transportType, int expectedChunkSize)
     {
-        _dviceClientMock.Setup(dc => dc.GetTransportType()).Returns(transportType);
+        _deviceClientMock.Setup(dc => dc.GetTransportType()).Returns(transportType);
 
-        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(fileName, actionId, startPosition, endPosition);
-        _dviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, fileName, actionId, startPosition, endPosition) == true)), Times.Once);
+        await _target.SendFirmwareUpdateEventAsync(FILE_NAME, ACTION_ID, START_POSITION, END_POSITION);
+        _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, FILE_NAME, ACTION_ID, START_POSITION, END_POSITION) == true)), Times.Once);
     }
 
+
+
+    [Test]
+    public async Task SendFirmwareUpdateEventAsync_Failure_ThrowException()
+    {
+        _deviceClientMock.Setup(dc => dc.GetTransportType()).Returns(TransportType.Mqtt);
+
+        _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).ThrowsAsync(new Exception());
+
+        Assert.ThrowsAsync<Exception>(async () =>
+        {
+            await _target.SendFirmwareUpdateEventAsync(FILE_NAME, ACTION_ID);
+        });
+    }
+    
 
     private bool CheckMessageContent(Message msg, int chunkSize, string fileName, string actionId, long? startPosition, long? endPosition)
     {
@@ -50,19 +65,4 @@ public class D2CMessengerHandlerTestFixture
               firmwareUpdateEvent.ActionId == actionId &&
               firmwareUpdateEvent.EndPosition == endPosition;
     }
-
-    [Test]
-    public async Task SendFirmwareUpdateEventAsync_Failure_ThrowException()
-    {
-        _dviceClientMock.Setup(dc => dc.GetTransportType()).Returns(TransportType.Mqtt);
-
-        _dviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).ThrowsAsync(new Exception());
-
-        Assert.ThrowsAsync<Exception>(async () =>
-        {
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(fileName, actionId);
-        });
-    }
-    
-
 }

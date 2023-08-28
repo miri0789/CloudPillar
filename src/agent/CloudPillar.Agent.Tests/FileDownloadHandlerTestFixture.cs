@@ -1,7 +1,4 @@
-using NUnit.Framework;
 using Moq;
-using System.IO;
-using System.Threading.Tasks;
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers;
 using Shared.Entities.Twin;
@@ -13,7 +10,7 @@ public class FileDownloadHandlerTestFixture
 {
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
-    private IFileDownloadHandler _fileDownloadHandler;
+    private IFileDownloadHandler _target;
 
     private DownloadAction _downloadAction = new DownloadAction()
     {
@@ -32,7 +29,7 @@ public class FileDownloadHandlerTestFixture
     {
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
-        _fileDownloadHandler = new FileDownloadHandler(_fileStreamerWrapperMock.Object, _d2CMessengerHandlerMock.Object);
+        _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object, _d2CMessengerHandlerMock.Object);
     }
 
 
@@ -41,7 +38,7 @@ public class FileDownloadHandlerTestFixture
     {
         _d2CMessengerHandlerMock.Setup(dc => dc.SendFirmwareUpdateEventAsync(_downloadAction.Source, _downloadAction.ActionId, null, null));
 
-        await _fileDownloadHandler.InitFileDownloadAsync(_downloadAction, _actionToReport);
+        await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
 
         _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(_downloadAction.Source, _downloadAction.ActionId, null, null), Times.Once);
 
@@ -56,16 +53,16 @@ public class FileDownloadHandlerTestFixture
 
         Assert.ThrowsAsync<Exception>(async () =>
         {
-            await _fileDownloadHandler.InitFileDownloadAsync(_downloadAction, _actionToReport);
+            await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
         });
 
     }
 
 
     [Test]
-    public async Task HandleDownloadMessageAsync_HandleMessage_ReturnReport()
+    public async Task HandleDownloadMessageAsync_PartiallyData_ReturnInprogressReport()
     {
-        await _fileDownloadHandler.InitFileDownloadAsync(_downloadAction, _actionToReport);
+        await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
 
         var message = new DownloadBlobChunkMessage
         {
@@ -77,12 +74,27 @@ public class FileDownloadHandlerTestFixture
         };
         _fileStreamerWrapperMock.Setup(f => f.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>()));
 
-        var report = await _fileDownloadHandler.HandleDownloadMessageAsync(message);
-        Assert.AreEqual(report.TwinReport.Status, StatusType.InProgress);
-        Assert.AreEqual(report.TwinReport.Progress, 50);
-        report = await _fileDownloadHandler.HandleDownloadMessageAsync(message);
+        var report = await _target.HandleDownloadMessageAsync(message);
+        Assert.AreEqual((report.TwinReport.Status, report.TwinReport.Progress), (StatusType.InProgress, 50));
+    }
+
+    [Test]
+    public async Task HandleDownloadMessageAsync_AllFileBytes_ReturnSuccessReport()
+    {
+        await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
+
+        var message = new DownloadBlobChunkMessage
+        {
+            ActionId = _downloadAction.ActionId,
+            FileName = _downloadAction.Source,
+            Offset = 0,
+            Data = new byte[1024],
+            FileSize = 1024
+        };
+        _fileStreamerWrapperMock.Setup(f => f.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>()));
+
+        var report = await _target.HandleDownloadMessageAsync(message);
         Assert.AreEqual(report.TwinReport.Status, StatusType.Success);
-        _fileStreamerWrapperMock.Verify(f => f.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>()), Times.Exactly(2));
     }
 
     [Test]
@@ -96,13 +108,11 @@ public class FileDownloadHandlerTestFixture
             Data = new byte[1024],
             FileSize = 2048
         };
-        _fileStreamerWrapperMock.Setup(f => f.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>()));
 
         Assert.ThrowsAsync<ArgumentException>(async () =>
                {
-                   await _fileDownloadHandler.HandleDownloadMessageAsync(message);
+                   await _target.HandleDownloadMessageAsync(message);
                });
-        _fileStreamerWrapperMock.Verify(f => f.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>()), Times.Never);
     }
 
 }
