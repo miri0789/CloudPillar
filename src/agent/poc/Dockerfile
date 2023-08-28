@@ -1,9 +1,10 @@
 # First stage: Build the application
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+
 WORKDIR /src
-COPY agent/poc/*.csproj agent/poc/
-COPY . .
+COPY agent/poc/* agent/poc/
 WORKDIR /src/agent/poc
+
 RUN dotnet restore
 RUN dotnet publish -c Release -o /app
 RUN pwsh ./publish.ps1

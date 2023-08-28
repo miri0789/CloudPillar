@@ -58,8 +58,8 @@ parameters:
     displayName: Select Agent Project
     type: object
     default:
-    - agent_project   
-    - poc   
+    - agent   
+    - pocagent   
 
 stages:
 
@@ -108,6 +108,9 @@ stages:
           docker image ls
         name: AcrLogin
 
+      - task: NuGetAuthenticate@1
+        displayName: 'Authenticate to NuGet'
+
       - ${{each item in parameters.backendImage}}:
         - script: |    
             imagesJson='$(images)'
@@ -148,7 +151,7 @@ stages:
                 echo -e "================================================\n\tDocker Build - \n================================================"
                 
                 docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath \
-                --build-arg DLL=$projectName
+                --build-arg DLL=$projectName --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
                 if [ $? -ne 0 ]; then
                   echo "Docker Build Failed"
                   exit 1
@@ -214,16 +217,21 @@ stages:
             done
           displayName: Extract image parameters for running tasks
 
+        - task: NuGetAuthenticate@1
+          displayName: 'Authenticate to NuGet'
 
         - task: Docker@2
           condition: eq(variables.processedImage, true)
           displayName: Docker Build & Tag ${{ item }}
           inputs:
-            command: 'build'
+            command: build
             repository: $(imageName)
             dockerfile: $(dockerFilePath)
-            buildContext: 'src'
-            tags: 'aux-build'
+            buildContext: src
+            tags: aux-build
+            arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+            buildArguments: |
+              
 
         - script: |
             CONTAINER_ID=$(docker create $(imageName):aux-build)
