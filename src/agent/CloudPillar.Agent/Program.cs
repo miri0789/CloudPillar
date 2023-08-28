@@ -16,7 +16,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<ISignatureHandler, SignatureHandler>();
         services.AddSingleton<ID2CMessengerHandler, D2CMessengerHandler>();
         services.AddSingleton<ITwinHandler, TwinHandler>();
-        services.AddSingleton<IMessagesFactory, MessagesFactory>();
+        services.AddSingleton<IMessageFactory, MessageFactory>();
 
         
     })
