@@ -1,6 +1,9 @@
+using CloudPillar.Agent.API.Entities;
 using CloudPillar.Agent.API.Handlers;
 using CloudPillar.Agent.API.Utilities;
+using CloudPillar.Agent.API.Validators;
 using CloudPillar.Agent.API.Wrappers;
+using FluentValidation;
 using Shared.Entities.Factories;
 using Shared.Logger;
 
@@ -27,6 +30,7 @@ builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 
+builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 
 
 builder.Services.AddControllers(options =>
@@ -44,6 +48,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.UseCors(myAllowSpecificOrigins);
 app.UseAuthorization();
