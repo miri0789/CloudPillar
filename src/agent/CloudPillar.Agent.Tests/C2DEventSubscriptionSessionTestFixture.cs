@@ -17,7 +17,7 @@ public class C2DEventSubscriptionSessionTestFixture
     private IC2DEventSubscriptionSession _target;
 
     private const string MESSAGE_TYPE_PROP = "MessageType";
-        private DownloadBlobChunkMessage _downloadBlobChunkMessage = new DownloadBlobChunkMessage() { MessageType = MessageType.DownloadChunk };
+    private DownloadBlobChunkMessage _downloadBlobChunkMessage = new DownloadBlobChunkMessage() { MessageType = MessageType.DownloadChunk };
 
 
     [SetUp]
@@ -35,11 +35,8 @@ public class C2DEventSubscriptionSessionTestFixture
              _messageFactoryMock.Object,
              _twinHandlerMock.Object);
 
-             
-        var receivedMessage = new Message();
-        receivedMessage.Properties[MESSAGE_TYPE_PROP] = MessageType.DownloadChunk.ToString();
-
-        _deviceClientMock.Setup(dc => dc.ReceiveAsync(It.IsAny<CancellationToken>())).ReturnsAsync(receivedMessage);
+        
+        var receivedMessage = SetRecivedMessageWithDurationMock(MessageType.DownloadChunk.ToString());
 
         _messageFactoryMock
             .Setup(mf => mf.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
@@ -54,47 +51,43 @@ public class C2DEventSubscriptionSessionTestFixture
 
     }
 
-    [Test, Order(1)]
+    [Test]
     public async Task ReceiveC2DMessagesAsync_ValidDownloadMessage_CallDownloadHandler()
     {
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
-        _messageSubscriberMock.Verify(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage), Times.AtLeastOnce);
+        _messageSubscriberMock.Verify(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage), Times.Once);
     }
 
-    [Test, Order(2)]
+    [Test]
     public async Task ReceiveC2DMessagesAsync_ValidDownloadMessage_CallReportHandler()
     {
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
 
-        _twinHandlerMock.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>()), Times.AtLeastOnce);
+        _twinHandlerMock.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>()), Times.Once);
     }
 
-    [Test, Order(3)]
+    [Test]
     public async Task ReceiveC2DMessagesAsync_UnknownMessageType_NotReportCompleteMsg()
-    {
-        var receivedMessage = new Message();
-        receivedMessage.Properties[MESSAGE_TYPE_PROP] = "Try";
-        _deviceClientMock.Setup(dc => dc.ReceiveAsync(It.IsAny<CancellationToken>())).ReturnsAsync(receivedMessage);
+    {        
+        var receivedMessage = SetRecivedMessageWithDurationMock("Try");
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
 
         _twinHandlerMock.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>()), Times.Never);
     }
 
-    [Test, Order(3)]
+    [Test]
     public async Task ReceiveC2DMessagesAsync_UnknownMessageType_CompleteMsg()
-    {
-        var receivedMessage = new Message();
-        receivedMessage.Properties[MESSAGE_TYPE_PROP] = "Try";
-        _deviceClientMock.Setup(dc => dc.ReceiveAsync(It.IsAny<CancellationToken>())).ReturnsAsync(receivedMessage);
+    {        
+        var receivedMessage = SetRecivedMessageWithDurationMock("Try");
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
 
-        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage), Times.AtLeastOnce);
+        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage), Times.Once);
     }
 
 
-    [Test, Order(4)]
+    [Test]
     public async Task ReceiveC2DMessagesAsync_ReceivingException_IgnoreMessage()
     {
         _deviceClientMock.Setup(dc => dc.ReceiveAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
@@ -104,13 +97,10 @@ public class C2DEventSubscriptionSessionTestFixture
         _deviceClientMock.Verify(dc => dc.CompleteAsync(It.IsAny<Message>()), Times.Never);
     }
 
-    [Test, Order(5)]
+    [Test]
     public async Task ReceiveC2DMessagesAsync_DownloadingException_CompleteMessage()
     {
-        var receivedMessage = new Message();
-        receivedMessage.Properties[MESSAGE_TYPE_PROP] = MessageType.DownloadChunk.ToString();
-
-        _deviceClientMock.Setup(dc => dc.ReceiveAsync(It.IsAny<CancellationToken>())).ReturnsAsync(receivedMessage);
+        var receivedMessage = SetRecivedMessageWithDurationMock(MessageType.DownloadChunk.ToString());
         _messageFactoryMock
             .Setup(mf => mf.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
             .Returns(_downloadBlobChunkMessage);
@@ -121,14 +111,29 @@ public class C2DEventSubscriptionSessionTestFixture
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
 
-        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage), Times.AtLeastOnce);
+        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage), Times.Once);
     }
 
     private CancellationToken GetCancellationToken()
     {
         var cts = new CancellationTokenSource();
-        var timeout = TimeSpan.FromMilliseconds(1);
+        var timeout = TimeSpan.FromMilliseconds(100);
         cts.CancelAfter(timeout);
         return cts.Token;
     }
+
+    private Message SetRecivedMessageWithDurationMock(string messageType)
+    {
+        var receivedMessage = new Message();
+        receivedMessage.Properties[MESSAGE_TYPE_PROP] = messageType;
+
+        _deviceClientMock.Setup(dc => dc.ReceiveAsync(It.IsAny<CancellationToken>())).Returns(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                return receivedMessage;
+            });
+
+        return receivedMessage;
+    }
+
 }
