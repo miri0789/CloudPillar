@@ -5,6 +5,7 @@ using CloudPillar.Agent.Handlers;
 
 namespace CloudPillar.Agent.Tests;
 
+[TestFixture]
 public class SignatureHandlerTestFixture
 {
     private ISignatureHandler _signatureHandler;

@@ -18,22 +18,22 @@ public class BlobService : IBlobService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ICloudStorageWrapper _cloudStorageWrapper;
     private readonly IDeviceClientWrapper _deviceClient;
-    private readonly IMessagesFactory _messagesFactory;
+    private readonly IMessageFactory _MessageFactory;
     private readonly ILoggerHandler _logger;
 
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
-     IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessagesFactory messagesFactory)
+     IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory MessageFactory)
     {
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         ArgumentNullException.ThrowIfNull(cloudStorageWrapper);
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(messagesFactory);
+        ArgumentNullException.ThrowIfNull(MessageFactory);
         ArgumentNullException.ThrowIfNull(logger);
 
         _environmentsWrapper = environmentsWrapper;
         _cloudStorageWrapper = cloudStorageWrapper;
         _deviceClient = deviceClientWrapper;
-        _messagesFactory = messagesFactory;
+        _MessageFactory = MessageFactory;
         _logger = logger;
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
@@ -75,7 +75,7 @@ public class BlobService : IBlobService
                 blobMessage.RangeSize = rangeEndSize;
             }
 
-            var c2dMessage = _messagesFactory.PrepareBlobMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
+            var c2dMessage = _MessageFactory.PrepareBlobMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
             await SendMessage(c2dMessage, deviceId);
         }
     }
