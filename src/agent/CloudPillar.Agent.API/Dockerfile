@@ -6,11 +6,11 @@ RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/m
 WORKDIR /src
 
 
-COPY agent/CloudPillar.Agent/*.csproj agent/CloudPillar.Agent/
-COPY nuget.config agent/CloudPillar.Agent/
+COPY agent/CloudPillar.Agent.API/*.csproj agent/CloudPillar.Agent.API/
+COPY nuget.config agent/CloudPillar.Agent.API/
 
 COPY . .
-WORKDIR /src/agent/CloudPillar.Agent
+WORKDIR /src/agent/CloudPillar.Agent.API
 RUN dotnet nuget locals all --clear
 
 ARG FEED_ACCESSTOKEN
@@ -25,7 +25,7 @@ RUN pwsh ./publish.ps1
 FROM mcr.microsoft.com/dotnet/runtime:7.0
 WORKDIR /app
 COPY --from=build /app .
-COPY --from=build ./src/agent/CloudPillar.Agent/publish/cloudpillar.zip .
+COPY --from=build ./src/agent/CloudPillar.Agent.API/publish/cloudpillar.zip .
 
 # Set the entrypoint for the application
 ENTRYPOINT ["dotnet", "jnjiotagent.dll"]

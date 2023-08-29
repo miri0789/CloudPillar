@@ -1,9 +1,9 @@
-using CloudPillar.Agent.Handlers;
-using CloudPillar.Agent.Wrappers;
+using CloudPillar.Agent.API.Handlers;
+using CloudPillar.Agent.API.Wrappers;
 using Shared.Entities.Factories;
 using Moq;
 using Microsoft.Azure.Devices.Client;
-using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.API.Entities;
 using Shared.Entities.Messages;
 
 [TestFixture]

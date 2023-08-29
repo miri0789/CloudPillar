@@ -1,8 +1,8 @@
 using Moq;
-using CloudPillar.Agent.Wrappers;
-using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.API.Wrappers;
+using CloudPillar.Agent.API.Handlers;
 using Shared.Entities.Twin;
-using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.API.Entities;
 using Shared.Entities.Messages;
 
 [TestFixture]

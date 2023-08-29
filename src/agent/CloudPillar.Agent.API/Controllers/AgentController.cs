@@ -1,12 +1,8 @@
 
-
 using CloudPillar.Agent.API.Entities;
 using CloudPillar.Agent.API.Handlers;
-using CloudPillar.Agent.API.Wrappers;
 using FluentValidation;
-using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.API.Controllers;
@@ -26,6 +22,18 @@ public class AgentController : ControllerBase
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
     }
 
+    [HttpPost("AddRecipe")]
+    public async Task<IActionResult> AddRecipe()
+    {
+        return Ok();
+    }
+
+    [HttpGet("GetDeviceState")]
+    public async Task<ActionResult<string>> GetDeviceState()
+    {
+        return await _twinHandler.GetTwinJsonAsync();
+    }
+
     [HttpPost("InitiateProvisioning")]
     public async Task<IActionResult> InitiateProvisioning()
     {
@@ -38,7 +46,6 @@ public class AgentController : ControllerBase
         return Ok();
     }
 
-
     [HttpPost("SetReady")]
     public async Task<IActionResult> SetReady()
     {
@@ -47,21 +54,8 @@ public class AgentController : ControllerBase
 
     [HttpPut("UpdateReportedProps")]
     public async Task<IActionResult> UpdateReportedProps(UpdateReportedProps updateReportedProps)
-    {       
+    {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return Ok();
-    }
-
-    [HttpGet("GetDeviceState")]
-    public async Task<ActionResult<string>> GetDeviceState()
-    {
-        return await _twinHandler.GetTwinJsonAsync();
-    }
-
-
-    [HttpPost("AddRecipe")]
-    public async Task<IActionResult> AddRecipe()
-    {
         return Ok();
     }
 }
