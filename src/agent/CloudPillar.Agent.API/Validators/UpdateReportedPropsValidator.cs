@@ -6,7 +6,7 @@ namespace CloudPillar.Agent.API.Validators
     {
         public UpdateReportedPropsValidator()
         {
-            RuleForEach(x => x.updateReportedProps).SetValidator(new UpdateReportedPropValidator());
+            RuleForEach(x => x.Properties).SetValidator(new UpdateReportedPropValidator());
         }
     }
 }
