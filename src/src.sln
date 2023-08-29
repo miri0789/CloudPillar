@@ -5,8 +5,6 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "agent", "agent", "{9AE4EBA4-9E7A-4F79-A2B2-CF9F1D18CBC7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudPillar.Agent", "agent\CloudPillar.Agent\CloudPillar.Agent.csproj", "{9816908F-A909-4E89-8449-56EA1908057B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudPillar.Agent.API", "agent\CloudPillar.Agent.API\CloudPillar.Agent.API.csproj", "{77067A81-8304-4901-88CD-FA19807AA69B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudPillar.Agent.Tests", "agent\CloudPillar.Agent.Tests\CloudPillar.Agent.Tests.csproj", "{DAE1E406-B666-4A84-9474-5F80D28B3554}"

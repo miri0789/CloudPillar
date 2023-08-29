@@ -226,12 +226,16 @@ public class TwinHandler : ITwinHandler
         try
         {
             var twin = await _deviceClient.GetTwinAsync();
-            return twin.ToJson();
+            if (twin != null)
+            {
+                return twin.ToJson();
+            }
+            return null;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"GetTwinJsonAsync failed: {ex.Message}");
-            return null;            
+            return null;
         }
     }
 
