@@ -6,7 +6,7 @@ using Shared.Entities.Messages;
 namespace Shared.Entities.Factories;
 
 
-public class MessagesFactory : IMessagesFactory
+public class MessageFactory : IMessageFactory
 {
 
     public T CreateBaseMessageFromMessage<T>(Microsoft.Azure.Devices.Client.Message message) where T : BaseMessage, new()

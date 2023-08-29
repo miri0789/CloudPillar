@@ -9,17 +9,17 @@ namespace CloudPillar.Agent.API.Handlers;
 
 public class FileDownloadHandler : IFileDownloadHandler
 {
-    private readonly IFileStreamerWrapper _FileStreamerWrapper;
+    private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
 
-    public FileDownloadHandler(IFileStreamerWrapper FileStreamerWrapper,
+    public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler)
     {
-        ArgumentNullException.ThrowIfNull(FileStreamerWrapper);
+        ArgumentNullException.ThrowIfNull(fileStreamerWrapper);
         ArgumentNullException.ThrowIfNull(d2CMessengerHandler);
 
-        _FileStreamerWrapper = FileStreamerWrapper;
+        _fileStreamerWrapper = fileStreamerWrapper;
         _d2CMessengerHandler = d2CMessengerHandler;
         _filesDownloads = new ConcurrentBag<FileDownload>();
     }
@@ -50,7 +50,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Stopwatch.Start();
             file.TotalBytes = message.FileSize;
         }
-        await _FileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
+        await _fileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
         file.Report.TwinReport.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
 
         if (file.TotalBytesDownloaded == file.TotalBytes)
@@ -62,6 +62,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             if (message?.RangeSize != null)
             {
+                // TODO find true way to calculate it
                 //  await CheckFullRangeBytesAsync(message, filePath);
             }
             file.Report.TwinReport.Status = StatusType.InProgress;
@@ -84,7 +85,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         long endPosition = blobChunk.Offset + blobChunk.Data.Length;
         long startPosition = endPosition - (long)blobChunk.RangeSize;
-        var isEmptyRangeBytes = await _FileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
+        var isEmptyRangeBytes = await _fileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
             await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, startPosition, endPosition);

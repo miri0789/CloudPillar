@@ -12,10 +12,9 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     private readonly IDeviceClientWrapper _deviceClient;
 
     private const int kB = 1024;
-    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, IEnvironmentsWrapper environmentsWrapper)
+    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _deviceClient = deviceClientWrapper;
     }
 
