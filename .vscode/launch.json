@@ -188,21 +188,7 @@
                 "AUTHORITY": "https://login.microsoftonline.com"
             },
             "stopAtEntry": false
-        },
-        {
-            "name": "Cloud Pillar Agent",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "buildCloudPillarAgent",
-            "program": "${workspaceFolder}/src/agent/CloudPillar.Agent/bin/Debug/net7.0/CloudPillar.Agent.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
-            "console": "internalConsole",
-            "env": {
-                "DeviceConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=m_try4;SharedAccessKey=3o/DWlR/LQ+E3zS4oRIxnnZr5NK51FIVeRv23cN3+H0="
-            },
-            "stopAtEntry": false
-        },
+        },        
         {
             "name": "Cloud Pillar Agent API",
             "type": "coreclr",
