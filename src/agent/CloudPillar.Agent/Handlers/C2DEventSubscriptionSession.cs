@@ -10,19 +10,19 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 {
     private readonly IMessageSubscriber _messageSubscriber;
     private readonly IDeviceClientWrapper _deviceClient;
-    private readonly IMessagesFactory _messagesFactory;
+    private readonly IMessageFactory _MessageFactory;
     private readonly ITwinHandler _twinHandler;
     public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
                                        IMessageSubscriber messageSubscriber,
-                                       IMessagesFactory messagesFactory,
+                                       IMessageFactory MessageFactory,
                                        ITwinHandler twinHandler)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(messageSubscriber);
-        ArgumentNullException.ThrowIfNull(messagesFactory);
+        ArgumentNullException.ThrowIfNull(MessageFactory);
         ArgumentNullException.ThrowIfNull(twinHandler);
 
-        _messagesFactory = messagesFactory;
+        _MessageFactory = MessageFactory;
         _deviceClient = deviceClientWrapper;
         _messageSubscriber = messageSubscriber;
         _twinHandler = twinHandler;
@@ -48,11 +48,15 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             try
             {
                 const string messageTypeProp = "MessageType";
-                MessageType.TryParse(receivedMessage.Properties[messageTypeProp], out MessageType messageType);
+                MessageType? messageType = null;
+                if (Enum.TryParse(receivedMessage.Properties[messageTypeProp], out MessageType parsedMessageType))
+                {
+                    messageType = parsedMessageType;
+                }
                 switch (messageType)
                 {
                     case MessageType.DownloadChunk:
-                        var message = _messagesFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
+                        var message = _MessageFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                         var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
                         await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;
