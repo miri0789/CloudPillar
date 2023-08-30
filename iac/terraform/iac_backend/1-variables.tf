@@ -8,6 +8,7 @@ variable "subscription_id" {
     type = string
     description = "The IaC Backend Subscription ID"
     sensitive = true
+
 }
 variable "client_id" {
     type = string
@@ -23,18 +24,14 @@ variable "client_secret" {
 variable "env" {
     type = string
     description = "The Azure Environment (prd, dev, tst, stg)"
-    default = "dev"
 }
 variable "location" {
     type = string
     description = "The IaC Backend Location"
-    default = "West Europe"
 }
-
 variable "region" {
     type = string
     description = "The IaC Backend Location"
-    default = "westeurope"
 }
 
 variable "tf_backend_rg" {
@@ -56,7 +53,6 @@ variable "tf_backend_kv" {
 }
 
 
-
 #* New Resources
 
 #* IaC Backend Resources
@@ -64,7 +60,6 @@ variable "tf_backend_kv" {
 variable "devops_url" {
     type        = string
     description = "The name of the subnet in which to create the resources"
-    default = "https://dev.azure.com/BiosenseWebsterIs"
 }
 variable "agent_pool" {
     type        = string
@@ -78,8 +73,7 @@ variable "personal_access_token_secret" {
     description = "The name of the subnet in which to create the resources"
     sensitive = true
     /* default = "Cloud-Pillar-Agent-Token" */
-    default = "iot-dicom-agent-devops-token"
-
+    /* default = "iot-dicom-agent-devops-token" */
 }
 
 variable "personal_access_token_value" {
@@ -88,10 +82,8 @@ variable "personal_access_token_value" {
     sensitive = true
 }
 
-
-
 variable "ip-pfx" {
     type        = string
     description = "The name of the subnet in which to create the resources"
-    default = 22
+    /* default = 22 */
 }

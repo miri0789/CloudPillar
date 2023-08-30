@@ -11,3 +11,19 @@ For each environment:
     terraform workspace new <env>
     terraform plan -var-file "<env>.tfvars" -out tfplan
     terraform apply tfplan
+
+
+
+
+
+
+
+
+
+
+
+
+
+cp-dev-rg
+cp-dev-vnet
+cpgreyacr

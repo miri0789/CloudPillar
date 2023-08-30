@@ -6,18 +6,18 @@ data "azuread_client_config" "current" {}
 
 #* Terraform Import Resources
 data "azurerm_resource_group" "aks_backend" {
-    name = "iot-${var.env}-rg"
+    name = "cp-${var.env}-rg"
 }
 
 data "azurerm_subnet" "aks_backend" {
     name                 = "aks-subnet"
-    virtual_network_name = "iot-${var.env}-vnet"
-    resource_group_name  = "iot-${var.env}-rg"
+    virtual_network_name = "cp-${var.env}-vnet"
+    resource_group_name  = "cp-${var.env}-rg"
 }
 
 data "azurerm_virtual_network" "aks_backend" {
-    name                 = "iot-${var.env}-vnet"
-    resource_group_name  = "iot-${var.env}-rg"
+    name                 = "cp-${var.env}-vnet"
+    resource_group_name  = "cp-${var.env}-rg"
 }
 
 
