@@ -8,6 +8,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.ApplicationInsights.Log4NetAppender;
 using Shared.Logger.Wrappers;
+using Microsoft.Extensions.Configuration;
 
 namespace Shared.Logger;
 
@@ -26,7 +27,7 @@ public class LoggerHandler : ILoggerHandler
     private readonly IHttpContextAccessor? m_httpContextAccessor;
 
     private Level? m_appInsightsLogLevel;
-    
+
     private SeverityLevel m_appInsightsSeverity;
 
     private Level? m_appendersLogLevel;
@@ -43,30 +44,34 @@ public class LoggerHandler : ILoggerHandler
             { Level.Critical, SeverityLevel.Critical }
         };
 
-    public LoggerHandler(ILoggerHandlerFactory loggerFactory, string filename,
-                          string? appInsightsKey = null, string? log4netConfigFile = null,
-                          string applicationName = "", string? connectionString = null) : this(loggerFactory,
-                              null, loggerFactory.CreateLogger(filename), appInsightsKey, log4netConfigFile,
-                              applicationName, connectionString, false)
-    { }
+    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IConfiguration configuration, string filename
+                          , string? log4netConfigFile = null,
+                          string applicationName = "") : this(loggerFactory,configuration,
+                              null, loggerFactory.CreateLogger(filename), log4netConfigFile,
+                              applicationName, false)
+    { 
+        Console.WriteLine("dsfdsdfsdfsd");
+    }
 
-    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IHttpContextAccessor? httpContextAccessor, ILog logger, string? appInsightsKey = null, string? log4netConfigFile = null, string applicationName = "", string? connectionString = null, bool hasHttpContext = true)
+    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IConfiguration configuration, IHttpContextAccessor? httpContextAccessor, ILog logger, string? log4netConfigFile = null, string applicationName = "", bool hasHttpContext = true)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        m_logger = logger;
+        //ArgumentNullException.ThrowIfNull(logger);
+        m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(loggerFactory);
+        m_repository = loggerFactory.CreateLogRepository(log4netConfigFile);
+        ArgumentNullException.ThrowIfNull(configuration);
 
         m_hasHttpContext = hasHttpContext;
         m_httpContextAccessor = httpContextAccessor;
 
-        ArgumentNullException.ThrowIfNull(loggerFactory);
-        m_repository = loggerFactory.CreateLogRepository(log4netConfigFile);
-
-        m_appInsightsAppender = m_repository.GetAppenders().OfType<ApplicationInsightsAppender>().FirstOrDefault() as ApplicationInsightsAppender;
-
         m_applicationName = applicationName;
-     
-        if (m_appInsightsAppender != null)
+
+
+        m_appInsightsAppender = m_repository.GetAppenders().OfType<ApplicationInsightsAppender>().FirstOrDefault();
+
+        if (m_appInsightsAppender != null && Log4netExtentions.IsAppenderInRoot<ApplicationInsightsAppender>(m_repository))
         {
+            var appInsightsKey = configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
             if (!string.IsNullOrWhiteSpace(appInsightsKey))
             {
                 m_appInsightsAppender.InstrumentationKey = appInsightsKey;
@@ -76,9 +81,7 @@ public class LoggerHandler : ILoggerHandler
             {
                 Info("Cannot activate Application Insights: Instrumentation Key is null");
             }
-        }
-        else
-        {
+            var connectionString = configuration[LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG];
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
                 m_telemetryClient = loggerFactory.CreateTelemetryClient(connectionString);
@@ -87,11 +90,12 @@ public class LoggerHandler : ILoggerHandler
             {
                 Info("Cannot activate Telemetry: Connection String is null");
             }
+            RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
         }
 
-        RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
+
         RefreshAppendersLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
-        
+
         Log4netConfigurationValidator.ValidateConfiguration(this);
     }
 
@@ -168,7 +172,7 @@ public class LoggerHandler : ILoggerHandler
             appender.Flush();
         }
 
-       m_telemetryClient?.Flush();
+        m_telemetryClient?.Flush();
     }
 
     private void TraceLogAppInsights(string message, SeverityLevel severityLevel)
@@ -259,7 +263,7 @@ public class LoggerHandler : ILoggerHandler
     public void RefreshAppInsightsLogLevel(string logLevel)
     {
         Level? level = GetLevel(logLevel);
-        if(level == null)
+        if (level == null)
         {
             Warn($"Trying to set invalid log level: {logLevel}");
             return;
@@ -275,13 +279,13 @@ public class LoggerHandler : ILoggerHandler
             m_appInsightsAppender.Threshold = level;
             m_appInsightsAppender.ActivateOptions();
         }
-                
+
         ((Hierarchy)m_repository).RaiseConfigurationChanged(EventArgs.Empty);
 
-        Info($"App Insights Log Level changed to {logLevel}"); 
+        Info($"App Insights Log Level changed to {logLevel}");
 
         m_appInsightsLogLevel = level;
-        
+
         // For manually controlling telemetry trace log level severity
         m_appInsightsSeverity = GetSeverityLevel(m_appInsightsLogLevel);
     }
@@ -289,7 +293,7 @@ public class LoggerHandler : ILoggerHandler
     public void RefreshAppendersLogLevel(string logLevel)
     {
         Level? level = GetLevel(logLevel);
-        if(level == null)
+        if (level == null)
         {
             Warn($"Trying to set invalid log level: {logLevel}");
             return;
@@ -307,8 +311,8 @@ public class LoggerHandler : ILoggerHandler
             appender.Threshold = level;
             ((Hierarchy)m_repository).RaiseConfigurationChanged(EventArgs.Empty);
             Info($"Appender {appender.Name} Log Level changed to {logLevel}");
-        } 
-                
+        }
+
         m_appendersLogLevel = level;
     }
 

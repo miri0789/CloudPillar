@@ -12,9 +12,9 @@ namespace Shared.Logger
 
         public LogLevelRefreshService(IConfiguration configuration, IConfigurationRefresher refresher, ILoggerHandler logger)
         {
-            _configuration = configuration;
-            _refresher = refresher;
-            _logger = logger;
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _refresher = refresher?? throw new ArgumentNullException(nameof(refresher));
+            _logger = logger?? throw new ArgumentNullException(nameof(logger));
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
