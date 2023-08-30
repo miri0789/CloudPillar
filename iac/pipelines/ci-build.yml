@@ -113,6 +113,27 @@ stages:
 
       - ${{each item in parameters.backendImage}}:
         - script: |    
+            ## Not Main Branch
+            # git branch
+            # SourceBranch=$(Build.SourceBranchName)
+            # echo "Source Branch Name: $(Build.SourceBranchName)"
+
+            # git fetch origin
+            # git checkout $SourceBranch
+            # git diff-tree --no-commit-id --name-only -r HEAD
+            # Get the list of changed files
+
+            ## For Main Branch
+            files=$(git diff --name-only HEAD~ HEAD)
+
+            # Print the list of changed files
+            echo $files
+
+            # Convert the list of changed files to an array
+            filesArray=($files)
+
+
+
             imagesJson='$(images)'
             for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
               _jq() {
@@ -120,51 +141,55 @@ stages:
               }
               imgName=$(_jq '.name')
               if [ "$imgName" == "${{ item }}" ]; then
-                imageName=$(_jq '.imageName')
-                imagePath=$(_jq '.imagePath')
-                dockerFilePath=$(_jq '.dockerFilePath')
-                imageVersion=$(_jq '.imageVersion')
-                projectName=$(_jq '.projectName')
-                ACR_NAME=$(ACR_NAME)     
-                echo $(imageVersion)
-                major=$(echo $imageVersion | cut -d '.' -f 1)
-                minor=$(echo $imageVersion | cut -d '.' -f 2)
-                
-                newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)
-                
-                echo "Processing image: $imgName"
-                echo "Image Version: $newVersion"
-                echo ""
-                echo -e "================================================\n\tBase Info Version\n================================================"
-                find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'            
+                for file in "${filesArray[@]}"; do
+                  if [[ $file == *"$imgName"* ]]; then
+                    imageName=$(_jq '.imageName')
+                    imagePath=$(_jq '.imagePath')
+                    dockerFilePath=$(_jq '.dockerFilePath')
+                    imageVersion=$(_jq '.imageVersion')
+                    projectName=$(_jq '.projectName')
+                    ACR_NAME=$(ACR_NAME)     
+                    echo $(imageVersion)
+                    major=$(echo $imageVersion | cut -d '.' -f 1)
+                    minor=$(echo $imageVersion | cut -d '.' -f 2)
+                    
+                    newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)
+                    
+                    echo "Processing image: $imgName"
+                    echo "Image Version: $newVersion"
+                    echo ""
+                    echo -e "================================================\n\tBase Info Version\n================================================"
+                    find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'            
 
-                echo -e "\n\n"
-                echo -e "================================================\n\tUpdated Tag\n================================================"
-                TAG="$newVersion"
-                echo "TAG: $TAG"
-                if [ "$imageName" != *edge_conquest* ]; then      
-                  find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
-                  find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
-                fi    
+                    echo -e "\n\n"
+                    echo -e "================================================\n\tUpdated Tag\n================================================"
+                    TAG="$newVersion"
+                    echo "TAG: $TAG"
+                    if [ "$imageName" != *edge_conquest* ]; then      
+                      find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
+                      find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+                    fi    
 
-                echo -e "\n\n"
-                echo -e "================================================\n\tDocker Build - \n================================================"
-                
-                docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath \
-                --build-arg DLL=$projectName --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
-                if [ $? -ne 0 ]; then
-                  echo "Docker Build Failed"
-                  exit 1
-                fi
-                docker images | grep $imageName       
-                
-                echo -e "\n\n"
-                echo -e "================================================\n\tDocker Scan - \n================================================"            
-                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $ACR_NAME.azurecr.io/$imageName:$newVersion
+                    echo -e "\n\n"
+                    echo -e "================================================\n\tDocker Build - \n================================================"
+                    
+                    docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath \
+                    --build-arg DLL=$projectName --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+                    if [ $? -ne 0 ]; then
+                      echo "Docker Build Failed"
+                      exit 1
+                    fi
+                    docker images | grep $imageName       
+                    
+                    echo -e "\n\n"
+                    echo -e "================================================\n\tDocker Scan - \n================================================"            
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $ACR_NAME.azurecr.io/$imageName:$newVersion
 
-                echo -e "\n\n"
-                echo -e "================================================\n\tDocker Push - \n================================================"            
-                docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
+                    echo -e "\n\n"
+                    echo -e "================================================\n\tDocker Push - \n================================================"            
+                    docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
+                  fi
+                done
               fi
             done
           displayName: Build Tag & Scan & Push Backend Images ${{ item }}
