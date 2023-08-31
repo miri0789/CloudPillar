@@ -159,11 +159,11 @@
         },        
         {
 
-            "label": "buildCloudPillarAgentAPI",
+            "label": "buildCloudPillarAgent",
             "command": "dotnet",
             "type": "process",
             "args": [ "build",
-            "${workspaceFolder}/src/agent/CloudPillar.Agent.API/CloudPillar.Agent.API.csproj",
+            "${workspaceFolder}/src/agent/CloudPillar.Agent/CloudPillar.Agent.csproj",
             "/property:GenerateFullPaths=true",
             "/consoleloggerparameters:NoSummary"
             ],

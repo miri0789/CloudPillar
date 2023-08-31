@@ -1,5 +1,5 @@
-using CloudPillar.Agent.API.Handlers;
-using CloudPillar.Agent.API.Wrappers;
+using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Shared;
 using Moq;
 using Newtonsoft.Json;

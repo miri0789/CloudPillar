@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CloudPillar.Agent.API\CloudPillar.Agent.API.csproj" />
+    <ProjectReference Include="..\CloudPillar.Agent\CloudPillar.Agent.csproj" />
   </ItemGroup>
 
 </Project>
