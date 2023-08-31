@@ -235,7 +235,7 @@ public class TwinHandler : ITwinHandler
         catch (Exception ex)
         {
             Console.WriteLine($"GetTwinJsonAsync failed: {ex.Message}");
-            return null;
+            throw;
         }
     }
 

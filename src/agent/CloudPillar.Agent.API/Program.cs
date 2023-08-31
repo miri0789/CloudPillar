@@ -7,22 +7,19 @@ using FluentValidation;
 using Shared.Entities.Factories;
 using Shared.Logger;
 
-string myAllowSpecificOrigins = "AllowLocalhost";
+const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 
 builder.Services.AddCors(options =>
         {
-            options.AddPolicy(myAllowSpecificOrigins, b =>
+            options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
                 b.WithOrigins("http://localhost")
                        .AllowAnyHeader()
                        .AllowAnyMethod();
             });
         });
-// builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
-// builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
-// builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
-// builder.Services.AddScoped<IMessagesFactory, MessagesFactory>();
+
 builder.Services.AddScoped<ITwinHandler, TwinHandler>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
@@ -51,8 +48,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
-app.UseCors(myAllowSpecificOrigins);
-app.UseAuthorization();
+app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.MapControllers();
 
 app.Run();

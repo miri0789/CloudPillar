@@ -16,9 +16,7 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                // "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=cartodemo2;SharedAccessKey=u+tS7S2tTZoOiyDC6TGdHz+dOUJVSxW2xbH9eFAtiVo=",
-                //"DEVICE_CONNECTION_STRING": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=m_try4;SharedAccessKey=3o/DWlR/LQ+E3zS4oRIxnnZr5NK51FIVeRv23cN3+H0="
-                "DEVICE_CONNECTION_STRING": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=m_try4;SharedAccessKey=3o/DWlR/LQ+E3zS4oRIxnnZr5NK51FIVeRv23cN3+H0="
+                "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=carto3ag1;SharedAccessKey=JP25Buy7v47bTIxm4umXnhGsku4keCqrz7qB+vEcmbo="
             },
             "stopAtEntry": false
         },
