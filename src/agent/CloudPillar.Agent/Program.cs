@@ -20,6 +20,11 @@ builder.Services.AddCors(options =>
             });
         });
 
+builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
+builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
+builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
+builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
+builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<ITwinHandler, TwinHandler>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();

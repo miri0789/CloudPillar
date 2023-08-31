@@ -23,7 +23,7 @@ public class TwinHandlerTestFixture
     }
 
     [Test]
-    public async Task GetTwinJsonAsync_ValidJson_isValid()
+    public async Task GetTwinJsonAsync_ValidTwin_ReturnJson()
     {
         var desierd = @"{
             '$metadata': {
