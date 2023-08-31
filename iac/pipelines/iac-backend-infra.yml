@@ -20,7 +20,7 @@ variables:
 - group: iac-backend-vg
 - group: aks-backend-vg
 - group: backend-secrets-vg
-- group: tf-backend-rg
+- group: cp-tf-backend-vg
 # - group: ${{ parameters.env }}-vg
 
 stages:
