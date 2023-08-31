@@ -18,6 +18,7 @@ parameters:
     displayName: Select Environment to deploy
     type: string
     default: Plan
+    values:
     - Plan
     - Apply
     - Destroy
