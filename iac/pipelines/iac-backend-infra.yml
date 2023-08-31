@@ -15,6 +15,16 @@ parameters:
     - stg
     - prd
 
+parameters:
+  - name: Action
+    displayName: Select Environment to deploy
+    type: string
+    default: Plan
+    - Plan
+    - Apply
+    - Destroy
+
+
 variables:
 - group: arm-vg
 - group: iac-backend-vg
@@ -90,7 +100,7 @@ stages:
     pool:
       vmImage: 'ubuntu-20.04'    
     steps:
-    - checkout: self
+    - checkout: self  
       persistCredentials: true
       clean: true
 
@@ -144,9 +154,11 @@ stages:
           echo "Terraform Initilized"
         workingDirectory: 'iac/terraform/iac_backend/'
 
-
+  
+  
 - stage: Apply_Terraform
   displayName: Apply Terraform Backend
+  condition: and(succeeded(), eq('${{ parameters.Action }}', 'Apply'))
   # dependsOn: Validate_Files
   jobs:
 
@@ -208,6 +220,7 @@ stages:
 
 - stage: Destroy_Terraform
   displayName: Destroy Terraform Backend
+  condition: and(succeeded(), eq('${{ parameters.Action }}', 'Destroy'))
   # dependsOn: Validate_Files
   jobs:
 
