@@ -23,12 +23,21 @@ parameters:
     - Apply
     - Destroy
 
+  - name: Action
+    displayName: Select Environment to deploy
+    type: string
+    default: Plan
+    - Plan
+    - Apply
+    - Destroy
+
+
 variables:
 - group: arm-vg
 - group: iac-backend-vg
 - group: aks-backend-vg
 - group: backend-secrets-vg
-- group: tf-backend-rg
+- group: cp-tf-backend-vg
 # - group: ${{ parameters.env }}-vg
 
 stages:
@@ -98,7 +107,7 @@ stages:
     pool:
       vmImage: 'ubuntu-20.04'    
     steps:
-    - checkout: self
+    - checkout: self  
       persistCredentials: true
       clean: true
 
@@ -117,10 +126,10 @@ stages:
           sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../env/${{ parameters.env }}.tfvars  
           sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../env/${{parameters.env}}.tfvars
-          # sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../env/${{parameters.env}}.tfvars
-          # sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../env/${{parameters.env}}.tfvars          
-          # sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../env/${{parameters.env}}.tfvars
-          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../env/${{parameters.env}}.tfvars          
+          sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(Cloud-Pillar-Agent-Token)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../env/${{parameters.env}}.tfvars          
           cat ../env/${{parameters.env}}.tfvars
         workingDirectory: 'iac/terraform/iac_backend/'
@@ -152,9 +161,11 @@ stages:
           echo "Terraform Initilized"
         workingDirectory: 'iac/terraform/iac_backend/'
 
-
+  
+  
 - stage: Apply_Terraform
   displayName: Apply Terraform Backend
+  condition: and(succeeded(), eq('${{ parameters.Action }}', 'Apply'))
   # dependsOn: Validate_Files
   jobs:
 
@@ -180,10 +191,10 @@ stages:
           sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../env/${{ parameters.env }}.tfvars  
           sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../env/${{parameters.env}}.tfvars
-          # sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../env/${{parameters.env}}.tfvars
-          # sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../env/${{parameters.env}}.tfvars          
-          # sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../env/${{parameters.env}}.tfvars
-          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../env/${{parameters.env}}.tfvars          
+          sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(Cloud-Pillar-Agent-Token)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../env/${{parameters.env}}.tfvars          
           cat ../env/${{parameters.env}}.tfvars
         workingDirectory: 'iac/terraform/iac_backend/'        
@@ -216,6 +227,7 @@ stages:
 
 - stage: Destroy_Terraform
   displayName: Destroy Terraform Backend
+  condition: and(succeeded(), eq('${{ parameters.Action }}', 'Destroy'))
   # dependsOn: Validate_Files
   jobs:
 
@@ -244,10 +256,10 @@ stages:
           sed -i "s/^env=.*/env=\"${{ parameters.env }}\"/" ../env/${{ parameters.env }}.tfvars  
           sed -i "s/^tf_backend_rg=.*/tf_backend_rg=\"$(TF_BACKEND_RG)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_sa=.*/tf_backend_sa=\"$(TF_BACKEND_SA)\"/" ../env/${{parameters.env}}.tfvars
-          # sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../env/${{parameters.env}}.tfvars
-          # sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../env/${{parameters.env}}.tfvars          
-          # sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../env/${{parameters.env}}.tfvars
-          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(iot-dicom-agent-devops-token)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^devops_url=.*/devops_url=\"$(DEVOPS_URL)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^agent_pool=.*/agent_pool=\"$(AGENT_POOL)\"/" ../env/${{parameters.env}}.tfvars          
+          sed -i "s/^personal_access_token_secret=.*/personal_access_token_secret=\"$(personal_access_token_secret)\"/" ../env/${{parameters.env}}.tfvars
+          sed -i "s/^personal_access_token_value=.*/personal_access_token_value=\"$(Cloud-Pillar-Agent-Token)\"/" ../env/${{parameters.env}}.tfvars
           sed -i "s/^tf_backend_kv=.*/tf_backend_kv=\"$(TF_BACKEND_KV)\"/" ../env/${{parameters.env}}.tfvars          
           cat ../env/${{parameters.env}}.tfvars
         workingDirectory: 'iac/terraform/iac_backend/'
