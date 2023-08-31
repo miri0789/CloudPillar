@@ -15,7 +15,6 @@ parameters:
     - stg
     - prd
 
-parameters:
   - name: Action
     displayName: Select Environment to deploy
     type: string
