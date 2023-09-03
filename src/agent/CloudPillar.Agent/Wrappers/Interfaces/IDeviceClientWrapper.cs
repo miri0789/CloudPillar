@@ -8,8 +8,6 @@ public interface IDeviceClientWrapper
 
     string GetDeviceId();
 
-    string GetDeviceIdFromConnectionString(string connectionString);
-
     TransportType GetTransportType();
 
     Task SendEventAsync(Message message);
@@ -26,5 +24,6 @@ public interface IDeviceClientWrapper
 
     Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default);
     Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default);
+    Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default);
 
 }

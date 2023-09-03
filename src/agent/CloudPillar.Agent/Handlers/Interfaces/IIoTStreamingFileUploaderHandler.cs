@@ -1,6 +1,6 @@
 namespace CloudPillar.Agent.Handlers;
 
-public interface IIoTStreamingFileUploaderHandler : IUploadFromStreamHandler
+public interface IIoTStreamingFileUploaderHandler 
 {
-    Task UploadFromStreamAsync(Uri storageUri, Stream readStream, string correlationId, long startFromPos, Func<string, Exception?, Task> onUploadComplete, CancellationToken cancellationToken);
+    Task UploadFromStreamAsync(Uri storageUri, Stream readStream, string correlationId, long startFromPos, CancellationToken cancellationToken);
 }

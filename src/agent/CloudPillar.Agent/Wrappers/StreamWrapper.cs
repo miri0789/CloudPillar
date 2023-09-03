@@ -1,10 +1,10 @@
-public class ControllableStream : Stream
+public class StreamWrapper : Stream
 {
     private readonly Stream _innerStream;
     private readonly CancellationToken _cancellationToken;
     private readonly IProgress<long>? _progress;
 
-    public ControllableStream(Stream innerStream, CancellationToken cancellationToken, IProgress<long>? progress = null)
+    public StreamWrapper(Stream innerStream, CancellationToken cancellationToken, IProgress<long>? progress = null)
     {
         _innerStream = innerStream;
         _cancellationToken = cancellationToken;

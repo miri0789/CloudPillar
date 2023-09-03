@@ -53,19 +53,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         throw new ArgumentException("DeviceId not found in the connection string");
     }
 
-    public string GetDeviceIdFromConnectionString(string connectionString)
-    {
-        var items = connectionString.Split(';');
-        foreach (var item in items)
-        {
-            if (item.StartsWith("DeviceId"))
-            {
-                return item.Split('=')[1];
-            }
-        }
-
-        throw new ArgumentException("DeviceId not found in the connection string.");
-    }
     public TransportType GetTransportType()
     {
         var transportTypeString = _environmentsWrapper.transportType;
@@ -117,7 +104,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         updatedReportedProperties[char.ToLower(key[0]) + key.Substring(1)] = value;
         await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
     }
-    
+
     public async Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties)
     {
         await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
@@ -131,6 +118,15 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
     public async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default)
     {
+        await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
+    }
+    public async Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default)
+    {
+        FileUploadCompletionNotification notification = new FileUploadCompletionNotification
+        {
+            CorrelationId = correlationId,
+            IsSuccess = isSuccess
+        };
         await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
     }
 }

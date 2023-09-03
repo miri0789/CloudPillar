@@ -1,6 +1,6 @@
 namespace CloudPillar.Agent.Handlers;
 
-public interface IBlobStorageFileUploaderHandler : IUploadFromStreamHandler
+public interface IBlobStorageFileUploaderHandler
 {
-    Task UploadFromStreamAsync(Uri storageUri, Stream readStream, string correlationId, long startFromPos, Func<string, Exception?, Task> onUploadComplete, CancellationToken cancellationToken);
+    Task UploadFromStreamAsync(Uri storageUri, Stream readStream, string correlationId, CancellationToken cancellationToken);
 }

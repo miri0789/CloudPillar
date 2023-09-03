@@ -11,7 +11,7 @@ public class IoTStreamingFileUploaderHandler : IIoTStreamingFileUploaderHandler
 
     }
 
-    public async Task UploadFromStreamAsync(Uri storageUri, Stream readStream, string correlationId, long startFromPos, Func<string, Exception?, Task> onUploadComplete, CancellationToken cancellationToken)
+    public async Task UploadFromStreamAsync(Uri storageUri, Stream readStream, string correlationId, long startFromPos, CancellationToken cancellationToken)
     {
 
     }
