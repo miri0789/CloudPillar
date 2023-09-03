@@ -4,6 +4,7 @@ using CloudPillar.Agent.API.Wrappers;
 using CloudPillar.Agent.API.Entities;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.API.Handlers;
 
@@ -12,9 +13,11 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
+    private readonly ILoggerHandler _logger;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
-                               ID2CMessengerHandler d2CMessengerHandler)
+                               ID2CMessengerHandler d2CMessengerHandler,
+                               ILoggerHandler loggerHandler)
     {
         ArgumentNullException.ThrowIfNull(fileStreamerWrapper);
         ArgumentNullException.ThrowIfNull(d2CMessengerHandler);
@@ -22,6 +25,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _fileStreamerWrapper = fileStreamerWrapper;
         _d2CMessengerHandler = d2CMessengerHandler;
         _filesDownloads = new ConcurrentBag<FileDownload>();
+        _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
     public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
@@ -77,7 +81,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.TotalBytesDownloaded += bytesLength;
         double progressPercent = Math.Round(file.TotalBytesDownloaded / (double)file.TotalBytes * 100, 2);
         double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
-        Console.WriteLine($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
+       _logger.Debug($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
         return (float)progressPercent;
     }
 

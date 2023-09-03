@@ -7,6 +7,7 @@ using CloudPillar.Agent.API.Entities;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.API.Handlers;
 public class TwinHandler : ITwinHandler
@@ -14,8 +15,11 @@ public class TwinHandler : ITwinHandler
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IEnumerable<ShellType> _supportedShells;
+
+    private readonly ILoggerHandler _logger;
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
-                       IFileDownloadHandler fileDownloadHandler)
+                       IFileDownloadHandler fileDownloadHandler,
+                       ILoggerHandler loggerHandler)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(fileDownloadHandler);
@@ -23,6 +27,7 @@ public class TwinHandler : ITwinHandler
         _deviceClient = deviceClientWrapper;
         _fileDownloadHandler = fileDownloadHandler;
         _supportedShells = GetSupportedShells();
+        _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
     public async Task HandleTwinActionsAsync()
@@ -42,7 +47,7 @@ public class TwinHandler : ITwinHandler
 
 
             var actions = await GetActionsToExecAsync(twinDesired, twinReported);
-            Console.WriteLine($"HandleTwinActions {actions.Count()} actions to exec");
+           _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
             if (actions.Count() > 0)
             {
                 await HandleTwinActionsAsync(actions);
@@ -50,7 +55,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"HandleTwinActions failed: {ex.Message}");
+           _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
 
     }
@@ -90,7 +95,7 @@ public class TwinHandler : ITwinHandler
                     default:
                         action.TwinReport.Status = StatusType.Failed;
                         action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
-                        Console.WriteLine($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
+                        _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
                 //TODO : queue - FIFO
@@ -100,7 +105,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"HandleTwinActions failed: {ex.Message}");
+           _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
     }
 
@@ -151,7 +156,7 @@ public class TwinHandler : ITwinHandler
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"GetActionsToExec failed , desired part: {property.Name} exception: {ex.Message}");
+                    _logger.Error($"GetActionsToExec failed , desired part: {property.Name} exception: {ex.Message}");
                     continue;
                 }
             }
@@ -163,7 +168,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"GetActionsToExec failed: {ex.Message}");
+            _logger.Error($"GetActionsToExec failed: {ex.Message}");
             return null;
         }
     }
@@ -174,11 +179,11 @@ public class TwinHandler : ITwinHandler
         {
             var deviceStateKey = nameof(TwinReported.DeviceState);
             await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState);
-            Console.WriteLine($"UpdateDeviceStateAsync success");
+            _logger.Info($"UpdateDeviceStateAsync success");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"UpdateDeviceStateAsync failed: {ex.Message}");
+            _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
         }
     }
 
@@ -190,11 +195,11 @@ public class TwinHandler : ITwinHandler
             await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells);
             var agentPlatformKey = nameof(TwinReported.AgentPlatform);
             await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, RuntimeInformation.OSDescription);
-            Console.WriteLine("InitReportedDeviceParams success");
+            _logger.Info("InitReportedDeviceParams success");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"InitReportedDeviceParams failed: {ex.Message}");
+           _logger.Error($"InitReportedDeviceParams failed: {ex.Message}");
         }
     }
 
@@ -216,7 +221,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"UpdateReportedAction failed: {ex.Message}");
+            _logger.Error($"UpdateReportedAction failed: {ex.Message}");
         }
 
     }
@@ -225,6 +230,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
+            _logger.Error($"GetTwinJsonAsync failed: ");
             var twin = await _deviceClient.GetTwinAsync();
             if (twin != null)
             {
@@ -234,7 +240,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"GetTwinJsonAsync failed: {ex.Message}");
+            _logger.Error($"GetTwinJsonAsync failed: {ex.Message}");
             return null;
         }
     }

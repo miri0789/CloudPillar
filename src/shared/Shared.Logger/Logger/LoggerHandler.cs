@@ -34,6 +34,8 @@ public class LoggerHandler : ILoggerHandler
 
     private ApplicationInsightsAppender? m_appInsightsAppender;
 
+    private bool useAppInsight = false;
+
     private Dictionary<Level, SeverityLevel> m_levelMap = new Dictionary<Level, SeverityLevel>
         {
             { Level.Trace, SeverityLevel.Verbose },
@@ -44,18 +46,9 @@ public class LoggerHandler : ILoggerHandler
             { Level.Critical, SeverityLevel.Critical }
         };
 
-    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IConfiguration configuration, string filename
-                          , string? log4netConfigFile = null,
-                          string applicationName = "") : this(loggerFactory,configuration,
-                              null, loggerFactory.CreateLogger(filename), log4netConfigFile,
-                              applicationName, false)
-    { 
-        Console.WriteLine("dsfdsdfsdfsd");
-    }
 
     public LoggerHandler(ILoggerHandlerFactory loggerFactory, IConfiguration configuration, IHttpContextAccessor? httpContextAccessor, ILog logger, string? log4netConfigFile = null, string applicationName = "", bool hasHttpContext = true)
     {
-        //ArgumentNullException.ThrowIfNull(logger);
         m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
         ArgumentNullException.ThrowIfNull(loggerFactory);
         m_repository = loggerFactory.CreateLogRepository(log4netConfigFile);
@@ -71,11 +64,13 @@ public class LoggerHandler : ILoggerHandler
 
         if (m_appInsightsAppender != null && Log4netExtentions.IsAppenderInRoot<ApplicationInsightsAppender>(m_repository))
         {
+
             var appInsightsKey = configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
             if (!string.IsNullOrWhiteSpace(appInsightsKey))
             {
                 m_appInsightsAppender.InstrumentationKey = appInsightsKey;
                 m_appInsightsAppender.ActivateOptions();
+                useAppInsight = true;
             }
             else
             {
@@ -85,6 +80,7 @@ public class LoggerHandler : ILoggerHandler
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
                 m_telemetryClient = loggerFactory.CreateTelemetryClient(connectionString);
+                useAppInsight = true;
             }
             else
             {
@@ -94,7 +90,7 @@ public class LoggerHandler : ILoggerHandler
         }
 
 
-        RefreshAppendersLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
+        RefreshAppendersLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD, true);
 
         Log4netConfigurationValidator.ValidateConfiguration(this);
     }
@@ -104,7 +100,7 @@ public class LoggerHandler : ILoggerHandler
         var formattedMessage = FormatMsg(message, args);
 
         m_logger?.Error(formattedMessage);
-        TraceLogAppInsights(formattedMessage, SeverityLevel.Error);
+        if (useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Error);
     }
 
     public void Error(string message, Exception e, params object[] args)
@@ -112,14 +108,14 @@ public class LoggerHandler : ILoggerHandler
         var error = string.Join(Environment.NewLine, FormatMsg(message, args), e);
 
         Error(error);
-        ExceptionLogAppInsights(e);
+        if (useAppInsight) ExceptionLogAppInsights(e);
     }
 
     public void Warn(string message, params object[] args)
     {
         var formattedMessage = FormatMsg(message, args);
         m_logger?.Warn(formattedMessage);
-        TraceLogAppInsights(formattedMessage, SeverityLevel.Warning);
+        if (useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Warning);
     }
 
     public void Warn(string message, Exception e, params object[] args)
@@ -127,21 +123,21 @@ public class LoggerHandler : ILoggerHandler
         var warn = string.Join(Environment.NewLine, FormatMsg(message, args), e);
 
         Warn(warn);
-        ExceptionLogAppInsights(e);
+        if (useAppInsight) ExceptionLogAppInsights(e);
     }
 
     public void Info(string message, params object[] args)
     {
         var formattedMessage = FormatMsg(message, args);
         m_logger?.Info(formattedMessage);
-        TraceLogAppInsights(formattedMessage, SeverityLevel.Information);
+        if (useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Information);
     }
 
     public void Debug(string message, params object[] args)
     {
         var formattedMessage = FormatMsg(message, args);
         m_logger?.Debug(formattedMessage);
-        TraceLogAppInsights(formattedMessage, SeverityLevel.Verbose);
+       if (useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Verbose);
     }
 
     private string FormatMsg(string message, params object[] args)
@@ -290,7 +286,7 @@ public class LoggerHandler : ILoggerHandler
         m_appInsightsSeverity = GetSeverityLevel(m_appInsightsLogLevel);
     }
 
-    public void RefreshAppendersLogLevel(string logLevel)
+    public void RefreshAppendersLogLevel(string logLevel, bool init)
     {
         Level? level = GetLevel(logLevel);
         if (level == null)
@@ -308,9 +304,12 @@ public class LoggerHandler : ILoggerHandler
 
         foreach (var appender in appenders)
         {
-            appender.Threshold = level;
-            ((Hierarchy)m_repository).RaiseConfigurationChanged(EventArgs.Empty);
-            Info($"Appender {appender.Name} Log Level changed to {logLevel}");
+            if (init && appender.Threshold == null)
+            {
+                appender.Threshold = level;
+                ((Hierarchy)m_repository).RaiseConfigurationChanged(EventArgs.Empty);
+                Info($"Appender {appender.Name} Log Level changed to {logLevel}");
+            }
         }
 
         m_appendersLogLevel = level;

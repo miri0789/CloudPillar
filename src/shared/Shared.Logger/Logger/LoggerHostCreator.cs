@@ -23,8 +23,6 @@ namespace Shared.Logger
             builder.Services.AddHttpContextAccessor();
             IConfigurationRefresher? refresher = null;
             string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
-            string? appInsightsInstrumentationKey = null;
-            string? appInsightsConnectionString = null;
             var lo4NetPath = "log4net.config";
             if (!Path.Exists(lo4NetPath))
             {
@@ -55,12 +53,6 @@ namespace Shared.Logger
                             refresher = options.GetRefresher();
                             refresher.TryRefreshAsync();
                         }));
-                appInsightsInstrumentationKey = builder.Configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
-                appInsightsConnectionString = builder.Configuration[LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG];
-
-
-
-
             }
             builder.Services.AddSingleton<ILoggerHandler>(sp =>
                {
@@ -71,7 +63,7 @@ namespace Shared.Logger
                        applicationName, true);
                    return logger;
                });
-               
+
             if (isAppenderDefined)
             {
                 builder.Services.AddSingleton(provider =>

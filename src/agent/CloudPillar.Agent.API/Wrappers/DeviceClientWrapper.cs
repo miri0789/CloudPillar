@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.API.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
@@ -7,15 +8,18 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     private readonly DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
+     private readonly ILoggerHandler _logger;
+
     /// <summary>
     /// Initializes a new instance of the DeviceClient class
     /// </summary>
     /// <param name="environmentsWrapper"></param>
     /// <exception cref="NullReferenceException"></exception>
-    public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper)
+    public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
         ArgumentNullException.ThrowIfNull(environmentsWrapper);
         _environmentsWrapper = environmentsWrapper;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         var _transportType = GetTransportType();
         try
         {
@@ -27,7 +31,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"CreateFromConnectionString failed {ex.Message}");
+            _logger.Error($"CreateFromConnectionString failed {ex.Message}");
             throw;
         }
 
