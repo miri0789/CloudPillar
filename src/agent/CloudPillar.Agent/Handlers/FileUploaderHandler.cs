@@ -40,8 +40,17 @@ public class FileUploaderHandler : IFileUploaderHandler
         if (uploadAction.FileName != null && uploadAction.Enabled)
         {
             actionToReport.TwinReport = await UploadFilesAsync(uploadAction.FileName, interval, uploadAction.Method, cancellationToken);
+            return actionToReport;
         }
-        return actionToReport;
+
+        if (String.IsNullOrEmpty(uploadAction.FileName))
+        {
+            actionToReport.TwinReport.Status = StatusType.Failed;
+            actionToReport.TwinReport.ResultText = "No file to apload";
+            return actionToReport;
+        }
+
+        return null;
     }
     public async Task<TwinActionReported> UploadFilesAsync(string filename, TimeSpan interval, FileUploadMethod uploadMethod, CancellationToken cancellationToken)
     {

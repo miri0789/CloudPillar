@@ -88,7 +88,10 @@ public class TwinHandler : ITwinHandler
                         break;
                     case TwinActionType.SingularUpload:
                         var twinReport = await _fileUploaderHandler.InitFileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
-                        await UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
+                        if (twinReport != null)
+                        {
+                            await UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
+                        }
                         break;
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
