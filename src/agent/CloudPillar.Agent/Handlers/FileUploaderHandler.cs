@@ -96,30 +96,37 @@ public class FileUploaderHandler : IFileUploaderHandler
                 };
                 readStream = fileStream;
             }
-            var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
-            {
-                BlobName = blobname
-            });
 
-            var storageUri = sasUriResponse.GetBlobUri();
+            FileUploadCompletionNotification notification = new FileUploadCompletionNotification()
+            {
+                IsSuccess = true
+            };
             try
             {
                 switch (uploadMethod)
                 {
                     case FileUploadMethod.Blob:
+                        var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
+                        {
+                            BlobName = blobname
+                        });
+                        var storageUri = sasUriResponse.GetBlobUri();
+                        notification.CorrelationId = sasUriResponse.CorrelationId;
+
                         await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
                         break;
                     case FileUploadMethod.Stream:
-                        await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, 0, cancellationToken);
+                        await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, 0, cancellationToken);
                         break;
                     default:
                         throw new ArgumentException("Unsupported upload method", "uploadMethod");
                 }
-                await _deviceClientWrapper.CompleteFileUploadAsync(sasUriResponse.CorrelationId, true);
+                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
             catch (Exception ex)
             {
-                await _deviceClientWrapper.CompleteFileUploadAsync(sasUriResponse.CorrelationId, false);
+                notification.IsSuccess = false;
+                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                 throw ex;
             }
         }
@@ -143,4 +150,5 @@ public class FileUploaderHandler : IFileUploaderHandler
             return memoryStream; // Will read from memory where the zip file was formed
         }
     }
+
 }
