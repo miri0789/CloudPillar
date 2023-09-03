@@ -19,11 +19,8 @@ public class FileDownloadHandler : IFileDownloadHandler
                                ID2CMessengerHandler d2CMessengerHandler,
                                ILoggerHandler loggerHandler)
     {
-        ArgumentNullException.ThrowIfNull(fileStreamerWrapper);
-        ArgumentNullException.ThrowIfNull(d2CMessengerHandler);
-
-        _fileStreamerWrapper = fileStreamerWrapper;
-        _d2CMessengerHandler = d2CMessengerHandler;
+        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
+        _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _filesDownloads = new ConcurrentBag<FileDownload>();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -81,7 +78,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.TotalBytesDownloaded += bytesLength;
         double progressPercent = Math.Round(file.TotalBytesDownloaded / (double)file.TotalBytes * 100, 2);
         double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
-       _logger.Debug($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
+        _logger.Debug($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
         return (float)progressPercent;
     }
 

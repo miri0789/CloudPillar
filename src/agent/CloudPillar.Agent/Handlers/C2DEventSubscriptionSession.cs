@@ -21,15 +21,10 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                                        ITwinHandler twinHandler,
                                        ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(messageSubscriber);
-        ArgumentNullException.ThrowIfNull(MessageFactory);
-        ArgumentNullException.ThrowIfNull(twinHandler);
-
-        _MessageFactory = MessageFactory;
-        _deviceClient = deviceClientWrapper;
-        _messageSubscriber = messageSubscriber;
-        _twinHandler = twinHandler;
+        _MessageFactory = MessageFactory ?? throw new ArgumentNullException(nameof(MessageFactory));
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _messageSubscriber = messageSubscriber ?? throw new ArgumentNullException(nameof(messageSubscriber));
+        _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 

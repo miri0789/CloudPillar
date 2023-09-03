@@ -17,8 +17,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// <exception cref="NullReferenceException"></exception>
     public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        _environmentsWrapper = environmentsWrapper;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         var _transportType = GetTransportType();
         try

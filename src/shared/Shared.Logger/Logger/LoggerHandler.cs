@@ -137,7 +137,7 @@ public class LoggerHandler : ILoggerHandler
     {
         var formattedMessage = FormatMsg(message, args);
         m_logger?.Debug(formattedMessage);
-       if (useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Verbose);
+        if (useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Verbose);
     }
 
     private string FormatMsg(string message, params object[] args)

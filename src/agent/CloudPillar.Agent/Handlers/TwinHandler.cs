@@ -21,11 +21,8 @@ public class TwinHandler : ITwinHandler
                        IFileDownloadHandler fileDownloadHandler,
                        ILoggerHandler loggerHandler)
     {
-        ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(fileDownloadHandler);
-
-        _deviceClient = deviceClientWrapper;
-        _fileDownloadHandler = fileDownloadHandler;
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
+        _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler)); ;
         _supportedShells = GetSupportedShells();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -47,7 +44,7 @@ public class TwinHandler : ITwinHandler
 
 
             var actions = await GetActionsToExecAsync(twinDesired, twinReported);
-           _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
+            _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
             if (actions.Count() > 0)
             {
                 await HandleTwinActionsAsync(actions);
@@ -55,7 +52,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-           _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
 
     }
@@ -105,7 +102,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-           _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
     }
 
@@ -199,7 +196,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-           _logger.Error($"InitReportedDeviceParams failed: {ex.Message}");
+            _logger.Error($"InitReportedDeviceParams failed: {ex.Message}");
         }
     }
 

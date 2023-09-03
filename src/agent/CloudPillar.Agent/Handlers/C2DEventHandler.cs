@@ -9,17 +9,14 @@ public class C2DEventHandler : IC2DEventHandler
     private readonly IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
 
     private readonly ILoggerHandler _logger;
-    
+
 
     public C2DEventHandler(IDeviceClientWrapper deviceClientWrapper,
      IC2DEventSubscriptionSession c2DEventSubscriptionSession,
      ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(c2DEventSubscriptionSession);
-
-        _deviceClient = deviceClientWrapper;
-        _c2DEventSubscriptionSession = c2DEventSubscriptionSession;
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(_deviceClient));
+        _c2DEventSubscriptionSession = c2DEventSubscriptionSession ?? throw new ArgumentNullException(nameof(_c2DEventSubscriptionSession));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
