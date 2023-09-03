@@ -1,5 +1,5 @@
-using CloudPillar.Agent.API.Handlers;
-using CloudPillar.Agent.API.Wrappers;
+using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Wrappers;
 using Moq;
 using Microsoft.Azure.Devices.Client;
 using System.Text;

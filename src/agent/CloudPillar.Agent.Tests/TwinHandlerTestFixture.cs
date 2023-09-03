@@ -1,5 +1,5 @@
-using CloudPillar.Agent.API.Handlers;
-using CloudPillar.Agent.API.Wrappers;
+using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Shared;
 using Moq;
 using Newtonsoft.Json;
@@ -23,7 +23,7 @@ public class TwinHandlerTestFixture
     }
 
     [Test]
-    public async Task GetTwinJsonAsync_ValidJson_isValid()
+    public async Task GetTwinJsonAsync_ValidTwin_ReturnJson()
     {
         var desierd = @"{
             '$metadata': {
