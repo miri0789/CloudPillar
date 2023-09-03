@@ -21,4 +21,9 @@ public static class Log4netExtentions
     {
         return IsAppenderDefined<TAppender>(repository) && IsAppenderInRoot<TAppender>(repository);
     }
+
+    public static TAppender? GetAppender<TAppender>(ILoggerRepository repository) where TAppender : IAppender
+    {
+        return  repository.GetAppenders().OfType<TAppender>().FirstOrDefault();
+    }
 }
