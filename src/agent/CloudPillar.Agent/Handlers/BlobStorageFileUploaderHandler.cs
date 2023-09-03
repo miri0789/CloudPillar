@@ -5,7 +5,7 @@ namespace CloudPillar.Agent.Entities
 {
     public class BlobStorageFileUploaderHandler : IBlobStorageFileUploaderHandler
     {
-        public async Task UploadFromStreamAsync(Uri storageUri, Stream readStream, string correlationId, CancellationToken cancellationToken)
+        public async Task UploadFromStreamAsync(Uri storageUri, Stream readStream, CancellationToken cancellationToken)
         {
             CloudBlockBlob blob = new CloudBlockBlob(storageUri);
 
