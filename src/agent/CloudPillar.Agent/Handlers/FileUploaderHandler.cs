@@ -46,7 +46,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         if (String.IsNullOrEmpty(uploadAction.FileName))
         {
             actionToReport.TwinReport.Status = StatusType.Failed;
-            actionToReport.TwinReport.ResultText = "No file to apload";
+            actionToReport.TwinReport.ResultText = "No file to upload";
             return actionToReport;
         }
 
