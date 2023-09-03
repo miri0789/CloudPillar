@@ -36,11 +36,10 @@ public class FileUploaderHandler : IFileUploaderHandler
     {
         //for periodicUpload
         var interval = TimeSpan.FromSeconds(uploadAction.Interval > 0 ? uploadAction.Interval : Convert.ToInt32(_environmentsWrapper.periodicUploadInterval));
-        var uploadMethod = uploadAction.Method != null ? uploadAction.Method : FileUploadMethod.Blob;
 
         if (uploadAction.FileName != null && uploadAction.Enabled)
         {
-            actionToReport.TwinReport = await UploadFilesAsync(uploadAction.FileName, interval, uploadMethod, cancellationToken);
+            actionToReport.TwinReport = await UploadFilesAsync(uploadAction.FileName, interval, uploadAction.Method, cancellationToken);
         }
         return actionToReport;
     }
