@@ -87,7 +87,7 @@ public class TwinHandler : ITwinHandler
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
                     case TwinActionType.SingularUpload:
-                        var twinReport = await _fileUploaderHandler.InitFileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+                        var twinReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         if (twinReport != null)
                         {
                             await UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
@@ -96,7 +96,7 @@ public class TwinHandler : ITwinHandler
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
-                        var actionToReport = await _fileUploaderHandler.InitFileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+                        var actionToReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         await UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;
 

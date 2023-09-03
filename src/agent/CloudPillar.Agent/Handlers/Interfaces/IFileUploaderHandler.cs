@@ -5,5 +5,5 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface IFileUploaderHandler
 {
-    Task<ActionToReport> InitFileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken);
+    Task<ActionToReport> FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken);
 }

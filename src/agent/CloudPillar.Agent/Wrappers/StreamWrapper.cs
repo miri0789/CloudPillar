@@ -6,6 +6,9 @@ public class StreamWrapper : Stream
 
     public StreamWrapper(Stream innerStream, CancellationToken cancellationToken, IProgress<long>? progress = null)
     {
+        ArgumentNullException.ThrowIfNull(innerStream);
+        ArgumentNullException.ThrowIfNull(cancellationToken);
+
         _innerStream = innerStream;
         _cancellationToken = cancellationToken;
         _progress = progress;

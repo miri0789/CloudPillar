@@ -32,46 +32,34 @@ public class FileUploaderHandler : IFileUploaderHandler
         _ioTStreamingFileUploaderHandler = ioTStreamingFileUploaderHandler;
     }
 
-    public async Task<ActionToReport> InitFileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
+    public async Task<ActionToReport> FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
     {
+        TwinActionReported twinAction = actionToReport.TwinReport;
         //for periodicUpload
         var interval = TimeSpan.FromSeconds(uploadAction.Interval > 0 ? uploadAction.Interval : Convert.ToInt32(_environmentsWrapper.periodicUploadInterval));
 
-        if (uploadAction.FileName != null && uploadAction.Enabled)
-        {
-            actionToReport.TwinReport = await UploadFilesAsync(uploadAction.FileName, interval, uploadAction.Method, cancellationToken);
-            return actionToReport;
-        }
-
-        if (String.IsNullOrEmpty(uploadAction.FileName))
-        {
-            actionToReport.TwinReport.Status = StatusType.Failed;
-            actionToReport.TwinReport.ResultText = "No file to upload";
-            return actionToReport;
-        }
-
-        return null;
-    }
-    public async Task<TwinActionReported> UploadFilesAsync(string filename, TimeSpan interval, FileUploadMethod uploadMethod, CancellationToken cancellationToken)
-    {
-        TwinActionReported twinAction = new TwinActionReported();
-
         try
         {
-            await UploadFilesToBlobStorageAsync(filename, uploadMethod, cancellationToken);
-            twinAction.Status = StatusType.Success;
-            twinAction.ResultCode = ResultCode.Done.ToString();
+            if (String.IsNullOrEmpty(uploadAction.FileName))
+            {
+                throw new ArgumentException("No file to upload");
+            }
+            if (uploadAction.Enabled)
+            {
+                await UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction.Method, cancellationToken);
+                twinAction.Status = StatusType.Success;
+                twinAction.ResultCode = ResultCode.Done.ToString();
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error uploading file '{filename}': {ex.Message}");
-
+            Console.WriteLine($"Error uploading file '{uploadAction.FileName}': {ex.Message}");
             twinAction.Status = StatusType.Failed;
             twinAction.ResultText = ex.Message;
             twinAction.ResultCode = ex.GetType().Name;
         }
 
-        return twinAction;
+        return actionToReport;
     }
 
     private async Task UploadFilesToBlobStorageAsync(string filePathPattern, FileUploadMethod uploadMethod, CancellationToken cancellationToken)
@@ -149,7 +137,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                 string baseDir = Path.GetFileName(fullFilePath);
                 foreach (string file in Directory.GetFiles(fullFilePath, "*", SearchOption.AllDirectories))
                 {
-                    string relativePath = baseDir + file.Substring(fullFilePath.Length);
+                    string relativePath = Path.Combine(baseDir, file.Substring(fullFilePath.Length + 1));
                     archive.CreateEntryFromFile(file, relativePath);
                 }
             }
