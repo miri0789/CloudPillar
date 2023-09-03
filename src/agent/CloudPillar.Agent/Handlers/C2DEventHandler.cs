@@ -1,4 +1,4 @@
-using CloudPillar.Agent.API.Wrappers;
+using CloudPillar.Agent.Wrappers;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;

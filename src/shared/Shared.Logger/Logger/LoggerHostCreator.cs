@@ -26,7 +26,7 @@ namespace Shared.Logger
             var lo4NetPath = "log4net.config";
             if (!Path.Exists(lo4NetPath))
             {
-                //set defult path
+                throw new Exception("no log4net config file");
             }
             log4net.Config.XmlConfigurator.Configure(new FileInfo(lo4NetPath));
             var repository = LogManager.GetRepository();

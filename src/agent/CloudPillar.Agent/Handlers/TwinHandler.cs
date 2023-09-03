@@ -230,7 +230,6 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            _logger.Error($"GetTwinJsonAsync failed: ");
             var twin = await _deviceClient.GetTwinAsync();
             if (twin != null)
             {
