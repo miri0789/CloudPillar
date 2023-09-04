@@ -30,7 +30,7 @@ namespace Shared.Logger
             }
             log4net.Config.XmlConfigurator.Configure(new FileInfo(lo4NetPath));
             var repository = LogManager.GetRepository();
-            bool isAppenderDefined = Log4netExtentions.IsAppenderExists<ApplicationInsightsAppender>(repository);
+            bool isAppenderDefined = repository.IsAppenderExists<ApplicationInsightsAppender>();
 
             if (isAppenderDefined)
             {

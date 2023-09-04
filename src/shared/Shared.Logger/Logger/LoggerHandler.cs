@@ -60,9 +60,9 @@ public class LoggerHandler : ILoggerHandler
         _applicationName = applicationName;
 
 
-        _appInsightsAppender = Log4netExtentions.GetAppender<ApplicationInsightsAppender>();
+        _appInsightsAppender = _repository.GetAppender<ApplicationInsightsAppender>();
 
-        if (_appInsightsAppender != null && Log4netExtentions.IsAppenderInRoot<ApplicationInsightsAppender>(_repository))
+        if (_appInsightsAppender != null && _repository.IsAppenderInRoot<ApplicationInsightsAppender>())
         {
 
             var appInsightsKey = configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
