@@ -20,5 +20,5 @@ public interface ILoggerHandler
 
     public void RefreshAppInsightsLogLevel(string logLevel);
 
-    public void RefreshAppendersLogLevel(string logLevel);
+    public void RefreshAppendersLogLevel(string logLevel, bool init);
 }

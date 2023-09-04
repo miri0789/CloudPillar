@@ -17,8 +17,7 @@ public class SchemaValidator : ISchemaValidator
     private readonly ILoggerHandler _logger;
     public SchemaValidator(ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
     public bool ValidatePayloadSchema(string payload, string schemaPath, bool isRequest)
     {
