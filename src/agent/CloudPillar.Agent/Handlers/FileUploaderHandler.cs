@@ -35,8 +35,6 @@ public class FileUploaderHandler : IFileUploaderHandler
     public async Task<ActionToReport> FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
     {
         TwinActionReported twinAction = actionToReport.TwinReport;
-        //for periodicUpload
-        var interval = TimeSpan.FromSeconds(uploadAction.Interval > 0 ? uploadAction.Interval : Convert.ToInt32(_environmentsWrapper.periodicUploadInterval));
 
         try
         {
@@ -75,60 +73,25 @@ public class FileUploaderHandler : IFileUploaderHandler
         // Upload each file
         foreach (string fullFilePath in files.Concat(directories))
         {
-            Stream? readStream = null;
-            string blobname = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
+            string blobname = BuildBlobName(fullFilePath);
 
-            // Check if the path is a directory
-            if (Directory.Exists(fullFilePath))
-            {
-                blobname += ".zip";
-                readStream = createZipArchive(fullFilePath); // Will read from memory where the zip file was formed
-            }
-            else
-            {
-                var fileStream = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true)
-                {
-                    Position = 0
-                };
-                readStream = fileStream;
-            }
+            Stream readStream = CreateStream(fullFilePath);
 
-            FileUploadCompletionNotification notification = new FileUploadCompletionNotification()
-            {
-                IsSuccess = true
-            };
-            try
-            {
-                switch (uploadMethod)
-                {
-                    case FileUploadMethod.Blob:
-                        var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
-                        {
-                            BlobName = blobname
-                        });
-                        var storageUri = sasUriResponse.GetBlobUri();
-                        notification.CorrelationId = sasUriResponse.CorrelationId;
-
-                        await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
-                        break;
-                    case FileUploadMethod.Stream:
-                        await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, 0, cancellationToken);
-                        break;
-                    default:
-                        throw new ArgumentException("Unsupported upload method", "uploadMethod");
-                }
-                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                notification.IsSuccess = false;
-                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-                throw ex;
-            }
+            await UploadFileAsync(uploadMethod, blobname, readStream, cancellationToken);
         }
     }
 
-    private MemoryStream createZipArchive(string fullFilePath)
+    private string BuildBlobName(string fullFilePath)
+    {
+        string blobname = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
+        if (Directory.Exists(fullFilePath))
+        {
+            blobname += ".zip";
+        }
+        return blobname;
+    }
+
+    private MemoryStream CreateZipArchive(string fullFilePath)
     {
         using (var memoryStream = new MemoryStream())
         {
@@ -147,4 +110,59 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
+    private Stream CreateStream(string fullFilePath)
+    {
+        Stream readStream;
+
+        // Check if the path is a directory
+        if (Directory.Exists(fullFilePath))
+        {
+            readStream = CreateZipArchive(fullFilePath); // Will read from memory where the zip file was formed
+        }
+        else
+        {
+            var fileStream = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true)
+            {
+                Position = 0
+            };
+            readStream = fileStream;
+        }
+        return readStream;
+    }
+
+    private async Task UploadFileAsync(FileUploadMethod uploadMethod, string blobname, Stream readStream, CancellationToken cancellationToken)
+    {
+        FileUploadCompletionNotification notification = new FileUploadCompletionNotification()
+        {
+            IsSuccess = true
+        };
+        try
+        {
+            switch (uploadMethod)
+            {
+                case FileUploadMethod.Blob:
+                    var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
+                    {
+                        BlobName = blobname
+                    });
+                    var storageUri = sasUriResponse.GetBlobUri();
+                    notification.CorrelationId = sasUriResponse.CorrelationId;
+
+                    await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
+                    break;
+                case FileUploadMethod.Stream:
+                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, 0, cancellationToken);
+                    break;
+                default:
+                    throw new ArgumentException("Unsupported upload method", "uploadMethod");
+            }
+            // await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            notification.IsSuccess = false;
+            // await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+            throw ex;
+        }
+    }
 }
