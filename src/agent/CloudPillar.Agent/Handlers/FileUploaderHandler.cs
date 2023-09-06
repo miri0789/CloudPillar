@@ -75,9 +75,10 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             string blobname = BuildBlobName(fullFilePath);
 
-            Stream readStream = CreateStream(fullFilePath);
-
-            await UploadFileAsync(uploadMethod, blobname, readStream, cancellationToken);
+            using (Stream readStream = CreateStream(fullFilePath))
+            {
+                await UploadFileAsync(uploadMethod, blobname, readStream, cancellationToken);
+            }
         }
     }
 
@@ -93,21 +94,19 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private MemoryStream CreateZipArchive(string fullFilePath)
     {
-        using (var memoryStream = new MemoryStream())
+        var memoryStream = new MemoryStream();
+        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
-            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            string baseDir = Path.GetFileName(fullFilePath);
+            foreach (string file in Directory.GetFiles(fullFilePath, "*", SearchOption.AllDirectories))
             {
-                string baseDir = Path.GetFileName(fullFilePath);
-                foreach (string file in Directory.GetFiles(fullFilePath, "*", SearchOption.AllDirectories))
-                {
-                    string relativePath = Path.Combine(baseDir, file.Substring(fullFilePath.Length + 1));
-                    archive.CreateEntryFromFile(file, relativePath);
-                }
+                string relativePath = Path.Combine(baseDir, file.Substring(fullFilePath.Length + 1));
+                archive.CreateEntryFromFile(file, relativePath);
             }
-
-            memoryStream.Position = 0;
-            return memoryStream; // Will read from memory where the zip file was formed
         }
+
+        memoryStream.Position = 0;
+        return memoryStream; // Will read from memory where the zip file was formed
     }
 
     private Stream CreateStream(string fullFilePath)
