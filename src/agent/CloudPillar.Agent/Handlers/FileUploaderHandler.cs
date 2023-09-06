@@ -156,12 +156,12 @@ public class FileUploaderHandler : IFileUploaderHandler
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");
             }
-            // await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
         }
         catch (Exception ex)
         {
             notification.IsSuccess = false;
-            // await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             throw ex;
         }
     }
