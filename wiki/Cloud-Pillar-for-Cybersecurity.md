@@ -1,7 +1,7 @@
-# Cloud Pillar for Medical Device exposure to the cloud: Enhancing Medical Equipment Security & Functionality
+# Cloud Pillar for Medical Device Exposure to the Cloud: Enhancing Medical Equipment Security & Functionality
 
 ## Introduction
-The Cloud Pillar for Cybersecurity is a revolutionary solution tailored for the healthcare sector. It's designed to bolster the capabilities of medical devices like CARTO, VELYS, and TRUDY by integrating advanced cloud functionalities. At its core, this system prioritizes cybersecurity, ensuring that each integration and functionality is designed with utmost security considerations.
+The Cloud Pillar is a revolutionary solution tailored for the healthcare sector. It's designed to bolster the capabilities of medical devices like CARTO, ThruD and VELYS by integrating advanced cloud functionalities. At its core, this system prioritizes cybersecurity, ensuring that each integration and functionality is designed with utmost security considerations.
 
 ## Key Features
 
