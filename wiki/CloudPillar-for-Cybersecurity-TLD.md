@@ -1594,6 +1594,12 @@ When resolving actions in the Device Twin, the Agent will support specifying fil
 [Device Agent v1 API - Digital Surgery Platform Help - Confluence (jnj.com)](https://confluence.jnj.com/pages/viewpage.action?spaceKey=VAXJ&title=Device%20Agent%20v1%20API)
 [dspagent.json](/.images/dspagent-8fd836ae-d614-4b50-b486-788823520b11.json)
 - To clarify, in addition to the Swagger above, the API and the Agent must support both remote and disk-on-key artifacts installation and collection.
+#### 5.1.6.1. Support FSE impersonation for offline device side-loading
+In many situations Velys equipment is reportedly installed in hospital basements where there isn't any connectivity practically achievable.
+For supporting downloads and uploads from these devices, CloudPillar offers the Offline Device Side-loading feature. Prior to the visit (at home, office or in the hotel), the FSE uses his laptop and the CP agent installed on it to impersonate as the device he is going to visit, creates a download pack, and, upon arrival, applies the download pack via the Agent installed on the device. The CP Agent on the device then creates an Upload pack, mandatory to report back the actual update status in the reported section of the Device Twin, but also carrying the intended uploads (logs, telemetry, clinical data), that FSE has to bring to his laptop so that his temporary impersonated Agent, when in connectivity (at home, hotel, office),  will be able to actually upload it to the cloud. 
+In order to do so, the FSE can not use the X.509 certificate issued for the device as identity sharing is not a good cyber practice. Instead, the FSE will contact the CP backend via the Asset Management UI to generate a temporary FSE impersonated identity (X.509 certificate unique per the visit) and have it installed on his laptop's Certificate Store, for using it with the CP agent to create the download pack.
+In order to preserve the original X.509 certificate used on the device itself, the new temporary certificate will be registered in the IoT Hub as the Secondary certificate's thumbprint.
+The Primary certificate hence will always be the one used by the device itself.
 
 ### 5.2. Backend Functional Requirements
 
