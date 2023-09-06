@@ -22,3 +22,4 @@ Built on the robust C# .Net Core 6-7 framework and integrating both AMQP and MQT
 3. **Data-Driven Insights**: Backend analysis of logs and telemetry data can lead to actionable insights for better device management.
 4. **Future Compatibility**: As the digital transformation of healthcare continues, Cloud Pillar ensures that medical devices are adaptable, secure, and ready to integrate with future systems.
 ![image.png](.images/cpcconnected.png)
+![image.png](.images/cpeconnected.png)
