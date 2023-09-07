@@ -8,7 +8,7 @@ resource "azurerm_resource_group" "state" {
 
 # Create a Storage Account for the Terraform State File
 resource "azurerm_storage_account" "state" {
-  name                     = "tftstcp"
+  name                     = "tftestcp"
   resource_group_name      = azurerm_resource_group.state.name
   location                 = azurerm_resource_group.state.location
   account_kind             = "StorageV2"
