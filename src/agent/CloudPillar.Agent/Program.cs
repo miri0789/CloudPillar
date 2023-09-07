@@ -11,6 +11,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
         services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
         services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
+        services.AddSingleton<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
         services.AddSingleton<IMessageSubscriber, MessageSubscriber>();
         services.AddSingleton<IFileDownloadHandler, FileDownloadHandler>();
         services.AddSingleton<IFileStreamerWrapper, FileStreamerWrapper>();

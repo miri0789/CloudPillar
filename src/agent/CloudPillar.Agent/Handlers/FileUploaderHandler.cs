@@ -11,23 +11,19 @@ public class FileUploaderHandler : IFileUploaderHandler
 {
     const int BUFFER_SIZE = 4 * 1024 * 1024;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
     private readonly IIoTStreamingFileUploaderHandler _ioTStreamingFileUploaderHandler;
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
-        IEnvironmentsWrapper environmentsWrapper,
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
         IIoTStreamingFileUploaderHandler ioTStreamingFileUploaderHandler)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
         ArgumentNullException.ThrowIfNull(blobStorageFileUploaderHandler);
         ArgumentNullException.ThrowIfNull(ioTStreamingFileUploaderHandler);
 
         _deviceClientWrapper = deviceClientWrapper;
-        _environmentsWrapper = environmentsWrapper;
         _blobStorageFileUploaderHandler = blobStorageFileUploaderHandler;
         _ioTStreamingFileUploaderHandler = ioTStreamingFileUploaderHandler;
     }
@@ -38,7 +34,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         try
         {
-            if (String.IsNullOrEmpty(uploadAction.FileName))
+            if (string.IsNullOrEmpty(uploadAction.FileName))
             {
                 throw new ArgumentException("No file to upload");
             }
@@ -70,6 +66,12 @@ public class FileUploaderHandler : IFileUploaderHandler
         // Get a list of all matching directories
         string[] directories = Directory.GetDirectories(directoryPath, searchPattern);
 
+        string[] filesToUpload = files.Concat(directories).ToArray();
+
+        if (filesToUpload.Length == 0)
+        {
+            throw new ArgumentNullException($"no files found in {filePathPattern}");
+        }
         // Upload each file
         foreach (string fullFilePath in files.Concat(directories))
         {
@@ -98,7 +100,12 @@ public class FileUploaderHandler : IFileUploaderHandler
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
             string baseDir = Path.GetFileName(fullFilePath);
-            foreach (string file in Directory.GetFiles(fullFilePath, "*", SearchOption.AllDirectories))
+            string[] filesDir = Directory.GetFiles(fullFilePath, "*", SearchOption.AllDirectories);
+            if (filesDir.Length == 0)
+            {
+                throw new ArgumentNullException($"No files found in directory {baseDir}");
+            }
+            foreach (string file in filesDir)
             {
                 string relativePath = Path.Combine(baseDir, file.Substring(fullFilePath.Length + 1));
                 archive.CreateEntryFromFile(file, relativePath);
@@ -144,6 +151,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                     {
                         BlobName = blobname
                     });
+
                     var storageUri = sasUriResponse.GetBlobUri();
                     notification.CorrelationId = sasUriResponse.CorrelationId;
 
