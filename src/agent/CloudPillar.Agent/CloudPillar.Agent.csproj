@@ -1,20 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
-
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-iotdevice-276dc73b-af42-45e8-be4f-901e736f5bf1</UserSecretsId>
   </PropertyGroup>
-
   <ItemGroup>
-    <Content Include="pki/*.*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>  
-  </ItemGroup>
-  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.10" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-    <PackageReference Include="SharedEntities" Version="1.0.27" />
-  </ItemGroup>
+    <PackageReference Include="SharedEntities" Version="1.0.56" />
+    <PackageReference Include="SharedLogger" Version="1.0.10"/>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+  </ItemGroup>  
+
 </Project>

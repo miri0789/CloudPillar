@@ -1,9 +1,40 @@
-name: ci_build
 
+name: ci_full_build_$(Rev:r)
 trigger:
-# - none
-# - $(Build.SourceBranchName)
-- main
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
+  paths:
+    include:
+    - src/edge/conquest/*
+    - src/backned/*
+    - src/agent/*
+    exclude:
+    - '*'    
+
+resources:
+- repo: self
+
+variables:
+- group: arm-vg
+- group: iac-backend-vg
+- group: aks-backend-vg
+- group: backend-secrets-vg
+
+
+- name: TIMELABEL
+  value: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
+- name: GitBuildNumber
+  value: $(Build.BuildId)
+- name: registryName
+  value: 'iotimageacr'
+- name: pipelineAcrConnection
+  value: 'iotacr'
+
 
 parameters:
   - name: env
@@ -14,68 +45,207 @@ parameters:
     - tst
     - dev
     - stg
-    - prd
-  - name: image
-    displayName: Select Image to Build and Scan
-    type: string
-    default: blobstreamer
-    values:
-    # - all
-    - analyzer
-    - beapi
+    - prd    
+  - name: backendImage
+    displayName: Select Backend Image to Build and Scan
+    type: object
+    default:
     - blobstreamer
-    - iotlistener
     - keyholder
-    - mongowriter
-    - twinlistener
-
-variables:
-- group: arm-vg
-- group: iac-backend-vg
-- group: aks-backend-vg
-- group: backend-secrets-vg
-# - group: images-vg
-
+    - edge_conquest
+    - iotlistener       
+  - name: agent
+    displayName: Select Agent Project
+    type: object
+    default:
+    - agent   
+    - pocagent   
 
 stages:
-- stage: Update_Build_Tag_Scan_Push
-  displayName: Update Version, Build, Tag and Push Images
-  jobs:
 
-  - job: Update_Version_Tag_Build_Image
-    displayName: Updating Version Label, Building and Tagging Images
-    pool:
-      name: $(AGENT_POOL)
-      agent.name: aks-${{parameters.env}}-agent 
-      # agent.name: iac-${{parameters.env}}-agent 
-    steps:
-    - checkout: self
-      persistCredentials: true
-      clean: true
-    - task: Bash@3
-      displayName: Build & Tag Image
-      inputs:
-        targetType: inline
-        script: |
+  - stage: GetBackendImagesJsonStage
+    jobs:
+    - job: GetBackendImagesJsonJob
+      displayName: Get Backend Images Json
+      steps:
+      - task: Bash@3
+        name: SetBackendImagesJson
+        inputs:
+          targetType: 'inline'
+          script: |
+            images=$(cat ./iac/pipelines/pipelines-data/backend-images.json | jq -c .) # Compact JSON
+            echo "##vso[task.setvariable variable=images;isOutput=true]$images"
+            echo "##vso[task.setvariable variable=images]$images"
+
+            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
+            echo "$images"
+            echo -e "\n\n"
+        displayName: Set Backend Images Json as Variable
+
+
+  - stage: CleanBuildScanPushAllBackendImagesStageBackendImagesStage
+    displayName: Build Tag Scan Push All Backend Backend Images
+    dependsOn: GetBackendImagesJsonStage
+    variables:
+      images: $[ stageDependencies.GetBackendImagesJsonStage.GetBackendImagesJsonJob.outputs['SetBackendImagesJson.images'] ]
+
+    jobs:
+    - job: All
+      displayName: Clean Tag Scan Push All Images
+      pool:
+        name: $(AGENT_POOL)
+        agent.name: aks-${{parameters.env}}-agent
+      steps:   
+      - script: |   
           az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
           az account set --subscription $(ARM_SUBSCRIPTION_ID)
           echo "Azure Login Successfull"
-          sudo az acr login -n $(ACR_NAME)
-          echo "Updating ${{parameters.image}} Informational Version Label"
-          TIMESTAMP=$(date +%Y%m%d%H%M%S) && BuildNumber=$(git rev-list --count HEAD) && sed -i "s/_BUILDNUM_/${BuildNumber}/g; s/_TIMESTAMP_/${TIMESTAMP}/g" src/backend/${{parameters.image}}/${{parameters.image}}.csproj
-          sudo docker build -t $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll --build-arg DLL=backend_${{parameters.image}}.dll -f ./src/backend/infra/build/Dockerfile ./src/backend/${{parameters.image}}
-          
-    - task: Bash@3
-      displayName: Trviy Scan Image
-      inputs:
-        targetType: inline
-        script: |
-          # sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
-          sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image  --severity HIGH,CRITICAL $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
+          az acr login -n $(ACR_NAME)
 
-    - task: Bash@3
-      displayName: Push Image to ACR
-      inputs:
-        targetType: inline
-        script: |
-          sudo docker push $(ACR_NAME).azurecr.io/backend_${{parameters.image}}.dll:latest
+          echo -e "\n\n"
+          echo "Clean Old Imaged"
+          docker image prune -a --force
+          docker image ls
+        name: AcrLogin
+
+      - task: NuGetAuthenticate@1
+        displayName: 'Authenticate to NuGet'
+
+      - ${{each item in parameters.backendImage}}:
+        - script: |    
+            imagesJson='$(images)'
+            for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+              _jq() {
+                echo ${img} | base64 --decode | jq -r ${1}
+              }
+              imgName=$(_jq '.name')
+              if [ "$imgName" == "${{ item }}" ]; then
+                imageName=$(_jq '.imageName')
+                imagePath=$(_jq '.imagePath')
+                dockerFilePath=$(_jq '.dockerFilePath')
+                imageVersion=$(_jq '.imageVersion')
+                projectName=$(_jq '.projectName')
+                ACR_NAME=$(ACR_NAME)     
+                echo $(imageVersion)
+                major=$(echo $imageVersion | cut -d '.' -f 1)
+                minor=$(echo $imageVersion | cut -d '.' -f 2)
+                
+                newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)
+                
+                echo "Processing image: $imgName"
+                echo "Image Version: $newVersion"
+                echo ""
+                echo -e "================================================\n\tBase Info Version\n================================================"
+                find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'            
+
+                echo -e "\n\n"
+                echo -e "================================================\n\tUpdated Tag\n================================================"
+                TAG="$newVersion"
+                echo "TAG: $TAG"
+                if [ "$imageName" != *edge_conquest* ]; then      
+                  find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
+                  find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+                fi    
+
+                echo -e "\n\n"
+                echo -e "================================================\n\tDocker Build - \n================================================"
+                
+                docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath \
+                --build-arg DLL=$projectName --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+                if [ $? -ne 0 ]; then
+                  echo "Docker Build Failed"
+                  exit 1
+                fi
+                docker images | grep $imageName       
+                
+                echo -e "\n\n"
+                echo -e "================================================\n\tDocker Scan - \n================================================"            
+                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $ACR_NAME.azurecr.io/$imageName:$newVersion
+
+                echo -e "\n\n"
+                echo -e "================================================\n\tDocker Push - \n================================================"            
+                docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
+              fi
+            done
+          displayName: Build Tag & Scan & Push Backend Images ${{ item }}
+
+
+
+  - stage: GetAgentImagesJsonStage
+    jobs:
+    - job: GetAgentImagesJsonJob
+      displayName: Get Agent Images Json
+      steps:
+      - task: Bash@3
+        name: SetAgentImagesJson
+        inputs:
+          targetType: 'inline'
+          script: |
+            images=$(cat ./iac/pipelines/pipelines-data/agent-images.json | jq -c .) # Compact JSON
+            echo "##vso[task.setvariable variable=images;isOutput=true]$images"
+
+            echo -e "\n\n===================================================================\n\tImages\n===================================================================\n"
+            echo "$images"
+            echo -e "\n\n"
+        displayName: Set Backend Images Json as Variable
+
+  - stage: BuildAgentArtifactsStage
+    dependsOn: GetAgentImagesJsonStage
+    jobs:
+    - job: BuildAgentArtifactsJob
+      displayName: Get Single Backend Image Job
+      variables:
+        images: $[ stageDependencies.GetAgentImagesJsonStage.GetAgentImagesJsonJob.outputs['SetAgentImagesJson.images'] ]
+      steps:
+        
+      - ${{each item in parameters.agent}}:
+        - script: |
+            imagesJson='$(images)'
+            echo "##vso[task.setvariable variable=processedImage]false"
+            for image in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+              _jq() {
+                echo ${image} | base64 --decode | jq -r ${1}
+              }
+              imgName=$(_jq '.name')
+              if [ "$imgName" == "${{ item }}" ]; then
+                echo -e "${imgName}"
+                echo "##vso[task.setvariable variable=imageName]$(_jq '.name')"
+                echo "##vso[task.setvariable variable=dockerFilePath]$(_jq '.dockerFilePath')"
+                echo "##vso[task.setvariable variable=imageVersion]$(_jq '.imageVersion')"
+                echo "##vso[task.setvariable variable=processedImage]true"
+              fi
+            done
+          displayName: Extract image parameters for running tasks
+
+        - task: NuGetAuthenticate@1
+          displayName: 'Authenticate to NuGet'
+
+        - task: Docker@2
+          condition: eq(variables.processedImage, true)
+          displayName: Docker Build & Tag ${{ item }}
+          inputs:
+            command: build
+            repository: $(imageName)
+            dockerfile: $(dockerFilePath)
+            buildContext: src
+            tags: aux-build
+            arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+            buildArguments: |
+              
+
+        - script: |
+            CONTAINER_ID=$(docker create $(imageName):aux-build)
+            docker cp $CONTAINER_ID:/app/cloudpillar.zip .
+            docker rm $CONTAINER_ID
+            mv ./cloudpillar.zip ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
+            ls -al ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
+          condition: eq(variables.processedImage, true)
+          displayName: 'Extract POC cloudpillar.zip from Image'
+
+        - task: PublishBuildArtifacts@1
+          condition: eq(variables.processedImage, true)
+          displayName: 'Publish cloudpillar.zip to Artifacts'
+          inputs:
+            pathtoPublish: ./cloudpillar-$(imageName)-$(imageVersion).$(GitBuildNumber).$(TIMELABEL).zip
+            artifactName: 'cloudpillar'
+            publishLocation: 'Container'

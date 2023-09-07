@@ -1,8 +1,8 @@
 terraform {
   backend "azurerm" {
-    subscription_id      = "a147112f-bc59-4e9e-ac2f-5b4585e6542e"
+    subscription_id      = ""
     resource_group_name  = "tf-rg"
-    storage_account_name = "tfcloudpillar"
+    storage_account_name = "tftestcp"
     container_name       = "tfstate"
     key                  = "aks.tfstate"
   }
@@ -11,7 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.0"
+      version = "~>3.0"
     }
     tls = {
       source = "hashicorp/tls"
@@ -26,6 +26,7 @@ terraform {
 
 provider "azurerm" {
   features {}
+  subscription_id = ""
 }
 
 provider "kubernetes" {
@@ -34,9 +35,3 @@ provider "kubernetes" {
   client_key             = "${base64decode(resource.azurerm_kubernetes_cluster.aks.kube_config.0.client_key)}"
   cluster_ca_certificate = "${base64decode(resource.azurerm_kubernetes_cluster.aks.kube_config.0.cluster_ca_certificate)}"
 }
-
-# provider "azurerm" {
-#   alias = "prod"
-#   features {}
-#   subscription_id = "ccf06142-bee8-4220-8360-ddb8dcde8ec4"
-# }

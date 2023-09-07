@@ -1,0 +1,37 @@
+trigger:
+  branches:
+    include:
+    - main
+    - conquest
+  paths:
+    include:
+    - src/edge/conquest/*
+    exclude:
+    - '*'
+resources:
+- repo: self
+
+variables:
+  imageName: 'edge_conquest'
+  imageVersion: 'v0.7.3'
+  registryName: 'iotimageacr'
+  dockerfilePath: './src/edge/conquest/Dockerfile'
+  pipelineAcrConnection: 'iotacr'
+
+stages:
+- stage: Build
+  displayName: Build and push
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: Docker@2
+      displayName: 'Build and Push Image'
+      inputs:
+        command: 'buildAndPush'
+        repository: '$(registryName).azurecr.io/$(imageName)'
+        dockerfile: '$(dockerfilePath)'
+        containerRegistry: '$(pipelineAcrConnection)'
+        tags: '$(imageVersion)'

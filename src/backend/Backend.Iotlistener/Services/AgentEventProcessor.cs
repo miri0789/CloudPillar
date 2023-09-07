@@ -19,16 +19,11 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService,
      ISigningService signingService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, string partitionId)
     {
-        ArgumentNullException.ThrowIfNull(firmwareUpdateService);
-        ArgumentNullException.ThrowIfNull(signingService);
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _environmentsWrapper = environmentsWrapper;
-        _firmwareUpdateService = firmwareUpdateService;
-        _signingService = signingService;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
+        _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _partitionId = partitionId;
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public IEventProcessor CreateEventProcessor(PartitionContext context)
@@ -51,15 +46,10 @@ public class AgentEventProcessor : IEventProcessor
     public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService,
      ISigningService signingService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(firmwareUpdateService);
-        ArgumentNullException.ThrowIfNull(signingService);
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _environmentsWrapper = environmentsWrapper;
-        _firmwareUpdateService = firmwareUpdateService;
-        _signingService = signingService;
-        _logger = logger;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
+        _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public Task OpenAsync(PartitionContext context)
@@ -94,12 +84,12 @@ public class AgentEventProcessor : IEventProcessor
                 _logger.Warn($"Ignoring message older than {_environmentsWrapper.messageTimeoutMinutes} minutes.");
                 continue;
             }
-            await HandleMessageData(eventData, !String.IsNullOrWhiteSpace(drainD2cQueues), context.PartitionId);
+            await HandleMessageAsync(eventData, !String.IsNullOrWhiteSpace(drainD2cQueues), context.PartitionId);
         }
         await context.CheckpointAsync();
     }
 
-    private async Task HandleMessageData(EventData eventData, bool isDrainMode, string partitionId)
+    private async Task HandleMessageAsync(EventData eventData, bool isDrainMode, string partitionId)
     {
         try
         {

@@ -1,8 +1,9 @@
 ﻿namespace CloudPillar.Agent.Wrappers;
 public class EnvironmentsWrapper : IEnvironmentsWrapper
 {
-    private const string _deviceConnectionString = "DEVICE_CONNECTION_STRING";
-    private const string _transportType = "TRANSPORT_TYPE";
+    private const string _deviceConnectionString = "DeviceConnectionString";
+    private const string _transportType = "TransportType";
+    private const string _periodicUploadInterval = "PeriodicUploadInterval";
 
     public string deviceConnectionString
     {
@@ -12,7 +13,10 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return GetVariable(_transportType); }
     }
-
+    public string periodicUploadInterval
+    {
+        get { return GetVariable(_periodicUploadInterval); }
+    }
 
     private string GetVariable(string name)
     {

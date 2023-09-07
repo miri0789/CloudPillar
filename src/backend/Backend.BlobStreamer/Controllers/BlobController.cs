@@ -1,5 +1,6 @@
 using Backend.BlobStreamer.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Logger;
 
 namespace Backend.BlobStreamer.Controllers;
 
@@ -22,9 +23,9 @@ public class BlobController : ControllerBase
     }
 
     [HttpPost("range")]
-    public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, Guid actionGuid, long fileSize)
+    public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string actionId, long fileSize)
     {
-        await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionGuid, fileSize);
+        await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionId, fileSize);
         return Ok();
     }
 }

@@ -6,6 +6,7 @@ using log4net.Repository.Hierarchy;
 using log4net.Appender;
 using System.Reflection;
 using Shared.Logger.Wrappers;
+using Microsoft.ApplicationInsights.Log4NetAppender;
 
 namespace Shared.Logger;
 
@@ -50,5 +51,10 @@ public class LoggerHandlerFactory : ILoggerHandlerFactory
     public ITelemetryClientWrapper CreateTelemetryClient(string connectionString)
     {
         return new TelemetryClientWrapper(connectionString);     
+    }
+
+    public bool IsApplicationInsightsAppenderInRoot()
+    {
+        return m_repository.IsAppenderInRoot<ApplicationInsightsAppender>();     
     }
 }

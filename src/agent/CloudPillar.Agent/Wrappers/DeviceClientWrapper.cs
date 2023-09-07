@@ -1,43 +1,50 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Client.Transport;
+using Microsoft.Azure.Devices.Shared;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
-
+    private readonly DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
-    private DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper)
-    {
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        _environmentsWrapper = environmentsWrapper;
-    }
+     private readonly ILoggerHandler _logger;
 
-    public DeviceClient CreateDeviceClient()
+    /// <summary>
+    /// Initializes a new instance of the DeviceClient class
+    /// </summary>
+    /// <param name="environmentsWrapper"></param>
+    /// <exception cref="NullReferenceException"></exception>
+    public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        var _transportType = GetTransportType();
         try
         {
-            string _deviceConnectionString = _environmentsWrapper.deviceConnectionString;
-            TransportType _transportType = GetTransportType();
-            var deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
-            if (deviceClient == null)
+            _deviceClient = DeviceClient.CreateFromConnectionString(_environmentsWrapper.deviceConnectionString, _transportType);
+            if (_deviceClient == null)
             {
-                Console.WriteLine($"CreateDeviceClient FromConnectionString failed the device is null");
+                throw new NullReferenceException("CreateDeviceClient FromConnectionString failed the device is null");
             }
-            return deviceClient;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"CreateFromConnectionString failed {ex.Message}");
+            _logger.Error($"CreateFromConnectionString failed {ex.Message}");
             throw;
-
         }
+
     }
 
-
+    /// <summary>
+    /// Extracts the device ID from the device connection string
+    /// </summary>
+    /// <returns>Device Id</returns>
+    /// <exception cref="ArgumentException"></exception>
     public string GetDeviceId()
     {
-        string _deviceConnectionString = _environmentsWrapper.deviceConnectionString;
-        var items = _deviceConnectionString.Split(';');
+        var items = _environmentsWrapper.deviceConnectionString.Split(';');
         foreach (var item in items)
         {
             if (item.StartsWith("DeviceId"))
@@ -46,9 +53,8 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             }
         }
 
-        throw new ArgumentException("DeviceId not found in the connection string.");
+        throw new ArgumentException("DeviceId not found in the connection string");
     }
-
 
     public TransportType GetTransportType()
     {
@@ -58,18 +64,72 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             : TransportType.Amqp;
     }
 
-    public Task<Message> ReceiveAsync(CancellationToken cancellationToken, DeviceClient deviceClient)
+    /// <summary>
+    /// Asynchronously waits for a message to be received from the device.
+    /// after recived the message, need to exec CompleteAsync function to the message
+    /// </summary>
+    /// <param name="cancellationToken">used to cancel the operation if needed.</param>
+    /// <returns>a task that represents the asynchronous operation and contains a Message when received.</returns>
+    public Task<Message> ReceiveAsync(CancellationToken cancellationToken)
     {
-        return deviceClient.ReceiveAsync(cancellationToken);
+        return _deviceClient.ReceiveAsync(cancellationToken);
     }
 
-
-    public async Task SendEventAsync(Message message, DeviceClient deviceClient)
+    /// <summary>
+    /// Asynchronously sends an event message to the device.
+    /// </summary>
+    /// <param name="message">The message object containing the data to be sent.</param>
+    /// <returns>a task representing the asynchronous operation.</returns>
+    public async Task SendEventAsync(Message message)
     {
-        await deviceClient.SendEventAsync(message);
+        await _deviceClient.SendEventAsync(message);
     }
 
+    /// <summary>
+    /// asynchronously completes the processing of a received message.
+    /// </summary>
+    /// <param name="message">the message object representing the received message to be completed.</param>
+    /// <returns>a task representing the asynchronous operation.</returns>
+    public async Task CompleteAsync(Message message)
+    {
+        await _deviceClient.CompleteAsync(message);
+    }
 
+    public async Task<Twin> GetTwinAsync()
+    {
+        var twin = await _deviceClient.GetTwinAsync();
+        return twin;
+    }
 
+    public async Task UpdateReportedPropertiesAsync(string key, object value)
+    {
+        var updatedReportedProperties = new TwinCollection();
+        updatedReportedProperties[char.ToLower(key[0]) + key.Substring(1)] = value;
+        await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
+    }
 
+    public async Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties)
+    {
+        await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+    }
+
+    public async Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default)
+    {
+        FileUploadSasUriResponse response = await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
+        return response;
+    }
+
+    public async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default)
+    {
+        await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
+    }
+    public async Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default)
+    {
+        FileUploadCompletionNotification notification = new FileUploadCompletionNotification
+        {
+            CorrelationId = correlationId,
+            IsSuccess = isSuccess
+        };
+        await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
+    }
 }

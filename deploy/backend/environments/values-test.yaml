@@ -1,0 +1,75 @@
+# Default values for cartonet.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+controllers:
+  - title: "analyzer"
+  - title: "beapi"
+    path: /cloudpillar/api
+    port: 8089
+  - title: "blobstreamer"
+    port: 8089
+    env:
+    - name: BlobContainerName
+      value: "iotcontainer"
+    - name: IothubConnectionString
+      value: "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=2d0InEKpMb4Hv9UOxrsSOjiKUcunjKvhFAIoTG6B04Q="
+    - name: StorageConnectionString
+      value: "DefaultEndpointsProtocol=https;AccountName=cptstfiles;AccountKey=xHc216jK0Hx0YnhGyxcErE10cVExM6nl5eEZJLvUWBpJcr8E6CxAbI4t0FxtSZ52Map8H8+DN+Xu+AStv9ca6w==;EndpointSuffix=core.windows.net"
+    - name: MessageExpiredMinutes
+      value: "60"
+    - name: RetryPolicyBaseDelay
+      value: "2"
+    - name: RetryPolicyExponent
+      value: "3"
+  - title: "iotlistener"
+    kind: StatefulSet
+    env:
+    - name: LogswriteTopic
+      value: "logswrite-topic"
+    - name: IothubEventHubCompatibleEndpoint
+      value: "Endpoint=sb://iothub-ns-cp-tst-iot-25232537-ec51fb8cc5.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=2d0InEKpMb4Hv9UOxrsSOjiKUcunjKvhFAIoTG6B04Q=;EntityPath=cp-tst-iothub"
+    - name: IothubEventHubCompatiblePath
+      value: "cp-tst-iothub"
+    - name: StorageConnectionString
+      value: "DefaultEndpointsProtocol=https;AccountName=cptstfiles;AccountKey=xHc216jK0Hx0YnhGyxcErE10cVExM6nl5eEZJLvUWBpJcr8E6CxAbI4t0FxtSZ52Map8H8+DN+Xu+AStv9ca6w==;EndpointSuffix=core.windows.net"
+    - name: BlobContainerName
+      value: "iotcontainer"
+    - name: BlobStreamerUrl
+      value: "blobstreamer-service"
+    - name: SigningUrl
+      value: "signing-service"
+    - name: RangeCalculateType
+      value: "percent"
+    - name: RangePercent
+      value: "25"
+    - name: MessageTimeoutMinutes
+      value: "60"
+    - name: RangeBytes
+      value: "123456"
+    - name: IothubConnectionDeviceId
+      value: "iothub-connection-device-id"     
+  - title: "keyholder"
+    port: 8089
+    env:
+    - name: KubernetesServiceHost
+      value: ""
+    - name: SigningPem
+      value: "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSHVBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFqQklIV01JSFRBZ0VCQkVJQml5QWE3YVJIRkRDaDJxZ2EKOXNUVUdJTkU1akhBRm5tTTh4V2VUL3VuaTVJNHROcWhWNVh4MHBEcm1DVjltYnJvRnRmRWEwWFZmS3VNQXh4ZgpaNkxNL3lLaGdZa0RnWVlBQkFHQnpnZG5QNzk4RnNMdVdZVEREUUE3YzByM0JWazhOblJVU2V4cFFVc1JpbFBOCnYzU2NoTzBsUnc5UnU4Nngxa2huVkR4K2R1cTRCaURGY3ZsU0FjeWpMQUNKdmp2b3lUTEppQStUUUZkbXJlYXIKak1pWk5FMjVwVDJ5V1AxTlVuZEp4UGN2VnRmQlc0OGtQT212a1k0V2xxUDViQXdDWHdic0tyQ2drNnhic3AxMgpldz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0="
+    - name: SecretName
+      value: "IoTTwinSecret"
+    - name: SecretKey
+      value: "signKey"
+    - name: IothubConnectionString
+      value: "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=2d0InEKpMb4Hv9UOxrsSOjiKUcunjKvhFAIoTG6B04Q="
+
+replicaCount: 1
+
+# env:
+#   - name: ASPNETCORE_ENVIRONMENT
+#     value: DevEU
+
+image:
+  acr: "iotimageacr.azurecr.io"
+  tag: latest
+

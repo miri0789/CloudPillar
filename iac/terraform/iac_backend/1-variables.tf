@@ -28,7 +28,7 @@ variable "env" {
 variable "location" {
     type = string
     description = "The IaC Backend Location"
-    default = "West Europe"
+    default = "eastus"
 }
 
 variable "region" {

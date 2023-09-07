@@ -83,7 +83,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/backend/blobstreamer/blobstreamer.csproj",
+                "${workspaceFolder}/src/backend/Backend.BlobStreamer/Backend.BlobStreamer.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -99,7 +99,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/backend/iotlistener/iotlistener.csproj",
+                "${workspaceFolder}/src/backend/Backend.Iotlistener/Backend.Iotlistener.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -115,7 +115,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/backend/keyholder/keyholder.csproj",
+                "${workspaceFolder}/src/backend/Backend.Keyholder/Backend.Keyholder.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -156,7 +156,7 @@
                 "kind": "build",
                 "isDefault": true
             }
-        },
+        },        
         {
 
             "label": "buildCloudPillarAgent",
