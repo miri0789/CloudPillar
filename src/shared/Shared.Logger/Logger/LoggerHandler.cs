@@ -1,4 +1,5 @@
 ﻿using System.Web;
+using System.Reflection;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
@@ -18,7 +19,7 @@ public class LoggerHandler : ILoggerHandler
 
     private ITelemetryClientWrapper? _telemetryClient;
 
-    private ILoggerRepository _repository;
+    private ILoggerHandlerFactory _loggerHandlerFactory;
 
     private string _applicationName;
 
@@ -51,7 +52,8 @@ public class LoggerHandler : ILoggerHandler
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         ArgumentNullException.ThrowIfNull(loggerFactory);
-        _repository = loggerFactory.CreateLogRepository(log4netConfigFile);
+        _loggerHandlerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        _loggerHandlerFactory.CreateLogRepository(log4netConfigFile);
         ArgumentNullException.ThrowIfNull(configuration);
 
         _hasHttpContext = hasHttpContext;
@@ -60,9 +62,9 @@ public class LoggerHandler : ILoggerHandler
         _applicationName = applicationName;
 
 
-        _appInsightsAppender = _repository.GetAppender<ApplicationInsightsAppender>();
+        _appInsightsAppender = FindAppender<ApplicationInsightsAppender>() as ApplicationInsightsAppender;
 
-        if (_appInsightsAppender != null && _repository.IsAppenderInRoot<ApplicationInsightsAppender>())
+        if (_appInsightsAppender != null && _loggerHandlerFactory.IsAppenderInRoot<ApplicationInsightsAppender>())
         {
 
             var appInsightsKey = configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
@@ -79,20 +81,50 @@ public class LoggerHandler : ILoggerHandler
             var connectionString = configuration[LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG];
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
-                _telemetryClient = loggerFactory.CreateTelemetryClient(connectionString);
+                _telemetryClient = _loggerHandlerFactory.CreateTelemetryClient(connectionString);
                 _useAppInsight = true;
             }
             else
             {
                 Info("Cannot activate Telemetry: Connection String is null");
             }
-            RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
+
+            RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD, true);
         }
 
 
-        RefreshAppendersLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD, true);
-
+        // Add Console Appender if not configured
+        if (FindAppender<ConsoleAppender>() == null)
+        {
+            var hierarchy = ((log4net.Core.ILoggerWrapper)_logger).Logger.Repository as log4net.Repository.Hierarchy.Hierarchy;
+            if (hierarchy != null)
+            {
+                hierarchy.Root.AddAppender(CreateConsoleAppender());
+                _loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
+            }
+        }
         Log4netConfigurationValidator.ValidateConfiguration(this);
+    }
+
+    private ConsoleAppender CreateConsoleAppender()
+    {
+        ConsoleAppender appender = new ConsoleAppender();
+        appender.Name = "ConsoleAppender";
+
+        log4net.Layout.PatternLayout layout = new log4net.Layout.PatternLayout();
+        layout.ConversionPattern = "%date [%-3thread] %-5level - %message%newline";
+        layout.ActivateOptions();
+
+        appender.Layout = layout;
+        appender.ActivateOptions();
+
+        return appender;
+    }
+
+    public T? FindAppender<T>() where T : IAppender
+    {
+        var appenders = _loggerHandlerFactory.GetAppenders();
+        return appenders.OfType<T>().FirstOrDefault();
     }
 
     public void Error(string message, params object[] args)
@@ -161,7 +193,7 @@ public class LoggerHandler : ILoggerHandler
 
     public void Flush()
     {
-        var appenders = _repository.GetAppenders().OfType<BufferingAppenderSkeleton>();
+        var appenders = _loggerHandlerFactory.GetAppenders().OfType<BufferingAppenderSkeleton>();
 
         foreach (var appender in appenders)
         {
@@ -258,7 +290,7 @@ public class LoggerHandler : ILoggerHandler
 
     public void RefreshAppInsightsLogLevel(string logLevel)
     {
-        Level? level = GetLevel(logLevel);
+        Level? level = _loggerHandlerFactory.GetLevel(logLevel);
         if (level == null)
         {
             Warn($"Trying to set invalid log level: {logLevel}");
@@ -276,7 +308,7 @@ public class LoggerHandler : ILoggerHandler
             _appInsightsAppender.ActivateOptions();
         }
 
-        ((Hierarchy)_repository).RaiseConfigurationChanged(EventArgs.Empty);
+        _loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
 
         Info($"App Insights Log Level changed to {logLevel}");
 
@@ -288,7 +320,7 @@ public class LoggerHandler : ILoggerHandler
 
     public void RefreshAppendersLogLevel(string logLevel, bool init)
     {
-        Level? level = GetLevel(logLevel);
+        Level? level = _loggerHandlerFactory.GetLevel(logLevel);
         if (level == null)
         {
             Warn($"Trying to set invalid log level: {logLevel}");
@@ -299,7 +331,7 @@ public class LoggerHandler : ILoggerHandler
             return;
         }
 
-        var appenders = _repository.GetAppenders().OfType<AppenderSkeleton>()
+        var appenders = _loggerHandlerFactory.GetAppenders().OfType<AppenderSkeleton>()
             .Where(a => !(a is ApplicationInsightsAppender));
 
         foreach (var appender in appenders)
@@ -307,7 +339,7 @@ public class LoggerHandler : ILoggerHandler
             if (init && appender.Threshold == null)
             {
                 appender.Threshold = level;
-                ((Hierarchy)_repository).RaiseConfigurationChanged(EventArgs.Empty);
+                _loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
                 Info($"Appender {appender.Name} Log Level changed to {logLevel}");
             }
         }
@@ -315,10 +347,7 @@ public class LoggerHandler : ILoggerHandler
         _appendersLogLevel = level;
     }
 
-    private Level? GetLevel(string logLevel)
-    {
-        return _repository.LevelMap[logLevel];
-    }
+
 
     private SeverityLevel GetSeverityLevel(Level logLevel)
     {

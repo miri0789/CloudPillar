@@ -16,39 +16,38 @@ public class SigningTestFixture
 {
     private Mock<RegistryManager> _registryManagerMock;
     private Mock<ECDsa> _ecdsaMock;
-    private SigningService _signingService;
+    private SigningService _target;
     private Mock<Kubernetes> _kubernetesMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
-    private Mock<ILoggerHandler> _mockLoggerHandler;
+    private Mock<ILoggerHandler> _mockLogger;
 
     [SetUp]
     public void Setup()
     {
         _registryManagerMock = new Mock<RegistryManager>();
-        _mockLoggerHandler = new Mock<ILoggerHandler>();
         _ecdsaMock = new Mock<ECDsa>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
+        _mockLogger = new Mock<ILoggerHandler>();
         _mockEnvironmentsWrapper.Setup(c => c.iothubConnectionString).Returns("HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=");
         _mockEnvironmentsWrapper.Setup(c => c.signingPem).Returns("");
         _mockEnvironmentsWrapper.Setup(c => c.kubernetesServiceHost).Returns("your-kubernetes-service-host");
         _mockEnvironmentsWrapper.Setup(c => c.secretName).Returns("");
         _mockEnvironmentsWrapper.Setup(c => c.secretKey).Returns("your-secret-key");
 
-        _signingService = new SigningService(_mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
-        _signingService.GetType()
+        _target = new SigningService(_mockEnvironmentsWrapper.Object, _mockLogger.Object);
+        _target.GetType()
             .GetField("_registryManager", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .SetValue(_signingService, _registryManagerMock.Object);
-        _signingService.GetType()
+            .SetValue(_target, _registryManagerMock.Object);
+        _target.GetType()
             .GetField("_signingPrivateKey", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .SetValue(_signingService, _ecdsaMock.Object);
+            .SetValue(_target, _ecdsaMock.Object);
         _kubernetesMock = new Mock<Kubernetes>();
     }
 
     [Test]
-    public async Task GetSigningPrivateKeyAsync_Should_ThrowError_When_SecretNameOrSecretKeyIsNullOrEmpty()
+    public async Task GetSigningPrivateKeyAsync_SecretNameOrSecretKeyIsNullOrEmpty_ThrowError()
     {
-
-        async Task InitSigning() => await _signingService.Init();
+        async Task InitSigning() => await _target.Init();
         Assert.ThrowsAsync<InvalidOperationException>(InitSigning);
     }
 
@@ -62,7 +61,7 @@ public class SigningTestFixture
     public async Task LoadPrivateKeyFromEnvirementVariable_ValidPrivateKey_InitECDsaInstance()
     {
         InitKeyFromEnvirementVar();
-        await _signingService.Init();
+        await _target.Init();
         Assert.IsNotNull(_ecdsaMock.Object);
         Assert.IsInstanceOf<ECDsa>(_ecdsaMock.Object);
     }
@@ -86,7 +85,7 @@ public class SigningTestFixture
         var expectedSignatureString = Convert.ToBase64String(expectedSignature);
 
         InitKeyFromEnvirementVar();
-        await _signingService.Init();
+        await _target.Init();
 
         var updateTwinCalled = false;
         _registryManagerMock.Setup(mock => mock.GetTwinAsync(deviceId))
@@ -105,7 +104,7 @@ public class SigningTestFixture
                         .ReturnsAsync(twin)
                         .Verifiable();
 
-        await _signingService.CreateTwinKeySignature(deviceId, keyPath, signatureKey);
+        await _target.CreateTwinKeySignature(deviceId, keyPath, signatureKey);
         Assert.IsTrue(updateTwinCalled);
     }
 
@@ -125,7 +124,7 @@ public class SigningTestFixture
                         .Verifiable();
 
         var ex = Assert.ThrowsAsync<ArgumentException>(async () =>
-            await _signingService.CreateTwinKeySignature(deviceId, invalidKeyPath, signatureKey));
+            await _target.CreateTwinKeySignature(deviceId, invalidKeyPath, signatureKey));
 
         Assert.AreEqual("Invalid JSON path specified", ex.Message);
         _registryManagerMock.Verify();

@@ -14,20 +14,23 @@ public class TwinHandler : ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IFileDownloadHandler _fileDownloadHandler;
+    private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly IEnumerable<ShellType> _supportedShells;
 
     private readonly ILoggerHandler _logger;
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
+                       IFileUploaderHandler fileUploaderHandler,
                        ILoggerHandler loggerHandler)
     {
-        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
-        _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler)); ;
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
+        _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _supportedShells = GetSupportedShells();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task HandleTwinActionsAsync()
+    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -47,7 +50,7 @@ public class TwinHandler : ITwinHandler
             _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
             if (actions.Count() > 0)
             {
-                await HandleTwinActionsAsync(actions);
+                await HandleTwinActionsAsync(actions, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -73,20 +76,29 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions)
+    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
     {
         try
         {
             foreach (var action in actions)
             {
-                switch (action.TwinAction)
+                switch (action.TwinAction.Action)
                 {
-                    case DownloadAction downloadAction:
-                        await _fileDownloadHandler.InitFileDownloadAsync(downloadAction, action);
+                    case TwinActionType.SingularDownload:
+                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
-
-                    case UploadAction uploadAction:
-                        // Handle UploadAction
+                    case TwinActionType.SingularUpload:
+                        var twinReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+                        if (twinReport != null)
+                        {
+                            await UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
+                        }
+                        break;
+                    case TwinActionType.PeriodicUpload:
+                        //TO DO 
+                        //implement the while loop with interval like poc
+                        var actionToReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+                        await UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;
 
                     default:

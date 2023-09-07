@@ -31,7 +31,9 @@ builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
-
+builder.Services.AddScoped<IIoTStreamingFileUploaderHandler, IoTStreamingFileUploaderHandler>();
+builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
+builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 
 
