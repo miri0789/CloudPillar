@@ -4,6 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
+using log4net.Repository;
+using log4net.Appender;
+using log4net;
+using Microsoft.ApplicationInsights.Log4NetAppender;
 
 namespace Shared.Logger
 {
@@ -15,47 +20,56 @@ namespace Shared.Logger
             {
                 builder = WebApplication.CreateBuilder(args);
             }
-
+            builder.Services.AddHttpContextAccessor();
             IConfigurationRefresher? refresher = null;
             string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
-            string? appInsightsInstrumentationKey = null;
-            string? appInsightsConnectionString = null;
-            builder.Configuration.AddAzureAppConfiguration(options =>
-                    options.Connect(appConfigConnectionString)
-                    .Select("Log4Net", LabelFilter.Null)
-                    .ConfigureRefresh(refreshOptions =>
-                    {
-                        refreshOptions.Register(LoggerConstants.LOG_LEVEL_DEFAULT_CONFIG, refreshAll: true)
-                                      .Register(LoggerConstants.LOG_LEVEL_APPINSIGHTS_CONFIG, refreshAll: true)
-                                      .Register(LoggerConstants.LOG_LEVEL_APPENDERS_CONFIG, refreshAll: true)
-                                      .Register(LoggerConstants.LOG_LEVEL_INTERVAL_CONFIG, refreshAll: true)
-                                      .Register(LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG, refreshAll: false)
-                                      .Register(LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG, refreshAll: false);
-
-                        refresher = options.GetRefresher();
-                        refresher.TryRefreshAsync();
-                    }));
-            appInsightsInstrumentationKey = builder.Configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
-            appInsightsConnectionString = builder.Configuration[LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG];
-
-            // Create Logger
-            builder.Services.AddHttpContextAccessor();
-
-            var applicationInsightsSection = builder.Configuration.GetSection("ApplicationInsights");
-            builder.Services.AddSingleton<ILoggerHandler>(sp =>
+            var lo4NetPath = "log4net.config";
+            if (!Path.Exists(lo4NetPath))
             {
-                var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
-                var logggerFactory = new LoggerHandlerFactory();
-                var logger = new LoggerHandler(logggerFactory, httpContextAccessor, logggerFactory.CreateLogger(applicationName),
-                    appInsightsInstrumentationKey, "log4net.config",
-                    applicationName, appInsightsConnectionString, true);
-                return logger;
-            });
+                throw new Exception("no log4net config file");
+            }
+            log4net.Config.XmlConfigurator.Configure(new FileInfo(lo4NetPath));
+            var repository = LogManager.GetRepository();
+            bool isAppenderDefined = repository.IsAppenderExists<ApplicationInsightsAppender>();
 
-            
-            builder.Services.AddSingleton<LogLevelRefreshService>(provider => 
-                {return new LogLevelRefreshService(builder.Configuration, refresher, provider.GetRequiredService<ILoggerHandler>());});
-            builder.Services.AddHostedService(provider => provider.GetRequiredService<LogLevelRefreshService>());
+            if (isAppenderDefined)
+            {
+                if (string.IsNullOrEmpty(appConfigConnectionString))
+                {
+                    throw new ArgumentNullException(nameof(appConfigConnectionString));
+                }
+                builder.Configuration.AddAzureAppConfiguration(options =>
+                        options.Connect(appConfigConnectionString)
+                        .Select("Log4Net", LabelFilter.Null)
+                        .ConfigureRefresh(refreshOptions =>
+                        {
+                            refreshOptions.Register(LoggerConstants.LOG_LEVEL_DEFAULT_CONFIG, refreshAll: true)
+                                          .Register(LoggerConstants.LOG_LEVEL_APPINSIGHTS_CONFIG, refreshAll: true)
+                                          .Register(LoggerConstants.LOG_LEVEL_APPENDERS_CONFIG, refreshAll: true)
+                                          .Register(LoggerConstants.LOG_LEVEL_INTERVAL_CONFIG, refreshAll: true)
+                                          .Register(LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG, refreshAll: false)
+                                          .Register(LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG, refreshAll: false);
+
+                            refresher = options.GetRefresher();
+                            refresher.TryRefreshAsync();
+                        }));
+            }
+            builder.Services.AddSingleton<ILoggerHandler>(sp =>
+               {
+                   var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+                   var logggerFactory = new LoggerHandlerFactory();
+                   var logger = new LoggerHandler(logggerFactory, builder.Configuration, httpContextAccessor, logggerFactory.CreateLogger(applicationName),
+                        lo4NetPath,
+                       applicationName, true);
+                   return logger;
+               });
+
+            if (isAppenderDefined)
+            {
+                builder.Services.AddSingleton(provider =>
+                    { return new LogLevelRefreshService(builder.Configuration, refresher, provider.GetRequiredService<ILoggerHandler>()); });
+                builder.Services.AddHostedService(provider => provider.GetRequiredService<LogLevelRefreshService>());
+            }
 
             return builder;
         }

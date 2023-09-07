@@ -20,11 +20,12 @@ public class SigningService : ISigningService
 
     public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _environmentsWrapper = environmentsWrapper;
-        _logger = logger;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        if (string.IsNullOrEmpty(_environmentsWrapper.iothubConnectionString))
+        {
+            throw new ArgumentNullException(nameof(_environmentsWrapper.iothubConnectionString));
+        }
         _registryManager = RegistryManager.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
     }
 

@@ -8,15 +8,17 @@ namespace Shared.Logger;
 
 public interface ILoggerHandlerFactory
 {
-    public ILog CreateLogger(string filename);
+    ILog CreateLogger(string filename);
 
-    public ILoggerRepository CreateLogRepository(string? log4netConfigFile);
+    ILoggerRepository CreateLogRepository(string? log4netConfigFile);
 
     IAppender[] GetAppenders();
 
-    public Level? GetLevel(string logLevel);
+    Level? GetLevel(string logLevel);
 
     void RaiseConfigurationChanged(EventArgs e);
 
-    public ITelemetryClientWrapper CreateTelemetryClient(string connectionString);
+    ITelemetryClientWrapper CreateTelemetryClient(string connectionString);
+
+    bool IsApplicationInsightsAppenderInRoot();
 }

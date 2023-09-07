@@ -14,8 +14,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     private const int kB = 1024;
     public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper)
     {
-        ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        _deviceClient = deviceClientWrapper;
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));;
     }
 
     public async Task SendFirmwareUpdateEventAsync(string fileName, string actionId, long? startPosition = null, long? endPosition = null)

@@ -9,30 +9,33 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.ApplicationInsights.Log4NetAppender;
 using Shared.Logger.Wrappers;
+using Microsoft.Extensions.Configuration;
 
 namespace Shared.Logger;
 
 public class LoggerHandler : ILoggerHandler
 {
-    private ILog m_logger;
+    private ILog _logger;
 
-    private ITelemetryClientWrapper? m_telemetryClient;
-    
-    ILoggerHandlerFactory m_loggerHandlerFactory;
+    private ITelemetryClientWrapper? _telemetryClient;
 
-    private string m_applicationName;
+    private ILoggerHandlerFactory _loggerHandlerFactory;
 
-    private bool m_hasHttpContext;
+    private string _applicationName;
 
-    private readonly IHttpContextAccessor? m_httpContextAccessor;
+    private bool _hasHttpContext;
 
-    private Level? m_appInsightsLogLevel;
-    
-    private SeverityLevel m_appInsightsSeverity;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
 
-    private Level? m_appendersLogLevel;
+    private Level? _appInsightsLogLevel;
 
-    private ApplicationInsightsAppender? m_appInsightsAppender;
+    private SeverityLevel _appInsightsSeverity;
+
+    private Level? _appendersLogLevel;
+
+    private ApplicationInsightsAppender? _appInsightsAppender;
+
+    private bool _useAppInsight = false;
 
     private Dictionary<Level, SeverityLevel> m_levelMap = new Dictionary<Level, SeverityLevel>
         {
@@ -44,72 +47,66 @@ public class LoggerHandler : ILoggerHandler
             { Level.Critical, SeverityLevel.Critical }
         };
 
-    public LoggerHandler(ILoggerHandlerFactory loggerFactory, string filename,
-                          string? appInsightsKey = null, string? log4netConfigFile = null,
-                          string applicationName = "", string? connectionString = null) : this(loggerFactory,
-                              null, loggerFactory.CreateLogger(filename), appInsightsKey, log4netConfigFile,
-                              applicationName, connectionString, false)
-    { }
 
-    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IHttpContextAccessor? httpContextAccessor, ILog logger, string? appInsightsKey = null, string? log4netConfigFile = null, string applicationName = "", string? connectionString = null, bool hasHttpContext = true)
+    public LoggerHandler(ILoggerHandlerFactory loggerFactory, IConfiguration configuration, IHttpContextAccessor? httpContextAccessor, ILog logger, string? log4netConfigFile = null, string applicationName = "", bool hasHttpContext = true)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        m_logger = logger;
-
-        m_hasHttpContext = hasHttpContext;
-        m_httpContextAccessor = httpContextAccessor;
-
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         ArgumentNullException.ThrowIfNull(loggerFactory);
-        m_loggerHandlerFactory = loggerFactory;
+        _loggerHandlerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        _loggerHandlerFactory.CreateLogRepository(log4netConfigFile);
+        ArgumentNullException.ThrowIfNull(configuration);
 
-        m_loggerHandlerFactory.CreateLogRepository(log4netConfigFile);
+        _hasHttpContext = hasHttpContext;
+        _httpContextAccessor = httpContextAccessor;
 
-        m_applicationName = applicationName;
-       
-        m_appInsightsAppender = FindAppender<ApplicationInsightsAppender>() as ApplicationInsightsAppender; 
+        _applicationName = applicationName;
 
-        if (m_appInsightsAppender != null)
+
+        _appInsightsAppender = FindAppender<ApplicationInsightsAppender>() as ApplicationInsightsAppender;
+
+        if (_appInsightsAppender != null && _loggerHandlerFactory.IsApplicationInsightsAppenderInRoot())
         {
+
+            var appInsightsKey = configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
             if (!string.IsNullOrWhiteSpace(appInsightsKey))
             {
-                m_appInsightsAppender.InstrumentationKey = appInsightsKey;
-                m_appInsightsAppender.ActivateOptions();
+                _appInsightsAppender.InstrumentationKey = appInsightsKey;
+                _appInsightsAppender.ActivateOptions();
+                _useAppInsight = true;
             }
             else
             {
                 Info("Cannot activate Application Insights: Instrumentation Key is null");
             }
-        }
-        else
-        {
+            var connectionString = configuration[LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG];
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
-                m_telemetryClient = m_loggerHandlerFactory.CreateTelemetryClient(connectionString);
+                _telemetryClient = _loggerHandlerFactory.CreateTelemetryClient(connectionString);
+                _useAppInsight = true;
             }
             else
             {
                 Info("Cannot activate Telemetry: Connection String is null");
             }
+
+            RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
         }
+
 
         // Add Console Appender if not configured
         if (FindAppender<ConsoleAppender>() == null)
         {
-            var hierarchy = ((log4net.Core.ILoggerWrapper)m_logger).Logger.Repository as log4net.Repository.Hierarchy.Hierarchy;
+            var hierarchy = ((log4net.Core.ILoggerWrapper)_logger).Logger.Repository as log4net.Repository.Hierarchy.Hierarchy;
             if (hierarchy != null)
             {
                 hierarchy.Root.AddAppender(CreateConsoleAppender());
-                m_loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
+                _loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
             }
         }
-
-        RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
-        RefreshAppendersLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
-        
         Log4netConfigurationValidator.ValidateConfiguration(this);
     }
 
-    public static ConsoleAppender CreateConsoleAppender()
+    private ConsoleAppender CreateConsoleAppender()
     {
         ConsoleAppender appender = new ConsoleAppender();
         appender.Name = "ConsoleAppender";
@@ -126,7 +123,7 @@ public class LoggerHandler : ILoggerHandler
 
     public T? FindAppender<T>() where T : IAppender
     {
-        var appenders = m_loggerHandlerFactory.GetAppenders();
+        var appenders = _loggerHandlerFactory.GetAppenders();
         return appenders.OfType<T>().FirstOrDefault();
     }
 
@@ -134,8 +131,8 @@ public class LoggerHandler : ILoggerHandler
     {
         var formattedMessage = FormatMsg(message, args);
 
-        m_logger?.Error(formattedMessage);
-        TraceLogAppInsights(formattedMessage, SeverityLevel.Error);
+        _logger?.Error(formattedMessage);
+        if (_useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Error);
     }
 
     public void Error(string message, Exception e, params object[] args)
@@ -143,14 +140,14 @@ public class LoggerHandler : ILoggerHandler
         var error = string.Join(Environment.NewLine, FormatMsg(message, args), e);
 
         Error(error);
-        ExceptionLogAppInsights(e);
+        if (_useAppInsight) ExceptionLogAppInsights(e);
     }
 
     public void Warn(string message, params object[] args)
     {
         var formattedMessage = FormatMsg(message, args);
-        m_logger?.Warn(formattedMessage);
-        TraceLogAppInsights(formattedMessage, SeverityLevel.Warning);
+        _logger?.Warn(formattedMessage);
+        if (_useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Warning);
     }
 
     public void Warn(string message, Exception e, params object[] args)
@@ -158,21 +155,21 @@ public class LoggerHandler : ILoggerHandler
         var warn = string.Join(Environment.NewLine, FormatMsg(message, args), e);
 
         Warn(warn);
-        ExceptionLogAppInsights(e);
+        if (_useAppInsight) ExceptionLogAppInsights(e);
     }
 
     public void Info(string message, params object[] args)
     {
         var formattedMessage = FormatMsg(message, args);
-        m_logger?.Info(formattedMessage);
-        TraceLogAppInsights(formattedMessage, SeverityLevel.Information);
+        _logger?.Info(formattedMessage);
+        if (_useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Information);
     }
 
     public void Debug(string message, params object[] args)
     {
         var formattedMessage = FormatMsg(message, args);
-        m_logger?.Debug(formattedMessage);
-        TraceLogAppInsights(formattedMessage, SeverityLevel.Verbose);
+        _logger?.Debug(formattedMessage);
+        if (_useAppInsight) TraceLogAppInsights(formattedMessage, SeverityLevel.Verbose);
     }
 
     private string FormatMsg(string message, params object[] args)
@@ -196,24 +193,24 @@ public class LoggerHandler : ILoggerHandler
 
     public void Flush()
     {
-        var appenders = m_loggerHandlerFactory.GetAppenders().OfType<BufferingAppenderSkeleton>();
+        var appenders = _loggerHandlerFactory.GetAppenders().OfType<BufferingAppenderSkeleton>();
 
         foreach (var appender in appenders)
         {
             appender.Flush();
         }
 
-       m_telemetryClient?.Flush();
+        _telemetryClient?.Flush();
     }
 
     private void TraceLogAppInsights(string message, SeverityLevel severityLevel)
     {
-        if (m_appInsightsSeverity > severityLevel)
+        if (_appInsightsSeverity > severityLevel)
         {
             return;
         }
 
-        if (m_hasHttpContext)
+        if (_hasHttpContext)
         {
             TraceLogAppInsightsWithSessionParams(message, severityLevel);
         }
@@ -225,7 +222,7 @@ public class LoggerHandler : ILoggerHandler
 
     private void ExceptionLogAppInsights(Exception e)
     {
-        if (m_hasHttpContext)
+        if (_hasHttpContext)
         {
             ExceptionLogAppInsightsWithSessionParams(e);
         }
@@ -238,9 +235,9 @@ public class LoggerHandler : ILoggerHandler
     private Dictionary<string, string> GetRequestParameters()
     {
         var httpContexProperties = new Dictionary<string, string>();
-        if (m_httpContextAccessor?.HttpContext != null)
+        if (_httpContextAccessor?.HttpContext != null)
         {
-            var context = m_httpContextAccessor.HttpContext;
+            var context = _httpContextAccessor.HttpContext;
             context.Request.Headers.TryGetValue(LoggerConstants.SESSION_USER_NAME, out var userName);
             context.Request.Headers.TryGetValue(LoggerConstants.SESSION_TENANT_ID, out var tenantId);
             context.Request.Query.TryGetValue(LoggerConstants.SESSION_CASE_ID, out var caseId);
@@ -268,8 +265,8 @@ public class LoggerHandler : ILoggerHandler
         {
             properties = new Dictionary<string, string>();
         }
-        properties.Add(LoggerConstants.APPLICATION_NAME, m_applicationName);
-        m_telemetryClient?.TrackTrace(message, severityLevel, properties);
+        properties.Add(LoggerConstants.APPLICATION_NAME, _applicationName);
+        _telemetryClient?.TrackTrace(message, severityLevel, properties);
     }
 
     private void ExceptionLogAppInsightsWithSessionParams(Exception e)
@@ -287,65 +284,70 @@ public class LoggerHandler : ILoggerHandler
         {
             properties = new Dictionary<string, string>();
         }
-        properties.Add(LoggerConstants.APPLICATION_NAME, m_applicationName);
-        m_telemetryClient?.TrackException(e, properties);
+        properties.Add(LoggerConstants.APPLICATION_NAME, _applicationName);
+        _telemetryClient?.TrackException(e, properties);
     }
 
     public void RefreshAppInsightsLogLevel(string logLevel)
     {
-        Level? level = m_loggerHandlerFactory.GetLevel(logLevel);
-        if(level == null)
+        Level? level = _loggerHandlerFactory.GetLevel(logLevel);
+        if (level == null)
         {
             Warn($"Trying to set invalid log level: {logLevel}");
             return;
         }
 
-        if (m_appInsightsLogLevel == level)
+        if (_appInsightsLogLevel == level)
         {
             return;
         }
 
-        if (m_appInsightsAppender != null)
+        if (_appInsightsAppender != null)
         {
-            m_appInsightsAppender.Threshold = level;
-            m_appInsightsAppender.ActivateOptions();
+            _appInsightsAppender.Threshold = level;
+            _appInsightsAppender.ActivateOptions();
         }
-                
-        m_loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
 
-        Info($"App Insights Log Level changed to {logLevel}"); 
+        _loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
 
-        m_appInsightsLogLevel = level;
-        
+        Info($"App Insights Log Level changed to {logLevel}");
+
+        _appInsightsLogLevel = level;
+
         // For manually controlling telemetry trace log level severity
-        m_appInsightsSeverity = GetSeverityLevel(m_appInsightsLogLevel);
+        _appInsightsSeverity = GetSeverityLevel(_appInsightsLogLevel);
     }
 
-    public void RefreshAppendersLogLevel(string logLevel)
+    public void RefreshAppendersLogLevel(string logLevel, bool init)
     {
-        Level? level = m_loggerHandlerFactory.GetLevel(logLevel);
-        if(level == null)
+        Level? level = _loggerHandlerFactory.GetLevel(logLevel);
+        if (level == null)
         {
             Warn($"Trying to set invalid log level: {logLevel}");
             return;
         }
-        if (m_appendersLogLevel == level)
+        if (_appendersLogLevel == level)
         {
             return;
         }
 
-        var appenders = m_loggerHandlerFactory.GetAppenders().OfType<AppenderSkeleton>()
+        var appenders = _loggerHandlerFactory.GetAppenders().OfType<AppenderSkeleton>()
             .Where(a => !(a is ApplicationInsightsAppender));
 
         foreach (var appender in appenders)
         {
-            appender.Threshold = level;
-            m_loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
-            Info($"Appender {appender.Name} Log Level changed to {logLevel}");
-        } 
-                
-        m_appendersLogLevel = level;
+            if (init && appender.Threshold == null)
+            {
+                appender.Threshold = level;
+                _loggerHandlerFactory.RaiseConfigurationChanged(EventArgs.Empty);
+                Info($"Appender {appender.Name} Log Level changed to {logLevel}");
+            }
+        }
+
+        _appendersLogLevel = level;
     }
+
+
 
     private SeverityLevel GetSeverityLevel(Level logLevel)
     {

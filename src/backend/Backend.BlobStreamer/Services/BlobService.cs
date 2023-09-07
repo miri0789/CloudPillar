@@ -24,17 +24,11 @@ public class BlobService : IBlobService
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
      IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory MessageFactory)
     {
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        ArgumentNullException.ThrowIfNull(cloudStorageWrapper);
-        ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(MessageFactory);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _environmentsWrapper = environmentsWrapper;
-        _cloudStorageWrapper = cloudStorageWrapper;
-        _deviceClient = deviceClientWrapper;
-        _MessageFactory = MessageFactory;
-        _logger = logger;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));;
+        _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));;
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));;
+        _MessageFactory = MessageFactory ?? throw new ArgumentNullException(nameof(MessageFactory));;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));;
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
         _serviceClient = _deviceClient.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
