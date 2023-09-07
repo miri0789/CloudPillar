@@ -64,7 +64,7 @@ public class LoggerHandler : ILoggerHandler
 
         _appInsightsAppender = FindAppender<ApplicationInsightsAppender>() as ApplicationInsightsAppender;
 
-        if (_appInsightsAppender != null && _loggerHandlerFactory.IsAppenderInRoot<ApplicationInsightsAppender>())
+        if (_appInsightsAppender != null && _loggerHandlerFactory.IsApplicationInsightsAppenderInRoot())
         {
 
             var appInsightsKey = configuration[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG];
@@ -89,7 +89,7 @@ public class LoggerHandler : ILoggerHandler
                 Info("Cannot activate Telemetry: Connection String is null");
             }
 
-            RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD, true);
+            RefreshAppInsightsLogLevel(LoggerConstants.LOG_LEVEL_DEFAULT_THRESHOLD);
         }
 
 
