@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 
 namespace CloudPillar.Agent.Wrappers;
@@ -52,7 +53,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         throw new ArgumentException("DeviceId not found in the connection string");
     }
 
-
     public TransportType GetTransportType()
     {
         var transportTypeString = _environmentsWrapper.transportType;
@@ -105,4 +105,28 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
     }
 
+    public async Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties)
+    {
+        await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+    }
+
+    public async Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default)
+    {
+        FileUploadSasUriResponse response = await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
+        return response;
+    }
+
+    public async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default)
+    {
+        await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
+    }
+    public async Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default)
+    {
+        FileUploadCompletionNotification notification = new FileUploadCompletionNotification
+        {
+            CorrelationId = correlationId,
+            IsSuccess = isSuccess
+        };
+        await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
+    }
 }
