@@ -5,7 +5,8 @@ namespace Shared.Entities.Events;
 public enum EventType
 {
     FirmwareUpdateReady,
-    SignTwinKey
+    SignTwinKey,
+    StreamingUploadChunk
 }
 
 public class AgentEvent

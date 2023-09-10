@@ -1,11 +1,19 @@
-using System.Collections.Concurrent;
+
+using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Handlers;
 
 public class IoTStreamingFileUploaderHandler : IIoTStreamingFileUploaderHandler
 {
-    public async Task UploadFromStreamAsync(Stream readStream, long startFromPos, CancellationToken cancellationToken)
-    {
+    private readonly ID2CMessengerHandler _d2CMessengerHandler;
 
+    public IoTStreamingFileUploaderHandler(IDeviceClientWrapper deviceClientWrapper, ID2CMessengerHandler d2CMessengerHandler)
+    {
+        _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
+    }
+
+    public async Task UploadFromStreamAsync(Stream readStream, string absolutePath, string actionId)
+    {
+        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(readStream, absolutePath, actionId);
     }
 }

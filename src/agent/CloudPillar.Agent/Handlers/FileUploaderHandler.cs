@@ -44,7 +44,7 @@ public class FileUploaderHandler : IFileUploaderHandler
             }
             if (uploadAction.Enabled)
             {
-                await UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction.Method, cancellationToken);
+                await UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, cancellationToken);
                 twinAction.Status = StatusType.Success;
                 twinAction.ResultCode = ResultCode.Done.ToString();
             }
@@ -60,7 +60,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         return actionToReport;
     }
 
-    private async Task UploadFilesToBlobStorageAsync(string filePathPattern, FileUploadMethod uploadMethod, CancellationToken cancellationToken)
+    private async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, CancellationToken cancellationToken)
     {
         string directoryPath = Path.GetDirectoryName(filePathPattern) ?? "";
         string searchPattern = Path.GetFileName(filePathPattern);
@@ -77,7 +77,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
             using (Stream readStream = CreateStream(fullFilePath))
             {
-                await UploadFileAsync(uploadMethod, blobname, readStream, cancellationToken);
+                await UploadFileAsync(uploadAction, blobname, readStream, cancellationToken);
             }
         }
     }
@@ -129,7 +129,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         return readStream;
     }
 
-    private async Task UploadFileAsync(FileUploadMethod uploadMethod, string blobname, Stream readStream, CancellationToken cancellationToken)
+    private async Task UploadFileAsync(UploadAction uploadAction, string blobname, Stream readStream, CancellationToken cancellationToken)
     {
         FileUploadCompletionNotification notification = new FileUploadCompletionNotification()
         {
@@ -137,20 +137,20 @@ public class FileUploaderHandler : IFileUploaderHandler
         };
         try
         {
-            switch (uploadMethod)
+            var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
+            {
+                BlobName = blobname
+            });
+            var storageUri = sasUriResponse.GetBlobUri();
+            switch (uploadAction.Method)
             {
                 case FileUploadMethod.Blob:
-                    var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
-                    {
-                        BlobName = blobname
-                    });
-                    var storageUri = sasUriResponse.GetBlobUri();
                     notification.CorrelationId = sasUriResponse.CorrelationId;
 
                     await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
                     break;
                 case FileUploadMethod.Stream:
-                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, 0, cancellationToken);
+                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri.AbsolutePath,uploadAction.ActionId);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");

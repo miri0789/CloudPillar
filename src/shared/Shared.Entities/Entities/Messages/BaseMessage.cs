@@ -5,7 +5,8 @@ namespace Shared.Entities.Messages;
 
 public enum MessageType
 {
-    DownloadChunk
+    DownloadChunk,
+    UploadChunk
 }
 
 public abstract class BaseMessage
