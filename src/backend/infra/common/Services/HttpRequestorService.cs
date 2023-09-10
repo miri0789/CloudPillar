@@ -71,18 +71,6 @@ public class HttpRequestorService : IHttpRequestorService
         {
             response = await client.SendAsync(request, cancellationToken);
         }
-        catch (ArgumentNullException ex)
-        {
-            throw new ArgumentNullException("The request is null", ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new ArgumentNullException("The request message was already sent by the HttpClient instance", ex);
-        }
-        catch (HttpRequestException ex)
-        {
-            throw new ArgumentNullException("The request failed due to an underlying issue", ex);
-        }
         catch (Exception ex)
         {
             throw ex;
