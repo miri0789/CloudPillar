@@ -59,11 +59,10 @@ public class HttpRequestorService : IHttpRequestorService
             client.Timeout = TimeSpan.FromSeconds(httpsTimeoutSeconds);
         }
 
-        HttpResponseMessage? response = await client.SendAsync(request, cancellationToken);
-
-        if (response != null && response.IsSuccessStatusCode)
+        HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
+        string responseContent = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
         {
-            string responseContent = await response.Content.ReadAsStringAsync();
             if (!string.IsNullOrWhiteSpace(responseContent))
             {
                 var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
@@ -76,6 +75,8 @@ public class HttpRequestorService : IHttpRequestorService
             TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
             return result;
         }
-        throw new Exception($"HTTP request failed with status code {response?.StatusCode}");
+
+        _logger.Error($"HTTP request failed: {response.ReasonPhrase}: {method}{url} {responseContent}");
+        throw new HttpRequestException($"HTTP request failed: {response.ReasonPhrase}", null, response.StatusCode);
     }
 }
