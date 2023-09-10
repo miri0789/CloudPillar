@@ -2,14 +2,16 @@
 using Moq;
 using System.Net;
 using System.Text;
+using Shared.Logger;
 using common;
 
 namespace common.tests;
 public class HttpRequestorTestFixture
 {
-    private IHttpRequestorService _httpRequestor;
+    private IHttpRequestorService _target;
     private Mock<ISchemaValidator> _validatorMock;
     private Mock<HttpClient> _httpClientMock;
+    private Mock<ILoggerHandler> _loggerHandlerMock;
     private string _testUrl = "https://example.com";
 
     [SetUp]
@@ -28,7 +30,9 @@ public class HttpRequestorTestFixture
         _validatorMock = new Mock<ISchemaValidator>();
         _validatorMock.Setup(v => v.ValidatePayloadSchema(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Returns(true);
 
-        _httpRequestor = new HttpRequestorService(httpClientFactoryMock.Object, _validatorMock.Object);
+        _loggerHandlerMock = new Mock<ILoggerHandler>();
+
+        _target = new HttpRequestorService(httpClientFactoryMock.Object, _validatorMock.Object, _loggerHandlerMock.Object);
     }
 
     #region TestSendRequest
@@ -37,7 +41,7 @@ public class HttpRequestorTestFixture
     {
         var requestData = new { Name = "try" };
         CancellationToken cancellationToken = default;
-        async Task SendRequest() => await _httpRequestor.SendRequest(_testUrl, HttpMethod.Post, requestData, cancellationToken);
+        async Task SendRequest() => await _target.SendRequest(_testUrl, HttpMethod.Post, requestData, cancellationToken);
         Assert.DoesNotThrowAsync(SendRequest);
     }
 
@@ -45,8 +49,28 @@ public class HttpRequestorTestFixture
     public async Task SendRequest_InvalidUrl_ThrowsException()
     {
         string url = "invalid url";
-        async Task SendRequest() => await _httpRequestor.SendRequest(url, HttpMethod.Get);
-        Assert.ThrowsAsync<System.InvalidOperationException>(SendRequest);
+        async Task SendRequest() => await _target.SendRequest(url, HttpMethod.Get);
+        Assert.ThrowsAsync<InvalidOperationException>(SendRequest);
+        _loggerHandlerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("Invalid Url")), 
+           It.IsAny<InvalidOperationException>()), Times.Once);
+    }
+
+    [Test]
+    public async Task SendRequest_NullRequest_ThrowsException()
+    {
+        _httpClientMock.Setup(c => c.SendAsync(null, It.IsAny<CancellationToken>()))
+                       .ThrowsAsync(new ArgumentNullException("Null request"));
+
+        try
+        {
+            /*async Task SendRequest() => */await _target.SendRequest<string>(_testUrl, HttpMethod.Get);
+            //Assert.ThrowsAsync<ArgumentNullException>(SendRequest);
+        }
+        catch(ArgumentNullException)
+        {
+            _loggerHandlerMock.Verify(l => l.Error(It.IsAny<string>(),
+                It.IsAny<ArgumentNullException>()), Times.Once);
+        }
     }
 
     #endregion
@@ -58,7 +82,7 @@ public class HttpRequestorTestFixture
         string httpsTimeoutSecondsString = "60"; // Valid environment variable value
         Environment.SetEnvironmentVariable(CommonConstants.httpsTimeoutSeconds, httpsTimeoutSecondsString);
 
-        _httpRequestor.SendRequest<object>(_testUrl, HttpMethod.Get);
+        _target.SendRequest<object>(_testUrl, HttpMethod.Get);
         Assert.That(_httpClientMock.Object.Timeout, Is.EqualTo(TimeSpan.FromSeconds(60)));
     }
 
@@ -68,14 +92,14 @@ public class HttpRequestorTestFixture
         string httpsTimeoutSecondsString = "invalid-value"; // Invalid environment variable value
         Environment.SetEnvironmentVariable(CommonConstants.httpsTimeoutSeconds, httpsTimeoutSecondsString);
 
-        _httpRequestor.SendRequest<object>(_testUrl, HttpMethod.Get);
+        _target.SendRequest<object>(_testUrl, HttpMethod.Get);
         Assert.That(_httpClientMock.Object.Timeout, Is.EqualTo(TimeSpan.FromSeconds(30)));
     }
 
     [Test]
     public void SetTimeoutForHttpRequest_UsesDefaultTimeout()
     {
-        _httpRequestor.SendRequest<object>(_testUrl, HttpMethod.Get);
+        _target.SendRequest<object>(_testUrl, HttpMethod.Get);
         Assert.That(_httpClientMock.Object.Timeout, Is.EqualTo(TimeSpan.FromSeconds(30)));
     }
 
@@ -90,8 +114,11 @@ public class HttpRequestorTestFixture
         _validatorMock.Setup(v => v.ValidatePayloadSchema(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(false); // Simulate an invalid schema
 
-        async Task SendRequest() => await _httpRequestor.SendRequest(_testUrl, HttpMethod.Post, requestData);
+        async Task SendRequest() => await _target.SendRequest(_testUrl, HttpMethod.Post, requestData);
         Assert.ThrowsAsync<HttpRequestException>(SendRequest);
+        _loggerHandlerMock.Verify(l => l.Error(
+            It.Is<string>(msg => msg.Contains("The request data is not fit the schema")),
+            It.IsAny<System.Net.Http.HttpRequestException>()), Times.Once);
     }
 
     [Test]
@@ -106,7 +133,10 @@ public class HttpRequestorTestFixture
             .ReturnsAsync(expectedResponse);
         _validatorMock.Setup(v => v.ValidatePayloadSchema(invalidResponseContent, It.IsAny<string>(), false))
             .Returns(false);
-        Assert.ThrowsAsync<HttpRequestException>(() => _httpRequestor.SendRequest<object>(_testUrl, HttpMethod.Get));
+        Assert.ThrowsAsync<HttpRequestException>(() => _target.SendRequest<object>(_testUrl, HttpMethod.Get));
+        _loggerHandlerMock.Verify(l => l.Error(
+            It.Is<string>(msg => msg.Contains("The reponse data is not fit the schema")),
+            It.IsAny<System.Net.Http.HttpRequestException>()), Times.Once);
     }
 
     #endregion

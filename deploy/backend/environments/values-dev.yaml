@@ -13,9 +13,9 @@ controllers:
     - name: BlobContainerName
       value: "iotcontainer"
     - name: IothubConnectionString
-      value: "HostName=iot-dicom-dev-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=E2XYLv9hvVVnlq0Kq4albyb3BGcYQiMW2qvgGAqjEZ4="
+      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28="
     - name: StorageConnectionString
-      value: "DefaultEndpointsProtocol=https;AccountName=iotdicomdevstorage;AccountKey=q6rFgRGKo0+BxrtcbTSGUFNEFF4av7nkS6Fghy0LaIQ5+K9Bs+BsjVDLRP58MN8QrP58gdcQHwBa+AStT/Llhw==;EndpointSuffix=core.windows.net"
+      value: "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net"
     - name: MessageExpiredMinutes
       value: "60"
     - name: RetryPolicyBaseDelay
@@ -36,11 +36,11 @@ controllers:
     - name: LogswriteTopic
       value: "logswrite-topic"
     - name: IothubEventHubCompatibleEndpoint
-      value: "Endpoint=sb://iothub-ns-iot-dicom-24995834-325eff99c6.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=E2XYLv9hvVVnlq0Kq4albyb3BGcYQiMW2qvgGAqjEZ4=;EntityPath=iot-dicom-dev-hub"
+      value: "Endpoint=sb://iothub-ns-cp-dev-iot-25232063-aa3e0e76e7.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=;EntityPath=cp-dev-iothub"
     - name: IothubEventHubCompatiblePath
-      value: "iot-dicom-dev-hub"
+      value: "cp-dev-iothub"
     - name: StorageConnectionString
-      value: "DefaultEndpointsProtocol=https;AccountName=iotdicomdevstorage;AccountKey=q6rFgRGKo0+BxrtcbTSGUFNEFF4av7nkS6Fghy0LaIQ5+K9Bs+BsjVDLRP58MN8QrP58gdcQHwBa+AStT/Llhw==;EndpointSuffix=core.windows.net"
+      value: "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net"
     - name: BlobContainerName
       value: "iotcontainer"
     - name: BlobStreamerUrl
@@ -69,17 +69,7 @@ controllers:
     - name: SecretKey
       value: "signKey"
     - name: IothubConnectionString
-      value: "HostName=iot-dicom-dev-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=M3PM2vdanS3QhCnjKyD8m/QObHFSR5e0ZK2wHU1Ywh8="         
-  - title: "mongowriter"
-    env:
-    - name: LOG_TOPIC
-      value: "logswrite-topic"
-    - name: TELEMETRY_TOPIC
-      value: "telemetrywrite-topic"
-  - title: "twinlistener"
-    env:
-    - name: WRITE_TOPIC
-      value: "telemetrywrite-topic"
+      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28="
 
 replicaCount: 1
 

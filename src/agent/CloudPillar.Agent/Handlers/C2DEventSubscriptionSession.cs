@@ -3,6 +3,7 @@ using Microsoft.Azure.Devices.Client;
 using Shared.Entities.Messages;
 using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Factories;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -12,20 +13,19 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IMessageFactory _MessageFactory;
     private readonly ITwinHandler _twinHandler;
+
+    private readonly ILoggerHandler _logger;
     public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
                                        IMessageSubscriber messageSubscriber,
                                        IMessageFactory MessageFactory,
-                                       ITwinHandler twinHandler)
+                                       ITwinHandler twinHandler,
+                                       ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(messageSubscriber);
-        ArgumentNullException.ThrowIfNull(MessageFactory);
-        ArgumentNullException.ThrowIfNull(twinHandler);
-
-        _MessageFactory = MessageFactory;
-        _deviceClient = deviceClientWrapper;
-        _messageSubscriber = messageSubscriber;
-        _twinHandler = twinHandler;
+        _MessageFactory = MessageFactory ?? throw new ArgumentNullException(nameof(MessageFactory));
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _messageSubscriber = messageSubscriber ?? throw new ArgumentNullException(nameof(messageSubscriber));
+        _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
 
@@ -41,7 +41,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{DateTime.Now}: Exception hit when receiving the message, ignoring it: {ex.Message}");
+                _logger.Error($"{DateTime.Now}: Exception hit when receiving the message, ignoring it: {ex.Message}");
                 continue;
             }
 
@@ -61,14 +61,14 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;
                     default:
-                        Console.WriteLine("Receive  message was not processed");
+                        _logger.Info("Receive  message was not processed");
                         break;
                 }
-                Console.WriteLine($"{DateTime.Now}: Receive message of type: {messageType.ToString()} completed");
+                _logger.Info($"{DateTime.Now}: Receive message of type: {messageType.ToString()} completed");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{DateTime.Now}: Exception hit when parsing the message, ignoring it: {ex.Message}");
+                _logger.Error($"{DateTime.Now}: Exception hit when parsing the message, ignoring it: {ex.Message}");
                 continue;
             }
             finally

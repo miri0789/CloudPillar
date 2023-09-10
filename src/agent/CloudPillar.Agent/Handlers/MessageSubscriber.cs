@@ -7,8 +7,7 @@ public class MessageSubscriber : IMessageSubscriber
     private readonly IFileDownloadHandler _fileDownloadHandler;
     public MessageSubscriber(IFileDownloadHandler fileDownloadHandler)
     {
-        ArgumentNullException.ThrowIfNull(fileDownloadHandler);
-        _fileDownloadHandler = fileDownloadHandler;
+        _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));;
     }
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)

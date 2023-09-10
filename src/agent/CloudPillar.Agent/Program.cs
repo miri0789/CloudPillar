@@ -1,40 +1,61 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Utilities;
+using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
-using Shared.Entities.Twin;
+using FluentValidation;
 using Shared.Entities.Factories;
+using Shared.Logger;
 
-IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services =>
+const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
+var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
+
+builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
+            {
+                b.WithOrigins("http://localhost")
+                       .AllowAnyHeader()
+                       .AllowAnyMethod();
+            });
+        });
+
+builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
+builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
+builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
+builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
+builder.Services.AddScoped<IMessageFactory, MessageFactory>();
+builder.Services.AddScoped<ITwinHandler, TwinHandler>();
+builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
+builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
+builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
+builder.Services.AddScoped<IIoTStreamingFileUploaderHandler, IoTStreamingFileUploaderHandler>();
+builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
+builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
+builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
+
+
+builder.Services.AddControllers(options =>
     {
-        services.AddSingleton<IC2DEventHandler, C2DEventHandler>();
-        services.AddSingleton<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
-        services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
-        services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
-        services.AddSingleton<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
-        services.AddSingleton<IMessageSubscriber, MessageSubscriber>();
-        services.AddSingleton<IFileDownloadHandler, FileDownloadHandler>();
-        services.AddSingleton<IFileStreamerWrapper, FileStreamerWrapper>();
-        services.AddSingleton<ISignatureHandler, SignatureHandler>();
-        services.AddSingleton<ID2CMessengerHandler, D2CMessengerHandler>();
-        services.AddSingleton<ITwinHandler, TwinHandler>();
-        services.AddSingleton<IMessageFactory, MessageFactory>();
-        services.AddSingleton<IIoTStreamingFileUploaderHandler, IoTStreamingFileUploaderHandler>();
-        services.AddSingleton<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
-        services.AddSingleton<IFileUploaderHandler, FileUploaderHandler>();
-    })
-    .Build();
+        options.Filters.Add<LogActionFilter>();
+    });
+builder.Services.AddSwaggerGen();
 
-// TODO: execute according to agent design
-var signatureHandler = host.Services.GetService<ISignatureHandler>();
-signatureHandler.InitPublicKeyAsync();
-var c2DEventHandler = host.Services.GetService<IC2DEventHandler>();
 
-var cts = new CancellationTokenSource();
+var app = builder.Build();
 
-c2DEventHandler.CreateSubscribeAsync(cts.Token);
-var twinHandler = host.Services.GetService<ITwinHandler>();
-twinHandler.UpdateDeviceStateAsync(DeviceStateType.Ready);
-twinHandler.HandleTwinActionsAsync(cts.Token);
 
-host.Run();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
+
+app.UseCors(MY_ALLOW_SPECIFICORIGINS);
+app.MapControllers();
+
+app.Run();
