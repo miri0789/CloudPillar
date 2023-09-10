@@ -14,7 +14,7 @@ namespace Backend.Iotlistener.Tests;
 
 public class AgentEventProcessorTestFixture
 {
-    private AgentEventProcessor _eventProcessor;
+    private AgentEventProcessor _target;
     private Mock<IFirmwareUpdateService> _firmwareUpdateServiceMock;
     private Mock<ISigningService> _signingServiceMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
@@ -32,7 +32,7 @@ public class AgentEventProcessorTestFixture
         _mockLoggerHandler = new Mock<ILoggerHandler>();
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(30);
         _mockEnvironmentsWrapper.Setup(f => f.iothubConnectionDeviceId).Returns(_iothubConnectionDeviceId);
-        _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
+        _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
         _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
 
     }
@@ -58,7 +58,7 @@ public class AgentEventProcessorTestFixture
             CallBase = true
         };
 
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
 
         _firmwareUpdateServiceMock.Verify(f => f.SendFirmwareUpdateAsync("deviceId", It.IsAny<FirmwareUpdateEvent>()), Times.Once);
     }
@@ -72,7 +72,7 @@ public class AgentEventProcessorTestFixture
             CallBase = true
         };
 
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Once);
     }
@@ -87,7 +87,7 @@ public class AgentEventProcessorTestFixture
             CallBase = true
         };
 
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
     }
@@ -97,13 +97,13 @@ public class AgentEventProcessorTestFixture
     {
         var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(1);
-        _eventProcessor = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
         };
 
-        await _eventProcessor.ProcessEventsAsync(contextMock.Object, messages);
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
 
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
     }

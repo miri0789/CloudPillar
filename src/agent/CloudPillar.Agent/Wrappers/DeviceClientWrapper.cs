@@ -1,5 +1,7 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
@@ -7,15 +9,17 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     private readonly DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
+     private readonly ILoggerHandler _logger;
+
     /// <summary>
     /// Initializes a new instance of the DeviceClient class
     /// </summary>
     /// <param name="environmentsWrapper"></param>
     /// <exception cref="NullReferenceException"></exception>
-    public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper)
+    public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        _environmentsWrapper = environmentsWrapper;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         var _transportType = GetTransportType();
         try
         {
@@ -27,7 +31,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"CreateFromConnectionString failed {ex.Message}");
+            _logger.Error($"CreateFromConnectionString failed {ex.Message}");
             throw;
         }
 
@@ -51,7 +55,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
         throw new ArgumentException("DeviceId not found in the connection string");
     }
-
 
     public TransportType GetTransportType()
     {
@@ -105,4 +108,28 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
     }
 
+    public async Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties)
+    {
+        await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+    }
+
+    public async Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default)
+    {
+        FileUploadSasUriResponse response = await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
+        return response;
+    }
+
+    public async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default)
+    {
+        await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
+    }
+    public async Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default)
+    {
+        FileUploadCompletionNotification notification = new FileUploadCompletionNotification
+        {
+            CorrelationId = correlationId,
+            IsSuccess = isSuccess
+        };
+        await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
+    }
 }

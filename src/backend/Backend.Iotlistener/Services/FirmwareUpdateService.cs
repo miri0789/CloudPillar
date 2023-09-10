@@ -15,14 +15,9 @@ public class FirmwareUpdateService : IFirmwareUpdateService
     public FirmwareUpdateService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper,
      ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(httpRequestorService);
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _logger = logger;
-        _environmentsWrapper = environmentsWrapper;
-        _httpRequestorService = httpRequestorService;
-
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
     }
 
     public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)

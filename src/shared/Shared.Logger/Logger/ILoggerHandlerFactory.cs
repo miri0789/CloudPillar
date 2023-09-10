@@ -1,14 +1,24 @@
 ﻿using log4net;
 using log4net.Repository;
+using log4net.Appender;
+using log4net.Core;
 using Shared.Logger.Wrappers;
 
 namespace Shared.Logger;
 
 public interface ILoggerHandlerFactory
 {
-    public ILog CreateLogger(string filename);
+    ILog CreateLogger(string filename);
 
-    public ILoggerRepository CreateLogRepository(string? log4netConfigFile);
+    ILoggerRepository CreateLogRepository(string? log4netConfigFile);
 
-    public ITelemetryClientWrapper CreateTelemetryClient(string connectionString);
+    IAppender[] GetAppenders();
+
+    Level? GetLevel(string logLevel);
+
+    void RaiseConfigurationChanged(EventArgs e);
+
+    ITelemetryClientWrapper CreateTelemetryClient(string connectionString);
+
+    bool IsApplicationInsightsAppenderInRoot();
 }

@@ -1,8 +1,8 @@
 resource "azurerm_storage_account" "iot" {
   # name has to be unique amongst all storage accounts in Azure could over the world
-  name                     = "cp${var.env}storage"
-  resource_group_name      = data.azurerm_resource_group.iot.name
-  location                 = data.azurerm_resource_group.iot.location
+  name                     = "cp${var.env}files"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }

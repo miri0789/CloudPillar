@@ -10,7 +10,7 @@ public class SigningTestFixture
 {
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
     private Mock<ILoggerHandler> _mockLoggerHandler;
-    private SigningService _signingService;
+    private ISigningService _target;
     private Uri _signingUrl;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
 
@@ -26,7 +26,7 @@ public class SigningTestFixture
         _signingUrl = new Uri("http://example.com/");
         _mockEnvironmentsWrapper.Setup(f => f.signingUrl).Returns(_signingUrl.AbsoluteUri);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
-        _signingService = new SigningService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new SigningService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
 
     [Test]
@@ -40,7 +40,7 @@ public class SigningTestFixture
 
         string requestUrl = $"{_signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
 
-        await _signingService.CreateTwinKeySignature(deviceId, signEvent);
+        await _target.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
             service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
@@ -49,7 +49,7 @@ public class SigningTestFixture
     }
 
     [Test]
-    public void CreateTwinKeySignature_ExceptionThrown_WrapsAndThrowsException()
+    public async Task CreateTwinKeySignature_ExceptionThrown_WrapsAndThrowsException()
     {
         SignEvent signEvent = new SignEvent
         {
@@ -61,11 +61,13 @@ public class SigningTestFixture
 
         _httpRequestorServiceMock
             .Setup(service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
-            .Throws<Exception>();
+            .ThrowsAsync(new Exception());
+
+        await _target.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
             service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
-            Times.Never
+            Times.Once
         );
     }
 }
