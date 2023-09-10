@@ -46,6 +46,8 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+var a = new ProvisioningClient();
+a.RegisterCertificate();
 
 if (app.Environment.IsDevelopment())
 {
