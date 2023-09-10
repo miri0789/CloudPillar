@@ -19,6 +19,7 @@ builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
 builder.Services.AddScoped<ISigningService, SigningService>();
+builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddHttpClient();
 

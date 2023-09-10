@@ -197,7 +197,7 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                "DeviceConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=b_try1;SharedAccessKey=G+VsVpWKXooJPdtHhbK8dvpc6d9fh1asSGa2zgYqZYI="
+                "DeviceConnectionString": "HostName=nechama-iot-hub.azure-devices.net;DeviceId=nechama-device;SharedAccessKey=SritVETg05slI+yMwtl7BMKcKvNZjeMaOP90zDBkOm4="
             },
             "stopAtEntry": false
         }
