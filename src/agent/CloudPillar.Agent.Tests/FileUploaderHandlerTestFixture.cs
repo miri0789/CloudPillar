@@ -4,6 +4,7 @@ using CloudPillar.Agent.Handlers;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Devices.Client.Transport;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 [TestFixture]
 public class FileUploaderHandlerTestFixture
@@ -12,11 +13,7 @@ public class FileUploaderHandlerTestFixture
     private Mock<IBlobStorageFileUploaderHandler> _blobStorageFileUploaderHandlerMock;
     private Mock<IIoTStreamingFileUploaderHandler> _ioTStreamingFileUploaderHandlerMock;
     private IFileUploaderHandler _target;
-
-    CancellationToken cancellationToken = CancellationToken.None;
-    UploadAction uploadAction;
-    ActionToReport actionToReport;
-    FileUploadSasUriResponse sasUriResponseForFile = new FileUploadSasUriResponse()
+    FileUploadSasUriResponse sasUriResponse = new FileUploadSasUriResponse()
     {
         BlobName = "nechama-device/C_driveroot_/git.dev/CloudPillar/UploadFolder/uploadFileInFolder.txt",
         ContainerName = "nechama-container",
@@ -25,50 +22,36 @@ public class FileUploaderHandlerTestFixture
         SasToken = "?sv=2018-03-28&sr=b&sig=wwdV5O%2FY2O3TVaAHn2jHZ17fQeKSW0rgkr1jcSxcTwE%3D&se=2023-09-07T09%3A19%3A58Z&sp=rw"
     };
 
-    FileUploadSasUriResponse sasUriResponseForDirectory = new FileUploadSasUriResponse()
-    {
-        BlobName = "nechama-device/c_driveroot_/upload.zip",
-        ContainerName = "nechama-container",
-        CorrelationId = "MjAyMzA5MDcwNzI0XzZiNDExM2ZlLTQ1MzktNDg2YS05YmRkLWIyY2QzMmUwM2U0NF9jX2RyaXZlcm9vdF8vdXBsb2FkLnppcF92ZXIyLjA=",
-        HostName = "nechama.blob.core.windows.net",
-        SasToken = "?sv=2018-03-28&sr=b&sig=itXnKMeEUEK5PuSwGgK0Gc4llSUoS3BndM1yiNo6GeE%3D&se=2023-09-07T07%3A14%3A15Z&sp=rw"
-    };
-
     [SetUp]
     public void Setup()
     {
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
         _blobStorageFileUploaderHandlerMock = new Mock<IBlobStorageFileUploaderHandler>();
         _ioTStreamingFileUploaderHandlerMock = new Mock<IIoTStreamingFileUploaderHandler>();
+        var _mockBlockBlob = new Mock<CloudBlockBlob>( new Uri("https://nechama.blob.core.windows.net/nechama-container"));
+
+        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(sasUriResponse);
 
         _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _ioTStreamingFileUploaderHandlerMock.Object);
     }
 
-    private void InitFileUpload(string fileName, bool enabled = true)
-    {
-        uploadAction = new UploadAction
-        {
-            FileName = fileName,
-            Enabled = enabled,
-        };
-
-        actionToReport = new ActionToReport
-        {
-            TwinReport = new TwinActionReported()
-        };
-    }
 
     [Test]
     public async Task UploadFilesToBlobStorageAsync_ExecInnerUploadFunction_ReturnStatusSuccess()
     {
 
-        InitFileUpload("C:\\upload");
+        var uploadAction = new UploadAction
+        {
+            FileName = "C:\\upload"
+        };
 
-        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponseForDirectory);
-
+        var actionToReport = new ActionToReport
+        {
+            TwinReport = new TwinActionReported()
+        };
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, cancellationToken);
+        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
 
         _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -76,14 +59,19 @@ public class FileUploaderHandlerTestFixture
     [Test]
     public async Task UploadFilesToBlobStorageAsync_ValidPathDirectory_ReturnStatusSuccess()
     {
+        var uploadAction = new UploadAction
+        {
+            FileName = "C:\\git.dev\\CloudPillar\\UploadFolder",
+            Enabled = true
+        };
 
-        InitFileUpload("C:\\git.dev\\CloudPillar\\UploadFolder");
-
-        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponseForDirectory);
+        var actionToReport = new ActionToReport
+        {
+            TwinReport = new TwinActionReported()
+        };
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, cancellationToken);
+        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Success);
     }
@@ -91,14 +79,19 @@ public class FileUploaderHandlerTestFixture
     [Test]
     public async Task UploadFilesToBlobStorageAsync_ValidPathFile_ReturnStatusSuccess()
     {
+        var uploadAction = new UploadAction
+        {
+            FileName = "C:\\git.dev\\CloudPillar\\uploadFile.txt",
+            Enabled = true
+        };
 
-        InitFileUpload("C:\\git.dev\\CloudPillar\\uploadFile.txt");
-
-        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponseForFile);
+        var actionToReport = new ActionToReport
+        {
+            TwinReport = new TwinActionReported()
+        };
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, cancellationToken);
+        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Success);
     }
@@ -106,14 +99,19 @@ public class FileUploaderHandlerTestFixture
     [Test]
     public async Task UploadFilesToBlobStorageAsync_NoExistsFile_ReturnStatusFailed()
     {
+        var uploadAction = new UploadAction
+        {
+            FileName = "C:\\git.dev\\CloudPillar\\no-exists.txt",
+            Enabled = true
+        };
 
-        InitFileUpload("C:\\git.dev\\CloudPillar\\no-exists.txt");
-
-        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponseForFile);
+        var actionToReport = new ActionToReport
+        {
+            TwinReport = new TwinActionReported()
+        };
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, cancellationToken);
+        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Failed);
     }
@@ -121,13 +119,19 @@ public class FileUploaderHandlerTestFixture
     [Test]
     public async Task UploadFilesToBlobStorageAsync_NoExistsFolder_ReturnStatusFailed()
     {
-        InitFileUpload("C:\\git.dev1\\CloudPillar\\no-exists-folder");
+        var uploadAction = new UploadAction
+        {
+            FileName = "C:\\git.dev\\CloudPillar\\no-exists-folder",
+            Enabled = true
+        };
 
-        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponseForDirectory);
+        var actionToReport = new ActionToReport
+        {
+            TwinReport = new TwinActionReported()
+        };
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, cancellationToken);
+        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Failed);
     }
@@ -135,13 +139,19 @@ public class FileUploaderHandlerTestFixture
     [Test]
     public async Task UploadFilesToBlobStorageAsync_NoFilesToUpload_ReturnStatusFailed()
     {
-        InitFileUpload("C:\\git.dev\\CloudPillar\\EmptyFolder");
+        var uploadAction = new UploadAction
+        {
+            FileName = "C:\\git.dev\\CloudPillar\\EmptyFolder",
+            Enabled = true
+        };
 
-        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponseForDirectory);
+        var actionToReport = new ActionToReport
+        {
+            TwinReport = new TwinActionReported()
+        };
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, cancellationToken);
+        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Failed);
     }
@@ -150,13 +160,19 @@ public class FileUploaderHandlerTestFixture
     public async Task UploadFilesToBlobStorageAsync_EmptyPath_ReturnStatusFailed()
     {
 
-        InitFileUpload("");
+        var uploadAction = new UploadAction
+        {
+            FileName = "",
+            Enabled = true
+        };
 
-        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponseForDirectory);
+        var actionToReport = new ActionToReport
+        {
+            TwinReport = new TwinActionReported()
+        };
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, cancellationToken);
+        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Failed);
     }

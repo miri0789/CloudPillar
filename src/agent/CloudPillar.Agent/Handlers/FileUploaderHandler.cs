@@ -34,7 +34,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         try
         {
-            if (string.IsNullOrEmpty(uploadAction.FileName))
+            if (string.IsNullOrWhiteSpace(uploadAction.FileName))
             {
                 throw new ArgumentException("No file to upload");
             }
@@ -70,7 +70,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         if (filesToUpload.Length == 0)
         {
-            throw new ArgumentNullException($"no files found in {filePathPattern}");
+            throw new ArgumentNullException($"The file {filePathPattern} not found");
         }
         // Upload each file
         foreach (string fullFilePath in files.Concat(directories))
@@ -103,7 +103,7 @@ public class FileUploaderHandler : IFileUploaderHandler
             string[] filesDir = Directory.GetFiles(fullFilePath, "*", SearchOption.AllDirectories);
             if (filesDir.Length == 0)
             {
-                throw new ArgumentNullException($"No files found in directory {baseDir}");
+                throw new ArgumentNullException($"Directory {baseDir} is empty");
             }
             foreach (string file in filesDir)
             {

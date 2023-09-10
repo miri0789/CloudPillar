@@ -15,6 +15,10 @@ namespace CloudPillar.Agent.Entities
 
         public async Task UploadFromStreamAsync(Uri storageUri, Stream readStream, CancellationToken cancellationToken)
         {
+            if (storageUri == null)
+            {
+                throw new ArgumentNullException("No URI was provided for upload the stream");
+            }
             CloudBlockBlob cloudBlockBlob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
             using (Stream controllableStream = new StreamWrapper(readStream, cancellationToken))
             {
