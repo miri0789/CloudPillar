@@ -11,7 +11,7 @@ public class FileUploaderHandlerTestFixture
 {
     private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
     private Mock<IBlobStorageFileUploaderHandler> _blobStorageFileUploaderHandlerMock;
-    private Mock<IIoTStreamingFileUploaderHandler> _ioTStreamingFileUploaderHandlerMock;
+    private Mock<IStreamingFileUploaderHandler> _streamingFileUploaderHandlerMock;
     private IFileUploaderHandler _target;
     FileUploadSasUriResponse sasUriResponse = new FileUploadSasUriResponse()
     {
@@ -27,18 +27,17 @@ public class FileUploaderHandlerTestFixture
     {
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
         _blobStorageFileUploaderHandlerMock = new Mock<IBlobStorageFileUploaderHandler>();
-        _ioTStreamingFileUploaderHandlerMock = new Mock<IIoTStreamingFileUploaderHandler>();
-        var _mockBlockBlob = new Mock<CloudBlockBlob>( new Uri("https://nechama.blob.core.windows.net/nechama-container"));
+        _streamingFileUploaderHandlerMock = new Mock<IStreamingFileUploaderHandler>();
 
         _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sasUriResponse);
 
-        _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _ioTStreamingFileUploaderHandlerMock.Object);
+        _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object);
     }
 
 
     [Test]
-    public async Task UploadFilesToBlobStorageAsync_ExecInnerUploadFunction_ReturnStatusSuccess()
+    public async Task UploadFilesToBlobStorageAsync_ValidStorageFiles_ReturnStatusSuccess()
     {
 
         var uploadAction = new UploadAction

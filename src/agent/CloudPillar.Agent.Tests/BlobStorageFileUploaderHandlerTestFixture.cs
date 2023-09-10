@@ -20,9 +20,9 @@ public class BlobStorageFileUploaderHandlerTestFixture
     [Test]
     public async Task UploadFromStreamAsync_ValidInput_UploadsStreamToBlob()
     {
-        Uri storageUri = new Uri("https://nechama.blob.core.windows.net/nechama-container");
-        MemoryStream readStream = new MemoryStream(new byte[] { 1, 2, 3 });
-        CancellationToken cancellationToken = CancellationToken.None;
+        var storageUri = new Uri("https://nechama.blob.core.windows.net/nechama-container");
+        var readStream = new MemoryStream(new byte[] { 1, 2, 3 });
+        var cancellationToken = CancellationToken.None;
         var _mockBlockBlob = new Mock<CloudBlockBlob>(storageUri);
 
         _cloudBlockBlobWrapperMock
@@ -48,8 +48,8 @@ public class BlobStorageFileUploaderHandlerTestFixture
     public async Task UploadFromStreamAsync_InvalidInput_DoesNotUploadStream()
     {
         Uri invalidStorageUri = null; // Or provide an invalid URI here
-        MemoryStream readStream = new MemoryStream(new byte[] { 1, 2, 3 });
-        CancellationToken cancellationToken = CancellationToken.None;
+        var readStream = new MemoryStream(new byte[] { 1, 2, 3 });
+        var cancellationToken = CancellationToken.None;
 
         Assert.ThrowsAsync<ArgumentNullException>(async () =>
             {

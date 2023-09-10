@@ -12,20 +12,20 @@ public class FileUploaderHandler : IFileUploaderHandler
     const int BUFFER_SIZE = 4 * 1024 * 1024;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
-    private readonly IIoTStreamingFileUploaderHandler _ioTStreamingFileUploaderHandler;
+    private readonly IStreamingFileUploaderHandler _StreamingFileUploaderHandler;
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
-        IIoTStreamingFileUploaderHandler ioTStreamingFileUploaderHandler)
+        IStreamingFileUploaderHandler StreamingFileUploaderHandler)
     {
         ArgumentNullException.ThrowIfNull(deviceClientWrapper);
         ArgumentNullException.ThrowIfNull(blobStorageFileUploaderHandler);
-        ArgumentNullException.ThrowIfNull(ioTStreamingFileUploaderHandler);
+        ArgumentNullException.ThrowIfNull(StreamingFileUploaderHandler);
 
         _deviceClientWrapper = deviceClientWrapper;
         _blobStorageFileUploaderHandler = blobStorageFileUploaderHandler;
-        _ioTStreamingFileUploaderHandler = ioTStreamingFileUploaderHandler;
+        _StreamingFileUploaderHandler = StreamingFileUploaderHandler;
     }
 
     public async Task<ActionToReport> FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
@@ -158,7 +158,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                     await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
                     break;
                 case FileUploadMethod.Stream:
-                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, 0, cancellationToken);
+                    await _StreamingFileUploaderHandler.UploadFromStreamAsync(readStream, 0, cancellationToken);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");
