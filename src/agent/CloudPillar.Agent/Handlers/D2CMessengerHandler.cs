@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
@@ -32,13 +33,12 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
         await SendMessageAsync(firmwareUpdateEvent);
     }
-  
-    public async Task SendStreamingUploadChunkEventAsync(Stream readStream, string absolutePath, string actionId, long? startPosition = null, long? endPosition = null, CancellationToken cancellationToken = default)
+
+    public async Task SendStreamingUploadChunkEventAsync(Stream readStream, string absolutePath, string actionId, string correlationId, long startPosition = 0, long? endPosition = null, CancellationToken cancellationToken = default)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClient.GetChunkSizeByTransportType();
         int totalChunks = (int)Math.Ceiling((double)readStream.Length / chunkSize);
-
 
         for (int chunkIndex = (int)(startPosition / chunkSize); chunkIndex < totalChunks; chunkIndex++)
         {
@@ -53,26 +53,33 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             {
                 AbsolutePath = absolutePath,
                 ChunkSize = chunkSize,
-                StartPosition = startPosition ?? 0,
+                StartPosition = startPosition,
                 EndPosition = endPosition,
                 ActionId = actionId,
                 Data = data
             };
 
-            // var messageString = JsonConvert.SerializeObject(streamingUploadChunkEvent);
-            // var message = new Message(Encoding.ASCII.GetBytes(messageString)); // TODO: why ASCII?
+            var properties = new Dictionary<string, string>
+                {
+                    { "chunk_index", chunkIndex.ToString() },
+                    { "total_chunks", totalChunks.ToString() },
+                };
 
-            // // message.Properties.Add("device_id", device_id);
-            // message.Properties.Add("chunk_index", chunkIndex.ToString());
-            // message.Properties.Add("total_chunks", totalChunks.ToString());
-
-            await SendMessageAsync(streamingUploadChunkEvent);
+            await SendMessageAsync(streamingUploadChunkEvent, properties);
         }
-    }
-    private async Task SendMessageAsync(AgentEvent agentEvent)
+    }   
+    private async Task SendMessageAsync(AgentEvent agentEvent, Dictionary<string, string>? properties = null)
     {
         var messageString = JsonConvert.SerializeObject(agentEvent);
         Message message = new Message(Encoding.ASCII.GetBytes(messageString));
+        if (properties != null)
+        {
+            foreach (var prop in properties)
+            {
+                message.Properties.Add(prop.Key, prop.Value);
+            }
+        }
+
         await _deviceClient.SendEventAsync(message);
     }
 }

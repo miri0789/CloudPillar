@@ -139,10 +139,11 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.Iotlistener",
             "console": "internalConsole",
             "env": {
-                //Iot hub-> Built in endpoinnts
+                //Iot hub-> Built in endpoinnts-> Event Hub-compatible endpoint
                 "IothubEventHubCompatibleEndpoint": "Endpoint=sb://ihsuprodamres049dednamespace.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=/Y22kAg691VT+L4S+VaFRNGALzbcUPvNDAIoTI5B49E=;EntityPath=iothub-ehub-nechama-io-25232409-56aa312c6f",
-                "IothubEventHubCompatiblePath": "nechama-iot-hub",
-                //storageAccount->Access Key
+                //Iot hub-> Built in endpoinnts-> Event Hub-compatible name
+                "IothubEventHubCompatiblePath": "iothub-ehub-nechama-io-25232409-56aa312c6f",
+                //StorageAccount->Access Key
                 "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=nechama;AccountKey=GGz3NyA7yim4dtaEnbrqDGR09vX6mrOk2NVmuWGQ7TnUt9bXgDIUZ+ze1Zdu7uryJN5wKDHRqYIx+AStJbKVrA==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "nechama-container",
                 "BlobStreamerUrl": "http://localhost:5019/",

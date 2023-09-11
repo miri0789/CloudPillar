@@ -142,15 +142,15 @@ public class FileUploaderHandler : IFileUploaderHandler
                 BlobName = blobname
             });
             var storageUri = sasUriResponse.GetBlobUri();
+            notification.CorrelationId = sasUriResponse.CorrelationId;
             switch (uploadAction.Method)
             {
                 case FileUploadMethod.Blob:
-                    notification.CorrelationId = sasUriResponse.CorrelationId;
 
                     await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
                     break;
                 case FileUploadMethod.Stream:
-                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri.AbsolutePath,uploadAction.ActionId);
+                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri.AbsolutePath, uploadAction.ActionId, sasUriResponse.CorrelationId);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");
