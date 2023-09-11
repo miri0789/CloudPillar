@@ -1579,7 +1579,8 @@ Each zone:
 - Allows specification of id / name
 - Allows specification of the action type (Upload / Download)
 - Allows specification of the restriction type (Allow / Deny). [Deny zone - a future requirement]
-- Allows specification of upload and download directories, with wild-card restrictions.
+- Allows specification of upload and download directories, with wild-card restrictions. **Note: Best reference for wildcard specifications is the one from [.gitignore files](https://git-scm.com/docs/gitignore#_pattern_format).
+
 - Allows specification of maximal size of a downloading file in each zone. Files exceeding the maximal size restriction will not be downloaded. 
 
 Every file being considered by the Agent to initiate upload or download, will be checked against all restrictions. If any of Deny zones or no one of Allow zones match the full file name along with the desired action type, the considered operation is rejected, and the reject cause for the Reported section will be 'Denied by local a restriction "DENY_ZONE_NAME"' or 'Denied by the lack of local allowance'.
