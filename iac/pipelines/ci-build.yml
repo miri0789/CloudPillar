@@ -19,7 +19,7 @@ trigger:
 resources:
 - repo: self
 
-# variables:
+variables:
 # - group: arm-vg
 # - group: iac-backend-vg
 # - group: aks-backend-vg
