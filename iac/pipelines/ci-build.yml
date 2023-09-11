@@ -59,9 +59,9 @@ parameters:
   - name: agent
     displayName: Select Agent Project
     type: object
-    # default:
-    # - agent   
-    # - pocagent   
+    default:
+    - agent1   
+    - pocagent1
 
 stages:
 
