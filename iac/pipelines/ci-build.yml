@@ -92,9 +92,9 @@ stages:
     jobs:
     - job: All
       displayName: Clean Tag Scan Push All Images
+
       pool:
-        # name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent
+        vmImage: ubuntu-latest
       steps:   
       # - script: |   
       #     az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
