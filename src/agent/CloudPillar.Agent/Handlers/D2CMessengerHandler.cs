@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Client.Transport;
 using Newtonsoft.Json;
 using Shared.Entities.Events;
 
@@ -10,17 +11,17 @@ namespace CloudPillar.Agent.Handlers;
 
 public class D2CMessengerHandler : ID2CMessengerHandler
 {
-    private readonly IDeviceClientWrapper _deviceClient;
+    private readonly IDeviceClientWrapper _deviceClientWrapper;
 
     public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper)
     {
-        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
+        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
     }
 
     public async Task SendFirmwareUpdateEventAsync(string fileName, string actionId, long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
-        int chunkSize = _deviceClient.GetChunkSizeByTransportType();
+        int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
 
         var firmwareUpdateEvent = new FirmwareUpdateEvent()
         {
@@ -37,37 +38,83 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     public async Task SendStreamingUploadChunkEventAsync(Stream readStream, string absolutePath, string actionId, string correlationId, long startPosition = 0, long? endPosition = null, CancellationToken cancellationToken = default)
     {
         // Deduct the chunk size based on the protocol being used
-        int chunkSize = _deviceClient.GetChunkSizeByTransportType();
+        int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
         int totalChunks = (int)Math.Ceiling((double)readStream.Length / chunkSize);
 
-        for (int chunkIndex = (int)(startPosition / chunkSize); chunkIndex < totalChunks; chunkIndex++)
+        long streamLength = readStream.Length;
+        long currentPosition = 0;
+        FileUploadCompletionNotification notification = new FileUploadCompletionNotification()
         {
-            int offset = chunkIndex * chunkSize;
-            int length = (chunkIndex == totalChunks - 1) ? (int)(readStream.Length - offset) : chunkSize;
-            byte[] data = new byte[length];
-            await readStream.ReadAsync(data, offset, length, cancellationToken);
-
-            // Deduct the chunk size based on the protocol being used
-
-            var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
+            IsSuccess = true,
+            CorrelationId = correlationId
+        };
+        try
+        {
+            while (currentPosition < streamLength)
             {
-                AbsolutePath = absolutePath,
-                ChunkSize = chunkSize,
-                StartPosition = startPosition,
-                EndPosition = endPosition,
-                ActionId = actionId,
-                Data = data
-            };
+                long remainingBytes = streamLength - currentPosition;
+                long bytesToUpload = Math.Min(chunkSize, remainingBytes);
 
-            var properties = new Dictionary<string, string>
+                byte[] buffer = new byte[bytesToUpload];
+                readStream.Read(buffer, 0, (int)bytesToUpload);
+
+                var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
                 {
-                    { "chunk_index", chunkIndex.ToString() },
+                    AbsolutePath = absolutePath,
+                    ChunkSize = chunkSize,
+                    StartPosition = currentPosition,
+                    // EndPosition = endPosition,
+                    ActionId = actionId,
+                    Data = buffer
+                };
+
+                var properties = new Dictionary<string, string>
+                {
+                    // { "chunk_index", chunkIndex.ToString() },
                     { "total_chunks", totalChunks.ToString() },
                 };
 
-            await SendMessageAsync(streamingUploadChunkEvent, properties);
+                await SendMessageAsync(streamingUploadChunkEvent, properties);
+
+                currentPosition += bytesToUpload;
+            }
+
+            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
         }
-    }   
+        catch (Exception ex)
+        {
+            notification.IsSuccess = false;
+            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+        }
+        // for (int chunkIndex = (int)(startPosition / chunkSize); chunkIndex < totalChunks; chunkIndex++)
+        // {
+        //     int offset = chunkIndex * chunkSize;
+        //     int length = (chunkIndex == totalChunks - 1) ? (int)(readStream.Length - offset) : chunkSize;
+        //     byte[] data = new byte[length];
+        //     await readStream.ReadAsync(data, offset, length, cancellationToken);
+
+        //     // Deduct the chunk size based on the protocol being used
+
+        //     var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
+        //     {
+        //         AbsolutePath = absolutePath,
+        //         ChunkSize = chunkSize,
+        //         StartPosition = startPosition,
+        //         EndPosition = endPosition,
+        //         ActionId = actionId,
+        //         Data = data
+        //     };
+
+        //     var properties = new Dictionary<string, string>
+        //         {
+        //             { "chunk_index", chunkIndex.ToString() },
+        //             { "total_chunks", totalChunks.ToString() },
+        //         };
+
+        //     await SendMessageAsync(streamingUploadChunkEvent, properties);
+        // }
+
+    }
     private async Task SendMessageAsync(AgentEvent agentEvent, Dictionary<string, string>? properties = null)
     {
         var messageString = JsonConvert.SerializeObject(agentEvent);
@@ -80,6 +127,6 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             }
         }
 
-        await _deviceClient.SendEventAsync(message);
+        await _deviceClientWrapper.SendEventAsync(message);
     }
 }

@@ -128,7 +128,7 @@ public class AgentEventProcessor : IEventProcessor
                     case EventType.StreamingUploadChunk:
                         {
                             var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
-                            await _streamingUploadChunkService.UploadStreamToBlob(deviceId,streamingUploadChunkEvent );
+                            await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent );
                             break;
                         }
                 }

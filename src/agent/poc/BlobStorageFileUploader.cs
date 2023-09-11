@@ -4,7 +4,7 @@ namespace FirmwareUpdateAgent
 {
     partial class Program
     {
-        public partial class BlobStorageFileUploader : IFileUploader
+        public class BlobStorageFileUploader : IFileUploader
         {
             private CloudBlockBlob blob;
 

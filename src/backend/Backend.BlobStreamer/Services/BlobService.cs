@@ -1,4 +1,3 @@
-using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Polly;
@@ -24,11 +23,11 @@ public class BlobService : IBlobService
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
      IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory MessageFactory)
     {
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));;
-        _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));;
-        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));;
-        _MessageFactory = MessageFactory ?? throw new ArgumentNullException(nameof(MessageFactory));;
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper)); ;
+        _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper)); ;
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
+        _MessageFactory = MessageFactory ?? throw new ArgumentNullException(nameof(MessageFactory)); ;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
         _serviceClient = _deviceClient.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
@@ -100,4 +99,13 @@ public class BlobService : IBlobService
         }
     }
 
+    public async Task UploadFromStreamAsync(Uri storageUri, byte[] readStream)
+    {
+        CloudBlockBlob blob = new CloudBlockBlob(storageUri);
+
+        using (Stream controllableStream = new MemoryStream(readStream))
+        {
+            await blob.UploadFromStreamAsync(controllableStream);
+        }
+    }
 }

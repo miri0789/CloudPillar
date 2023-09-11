@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Text.Json.Serialization;
-using Shared.Entities.Events;
+
+namespace Shared.Entities.Events;
 
 public class StreamingUploadChunkEvent : AgentEvent
 {

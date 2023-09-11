@@ -27,7 +27,6 @@ public class AgentController : ControllerBase
     [HttpGet("TwinHandler")]
     public async Task<IActionResult> TwinHandler()
     {
-        ActionToReport actionToReport = new ActionToReport();
         UploadAction uploadAction = new UploadAction()
         {
             Action = TwinActionType.SingularUpload,
@@ -35,6 +34,10 @@ public class AgentController : ControllerBase
             Enabled = true,
             Method = FileUploadMethod.Stream,
             FileName = "C:\\git.dev\\CloudPillar\\UploadFolder\\uploadFileInFolder.txt"
+        };
+        ActionToReport actionToReport = new ActionToReport(){
+            TwinAction = uploadAction,
+            TwinReport = new TwinActionReported(),
         };
 
         var twinReport = await _fileUploaderHandler.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);

@@ -148,6 +148,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                 case FileUploadMethod.Blob:
 
                     await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
+                    await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                     break;
                 case FileUploadMethod.Stream:
                     await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri.AbsolutePath, uploadAction.ActionId, sasUriResponse.CorrelationId);
@@ -155,7 +156,6 @@ public class FileUploaderHandler : IFileUploaderHandler
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");
             }
-            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
         }
         catch (Exception ex)
         {
