@@ -35,4 +35,9 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         }
     }
 
+    public async Task<string> ReadAllTextAsync(string filePath)
+    {
+        return await File.ReadAllTextAsync(filePath);
+    }
+
 }

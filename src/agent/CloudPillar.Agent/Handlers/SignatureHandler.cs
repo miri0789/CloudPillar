@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using CloudPillar.Agent.Wrappers;
 
 
 namespace CloudPillar.Agent.Handlers;
@@ -7,10 +8,16 @@ namespace CloudPillar.Agent.Handlers;
 
 public class SignatureHandler : ISignatureHandler
 {
+    private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private ECDsa _signingPublicKey;
+
+    public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper)
+    {
+        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
+    }
     public async Task InitPublicKeyAsync()
     {
-        string publicKeyPem = await File.ReadAllTextAsync("pki/sign-pubkey.pem");
+        string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync("pki/sign-pubkey.pem");
         _signingPublicKey = (ECDsa)LoadPublicKeyFromPem(publicKeyPem);
     }
 

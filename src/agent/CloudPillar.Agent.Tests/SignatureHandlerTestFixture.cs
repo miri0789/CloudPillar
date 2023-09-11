@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Moq;
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Wrappers;
 
 
 namespace CloudPillar.Agent.Tests;
@@ -8,6 +9,7 @@ namespace CloudPillar.Agent.Tests;
 [TestFixture]
 public class SignatureHandlerTestFixture
 {
+    private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private ISignatureHandler _signatureHandler;
     private Mock<ECDsa> _ecdsaMock;
 
@@ -15,8 +17,17 @@ public class SignatureHandlerTestFixture
     [SetUp]
     public void Setup()
     {
-        _signatureHandler = new SignatureHandler();
+        _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
+        _signatureHandler = new SignatureHandler(_fileStreamerWrapperMock.Object);
         _ecdsaMock = new Mock<ECDsa>();
+
+        string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
+                                MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBgc4HZz+/fBbC7lmEww0AO3NK9wVZ
+                                PDZ0VEnsaUFLEYpTzb90nITtJUcPUbvOsdZIZ1Q8fnbquAYgxXL5UgHMoywAib47
+                                6MkyyYgPk0BXZq3mq4zImTRNuaU9slj9TVJ3ScT3L1bXwVuPJDzpr5GOFpaj+WwM
+                                Al8G7CqwoJOsW7Kddns=
+                                -----END PUBLIC KEY-----";
+        _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync(It.IsAny<string>())).ReturnsAsync(() => publicKeyPem);
     }
 
     [Test]
@@ -30,7 +41,7 @@ public class SignatureHandlerTestFixture
         Assert.IsNotNull(_ecdsaMock.Object);
         Assert.IsInstanceOf<ECDsa>(_ecdsaMock.Object);
     }
-    
+
 
     [Test]
     public async Task VerifySignature_ValidSignature_ReturnsTrue()
