@@ -93,7 +93,7 @@ stages:
     - job: All
       displayName: Clean Tag Scan Push All Images
       pool:
-        name: $(AGENT_POOL)
+        # name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:   
       # - script: |   
