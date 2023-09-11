@@ -19,11 +19,11 @@ trigger:
 resources:
 - repo: self
 
-variables:
-- group: arm-vg
-- group: iac-backend-vg
-- group: aks-backend-vg
-- group: backend-secrets-vg
+# variables:
+# - group: arm-vg
+# - group: iac-backend-vg
+# - group: aks-backend-vg
+# - group: backend-secrets-vg
 
 
 - name: TIMELABEL
@@ -96,78 +96,78 @@ stages:
         name: $(AGENT_POOL)
         agent.name: aks-${{parameters.env}}-agent
       steps:   
-      - script: |   
-          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-          az account set --subscription $(ARM_SUBSCRIPTION_ID)
-          echo "Azure Login Successfull"
-          az acr login -n $(ACR_NAME)
+      # - script: |   
+      #     az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+      #     az account set --subscription $(ARM_SUBSCRIPTION_ID)
+      #     echo "Azure Login Successfull"
+      #     az acr login -n $(ACR_NAME)
 
-          echo -e "\n\n"
-          echo "Clean Old Imaged"
-          docker image prune -a --force
-          docker image ls
-        name: AcrLogin
+      #     echo -e "\n\n"
+      #     echo "Clean Old Imaged"
+      #     docker image prune -a --force
+      #     docker image ls
+      #   name: AcrLogin
 
       - task: NuGetAuthenticate@1
         displayName: 'Authenticate to NuGet'
 
-      - ${{each item in parameters.backendImage}}:
-        - script: |    
-            imagesJson='$(images)'
-            for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
-              _jq() {
-                echo ${img} | base64 --decode | jq -r ${1}
-              }
-              imgName=$(_jq '.name')
-              if [ "$imgName" == "${{ item }}" ]; then
-                imageName=$(_jq '.imageName')
-                imagePath=$(_jq '.imagePath')
-                dockerFilePath=$(_jq '.dockerFilePath')
-                imageVersion=$(_jq '.imageVersion')
-                projectName=$(_jq '.projectName')
-                ACR_NAME=$(ACR_NAME)     
-                echo $(imageVersion)
-                major=$(echo $imageVersion | cut -d '.' -f 1)
-                minor=$(echo $imageVersion | cut -d '.' -f 2)
+      # - ${{each item in parameters.backendImage}}:
+      #   - script: |    
+      #       imagesJson='$(images)'
+      #       for img in $(echo "${imagesJson}" | jq -r '.[] | @base64'); do
+      #         _jq() {
+      #           echo ${img} | base64 --decode | jq -r ${1}
+      #         }
+      #         imgName=$(_jq '.name')
+      #         if [ "$imgName" == "${{ item }}" ]; then
+      #           imageName=$(_jq '.imageName')
+      #           imagePath=$(_jq '.imagePath')
+      #           dockerFilePath=$(_jq '.dockerFilePath')
+      #           imageVersion=$(_jq '.imageVersion')
+      #           projectName=$(_jq '.projectName')
+      #           ACR_NAME=$(ACR_NAME)     
+      #           echo $(imageVersion)
+      #           major=$(echo $imageVersion | cut -d '.' -f 1)
+      #           minor=$(echo $imageVersion | cut -d '.' -f 2)
                 
-                newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)
+      #           newVersion=$major.$minor.$(GitBuildNumber).$(TIMELABEL)
                 
-                echo "Processing image: $imgName"
-                echo "Image Version: $newVersion"
-                echo ""
-                echo -e "================================================\n\tBase Info Version\n================================================"
-                find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'            
+      #           echo "Processing image: $imgName"
+      #           echo "Image Version: $newVersion"
+      #           echo ""
+      #           echo -e "================================================\n\tBase Info Version\n================================================"
+      #           find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'            
 
-                echo -e "\n\n"
-                echo -e "================================================\n\tUpdated Tag\n================================================"
-                TAG="$newVersion"
-                echo "TAG: $TAG"
-                if [ "$imageName" != *edge_conquest* ]; then      
-                  find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
-                  find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
-                fi    
+      #           echo -e "\n\n"
+      #           echo -e "================================================\n\tUpdated Tag\n================================================"
+      #           TAG="$newVersion"
+      #           echo "TAG: $TAG"
+      #           if [ "$imageName" != *edge_conquest* ]; then      
+      #             find $imagePath -name "*.csproj" -exec sed -i "s/1.0._BUILDNUM_._TIMESTAMP_/${TAG}/g" {} \; 
+      #             find $imagePath -name "*.csproj" -print0 | xargs -0 grep -H "InformationalVersion" | awk -F':' '{n=split($1,a,"/"); printf "%s:%s\n", a[n], $2}'
+      #           fi    
 
-                echo -e "\n\n"
-                echo -e "================================================\n\tDocker Build - \n================================================"
+      #           echo -e "\n\n"
+      #           echo -e "================================================\n\tDocker Build - \n================================================"
                 
-                docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath \
-                --build-arg DLL=$projectName --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
-                if [ $? -ne 0 ]; then
-                  echo "Docker Build Failed"
-                  exit 1
-                fi
-                docker images | grep $imageName       
+      #           docker build -t $ACR_NAME.azurecr.io/$imageName:$newVersion  -f $dockerFilePath $imagePath \
+      #           --build-arg DLL=$projectName --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+      #           if [ $? -ne 0 ]; then
+      #             echo "Docker Build Failed"
+      #             exit 1
+      #           fi
+      #           docker images | grep $imageName       
                 
-                echo -e "\n\n"
-                echo -e "================================================\n\tDocker Scan - \n================================================"            
-                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $ACR_NAME.azurecr.io/$imageName:$newVersion
+      #           echo -e "\n\n"
+      #           echo -e "================================================\n\tDocker Scan - \n================================================"            
+      #           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $ACR_NAME.azurecr.io/$imageName:$newVersion
 
-                echo -e "\n\n"
-                echo -e "================================================\n\tDocker Push - \n================================================"            
-                docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
-              fi
-            done
-          displayName: Build Tag & Scan & Push Backend Images ${{ item }}
+      #           echo -e "\n\n"
+      #           echo -e "================================================\n\tDocker Push - \n================================================"            
+      #           docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
+      #         fi
+      #       done
+      #     displayName: Build Tag & Scan & Push Backend Images ${{ item }}
 
 
 
