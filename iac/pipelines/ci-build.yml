@@ -34,6 +34,8 @@ variables:
   value: 'iotimageacr'
 - name: pipelineAcrConnection
   value: 'iotacr'
+- name: ACR_NAME
+  value: 'iotacr'
 
 
 parameters:
