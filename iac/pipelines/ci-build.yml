@@ -166,7 +166,7 @@ stages:
 
                 echo -e "\n\n"
                 echo -e "================================================\n\tDocker Push - \n================================================"            
-                docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
+                # docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
               fi
             done
           displayName: Build Tag & Scan & Push Backend Images ${{ item }}
