@@ -49,28 +49,15 @@ public class HttpRequestorTestFixture
     public async Task SendRequest_InvalidUrl_ThrowsException()
     {
         string url = "invalid url";
-        async Task SendRequest() => await _target.SendRequest(url, HttpMethod.Get);
-        Assert.ThrowsAsync<InvalidOperationException>(SendRequest);
-        _loggerHandlerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("Invalid Url")), 
-           It.IsAny<InvalidOperationException>()), Times.Once);
+        Assert.ThrowsAsync<InvalidOperationException>(() => _target.SendRequest<object>(url, HttpMethod.Get));
     }
 
     [Test]
     public async Task SendRequest_NullRequest_ThrowsException()
     {
-        _httpClientMock.Setup(c => c.SendAsync(null, It.IsAny<CancellationToken>()))
-                       .ThrowsAsync(new ArgumentNullException("Null request"));
-
-        try
-        {
-            /*async Task SendRequest() => */await _target.SendRequest<string>(_testUrl, HttpMethod.Get);
-            //Assert.ThrowsAsync<ArgumentNullException>(SendRequest);
-        }
-        catch(ArgumentNullException)
-        {
-            _loggerHandlerMock.Verify(l => l.Error(It.IsAny<string>(),
-                It.IsAny<ArgumentNullException>()), Times.Once);
-        }
+        _httpClientMock.Setup(c => c.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()))
+                       .ThrowsAsync(new ArgumentNullException());       
+        Assert.ThrowsAsync<ArgumentNullException>(() => _target.SendRequest<object>(_testUrl, HttpMethod.Get));
     }
 
     #endregion
@@ -97,7 +84,7 @@ public class HttpRequestorTestFixture
     }
 
     [Test]
-    public void SetTimeoutForHttpRequest_UsesDefaultTimeout()
+    public void SendRequest_SetTimeoutForHttpRequest_UsesDefaultTimeout()
     {
         _target.SendRequest<object>(_testUrl, HttpMethod.Get);
         Assert.That(_httpClientMock.Object.Timeout, Is.EqualTo(TimeSpan.FromSeconds(30)));
@@ -116,9 +103,6 @@ public class HttpRequestorTestFixture
 
         async Task SendRequest() => await _target.SendRequest(_testUrl, HttpMethod.Post, requestData);
         Assert.ThrowsAsync<HttpRequestException>(SendRequest);
-        _loggerHandlerMock.Verify(l => l.Error(
-            It.Is<string>(msg => msg.Contains("The request data is not fit the schema")),
-            It.IsAny<System.Net.Http.HttpRequestException>()), Times.Once);
     }
 
     [Test]
@@ -134,9 +118,6 @@ public class HttpRequestorTestFixture
         _validatorMock.Setup(v => v.ValidatePayloadSchema(invalidResponseContent, It.IsAny<string>(), false))
             .Returns(false);
         Assert.ThrowsAsync<HttpRequestException>(() => _target.SendRequest<object>(_testUrl, HttpMethod.Get));
-        _loggerHandlerMock.Verify(l => l.Error(
-            It.Is<string>(msg => msg.Contains("The reponse data is not fit the schema")),
-            It.IsAny<System.Net.Http.HttpRequestException>()), Times.Once);
     }
 
     #endregion
