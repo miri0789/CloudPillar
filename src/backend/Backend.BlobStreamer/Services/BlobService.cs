@@ -112,12 +112,13 @@ public class BlobService : IBlobService
                 if (startPosition == 0)
                 {
                     // If the blob doesn't exist, you can't use AppendBlock, so upload it as a new blob.
-                    blob.UploadFromStream(inputStream);
+                    await blob.UploadFromStreamAsync(inputStream);
                 }
                 else
                 {
                     MemoryStream existingData = new MemoryStream();
                     blob.DownloadToStream(existingData);
+
                     if (existingData.Length == startPosition)
                     {
                         // Seek the existingData stream to the beginning

@@ -29,7 +29,7 @@ public class StreamingUploadChunkService : IStreamingUploadChunkService
         }
         catch (Exception ex)
         {
-            _logger.Error($"StreamingUploadChunkService UploadStreamToBlob failed. Message: {ex.Message}");
+            throw ex;
         }
     }
 }

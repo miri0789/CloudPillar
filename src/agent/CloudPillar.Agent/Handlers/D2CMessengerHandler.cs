@@ -76,6 +76,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
                 var properties = new Dictionary<string, string>
                 {
+                    { "chunk_index", chunkIndex.ToString() },
                     { "total_chunks", totalChunks.ToString() },
                 };
 
@@ -86,7 +87,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             }
             if (currentPosition == streamLength)
             {
-                _logger.Debug($"All bytes send successfuly");
+                _logger.Debug($"All bytes sent successfuly");
             }
 
             await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
@@ -95,6 +96,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         {
             notification.IsSuccess = false;
             await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+            throw ex;
         }
     }
     private async Task SendMessageAsync(AgentEvent agentEvent, Dictionary<string, string>? properties = null)
