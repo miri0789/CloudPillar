@@ -12,8 +12,8 @@ public class IoTStreamingFileUploaderHandler : IIoTStreamingFileUploaderHandler
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
     }
 
-    public async Task UploadFromStreamAsync(Stream readStream, string absolutePath, string actionId, string correlationId)
+    public async Task UploadFromStreamAsync(Stream readStream, Uri storageUri, string actionId, string correlationId)
     {
-        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(readStream, absolutePath, actionId, correlationId, 0);
+        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(readStream, storageUri, actionId, correlationId, 0);
     }
 }

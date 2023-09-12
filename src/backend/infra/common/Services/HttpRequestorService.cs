@@ -19,13 +19,9 @@ public class HttpRequestorService : IHttpRequestorService
 
     public HttpRequestorService(IHttpClientFactory httpClientFactory, ISchemaValidator schemaValidator, ILoggerHandler logger)
     {
-        ArgumentNullException.ThrowIfNull(httpClientFactory);
-        ArgumentNullException.ThrowIfNull(schemaValidator);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _httpClientFactory = httpClientFactory;
-        _schemaValidator = schemaValidator;
-        _logger = logger;
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _schemaValidator = schemaValidator ?? throw new ArgumentNullException(nameof(schemaValidator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task SendRequest(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default)
@@ -86,8 +82,8 @@ public class HttpRequestorService : IHttpRequestorService
         catch (Exception ex)
         {
             throw ex;
-        }      
-        if (response!= null && response.IsSuccessStatusCode)
+        }
+        if (response != null && response.IsSuccessStatusCode)
         {
             string responseContent = await response.Content.ReadAsStringAsync();
             if (!String.IsNullOrWhiteSpace(responseContent))

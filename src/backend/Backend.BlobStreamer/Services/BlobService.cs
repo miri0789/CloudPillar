@@ -99,13 +99,46 @@ public class BlobService : IBlobService
         }
     }
 
-    public async Task UploadFromStreamAsync(Uri storageUri, byte[] readStream)
+    public async Task UploadFromStreamAsync(Uri storageUri, byte[] readStream, long startPosition, int chunkIndex)
     {
-        CloudBlockBlob blob = new CloudBlockBlob(storageUri);
-
-        using (Stream controllableStream = new MemoryStream(readStream))
+        try
         {
-            await blob.UploadFromStreamAsync(controllableStream);
+            _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex} to {storageUri.AbsolutePath}");
+
+            CloudBlockBlob blob = new CloudBlockBlob(storageUri);
+
+            using (Stream inputStream = new MemoryStream(readStream))
+            {
+                if (startPosition == 0)
+                {
+                    // If the blob doesn't exist, you can't use AppendBlock, so upload it as a new blob.
+                    blob.UploadFromStream(inputStream);
+                }
+                else
+                {
+                    MemoryStream existingData = new MemoryStream();
+                    blob.DownloadToStream(existingData);
+                    if (existingData.Length == startPosition)
+                    {
+                        // Seek the existingData stream to the beginning
+                        existingData.Seek(startPosition, SeekOrigin.Begin);
+
+                        // Append the new content from inputStream to existingData
+                        inputStream.Seek(0, SeekOrigin.Begin);
+                        inputStream.CopyTo(existingData);
+
+                        // Reset the position of existingData to the beginning
+                        existingData.Seek(0, SeekOrigin.Begin);
+
+                        // Upload the combined data to the blob
+                        blob.UploadFromStream(existingData);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Blobstreamer UploadFromStreamAsync failed. Message: {ex.Message}");
         }
     }
 }

@@ -6,18 +6,16 @@ namespace Shared.Entities.Events;
 public class StreamingUploadChunkEvent : AgentEvent
 {
 
-    public string AbsolutePath { get; set; }
-    public int ChunkSize { get; set; }
+    public Uri StorageUri { get; set; }
+    public int ChunkIndex { get; set; }
+    public long StartPosition { get; set; } = 0;
 
-    [DefaultValue(0)]
-    public long StartPosition { get; set; }
-
-    public long? EndPosition { get; set; }
     public byte[] Data { get; set; }
 
     [JsonConstructor]
     public StreamingUploadChunkEvent()
     {
         this.EventType = EventType.StreamingUploadChunk;
+        this.ActionId = Guid.NewGuid().ToString();
     }
 }

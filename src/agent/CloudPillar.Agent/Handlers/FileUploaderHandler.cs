@@ -21,15 +21,10 @@ public class FileUploaderHandler : IFileUploaderHandler
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
         IIoTStreamingFileUploaderHandler ioTStreamingFileUploaderHandler)
     {
-        ArgumentNullException.ThrowIfNull(deviceClientWrapper);
-        ArgumentNullException.ThrowIfNull(environmentsWrapper);
-        ArgumentNullException.ThrowIfNull(blobStorageFileUploaderHandler);
-        ArgumentNullException.ThrowIfNull(ioTStreamingFileUploaderHandler);
-
-        _deviceClientWrapper = deviceClientWrapper;
-        _environmentsWrapper = environmentsWrapper;
-        _blobStorageFileUploaderHandler = blobStorageFileUploaderHandler;
-        _ioTStreamingFileUploaderHandler = ioTStreamingFileUploaderHandler;
+        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _blobStorageFileUploaderHandler = blobStorageFileUploaderHandler ?? throw new ArgumentNullException(nameof(blobStorageFileUploaderHandler));
+        _ioTStreamingFileUploaderHandler = ioTStreamingFileUploaderHandler ?? throw new ArgumentNullException(nameof(ioTStreamingFileUploaderHandler));
     }
 
     public async Task<ActionToReport> FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
@@ -151,7 +146,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                     await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                     break;
                 case FileUploadMethod.Stream:
-                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri.AbsolutePath, uploadAction.ActionId, sasUriResponse.CorrelationId);
+                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");

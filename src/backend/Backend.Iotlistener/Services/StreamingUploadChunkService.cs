@@ -1,11 +1,7 @@
 ﻿using common;
 using Backend.Iotlistener.Interfaces;
-using Backend.Iotlistener.Models.Enums;
 using Shared.Logger;
 using Shared.Entities.Events;
-using Newtonsoft.Json;
-using System.Text;
-using System.Net.Http.Headers;
 
 namespace Backend.Iotlistener.Services;
 
@@ -26,14 +22,10 @@ public class StreamingUploadChunkService : IStreamingUploadChunkService
     {
         try
         {
-            var requests = new List<Task>();
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/uploadStream";
-            var jsonContent = JsonConvert.SerializeObject(data);
-            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-            requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, content));
-            await Task.WhenAll(requests);
+            _logger.Info($"IotListener: Send chunk number {data.ChunkIndex} to BlobStreamer");
 
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/uploadStream";
+            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);
         }
         catch (Exception ex)
         {

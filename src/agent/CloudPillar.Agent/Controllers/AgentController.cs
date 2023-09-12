@@ -25,7 +25,7 @@ public class AgentController : ControllerBase
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
     }
     [HttpGet("TwinHandler")]
-    public async Task<IActionResult> TwinHandler()
+    public async Task<IActionResult> TwinHandler(string fileName="C:\\git.dev\\a123.txt")
     {
         UploadAction uploadAction = new UploadAction()
         {
@@ -33,7 +33,7 @@ public class AgentController : ControllerBase
             Description = "test upload by stream",
             Enabled = true,
             Method = FileUploadMethod.Stream,
-            FileName = "C:\\git.dev\\CloudPillar\\UploadFolder\\uploadFileInFolder.txt"
+            FileName = fileName
         };
         ActionToReport actionToReport = new ActionToReport(){
             TwinAction = uploadAction,

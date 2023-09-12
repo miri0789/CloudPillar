@@ -58,4 +58,11 @@ app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var serviceProvider = scope.ServiceProvider;
+    var twinHandler = serviceProvider.GetRequiredService<ITwinHandler>();
+    ArgumentNullException.ThrowIfNull(twinHandler);
+    await twinHandler.HandleTwinActionsAsync(CancellationToken.None);
+}
 app.Run();
