@@ -6,8 +6,9 @@ using Moq;
 using k8s;
 using k8s.Models;
 using Microsoft.Azure.Devices.Shared;
-using Backend.Keyholder.Services;
+using Backend.Keyholder.Interfaces;
 using Shared.Logger;
+using Backend.Keyholder.Services;
 
 namespace Backend.Keyholder.Tests;
 
@@ -16,7 +17,7 @@ public class SigningTestFixture
 {
     private Mock<RegistryManager> _registryManagerMock;
     private Mock<ECDsa> _ecdsaMock;
-    private SigningService _target;
+    private ISigningService _target;
     private Mock<Kubernetes> _kubernetesMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
     private Mock<ILoggerHandler> _mockLogger;
@@ -58,11 +59,10 @@ public class SigningTestFixture
     }
 
     [Test]
-    public async Task LoadPrivateKeyFromEnvirementVariable_ValidPrivateKey_InitECDsaInstance()
+    public async Task Init_ValidPrivateKeyFromEnvirementVariable_InitECDsaInstance()
     {
         InitKeyFromEnvirementVar();
         await _target.Init();
-        Assert.IsNotNull(_ecdsaMock.Object);
         Assert.IsInstanceOf<ECDsa>(_ecdsaMock.Object);
     }
 
@@ -127,6 +127,5 @@ public class SigningTestFixture
             await _target.CreateTwinKeySignature(deviceId, invalidKeyPath, signatureKey));
 
         Assert.AreEqual("Invalid JSON path specified", ex.Message);
-        _registryManagerMock.Verify();
     }
 }
