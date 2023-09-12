@@ -9,4 +9,6 @@ public interface IFileStreamerWrapper
     Task<bool> HasBytesAsync(string filePath, long startPosition, long endPosition);
 
     Task<string> ReadAllTextAsync(string filePath);
+
+    bool Exists(string filePath);
 }

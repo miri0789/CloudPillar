@@ -35,6 +35,7 @@ builder.Services.AddScoped<IIoTStreamingFileUploaderHandler, IoTStreamingFileUpl
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
+builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 
 
 builder.Services.AddControllers(options =>

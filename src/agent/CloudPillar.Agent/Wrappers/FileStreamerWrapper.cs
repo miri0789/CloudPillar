@@ -39,5 +39,8 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return await File.ReadAllTextAsync(filePath);
     }
-
+    public bool Exists(string filePath)
+    {
+        return File.Exists(filePath);
+    }
 }
