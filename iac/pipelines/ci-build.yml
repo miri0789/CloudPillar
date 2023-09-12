@@ -20,10 +20,10 @@ resources:
 - repo: self
 
 variables:
-- group: arm-vg
-- group: iac-backend-vg
-- group: aks-backend-vg
-- group: backend-secrets-vg
+# - group: arm-vg
+# - group: iac-backend-vg
+# - group: aks-backend-vg
+# - group: backend-secrets-vg
 
 
 - name: TIMELABEL
@@ -33,6 +33,8 @@ variables:
 - name: registryName
   value: 'iotimageacr'
 - name: pipelineAcrConnection
+  value: 'iotacr'
+- name: ACR_NAME
   value: 'iotacr'
 
 
@@ -59,7 +61,7 @@ parameters:
     type: object
     default:
     - agent   
-    - pocagent   
+    - pocagent
 
 stages:
 
@@ -92,21 +94,21 @@ stages:
     jobs:
     - job: All
       displayName: Clean Tag Scan Push All Images
-      pool:
-        name: $(AGENT_POOL)
-        agent.name: aks-${{parameters.env}}-agent
-      steps:   
-      - script: |   
-          az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
-          az account set --subscription $(ARM_SUBSCRIPTION_ID)
-          echo "Azure Login Successfull"
-          az acr login -n $(ACR_NAME)
 
-          echo -e "\n\n"
-          echo "Clean Old Imaged"
-          docker image prune -a --force
-          docker image ls
-        name: AcrLogin
+      pool:
+        vmImage: ubuntu-latest
+      steps:   
+      # - script: |   
+      #     az login --service-principal -u $(iac-app-client-id) -p $(iac-app-client-secret) --tenant $(ARM_TENANT_ID)
+      #     az account set --subscription $(ARM_SUBSCRIPTION_ID)
+      #     echo "Azure Login Successfull"
+      #     az acr login -n $(ACR_NAME)
+
+      #     echo -e "\n\n"
+      #     echo "Clean Old Imaged"
+      #     docker image prune -a --force
+      #     docker image ls
+      #   name: AcrLogin
 
       - task: NuGetAuthenticate@1
         displayName: 'Authenticate to NuGet'
@@ -164,7 +166,7 @@ stages:
 
                 echo -e "\n\n"
                 echo -e "================================================\n\tDocker Push - \n================================================"            
-                docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
+                # docker push $ACR_NAME.azurecr.io/$imageName:$newVersion
               fi
             done
           displayName: Build Tag & Scan & Push Backend Images ${{ item }}
