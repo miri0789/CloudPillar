@@ -1,4 +1,4 @@
-﻿namespace Backend.Keyholder.Services;
+﻿namespace Backend.Keyholder.Interfaces;
 public interface IEnvironmentsWrapper
 {
     string kubernetesServiceHost { get; }

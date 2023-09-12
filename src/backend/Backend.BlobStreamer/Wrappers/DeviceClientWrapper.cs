@@ -1,13 +1,7 @@
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
-using Polly;
-using Shared.Entities.Messages;
 using Backend.BlobStreamer.Interfaces;
-using Microsoft.Azure.Devices.Client.Exceptions;
 
-namespace Backend.BlobStreamer.Services;
-
+namespace Backend.BlobStreamer.Wrappers;
 
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
