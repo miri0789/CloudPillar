@@ -81,6 +81,8 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
         while (currentPosition < streamLength)
         {
+            _logger.Debug($"Agent: Start send Chunk number: {chunkIndex}, with position: {currentPosition}");
+
             await ProcessChunkAsync(readStream, storageUri, actionId, totalChunks, chunkIndex, chunkSize, currentPosition);
 
             currentPosition += chunkSize;
