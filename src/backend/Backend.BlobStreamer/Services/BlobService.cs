@@ -8,8 +8,6 @@ using Shared.Logger;
 
 namespace Backend.BlobStreamer.Services;
 
-
-
 public class BlobService : IBlobService
 {
     private readonly CloudBlobContainer _container;
@@ -32,7 +30,6 @@ public class BlobService : IBlobService
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
         _serviceClient = _deviceClient.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
     }
-
 
     public async Task<BlobProperties> GetBlobMetadataAsync(string fileName)
     {
@@ -99,7 +96,7 @@ public class BlobService : IBlobService
         }
     }
 
-    public async Task UploadFromStreamAsync(Uri storageUri, byte[] readStream, long startPosition, int chunkIndex)
+    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, int chunkIndex)
     {
         try
         {
@@ -109,11 +106,12 @@ public class BlobService : IBlobService
 
             using (Stream inputStream = new MemoryStream(readStream))
             {
+                //first chunk
                 if (startPosition == 0)
                 {
-                    // If the blob doesn't exist, you can't use AppendBlock, so upload it as a new blob.
                     await blob.UploadFromStreamAsync(inputStream);
                 }
+                //continue upload the next stream chunks
                 else
                 {
                     MemoryStream existingData = new MemoryStream();
@@ -121,7 +119,6 @@ public class BlobService : IBlobService
 
                     if (existingData.Length == startPosition)
                     {
-                        // Seek the existingData stream to the beginning
                         existingData.Seek(startPosition, SeekOrigin.Begin);
 
                         // Append the new content from inputStream to existingData
