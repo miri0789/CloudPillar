@@ -14,11 +14,6 @@ public class BlobController : ControllerBase
     {
         _blobService = blobService;
     }
-    [HttpGet("test")]
-    public async Task<IActionResult> Test(string fileName)
-    {
-        return Ok(fileName);
-    }
 
     [HttpGet("metadata")]
     public async Task<IActionResult> GetMeatadata(string fileName)
