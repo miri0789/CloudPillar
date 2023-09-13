@@ -25,30 +25,33 @@ public class AgentController : ControllerBase
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
     }
     [HttpGet("TwinHandler")]
-    public async Task<IActionResult> TwinHandler(string fileName="C:\\git.dev\\a123.txt")
+    public async Task<IActionResult> TwinHandler()
     {
-        UploadAction uploadAction = new UploadAction()
-        {
-            Action = TwinActionType.SingularUpload,
-            Description = "test upload by stream",
-            Enabled = true,
-            Method = FileUploadMethod.Stream,
-            FileName = fileName
-        };
-        ActionToReport actionToReport = new ActionToReport(){
-            TwinAction = uploadAction,
-            TwinReport = new TwinActionReported(),
-        };
+        await _twinHandler.HandleTwinActionsAsync(CancellationToken.None);
 
-        var twinReport = await _fileUploaderHandler.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
-        if (twinReport.TwinReport.Status == StatusType.Success)
-        {
-           
-        }
+        // UploadAction uploadAction = new UploadAction()
+        // {
+        //     Action = TwinActionType.SingularUpload,
+        //     Description = "test upload by stream",
+        //     Enabled = true,
+        //     Method = FileUploadMethod.Stream,
+        //     FileName = fileName
+        // };
+        // ActionToReport actionToReport = new ActionToReport(){
+        //     TwinAction = uploadAction,
+        //     TwinReport = new TwinActionReported(),
+        // };
+
+        // var twinReport = await _fileUploaderHandler.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
+        // if (twinReport.TwinReport.Status == StatusType.Success)
+        // {
+
+        // }
 
         // await _twinHandler.HandleTwinActionsAsync(CancellationToken.None);
         return Ok();
     }
+
     [HttpPost("AddRecipe")]
     public async Task<IActionResult> AddRecipe()
     {
