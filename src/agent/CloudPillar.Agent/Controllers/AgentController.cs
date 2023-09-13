@@ -15,7 +15,7 @@ public class AgentController : ControllerBase
     private readonly ITwinHandler _twinHandler;
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
 
-    public AgentController(ITwinHandler twinHandler, IFileUploaderHandler fileUploaderHandler, IValidator<UpdateReportedProps> updateReportedPropsValidator, ILoggerHandler logger)
+    public AgentController(ITwinHandler twinHandler, IValidator<UpdateReportedProps> updateReportedPropsValidator, ILoggerHandler logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
