@@ -15,11 +15,17 @@ public class AgentController : ControllerBase
     private readonly ITwinHandler _twinHandler;
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
 
-    public AgentController(ITwinHandler twinHandler, IValidator<UpdateReportedProps> updateReportedPropsValidator, ILoggerHandler logger)
+    private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
+
+    public AgentController(ITwinHandler twinHandler,
+     IValidator<UpdateReportedProps> updateReportedPropsValidator,
+     IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
+     ILoggerHandler logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
+        _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
     }
 
     [HttpPost("AddRecipe")]
@@ -35,8 +41,9 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("InitiateProvisioning")]
-    public async Task<IActionResult> InitiateProvisioning()
+    public async Task<IActionResult> InitiateProvisioning(string spcScopeId, string certificateThumbprint)
     {
+        await _dPSProvisioningDeviceClientHandler.Provisioning(spcScopeId, certificateThumbprint);
         return Ok();
     }
 

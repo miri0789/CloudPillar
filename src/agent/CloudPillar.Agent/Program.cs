@@ -35,6 +35,7 @@ builder.Services.AddScoped<IIoTStreamingFileUploaderHandler, IoTStreamingFileUpl
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
+builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 
 
 builder.Services.AddControllers(options =>
@@ -45,10 +46,6 @@ builder.Services.AddSwaggerGen();
 
 
 var app = builder.Build();
-
-var a = new ProvisioningClient();
-a.RegisterCertificate();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

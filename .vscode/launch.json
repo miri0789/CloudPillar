@@ -196,9 +196,9 @@
             "args": [],
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
-            "env": {
-                "DeviceConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=b_try1;SharedAccessKey=G+VsVpWKXooJPdtHhbK8dvpc6d9fh1asSGa2zgYqZYI="
-            },
+            // "env": {
+            //     "DeviceConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=b_try1;SharedAccessKey=G+VsVpWKXooJPdtHhbK8dvpc6d9fh1asSGa2zgYqZYI="
+            // },
             "stopAtEntry": false
         }
     ]
