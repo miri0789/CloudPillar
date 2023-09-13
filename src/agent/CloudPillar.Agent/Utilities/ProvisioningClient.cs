@@ -13,9 +13,9 @@ public class ProvisioningClient
 
     public async void RegisterCertificate()
     {
+        
         string dpsScopeId = "0ne00AF7B07";
-        string deviceId = "BrachaD";
-
+        
         // Specify the thumbprint of the certificate you want to use from the certificate store
         string certificateThumbprint = "0579697e370b29c7ee5a29da0cadfa005ad0a19b";
 
@@ -39,7 +39,7 @@ public class ProvisioningClient
 
         using ProvisioningTransportHandler transport = GetTransportHandler();
         var provClient = ProvisioningDeviceClient.Create(
-            deviceId,
+            "global.azure-devices-provisioning.net",
             dpsScopeId,
             security,
             transport);
@@ -64,7 +64,7 @@ public class ProvisioningClient
             deviceCert);
 
         Console.WriteLine($"Testing the provisioned device with IoT Hub...");
-        using var iotClient = DeviceClient.Create(result.AssignedHub, auth, TransportType.Http1);
+        using var iotClient = DeviceClient.Create(result.AssignedHub, auth, TransportType.Amqp);
 
         Console.WriteLine("Sending a telemetry message...");
         using var message = new Message(Encoding.UTF8.GetBytes("TestMessage"));
@@ -105,11 +105,12 @@ public class ProvisioningClient
 
         // Close the certificate store
         store.Close();
+       
     }
 
     private ProvisioningTransportHandler GetTransportHandler()
     {
-        return new ProvisioningTransportHandlerHttp();
+        return new ProvisioningTransportHandlerAmqp();
         //return new Microsoft.Azure.Devices.Provisioning.Client.Transport.ProvisioningTransportHandlerMqtt();
         // return TransportType.Amqp
         // {
