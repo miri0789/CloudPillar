@@ -39,7 +39,7 @@ public class C2DEventSubscriptionSessionTestFixture
         var receivedMessage = SetRecivedMessageWithDurationMock(MessageType.DownloadChunk.ToString());
 
         _messageFactoryMock
-            .Setup(mf => mf.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
+            .Setup(mf => mf.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
             .Returns(_downloadBlobChunkMessage);
 
         var actionToReport = new ActionToReport();
@@ -102,7 +102,7 @@ public class C2DEventSubscriptionSessionTestFixture
     {
         var receivedMessage = SetRecivedMessageWithDurationMock(MessageType.DownloadChunk.ToString());
         _messageFactoryMock
-            .Setup(mf => mf.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
+            .Setup(mf => mf.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
             .Returns(_downloadBlobChunkMessage);
 
         _messageSubscriberMock
