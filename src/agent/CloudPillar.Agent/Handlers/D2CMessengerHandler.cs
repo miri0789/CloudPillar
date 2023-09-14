@@ -92,6 +92,10 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         {
             _logger.Debug($"All bytes sent successfuly");
         }
+        else
+        {
+            throw new Exception("An error occurred, not all messages were sent");
+        }
     }
 
     private async Task ProcessChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkIndex, int chunkSize, long currentPosition)

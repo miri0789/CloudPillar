@@ -82,32 +82,28 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task SendStreamingUploadChunkEventAsync_ValidData_SendEventAsync()
+        public async Task SendStreamingUploadChunks_ValidData_SendAllChunks()
         {
-            var chunkIndex = CHUNK_INDEX;
-            var currentPosition = 0;
             var totalChunks = CalculateTotalChunks(READ_STREAM.Length, MQQT_KB);
+
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(MQQT_KB);
-            var chunkSize = _deviceClientMock.Object.GetChunkSizeByTransportType();
 
             await _target.SendStreamingUploadChunkEventAsync(READ_STREAM, STORAGE_URI, ACTION_ID, CORRELATION_ID, START_POSITION);
 
             _deviceClientMock.Verify(dc => dc.SendEventAsync(It.IsAny<Message>()), Times.Exactly(totalChunks));
-            //      currentPosition, END_POSITION) == true)), Times.Once);
-            // while (currentPosition < READ_STREAM.Length)
-            // {
-            //     var remainingBytes = READ_STREAM.Length - currentPosition;
-            //     var bytesToUpload = Math.Min(chunkSize, remainingBytes);
 
-            //     var buffer = new byte[bytesToUpload];
-            //     await READ_STREAM.ReadAsync(buffer, currentPosition, (int)bytesToUpload);
+        }
+        [Test]
+        public async Task SendStreamingUploadChunks_Failure_ThrowException()
+        {
+            _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(MQQT_KB);
 
-            //     _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckUploadMessageContent(msg, chunkIndex, STORAGE_URI, ACTION_ID, buffer,
-            //      currentPosition, END_POSITION) == true)), Times.Once);
+            _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).ThrowsAsync(new Exception());
 
-            //     currentPosition += chunkSize;
-            //     chunkIndex++;
-            // }
+            Assert.ThrowsAsync<Exception>(async () =>
+            {
+                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM, STORAGE_URI, ACTION_ID, CORRELATION_ID, START_POSITION);
+            });
 
         }
 
@@ -123,17 +119,7 @@ namespace CloudPillar.Agent.Tests
                   firmwareUpdateEvent.EndPosition == endPosition;
         }
 
-        private bool CheckUploadMessageContent(Message msg, int chunkIndex, Uri storageUri, string actionId, byte[] data, long? startPosition, long? endPosition)
-        {
-            string messageString = Encoding.ASCII.GetString(msg.GetBytes());
-            StreamingUploadChunkEvent streamingUploadChunkEvent = JsonConvert.DeserializeObject<StreamingUploadChunkEvent>(messageString);
-            var comp = streamingUploadChunkEvent.ChunkIndex == chunkIndex &&
-                  streamingUploadChunkEvent.ActionId == actionId &&
-                  streamingUploadChunkEvent.StartPosition == startPosition &&
-                  streamingUploadChunkEvent.StorageUri == storageUri &&
-                  streamingUploadChunkEvent.Data == data;
-            return comp;
-        }
+
 
         private FileUploadCompletionNotification InitializeNotification(bool isSuccess)
         {
