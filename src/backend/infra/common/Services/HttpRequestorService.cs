@@ -63,7 +63,7 @@ public class HttpRequestorService : IHttpRequestorService
                 var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
                 if (!isResponseValid)
                 {
-                    // _logger.Error($"The reponse data is not fit the schema. url: {url}");
+                    _logger.Error($"The reponse data is not fit the schema. url: {url}");
                     throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
                 }
             }
@@ -71,7 +71,7 @@ public class HttpRequestorService : IHttpRequestorService
             return result;
         }
 
-        // _logger.Error($"HTTP request failed: {response.ReasonPhrase}: {method}{url} {responseContent}");
+        _logger.Error($"HTTP request failed: {response.ReasonPhrase}: {method}{url} {responseContent}");
         throw new HttpRequestException($"HTTP request failed: {response.ReasonPhrase}", null, response.StatusCode);
     }
 }
