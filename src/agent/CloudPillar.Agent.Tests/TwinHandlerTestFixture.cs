@@ -4,6 +4,7 @@ using Microsoft.Azure.Devices.Shared;
 using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -11,7 +12,8 @@ public class TwinHandlerTestFixture
 {
     private Mock<IDeviceClientWrapper> _deviceClientMock;
     private Mock<IFileDownloadHandler> _fileDownloadHandlerMock;
-
+    private Mock<IFileUploaderHandler> _fileUploaderHandlerMock;
+    private Mock<ILoggerHandler> _loggerMock;
     private ITwinHandler _target;
 
     [SetUp]
@@ -19,7 +21,10 @@ public class TwinHandlerTestFixture
     {
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _fileDownloadHandlerMock = new Mock<IFileDownloadHandler>();
-        _target = new TwinHandler(_deviceClientMock.Object, _fileDownloadHandlerMock.Object);
+        _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
+        _loggerMock = new Mock<ILoggerHandler>();
+
+        _target = new TwinHandler(_deviceClientMock.Object, _fileDownloadHandlerMock.Object,_fileUploaderHandlerMock.Object, _loggerMock.Object);
     }
 
     [Test]
