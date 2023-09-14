@@ -3,7 +3,6 @@ using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Entities.Twin;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Controllers;
@@ -14,14 +13,12 @@ public class AgentController : ControllerBase
 {
     private readonly ILoggerHandler _logger;
     private readonly ITwinHandler _twinHandler;
-    private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
 
-    public AgentController(ITwinHandler twinHandler, IFileUploaderHandler fileUploaderHandler, IValidator<UpdateReportedProps> updateReportedPropsValidator, ILoggerHandler logger)
+    public AgentController(ITwinHandler twinHandler, IValidator<UpdateReportedProps> updateReportedPropsValidator, ILoggerHandler logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
-        _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
     }
     [HttpGet("TwinHandler")]

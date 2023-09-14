@@ -58,26 +58,26 @@ public class AgentEventProcessor : IEventProcessor
 
     public Task OpenAsync(PartitionContext context)
     {
-        // _logger.Info($"AgentEventProcessor initialized. Partition: '{context.PartitionId}'");
+        _logger.Info($"AgentEventProcessor initialized. Partition: '{context.PartitionId}'");
         return Task.CompletedTask;
     }
 
     public Task CloseAsync(PartitionContext context, CloseReason reason)
     {
-        // _logger.Info($"AgentEventProcessor closing. Partition: '{context.PartitionId}', Reason: '{reason}'");
+        _logger.Info($"AgentEventProcessor closing. Partition: '{context.PartitionId}', Reason: '{reason}'");
         return Task.CompletedTask;
     }
 
     public Task ProcessErrorAsync(PartitionContext context, Exception error)
     {
-        // _logger.Info($"AgentEventProcessor error on Partition: {context.PartitionId}, Error: {error}");
+        _logger.Info($"AgentEventProcessor error on Partition: {context.PartitionId}, Error: {error}");
         return Task.CompletedTask;
     }
 
     // Process events received from the Event Hubs
     public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
     {
-        // _logger.Info($"AgentEventProcessor ProcessEventsAsync. Partition: '{context.PartitionId}'.");
+        _logger.Info($"AgentEventProcessor ProcessEventsAsync. Partition: '{context.PartitionId}'.");
 
         string drainD2cQueues = _environmentsWrapper.drainD2cQueues;
 
@@ -102,7 +102,7 @@ public class AgentEventProcessor : IEventProcessor
 
             if (agentEvent == null || isDrainMode)
             {
-                // _logger.Warn($"Draining on Partition: {partitionId}, Event: {data}");
+                _logger.Warn($"Draining on Partition: {partitionId}, Event: {data}");
                 return;
             }
 
