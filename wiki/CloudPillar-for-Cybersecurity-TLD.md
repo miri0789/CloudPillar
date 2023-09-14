@@ -866,7 +866,14 @@ The Agent's API provides a versatile interface that facilitates several crucial 
 - **State Query**:
   - The API offers a `GetDeviceState` method, allowing users or backend systems to query the current state of the device. 
   - Upon invocation, this call responds with the updated device twin JSON, offering a comprehensive view of both the device's desired and reported states, thereby serving as a snapshot of the device's current standing and configurations.
-
+- **Diagnostics**: the `RunDiagnistics` method allows the Agent to self-test end-to-end sanity. It orchestrates an end-to-end flow involving many (if not all) Agent and Backend components.
+The flow comprises:
+  - Creation of a small file with random content (128kB)
+  - Streaming uploading the file to the cloud, with a temporary persistency (1 hour)
+  - Signing the file on the backend
+  - Streaming downloading the file back to the Agent
+  - Verifying the signature
+  - Comparing the downloaded file to the original.
 By offering these functionalities, the API underscores its pivotal role in granting users and backend systems nuanced control over the Agent, promoting both adaptability and efficiency in the overarching system operations.
 #### 5.1.2.2.1. API Endpoints
 
