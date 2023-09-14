@@ -20,16 +20,9 @@ public class StreamingUploadChunkService : IStreamingUploadChunkService
 
     public async Task UploadStreamToBlob(StreamingUploadChunkEvent data)
     {
-        try
-        {
-            _logger.Info($"IotListener: Send chunk number {data.ChunkIndex} to BlobStreamer");
+        _logger.Info($"IotListener: Send chunk number {data.ChunkIndex} to BlobStreamer");
 
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/uploadStream";
-            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);
-        }
-        catch (Exception ex)
-        {
-            throw ex;
-        }
+        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/uploadStream";
+        await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);
     }
 }

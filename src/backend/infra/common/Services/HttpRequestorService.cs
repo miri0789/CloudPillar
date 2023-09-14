@@ -39,11 +39,11 @@ public class HttpRequestorService : IHttpRequestorService
         if (requestData != null)
         {
             string serializedData = JsonConvert.SerializeObject(requestData);
-            // var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
-            // if (!isRequestValid)
-            // {
-            //     throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
-            // }
+            var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
+            if (!isRequestValid)
+            {
+                throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
+            }
             request.Content = new StringContent(serializedData, Encoding.UTF8, "application/json");
         }
 
