@@ -878,6 +878,7 @@ By offering these functionalities, the API underscores its pivotal role in grant
 | UpdateReportedProps  | PUT         | None                  | JSON (list of updated properties)               | Updated device twin after properties updated | Error message with reason                          |
 | GetDeviceState       | GET         | None                  | None                                             | Updated device twin (current state)          | Error message with reason                          |
 | AddRecipe            | POST        | None                  | JSON (Recipe details)                           | Updated device twin with added recipe        | Error message with reason                          |
+| RunDiagnostics            | GET        | None                  | None                           | 200 OK, after all diagnostics finished        | Error message with stage, reason                          |
 
 **Note on UpdateReportedProps JSON Format**:
 For the `UpdateReportedProps` API call, the request body requires a JSON format containing a list of updated properties. The JSON structure can be like:
