@@ -88,6 +88,7 @@ public class TwinHandler : ITwinHandler
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
                     case TwinActionType.SingularUpload:
+                        _logger.Info("Start SingularUpload");
                         var twinReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         if (twinReport != null)
                         {

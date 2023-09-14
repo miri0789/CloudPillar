@@ -4,12 +4,15 @@ using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client.Transport;
 using System.IO.Compression;
 using Shared.Entities.Twin;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 
 public class FileUploaderHandler : IFileUploaderHandler
 {
     const int BUFFER_SIZE = 4 * 1024 * 1024;
+
+    private readonly ILoggerHandler _logger;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
@@ -19,16 +22,19 @@ public class FileUploaderHandler : IFileUploaderHandler
         IDeviceClientWrapper deviceClientWrapper,
         IEnvironmentsWrapper environmentsWrapper,
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
-        IIoTStreamingFileUploaderHandler ioTStreamingFileUploaderHandler)
+        IIoTStreamingFileUploaderHandler ioTStreamingFileUploaderHandler,
+        ILoggerHandler logger)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _blobStorageFileUploaderHandler = blobStorageFileUploaderHandler ?? throw new ArgumentNullException(nameof(blobStorageFileUploaderHandler));
         _ioTStreamingFileUploaderHandler = ioTStreamingFileUploaderHandler ?? throw new ArgumentNullException(nameof(ioTStreamingFileUploaderHandler));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<ActionToReport> FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
     {
+        _logger.Info($"FileUploadAsync");
         TwinActionReported twinAction = actionToReport.TwinReport;
 
         try
@@ -57,6 +63,8 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, CancellationToken cancellationToken)
     {
+        _logger.Info($"UploadFilesToBlobStorageAsync");
+
         string directoryPath = Path.GetDirectoryName(filePathPattern) ?? "";
         string searchPattern = Path.GetFileName(filePathPattern);
 
@@ -79,6 +87,8 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private string BuildBlobName(string fullFilePath)
     {
+        _logger.Info($"BuildBlobName");
+
         string blobname = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
         if (Directory.Exists(fullFilePath))
         {
@@ -89,6 +99,8 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private MemoryStream CreateZipArchive(string fullFilePath)
     {
+        _logger.Info($"CreateZipArchive");
+
         var memoryStream = new MemoryStream();
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
@@ -106,6 +118,8 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private Stream CreateStream(string fullFilePath)
     {
+        _logger.Info($"CreateStream");
+
         Stream readStream;
 
         // Check if the path is a directory
@@ -126,6 +140,8 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private async Task UploadFileAsync(UploadAction uploadAction, string blobname, Stream readStream, CancellationToken cancellationToken)
     {
+        _logger.Info($"UploadFileAsync");
+
         FileUploadCompletionNotification notification = new FileUploadCompletionNotification()
         {
             IsSuccess = true
@@ -141,9 +157,12 @@ public class FileUploaderHandler : IFileUploaderHandler
             switch (uploadAction.Method)
             {
                 case FileUploadMethod.Blob:
+                    _logger.Info($"Upload file: {uploadAction.FileName} by http");
 
                     await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
                     await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+                    _logger.Info($"The file: {uploadAction.FileName} uploaded successfully");
+
                     break;
                 case FileUploadMethod.Stream:
                     await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId);
