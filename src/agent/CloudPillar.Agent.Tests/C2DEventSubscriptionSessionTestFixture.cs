@@ -5,6 +5,7 @@ using Moq;
 using Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
+using Shared.Logger;
 
 [TestFixture]
 public class C2DEventSubscriptionSessionTestFixture
@@ -14,6 +15,7 @@ public class C2DEventSubscriptionSessionTestFixture
     private Mock<IMessageSubscriber> _messageSubscriberMock;
     private Mock<IMessageFactory> _messageFactoryMock;
     private Mock<ITwinHandler> _twinHandlerMock;
+    private Mock<ILoggerHandler> _loggerMock;
     private IC2DEventSubscriptionSession _target;
 
     private const string MESSAGE_TYPE_PROP = "MessageType";
@@ -27,15 +29,16 @@ public class C2DEventSubscriptionSessionTestFixture
         _messageSubscriberMock = new Mock<IMessageSubscriber>();
         _messageFactoryMock = new Mock<IMessageFactory>();
         _twinHandlerMock = new Mock<ITwinHandler>();
-
+        _loggerMock = new Mock<ILoggerHandler>();
 
         _target = new C2DEventSubscriptionSession(
              _deviceClientMock.Object,
              _messageSubscriberMock.Object,
              _messageFactoryMock.Object,
-             _twinHandlerMock.Object);
+             _twinHandlerMock.Object,
+             _loggerMock.Object);
 
-        
+
         var receivedMessage = SetRecivedMessageWithDurationMock(MessageType.DownloadChunk.ToString());
 
         _messageFactoryMock
@@ -68,7 +71,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
     [Test]
     public async Task ReceiveC2DMessagesAsync_UnknownMessageType_NotReportCompleteMsg()
-    {        
+    {
         var receivedMessage = SetRecivedMessageWithDurationMock("Try");
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
@@ -78,7 +81,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
     [Test]
     public async Task ReceiveC2DMessagesAsync_UnknownMessageType_CompleteMsg()
-    {        
+    {
         var receivedMessage = SetRecivedMessageWithDurationMock("Try");
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());

@@ -88,7 +88,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             currentPosition += chunkSize;
             chunkIndex++;
         }
-        if (currentPosition == streamLength)
+        if (chunkIndex - 1 == totalChunks && currentPosition >= streamLength)
         {
             _logger.Debug($"All bytes sent successfuly");
         }
