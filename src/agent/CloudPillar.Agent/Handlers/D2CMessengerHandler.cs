@@ -36,72 +36,8 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(firmwareUpdateEvent);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(Stream readStream, Uri storageUri, string actionId, string correlationId, long startPosition = 0, long? endPosition = null, CancellationToken cancellationToken = default)
-    {
-        int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
-        int totalChunks = CalculateTotalChunks(readStream.Length, chunkSize);
-
-        FileUploadCompletionNotification notification = InitializeNotification(correlationId);
-
-        try
-        {
-            _logger.Info($"Start send messages with chunks. Total chunks is: {totalChunks}");
-
-            await HandleUploadChunkAsync(readStream, storageUri, actionId, totalChunks, chunkSize);
-
-            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            notification.IsSuccess = false;
-            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-            _logger.Error($"SendStreamingUploadChunkEventAsync failed: {ex.Message}");
-        }
-    }
-
-    private FileUploadCompletionNotification InitializeNotification(string correlationId)
-    {
-        return new FileUploadCompletionNotification()
-        {
-            IsSuccess = true,
-            CorrelationId = correlationId
-        };
-    }
-
-    private int CalculateTotalChunks(long streamLength, int chunkSize)
-    {
-        return (int)Math.Ceiling((double)streamLength / chunkSize);
-    }
-
-    private async Task HandleUploadChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkSize)
-    {
-        int chunkIndex = 1;
-        long currentPosition = 0;
-        long streamLength = readStream.Length;
-
-        while (currentPosition < streamLength)
-        {
-            _logger.Debug($"Agent: Start send Chunk number: {chunkIndex}, with position: {currentPosition}");
-
-            await ProcessChunkAsync(readStream, storageUri, actionId, totalChunks, chunkIndex, chunkSize, currentPosition);
-
-            currentPosition += chunkSize;
-            chunkIndex++;
-        }
-        if (chunkIndex - 1 == totalChunks && currentPosition >= streamLength)
-        {
-            _logger.Debug($"All bytes sent successfuly");
-        }
-    }
-
-    private async Task ProcessChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkIndex, int chunkSize, long currentPosition)
-    {
-        long remainingBytes = readStream.Length - currentPosition;
-        long bytesToUpload = Math.Min(chunkSize, remainingBytes);
-
-        byte[] buffer = new byte[bytesToUpload];
-        await readStream.ReadAsync(buffer, 0, (int)bytesToUpload);
-
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, int chunkSize, int chunkIndex, int totalChunks, long? endPosition = null, CancellationToken cancellationToken = default)
+    {       
         var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
         {
             StorageUri = storageUri,
@@ -119,6 +55,8 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
         await SendMessageAsync(streamingUploadChunkEvent, properties);
     }
+
+
 
     private async Task SendMessageAsync(AgentEvent agentEvent, Dictionary<string, string>? properties = null)
     {

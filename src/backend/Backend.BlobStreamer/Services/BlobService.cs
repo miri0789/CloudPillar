@@ -115,22 +115,20 @@ public class BlobService : IBlobService
                 else
                 {
                     MemoryStream existingData = new MemoryStream();
-                    blob.DownloadToStream(existingData);
+                    await blob.DownloadToStreamAsync(existingData);
 
-                    if (existingData.Length == startPosition)
-                    {
-                        existingData.Seek(startPosition, SeekOrigin.Begin);
+                    existingData.Seek(startPosition, SeekOrigin.Begin);
 
-                        // Append the new content from inputStream to existingData
-                        inputStream.Seek(0, SeekOrigin.Begin);
-                        inputStream.CopyTo(existingData);
+                    // Append the new content from inputStream to existingData
+                    inputStream.Seek(0, SeekOrigin.Begin);
+                    inputStream.CopyTo(existingData);
 
-                        // Reset the position of existingData to the beginning
-                        existingData.Seek(0, SeekOrigin.Begin);
+                    // Reset the position of existingData to the beginning
+                    existingData.Seek(0, SeekOrigin.Begin);
 
-                        // Upload the combined data to the blob
-                        blob.UploadFromStream(existingData);
-                    }
+                    // Upload the combined data to the blob
+                    await blob.UploadFromStreamAsync(inputStream);
+
                 }
             }
         }

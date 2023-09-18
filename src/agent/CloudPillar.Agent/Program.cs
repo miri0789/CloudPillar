@@ -56,5 +56,6 @@ app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.MapControllers();
-app.Run();
 
+
+app.Run();
