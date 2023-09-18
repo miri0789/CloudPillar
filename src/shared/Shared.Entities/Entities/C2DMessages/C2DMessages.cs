@@ -1,17 +1,15 @@
-using System.Reflection;
-using Microsoft.Azure.Devices;
 
 namespace Shared.Entities.Messages;
 
-public enum MessageType
+public enum C2DMessageType
 {
     DownloadChunk,
     UploadChunk
 }
 
-public abstract class BaseMessage
+public abstract class C2DMessages
 {
-    public MessageType MessageType { get; set; }
+    public C2DMessageType MessageType { get; set; }
     public string ActionId { get; set; } //TODO - set
     public byte[] Data { get; set; }
     public abstract string GetMessageId();

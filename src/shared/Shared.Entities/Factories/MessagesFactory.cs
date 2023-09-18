@@ -9,7 +9,7 @@ namespace Shared.Entities.Factories;
 public class MessageFactory : IMessageFactory
 {
 
-    public T CreateBaseMessageFromMessage<T>(Microsoft.Azure.Devices.Client.Message message) where T : BaseMessage, new()
+    public T CreateC2DMessageFromMessage<T>(Microsoft.Azure.Devices.Client.Message message) where T : C2DMessages, new()
     {
         var obj = new T();
 
@@ -32,23 +32,23 @@ public class MessageFactory : IMessageFactory
         return obj;
     }
 
-    public Message PrepareBlobMessage(BaseMessage baseMessage, int expiredMinutes = 60)
+    public Message PrepareC2DMessage(C2DMessages c2dMessage, int expiredMinutes = 60)
     {
-        var message = new Message(baseMessage.Data)
+        var message = new Message(c2dMessage.Data)
         {
-            MessageId = baseMessage.GetMessageId(),
+            MessageId = c2dMessage.GetMessageId(),
             ExpiryTimeUtc = DateTime.UtcNow.AddMinutes(expiredMinutes)
         };
 
-        PropertyInfo[] properties = baseMessage.GetType().GetProperties();
+        PropertyInfo[] properties = c2dMessage.GetType().GetProperties();
         foreach (var property in properties)
         {
             if (property.Name != "Data")
             {
-                message.Properties.Add(property.Name, property.GetValue(baseMessage)?.ToString());
+                message.Properties.Add(property.Name, property.GetValue(c2dMessage)?.ToString());
             }
         }
-        Console.WriteLine($"BaseMessage PrepareBlobMessage. message title: {baseMessage.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
+        Console.WriteLine($"C2DMessages PrepareC2DMessage. message title: {c2dMessage.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
     }
 

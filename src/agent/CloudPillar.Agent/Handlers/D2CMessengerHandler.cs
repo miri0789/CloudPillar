@@ -1,7 +1,6 @@
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Client.Transport;
 using Newtonsoft.Json;
 using Shared.Entities.Events;
 using Shared.Logger;

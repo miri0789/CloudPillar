@@ -3,7 +3,7 @@ using System.Text.Json;
 using Backend.Iotlistener.Interfaces;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
-using Shared.Entities.Events;
+using Shared.Entities.Messages;
 using Shared.Logger;
 
 namespace Backend.Iotlistener.Processors;
@@ -98,9 +98,9 @@ public class AgentEventProcessor : IEventProcessor
         try
         {
             var data = Encoding.UTF8.GetString(eventData!.Body!.Array!, eventData.Body.Offset, eventData.Body.Count);
-            AgentEvent agentEvent = JsonSerializer.Deserialize<AgentEvent>(data)!;
+            D2CMessage d2CMessage= JsonSerializer.Deserialize<D2CMessage>(data)!;
 
-            if (agentEvent == null || isDrainMode)
+            if (d2CMessage == null || isDrainMode)
             {
                 _logger.Warn($"Draining on Partition: {partitionId}, Event: {data}");
                 return;
@@ -109,17 +109,17 @@ public class AgentEventProcessor : IEventProcessor
             string iothubConnectionDeviceId = _environmentsWrapper.iothubConnectionDeviceId;
             string? deviceId = eventData.SystemProperties[iothubConnectionDeviceId]?.ToString();
 
-            if (!String.IsNullOrWhiteSpace(deviceId) && agentEvent.EventType != null)
+            if (!String.IsNullOrWhiteSpace(deviceId) && d2CMessage.MessageType != null)
             {
-                switch (agentEvent.EventType)
+                switch (d2CMessage.MessageType)
                 {
-                    case EventType.FirmwareUpdateReady:
+                    case D2CMessageType.FirmwareUpdateReady:
                         {
                             var firmwareUpdateEvent = JsonSerializer.Deserialize<FirmwareUpdateEvent>(data)!;
                             await _firmwareUpdateService.SendFirmwareUpdateAsync(deviceId, firmwareUpdateEvent);
                             break;
                         }
-                    case EventType.SignTwinKey:
+                    case D2CMessageType.SignTwinKey:
                         {
                             var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;
                             await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);

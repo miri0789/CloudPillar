@@ -42,7 +42,7 @@ namespace Backend.BlobStreamer.Tests
             _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
             _mockLogger = new Mock<ILoggerHandler>();
             _mockMessageFactory = new Mock<IMessageFactory>();
-            _mockMessageFactory.Setup(c => c.PrepareBlobMessage(It.IsAny<BaseMessage>(), It.IsAny<int>())).Returns(new Message());
+            _mockMessageFactory.Setup(c => c.PrepareC2DMessage(It.IsAny<C2DMessages>(), It.IsAny<int>())).Returns(new Message());
             _mockEnvironmentsWrapper.Setup(c => c.retryPolicyExponent).Returns(3);
             _mockDeviceClientWrapper.Setup(c => c.CreateFromConnectionString(It.IsAny<string>()))
             .Returns(new ServiceClient());
