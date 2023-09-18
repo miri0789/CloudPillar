@@ -13,6 +13,7 @@ public class FirmwareUpdateEvent : D2CMessage
 
     public long? EndPosition { get; set; }
 
+
     [JsonConstructor]
     public FirmwareUpdateEvent()
     {

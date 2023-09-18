@@ -119,9 +119,7 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.BlobStreamer",
             "console": "internalConsole",
             "env": {
-                //IotHub->shared Access Policies->owner
                 "IothubConnectionString": "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=",
-               //storageAccount->Access Key
                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net",
                "BlobContainerName": "iotcontainer",
                 "MessageExpiredMinutes": "60",
@@ -139,11 +137,8 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.Iotlistener",
             "console": "internalConsole",
             "env": {
-                //Iot hub-> Built in endpoinnts-> Event Hub-compatible endpoint
                 "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-dev-iot-25232063-aa3e0e76e7.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=;EntityPath=cp-dev-iothub",
-                //Iot hub-> Built in endpoinnts-> Event Hub-compatible name
                 "IothubEventHubCompatiblePath": "cp-dev-iothub",
-                //StorageAccount->Access Key
                 "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "iotcontainer",
                 "BlobStreamerUrl": "http://localhost:5019/",

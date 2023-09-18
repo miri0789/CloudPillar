@@ -7,7 +7,6 @@ public class SignEvent : D2CMessage
 
     public string SignatureKey { get; set; }
     
-    [JsonConstructor]
     public SignEvent()
     {
         this.MessageType = D2CMessageType.SignTwinKey;

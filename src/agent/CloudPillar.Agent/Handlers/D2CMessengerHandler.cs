@@ -45,6 +45,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         {
             StorageUri = storageUri,
             ChunkIndex = chunkIndex,
+            TotalChunk = totalChunks,
             StartPosition = currentPosition,
             ActionId = actionId ?? Guid.NewGuid().ToString(),
             Data = buffer

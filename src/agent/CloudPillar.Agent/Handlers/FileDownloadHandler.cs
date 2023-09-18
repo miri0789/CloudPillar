@@ -69,6 +69,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Report.TwinReport.Status = StatusType.InProgress;
         }
         return file.Report;
+
     }
 
     private float CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
@@ -91,4 +92,5 @@ public class FileDownloadHandler : IFileDownloadHandler
             await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, startPosition, endPosition);
         }
     }
+    
 }

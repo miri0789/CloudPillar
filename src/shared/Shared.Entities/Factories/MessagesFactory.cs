@@ -51,5 +51,6 @@ public class MessageFactory : IMessageFactory
         Console.WriteLine($"C2DMessages PrepareC2DMessage. message title: {c2dMessage.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
     }
+
 }
 

@@ -7,8 +7,8 @@ public enum D2CMessageType
     StreamingUploadChunk
 }
 
-public  class D2CMessage
+public class D2CMessage
 {
     public D2CMessageType MessageType { get; set; }
-    public string ActionId { get; set; } 
+    public string ActionId { get; set; }
 }

@@ -25,30 +25,8 @@ public class AgentController : ControllerBase
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
     }
     [HttpGet("TwinHandler")]
-    public async Task<IActionResult> TwinHandler(string fileName = "C:\\demo\\stream.jpg")
+    public async Task<IActionResult> TwinHandler()
     {
-        await _twinHandler.HandleTwinActionsAsync(CancellationToken.None);
-
-        UploadAction uploadAction = new UploadAction()
-        {
-            Action = TwinActionType.SingularUpload,
-            Description = "test upload by stream",
-            Enabled = true,
-            Method = FileUploadMethod.Stream,
-            FileName = fileName
-        };
-        ActionToReport actionToReport = new ActionToReport()
-        {
-            TwinAction = uploadAction,
-            TwinReport = new TwinActionReported(),
-        };
-
-        var twinReport = await _fileUploaderHandler.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
-        if (twinReport.TwinReport.Status == StatusType.Success)
-        {
-
-        }
-
         await _twinHandler.HandleTwinActionsAsync(CancellationToken.None);
         return Ok();
     }

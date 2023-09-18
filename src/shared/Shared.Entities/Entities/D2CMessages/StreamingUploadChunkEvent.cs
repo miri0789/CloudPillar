@@ -13,7 +13,6 @@ public class streamingUploadChunkEvent : D2CMessage
 
     public byte[] Data { get; set; }
 
-    [JsonConstructor]
     public streamingUploadChunkEvent()
     {
         this.MessageType = D2CMessageType.StreamingUploadChunk;
