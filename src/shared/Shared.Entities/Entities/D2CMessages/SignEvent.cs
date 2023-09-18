@@ -12,8 +12,4 @@ public class SignEvent : D2CMessage
     {
         this.MessageType = D2CMessageType.SignTwinKey;
     }
-    public override string GetMessageId()
-    {
-        return $"{this.KeyPath}_{this.SignatureKey}";
-    }
 }

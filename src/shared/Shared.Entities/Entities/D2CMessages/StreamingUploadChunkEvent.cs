@@ -17,9 +17,5 @@ public class streamingUploadChunkEvent : D2CMessage
     public streamingUploadChunkEvent()
     {
         this.MessageType = D2CMessageType.StreamingUploadChunk;
-    }
-    public override string GetMessageId()
-    {
-        return $"{this.StorageUri.AbsolutePath}_{this.TotalChunk}_{this.ChunkIndex}";
-    }
+    }   
 }

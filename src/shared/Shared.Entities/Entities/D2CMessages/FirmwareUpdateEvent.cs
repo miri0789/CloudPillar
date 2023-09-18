@@ -18,9 +18,4 @@ public class FirmwareUpdateEvent : D2CMessage
     {
         this.MessageType = D2CMessageType.FirmwareUpdateReady;
     }
-
-    public override string GetMessageId()
-    {
-        return $"{this.FileName}_{this.ChunkSize}";
-    }
 }
