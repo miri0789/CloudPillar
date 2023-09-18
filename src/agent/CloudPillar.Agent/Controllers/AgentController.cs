@@ -3,6 +3,7 @@ using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Entities.Twin;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Controllers;
@@ -23,9 +24,9 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("AddRecipe")]
-    public async Task<IActionResult> AddRecipe()
+    public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpGet("GetDeviceState")]
@@ -35,28 +36,28 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("InitiateProvisioning")]
-    public async Task<IActionResult> InitiateProvisioning()
+    public async Task<ActionResult<string>> InitiateProvisioning()
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPost("SetBusy")]
-    public async Task<IActionResult> SetBusy()
+    public async Task<ActionResult<string>> SetBusy()
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPost("SetReady")]
-    public async Task<IActionResult> SetReady()
+    public async Task<ActionResult<string>> SetReady()
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPut("UpdateReportedProps")]
-    public async Task<IActionResult> UpdateReportedProps(UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 }
 

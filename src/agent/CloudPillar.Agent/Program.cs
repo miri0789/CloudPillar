@@ -9,12 +9,14 @@ using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
-
+var port = builder.Configuration.GetValue<int>("Port", 8099);
+var url = $"http://localhost:{port}";
+builder.WebHost.UseUrls(url);
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins("http://localhost")
+                b.WithOrigins(url)
                        .AllowAnyHeader()
                        .AllowAnyMethod();
             });
