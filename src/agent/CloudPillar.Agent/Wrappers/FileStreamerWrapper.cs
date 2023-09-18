@@ -37,7 +37,11 @@ public class FileStreamerWrapper : IFileStreamerWrapper
 
     public async Task<string> ReadAllTextAsync(string filePath)
     {
-        return await File.ReadAllTextAsync(filePath);
+        if (File.Exists(filePath))
+        {
+            return await File.ReadAllTextAsync(filePath);
+        }
+        return null;
     }
     public bool Exists(string filePath)
     {

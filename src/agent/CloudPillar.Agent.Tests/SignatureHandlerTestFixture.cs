@@ -10,15 +10,15 @@ namespace CloudPillar.Agent.Tests;
 public class SignatureHandlerTestFixture
 {
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
-    private ISignatureHandler _signatureHandler;
     private Mock<ECDsa> _ecdsaMock;
+    private ISignatureHandler _target;
 
 
     [SetUp]
     public void Setup()
     {
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
-        _signatureHandler = new SignatureHandler(_fileStreamerWrapperMock.Object);
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object);
         _ecdsaMock = new Mock<ECDsa>();
 
         string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
@@ -33,12 +33,11 @@ public class SignatureHandlerTestFixture
     [Test]
     public async Task InitPublicKeyAsync_LoadsPublicKey_Success()
     {
-        await _signatureHandler.InitPublicKeyAsync();
-        _signatureHandler.GetType()
+        await _target.InitPublicKeyAsync();
+        _target.GetType()
             .GetField("_signingPublicKey", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .SetValue(_signatureHandler, _ecdsaMock.Object);
+            .SetValue(_target, _ecdsaMock.Object);
 
-        Assert.IsNotNull(_ecdsaMock.Object);
         Assert.IsInstanceOf<ECDsa>(_ecdsaMock.Object);
     }
 
@@ -46,20 +45,33 @@ public class SignatureHandlerTestFixture
     [Test]
     public async Task VerifySignature_ValidSignature_ReturnsTrue()
     {
-        await _signatureHandler.InitPublicKeyAsync();
+        await _target.InitPublicKeyAsync();
         string message = "value";
         string signatureString = "AamBQZxGNBGWsm9NkOyWiZRCWGponIRIJo3nnKytRyQlcpJv/iUy5fS1FUodBAX6Sn5kJV9g3DMn2GkJovSWOFXTAdNgY+OJsV42919LetahmaR1M7V8wcHqm+0ddfwF9MzO11fl39PZTT6upInvAVb8KA7Hazjn9enCWCxcise/2RZy";
-        bool result = _signatureHandler.VerifySignature(message, signatureString);
+        bool result = _target.VerifySignature(message, signatureString);
         Assert.IsTrue(result);
     }
 
     [Test]
     public async Task VerifySignature_InvalidSignature_ReturnsFalse()
     {
-        await _signatureHandler.InitPublicKeyAsync();
+        await _target.InitPublicKeyAsync();
         string message = "Hello, world!";
         string signatureString = "SGVsbG8sIHdvcmxkIQ==";
-        bool result = _signatureHandler.VerifySignature(message, signatureString);
+        bool result = _target.VerifySignature(message, signatureString);
         Assert.IsFalse(result);
+    }
+
+
+
+    [Test]
+    public async Task InitPublicKeyAsync_FileNotExist_ThrowNull()
+    {
+        _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync(It.IsAny<string>())).ReturnsAsync(() => null);
+
+        Assert.ThrowsAsync<ArgumentNullException>(async () =>
+               {
+                   await _target.InitPublicKeyAsync();
+               });
     }
 }

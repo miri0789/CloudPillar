@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
+using Shared.Logger;
 
 
 namespace CloudPillar.Agent.Handlers;
@@ -10,6 +11,12 @@ public class SignatureHandler : ISignatureHandler
 {
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private ECDsa _signingPublicKey;
+    private readonly ILoggerHandler _logger;
+
+    public SignatureHandler(ILoggerHandler logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper)
     {
@@ -18,6 +25,11 @@ public class SignatureHandler : ISignatureHandler
     public async Task InitPublicKeyAsync()
     {
         string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync("pki/sign-pubkey.pem");
+        if (publicKeyPem == null)
+        {
+            _logger.Error("sign pubkey not exist");
+            throw new ArgumentNullException();
+        }
         _signingPublicKey = (ECDsa)LoadPublicKeyFromPem(publicKeyPem);
     }
 
