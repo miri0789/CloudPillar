@@ -9,6 +9,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <!-- <PackageReference Include="SharedEntities" Version="1.0.60" /> -->
     <ProjectReference Include="./../../shared/Shared.Entities/Shared.Entities.csproj"/>
     <PackageReference Include="SharedLogger" Version="1.0.10"/>
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />

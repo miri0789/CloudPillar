@@ -107,7 +107,7 @@ public class BlobService : IBlobService
             using (Stream inputStream = new MemoryStream(readStream))
             {
                 //first chunk
-                if (startPosition == 0)
+                if (!blob.Exists())
                 {
                     await blob.UploadFromStreamAsync(inputStream);
                 }
@@ -116,19 +116,14 @@ public class BlobService : IBlobService
                 {
                     MemoryStream existingData = new MemoryStream();
                     await blob.DownloadToStreamAsync(existingData);
-
-                    existingData.Seek(startPosition, SeekOrigin.Begin);
-
-                    // Append the new content from inputStream to existingData
-                    // inputStream.Seek(0, SeekOrigin.Begin);
-                    inputStream.CopyTo(existingData);
+                   
+                    await inputStream.CopyToAsync(existingData);
 
                     // Reset the position of existingData to the beginning
-                    // existingData.Seek(0, SeekOrigin.Begin);
+                    existingData.Seek(0, SeekOrigin.Begin);
 
                     // Upload the combined data to the blob
-                    await blob.UploadFromStreamAsync(inputStream);
-
+                    await blob.UploadFromStreamAsync(existingData);
                 }
             }
         }

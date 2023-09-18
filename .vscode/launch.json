@@ -121,9 +121,9 @@
             "env": {
                 //IotHub->shared Access Policies->owner
                 "IothubConnectionString": "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=",
-                //storageAccount->Access Key
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net",
-                "BlobContainerName": "iotcontainer",
+               //storageAccount->Access Key
+               "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net",
+               "BlobContainerName": "iotcontainer",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
                 "RetryPolicyExponent": "3"
