@@ -13,13 +13,9 @@ public class SignatureHandler : ISignatureHandler
     private ECDsa _signingPublicKey;
     private readonly ILoggerHandler _logger;
 
-    public SignatureHandler(ILoggerHandler logger)
+    public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
-    public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper)
-    {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
     }
     public async Task InitPublicKeyAsync()

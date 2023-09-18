@@ -304,7 +304,7 @@ public class TwinHandlerTestFixture
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
             nameof(TwinReported.ChangeSpec), It.IsAny<string>()), Times.Once);
     }
-    
+
     private List<ActionToReport> CreateReportForUpdating()
     {
         var actionsToReported = new List<ActionToReport> { new ActionToReport

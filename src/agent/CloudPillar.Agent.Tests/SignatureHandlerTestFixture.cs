@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Moq;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
+using Shared.Logger;
 
 
 namespace CloudPillar.Agent.Tests;
@@ -11,6 +12,7 @@ public class SignatureHandlerTestFixture
 {
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private Mock<ECDsa> _ecdsaMock;
+    private Mock<ILoggerHandler> _loggerHandlerMock;
     private ISignatureHandler _target;
 
 
@@ -18,7 +20,8 @@ public class SignatureHandlerTestFixture
     public void Setup()
     {
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
-        _target = new SignatureHandler(_fileStreamerWrapperMock.Object);
+        _loggerHandlerMock = new Mock<ILoggerHandler>();
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object);
         _ecdsaMock = new Mock<ECDsa>();
 
         string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
