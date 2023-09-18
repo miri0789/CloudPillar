@@ -4,7 +4,7 @@ using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 using Microsoft.Azure.Storage.Blob;
 using Moq;
-using Shared.Entities.Events;
+using Shared.Entities.Messages;
 using Shared.Logger;
 
 namespace Backend.Iotlistener.Tests;
@@ -51,7 +51,7 @@ public class FirmwareUpdateTestFixture
     [Test]
     public async Task SendFirmwareUpdateAsync_SendsRangeRequests()
     {
-        var actionGuid = new Guid();
+        var actionId = "123";
 
         _httpRequestorServiceMock
                     .Setup(service => service.SendRequest(It.IsAny<string>(), HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()));
@@ -63,26 +63,26 @@ public class FirmwareUpdateTestFixture
             FileName = _fileName,
             ChunkSize = _chunkSize,
             StartPosition = 0,
-            ActionGuid = actionGuid
+            ActionId = actionId
         });
 
         for (long offset = _startPosition, rangeIndex = 0; offset < _blobSize; offset += _rangeSize, rangeIndex++)
         {
-            string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionGuid, _blobSize, rangeIndex, offset);
+            string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _blobSize, rangeIndex, offset);
             _httpRequestorServiceMock.Verify(service =>
                 service.SendRequest(blobRangeUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
     }
-    private string BuildBlobRangeUrl(Uri blobStreamerUrl, string deviceId, string fileName, int chunkSize, long rangeSize, Guid actionGuid, long fileSize, long rangeIndex = 0, long offset = 0)
+    private string BuildBlobRangeUrl(Uri blobStreamerUrl, string deviceId, string fileName, int chunkSize, long rangeSize, string actionId, long fileSize, long rangeIndex = 0, long offset = 0)
     {
-        return $"{blobStreamerUrl.AbsoluteUri}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionGuid={actionGuid}&fileSize={fileSize}";
+        return $"{blobStreamerUrl.AbsoluteUri}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={actionId}&fileSize={fileSize}";
     }
 
     [Test]
     public async Task SendFirmwareUpdateAsync_GetBlobSizeFails_ThrowsException()
     {
-        var actionGuid = new Guid();
+        var actionId = "123";
 
         _httpRequestorServiceMock
              .Setup(service => service.SendRequest<BlobProperties>(It.IsAny<string>(), HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
@@ -93,9 +93,9 @@ public class FirmwareUpdateTestFixture
             FileName = _fileName,
             ChunkSize = _chunkSize,
             StartPosition = 0,
-            ActionGuid = actionGuid
+            ActionId = actionId
         });
-        string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionGuid, _rangeSize);
+        string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _rangeSize);
         _httpRequestorServiceMock.Verify(service =>
            service.SendRequest(blobRangeUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
            Times.Never);
@@ -106,9 +106,9 @@ public class FirmwareUpdateTestFixture
     [Test]
     public async Task SendFirmwareUpdateAsync_RequestFails_ThrowsException()
     {
-        var actionGuid = new Guid();
+        var actionId = "123";
 
-        string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionGuid, _rangeSize);
+        string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _rangeSize);
         _httpRequestorServiceMock.Setup(service =>
             service.SendRequest(blobRangeUrl,
              HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
@@ -121,9 +121,9 @@ public class FirmwareUpdateTestFixture
             FileName = _fileName,
             ChunkSize = _chunkSize,
             StartPosition = 0,
-            ActionGuid = actionGuid
+            ActionId = actionId
         });
-         blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionGuid, _rangeSize);
+         blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _rangeSize);
         _httpRequestorServiceMock.Verify(service =>
             service.SendRequest(blobRangeUrl,
              HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);

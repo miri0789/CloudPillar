@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Text.Json.Serialization;
-using Shared.Entities.Events;
 
-public class FirmwareUpdateEvent : AgentEvent
+namespace Shared.Entities.Messages;
+public class FirmwareUpdateEvent : D2CMessage
 {
     public string FileName { get; set; }
 
@@ -17,6 +17,6 @@ public class FirmwareUpdateEvent : AgentEvent
     [JsonConstructor]
     public FirmwareUpdateEvent()
     {
-        this.EventType = EventType.FirmwareUpdateReady;
+        this.MessageType = D2CMessageType.FirmwareUpdateReady;
     }
 }
