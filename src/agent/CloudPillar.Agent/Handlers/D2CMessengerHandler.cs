@@ -2,7 +2,7 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using Shared.Entities.Events;
+using Shared.Entities.Messages;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
@@ -57,9 +57,9 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
 
 
-    private async Task SendMessageAsync(AgentEvent agentEvent, Dictionary<string, string>? properties = null)
+    private async Task SendMessageAsync(D2CMessage d2CMessage, Dictionary<string, string>? properties = null)
     {
-        var messageString = JsonConvert.SerializeObject(agentEvent);
+        var messageString = JsonConvert.SerializeObject(d2CMessage);
         Message message = new Message(Encoding.ASCII.GetBytes(messageString));
         if (properties != null)
         {

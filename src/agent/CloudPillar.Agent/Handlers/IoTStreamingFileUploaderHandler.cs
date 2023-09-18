@@ -5,13 +5,13 @@ using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 
-public class IoTStreamingFileUploaderHandler : IIoTStreamingFileUploaderHandler
+public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
 {
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly ILoggerHandler _logger;
 
-    public IoTStreamingFileUploaderHandler(ID2CMessengerHandler d2CMessengerHandler, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
+    public StreamingFileUploaderHandler(ID2CMessengerHandler d2CMessengerHandler, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
     {
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));

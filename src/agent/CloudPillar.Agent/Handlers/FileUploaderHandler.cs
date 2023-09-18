@@ -14,21 +14,18 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private readonly ILoggerHandler _logger;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
-    private readonly IIoTStreamingFileUploaderHandler _ioTStreamingFileUploaderHandler;
+    private readonly IStreamingFileUploaderHandler _streamingFileUploaderHandler;
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
-        IEnvironmentsWrapper environmentsWrapper,
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
-        IIoTStreamingFileUploaderHandler ioTStreamingFileUploaderHandler,
+        IStreamingFileUploaderHandler StreamingFileUploaderHandler,
         ILoggerHandler logger)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _blobStorageFileUploaderHandler = blobStorageFileUploaderHandler ?? throw new ArgumentNullException(nameof(blobStorageFileUploaderHandler));
-        _ioTStreamingFileUploaderHandler = ioTStreamingFileUploaderHandler ?? throw new ArgumentNullException(nameof(ioTStreamingFileUploaderHandler));
+        _streamingFileUploaderHandler = StreamingFileUploaderHandler ?? throw new ArgumentNullException(nameof(StreamingFileUploaderHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -165,7 +162,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _ioTStreamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId);
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId,cancellationToken);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");

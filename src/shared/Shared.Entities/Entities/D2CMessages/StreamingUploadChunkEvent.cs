@@ -1,9 +1,8 @@
-﻿using System.ComponentModel;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace Shared.Entities.Events;
+namespace Shared.Entities.Messages;
 
-public class StreamingUploadChunkEvent : AgentEvent
+public class StreamingUploadChunkEvent : D2CMessage
 {
 
     public Uri StorageUri { get; set; }
@@ -16,7 +15,7 @@ public class StreamingUploadChunkEvent : AgentEvent
     [JsonConstructor]
     public StreamingUploadChunkEvent()
     {
-        this.EventType = EventType.StreamingUploadChunk;
+        this.MessageType = D2CMessageType.StreamingUploadChunk;
         this.ActionId = Guid.NewGuid().ToString();
     }
 }
