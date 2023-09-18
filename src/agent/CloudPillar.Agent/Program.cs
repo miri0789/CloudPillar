@@ -8,8 +8,9 @@ using Shared.Entities.Factories;
 using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
+const string CONFIG_PORT = "Port";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
-var port = builder.Configuration.GetValue<int>("Port", 8099);
+var port = builder.Configuration.GetValue(CONFIG_PORT, 8099);
 var url = $"http://localhost:{port}";
 builder.WebHost.UseUrls(url);
 builder.Services.AddCors(options =>

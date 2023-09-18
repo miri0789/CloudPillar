@@ -2,7 +2,14 @@
 
 # Define the target platforms and architectures
 $platforms = @(
-    "win-x64"
+    "linux-x64",
+    "linux-arm",
+    "linux-arm64",
+    "osx-x64",
+    "osx-arm64",
+    "win-x64",
+    "win-arm64",
+    "win-x86"
 )
 
 # Get the full path of the script directory
