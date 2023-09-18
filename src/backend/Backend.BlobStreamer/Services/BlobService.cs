@@ -116,6 +116,8 @@ public class BlobService : IBlobService
                 {
                     MemoryStream existingData = new MemoryStream();
                     await blob.DownloadToStreamAsync(existingData);
+                    
+                    existingData.Seek(startPosition, SeekOrigin.Begin);
                    
                     await inputStream.CopyToAsync(existingData);
 
