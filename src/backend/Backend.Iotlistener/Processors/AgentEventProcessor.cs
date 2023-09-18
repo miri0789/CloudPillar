@@ -6,7 +6,7 @@ using Microsoft.Azure.EventHubs.Processor;
 using Shared.Entities.Messages;
 using Shared.Logger;
 
-namespace Backend.Iotlistener.Services;
+namespace Backend.Iotlistener.Processors;
 
 class AzureStreamProcessorFactory : IEventProcessorFactory
 {

@@ -1,6 +1,6 @@
 ﻿using Backend.Keyholder.Interfaces;
 
-namespace Backend.Keyholder.Services;
+namespace Backend.Keyholder.Wrappers;
 public class EnvironmentsWrapper: IEnvironmentsWrapper
 {
 

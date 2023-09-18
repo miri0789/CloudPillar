@@ -1,4 +1,6 @@
-﻿namespace Backend.BlobStreamer.Services;
+﻿using Backend.BlobStreamer.Interfaces;
+
+namespace Backend.BlobStreamer.Wrappers;
 public class EnvironmentsWrapper: IEnvironmentsWrapper
 {
     private const string _storageConnectionString = "StorageConnectionString";
