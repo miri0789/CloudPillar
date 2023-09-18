@@ -1,7 +1,7 @@
 ﻿using common;
 using Backend.Iotlistener.Interfaces;
 using Shared.Logger;
-using Shared.Entities.Events;
+using Shared.Entities.Messages;
 
 namespace Backend.Iotlistener.Services;
 
@@ -18,7 +18,7 @@ public class StreamingUploadChunkService : IStreamingUploadChunkService
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
     }
 
-    public async Task UploadStreamToBlob(StreamingUploadChunkEvent data)
+    public async Task UploadStreamToBlob(streamingUploadChunkEvent data)
     {
         _logger.Info($"IotListener: Send chunk number {data.ChunkIndex} to BlobStreamer");
 

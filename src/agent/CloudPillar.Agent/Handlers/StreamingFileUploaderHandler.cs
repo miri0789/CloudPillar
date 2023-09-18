@@ -50,20 +50,17 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         };
     }
 
-    private int CalculateTotalChunks(long streamLength, int chunkSize)
-    {
-        return (int)Math.Ceiling((double)streamLength / chunkSize);
-    }
-
     private async Task HandleUploadChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkSize)
     {
         int chunkIndex = 1;
         long currentPosition = 0;
         long streamLength = readStream.Length;
 
+        _logger.Debug($"Agent: Start send chunks, Totak chunks is: {totalChunks}");
+
         while (currentPosition < streamLength)
         {
-            _logger.Debug($"Agent: Start send Chunk number: {chunkIndex}, with position: {currentPosition}");
+            _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
             await ProcessChunkAsync(readStream, storageUri, actionId, totalChunks, chunkIndex, chunkSize, currentPosition);
 
@@ -86,5 +83,10 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
 
         await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition, chunkSize, chunkIndex, totalChunks, null);
 
+    }
+
+    private int CalculateTotalChunks(long streamLength, int chunkSize)
+    {
+        return (int)Math.Ceiling((double)streamLength / chunkSize);
     }
 }

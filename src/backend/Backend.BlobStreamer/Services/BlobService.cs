@@ -15,16 +15,16 @@ public class BlobService : IBlobService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ICloudStorageWrapper _cloudStorageWrapper;
     private readonly IDeviceClientWrapper _deviceClient;
-    private readonly IMessageFactory _MessageFactory;
+    private readonly IMessageFactory _messageFactory;
     private readonly ILoggerHandler _logger;
 
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
-     IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory MessageFactory)
+     IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory messageFactory)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper)); ;
         _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper)); ;
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
-        _MessageFactory = MessageFactory ?? throw new ArgumentNullException(nameof(MessageFactory)); ;
+        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory)); ;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
@@ -65,7 +65,7 @@ public class BlobService : IBlobService
                 blobMessage.RangeSize = rangeEndSize;
             }
 
-            var c2dMessage = _MessageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
+            var c2dMessage = _messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
             await SendMessage(c2dMessage, deviceId);
         }
     }
@@ -120,11 +120,11 @@ public class BlobService : IBlobService
                     existingData.Seek(startPosition, SeekOrigin.Begin);
 
                     // Append the new content from inputStream to existingData
-                    inputStream.Seek(0, SeekOrigin.Begin);
+                    // inputStream.Seek(0, SeekOrigin.Begin);
                     inputStream.CopyTo(existingData);
 
                     // Reset the position of existingData to the beginning
-                    existingData.Seek(0, SeekOrigin.Begin);
+                    // existingData.Seek(0, SeekOrigin.Begin);
 
                     // Upload the combined data to the blob
                     await blob.UploadFromStreamAsync(inputStream);

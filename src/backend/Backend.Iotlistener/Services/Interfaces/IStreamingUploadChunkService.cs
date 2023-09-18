@@ -1,8 +1,8 @@
-﻿using Shared.Entities.Events;
+﻿using Shared.Entities.Messages;
 
 namespace Backend.Iotlistener.Interfaces;
 
 public interface IStreamingUploadChunkService
 {
-    Task UploadStreamToBlob(StreamingUploadChunkEvent data);
+    Task UploadStreamToBlob(streamingUploadChunkEvent data);
 }

@@ -125,9 +125,9 @@ public class AgentEventProcessor : IEventProcessor
                             await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);
                             break;
                         }
-                    case EventType.StreamingUploadChunk:
+                    case D2CMessageType.StreamingUploadChunk:
                         {
-                            var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
+                            var streamingUploadChunkEvent = JsonSerializer.Deserialize<streamingUploadChunkEvent>(data)!;
                             await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent );
                             break;
                         }

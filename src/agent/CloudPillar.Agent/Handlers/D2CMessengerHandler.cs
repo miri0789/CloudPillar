@@ -1,7 +1,9 @@
+using System.Reflection;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
+using Shared.Entities.Factories;
 using Shared.Entities.Messages;
 using Shared.Logger;
 
@@ -10,11 +12,13 @@ namespace CloudPillar.Agent.Handlers;
 public class D2CMessengerHandler : ID2CMessengerHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IMessageFactory _messageFactory;
     private readonly ILoggerHandler _logger;
 
-    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
+    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, IMessageFactory messageFactory, ILoggerHandler logger)
     {
-        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
+        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
     }
 
@@ -36,8 +40,8 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     }
 
     public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, int chunkSize, int chunkIndex, int totalChunks, long? endPosition = null, CancellationToken cancellationToken = default)
-    {       
-        var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
+    {
+        var streamingUploadChunkEvent = new streamingUploadChunkEvent()
         {
             StorageUri = storageUri,
             ChunkIndex = chunkIndex,
@@ -46,29 +50,30 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             Data = buffer
         };
 
-        var properties = new Dictionary<string, string>
-        {
-            { "chunk_index", chunkIndex.ToString() },
-            { "total_chunks", totalChunks.ToString() },
-        };
-
-        await SendMessageAsync(streamingUploadChunkEvent, properties);
+        await SendMessageAsync(streamingUploadChunkEvent);
     }
 
 
 
-    private async Task SendMessageAsync(D2CMessage d2CMessage, Dictionary<string, string>? properties = null)
+    private async Task SendMessageAsync(D2CMessage d2CMessage)
+    {        
+        Message message = PrepareD2CMessage(d2CMessage);
+        await _deviceClientWrapper.SendEventAsync(message);
+    }
+
+    private Message PrepareD2CMessage(D2CMessage d2CMessage)
     {
         var messageString = JsonConvert.SerializeObject(d2CMessage);
         Message message = new Message(Encoding.ASCII.GetBytes(messageString));
-        if (properties != null)
+
+        PropertyInfo[] properties = d2CMessage.GetType().GetProperties();
+        foreach (var property in properties)
         {
-            foreach (var prop in properties)
+            if (property.Name != "Data")
             {
-                message.Properties.Add(prop.Key, prop.Value);
+                message.Properties.Add(property.Name, property.GetValue(d2CMessage)?.ToString());
             }
         }
-
-        await _deviceClientWrapper.SendEventAsync(message);
+        return message;
     }
 }

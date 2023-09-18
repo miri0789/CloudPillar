@@ -1,6 +1,6 @@
 using Backend.BlobStreamer.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Entities.Events;
+using Shared.Entities.Messages;
 
 namespace Backend.BlobStreamer.Controllers;
 
@@ -30,7 +30,7 @@ public class BlobController : ControllerBase
     }
 
     [HttpPost("uploadStream")]
-    public async Task UploadStream([FromBody] StreamingUploadChunkEvent data)
+    public async Task UploadStream([FromBody] streamingUploadChunkEvent data)
     {
         await _blobService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.ChunkIndex);
     }

@@ -13,10 +13,14 @@ public class FirmwareUpdateEvent : D2CMessage
 
     public long? EndPosition { get; set; }
 
-
     [JsonConstructor]
     public FirmwareUpdateEvent()
     {
         this.MessageType = D2CMessageType.FirmwareUpdateReady;
+    }
+
+    public override string GetMessageId()
+    {
+        return $"{this.FileName}_{this.ChunkSize}";
     }
 }

@@ -52,5 +52,23 @@ public class MessageFactory : IMessageFactory
         return message;
     }
 
+    // Microsoft.Azure.Devices.Client.Message IMessageFactory.PrepareD2CMessage(D2CMessage d2CMessage, int expiredMinutes = 60)
+    // {
+    //     var message = new Message()
+    //     {
+    //         ExpiryTimeUtc = DateTime.UtcNow.AddMinutes(expiredMinutes)
+    //     };
+
+    //     PropertyInfo[] properties = d2CMessage.GetType().GetProperties();
+    //     foreach (var property in properties)
+    //     {
+    //         if (property.Name != "Data")
+    //         {
+    //             message.Properties.Add(property.Name, property.GetValue(d2CMessage)?.ToString());
+    //         }
+    //     }
+    //     Console.WriteLine($"C2DMessages PrepareC2DMessage. message title: {d2CMessage.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
+    //     return message;
+    // }
 }
 

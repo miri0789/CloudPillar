@@ -3,8 +3,7 @@ namespace Shared.Entities.Messages;
 
 public enum C2DMessageType
 {
-    DownloadChunk,
-    UploadChunk
+    DownloadChunk
 }
 
 public abstract class C2DMessages
