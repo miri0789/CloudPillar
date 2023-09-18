@@ -1,15 +1,13 @@
 ﻿using System.Runtime.Loader;
 using common;
-using Backend.Iotlistener;
 using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Services;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Extensions.DependencyInjection;
-
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
+using Backend.Iotlistener.Wrappers;
+using Backend.Iotlistener.Processors;
 
 using Shared.Logger;
 
