@@ -40,11 +40,36 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate)
     {
-        ArgumentNullException.ThrowIfNull(userCertificate);
-        var deviceId = userCertificate.Subject.Replace(CLOUD_PILLAR_SUBJECT, string.Empty);
-        var iotHubHostNameExtention = userCertificate.Extensions.FirstOrDefault(ext => ext.Oid.FriendlyName == "iotHubHostName");
-        ArgumentNullException.ThrowIfNull(iotHubHostNameExtention);
-        var iotHubHostName = Encoding.UTF8.GetString(iotHubHostNameExtention.RawData);
+        try
+        {
+            //this to check if the device alerdy Initialized...
+            await _deviceClientWrapper.GetTwinAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+        }
+
+        if (userCertificate == null)
+        {
+            _logger.Error($"AuthorizationAsync certificate cant be null");
+            return false;
+        }
+        var deviceId = userCertificate.Subject.Replace("CN=", string.Empty);
+        var iotHubHostName = string.Empty;
+        foreach (X509Extension extension in userCertificate.Extensions)
+        {
+            //that the code of iotHubHostName in extention in certificate
+            if (extension.Oid?.Value == "2.2.2.2")
+            {
+                iotHubHostName = Encoding.UTF8.GetString(extension.RawData);
+            }
+        }
+        if (string.IsNullOrEmpty(iotHubHostName))
+        {
+            _logger.Error($"AuthorizationAsync certificate must have iotHubHostName extention");
+            return false;
+        }
         try
         {
 

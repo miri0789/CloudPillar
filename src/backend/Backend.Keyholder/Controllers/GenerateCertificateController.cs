@@ -44,7 +44,7 @@ public class GenerateCertificateController : ControllerBase
             byte[] iotHubHostNameValue = Encoding.UTF8.GetBytes(iotHubHostName);
             var iotHubHostNameExtension = new X509Extension(
                 new Oid("2.2.2.2", "iotHubHostName"),
-                oneMDKeyValue, false
+                iotHubHostNameValue, false
                );
 
             request.CertificateExtensions.Add(OneMDKeyExtension);
@@ -64,10 +64,10 @@ public class GenerateCertificateController : ControllerBase
             string base64Certificate = Convert.ToBase64String(certificate.Export(X509ContentType.Cert));
 
             // Save the certificate to a file
-            System.IO.File.WriteAllText("YourCertificate3.cer", base64Certificate);
+            System.IO.File.WriteAllText("YourCertificate5.cer", base64Certificate);
 
             // Save the certificate to a file
-            System.IO.File.WriteAllBytes("YourCertificate3.pfx", pfxBytes);
+            System.IO.File.WriteAllBytes("YourCertificate5.pfx", pfxBytes);
         }
 
 

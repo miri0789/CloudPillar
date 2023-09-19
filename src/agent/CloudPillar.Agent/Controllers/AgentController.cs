@@ -71,6 +71,7 @@ public class AgentController : ControllerBase
                 if (await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint))
                 {
                     await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert);
+                    //_twinHandler
                 }
                 else
                 {

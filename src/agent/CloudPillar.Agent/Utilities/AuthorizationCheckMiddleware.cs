@@ -2,6 +2,7 @@ using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Utilities;
@@ -13,7 +14,7 @@ public class AuthorizationCheckMiddleware
 
     private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
-    public AuthorizationCheckMiddleware(RequestDelegate next,  IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
+    public AuthorizationCheckMiddleware(RequestDelegate next, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
     {
         _next = next;
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
@@ -22,14 +23,16 @@ public class AuthorizationCheckMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-        
-            Endpoint endpoint = context.GetEndpoint();
-            if (endpoint != null && endpoint.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
-            {
-                // The action has [AllowAnonymous], so allow the request to proceed
-                await _next(context);
-                return;
-            }
+
+        Endpoint endpoint = context.GetEndpoint();
+        if (endpoint != null && endpoint.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+        {
+            // The action has [AllowAnonymous], so allow the request to proceed
+            await _next(context);
+            return;
+        }
+        if (IsActionMethod(endpoint))
+        {
 
             X509Certificate2 userCertificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
 
@@ -52,8 +55,23 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await _next(context);       
-        
+            await _next(context);
+        }
+        else
+        {
+            await _next(context);
+        }
+
     }
 
+    private bool IsActionMethod(Endpoint? endpoint)
+    {
+        if (endpoint == null)
+        {
+            return false;
+        }
+
+        var actionDescriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
+        return actionDescriptor != null;
+    }
 }
