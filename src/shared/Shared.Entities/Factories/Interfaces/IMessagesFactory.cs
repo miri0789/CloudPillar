@@ -6,7 +6,7 @@ namespace Shared.Entities.Factories;
 
 public interface IMessageFactory
 {
-    T CreateBaseMessageFromMessage<T>(Microsoft.Azure.Devices.Client.Message message) where T : BaseMessage, new();
-    Message PrepareBlobMessage(BaseMessage baseMessage, int expiredMinutes = 60);
+    T CreateC2DMessageFromMessage<T>(Microsoft.Azure.Devices.Client.Message message) where T : C2DMessages, new();
+    Message PrepareC2DMessage(C2DMessages c2dMessage, int expiredMinutes = 60);
 }
 

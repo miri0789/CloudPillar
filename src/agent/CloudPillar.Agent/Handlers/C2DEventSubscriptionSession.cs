@@ -48,15 +48,15 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             try
             {
                 const string messageTypeProp = "MessageType";
-                MessageType? messageType = null;
-                if (Enum.TryParse(receivedMessage.Properties[messageTypeProp], out MessageType parsedMessageType))
+                C2DMessageType? messageType = null;
+                if (Enum.TryParse(receivedMessage.Properties[messageTypeProp], out C2DMessageType parsedMessageType))
                 {
                     messageType = parsedMessageType;
                 }
                 switch (messageType)
                 {
-                    case MessageType.DownloadChunk:
-                        var message = _MessageFactory.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
+                    case C2DMessageType.DownloadChunk:
+                        var message = _MessageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                         var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
                         await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;

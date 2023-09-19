@@ -1,5 +1,4 @@
-﻿using System.Xml.Schema;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using k8s;
 using Backend.Keyholder.Interfaces;

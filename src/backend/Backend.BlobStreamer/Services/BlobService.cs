@@ -1,4 +1,3 @@
-using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Devices;
 using Polly;
@@ -69,7 +68,7 @@ public class BlobService : IBlobService
                 blobMessage.RangeSize = rangeEndSize;
             }
 
-            var c2dMessage = _MessageFactory.PrepareBlobMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
+            var c2dMessage = _MessageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
             await SendMessage(c2dMessage, deviceId);
         }
     }

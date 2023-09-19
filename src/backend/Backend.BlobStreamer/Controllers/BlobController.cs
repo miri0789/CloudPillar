@@ -1,6 +1,5 @@
 using Backend.BlobStreamer.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Logger;
 
 namespace Backend.BlobStreamer.Controllers;
 

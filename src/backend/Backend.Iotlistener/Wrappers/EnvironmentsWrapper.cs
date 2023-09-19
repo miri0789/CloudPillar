@@ -2,7 +2,7 @@
 using Backend.Iotlistener.Models.Enums;
 using Backend.Iotlistener.Interfaces;
 
-namespace Backend.Iotlistener.Services;
+namespace Backend.Iotlistener.Wrappers;
 public class EnvironmentsWrapper: IEnvironmentsWrapper
 {
     public static readonly string _blobStreamerUrl = "BlobStreamerUrl";

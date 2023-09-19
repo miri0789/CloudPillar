@@ -5,16 +5,20 @@ using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Shared.Entities.Factories;
+using Shared.Entities.Twin;
 using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
+const string CONFIG_PORT = "Port";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
-
+var port = builder.Configuration.GetValue(CONFIG_PORT, 8099);
+var url = $"http://localhost:{port}";
+builder.WebHost.UseUrls(url);
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins("http://localhost")
+                b.WithOrigins(url)
                        .AllowAnyHeader()
                        .AllowAnyMethod();
             });
@@ -36,6 +40,7 @@ builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploa
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
+builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
 
 builder.Services.AddControllers(options =>

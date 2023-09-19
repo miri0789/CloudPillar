@@ -38,15 +38,7 @@ public class HttpRequestorService : IHttpRequestorService
         HttpClient client = _httpClientFactory.CreateClient();
 
         HttpRequestMessage request = new HttpRequestMessage(method, url);
-        string schemaPath = "";
-        try
-        {
-            schemaPath = $"{request.RequestUri.Host}/{method.Method}{request.RequestUri.AbsolutePath.Replace("/", "_")}";
-        }
-        catch (System.InvalidOperationException ex)
-        {
-            throw new InvalidOperationException("Invalid Url", ex);
-        }
+        string schemaPath = $"{request.RequestUri.Host}/{method.Method}{request.RequestUri.AbsolutePath.Replace("/", "_")}";
 
         if (requestData != null)
         {
@@ -54,6 +46,7 @@ public class HttpRequestorService : IHttpRequestorService
             var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
             if (!isRequestValid)
             {
+                _logger.Error($"The request data is not fit the schema. url: {url}");
                 throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
             }
             request.Content = new StringContent(serializedData, Encoding.UTF8, "application/json");
@@ -66,41 +59,24 @@ public class HttpRequestorService : IHttpRequestorService
             client.Timeout = TimeSpan.FromSeconds(httpsTimeoutSeconds);
         }
 
-        HttpResponseMessage? response = null;
-        try
+        HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
+        string responseContent = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
         {
-            response = await client.SendAsync(request, cancellationToken);
-        }
-        catch (ArgumentNullException ex)
-        {
-            throw new ArgumentNullException("The request is null", ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new ArgumentNullException("The request message was already sent by the HttpClient instance", ex);
-        }
-        catch (HttpRequestException ex)
-        {
-            throw new ArgumentNullException("The request failed due to an underlying issue", ex);
-        }
-        catch (Exception ex)
-        {
-            throw ex;
-        }      
-        if (response!= null && response.IsSuccessStatusCode)
-        {
-            string responseContent = await response.Content.ReadAsStringAsync();
-            if (!String.IsNullOrWhiteSpace(responseContent))
+            if (!string.IsNullOrWhiteSpace(responseContent))
             {
                 var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
                 if (!isResponseValid)
                 {
+                    _logger.Error($"The reponse data is not fit the schema. url: {url}");
                     throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
                 }
             }
             TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
             return result;
         }
-        throw new Exception($"HTTP request failed with status code {response?.StatusCode}");
+
+        _logger.Error($"HTTP request failed: {response.ReasonPhrase}: {method}{url} {responseContent}");
+        throw new HttpRequestException($"HTTP request failed: {response.ReasonPhrase}", null, response.StatusCode);
     }
 }
