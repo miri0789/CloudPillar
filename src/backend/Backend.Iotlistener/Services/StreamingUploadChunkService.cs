@@ -18,9 +18,11 @@ public class StreamingUploadChunkService : IStreamingUploadChunkService
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
     }
 
-    public async Task UploadStreamToBlob(streamingUploadChunkEvent data)
+    public async Task UploadStreamToBlob(StreamingUploadChunkEvent data)
     {
-        _logger.Info($"IotListener: Send chunk number {data.ChunkIndex} to BlobStreamer");
+        long chunkIndex = data.Data.Length / data.StartPosition;
+
+        _logger.Info($"IotListener: Send chunk number {chunkIndex} to BlobStreamer");
 
         string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/uploadStream";
         await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);

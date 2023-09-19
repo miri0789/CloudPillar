@@ -4,5 +4,5 @@ namespace Backend.Iotlistener.Interfaces;
 
 public interface IStreamingUploadChunkService
 {
-    Task UploadStreamToBlob(streamingUploadChunkEvent data);
+    Task UploadStreamToBlob(StreamingUploadChunkEvent data);
 }
