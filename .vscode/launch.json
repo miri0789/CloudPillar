@@ -119,8 +119,10 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.BlobStreamer",
             "console": "internalConsole",
             "env": {
-                "IothubConnectionString": "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=",
-               "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net",
+                //IotHub->shared Access Policies->owner
+                "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
+               //storageAccount->Access Key
+               "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
                "BlobContainerName": "iotcontainer",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
@@ -137,9 +139,12 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.Iotlistener",
             "console": "internalConsole",
             "env": {
-                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-dev-iot-25232063-aa3e0e76e7.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=;EntityPath=cp-dev-iothub",
-                "IothubEventHubCompatiblePath": "cp-dev-iothub",
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net",
+                //Iot hub-> Built in endpoinnts-> Event Hub-compatible endpoint
+                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-iot-bracha-25252981-8c43c79e79.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=;EntityPath=iot-bracha-dev",
+                //Iot hub-> Built in endpoinnts-> Event Hub-compatible name
+                "IothubEventHubCompatiblePath": "iot-bracha-dev",
+                //StorageAccount->Access Key
+                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "iotcontainer",
                 "BlobStreamerUrl": "http://localhost:5019/",
                 "SigningUrl": "http://localhost:5164",
@@ -197,7 +202,7 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                "DeviceConnectionString": "HostName=cp-dev-iothub.azure-devices.net;DeviceId=nechama-device;SharedAccessKey=XMJaaLr7j77htk5l1l8lvMcEzK7yh1sy50Xb/MfcZEU="
+                "DeviceConnectionString": "HostName=iot-bracha-dev.azure-devices.net;DeviceId=nechama-device;SharedAccessKey=vyzvjBHuxD1a7hoBPvqJ8ORD8QNWOEMjxz+/jYIzklU="
             },
             "stopAtEntry": false
         }

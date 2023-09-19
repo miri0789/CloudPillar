@@ -12,36 +12,48 @@ namespace CloudPillar.Agent.Controllers;
 [Route("[controller]")]
 public class AgentController : ControllerBase
 {
-    private readonly ILoggerHandler _logger;
     private readonly ITwinHandler _twinHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
-    private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
-    public AgentController(ITwinHandler twinHandler,
-                            IFileUploaderHandler fileUploaderHandler,
-                            IValidator<UpdateReportedProps> updateReportedPropsValidator,
-                            IValidator<TwinDesired> twinDesiredPropsValidator,
-                            ILoggerHandler logger)
+    public AgentController(ITwinHandler twinHandler, IFileUploaderHandler fileUploaderHandler, IValidator<UpdateReportedProps> updateReportedPropsValidator)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
+        _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
-        _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
     }
     [HttpGet("TwinHandler")]
-    public async Task<IActionResult> TwinHandler()
+    public async Task<IActionResult> TwinHandler(string fileName = "C:\\demo\\stream2.jpg")
     {
+
+        UploadAction uploadAction = new UploadAction()
+        {
+            Action = TwinActionType.SingularUpload,
+            Description = "test upload by stream",
+            Enabled = true,
+            Method = FileUploadMethod.Stream,
+            FileName = fileName
+        };
+        ActionToReport actionToReport = new ActionToReport()
+        {
+            TwinAction = uploadAction,
+            TwinReport = new TwinActionReported(),
+        };
+
+        var twinReport = await _fileUploaderHandler.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
+        if (twinReport.TwinReport.Status == StatusType.Success)
+        {
+
+        }
+
         await _twinHandler.HandleTwinActionsAsync(CancellationToken.None);
         return Ok();
     }
 
     [HttpPost("AddRecipe")]
-    public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
+    public async Task<IActionResult> AddRecipe()
     {
-        _twinDesiredPropsValidator.ValidateAndThrow(recipe);
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 
     [HttpGet("GetDeviceState")]
@@ -51,28 +63,28 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning()
+    public async Task<IActionResult> InitiateProvisioning()
     {
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 
     [HttpPost("SetBusy")]
-    public async Task<ActionResult<string>> SetBusy()
+    public async Task<IActionResult> SetBusy()
     {
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 
     [HttpPost("SetReady")]
-    public async Task<ActionResult<string>> SetReady()
+    public async Task<IActionResult> SetReady()
     {
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 
     [HttpPut("UpdateReportedProps")]
-    public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
+    public async Task<IActionResult> UpdateReportedProps(UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 }
 
