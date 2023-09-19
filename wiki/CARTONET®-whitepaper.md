@@ -7,18 +7,25 @@ CARTONET® stands as a beacon of innovation in healthcare analytics. It's design
 
 - **ML-Driven Analytics**: Harness the power of machine learning to derive nuanced insights from vast datasets, offering a deeper understanding of clinical scenarios.
   
-- **Clinical Data Insights**: Offers granular analysis of CARTO clinical data, including ablation analysis, providing clinicians with a holistic view of patient data (...Need more here).
+- **Clinical Data Insights**: Offers granular analysis of CARTO clinical data, including ablation analysis, providing clinicians with a holistic view of patient data.
   
 - **Case Revisit & Extension**: An interactive online system that not only allows for revisiting cases but also extends them with intelligently managed questionnaires and forms, enhancing the depth of clinical data available.
   
 - **Highway of cloud connectivity**: As CARTONET evolves, it progressively leverages the CloudPillar platform-as-a-service, bolstering synergy between analytics and cybersecurity, and paving the way for future integrations, compliance to regulations and capabilities.
-  
-## Benefits
 
-1. **Data-Driven Decision Making**: Equip clinicians with actionable insights derived from cutting-edge ML analytics, fostering evidence-based clinical decisions.
-  
-2. **Enhanced Patient Profiles**: By revisiting and extending case data, build richer patient profiles, ensuring a comprehensive understanding of patient history and needs.
-  
-3. **Future-Proof Platform**: With the backing of the CloudPillar platform, CARTONET is primed for continuous evolution, staying abreast with the rapid advancements in cloud technology for the HealthCare.
-  
-4. **Unified Ecosystem**: The integration with CloudPillar ensures that data handling, analytics, and cybersecurity operate in harmony, offering a cohesive experience for users.
+## CARTONET's Architectural Excellence
+
+CARTONET's architecture is founded on a **Hub/Spoke** topology, ensuring a clear separation of concerns and domains:
+
+- **Network Manager & Azure Firewall**: At the heart of the hub, these elements govern network access between various security zones or spokes.
+
+- **Frontend Spoke**: Strategically isolated from sensitive resources, ensuring user interfaces remain secure.
+
+- **DMZ Spoke**: A clean zone dedicated exclusively to the Web Application Firewall (WAF), Application Gateway, and Listeners.
+
+The flow within CARTONET is orchestrated by a **Logic App**, ensuring processes are streamlined and consume only relevant resource. **Microservices** leverage scalability optimizations with lowest margical costs and utter cybersecurity, and all access to storage is managed via **Frontier Microservices**, allowing for adaptability in architectural developments.
+
+In terms of security, CARTONET stands unparalleled. All data is encrypted, whether at rest or in transit. Communications are authenticated through the **Open Service Mesh**, and every request is authenticated using **Azure Active Directory** and custom tokens.
+
+![image.png](.images/cnettop.png)
+![image.png](.images/cnetcloud.png)
