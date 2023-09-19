@@ -22,6 +22,7 @@ public class AgentController : ControllerBase
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
 
+
     public AgentController(ITwinHandler twinHandler,
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
@@ -48,21 +49,29 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId)
+    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId, string globalDeviceEndpoint)
     {
         try
         {
-            var cert = _dPSProvisioningDeviceClientHandler.Authenticate();
+
+            var cert = _dPSProvisioningDeviceClientHandler.GetCertificate();
             if (cert == null)
             {
                 _logger.Debug("No certificate exist in agent");
                 return Unauthorized("No certificate exist in agent.");
             }
-            var isAuthorized = _dPSProvisioningDeviceClientHandler.Authorization(cert);
+
+            var isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert);
             if (!isAuthorized)
             {
-                await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert);
-                _dPSProvisioningDeviceClientHandler.Authorization(cert);
+                if (await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint))
+                {
+                    await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert);
+                }
+                else
+                {
+                    return BadRequest("Failed to provisioning");
+                }
             }
             return await _twinHandler.GetTwinJsonAsync();
         }
@@ -71,7 +80,6 @@ public class AgentController : ControllerBase
             _logger.Error($"InitiateProvisioning error: {ex.Message}");
             throw;
         }
-        return Ok();
     }
 
 

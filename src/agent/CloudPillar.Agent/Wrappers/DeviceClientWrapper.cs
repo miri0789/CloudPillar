@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
@@ -7,9 +8,11 @@ namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
     private DeviceClient _deviceClient;
-  //  private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
 
     private readonly ILoggerHandler _logger;
+
+    private readonly object _lock = new object();
 
     /// <summary>
     /// Initializes a new instance of the DeviceClient class
@@ -20,23 +23,8 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper)); ;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        // var _transportType = GetTransportType();
-        // try
-        // {
-        //     _deviceClient = DeviceClient.CreateFromConnectionString(_environmentsWrapper.deviceConnectionString, _transportType);
-        //     if (_deviceClient == null)
-        //     {
-        //         throw new NullReferenceException("CreateDeviceClient FromConnectionString failed the device is null");
-        //     }
-        // }
-        // catch (Exception ex)
-        // {
-        //     _logger.Error($"CreateFromConnectionString failed {ex.Message}");
-        //     throw;
-        // }
 
     }
-
 
     public void DeviceInitialization(DeviceClient deviceClient)
     {
@@ -44,9 +32,10 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         {
             throw new ArgumentNullException(nameof(deviceClient));
         }
-        _deviceClient = deviceClient;
-        // throw new NotImplementedException();
+        _deviceClient = deviceClient;        
     }
+
+
 
     /// <summary>
     /// Extracts the device ID from the device connection string

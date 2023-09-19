@@ -21,6 +21,7 @@ builder.Services.AddCors(options =>
         });
 
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
@@ -28,16 +29,13 @@ builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<ITwinHandler, TwinHandler>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
-builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 builder.Services.AddScoped<IIoTStreamingFileUploaderHandler, IoTStreamingFileUploaderHandler>();
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
-builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
-
-//builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 
 
 builder.Services.AddControllers(options =>

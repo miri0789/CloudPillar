@@ -4,9 +4,9 @@ using System.Security.Cryptography.X509Certificates;
 namespace CloudPillar.Agent.Handlers;
 public interface IDPSProvisioningDeviceClientHandler
 {
-    Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate);
+    Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint);
 
-    X509Certificate2 Authenticate();
+    X509Certificate2 GetCertificate();
 
-    bool Authorization(X509Certificate2 userCertificate);
+    Task<bool> AuthorizationAsync(X509Certificate2 userCertificate);
 }

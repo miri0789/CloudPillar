@@ -16,8 +16,8 @@ public class TwinHandler : ITwinHandler
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly IEnumerable<ShellType> _supportedShells;
-
     private readonly ILoggerHandler _logger;
+    
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
                        IFileUploaderHandler fileUploaderHandler,

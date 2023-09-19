@@ -12,14 +12,15 @@ public class GenerateCertificateController : ControllerBase
 {
     private readonly ILoggerHandler _logger;
 
-    // this controller is  not for prodaction it will refactoring in task 
+    // this controller is  not for prodaction it will be refactoring in other task 
     public GenerateCertificateController(ILoggerHandler logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpPost("Generate")]
-    public IActionResult Generate(string deviceName, string OneMDKey)
+
+    public IActionResult Generate(string deviceName, string OneMDKey, string iotHubHostName)
     {
         if (string.IsNullOrEmpty(deviceName) || string.IsNullOrEmpty(OneMDKey))
         {
@@ -31,15 +32,23 @@ public class GenerateCertificateController : ControllerBase
 
 
             var request = new CertificateRequest(
-                $"CN={deviceName}", rsa
+                $"CN=CloudPillar-{deviceName}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(OneMDKey);
-            var customExtension = new X509Extension(
+            var OneMDKeyExtension = new X509Extension(
                 new Oid("1.1.1.1", "OneMDKey"),
                 oneMDKeyValue, false
                );
-            request.CertificateExtensions.Add(customExtension);
+
+            byte[] iotHubHostNameValue = Encoding.UTF8.GetBytes(iotHubHostName);
+            var iotHubHostNameExtension = new X509Extension(
+                new Oid("2.2.2.2", "iotHubHostName"),
+                oneMDKeyValue, false
+               );
+
+            request.CertificateExtensions.Add(OneMDKeyExtension);
+            request.CertificateExtensions.Add(iotHubHostNameExtension);
 
             // Create a self-signed certificate
             var certificate = request.CreateSelfSigned(
