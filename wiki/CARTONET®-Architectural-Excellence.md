@@ -23,7 +23,7 @@ CARTONET's architecture is founded on a **Hub/Spoke** topology, ensuring a clear
 
 - **DMZ Spoke**: A clean zone dedicated exclusively to the Web Application Firewall (WAF), Application Gateway, and Listeners.
 
-The flow within CARTONET is orchestrated by a **Logic App**, ensuring processes are streamlined and consume only relevant resource. **Microservices** leverage scalability optimizations with lowest margical costs and utter cybersecurity, and all access to storage is managed via **Frontier Microservices**, allowing for adaptability in architectural developments.
+The flow within CARTONET is orchestrated by a Logic App, ensuring processes are streamlined and consume only relevant resources. **Microservices** leverage scalability optimizations with lowest marginal costs and utter cybersecurity, and all access to storage is managed via frontier microservices, allowing for adaptability in architectural developments.
 
 In terms of security, CARTONET stands unparalleled. All data is encrypted, whether at rest or in transit. Communications are authenticated through the **Open Service Mesh**, and every request is authenticated using **Azure Active Directory** and custom tokens.
 
