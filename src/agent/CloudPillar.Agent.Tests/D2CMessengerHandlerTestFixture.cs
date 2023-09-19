@@ -6,7 +6,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Shared.Logger;
 using Microsoft.Azure.Devices.Client.Transport;
-using Shared.Entities.Events;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -26,10 +26,8 @@ namespace CloudPillar.Agent.Tests
         private const int MQQT_KB = 32 * KB;
         private const int AMQP_KB = 64 * KB;
         private const int HTTP1_KB = 256 * KB;
-        private const string CORRELATION_ID = "abc";
         private Uri STORAGE_URI = new Uri("https://nechama.blob.core.windows.net/nechama-container");
         private MemoryStream READ_STREAM = new MemoryStream(new byte[] { 1, 2, 3 });
-        private const int CHUNK_INDEX = 1;
 
         [SetUp]
         public void Setup()
@@ -53,8 +51,6 @@ namespace CloudPillar.Agent.Tests
             _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, FILE_NAME, ACTION_ID, START_POSITION, END_POSITION) == true)), Times.Once);
         }
 
-
-
         [Test]
         public async Task SendFirmwareUpdateEventAsync_Failure_ThrowException()
         {
@@ -69,30 +65,16 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task SendStreamingUploadChunkEventAsync_ValidData_CompleteFileUpload()
+        public async Task SendStreamingUploadChunkEventAsync_Success_CompleteFileUpload()
         {
-
-            FileUploadCompletionNotification notification = InitializeNotification(true);
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(MQQT_KB);
 
-            _deviceClientMock.Setup(dc => dc.CompleteFileUploadAsync(notification, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).Returns(Task.CompletedTask);
 
-            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM, STORAGE_URI, ACTION_ID, CORRELATION_ID, START_POSITION);
-            _deviceClientMock.Verify(dc => dc.CompleteFileUploadAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<CancellationToken>()), Times.Once);
+            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION);
+            _deviceClientMock.Verify(dc => dc.SendEventAsync(It.IsAny<Message>()), Times.Once);
         }
 
-        [Test]
-        public async Task SendStreamingUploadChunks_ValidData_SendAllChunks()
-        {
-            var totalChunks = CalculateTotalChunks(READ_STREAM.Length, MQQT_KB);
-
-            _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(MQQT_KB);
-
-            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM, STORAGE_URI, ACTION_ID, CORRELATION_ID, START_POSITION);
-
-            _deviceClientMock.Verify(dc => dc.SendEventAsync(It.IsAny<Message>()), Times.Exactly(totalChunks));
-
-        }
         [Test]
         public async Task SendStreamingUploadChunks_Failure_ThrowException()
         {
@@ -102,11 +84,10 @@ namespace CloudPillar.Agent.Tests
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM, STORAGE_URI, ACTION_ID, CORRELATION_ID, START_POSITION);
+                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION);
             });
 
         }
-
 
         private bool CheckMessageContent(Message msg, int chunkSize, string fileName, string actionId, long? startPosition, long? endPosition)
         {
@@ -119,20 +100,5 @@ namespace CloudPillar.Agent.Tests
                   firmwareUpdateEvent.EndPosition == endPosition;
         }
 
-
-
-        private FileUploadCompletionNotification InitializeNotification(bool isSuccess)
-        {
-            return new FileUploadCompletionNotification()
-            {
-                IsSuccess = isSuccess,
-                CorrelationId = CORRELATION_ID
-            };
-        }
-
-        private int CalculateTotalChunks(long streamLength, int chunkSize)
-        {
-            return (int)Math.Ceiling((double)streamLength / chunkSize);
-        }
     }
 }
