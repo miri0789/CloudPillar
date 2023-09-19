@@ -41,11 +41,10 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
     public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, int chunkIndex, int totalChunks)
     {
-        var streamingUploadChunkEvent = new streamingUploadChunkEvent()
+        var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
         {
             StorageUri = storageUri,
-            ChunkIndex = chunkIndex,
-            TotalChunk = totalChunks,
+            CheckSum = "",            
             StartPosition = currentPosition,
             ActionId = actionId ?? Guid.NewGuid().ToString(),
             Data = buffer

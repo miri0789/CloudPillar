@@ -56,19 +56,13 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
 
         _logger.Debug($"Agent: Start send chunks, Totak chunks is: {totalChunks}");
 
-        int currentPosition, chunkIndex;
-
-        for (currentPosition = 0, chunkIndex = 1; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
+        for (int currentPosition = 0, chunkIndex = 1; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
         {
             _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
             await ProcessChunkAsync(readStream, storageUri, actionId, totalChunks, chunkIndex, chunkSize, currentPosition);
         }
-
-        if (chunkIndex - 1 == totalChunks)
-        {
-            _logger.Debug($"All bytes sent successfuly");
-        }
+        _logger.Debug($"All bytes sent successfuly");
     }
 
     private async Task ProcessChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkIndex, int chunkSize, long currentPosition)
