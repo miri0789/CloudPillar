@@ -2,7 +2,7 @@ using Microsoft.Azure.Devices.Client;
 
 namespace Shared.Entities.Messages;
 
-public class DownloadBlobChunkMessage : BaseMessage
+public class DownloadBlobChunkMessage : C2DMessages
 {
     public int RangeIndex { get; set; }
     public int ChunkIndex { get; set; }
@@ -18,7 +18,7 @@ public class DownloadBlobChunkMessage : BaseMessage
 
     public DownloadBlobChunkMessage()
     {
-        this.MessageType = MessageType.DownloadChunk;
+        this.MessageType = C2DMessageType.DownloadChunk;
     }
 }
 

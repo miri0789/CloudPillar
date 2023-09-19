@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
 WORKDIR /src
 COPY agent/poc/* agent/poc/
+COPY agent/poc/publish agent/poc/publish
 WORKDIR /src/agent/poc
 
 RUN dotnet restore
@@ -14,7 +15,7 @@ RUN pwsh ./publish.ps1
 FROM mcr.microsoft.com/dotnet/runtime:7.0
 WORKDIR /app
 COPY --from=build /app .
-COPY --from=build ./src/agent/poc/publish/cloudpillar.zip . .
+COPY --from=build ./src/agent/poc/publish/cloudpillar.zip .
 
 
 # Set the entrypoint for the application

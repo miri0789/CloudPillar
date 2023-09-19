@@ -1,9 +1,10 @@
+using System.Reflection;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Client.Transport;
 using Newtonsoft.Json;
-using Shared.Entities.Events;
+using Shared.Entities.Factories;
+using Shared.Entities.Messages;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
@@ -11,11 +12,13 @@ namespace CloudPillar.Agent.Handlers;
 public class D2CMessengerHandler : ID2CMessengerHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IMessageFactory _messageFactory;
     private readonly ILoggerHandler _logger;
 
-    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
+    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, IMessageFactory messageFactory, ILoggerHandler logger)
     {
-        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
+        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
     }
 
@@ -36,106 +39,42 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(firmwareUpdateEvent);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(Stream readStream, Uri storageUri, string actionId, string correlationId, long startPosition = 0, long? endPosition = null, CancellationToken cancellationToken = default)
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, int chunkIndex, int totalChunks)
     {
-        int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
-        int totalChunks = CalculateTotalChunks(readStream.Length, chunkSize);
-
-        FileUploadCompletionNotification notification = InitializeNotification(correlationId);
-
-        try
-        {
-            _logger.Info($"Start send messages with chunks. Total chunks is: {totalChunks}");
-
-            await HandleUploadChunkAsync(readStream, storageUri, actionId, totalChunks, chunkSize);
-
-            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            notification.IsSuccess = false;
-            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-            _logger.Error($"SendStreamingUploadChunkEventAsync failed: {ex.Message}");
-        }
-    }
-
-    private FileUploadCompletionNotification InitializeNotification(string correlationId)
-    {
-        return new FileUploadCompletionNotification()
-        {
-            IsSuccess = true,
-            CorrelationId = correlationId
-        };
-    }
-
-    private int CalculateTotalChunks(long streamLength, int chunkSize)
-    {
-        return (int)Math.Ceiling((double)streamLength / chunkSize);
-    }
-
-    private async Task HandleUploadChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkSize)
-    {
-        int chunkIndex = 1;
-        long currentPosition = 0;
-        long streamLength = readStream.Length;
-
-        while (currentPosition < streamLength)
-        {
-            _logger.Debug($"Agent: Start send Chunk number: {chunkIndex}, with position: {currentPosition}");
-
-            await ProcessChunkAsync(readStream, storageUri, actionId, totalChunks, chunkIndex, chunkSize, currentPosition);
-
-            currentPosition += chunkSize;
-            chunkIndex++;
-        }
-        if (chunkIndex - 1 == totalChunks && currentPosition >= streamLength)
-        {
-            _logger.Debug($"All bytes sent successfuly");
-        }
-        else
-        {
-            throw new Exception("An error occurred, not all messages were sent");
-        }
-    }
-
-    private async Task ProcessChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkIndex, int chunkSize, long currentPosition)
-    {
-        long remainingBytes = readStream.Length - currentPosition;
-        long bytesToUpload = Math.Min(chunkSize, remainingBytes);
-
-        byte[] buffer = new byte[bytesToUpload];
-        await readStream.ReadAsync(buffer, 0, (int)bytesToUpload);
-
-        var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
+        var streamingUploadChunkEvent = new streamingUploadChunkEvent()
         {
             StorageUri = storageUri,
             ChunkIndex = chunkIndex,
+            TotalChunk = totalChunks,
             StartPosition = currentPosition,
             ActionId = actionId ?? Guid.NewGuid().ToString(),
             Data = buffer
         };
 
-        var properties = new Dictionary<string, string>
-        {
-            { "chunk_index", chunkIndex.ToString() },
-            { "total_chunks", totalChunks.ToString() },
-        };
-
-        await SendMessageAsync(streamingUploadChunkEvent, properties);
+        await SendMessageAsync(streamingUploadChunkEvent);
     }
 
-    private async Task SendMessageAsync(AgentEvent agentEvent, Dictionary<string, string>? properties = null)
+
+
+    private async Task SendMessageAsync(D2CMessage d2CMessage)
+    {        
+        Message message = PrepareD2CMessage(d2CMessage);
+        await _deviceClientWrapper.SendEventAsync(message);
+    }
+
+    private Message PrepareD2CMessage(D2CMessage d2CMessage)
     {
-        var messageString = JsonConvert.SerializeObject(agentEvent);
+        var messageString = JsonConvert.SerializeObject(d2CMessage);
         Message message = new Message(Encoding.ASCII.GetBytes(messageString));
-        if (properties != null)
+
+        PropertyInfo[] properties = d2CMessage.GetType().GetProperties();
+        foreach (var property in properties)
         {
-            foreach (var prop in properties)
+            if (property.Name != "Data")
             {
-                message.Properties.Add(prop.Key, prop.Value);
+                message.Properties.Add(property.Name, property.GetValue(d2CMessage)?.ToString());
             }
         }
-
-        await _deviceClientWrapper.SendEventAsync(message);
+        return message;
     }
 }

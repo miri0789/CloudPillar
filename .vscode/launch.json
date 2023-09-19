@@ -35,11 +35,11 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "IOTHUB_CONNECTION_STRING":             "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
+                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
                 "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub",
-                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH":     "szlabs-iot-hub",
-                "STORAGE_CONNECTION_STRING":            "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
-                "BLOB_CONTAINER_NAME":                  "iot-firmware",
+                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH": "szlabs-iot-hub",
+                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "BLOB_CONTAINER_NAME": "iot-firmware",
                 // "PARTITION_ID":                         "0"
             },
             "stopAtEntry": false
@@ -78,12 +78,12 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "IOTHUB_CONNECTION_STRING":             "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
+                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
                 "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub",
-                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH":     "szlabs-iot-hub",
-                "STORAGE_CONNECTION_STRING":            "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
-                "BLOB_CONTAINER_NAME":                  "iot-firmware",
-                "DRAIN_D2C_QUEUES":                     "true",
+                "IOTHUB_EVENT_HUB_COMPATIBLE_PATH": "szlabs-iot-hub",
+                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "BLOB_CONTAINER_NAME": "iot-firmware",
+                "DRAIN_D2C_QUEUES": "true",
                 // "PARTITION_ID":                         "0"
             },
             "stopAtEntry": false
@@ -119,10 +119,8 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.BlobStreamer",
             "console": "internalConsole",
             "env": {
-                //IotHub->shared Access Policies->owner
-                "IothubConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=E2XYLv9hvVVnlq0Kq4albyb3BGcYQiMW2qvgGAqjEZ4=",
-               //storageAccount->Access Key
-               "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=iotdicomdevstorage;AccountKey=q6rFgRGKo0+BxrtcbTSGUFNEFF4av7nkS6Fghy0LaIQ5+K9Bs+BsjVDLRP58MN8QrP58gdcQHwBa+AStT/Llhw==;EndpointSuffix=core.windows.net",
+                "IothubConnectionString": "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=",
+               "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net",
                "BlobContainerName": "iotcontainer",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
@@ -139,16 +137,13 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.Iotlistener",
             "console": "internalConsole",
             "env": {
-                //Iot hub-> Built in endpoinnts-> Event Hub-compatible endpoint
-                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-iot-dicom-24995834-325eff99c6.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=E2XYLv9hvVVnlq0Kq4albyb3BGcYQiMW2qvgGAqjEZ4=;EntityPath=iot-dicom-dev-hub",
-                //Iot hub-> Built in endpoinnts-> Event Hub-compatible name
-                "IothubEventHubCompatiblePath": "iot-dicom-dev-hub",
-                //StorageAccount->Access Key
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=iotdicomdevstorage;AccountKey=q6rFgRGKo0+BxrtcbTSGUFNEFF4av7nkS6Fghy0LaIQ5+K9Bs+BsjVDLRP58MN8QrP58gdcQHwBa+AStT/Llhw==;EndpointSuffix=core.windows.net",
+                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-dev-iot-25232063-aa3e0e76e7.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=;EntityPath=cp-dev-iothub",
+                "IothubEventHubCompatiblePath": "cp-dev-iothub",
+                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "iotcontainer",
                 "BlobStreamerUrl": "http://localhost:5019/",
                 "SigningUrl": "http://localhost:5164",
-                "MessageTimeoutMinutes": "1",
+                "MessageTimeoutMinutes": "10",
                 "RangeCalculateType": "percent",
                 "RangePercent": "25",
                 "RangeBytes": "123456",
@@ -191,7 +186,7 @@
                 "AUTHORITY": "https://login.microsoftonline.com"
             },
             "stopAtEntry": false
-        },        
+        },
         {
             "name": "Cloud Pillar Agent",
             "type": "coreclr",
@@ -202,7 +197,7 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                "DeviceConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;DeviceId=b_try1;SharedAccessKey=G+VsVpWKXooJPdtHhbK8dvpc6d9fh1asSGa2zgYqZYI="
+                "DeviceConnectionString": "HostName=cp-dev-iothub.azure-devices.net;DeviceId=nechama-device;SharedAccessKey=XMJaaLr7j77htk5l1l8lvMcEzK7yh1sy50Xb/MfcZEU="
             },
             "stopAtEntry": false
         }
