@@ -13,43 +13,17 @@ namespace CloudPillar.Agent.Controllers;
 public class AgentController : ControllerBase
 {
     private readonly ITwinHandler _twinHandler;
-    private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
 
-    public AgentController(ITwinHandler twinHandler, IFileUploaderHandler fileUploaderHandler, IValidator<UpdateReportedProps> updateReportedPropsValidator)
+    public AgentController(ITwinHandler twinHandler,
+                            IValidator<UpdateReportedProps> updateReportedPropsValidator,
+                            IValidator<TwinDesired> twinDesiredPropsValidator
+                            )
     {
-        _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
     }
-    [HttpGet("TwinHandler")]
-    public async Task<IActionResult> TwinHandler(string fileName = "C:\\demo\\stream2.jpg")
-    {
-
-        UploadAction uploadAction = new UploadAction()
-        {
-            Action = TwinActionType.SingularUpload,
-            Description = "test upload by stream",
-            Enabled = true,
-            Method = FileUploadMethod.Stream,
-            FileName = fileName
-        };
-        ActionToReport actionToReport = new ActionToReport()
-        {
-            TwinAction = uploadAction,
-            TwinReport = new TwinActionReported(),
-        };
-
-        var twinReport = await _fileUploaderHandler.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
-        if (twinReport.TwinReport.Status == StatusType.Success)
-        {
-
-        }
-
-        await _twinHandler.HandleTwinActionsAsync(CancellationToken.None);
-        return Ok();
-    }
-
+   
     [HttpPost("AddRecipe")]
     public async Task<IActionResult> AddRecipe()
     {
