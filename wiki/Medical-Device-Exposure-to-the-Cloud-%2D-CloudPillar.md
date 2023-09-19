@@ -1,4 +1,4 @@
-# Cloud Pillar for Medical Device Exposure to the Cloud: Vitalizing Medical Equipment Security & Functionality
+# _CLOUD PILLAR_ for Medical Device Exposure to the Cloud: Vitalizing Medical Equipment Security & Functionality
 
 ## Introduction
 The Cloud Pillar is designed to bolster the capabilities of medical devices like CARTO by integrating advanced cloud functionalities. At its core, this system prioritizes cybersecurity, leveraging the cloud to gain an edge against evolving threats.
