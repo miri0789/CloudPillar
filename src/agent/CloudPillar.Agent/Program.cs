@@ -5,6 +5,7 @@ using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Shared.Entities.Factories;
+using Shared.Entities.Twin;
 using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
@@ -38,6 +39,7 @@ builder.Services.AddScoped<IIoTStreamingFileUploaderHandler, IoTStreamingFileUpl
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
+builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
 
 builder.Services.AddControllers(options =>
