@@ -29,7 +29,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         {
             _logger.Info($"Start send messages with chunks. Total chunks is: {totalChunks}");
 
-            await HandleUploadChunkAsync(readStream, storageUri, actionId, totalChunks, chunkSize);
+            await HandleUploadChunkAsync(readStream, storageUri, actionId, chunkSize);
 
             await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
         }
@@ -50,22 +50,20 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         };
     }
 
-    private async Task HandleUploadChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkSize)
+    private async Task HandleUploadChunkAsync(Stream readStream, Uri storageUri, string actionId, int chunkSize)
     {
         long streamLength = readStream.Length;
-
-        _logger.Debug($"Agent: Start send chunks, Totak chunks is: {totalChunks}");
 
         for (int currentPosition = 0, chunkIndex = 1; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
         {
             _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
-            await ProcessChunkAsync(readStream, storageUri, actionId, totalChunks, chunkIndex, chunkSize, currentPosition);
+            await ProcessChunkAsync(readStream, storageUri, actionId, chunkSize, currentPosition);
         }
         _logger.Debug($"All bytes sent successfuly");
     }
 
-    private async Task ProcessChunkAsync(Stream readStream, Uri storageUri, string actionId, int totalChunks, int chunkIndex, int chunkSize, long currentPosition)
+    private async Task ProcessChunkAsync(Stream readStream, Uri storageUri, string actionId, int chunkSize, long currentPosition)
     {
         long remainingBytes = readStream.Length - currentPosition;
         long bytesToUpload = Math.Min(chunkSize, remainingBytes);
@@ -73,7 +71,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         byte[] buffer = new byte[bytesToUpload];
         await readStream.ReadAsync(buffer, 0, (int)bytesToUpload);
 
-        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition, chunkIndex, totalChunks);
+        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition);
 
     }
 
