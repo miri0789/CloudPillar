@@ -12,13 +12,11 @@ namespace CloudPillar.Agent.Handlers;
 public class D2CMessengerHandler : ID2CMessengerHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly IMessageFactory _messageFactory;
     private readonly ILoggerHandler _logger;
 
-    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, IMessageFactory messageFactory, ILoggerHandler logger)
+    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
-        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
     }
 
@@ -57,7 +55,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
 
     private async Task SendMessageAsync(D2CMessage d2CMessage)
-    {        
+    {
         Message message = PrepareD2CMessage(d2CMessage);
         await _deviceClientWrapper.SendEventAsync(message);
     }
@@ -75,6 +73,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
                 message.Properties.Add(property.Name, property.GetValue(d2CMessage)?.ToString());
             }
         }
+        _logger.Debug($"D2CMessengerHandler PrepareD2CMessage. message title: {d2CMessage.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
     }
 }
