@@ -12,22 +12,20 @@ namespace CloudPillar.Agent.Controllers;
 [Route("[controller]")]
 public class AgentController : ControllerBase
 {
-    private readonly ILoggerHandler _logger;
     private readonly ITwinHandler _twinHandler;
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
     public AgentController(ITwinHandler twinHandler,
                             IValidator<UpdateReportedProps> updateReportedPropsValidator,
-                            IValidator<TwinDesired> twinDesiredPropsValidator,
-                            ILoggerHandler logger)
+                            IValidator<TwinDesired> twinDesiredPropsValidator
+                            )
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
     }
-
+   
     [HttpPost("AddRecipe")]
     public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
     {

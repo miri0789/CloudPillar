@@ -4,6 +4,7 @@ using Moq;
 using Microsoft.Azure.Devices.Client;
 using System.Text;
 using Newtonsoft.Json;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -12,6 +13,7 @@ namespace CloudPillar.Agent.Tests
     {
 
         private Mock<IDeviceClientWrapper> _deviceClientMock;
+        private Mock<ILoggerHandler> _loggerMock;
         private ID2CMessengerHandler _target;
 
         private const string FILE_NAME = "fileName.txt";
@@ -24,8 +26,9 @@ namespace CloudPillar.Agent.Tests
         public void Setup()
         {
             _deviceClientMock = new Mock<IDeviceClientWrapper>();
+            _loggerMock = new Mock<ILoggerHandler>();
 
-            _target = new D2CMessengerHandler(_deviceClientMock.Object);
+            _target = new D2CMessengerHandler(_deviceClientMock.Object, _loggerMock.Object);
 
         }
 
