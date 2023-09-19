@@ -14,6 +14,7 @@ public class AgentController : ControllerBase
 {
     private readonly ITwinHandler _twinHandler;
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
+    private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
     public AgentController(ITwinHandler twinHandler,
                             IValidator<UpdateReportedProps> updateReportedPropsValidator,
@@ -22,12 +23,14 @@ public class AgentController : ControllerBase
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
+        _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
     }
    
     [HttpPost("AddRecipe")]
-    public async Task<IActionResult> AddRecipe()
+    public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
     {
-        return Ok();
+        _twinDesiredPropsValidator.ValidateAndThrow(recipe);
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpGet("GetDeviceState")]
@@ -37,28 +40,28 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("InitiateProvisioning")]
-    public async Task<IActionResult> InitiateProvisioning()
+    public async Task<ActionResult<string>> InitiateProvisioning()
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPost("SetBusy")]
-    public async Task<IActionResult> SetBusy()
+    public async Task<ActionResult<string>> SetBusy()
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPost("SetReady")]
-    public async Task<IActionResult> SetReady()
+    public async Task<ActionResult<string>> SetReady()
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPut("UpdateReportedProps")]
-    public async Task<IActionResult> UpdateReportedProps(UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 }
 

@@ -72,6 +72,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         await readStream.ReadAsync(buffer, 0, (int)bytesToUpload);
 
         await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition);
+        
     }
 
     private int CalculateTotalChunks(long streamLength, int chunkSize)

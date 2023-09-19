@@ -24,8 +24,6 @@ namespace CloudPillar.Agent.Tests
         private const long END_POSITION = 20;
         private const int KB = 1024;
         private const int MQQT_KB = 32 * KB;
-        private const int AMQP_KB = 64 * KB;
-        private const int HTTP1_KB = 256 * KB;
         private Uri STORAGE_URI = new Uri("https://nechama.blob.core.windows.net/nechama-container");
         private MemoryStream READ_STREAM = new MemoryStream(new byte[] { 1, 2, 3 });
 
@@ -40,8 +38,8 @@ namespace CloudPillar.Agent.Tests
         }
 
         [TestCase(TransportType.Mqtt, MQQT_KB)]
-        [TestCase(TransportType.Amqp, AMQP_KB)]
-        [TestCase(TransportType.Http1, HTTP1_KB)]
+        [TestCase(TransportType.Amqp, 64 * KB)]
+        [TestCase(TransportType.Http1, 256 * KB)]
         [TestCase((TransportType)100, 32 * KB)] // Unknown transport type
         public async Task SendFirmwareUpdateEventAsync_ByTransportType_SendCorrectChunkSize(TransportType transportType, int expectedChunkSize)
         {
