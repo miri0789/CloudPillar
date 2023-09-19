@@ -20,7 +20,7 @@ public class StreamingUploadChunkService : IStreamingUploadChunkService
 
     public async Task UploadStreamToBlob(StreamingUploadChunkEvent data)
     {
-        long chunkIndex = data.Data.Length / data.StartPosition;
+        long chunkIndex = (data.StartPosition / data.Data.Length) + 1;
 
         _logger.Info($"IotListener: Send chunk number {chunkIndex} to BlobStreamer");
 

@@ -100,9 +100,9 @@ public class BlobService : IBlobService
     {
         try
         {
-            long chunckIndex = readStream.Length / startPosition;
-            
-            _logger.Info($"BlobStreamer: Upload chunk number {chunckIndex} to {storageUri.AbsolutePath}");
+            long chunkIndex = (startPosition / readStream.Length) + 1;
+
+            _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex} to {storageUri.AbsolutePath}");
 
             CloudBlockBlob blob = new CloudBlockBlob(storageUri);
 
