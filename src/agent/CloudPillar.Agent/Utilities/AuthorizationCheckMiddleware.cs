@@ -25,7 +25,7 @@ public class AuthorizationCheckMiddleware
     {
 
         Endpoint endpoint = context.GetEndpoint();
-        if (endpoint != null && endpoint.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+        if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
         {
             // The action has [AllowAnonymous], so allow the request to proceed
             await _next(context);
@@ -39,19 +39,15 @@ public class AuthorizationCheckMiddleware
             if (userCertificate == null)
             {
                 var error = "no certificate found in the store";
-                _logger.Error(error);
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsync(error);
+                await UnauthorizedResponseAsync(context, error);
                 return;
             }
 
             bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate);
             if (!isAuthorized)
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 var error = "User is not authorized.";
-                _logger.Error(error);
-                await context.Response.WriteAsync(error);
+                await UnauthorizedResponseAsync(context, error);
                 return;
             }
 
@@ -62,6 +58,13 @@ public class AuthorizationCheckMiddleware
             await _next(context);
         }
 
+    }
+
+    private async Task UnauthorizedResponseAsync(HttpContext context, string error)
+    {
+        _logger.Error(error);
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        await context.Response.WriteAsync(error);
     }
 
     private bool IsActionMethod(Endpoint? endpoint)

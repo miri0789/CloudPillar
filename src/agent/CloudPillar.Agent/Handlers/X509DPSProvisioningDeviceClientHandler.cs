@@ -14,6 +14,10 @@ namespace CloudPillar.Agent.Handlers;
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
 {
     private const string CLOUD_PILLAR_SUBJECT = "CN=CloudPillar-";
+    private const string CERTIFICATE_SUBJECT = "CN=";
+
+    //that the code of iotHubHostName in extention in certificate
+    private const string IOT_HUB_HOST_NAME_EXTENTION_KEY = "2.2.2.2";
     private readonly ILoggerHandler _logger;
 
     private IDeviceClientWrapper _deviceClientWrapper;
@@ -40,60 +44,27 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate)
     {
-        try
-        {
-            //this to check if the device alerdy Initialized...
-            await _deviceClientWrapper.GetTwinAsync();
-            return true;
-        }
-        catch (Exception ex)
-        {
-        }
-
         if (userCertificate == null)
         {
             _logger.Error($"AuthorizationAsync certificate cant be null");
             return false;
         }
-        var deviceId = userCertificate.Subject.Replace("CN=", string.Empty);
-        var iotHubHostName = string.Empty;
-        foreach (X509Extension extension in userCertificate.Extensions)
+
+        if (await IsDeviceInitialized())
         {
-            //that the code of iotHubHostName in extention in certificate
-            if (extension.Oid?.Value == "2.2.2.2")
-            {
-                iotHubHostName = Encoding.UTF8.GetString(extension.RawData);
-            }
+            return true;
         }
+
+        var deviceId = GetDeviceIdFromCertificate(userCertificate);
+        var iotHubHostName = GetIotHubHostNameFromCertificate(userCertificate);
+
         if (string.IsNullOrEmpty(iotHubHostName))
         {
             _logger.Error($"AuthorizationAsync certificate must have iotHubHostName extention");
             return false;
         }
-        try
-        {
-
-            using var auth = new DeviceAuthenticationWithX509Certificate(deviceId, userCertificate);
-            var iotClient = DeviceClient.Create(iotHubHostName, auth, _deviceClientWrapper.GetTransportType());
-            if (iotClient != null)
-            {
-                // iotClient never return null also if device not exist, so to check if device is exist, or the certificate is valid we try to get the device twin.
-                var twin = await iotClient.GetTwinAsync();
-                if (twin != null)
-                {
-                    _deviceClientWrapper.DeviceInitialization(iotClient);
-                    return true;
-                }
-            }
-
-            _logger.Info($"Device {deviceId}, is not exist in {iotHubHostName}");
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Exception during IoT Hub connection: {ex.Message}");
-            return false;
-        }
+        
+        return await AuthorizeDevice(deviceId, iotHubHostName, userCertificate);
     }
 
     public async Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint = "global.azure-devices-provisioning.net")
@@ -133,6 +104,67 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
+    }
+
+    private async Task<bool> IsDeviceInitialized()
+    {
+        try
+        {
+            // Check if the device is already initialized
+            await _deviceClientWrapper.GetTwinAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string GetDeviceIdFromCertificate(X509Certificate2 userCertificate)
+    {
+        return userCertificate.Subject.Replace(CERTIFICATE_SUBJECT, string.Empty);
+    }
+
+    private string GetIotHubHostNameFromCertificate(X509Certificate2 userCertificate)
+    {
+        var iotHubHostName = string.Empty;
+        foreach (X509Extension extension in userCertificate.Extensions)
+        {
+
+            if (extension.Oid?.Value == IOT_HUB_HOST_NAME_EXTENTION_KEY)
+            {
+                iotHubHostName = Encoding.UTF8.GetString(extension.RawData);
+            }
+        }
+        return iotHubHostName;
+    }
+
+    private async Task<bool> AuthorizeDevice(string deviceId, string iotHubHostName, X509Certificate2 userCertificate)
+    {
+        try
+        {
+
+            using var auth = new DeviceAuthenticationWithX509Certificate(deviceId, userCertificate);
+            var iotClient = DeviceClient.Create(iotHubHostName, auth, _deviceClientWrapper.GetTransportType());
+            if (iotClient != null)
+            {
+                // iotClient never return null also if device not exist, so to check if device is exist, or the certificate is valid we try to get the device twin.
+                var twin = await iotClient.GetTwinAsync();
+                if (twin != null)
+                {
+                    _deviceClientWrapper.DeviceInitialization(iotClient);
+                    return true;
+                }
+            }
+
+            _logger.Info($"Device {deviceId}, is not exist in {iotHubHostName}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Exception during IoT Hub connection: {ex.Message}");
+            return false;
+        }
     }
 
     private ProvisioningTransportHandler GetTransportHandler()
