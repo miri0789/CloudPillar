@@ -41,7 +41,7 @@ stages:
             Dockerfile: './src/backend/infra/build/Dockerfile'
             buildContext: src
             tags: '$(Build.BuildNumber)'
-            arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'
+            arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.$(item)'
 
   
 # - stage: CD_Stage
