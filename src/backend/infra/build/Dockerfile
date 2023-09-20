@@ -11,6 +11,10 @@ COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY nuget.config backend/${DLL}/
 ARG FEED_ACCESSTOKEN
 ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
+RUN echo "=???==="
+RUN echo $FEED_ACCESSTOKEN
+RUN echo "=???==="
+RUN echo $Env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS
 RUN echo "==============="
 RUN echo $DLL
 RUN echo "==============="
