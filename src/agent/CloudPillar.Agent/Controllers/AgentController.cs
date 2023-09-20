@@ -61,8 +61,9 @@ public class AgentController : ControllerBase
             var cert = _dPSProvisioningDeviceClientHandler.GetCertificate();
             if (cert == null)
             {
-                _logger.Debug("No certificate exist in agent");
-                return Unauthorized("No certificate exist in agent.");
+                var error  = "No certificate exist in agent";
+                _logger.Error(error);
+                return Unauthorized(error);
             }
 
             var isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert);
@@ -71,7 +72,6 @@ public class AgentController : ControllerBase
                 if (await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint))
                 {
                     await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert);
-                    //_twinHandler
                 }
                 else
                 {
