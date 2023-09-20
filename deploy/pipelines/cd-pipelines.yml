@@ -37,7 +37,7 @@ stages:
           inputs:
             containerRegistry: 'CP dev docker registry'
             repository: 'cloudpillar${{ lower(item) }}service'
-            command: 'buildAndPush'
+            command: 'build'
             Dockerfile: './src/backend/infra/build/Dockerfile'
             buildContext: src
             tags: '$(Build.BuildNumber)'
