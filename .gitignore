@@ -17,3 +17,4 @@ src/agent/dotnet/CartoPatch*
 src/agent/dotnet/VelysPatch*
 **/tfplan
 **/.terraform*
+terraform.tfstate
