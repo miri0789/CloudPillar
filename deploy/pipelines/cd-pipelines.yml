@@ -13,9 +13,8 @@ parameters:
   - prd   
 - name: services
   displayName: Select services to deploy
-  type: string
-  default: dev
-  values:
+  type: object
+  default:
   - BlobStreamer
   - Iotlistener
   - Keyholder  
