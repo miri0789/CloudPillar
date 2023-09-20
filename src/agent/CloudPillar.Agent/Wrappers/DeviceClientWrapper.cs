@@ -10,9 +10,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     private DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
-    private readonly ILoggerHandler _logger;
-
-    private readonly object _lock = new object();
+    private readonly ILoggerHandler _logger;   
 
     /// <summary>
     /// Initializes a new instance of the DeviceClient class
