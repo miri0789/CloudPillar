@@ -3,7 +3,9 @@
     <PackageReference Include="Microsoft.Azure.EventHubs" Version="4.3.2" />
     <PackageReference Include="Microsoft.Azure.EventHubs.Processor" Version="4.3.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="SharedEntities" Version="1.0.63" />
+    <!-- <PackageReference Include="SharedEntities" Version="1.0.63" /> -->
+        <ProjectReference Include="./../../shared/Shared.Entities/Shared.Entities.csproj"/>
+
     <PackageReference Include="SharedLogger" Version="1.0.10" />
   </ItemGroup>
   <ItemGroup>

@@ -94,6 +94,5 @@ public class BlobService : IBlobService
         {
             _logger.Error($"Blobstreamer SendMessage failed. Message: {ex.Message}");
         }
-    }
-    
+    }    
 }
