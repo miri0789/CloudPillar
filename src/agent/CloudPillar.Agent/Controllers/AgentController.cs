@@ -19,6 +19,7 @@ public class AgentController : ControllerBase
     private readonly ITwinHandler _twinHandler;
 
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
+    
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
@@ -31,13 +32,12 @@ public class AgentController : ControllerBase
      IValidator<TwinDesired> twinDesiredPropsValidator,
      ILoggerHandler logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
     }
-
+   
     [HttpPost("AddRecipe")]
     public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
     {

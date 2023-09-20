@@ -10,6 +10,7 @@ public interface IDeviceClientWrapper
     string GetDeviceId();
 
     TransportType GetTransportType();
+    int GetChunkSizeByTransportType();
 
     Task SendEventAsync(Message message);
 

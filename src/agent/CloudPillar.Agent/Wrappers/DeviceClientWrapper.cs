@@ -10,7 +10,8 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     private DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
-    private readonly ILoggerHandler _logger;   
+    private readonly ILoggerHandler _logger;
+    private const int kB = 1024;
 
     /// <summary>
     /// Initializes a new instance of the DeviceClient class
@@ -61,7 +62,18 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             ? transportType
             : TransportType.Amqp;
     }
-
+    public int GetChunkSizeByTransportType()
+    {
+        int chunkSize =
+        GetTransportType() switch
+        {
+            TransportType.Mqtt => 32 * kB,
+            TransportType.Amqp => 64 * kB,
+            TransportType.Http1 => 256 * kB,
+            _ => 32 * kB
+        };
+        return chunkSize;
+    }
     /// <summary>
     /// Asynchronously waits for a message to be received from the device.
     /// after recived the message, need to exec CompleteAsync function to the message
