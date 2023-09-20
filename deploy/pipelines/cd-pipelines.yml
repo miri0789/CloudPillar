@@ -24,25 +24,31 @@ stages:
   
 - stage: CI_Stage
   jobs:
-    - job: aaa_CI_Platform_Job
+  - ${{each item in parameters.services}}:
+    - job: ${{ item }}_CI_Platform_Job
       pool:
         vmImage: ubuntu-latest
       steps:
-      - ${{each item in parameters.services}}:
         - task: NuGetAuthenticate@1
           displayName: 'Authenticate to NuGet'
 
         - task: Docker@2
           displayName: '${{ item }} service dockerize'
           inputs:
-            containerRegistry: 'CP dev docker registry'
             repository: 'cloudpillar${{ lower(item) }}service'
             command: 'build'
             Dockerfile: './src/backend/infra/build/Dockerfile'
             buildContext: src
             tags: '$(Build.BuildNumber)'
             arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'
-
+            
+        - task: Docker@2
+          displayName: 'Docker Push'
+          inputs:
+            command: 'push' 
+            repository: 'cloudpillar${{ lower(item) }}service'
+            containerRegistry: 'CP dev docker registry'
+            tags: '$(Build.BuildNumber)'
   
 # - stage: CD_Stage
 #   jobs:  
