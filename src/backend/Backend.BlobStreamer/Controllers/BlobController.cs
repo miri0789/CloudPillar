@@ -9,10 +9,12 @@ namespace Backend.BlobStreamer.Controllers;
 public class BlobController : ControllerBase
 {
     private readonly IBlobService _blobService;
+    private readonly IUploadStreamChunksService _uploadStreamChunksService;
 
-    public BlobController(IBlobService blobService)
+    public BlobController(IBlobService blobService, IUploadStreamChunksService uploadStreamChunksService)
     {
-        _blobService = blobService;
+        _blobService = blobService ?? throw new ArgumentNullException(nameof(blobService));
+        _uploadStreamChunksService = uploadStreamChunksService ?? throw new ArgumentNullException(nameof(uploadStreamChunksService));
     }
 
     [HttpGet("metadata")]
@@ -32,6 +34,8 @@ public class BlobController : ControllerBase
     [HttpPost("uploadStream")]
     public async Task UploadStream([FromBody] StreamingUploadChunkEvent data)
     {
+        //****
         await _blobService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum);
+        // await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum);
     }
 }

@@ -96,6 +96,7 @@ public class BlobService : IBlobService
         }
     }
 
+    //****
     public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum)
     {
         try

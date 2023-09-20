@@ -12,13 +12,11 @@ namespace CloudPillar.Agent.Handlers;
 public class D2CMessengerHandler : ID2CMessengerHandler
 {
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly IMessageFactory _messageFactory;
     private readonly ILoggerHandler _logger;
 
     public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, IMessageFactory messageFactory, ILoggerHandler logger)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
-        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
     }
 
@@ -39,12 +37,12 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(firmwareUpdateEvent);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition)
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum)
     {
         var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
         {
             StorageUri = storageUri,
-            CheckSum = "",
+            CheckSum = checkSum,
             StartPosition = currentPosition,
             ActionId = actionId ?? Guid.NewGuid().ToString(),
             Data = buffer
