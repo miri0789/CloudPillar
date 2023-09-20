@@ -2,7 +2,7 @@
 resource "azurerm_kubernetes_cluster_node_pool" "aks" {
   name                  = "spotcpunp"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
-  vm_size               = "Standard_B1s"
+  vm_size               = "Standard_D2s_v3"
   zones                 = [ "1", "2", "3" ]
   node_count            = 3
   min_count             = 1
