@@ -70,7 +70,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         Stream azureStream = new MemoryStream();
         await blob.DownloadToStreamAsync(azureStream);
 
-        string newCheckSum = await _checkSumService.CalculateCheckSumAsync(azureStream, CheckSumType.MD5);
+        string newCheckSum = await _checkSumService.CalculateCheckSumAsync(azureStream);
         if (newCheckSum.Equals(originalCheckSum))
         {
 

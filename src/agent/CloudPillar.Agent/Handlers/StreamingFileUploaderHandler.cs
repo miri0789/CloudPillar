@@ -87,7 +87,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
 
     private async Task<string> CalcCheckSumAsync(Stream stream)
     {
-        string checkSum = await _checkSumService.CalculateCheckSumAsync(stream, CheckSumType.MD5);
+        string checkSum = await _checkSumService.CalculateCheckSumAsync(stream);
         _logger.Debug($"checkSum was calculated, The checkSum is: {checkSum}");
         return checkSum;
     }

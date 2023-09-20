@@ -6,7 +6,7 @@ namespace Shared.Entities.Services;
 
 public class CheckSumService : ICheckSumService
 {
-    public async Task<string> CalculateCheckSumAsync(Stream stream, CheckSumType checkSumType)
+    public async Task<string> CalculateCheckSumAsync(Stream stream, CheckSumType checkSumType = CheckSumType.MD5)
     {
         switch (checkSumType)
         {
