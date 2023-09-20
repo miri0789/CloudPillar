@@ -11,7 +11,10 @@ COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY nuget.config backend/${DLL}/
 ARG FEED_ACCESSTOKEN
 ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
-
+RUN echo "==============="
+RUN echo $DLL
+RUN echo "==============="
+RUN echo backend/${DLL}/${DLL}.csproj
 RUN dotnet nuget locals all --clear
 RUN dotnet restore backend/${DLL}/${DLL}.csproj
 
