@@ -44,49 +44,49 @@ stages:
             arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}
 
   
-- stage: CD_Stage
-  jobs:  
-  - job: Start_VM_Job
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - checkout: none
-    - task: AzureCLI@1
-      displayName: 'Start VM'
-      inputs:
-        azureSubscription: CloudPillar Dev
-        scriptLocation: inlineScript
-        inlineScript: |
-          az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
-  - job: CD_Job
-    pool:
-      name: AKS-Private-Cluster-Pool
-      demands:
-      - agent.name -equals aks-${{ parameters.env }}-vm-agent
-    steps:
-    - task: HelmDeploy@0
-      inputs:
-        connectionType: 'Azure Resource Manager'
-        azureSubscription: CloudPillar Dev
-        azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
-        kubernetesCluster: 'cp-${{ parameters.env }}-aks'
-        command: 'upgrade'
-        chartType: 'FilePath'
-        chartPath: 'deploy/backend/templates'
-        releaseName: 'cartonet'
-        overrideValues: 'image.tag=${{ parameters.imagetag }}'
-        valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
-        arguments: '--debug --timeout 20m0s'
-  - job: Stop_VM_Job
-    dependsOn: CD_Job
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - checkout: none
-    - task: AzureCLI@1
-      displayName: 'Stop VM'
-      inputs:
-        azureSubscription: CloudPillar Test
-        scriptLocation: inlineScript
-        inlineScript: |
-          az vm deallocate -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
+# - stage: CD_Stage
+#   jobs:  
+#   - job: Start_VM_Job
+#     pool:
+#       vmImage: ubuntu-latest
+#     steps:
+#     - checkout: none
+#     - task: AzureCLI@1
+#       displayName: 'Start VM'
+#       inputs:
+#         azureSubscription: CloudPillar Dev
+#         scriptLocation: inlineScript
+#         inlineScript: |
+#           az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
+#   - job: CD_Job
+#     pool:
+#       name: AKS-Private-Cluster-Pool
+#       demands:
+#       - agent.name -equals aks-${{ parameters.env }}-vm-agent
+#     steps:
+#     - task: HelmDeploy@0
+#       inputs:
+#         connectionType: 'Azure Resource Manager'
+#         azureSubscription: CloudPillar Dev
+#         azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
+#         kubernetesCluster: 'cp-${{ parameters.env }}-aks'
+#         command: 'upgrade'
+#         chartType: 'FilePath'
+#         chartPath: 'deploy/backend/templates'
+#         releaseName: 'cartonet'
+#         overrideValues: 'image.tag=${{ parameters.imagetag }}'
+#         valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
+#         arguments: '--debug --timeout 20m0s'
+#   - job: Stop_VM_Job
+#     dependsOn: CD_Job
+#     pool:
+#       vmImage: ubuntu-latest
+#     steps:
+#     - checkout: none
+#     - task: AzureCLI@1
+#       displayName: 'Stop VM'
+#       inputs:
+#         azureSubscription: CloudPillar Test
+#         scriptLocation: inlineScript
+#         inlineScript: |
+#           az vm deallocate -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
