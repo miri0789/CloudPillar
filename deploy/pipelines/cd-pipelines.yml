@@ -35,7 +35,8 @@ stages:
         - task: Docker@2
           displayName: '${{ item }} service dockerize'
           inputs:
-            repository: 'myrepository/cloudpillar${{ lower(item) }}service'
+            repository: 'cloudpillar${{ lower(item) }}service'
+            containerRegistry: 'CP dev docker registry'
             command: 'build'
             Dockerfile: './src/backend/infra/build/Dockerfile'
             buildContext: src
@@ -46,7 +47,7 @@ stages:
           displayName: 'Docker Push'
           inputs:
             command: 'push' 
-            repository: 'myrepository/cloudpillar${{ lower(item) }}service'
+            repository: 'cloudpillar${{ lower(item) }}service'
             containerRegistry: 'CP dev docker registry'
             tags: '$(Build.BuildNumber)'
   
