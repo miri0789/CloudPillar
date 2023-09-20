@@ -6,6 +6,9 @@ RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/m
 WORKDIR /src
 ARG DLL
 
+RUN echo "========:::::::::======="
+RUN echo $DLL
+RUN echo "========:::::::::======="
 # Copy the .csproj file and restore the dependencies
 COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY nuget.config backend/${DLL}/
