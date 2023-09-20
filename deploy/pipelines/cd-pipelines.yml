@@ -24,11 +24,11 @@ stages:
   
 - stage: CI_Stage
   jobs:
-  - ${{each item in parameters.services}}:
-    - job: ${{ item }}_CI_Platform_Job
+    - job: aaa_CI_Platform_Job
       pool:
         vmImage: ubuntu-latest
       steps:
+      - ${{each item in parameters.services}}:
         - task: NuGetAuthenticate@1
           displayName: 'Authenticate to NuGet'
 
