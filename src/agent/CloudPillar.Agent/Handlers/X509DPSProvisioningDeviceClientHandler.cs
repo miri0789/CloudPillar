@@ -13,11 +13,8 @@ namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
 {
-    private const string CLOUD_PILLAR_SUBJECT = "CN=CloudPillar-";
     private const string CERTIFICATE_SUBJECT = "CN=";
-
-    //that the code of iotHubHostName in extention in certificate
-    private const string IOT_HUB_HOST_NAME_EXTENTION_KEY = "2.2.2.2";
+  
     private readonly ILoggerHandler _logger;
 
     private IDeviceClientWrapper _deviceClientWrapper;
@@ -35,7 +32,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             store.Open(OpenFlags.ReadOnly);
             X509Certificate2Collection certificates = store.Certificates;
             var filteredCertificate = certificates.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(CLOUD_PILLAR_SUBJECT))
+               .Where(cert => cert.Subject.StartsWith(CertificateConstants.CLOUD_PILLAR_SUBJECT))
                .FirstOrDefault();
 
             return filteredCertificate;
@@ -131,7 +128,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         foreach (X509Extension extension in userCertificate.Extensions)
         {
 
-            if (extension.Oid?.Value == IOT_HUB_HOST_NAME_EXTENTION_KEY)
+            if (extension.Oid?.Value == CertificateConstants.IOT_HUB_HOST_NAME_EXTENTION_KEY)
             {
                 iotHubHostName = Encoding.UTF8.GetString(extension.RawData);
             }

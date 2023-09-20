@@ -12,6 +12,7 @@ var builder = LoggerHostCreator.Configure("keyholder", WebApplication.CreateBuil
 
 builder.Services.AddSingleton<ISigningService, SigningService>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
