@@ -41,7 +41,7 @@ stages:
             Dockerfile: './src/backend/infra/build/Dockerfile'
             buildContext: src
             tags: '$(Build.BuildNumber)'
-            arguments: '--build-arg DLL=aaa'
+            arguments: '--build-arg DLL=aaa --no-cache'
             buildArguments: |
 
   
