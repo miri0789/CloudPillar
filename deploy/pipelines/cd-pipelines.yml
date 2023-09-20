@@ -35,7 +35,7 @@ stages:
         - task: Docker@2
           displayName: '${{ item }} service dockerize'
           inputs:
-            containerRegistry: 'CloudPillar${{ parameters.environment }}'
+            containerRegistry: 'CloudPillarDev'
             repository: 'cloudpillar${{ lower(item) }}service'
             command: 'buildAndPush'
             Dockerfile: './src/backend/infra/build/Dockerfile'
