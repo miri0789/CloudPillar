@@ -1,5 +1,9 @@
 # CARTONET®: Advanced CARTO® Clinical Data Insights & ML Analytics 
 
+## Introduction
+CARTONET® pursues innovation in post-op healthcare analytics. It's designed to delve deep into CARTO 3 System clinical data, extracting invaluable insights through the power of machine learning. Beyond analytics, CARTONET provides a comprehensive platform for reviewing and researching medical cases, leveraging the robust capabilities of cloud technologies.
+
+
 ## Key Features:
 
 - **Secure Cloud-Based Smart Storage Solution**: CARTONET™ provides secure storage for CARTO® 3 System cases, meeting industry best practices of security and privacy and supports compliance with HIPAA and GDPR.
