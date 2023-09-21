@@ -41,6 +41,7 @@ builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderH
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
+builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
 
