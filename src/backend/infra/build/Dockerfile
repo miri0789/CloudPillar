@@ -6,22 +6,11 @@ RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/m
 WORKDIR /src
 ARG DLL
 
-RUN echo "========:::::::::======="
-RUN echo $DLL
-RUN echo "========:::::::::======="
 # Copy the .csproj file and restore the dependencies
 COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY nuget.config backend/${DLL}/
 ARG FEED_ACCESSTOKEN
 ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
-RUN echo "=???==="
-RUN echo $FEED_ACCESSTOKEN
-RUN echo "=???==="
-RUN echo $Env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS
-RUN echo "==============="
-RUN echo $DLL
-RUN echo "==============="
-RUN echo backend/${DLL}/${DLL}.csproj
 RUN dotnet nuget locals all --clear
 RUN dotnet restore backend/${DLL}/${DLL}.csproj
 
