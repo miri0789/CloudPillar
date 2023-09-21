@@ -105,21 +105,6 @@ stages:
             repository: 'cloudpillar${{ lower(item) }}service'
             containerRegistry: 'cp ${{ parameters.env }} docker registry'
             tags: '$(parameters.imagetag).$(timelabel)'
-        
-        # - script: |
-        #     $files=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
-        #     $temp=$files -split ' '
-        #     $count=$temp.Length
-        #     echo "Total changed $count files"
-        #     echo $files
-        # - task: Bash@3
-        #   name: SetBackendImagesJson
-        #   inputs:
-        #     targetType: 'inline'
-        #     script: |
-        #       $files = git diff --name-only @~ @
-        #       echo "mmmmmmmmmm"
-        #       echo $files
 
 
 - stage: CD_Stage
