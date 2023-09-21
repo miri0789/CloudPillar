@@ -47,13 +47,13 @@ stages:
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
           displayName: 'Security Scan with Trivy'
           
-        - task: Docker@2
-          displayName: 'Docker Push'
-          inputs:
-            command: 'push' 
-            repository: 'cloudpillar${{ lower(item) }}service'
-            containerRegistry: 'CP ${{ parameters.env }} docker registry'
-            tags: '$(Build.BuildNumber)'
+        # - task: Docker@2
+        #   displayName: 'Docker Push'
+        #   inputs:
+        #     command: 'push' 
+        #     repository: 'cloudpillar${{ lower(item) }}service'
+        #     containerRegistry: 'CP ${{ parameters.env }} docker registry'
+        #     tags: '$(Build.BuildNumber)'
         
         - script: |    
             files=$(git diff --name-only HEAD~ HEAD)
