@@ -34,27 +34,31 @@ stages:
 - stage: CI_Stage
   
   jobs:
-  - job: Run_UnitTests
+  - job: RunUnitTests
+    displayName: 'Run Unit Tests'
+    pool:
+      vmImage: 'windows-latest'
     steps:
-    - task: NuGetAuthenticate@1
-      displayName: 'Authenticate to NuGet'
+    - task: UseDotNet@2
+      displayName: 'Use .NET Core SDK'
+      inputs:
+        packageType: 'sdk'
+        installationPath: $(Agent.ToolsDirectory)/dotnet
+        version: '3.x'
+
     - task: DotNetCoreCLI@2
-      displayName: Unit Tests
+      displayName: 'Run Unit Tests'
       inputs:
-        command: test
-        projects: |
-          **/*Tests/*.csproj
+        command: 'test'
+        projects: '**/*Tests/*.csproj'
         arguments: '--configuration $(buildConfiguration)'
-        buildProperties: 
+
     - task: PublishTestResults@2
-      condition: always()
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/test-results/*.xml'
-        failTaskOnFailedTests: true
-        mergeTestResults: true
-        testRunTitle: 'Cypress Test Results'
       displayName: 'Publish Test Results'
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '**/TestResults/*.trx'
+
 
   - job: Agent_CI_Job
     pool:
