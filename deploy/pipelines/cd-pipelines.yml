@@ -32,20 +32,20 @@ stages:
         - task: NuGetAuthenticate@1
           displayName: 'Authenticate to NuGet'
 
-        - task: Docker@2
-          displayName: '${{ item }} service dockerize'
-          inputs:
-            repository: 'cloudpillar${{ lower(item) }}service'
-            containerRegistry: 'CP ${{ parameters.env }} docker registry'
-            command: 'build'
-            Dockerfile: './src/backend/infra/build/Dockerfile'
-            buildContext: src
-            tags: '$(Build.BuildNumber)'
-            arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
+        # - task: Docker@2
+        #   displayName: '${{ item }} service dockerize'
+        #   inputs:
+        #     repository: 'cloudpillar${{ lower(item) }}service'
+        #     containerRegistry: 'CP ${{ parameters.env }} docker registry'
+        #     command: 'build'
+        #     Dockerfile: './src/backend/infra/build/Dockerfile'
+        #     buildContext: src
+        #     tags: '$(Build.BuildNumber)'
+        #     arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
         
-        - script: |
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
-          displayName: 'Security Scan with Trivy'
+        # - script: |
+        #     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
+        #   displayName: 'Security Scan with Trivy'
           
         # - task: Docker@2
         #   displayName: 'Docker Push'
@@ -56,7 +56,7 @@ stages:
         #     tags: '$(Build.BuildNumber)'
         
         - script: |    
-            files=$(git diff --name-only HEAD~ HEAD)
+            files=$(git diff --name-only)
             echo $files
             
 - stage: CD_Stage
