@@ -10,5 +10,5 @@ variable "env" {
 }
 variable "akspat" {
   type = string
-  default = "uweedhif4bsases4zyrxwqmisaqeybutygvtxqthqrltwjv7t3xa"
+  default = "qrgkclecogqc74qeambmotisrfmp2j6bmwmwef47j6tkpbj4bv7q"
 }

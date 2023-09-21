@@ -1,7 +1,7 @@
 
 locals {
   devopsURL = "https://dev.azure.com/BiosenseWebsterIs"
-  agentPool = "AKS-Private-Cluster-Pool"
+  agentPool = "Cloud-Pillar-Pool"
   aks_vm_custom_data = <<CUSTOM_DATA
 #!/bin/bash
 set -x

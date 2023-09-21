@@ -7,7 +7,7 @@ data "azurerm_client_config" "current" {
 }
 
 resource "azurerm_key_vault" "infr" { 
-    name = "cp-${var.env}-information-kv"
+    name = "cp-${var.env}-infrm-kv"
     location = var.location
     resource_group_name = azurerm_resource_group.aks.name
     tenant_id = data.azurerm_client_config.current.tenant_id
