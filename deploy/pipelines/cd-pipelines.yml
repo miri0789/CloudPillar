@@ -33,7 +33,7 @@ stages:
   
 - stage: CI_Stage
   jobs:
-    - job: ${{ item }}_CI_Platform_Job
+    - job: Dockers
       pool:
         vmImage: ubuntu-latest
       steps:
