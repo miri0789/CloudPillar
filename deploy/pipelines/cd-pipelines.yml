@@ -45,6 +45,8 @@ stages:
         packageType: 'sdk'
         installationPath: $(Agent.ToolsDirectory)/dotnet
         version: '3.x'
+    - task: NuGetAuthenticate@1
+      displayName: 'Authenticate to NuGet'
 
     - task: DotNetCoreCLI@2
       displayName: 'Run Unit Tests'
