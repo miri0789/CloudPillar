@@ -33,7 +33,7 @@ stages:
   
 - stage: CI_Stage
   jobs:
-  - job: Agent CI Job
+  - job: Agent_CI_Job
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -66,7 +66,7 @@ stages:
         publishLocation: 'Container'  
 
   - ${{each item in parameters.services}}:
-      - job: '${{ item }} CI Job'
+      - job: '${{ item }}_CI_Job'
         pool:
           vmImage: ubuntu-latest
         steps:
