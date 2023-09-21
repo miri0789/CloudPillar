@@ -67,6 +67,14 @@ stages:
             $count=$temp.Length
             echo "Total changed $count files"
             echo $files
+        - task: Bash@3
+          name: SetBackendImagesJson
+          inputs:
+            targetType: 'inline'
+            script: |
+              $files = git diff --name-only @~ @
+              echo "mmmmmmmmmm"
+              echo $files
 
 
 - stage: CD_Stage
