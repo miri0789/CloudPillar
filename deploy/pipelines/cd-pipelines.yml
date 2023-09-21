@@ -69,7 +69,7 @@ stages:
         docker rm $CONTAINER_ID
         mv ./cloudpillar.zip ./cloudpillar-$(imageName)-${{ parameters.imagetag }}.$(timelabel).zip
         ls -al ./cloudpillar-$(imageName)-${{ parameters.imagetag }}.$(timelabel).zip
-      displayName: 'Extract POC cloudpillar.zip from Image'
+      displayName: 'Run Agent Security Scan & Extract cloudpillar.zip from Image'
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cloudpillar.zip to Artifacts'
