@@ -39,12 +39,6 @@ stages:
     pool:
       vmImage: 'windows-latest'
     steps:
-    - task: UseDotNet@2
-      displayName: 'Use .NET Core SDK'
-      inputs:
-        packageType: 'sdk'
-        installationPath: $(Agent.ToolsDirectory)/dotnet
-        version: '3.x'
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to NuGet'
 
