@@ -49,11 +49,11 @@ stages:
               command: 'build'
               Dockerfile: './src/backend/infra/build/Dockerfile'
               buildContext: src
-              tags: '$(parameters.imagetag).$(timelabel)'
+              tags: '${{ parameters.imagetag }}.$(timelabel)'
               arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
           
           - script: |
-              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
+              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:${{ parameters.imagetag }}.$(timelabel)
             displayName: 'Security Scan with Trivy'
 
         - task: Docker@2
@@ -71,8 +71,8 @@ stages:
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL CONTAINER_ID
             docker cp $CONTAINER_ID:/app/cloudpillar.zip .
             docker rm $CONTAINER_ID
-            mv ./cloudpillar.zip ./cloudpillar-$(imageName)-$(parameters.imagetag).$(timelabel).zip
-            ls -al ./cloudpillar-$(imageName)-$(parameters.imagetag).$(timelabel).zip
+            mv ./cloudpillar.zip ./cloudpillar-$(imageName)-${{ parameters.imagetag }}.$(timelabel).zip
+            ls -al ./cloudpillar-$(imageName)-${{ parameters.imagetag }}.$(timelabel).zip
           condition: eq(variables.processedImage, true)
           displayName: 'Extract POC cloudpillar.zip from Image'
 
@@ -80,7 +80,7 @@ stages:
           condition: eq(variables.processedImage, true)
           displayName: 'Publish cloudpillar.zip to Artifacts'
           inputs:
-            pathtoPublish: ./cloudpillar-agent-$(parameters.imagetag).$(timelabel).zip
+            pathtoPublish: ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
             artifactName: 'cloudpillar'
             publishLocation: 'Container'  
         # - task: Docker@2
