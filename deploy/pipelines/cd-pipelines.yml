@@ -35,7 +35,7 @@ stages:
   
   jobs:
   - job: RunUnitTests
-    displayName: 'Run Unit Tests'
+    displayName: 'Run_Unit_Tests'
     pool:
       vmImage: 'windows-latest'
     steps:
