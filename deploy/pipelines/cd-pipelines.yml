@@ -35,13 +35,14 @@ stages:
   
   jobs:
   - job: RUN_UNITTESTS
-  - task: DotNetCoreCLI@2
-    displayName: Unit Tests
-    inputs:
-      command: test
-      projects: |
-        **/*Tests/*.csproj
-      arguments: '--configuration $(buildConfiguration)'
+    steps:
+    - task: DotNetCoreCLI@2
+      displayName: Unit Tests
+      inputs:
+        command: test
+        projects: |
+          **/*Tests/*.csproj
+        arguments: '--configuration $(buildConfiguration)'
 
   - job: Agent_CI_Job
     pool:
