@@ -63,6 +63,7 @@ stages:
         
         - script: |
             $files=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
+            $temp=$files -split ' '
             $count=$temp.Length
             echo "Total changed $count files"
             echo $files
