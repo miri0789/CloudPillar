@@ -6,6 +6,7 @@ using Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Logger;
+using Shared.Logger;
 
 [TestFixture]
 public class C2DEventSubscriptionSessionTestFixture

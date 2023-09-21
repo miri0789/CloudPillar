@@ -5,6 +5,7 @@ using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Shared.Entities.Factories;
+using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -29,6 +30,7 @@ builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSes
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
 builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
+builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddScoped<ITwinHandler, TwinHandler>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
@@ -39,6 +41,7 @@ builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderH
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
+builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
 
