@@ -37,6 +37,8 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
+    - task: NuGetAuthenticate@1
+      displayName: 'Authenticate to NuGet'
     - task: Docker@2
       displayName: Agent Dockerize
       inputs:
@@ -68,31 +70,30 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
-          - task: NuGetAuthenticate@1
-            displayName: 'Authenticate to NuGet'
-
-            - task: Docker@2
-              displayName: '${{ item }} Dockerize'
-              inputs:
-                repository: 'cloudpillar${{ lower(item) }}service'
-                containerRegistry: 'CP ${{ parameters.env }} docker registry'
-                command: 'build'
-                Dockerfile: './src/backend/infra/build/Dockerfile'
-                buildContext: src
-                tags: '${{ parameters.imagetag }}.$(timelabel)'
-                arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
+        - task: NuGetAuthenticate@1
+          displayName: 'Authenticate to NuGet'
+        - task: Docker@2
+          displayName: '${{ item }} Dockerize'
+            inputs:
+              repository: 'cloudpillar${{ lower(item) }}service'
+              containerRegistry: 'CP ${{ parameters.env }} docker registry'
+              command: 'build'
+              Dockerfile: './src/backend/infra/build/Dockerfile'
+              buildContext: src
+              tags: '${{ parameters.imagetag }}.$(timelabel)'
+              arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
             
-            - script: |
-                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:${{ parameters.imagetag }}.$(timelabel)
-                displayName: '${{ item }} Security Scan'
+        - script: |
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:${{ parameters.imagetag }}.$(timelabel)
+            displayName: '${{ item }} Security Scan'
             
-            - task: Docker@2
-              displayName: '${{ item }} Docker Push'
-              inputs:
-                command: 'push' 
-                repository: 'cloudpillar${{ lower(item) }}service'
-                containerRegistry: 'cp ${{ parameters.env }} docker registry'
-                tags: '$(parameters.imagetag).$(timelabel)'
+        - task: Docker@2
+          displayName: '${{ item }} Docker Push'
+          inputs:
+            command: 'push' 
+            repository: 'cloudpillar${{ lower(item) }}service'
+            containerRegistry: 'cp ${{ parameters.env }} docker registry'
+            tags: '$(parameters.imagetag).$(timelabel)'
       
     # - job: ${{ item }}_CI_Ablation_Job
     #     pool:
