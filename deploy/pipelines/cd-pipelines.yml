@@ -36,6 +36,8 @@ stages:
   jobs:
   - job: RUN_UNITTESTS
     steps:
+    - task: NuGetAuthenticate@1
+      displayName: 'Authenticate to NuGet'
     - task: DotNetCoreCLI@2
       displayName: Unit Tests
       inputs:
@@ -104,7 +106,7 @@ stages:
             command: 'push' 
             repository: 'cloudpillar${{ lower(item) }}service'
             containerRegistry: 'cp ${{ parameters.env }} docker registry'
-            tags: '$(parameters.imagetag).$(timelabel)'
+            tags: '${{ parameters.imagetag }}.$(timelabel)'
 
 
 - stage: CD_Stage
