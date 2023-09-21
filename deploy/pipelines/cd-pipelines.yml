@@ -61,10 +61,15 @@ stages:
         #     containerRegistry: 'CP ${{ parameters.env }} docker registry'
         #     tags: '$(Build.BuildNumber)'
         
-        - script: |    
-            files=$(git diff --name-only)
-            echo $files
-            
+        - powershell: |
+        ## get the changed files
+        $files=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
+        $temp=$files -split ' '
+        $count=$temp.Length
+        echo "Total changed $count files"
+        echo $files
+
+
 - stage: CD_Stage
   jobs:  
   - job: Start_VM_Job
