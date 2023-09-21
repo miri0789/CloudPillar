@@ -145,6 +145,7 @@ stages:
         overrideValues: 'image.tag=${{ parameters.imagetag }}.$(timelabel)'
         valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
         arguments: '--debug --timeout 20m0s'
+        
   - job: Stop_VM_Job
     dependsOn: CD_Job
     pool:
