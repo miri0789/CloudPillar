@@ -94,51 +94,21 @@ stages:
             repository: 'cloudpillar${{ lower(item) }}service'
             containerRegistry: 'cp ${{ parameters.env }} docker registry'
             tags: '$(parameters.imagetag).$(timelabel)'
-      
-    # - job: ${{ item }}_CI_Ablation_Job
-    #     pool:
-    #       vmImage: ubuntu-latest
-    #     steps:
-    #     - task: Docker@2
-    #       displayName: Agent Dockerize
-    #       inputs:
-    #         command: build
-    #         repository: agent
-    #         dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
-    #         buildContext: src
-    #         tags: aux-build
-    #         arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
-
-    #     - script: |
-    #         CONTAINER_ID=$(docker create $(imageName):aux-build)
-    #         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL CONTAINER_ID
-    #         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
-    #         docker rm $CONTAINER_ID
-    #         mv ./cloudpillar.zip ./cloudpillar-$(imageName)-${{ parameters.imagetag }}.$(timelabel).zip
-    #         ls -al ./cloudpillar-$(imageName)-${{ parameters.imagetag }}.$(timelabel).zip
-    #       displayName: 'Extract POC cloudpillar.zip from Image'
-
-    #     - task: PublishBuildArtifacts@1
-    #       displayName: 'Publish cloudpillar.zip to Artifacts'
-    #       inputs:
-    #         pathtoPublish: ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
-    #         artifactName: 'cloudpillar'
-    #         publishLocation: 'Container'  
         
-        - script: |
-            $files=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
-            $temp=$files -split ' '
-            $count=$temp.Length
-            echo "Total changed $count files"
-            echo $files
-        - task: Bash@3
-          name: SetBackendImagesJson
-          inputs:
-            targetType: 'inline'
-            script: |
-              $files = git diff --name-only @~ @
-              echo "mmmmmmmmmm"
-              echo $files
+        # - script: |
+        #     $files=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
+        #     $temp=$files -split ' '
+        #     $count=$temp.Length
+        #     echo "Total changed $count files"
+        #     echo $files
+        # - task: Bash@3
+        #   name: SetBackendImagesJson
+        #   inputs:
+        #     targetType: 'inline'
+        #     script: |
+        #       $files = git diff --name-only @~ @
+        #       echo "mmmmmmmmmm"
+        #       echo $files
 
 
 - stage: CD_Stage
@@ -156,35 +126,35 @@ stages:
         inlineScript: |
           az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
           
-  # - job: CD_Job
-  #   pool:
-  #     name: Cloud-Pillar-Pool
-  #     demands:
-  #     - agent.name -equals aks-${{ parameters.env }}-vm-agent
-  #   steps:
-  #   - task: HelmDeploy@0
-  #     inputs:
-  #       connectionType: 'Azure Resource Manager'
-  #       azureSubscription: CloudPillar Dev
-  #       azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
-  #       kubernetesCluster: 'cp-${{ parameters.env }}-aks'
-  #       command: 'upgrade'
-  #       chartType: 'FilePath'
-  #       chartPath: 'deploy/backend/templates'
-  #       releaseName: 'cartonet'
-  #       overrideValues: 'image.tag=${{ parameters.imagetag }}'
-  #       valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
-  #       arguments: '--debug --timeout 20m0s'
-  # - job: Stop_VM_Job
-  #   dependsOn: CD_Job
-  #   pool:
-  #     vmImage: ubuntu-latest
-  #   steps:
-  #   - checkout: none
-  #   - task: AzureCLI@1
-  #     displayName: 'Stop VM'
-  #     inputs:
-  #       azureSubscription: 'CloudPillar ${{ parameters.env }}'
-  #       scriptLocation: inlineScript
-  #       inlineScript: |
-  #         az vm deallocate -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
+  - job: CD_Job
+    pool:
+      name: CloudPillar-Pool
+      demands:
+      - agent.name -equals cpaks-${{ parameters.env }}-vm-agent
+    steps:
+    - task: HelmDeploy@0
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: CloudPillar Dev
+        azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
+        kubernetesCluster: 'cp-${{ parameters.env }}-aks'
+        command: 'upgrade'
+        chartType: 'FilePath'
+        chartPath: 'deploy/backend/templates'
+        releaseName: 'cartonet'
+        overrideValues: 'image.tag=${{ parameters.imagetag }}.$(timelabel)'
+        valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
+        arguments: '--debug --timeout 20m0s'
+  - job: Stop_VM_Job
+    dependsOn: CD_Job
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - checkout: none
+    - task: AzureCLI@1
+      displayName: 'Stop VM'
+      inputs:
+        azureSubscription: 'CloudPillar ${{ parameters.env }}'
+        scriptLocation: inlineScript
+        inlineScript: |
+          az vm deallocate -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
