@@ -65,8 +65,8 @@ stages:
         artifactName: 'cloudpillar'
         publishLocation: 'Container'  
 
-    - ${{each item in parameters.ablationAnslysisServices}}:
-      - job: ${{ item }}_CI_Ablation_Job
+  - ${{each item in parameters.ablationAnslysisServices}}:
+      - job: '${{ item }} CI Job'
         pool:
           vmImage: ubuntu-latest
         steps:
