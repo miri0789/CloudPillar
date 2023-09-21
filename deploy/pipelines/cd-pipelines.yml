@@ -65,7 +65,7 @@ stages:
     - task: AzureCLI@1
       displayName: 'Start VM'
       inputs:
-        azureSubscription: 'a147112f-bc59-4e9e-ac2f-5b4585e6542e'
+        azureSubscription: 'CloudPillar ${{ parameters.env }}'
         scriptLocation: inlineScript
         inlineScript: |
           az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
@@ -98,7 +98,7 @@ stages:
     - task: AzureCLI@1
       displayName: 'Stop VM'
       inputs:
-        azureSubscription: a147112f-bc59-4e9e-ac2f-5b4585e6542e
+        azureSubscription: 'CloudPillar ${{ parameters.env }}'
         scriptLocation: inlineScript
         inlineScript: |
           az vm deallocate -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
