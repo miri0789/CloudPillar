@@ -42,7 +42,13 @@ stages:
             buildContext: src
             tags: '$(Build.BuildNumber)'
             arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'
-            
+        
+        - script: |
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $(imageName):$(newVersion)
+            displayName: 'Security Scan with Trivy'
+            env:
+              imageName: 'cloudpillar${{ lower(item) }}service'
+              newVersion: '$(Build.BuildNumber)'
         - task: Docker@2
           displayName: 'Docker Push'
           inputs:
