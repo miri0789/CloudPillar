@@ -9,7 +9,8 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     private readonly DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
-     private readonly ILoggerHandler _logger;
+    private readonly ILoggerHandler _logger;
+    private const int kB = 1024;
 
     /// <summary>
     /// Initializes a new instance of the DeviceClient class
@@ -18,7 +19,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// <exception cref="NullReferenceException"></exception>
     public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper)); ;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         var _transportType = GetTransportType();
         try
@@ -63,7 +64,18 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             ? transportType
             : TransportType.Amqp;
     }
-
+    public int GetChunkSizeByTransportType()
+    {
+        int chunkSize =
+        GetTransportType() switch
+        {
+            TransportType.Mqtt => 32 * kB,
+            TransportType.Amqp => 64 * kB,
+            TransportType.Http1 => 256 * kB,
+            _ => 32 * kB
+        };
+        return chunkSize;
+    }
     /// <summary>
     /// Asynchronously waits for a message to be received from the device.
     /// after recived the message, need to exec CompleteAsync function to the message

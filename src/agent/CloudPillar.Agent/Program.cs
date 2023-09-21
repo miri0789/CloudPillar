@@ -5,16 +5,20 @@ using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Shared.Entities.Factories;
+using Shared.Entities.Twin;
 using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
+const string CONFIG_PORT = "Port";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
-
+var port = builder.Configuration.GetValue(CONFIG_PORT, 8099);
+var url = $"http://localhost:{port}";
+builder.WebHost.UseUrls(url);
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins("http://localhost")
+                b.WithOrigins(url)
                        .AllowAnyHeader()
                        .AllowAnyMethod();
             });
@@ -31,11 +35,12 @@ builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
-builder.Services.AddScoped<IIoTStreamingFileUploaderHandler, IoTStreamingFileUploaderHandler>();
+builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderHandler>();
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
+builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
 
 builder.Services.AddControllers(options =>
@@ -43,7 +48,6 @@ builder.Services.AddControllers(options =>
         options.Filters.Add<LogActionFilter>();
     });
 builder.Services.AddSwaggerGen();
-
 
 var app = builder.Build();
 
@@ -58,5 +62,6 @@ app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.MapControllers();
+
 
 app.Run();
