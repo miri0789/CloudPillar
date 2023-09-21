@@ -73,12 +73,12 @@ stages:
         arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
 
     - script: |
-        CONTAINER_ID=$(docker create $(imageName):aux-build)
-        # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL $CONTAINER_ID
+        CONTAINER_ID=$(docker create agent:aux-build)
+        # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL agent:aux-build
         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
         docker rm $CONTAINER_ID
-        mv ./cloudpillar.zip ./cloudpillar-$(imageName)-${{ parameters.imagetag }}.$(timelabel).zip
-        ls -al ./cloudpillar-$(imageName)-${{ parameters.imagetag }}.$(timelabel).zip
+        mv ./cloudpillar.zip ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
+        ls -al ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
       displayName: 'Run Agent Security Scan & Extract cloudpillar.zip from Image'
 
     - task: PublishBuildArtifacts@1
