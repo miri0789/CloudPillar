@@ -65,13 +65,10 @@ stages:
             buildContext: src
             tags: aux-build
             arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
-         
-        - script: |
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
-          displayName: 'Agent Security Scan with Trivy'     
 
         - script: |
             CONTAINER_ID=$(docker create $(imageName):aux-build)
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL CONTAINER_ID
             docker cp $CONTAINER_ID:/app/cloudpillar.zip .
             docker rm $CONTAINER_ID
             mv ./cloudpillar.zip ./cloudpillar-$(imageName)-$(parameters.imagetag).$(variables.timelabel).zip
