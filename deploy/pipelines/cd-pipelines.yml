@@ -19,7 +19,13 @@ parameters:
   - Iotlistener
   - Keyholder  
 trigger:
-- none
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
 stages:
   
 - stage: CI_Stage
