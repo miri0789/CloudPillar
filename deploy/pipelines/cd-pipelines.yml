@@ -33,7 +33,7 @@ stages:
   
 - stage: CI_Stage
   jobs:
-  - job: ${{ item }}_CI_Ablation_Job
+  - job: Agent CI Job
     pool:
       vmImage: ubuntu-latest
     steps:
