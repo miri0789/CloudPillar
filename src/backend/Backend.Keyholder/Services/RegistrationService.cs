@@ -1,7 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
+using Microsoft.Azure.Devices.Provisioning.Service;
+using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
+using System;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
 using System.Text;
 public class RegistrationService : IRegistrationService
 {
@@ -14,7 +17,29 @@ public class RegistrationService : IRegistrationService
     {
         _loggerHandler = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
-    public Task Register(string deviceName, string OneMDKey, string iotHubHostName)
+
+
+    // Export the certificate to a PFX file (password-protected)
+    // var pfxBytes = certificate.Export(
+    //     X509ContentType.Pkcs12, "1234");
+
+    // string base64Certificate = Convert.ToBase64String(certificate.Export(X509ContentType.Cert));
+
+    // // Save the certificate to a file
+    // System.IO.File.WriteAllText("YourCertificate5.cer", base64Certificate);
+
+    // // Save the certificate to a file
+    // System.IO.File.WriteAllBytes("YourCertificate5.pfx", pfxBytes);
+    public async Task Register(string deviceId, string OneMDKey, string iotHubHostName)
+    {
+        var certificate = GenerateCertificate(deviceId, OneMDKey, iotHubHostName);
+        await CreateEnrollmentAsync(certificate, deviceId, iotHubHostName);
+        SendCertificateToAgent(certificate);
+    }
+
+
+
+    private X509Certificate2 GenerateCertificate(string deviceName, string OneMDKey, string iotHubHostName)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(deviceName);
         ArgumentNullException.ThrowIfNullOrEmpty(OneMDKey);
@@ -47,20 +72,43 @@ public class RegistrationService : IRegistrationService
                 DateTimeOffset.Now.AddDays(-1),
                 DateTimeOffset.Now.AddDays(30));
 
+            return certificate;
 
 
-            // Export the certificate to a PFX file (password-protected)
-            var pfxBytes = certificate.Export(
-                X509ContentType.Pkcs12, "1234");
-
-            string base64Certificate = Convert.ToBase64String(certificate.Export(X509ContentType.Cert));
-
-            // // Save the certificate to a file
-            // System.IO.File.WriteAllText("YourCertificate5.cer", base64Certificate);
-
-            // // Save the certificate to a file
-            // System.IO.File.WriteAllBytes("YourCertificate5.pfx", pfxBytes);
         }
+    }
+
+    private async Task CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId, string iotHubHostName)
+    {
+        using (ProvisioningServiceClient provisioningServiceClient =
+                    ProvisioningServiceClient.CreateFromConnectionString("HostName=DPS-Bracha.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=f3+8+rqrtH0T7nlSuIshUSn2K6rbIb7mUHQwTcztRzg="))
+        {
+
+
+            try
+            {
+                var cer = new X509Certificate2(certificate.Export(X509ContentType.Cert));
+                Attestation attestation = X509Attestation.CreateFromClientCertificates(cer);
+
+                var individualEnrollment = new IndividualEnrollment(deviceId, attestation)
+                {
+                    ProvisioningStatus = ProvisioningStatus.Enabled,
+                    DeviceId = deviceId,
+                    IotHubHostName = iotHubHostName
+                };
+
+                var result = await provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);
+
+            }
+            catch (Exception ex)
+            {
+                _loggerHandler.Error("asdasda", ex);
+            }
+        }
+    }
+
+    private void SendCertificateToAgent(X509Certificate2 certificate)
+    {
 
     }
 }
