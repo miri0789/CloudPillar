@@ -32,6 +32,17 @@ trigger:
 stages:
   
 - stage: CI_Stage
+  
+  jobs:
+  - job: RUN_UNITTESTS
+  - task: DotNetCoreCLI@2
+    displayName: Unit Tests
+    inputs:
+      command: test
+      projects: |
+        **/*Tests/*.csproj
+      arguments: '--configuration $(buildConfiguration)'
+
   jobs:
   - job: Agent_CI_Job
     pool:
