@@ -34,7 +34,7 @@ stages:
 - stage: CI_Stage
   
   jobs:
-  - job: RUN_UNITTESTS
+  - job: Run_UnitTests
     steps:
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to NuGet'
