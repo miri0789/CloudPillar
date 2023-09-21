@@ -1,7 +1,7 @@
 
 locals {
   devopsURL = "https://dev.azure.com/BiosenseWebsterIs"
-  agentPool = "Cloud-Pillar-Pool"
+  agentPool = "CloudPillar-Pool"
   aks_vm_custom_data = <<CUSTOM_DATA
 #!/bin/bash
 set -x
@@ -29,7 +29,7 @@ mv ./kubectl /usr/local/bin/kubectl
 export PATH=$PATH:/usr/local/bin/kubectl
 su azureuser -c 'cd ~; mkdir myagent && cd myagent && curl -LsS https://vstsagentpackage.azureedge.net/agent/3.220.0/vsts-agent-linux-x64-3.220.0.tar.gz -o vstsagent.tar.gz && tar -zxvf vstsagent.tar.gz'
 
-su azureuser -c 'cd ~/myagent && ./config.sh --unattended --url "${local.devopsURL}" --auth pat --token "${azurerm_key_vault_secret.kv_pat.value}" --pool "${local.agentPool}" --agent "aks-${var.env}-vm-agent" --work _work --runAsService'
+su azureuser -c 'cd ~/myagent && ./config.sh --unattended --url "${local.devopsURL}" --auth pat --token "${azurerm_key_vault_secret.kv_pat.value}" --pool "${local.agentPool}" --agent "cpaks-${var.env}-vm-agent" --work _work --runAsService'
 cd /home/azureuser/myagent && ./svc.sh install azureuser
 cd /home/azureuser/myagent && ./svc.sh start
 su azureuser -c 'cd ~/ && git clone https://${azurerm_key_vault_secret.kv_pat.value}@dev.azure.com/BiosenseWebsterIs/CloudPillar/_git/CloudPillar'

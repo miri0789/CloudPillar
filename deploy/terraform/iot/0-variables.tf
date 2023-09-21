@@ -8,7 +8,3 @@ variable "env" {
   description = "The environment to assign the resources"
   default = "dev"
 }
-variable "subscription_id" {
-  type = string
-  default = "a147112f-bc59-4e9e-ac2f-5b4585e6542e"
-}
