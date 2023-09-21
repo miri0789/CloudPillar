@@ -1,4 +1,6 @@
 parameters:
+- name: TIMELABEL
+  value: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
 - name: imagetag
   type: string
   default: $(Build.BuildNumber)
@@ -30,7 +32,6 @@ stages:
   
 - stage: CI_Stage
   jobs:
-  - ${{each item in parameters.services}}:
     - job: ${{ item }}_CI_Platform_Job
       pool:
         vmImage: ubuntu-latest
@@ -38,28 +39,59 @@ stages:
         - task: NuGetAuthenticate@1
           displayName: 'Authenticate to NuGet'
 
-        # - task: Docker@2
-        #   displayName: '${{ item }} service dockerize'
-        #   inputs:
-        #     repository: 'cloudpillar${{ lower(item) }}service'
-        #     containerRegistry: 'CP ${{ parameters.env }} docker registry'
-        #     command: 'build'
-        #     Dockerfile: './src/backend/infra/build/Dockerfile'
-        #     buildContext: src
-        #     tags: '$(Build.BuildNumber)'
-        #     arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
-        
-        # - script: |
-        #     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
-        #   displayName: 'Security Scan with Trivy'
+        - ${{each item in parameters.services}}:
+          - task: Docker@2
+            displayName: '${{ item }} service Dockerize'
+            inputs:
+              repository: 'cloudpillar${{ lower(item) }}service'
+              containerRegistry: 'CP ${{ parameters.env }} docker registry'
+              command: 'build'
+              Dockerfile: './src/backend/infra/build/Dockerfile'
+              buildContext: src
+              tags: '$(imagetag).$(TIMELABEL)'
+              arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
           
+          - script: |
+              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
+            displayName: 'Security Scan with Trivy'
+
+        - task: Docker@2
+          displayName: Agent Dockerize
+          inputs:
+            command: build
+            repository: agent
+            dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
+            buildContext: src
+            tags: aux-build
+            arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+         
+        - script: |
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
+          displayName: 'Agent Security Scan with Trivy'     
+
+        - script: |
+            CONTAINER_ID=$(docker create $(imageName):aux-build)
+            docker cp $CONTAINER_ID:/app/cloudpillar.zip .
+            docker rm $CONTAINER_ID
+            mv ./cloudpillar.zip ./cloudpillar-$(imageName)-$(imagetag).$(TIMELABEL).zip
+            ls -al ./cloudpillar-$(imageName)-$(imagetag).$(TIMELABEL).zip
+          condition: eq(variables.processedImage, true)
+          displayName: 'Extract POC cloudpillar.zip from Image'
+
+        - task: PublishBuildArtifacts@1
+          condition: eq(variables.processedImage, true)
+          displayName: 'Publish cloudpillar.zip to Artifacts'
+          inputs:
+            pathtoPublish: ./cloudpillar-agent-$(imagetag).$(TIMELABEL).zip
+            artifactName: 'cloudpillar'
+            publishLocation: 'Container'  
         # - task: Docker@2
         #   displayName: 'Docker Push'
         #   inputs:
         #     command: 'push' 
         #     repository: 'cloudpillar${{ lower(item) }}service'
         #     containerRegistry: 'CP ${{ parameters.env }} docker registry'
-        #     tags: '$(Build.BuildNumber)'
+        #     tags: '$(imagetag).$(TIMELABEL)'
         
         - script: |
             $files=$(git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion))
