@@ -43,7 +43,6 @@ stages:
         **/*Tests/*.csproj
       arguments: '--configuration $(buildConfiguration)'
 
-  jobs:
   - job: Agent_CI_Job
     pool:
       vmImage: ubuntu-latest
