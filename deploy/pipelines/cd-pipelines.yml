@@ -44,7 +44,7 @@ stages:
             arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
         
         - script: |
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL registry/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cpdevacr/cloudpillar${{ lower(item) }}service:$(Build.BuildNumber)
           displayName: 'Security Scan with Trivy'
           
         - task: Docker@2
