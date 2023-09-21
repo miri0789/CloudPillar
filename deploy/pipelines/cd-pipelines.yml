@@ -36,7 +36,7 @@ stages:
           displayName: '${{ item }} service dockerize'
           inputs:
             repository: 'cloudpillar${{ lower(item) }}service'
-            containerRegistry: 'CP dev docker registry'
+            containerRegistry: 'cpdevacr'
             command: 'build'
             Dockerfile: './src/backend/infra/build/Dockerfile'
             buildContext: src
