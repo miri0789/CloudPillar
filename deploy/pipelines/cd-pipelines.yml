@@ -72,7 +72,7 @@ stages:
           
   - job: CD_Job
     pool:
-      name: AKS-Private-Cluster-Pool
+      name: Cloud-Pillar-Pool
       demands:
       - agent.name -equals aks-${{ parameters.env }}-vm-agent
     steps:
