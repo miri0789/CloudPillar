@@ -46,6 +46,10 @@ stages:
         kubernetesCluster: 'cp-${{ parameters.env }}-aks'
         command: 'ls'
         arguments: --all
+    - script: |
+        helm list -n default
+        helm uninstall cloudpillarback -n default
+        helm list -n default
     - task: HelmDeploy@0
       inputs:
         connectionType: 'Azure Resource Manager'
