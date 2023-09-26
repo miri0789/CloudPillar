@@ -12,7 +12,11 @@
     <PackageReference Include="Microsoft.Azure.Devices" Version="1.39.0" />
     <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="7.0.5" />
+<<<<<<< HEAD
     <PackageReference Include="SharedEntities" Version="1.0.69" />
+=======
+    <PackageReference Include="SharedEntities" Version="1.0.66" />
+>>>>>>> ef7c84fc7b36d7338fca7e0a31c66c7c75f9dbd3
     <PackageReference Include="SharedLogger" Version="1.0.10" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" /> 
     <!-- 05/2023: This package has no known vulnerabilities. https://nuget.qite.be/feeds/Default/Swashbuckle.AspNetCore.SwaggerUI/versions/vulnerabilities -->

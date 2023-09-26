@@ -4,6 +4,7 @@ using CloudPillar.Agent.Handlers;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -12,6 +13,7 @@ namespace CloudPillar.Agent.Tests
     {
         private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
         private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
+        private Mock<ILoggerHandler> _loggerHandlerMock;
         private IFileDownloadHandler _target;
 
         private DownloadAction _downloadAction = new DownloadAction()
@@ -31,7 +33,8 @@ namespace CloudPillar.Agent.Tests
         {
             _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
-            _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object, _d2CMessengerHandlerMock.Object);
+            _loggerHandlerMock = new Mock<ILoggerHandler>();
+            _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object, _d2CMessengerHandlerMock.Object, _loggerHandlerMock.Object);
         }
 
 

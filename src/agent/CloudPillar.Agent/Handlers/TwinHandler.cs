@@ -10,12 +10,16 @@ using Shared.Logger;
 using Newtonsoft.Json.Converters;
 
 namespace CloudPillar.Agent.Handlers;
+
+
 public class TwinHandler : ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
+    private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
+    private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
 
     private readonly ILoggerHandler _logger;
@@ -23,12 +27,16 @@ public class TwinHandler : ITwinHandler
                        IFileDownloadHandler fileDownloadHandler,
                        IFileUploaderHandler fileUploaderHandler,
                        ITwinActionsHandler twinActionsHandler,
-                       ILoggerHandler loggerHandler)
+                       ILoggerHandler loggerHandler,
+                       IRuntimeInformationWrapper runtimeInformationWrapper,
+                       IFileStreamerWrapper fileStreamerWrapper)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
+        _runtimeInformationWrapper = runtimeInformationWrapper ?? throw new ArgumentNullException(nameof(runtimeInformationWrapper));
+        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _supportedShells = GetSupportedShells();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -205,7 +213,7 @@ public class TwinHandler : ITwinHandler
             var supportedShellsKey = nameof(TwinReported.SupportedShells);
             await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells);
             var agentPlatformKey = nameof(TwinReported.AgentPlatform);
-            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, RuntimeInformation.OSDescription);
+            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, _runtimeInformationWrapper.GetOSDescription());
             _logger.Info("InitReportedDeviceParams success");
         }
         catch (Exception ex)
@@ -239,22 +247,22 @@ public class TwinHandler : ITwinHandler
         const string linuxPsPath2 = @"/usr/local/bin/pwsh";
 
         var supportedShells = new List<ShellType>();
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (_runtimeInformationWrapper.IsOSPlatform(OSPlatform.Windows))
         {
             supportedShells.Add(ShellType.Cmd);
             supportedShells.Add(ShellType.Powershell);
             // Check if WSL is installed
-            if (File.Exists(windowsBashPath))
+            if (_fileStreamerWrapper.Exists(windowsBashPath))
             {
                 supportedShells.Add(ShellType.Bash);
             }
         }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        else if (_runtimeInformationWrapper.IsOSPlatform(OSPlatform.Linux) || _runtimeInformationWrapper.IsOSPlatform(OSPlatform.OSX))
         {
             supportedShells.Add(ShellType.Bash);
 
             // Add PowerShell if it's installed on Linux or macOS
-            if (File.Exists(linuxPsPath1) || File.Exists(linuxPsPath2))
+            if (_fileStreamerWrapper.Exists(linuxPsPath1) || _fileStreamerWrapper.Exists(linuxPsPath2))
             {
                 supportedShells.Add(ShellType.Powershell);
             }

@@ -5,6 +5,7 @@ using Microsoft.Azure.Devices.Client;
 using System.Text;
 using Newtonsoft.Json;
 using Shared.Logger;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Tests
 {
