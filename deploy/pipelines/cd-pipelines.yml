@@ -55,10 +55,9 @@ stages:
         command: 'delete'
         # chartType: 'FilePath'
         # chartPath: 'deploy/backend/'
-        # releaseName: 'cloudpillarback'
+        releaseName: 'cloudpillarback'
         # valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
         namespace: default
-        arguments: --purge cloudpillarback
     - task: HelmDeploy@0
       inputs:
         azureSubscription: CloudPillar Dev
