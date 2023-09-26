@@ -1,0 +1,13 @@
+"changeSpec": {
+  "id": "1.14.61047.38115.20230418180124",
+  "patch": {
+    "transitPackage": [
+      {
+        "action": "singularUpload",
+        "description": "Periodically (once in 10min) upload wifi logging",
+        "filename": "c:\\demo\\stream2.jpg",
+        "method": "Stream"
+      }
+    ]
+  }
+}

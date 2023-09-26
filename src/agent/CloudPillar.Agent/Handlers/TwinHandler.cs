@@ -5,9 +5,9 @@ using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Shared.Logger;
+using Newtonsoft.Json.Converters;
 
 namespace CloudPillar.Agent.Handlers;
 public class TwinHandler : ITwinHandler
@@ -15,17 +15,20 @@ public class TwinHandler : ITwinHandler
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
+    private readonly ITwinActionsHandler _twinActionsHandler;
     private readonly IEnumerable<ShellType> _supportedShells;
 
     private readonly ILoggerHandler _logger;
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
                        IFileUploaderHandler fileUploaderHandler,
+                       ITwinActionsHandler twinActionsHandler,
                        ILoggerHandler loggerHandler)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
+        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _supportedShells = GetSupportedShells();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -59,7 +62,6 @@ public class TwinHandler : ITwinHandler
         }
 
     }
-
     private async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec)
     {
         var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
@@ -92,14 +94,14 @@ public class TwinHandler : ITwinHandler
                         var twinReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         if (twinReport != null)
                         {
-                            await UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
+                            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
                         }
                         break;
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
                         var actionToReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
-                        await UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
+                        await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;
 
                     default:
@@ -110,7 +112,7 @@ public class TwinHandler : ITwinHandler
                 }
                 //TODO : queue - FIFO
                 // https://dev.azure.com/BiosenseWebsterIs/CloudPillar/_backlogs/backlog/CloudPillar%20Team/Epics/?workitem=9782
-                await UpdateReportActionAsync(new List<ActionToReport>() { action });
+                await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action });
             }
         }
         catch (Exception ex)
@@ -118,7 +120,6 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
     }
-
     private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
     {
         try
@@ -211,29 +212,6 @@ public class TwinHandler : ITwinHandler
         {
             _logger.Error($"InitReportedDeviceParams failed: {ex.Message}");
         }
-    }
-
-    public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported)
-    {
-        try
-        {
-            var twin = await _deviceClient.GetTwinAsync();
-            string reportedJson = twin.Properties.Reported.ToJson();
-            var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-            actionsToReported.ToList().ForEach(actionToReport =>
-            {
-                var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
-                var reportedValue = (TwinActionReported[])reportedProp.GetValue(twinReported.ChangeSpec.Patch);
-                reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
-                reportedProp.SetValue(twinReported.ChangeSpec.Patch, reportedValue);
-            });
-            await UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UpdateReportedAction failed: {ex.Message}");
-        }
-
     }
 
     public async Task<string> GetTwinJsonAsync()

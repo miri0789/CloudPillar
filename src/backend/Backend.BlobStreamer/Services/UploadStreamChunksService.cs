@@ -2,7 +2,7 @@ using Microsoft.Azure.Storage.Blob;
 using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
 using Shared.Entities.Services;
-using Shared.Enums;
+using System.Text.RegularExpressions;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -54,7 +54,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     {
                         await VerifyStreamChecksum(checkSum, blob);
                     }
-
                 }
             }
         }
@@ -71,9 +70,29 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         await blob.DownloadToStreamAsync(azureStream);
 
         string newCheckSum = await _checkSumService.CalculateCheckSumAsync(azureStream);
-        if (newCheckSum.Equals(originalCheckSum))
-        {
+        var uploadSuccess = newCheckSum.Equals(originalCheckSum);
 
+        //update metadata
+        var key = GenerateValidMetadataKey(blob.Uri.AbsoluteUri.Split("/").Last().Split("%2F").Last());
+        blob.Metadata[key] = uploadSuccess.ToString();
+        await blob.SetMetadataAsync();
+
+        //TO DO
+        //when failed ->  add recipe to desired
+    }
+
+    private string GenerateValidMetadataKey(string fileName)
+    {
+        // Remove invalid characters and ensure uniqueness
+        string validKey = Regex.Replace(fileName, @"[^a-zA-Z0-9_]", "_");
+        string uniqueKey = validKey;//+ "_" + Guid.NewGuid().ToString("N");
+
+        // Ensure that the key is within the length limit (maximum of 128 characters)
+        if (uniqueKey.Length > 128)
+        {
+            uniqueKey = uniqueKey.Substring(0, 128);
         }
+
+        return uniqueKey;
     }
 }
