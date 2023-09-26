@@ -72,10 +72,18 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         string newCheckSum = await _checkSumService.CalculateCheckSumAsync(azureStream);
         var uploadSuccess = newCheckSum.Equals(originalCheckSum);
 
-        if (!uploadSuccess)
+        if (uploadSuccess)
         {
+            _logger.Debug($"Blobstreamer UploadFromStreamAsync: File uploaded successfully");
+        }
+        else
+        {
+            _logger.Debug($"Blobstreamer UploadFromStreamAsync Failed");
+            
             //TO DO
             //add recipe to desired
         }
+
+
     }
 }
