@@ -52,7 +52,7 @@ stages:
         azureSubscription: CloudPillar Dev
         azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
         kubernetesCluster: 'cp-${{ parameters.env }}-aks'
-        command: 'delete'
+        command: 'uninstall'
         chartType: 'FilePath'
         chartPath: 'deploy/backend/'
         releaseName: 'cloudpillarback'
