@@ -52,12 +52,11 @@ stages:
         azureSubscription: CloudPillar Dev
         azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
         kubernetesCluster: 'cp-${{ parameters.env }}-aks'
-        command: 'rollback'
+        command: 'delete'
         chartType: 'FilePath'
         chartPath: 'deploy/backend/'
         releaseName: 'cloudpillarback'
         valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
-        arguments: '--revision 4'
     - task: HelmDeploy@0
       inputs:
         azureSubscription: CloudPillar Dev
