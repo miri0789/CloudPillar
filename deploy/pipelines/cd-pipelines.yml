@@ -47,9 +47,11 @@ stages:
         command: 'ls'
         arguments: --all
     - script: |
-        helm list -n default
-        helm uninstall cloudpillarback -n default
-        helm list -n default
+        helm list --all
+    - script: |
+        helm list --all
+        helm delete cloudpillarback
+        helm list --all
     - task: HelmDeploy@0
       inputs:
         connectionType: 'Azure Resource Manager'
