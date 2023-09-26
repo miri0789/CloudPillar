@@ -149,7 +149,6 @@ stages:
         command: 'upgrade'
         chartType: 'FilePath'
         chartPath: 'deploy/backend/templates'
-        releaseName: 'cartonet'
         overrideValues: 'image.tag=${{ parameters.imagetag }}.$(timelabel)'
         valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
         arguments: '--debug --timeout 20m0s'
