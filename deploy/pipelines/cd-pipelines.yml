@@ -108,7 +108,15 @@ stages:
         - script: |
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag)
           displayName: '${{ item }} Security Scan'
-            
+        - script: |
+            SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
+            echo "$SCAN_RESULT"  # For debugging purposes, to see the scan result in the build logs
+            if [[ $SCAN_RESULT == *"HIGH"* ]]; then
+              echo "Critical vulnerabilities found. Failing the pipeline."
+              exit 1  # This will cause the pipeline to fail
+            fi
+          displayName: 'Security Scan'
+
         - task: Docker@2
           displayName: '${{ item }} Docker Push'
           inputs:
