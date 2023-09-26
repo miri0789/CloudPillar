@@ -1,6 +1,8 @@
 variables:
+- name: timelabel
+  value: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
 - name: imagetag
-  value: 1.0.$(Build.BuildNumber).$(format('{0:yyyyMMddHHmmss}', pipeline.startTime))
+  value: 1.0.$(Build.BuildNumber).$(timelabel)
 parameters:
 - name: env
   displayName: Select Environment to deploy
