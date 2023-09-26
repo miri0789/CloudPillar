@@ -158,6 +158,9 @@ stages:
     - task: HelmDeploy@0
       inputs:
         connectionType: 'Azure Resource Manager'
+        azureSubscription: CloudPillar Dev
+        azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
+        kubernetesCluster: 'cp-${{ parameters.env }}-aks'
         command: 'rollback'
         chartType: 'FilePath'
         chartPath: 'deploy/backend/'
