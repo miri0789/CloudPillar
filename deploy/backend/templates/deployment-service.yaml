@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: {{ .title }}
-        image: "{{ $.Values.image.acr }}/{{ .title }}:{{ .tag | default $.Values.image.tag }}"
+        image: "{{ $.Values.image.acr }}/cloudpillar{{ .title }}service:{{ .tag | default $.Values.image.tag }}"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

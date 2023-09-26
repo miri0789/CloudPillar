@@ -3,10 +3,10 @@
 # Declare variables to be passed into your templates.
 
 controllers:
-  - title: "analyzer"
-  - title: "beapi"
-    path: /cloudpillar/api
-    port: 8089
+  # - title: "analyzer"
+  # - title: "beapi"
+  #   path: /cloudpillar/api
+  #   port: 8089
   - title: "blobstreamer"
     port: 8089
     env:
@@ -78,6 +78,6 @@ replicaCount: 1
 #     value: DevEU
 
 image:
-  acr: "iotimageacr.azurecr.io"
+  acr: "cpdevacr.azurecr.io"
   tag: latest
 

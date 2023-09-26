@@ -4,7 +4,7 @@ terraform {
     resource_group_name  = "cp-tf-rg"
     storage_account_name = "tfcp"
     container_name       = "tfstate"
-    key                  = "aks.tfstate"
+    key                  = "iot.tfstate"
   }
   required_version = ">=0.12"
 
