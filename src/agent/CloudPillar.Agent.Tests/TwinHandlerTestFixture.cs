@@ -18,7 +18,7 @@ public class TwinHandlerTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientMock;
     private Mock<IFileDownloadHandler> _fileDownloadHandlerMock;
     private Mock<IFileUploaderHandler> _fileUploaderHandlerMock;
-    private Mock<ILoggerHandler> _loggerMock;
+    private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private ITwinHandler _target;
@@ -42,7 +42,7 @@ public class TwinHandlerTestFixture
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _fileDownloadHandlerMock = new Mock<IFileDownloadHandler>();
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
-        _loggerMock = new Mock<ILoggerHandler>();
+        _loggerHandlerMock = new Mock<ILoggerHandler>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
         CreateTarget();
@@ -53,7 +53,7 @@ public class TwinHandlerTestFixture
 
         _target = new TwinHandler(_deviceClientMock.Object,
           _fileDownloadHandlerMock.Object,
-          _fileUploaderHandler.Object,
+          _fileUploaderHandlerMock.Object,
           _loggerHandlerMock.Object,
           _runtimeInformationWrapper.Object,
           _fileStreamerWrapper.Object);
