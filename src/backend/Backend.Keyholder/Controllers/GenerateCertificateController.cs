@@ -23,10 +23,10 @@ public class GenerateCertificateController : ControllerBase
 
     [HttpPost("GenerateCertificateForAgent")]
 
-    public IActionResult GenerateCertificateForAgent(string deviceId, string OneMDKey, string iotHubHostName)
+    public IActionResult GenerateCertificateForAgent(string deviceId, string OneMDKey, string iotHubHostName, string password)
     {
 
-        _registrationService.Register(deviceId, OneMDKey, iotHubHostName);
+        _registrationService.Register(deviceId, OneMDKey, iotHubHostName, password);
 
         return Ok();
     }

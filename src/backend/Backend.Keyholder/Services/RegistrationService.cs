@@ -6,6 +6,10 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Text;
+using Shared.Entities.Messages;
+using Shared.Entities.Factories;
+using Shared.Entities.DeviceClient;
+
 public class RegistrationService : IRegistrationService
 {
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
@@ -13,8 +17,13 @@ public class RegistrationService : IRegistrationService
     private const int KEY_SIZE_IN_BITS = 4096;
     private readonly ILoggerHandler _loggerHandler;
 
-    public RegistrationService(ILoggerHandler loggerHandler)
+    private  readonly IMessageFactory _messageFactory;
+    private readonly IDeviceClientWrapper _deviceClientWrapper;
+
+    public RegistrationService(IMessageFactory messageFactory, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler loggerHandler)
     {
+        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
+        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _loggerHandler = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
@@ -30,11 +39,11 @@ public class RegistrationService : IRegistrationService
 
     // // Save the certificate to a file
     // System.IO.File.WriteAllBytes("YourCertificate5.pfx", pfxBytes);
-    public async Task Register(string deviceId, string OneMDKey, string iotHubHostName)
+    public async Task Register(string deviceId, string OneMDKey, string iotHubHostName, string password)
     {
         var certificate = GenerateCertificate(deviceId, OneMDKey, iotHubHostName);
         await CreateEnrollmentAsync(certificate, deviceId, iotHubHostName);
-        SendCertificateToAgent(certificate);
+        await SendCertificateToAgent(certificate, password);
     }
 
 
@@ -84,7 +93,6 @@ public class RegistrationService : IRegistrationService
                     ProvisioningServiceClient.CreateFromConnectionString("HostName=DPS-Bracha.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=f3+8+rqrtH0T7nlSuIshUSn2K6rbIb7mUHQwTcztRzg="))
         {
 
-
             try
             {
                 var cer = new X509Certificate2(certificate.Export(X509ContentType.Cert));
@@ -107,8 +115,19 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    private void SendCertificateToAgent(X509Certificate2 certificate)
+    private async Task SendCertificateToAgent(X509Certificate2 certificate, string password)
     {
-
+        var pfxBytes = certificate.Export(X509ContentType.Pkcs12, password);
+        string certificateBase64 = Convert.ToBase64String(pfxBytes);
+        var deviceId = "YourDeviceId"; // Replace with the device ID of the target device.
+        var message = new RegisterCertificateMessage()
+        {
+            Certificate = certificateBase64,
+            Password = password
+        };
+        var c2dMessage =  _messageFactory.PrepareC2DMessage(message);
+        var device =  _deviceClientWrapper.CreateFromConnectionString("a");
+        _deviceClientWrapper.SendAsync(device, deviceId, c2dMessage);
+        // await serviceClient.SendAsync(deviceId, c2dMessage);
     }
 }
