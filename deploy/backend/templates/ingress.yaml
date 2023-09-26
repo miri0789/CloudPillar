@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress
+  name: iotingress
   annotations:
     appgw.ingress.kubernetes.io/health-probe-path: /api/version
     appgw.ingress.kubernetes.io/use-private-ip: 'true'

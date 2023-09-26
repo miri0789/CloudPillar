@@ -8,6 +8,7 @@ controllers:
   #   path: /cloudpillar/api
   #   port: 8089
   - title: "blobstreamer"
+    path: /blobstreamer
     port: 8089
     env:
     - name: BlobContainerName
@@ -58,6 +59,7 @@ controllers:
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
+    path: /keyholder
     port: 8089
     env:
     - name: KubernetesServiceHost
