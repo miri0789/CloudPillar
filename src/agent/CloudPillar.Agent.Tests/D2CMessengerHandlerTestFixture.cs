@@ -5,11 +5,8 @@ using Microsoft.Azure.Devices.Client;
 using System.Text;
 using Newtonsoft.Json;
 using Shared.Logger;
-<<<<<<< HEAD
-using Microsoft.Azure.Devices.Client.Transport;
-=======
->>>>>>> ef7c84fc7b36d7338fca7e0a31c66c7c75f9dbd3
 using Shared.Entities.Messages;
+using System.Security.Cryptography;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -29,10 +26,12 @@ namespace CloudPillar.Agent.Tests
         private const int MQQT_KB = 32 * KB;
         private Uri STORAGE_URI = new Uri("https://nechama.blob.core.windows.net/nechama-container");
         private MemoryStream READ_STREAM = new MemoryStream(new byte[] { 1, 2, 3 });
+        private string checkSum;
 
         [SetUp]
         public void Setup()
         {
+            checkSum = CalculateMdsCheckSumAsync(READ_STREAM).Result;
             _deviceClientMock = new Mock<IDeviceClientWrapper>();
             _loggerMock = new Mock<ILoggerHandler>();
 
@@ -72,7 +71,7 @@ namespace CloudPillar.Agent.Tests
 
             _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).Returns(Task.CompletedTask);
 
-            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION);
+            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION, checkSum);
             _deviceClientMock.Verify(dc => dc.SendEventAsync(It.IsAny<Message>()), Times.Once);
         }
 
@@ -85,7 +84,7 @@ namespace CloudPillar.Agent.Tests
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION);
+                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION, checkSum);
             });
 
         }
@@ -99,6 +98,18 @@ namespace CloudPillar.Agent.Tests
                   firmwareUpdateEvent.FileName == fileName &&
                   firmwareUpdateEvent.ActionId == actionId &&
                   firmwareUpdateEvent.EndPosition == endPosition;
+        }
+
+        private async Task<string> CalculateMdsCheckSumAsync(Stream stream)
+        {
+            using (var md5 = MD5.Create())
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                byte[] hashBytes = await MD5.Create().ComputeHashAsync(stream);
+                stream.Seek(0, SeekOrigin.Begin);
+                string checkSum = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+                return checkSum;
+            }
         }
 
     }
