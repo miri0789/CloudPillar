@@ -5,7 +5,10 @@ using Microsoft.Azure.Devices.Client;
 using System.Text;
 using Newtonsoft.Json;
 using Shared.Logger;
+<<<<<<< HEAD
 using Microsoft.Azure.Devices.Client.Transport;
+=======
+>>>>>>> ef7c84fc7b36d7338fca7e0a31c66c7c75f9dbd3
 using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Tests
