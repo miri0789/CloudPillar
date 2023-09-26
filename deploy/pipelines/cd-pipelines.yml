@@ -1,10 +1,7 @@
 variables:
-- name: timelabel
-  value: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
-parameters:
 - name: imagetag
-  type: string
-  default: $(Build.BuildNumber)
+  value: 1.0.$(Build.BuildNumber).$[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
+parameters:
 - name: env
   displayName: Select Environment to deploy
   type: string
@@ -77,14 +74,14 @@ stages:
   #       docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL agent:aux-build
   #       docker cp $CONTAINER_ID:/app/cloudpillar.zip .
   #       docker rm $CONTAINER_ID
-  #       mv ./cloudpillar.zip ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
-  #       ls -al ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
+  #       mv ./cloudpillar.zip ./cloudpillar-agent-${{ parameters.imagetag }}.zip
+  #       ls -al ./cloudpillar-agent-${{ parameters.imagetag }}.zip
   #     displayName: 'Run Agent Security Scan & Extract cloudpillar.zip from Image'
 
   #   - task: PublishBuildArtifacts@1
   #     displayName: 'Publish cloudpillar.zip to Artifacts'
   #     inputs:
-  #       pathtoPublish: ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
+  #       pathtoPublish: ./cloudpillar-agent-${{ parameters.imagetag }}.zip
   #       artifactName: 'cloudpillar'
   #       publishLocation: 'Container'  
 
@@ -103,11 +100,11 @@ stages:
             command: 'build'
             Dockerfile: './src/backend/infra/build/Dockerfile'
             buildContext: src
-            tags: '${{ parameters.imagetag }}.$(timelabel)'
+            tags: '${{ parameters.imagetag }}'
             arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
             
         - script: |
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:${{ parameters.imagetag }}.$(timelabel)
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:${{ parameters.imagetag }}
           displayName: '${{ item }} Security Scan'
             
         - task: Docker@2
@@ -116,7 +113,7 @@ stages:
             command: 'push' 
             repository: 'cloudpillar${{ lower(item) }}service'
             containerRegistry: 'cp ${{ parameters.env }} docker registry'
-            tags: '${{ parameters.imagetag }}.$(timelabel)'
+            tags: '${{ parameters.imagetag }}'
 
 
 - stage: CD_Stage
@@ -135,6 +132,7 @@ stages:
           az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
           
   - job: CD_Job
+    dependsOn: Start_VM_Job
     pool:
       name: CloudPillar-Pool
       demands:
@@ -149,7 +147,8 @@ stages:
         command: 'upgrade'
         chartType: 'FilePath'
         chartPath: 'deploy/backend/'
-        overrideValues: 'image.tag=${{ parameters.imagetag }}.$(timelabel)'
+        releaseName: 'cloudpillarback'
+        overrideValues: 'image.tag=${{ parameters.imagetag }}'
         valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
         arguments: '--debug --timeout 20m0s'
         
