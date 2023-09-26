@@ -150,6 +150,9 @@ stages:
     steps:
     - task: HelmDeploy@0
       inputs:
+        command: 'ls'
+    - task: HelmDeploy@0
+      inputs:
         connectionType: 'Azure Resource Manager'
         azureSubscription: CloudPillar Dev
         azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
