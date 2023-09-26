@@ -34,7 +34,6 @@ stages:
   
   jobs:
   - job: CD_Job
-    dependsOn: Start_VM_Job
     pool:
       name: CloudPillar-Pool
       demands:
