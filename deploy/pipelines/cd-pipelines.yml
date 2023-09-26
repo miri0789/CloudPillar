@@ -146,7 +146,6 @@ stages:
         kubernetesCluster: 'cp-${{ parameters.env }}-aks'
         command: 'upgrade'
         chartType: 'FilePath'
-        releaseName: 'cloudpillarback'
         chartPath: 'deploy/backend/'
         releaseName: 'cloudpillarback'
         overrideValues: 'image.tag=${{ parameters.imagetag }}'
