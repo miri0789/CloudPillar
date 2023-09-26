@@ -46,23 +46,17 @@ stages:
         kubernetesCluster: 'cp-${{ parameters.env }}-aks'
         command: 'ls'
         arguments: --all
-    - script: |
-        helm list --all
-    - script: |
-        helm list --all
-        helm delete cloudpillarback
-        helm list --all
     - task: HelmDeploy@0
-      inputs:
+      inputs:      
         connectionType: 'Azure Resource Manager'
         azureSubscription: CloudPillar Dev
         azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
         kubernetesCluster: 'cp-${{ parameters.env }}-aks'
-        command: 'uninstall'
-        chartType: 'FilePath'
-        chartPath: 'deploy/backend/'
-        releaseName: 'cloudpillarback'
-        valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
+        command: 'delete'
+        # chartType: 'FilePath'
+        # chartPath: 'deploy/backend/'
+        # releaseName: 'cloudpillarback'
+        # valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
         namespace: default
     - task: HelmDeploy@0
       inputs:
