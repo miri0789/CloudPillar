@@ -56,37 +56,37 @@ stages:
   #       testResultsFiles: '**/TestResults/*.trx'
 
 
-  - job: Agent_CI_Job
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: NuGetAuthenticate@1
-      displayName: 'Authenticate to NuGet'
-    - task: Docker@2
-      displayName: Agent Dockerize
-      inputs:
-        command: build
-        repository: agent
-        dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
-        buildContext: src
-        tags: aux-build
-        arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+  # - job: Agent_CI_Job
+  #   pool:
+  #     vmImage: ubuntu-latest
+  #   steps:
+  #   - task: NuGetAuthenticate@1
+  #     displayName: 'Authenticate to NuGet'
+  #   - task: Docker@2
+  #     displayName: Agent Dockerize
+  #     inputs:
+  #       command: build
+  #       repository: agent
+  #       dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
+  #       buildContext: src
+  #       tags: aux-build
+  #       arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
 
-    - script: |
-        CONTAINER_ID=$(docker create agent:aux-build)
-        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL agent:aux-build
-        docker cp $CONTAINER_ID:/app/cloudpillar.zip .
-        docker rm $CONTAINER_ID
-        mv ./cloudpillar.zip ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
-        ls -al ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
-      displayName: 'Run Agent Security Scan & Extract cloudpillar.zip from Image'
+  #   - script: |
+  #       CONTAINER_ID=$(docker create agent:aux-build)
+  #       docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL agent:aux-build
+  #       docker cp $CONTAINER_ID:/app/cloudpillar.zip .
+  #       docker rm $CONTAINER_ID
+  #       mv ./cloudpillar.zip ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
+  #       ls -al ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
+  #     displayName: 'Run Agent Security Scan & Extract cloudpillar.zip from Image'
 
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish cloudpillar.zip to Artifacts'
-      inputs:
-        pathtoPublish: ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
-        artifactName: 'cloudpillar'
-        publishLocation: 'Container'  
+  #   - task: PublishBuildArtifacts@1
+  #     displayName: 'Publish cloudpillar.zip to Artifacts'
+  #     inputs:
+  #       pathtoPublish: ./cloudpillar-agent-${{ parameters.imagetag }}.$(timelabel).zip
+  #       artifactName: 'cloudpillar'
+  #       publishLocation: 'Container'  
 
   - ${{each item in parameters.services}}:
       - job: '${{ item }}_CI_Job'
@@ -148,7 +148,7 @@ stages:
         kubernetesCluster: 'cp-${{ parameters.env }}-aks'
         command: 'upgrade'
         chartType: 'FilePath'
-        chartPath: 'deploy/backend/templates'
+        chartPath: 'deploy/backend/'
         overrideValues: 'image.tag=${{ parameters.imagetag }}.$(timelabel)'
         valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
         arguments: '--debug --timeout 20m0s'
