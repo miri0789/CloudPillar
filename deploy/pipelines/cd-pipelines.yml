@@ -57,7 +57,7 @@ stages:
         chartPath: 'deploy/backend/'
         releaseName: 'cloudpillarback'
         valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
-        arguments: --all
+        arguments: -n default
     - task: HelmDeploy@0
       inputs:
         azureSubscription: CloudPillar Dev
