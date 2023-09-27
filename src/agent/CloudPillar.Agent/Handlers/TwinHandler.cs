@@ -99,28 +99,24 @@ public class TwinHandler : ITwinHandler
                         break;
                     case TwinActionType.SingularUpload:
                         _logger.Info("Start SingularUpload");
-                        var twinReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
-                        if (twinReport != null)
-                        {
-                            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
-                        }
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+
                         break;
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
-                        var actionToReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
-                        await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         break;
 
                     default:
                         action.TwinReport.Status = StatusType.Failed;
                         action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
+                        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action });
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
                 //TODO : queue - FIFO
                 // https://dev.azure.com/BiosenseWebsterIs/CloudPillar/_backlogs/backlog/CloudPillar%20Team/Epics/?workitem=9782
-                await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action });
             }
         }
         catch (Exception ex)
