@@ -21,10 +21,7 @@ FROM build AS publish
 RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 
 # Use the official .NET Core Runtime image as the base image for the final stage
-FROM base AS final
-RUN useradd admin
-RUN chown -R admin:admin /app
-USER admin
+FROM mcr.microsoft.com/dotnet/runtime:7.0-alpine3.18-amd64 AS base
 WORKDIR /app
 COPY --from=publish /app/publish .
 ARG DLL
