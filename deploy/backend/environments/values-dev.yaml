@@ -31,33 +31,33 @@ controllers:
     #   valueFrom:
     #     fieldRef:
     #       fieldPath: metadata.namespace
-  - title: "iotlistener"
-    kind: StatefulSet
-    env:
-    - name: LogswriteTopic
-      value: "logswrite-topic"
-    - name: IothubEventHubCompatibleEndpoint
-      value: "Endpoint=sb://iothub-ns-cp-dev-iot-25265827-69d8d8cde4.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=9rvwvS9LH8uF2tv30QOjqZc0u3y9UlVTjAIoTCFYTQI=;EntityPath=cp-dev-iothub"
-    - name: IothubEventHubCompatiblePath
-      value: "cp-dev-iothub"
-    - name: StorageConnectionString
-      value: "DefaultEndpointsProtocol=https;AccountName=cpiotdevfiles;AccountKey=CSd3tecNZy82mqFfxvYB5PvoDbhQRjPWyJaMshFgz6WRshqcKURlqGKtZk2tFLQgh8VRdbCFLUqe+AStnJhc2g==;EndpointSuffix=core.windows.net"
-    - name: BlobContainerName
-      value: "iotcontainer"
-    - name: BlobStreamerUrl
-      value: "blobstreamer-service"
-    - name: SigningUrl
-      value: "keyholder-service"
-    - name: RangeCalculateType
-      value: "percent"
-    - name: RangePercent
-      value: "25"
-    - name: MessageTimeoutMinutes
-      value: "60"
-    - name: RangeBytes
-      value: "123456"
-    - name: IothubConnectionDeviceId
-      value: "iothub-connection-device-id"     
+  # - title: "iotlistener"
+  #   kind: StatefulSet
+  #   env:
+  #   - name: LogswriteTopic
+  #     value: "logswrite-topic"
+  #   - name: IothubEventHubCompatibleEndpoint
+  #     value: "Endpoint=sb://iothub-ns-cp-dev-iot-25265827-69d8d8cde4.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=9rvwvS9LH8uF2tv30QOjqZc0u3y9UlVTjAIoTCFYTQI=;EntityPath=cp-dev-iothub"
+  #   - name: IothubEventHubCompatiblePath
+  #     value: "cp-dev-iothub"
+  #   - name: StorageConnectionString
+  #     value: "DefaultEndpointsProtocol=https;AccountName=cpiotdevfiles;AccountKey=CSd3tecNZy82mqFfxvYB5PvoDbhQRjPWyJaMshFgz6WRshqcKURlqGKtZk2tFLQgh8VRdbCFLUqe+AStnJhc2g==;EndpointSuffix=core.windows.net"
+  #   - name: BlobContainerName
+  #     value: "iotcontainer"
+  #   - name: BlobStreamerUrl
+  #     value: "blobstreamer-service"
+  #   - name: SigningUrl
+  #     value: "keyholder-service"
+  #   - name: RangeCalculateType
+  #     value: "percent"
+  #   - name: RangePercent
+  #     value: "25"
+  #   - name: MessageTimeoutMinutes
+  #     value: "60"
+  #   - name: RangeBytes
+  #     value: "123456"
+  #   - name: IothubConnectionDeviceId
+  #     value: "iothub-connection-device-id"     
   - title: "keyholder"
     path: /keyholder-service
     port: 8080
