@@ -27,5 +27,5 @@ COPY --from=publish /app/publish .
 ARG DLL
 ENV DLL_NAME=${DLL}.dll
 RUN echo "Building for $DLL_NAME"
-ENTRYPOINT /bin/sh dotnet $DLL_NAME
+ENTRYPOINT dotnet $DLL_NAME
 
