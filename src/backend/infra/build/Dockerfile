@@ -18,10 +18,13 @@ WORKDIR /src/backend/${DLL}
 # Build the application for release
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 
 # Use the official .NET Core Runtime image as the base image for the final stage
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+FROM base AS final
+RUN useradd admin
+RUN chown -R admin:admin /app
+USER admin
 WORKDIR /app
 COPY --from=publish /app/publish .
 ARG DLL
