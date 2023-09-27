@@ -22,8 +22,10 @@ RUN dotnet publish -c Release -o /app/publish
 
 # Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
-ARG DLL
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "${DLL}.dll"]
+ARG DLL
+ENV DLL_NAME=${DLL}.dll
+RUN echo "Building for $DLL_NAME"
+ENTRYPOINT /bin/sh dotnet $DLL_NAME
 
