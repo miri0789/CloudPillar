@@ -1,8 +1,10 @@
 using Backend.BlobStreamer.Services;
 using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Wrappers;
 using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
+using Shared.Entities.Services;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -15,6 +17,8 @@ builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IBlobService, BlobService>();
+builder.Services.AddScoped<IUploadStreamChunksService, UploadStreamChunksService>();
+builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 

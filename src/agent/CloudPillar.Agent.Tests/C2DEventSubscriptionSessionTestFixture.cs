@@ -5,6 +5,8 @@ using Moq;
 using Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
+using Shared.Logger;
+using Shared.Logger;
 
 [TestFixture]
 public class C2DEventSubscriptionSessionTestFixture
@@ -14,10 +16,11 @@ public class C2DEventSubscriptionSessionTestFixture
     private Mock<IMessageSubscriber> _messageSubscriberMock;
     private Mock<IMessageFactory> _messageFactoryMock;
     private Mock<ITwinHandler> _twinHandlerMock;
+    private Mock<ILoggerHandler> _loggerMock;
     private IC2DEventSubscriptionSession _target;
 
     private const string MESSAGE_TYPE_PROP = "MessageType";
-    private DownloadBlobChunkMessage _downloadBlobChunkMessage = new DownloadBlobChunkMessage() { MessageType = MessageType.DownloadChunk };
+    private DownloadBlobChunkMessage _downloadBlobChunkMessage = new DownloadBlobChunkMessage() { MessageType = C2DMessageType.DownloadChunk };
 
 
     [SetUp]
@@ -27,19 +30,21 @@ public class C2DEventSubscriptionSessionTestFixture
         _messageSubscriberMock = new Mock<IMessageSubscriber>();
         _messageFactoryMock = new Mock<IMessageFactory>();
         _twinHandlerMock = new Mock<ITwinHandler>();
-
+        _loggerMock = new Mock<ILoggerHandler>();
 
         _target = new C2DEventSubscriptionSession(
              _deviceClientMock.Object,
              _messageSubscriberMock.Object,
              _messageFactoryMock.Object,
-             _twinHandlerMock.Object);
+             _twinHandlerMock.Object,
+             _loggerMock.Object);
+
 
         
-        var receivedMessage = SetRecivedMessageWithDurationMock(MessageType.DownloadChunk.ToString());
+        var receivedMessage = SetRecivedMessageWithDurationMock(C2DMessageType.DownloadChunk.ToString());
 
         _messageFactoryMock
-            .Setup(mf => mf.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
+            .Setup(mf => mf.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
             .Returns(_downloadBlobChunkMessage);
 
         var actionToReport = new ActionToReport();
@@ -68,7 +73,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
     [Test]
     public async Task ReceiveC2DMessagesAsync_UnknownMessageType_NotReportCompleteMsg()
-    {        
+    {
         var receivedMessage = SetRecivedMessageWithDurationMock("Try");
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
@@ -78,7 +83,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
     [Test]
     public async Task ReceiveC2DMessagesAsync_UnknownMessageType_CompleteMsg()
-    {        
+    {
         var receivedMessage = SetRecivedMessageWithDurationMock("Try");
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
@@ -100,9 +105,9 @@ public class C2DEventSubscriptionSessionTestFixture
     [Test]
     public async Task ReceiveC2DMessagesAsync_DownloadingException_CompleteMessage()
     {
-        var receivedMessage = SetRecivedMessageWithDurationMock(MessageType.DownloadChunk.ToString());
+        var receivedMessage = SetRecivedMessageWithDurationMock(C2DMessageType.DownloadChunk.ToString());
         _messageFactoryMock
-            .Setup(mf => mf.CreateBaseMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
+            .Setup(mf => mf.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(It.IsAny<Message>()))
             .Returns(_downloadBlobChunkMessage);
 
         _messageSubscriberMock
