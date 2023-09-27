@@ -2,6 +2,7 @@ using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client.Transport;
 using Moq;
+using Shared.Entities.Services;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Tests
@@ -9,30 +10,30 @@ namespace CloudPillar.Agent.Tests
     [TestFixture]
     public class StreamingFileUploaderHandlerTestFixture
     {
-
         private Mock<IDeviceClientWrapper> _deviceClientMock;
         private Mock<ILoggerHandler> _loggerMock;
         private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
+        private Mock<ICheckSumService> _checkSumServiceMock;
         private StreamingFileUploaderHandler _target;
 
         private const string ACTION_ID = "action123";
         private const int CHUNK_SIZE = 1024;
         private const int NUM_OF_CHUNKS = 4;
         private const string CORRELATION_ID = "abc";
-        private Uri STORAGE_URI = new Uri("https://nechama.blob.core.windows.net/nechama-container");
-
+        private Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
 
         [SetUp]
         public void Setup()
         {
             _deviceClientMock = new Mock<IDeviceClientWrapper>();
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
+            _checkSumServiceMock = new Mock<ICheckSumService>();
             _loggerMock = new Mock<ILoggerHandler>();
-            
-            _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(CHUNK_SIZE);
-            _d2CMessengerHandlerMock.Setup(d => d.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<long>())).Returns(Task.CompletedTask);
 
-            _target = new StreamingFileUploaderHandler(_d2CMessengerHandlerMock.Object, _deviceClientMock.Object, _loggerMock.Object);
+            _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(CHUNK_SIZE);
+            _d2CMessengerHandlerMock.Setup(d => d.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+
+            _target = new StreamingFileUploaderHandler(_d2CMessengerHandlerMock.Object, _deviceClientMock.Object, _checkSumServiceMock.Object, _loggerMock.Object);
         }
         [Test]
         public async Task SendStreamingUploadChunks_SingleChunk_CompleteTask()
@@ -51,7 +52,7 @@ namespace CloudPillar.Agent.Tests
             var largeStream = CreateLargeStream(CHUNK_SIZE * NUM_OF_CHUNKS);
             await _target.UploadFromStreamAsync(largeStream, STORAGE_URI, ACTION_ID, CORRELATION_ID, CancellationToken.None);
 
-            _d2CMessengerHandlerMock.Verify(w => w.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<long>()), Times.Exactly(NUM_OF_CHUNKS));
+            _d2CMessengerHandlerMock.Verify(w => w.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>()), Times.Exactly(NUM_OF_CHUNKS));
         }
         public static Stream CreateLargeStream(long streamSize)
         {
