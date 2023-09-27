@@ -14,7 +14,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly ILoggerHandler _logger;
 
-    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, IMessageFactory messageFactory, ILoggerHandler logger)
+    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
@@ -72,6 +72,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
                 message.Properties.Add(property.Name, property.GetValue(d2CMessage)?.ToString());
             }
         }
+        _logger.Debug($"D2CMessengerHandler PrepareD2CMessage. message title: {d2CMessage.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
     }
 }
