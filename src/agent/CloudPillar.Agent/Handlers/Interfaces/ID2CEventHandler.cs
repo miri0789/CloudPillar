@@ -3,5 +3,5 @@ namespace CloudPillar.Agent.Handlers;
 public interface ID2CMessengerHandler
 {
     Task SendFirmwareUpdateEventAsync(string fileName, string actionId, long? startPosition = null, long? endPosition = null);
-    Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string deviceId, string actionId, long currentPosition, string checkSum);
+    Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum);
 }
