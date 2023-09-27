@@ -104,9 +104,8 @@ stages:
             arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
             
         - script: |
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag)
-          displayName: '${{ item }} Security Scan'
-
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.45.1 image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag)
+          displayName: '${{ item }} Security Scan'        
 
         - task: Docker@2
           displayName: '${{ item }} Docker Push'
