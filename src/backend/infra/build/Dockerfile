@@ -41,6 +41,7 @@ RUN echo $DLL
 RUN echo "=======6========"
 # Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+ARG DLL
 RUN echo "=======7========"
 RUN echo $DLL
 RUN echo "========7======="
