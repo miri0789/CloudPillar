@@ -37,11 +37,12 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(firmwareUpdateEvent);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum)
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string deviceId, string actionId, long currentPosition, string checkSum)
     {
         var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
         {
             StorageUri = storageUri,
+            DeviceId = deviceId,
             CheckSum = checkSum,
             StartPosition = currentPosition,
             ActionId = actionId ?? Guid.NewGuid().ToString(),

@@ -68,6 +68,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
 
     private async Task ProcessChunkAsync(ActionToReport actionToReport, Stream readStream, Uri storageUri, string actionId, int chunkSize, long currentPosition, string checkSum)
     {
+        var deviceId = _deviceClientWrapper.GetDeviceId();
         long remainingBytes = readStream.Length - currentPosition;
         long bytesToUpload = Math.Min(chunkSize, remainingBytes);
 
@@ -76,7 +77,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
 
         await CalcAndUpdatePercentsAsync(actionToReport, readStream, currentPosition, bytesToUpload);
 
-        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition, checkSum);
+        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, deviceId, actionId, currentPosition, checkSum);
     }
 
     private int CalculateTotalChunks(long streamLength, int chunkSize)
