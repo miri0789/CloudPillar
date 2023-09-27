@@ -69,6 +69,11 @@ public class FileUploaderHandler : IFileUploaderHandler
         // Get a list of all matching directories
         string[] directories = Directory.GetDirectories(directoryPath, searchPattern);
 
+        var emptyFolder = files.Concat(directories).Count() == 0;
+        if (emptyFolder)
+        {
+            throw new ArgumentException("The folder is empty");
+        }
         // Upload each file
         foreach (string fullFilePath in files.Concat(directories))
         {
