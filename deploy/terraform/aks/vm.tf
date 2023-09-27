@@ -71,7 +71,7 @@ resource "azurerm_linux_virtual_machine" "aks_vm" {
   network_interface_ids = [
     azurerm_network_interface.aks_vm.id,
   ]
-  size                = "Standard_B2s"
+  size                = "Standard_B2s_v2"
   computer_name  = "aks-${var.env}-vm"
   admin_username = "azureuser"
   disable_password_authentication = true
