@@ -50,5 +50,5 @@ COPY --from=publish /app/publish .
 RUN echo "=======8========"
 RUN echo $DLL
 RUN echo "========8======="
-ENTRYPOINT ["dotnet", "${DLL}.dll"]
+ENTRYPOINT [dotnet, ${DLL}.dll]
 
