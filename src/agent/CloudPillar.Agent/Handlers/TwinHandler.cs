@@ -70,21 +70,6 @@ public class TwinHandler : ITwinHandler
         }
 
     }
-    private async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec)
-    {
-        var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
-          Formatting.None,
-          new JsonSerializerSettings
-          {
-              ContractResolver = new CamelCasePropertyNamesContractResolver(),
-              Converters = { new StringEnumConverter() },
-              Formatting = Formatting.Indented,
-              NullValueHandling = NullValueHandling.Ignore
-          }));
-        var changeSpecKey = nameof(TwinReported.ChangeSpec);
-        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey, changeSpecJson);
-
-    }
 
     private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
     {
@@ -216,6 +201,22 @@ public class TwinHandler : ITwinHandler
         {
             _logger.Error($"InitReportedDeviceParams failed: {ex.Message}");
         }
+    }
+
+    private async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec)
+    {
+        var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
+          Formatting.None,
+          new JsonSerializerSettings
+          {
+              ContractResolver = new CamelCasePropertyNamesContractResolver(),
+              Converters = { new StringEnumConverter() },
+              Formatting = Formatting.Indented,
+              NullValueHandling = NullValueHandling.Ignore
+          }));
+        var changeSpecKey = nameof(TwinReported.ChangeSpec);
+        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey, changeSpecJson);
+
     }
 
     public async Task<string> GetTwinJsonAsync()

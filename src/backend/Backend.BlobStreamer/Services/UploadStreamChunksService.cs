@@ -2,7 +2,6 @@ using Microsoft.Azure.Storage.Blob;
 using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
 using Shared.Entities.Services;
-using System.Text.RegularExpressions;
 
 namespace Backend.BlobStreamer.Services;
 

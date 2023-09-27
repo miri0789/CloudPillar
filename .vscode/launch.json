@@ -197,7 +197,7 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                "DeviceConnectionString": "HostName=iot-bracha-dev.azure-devices.net;DeviceId=nechama-device;SharedAccessKey=vyzvjBHuxD1a7hoBPvqJ8ORD8QNWOEMjxz+/jYIzklU="
+                "DeviceConnectionString": "HostName=iot-bracha-dev.azure-devices.net;DeviceId=nechama-device;SharedAccessKey=ovieFfX4XSsVsorpq6SuChCzr+XEPQdluRN8HbWLduI="
             },
             "stopAtEntry": false
         }
