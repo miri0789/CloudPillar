@@ -4,6 +4,7 @@ using Backend.BlobStreamer.Wrappers;
 using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
+using Shared.Entities.DeviceClient;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?

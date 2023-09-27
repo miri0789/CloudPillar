@@ -9,6 +9,8 @@ using System.Text;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
 using Shared.Entities.DeviceClient;
+using Microsoft.Azure.Devices;
+using Backend.Keyholder.Interfaces;
 
 public class RegistrationService : IRegistrationService
 {
@@ -17,48 +19,47 @@ public class RegistrationService : IRegistrationService
     private const int KEY_SIZE_IN_BITS = 4096;
     private readonly ILoggerHandler _loggerHandler;
 
-    private  readonly IMessageFactory _messageFactory;
+    private readonly IMessageFactory _messageFactory;
+
     private readonly IDeviceClientWrapper _deviceClientWrapper;
 
-    public RegistrationService(IMessageFactory messageFactory, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler loggerHandler)
+    private readonly ServiceClient _serviceClient;
+
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
+
+    private readonly string _iotHubHostName;
+
+    public RegistrationService(IMessageFactory messageFactory, IDeviceClientWrapper deviceClientWrapper, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler loggerHandler)
     {
         _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _loggerHandler = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.iothubConnectionString);
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.dpsConnectionString);
+
+        _serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
+        _iotHubHostName = GetIOTHubHostName();
     }
 
-
-    // Export the certificate to a PFX file (password-protected)
-    // var pfxBytes = certificate.Export(
-    //     X509ContentType.Pkcs12, "1234");
-
-    // string base64Certificate = Convert.ToBase64String(certificate.Export(X509ContentType.Cert));
-
-    // // Save the certificate to a file
-    // System.IO.File.WriteAllText("YourCertificate5.cer", base64Certificate);
-
-    // // Save the certificate to a file
-    // System.IO.File.WriteAllBytes("YourCertificate5.pfx", pfxBytes);
-    public async Task Register(string deviceId, string OneMDKey, string iotHubHostName, string password)
+    public async Task Register(string deviceId, string OneMDKey, string password)
     {
-        var certificate = GenerateCertificate(deviceId, OneMDKey, iotHubHostName);
-        await CreateEnrollmentAsync(certificate, deviceId, iotHubHostName);
+        ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
+        ArgumentNullException.ThrowIfNullOrEmpty(OneMDKey);
+
+        var certificate = GenerateCertificate(deviceId, OneMDKey);
+        await CreateEnrollmentAsync(certificate, deviceId);
         await SendCertificateToAgent(certificate, password);
     }
 
 
 
-    private X509Certificate2 GenerateCertificate(string deviceName, string OneMDKey, string iotHubHostName)
+    internal X509Certificate2 GenerateCertificate(string deviceId, string OneMDKey)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(deviceName);
-        ArgumentNullException.ThrowIfNullOrEmpty(OneMDKey);
-        ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
-
-
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceName}", rsa
+                $"{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(OneMDKey);
@@ -67,7 +68,7 @@ public class RegistrationService : IRegistrationService
                 oneMDKeyValue, false
                );
 
-            byte[] iotHubHostNameValue = Encoding.UTF8.GetBytes(iotHubHostName);
+            byte[] iotHubHostNameValue = Encoding.UTF8.GetBytes(_iotHubHostName);
             var iotHubHostNameExtension = new X509Extension(
                 new Oid(CertificateConstants.IOT_HUB_HOST_NAME_EXTENTION_KEY, HOST_NAME_EXTENTION_NAME),
                 iotHubHostNameValue, false
@@ -76,7 +77,6 @@ public class RegistrationService : IRegistrationService
             request.CertificateExtensions.Add(OneMDKeyExtension);
             request.CertificateExtensions.Add(iotHubHostNameExtension);
 
-            // Create a self-signed certificate
             var certificate = request.CreateSelfSigned(
                 DateTimeOffset.Now.AddDays(-1),
                 DateTimeOffset.Now.AddDays(30));
@@ -87,10 +87,10 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    private async Task CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId, string iotHubHostName)
+    internal async Task CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId)
     {
         using (ProvisioningServiceClient provisioningServiceClient =
-                    ProvisioningServiceClient.CreateFromConnectionString("HostName=DPS-Bracha.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=f3+8+rqrtH0T7nlSuIshUSn2K6rbIb7mUHQwTcztRzg="))
+                    ProvisioningServiceClient.CreateFromConnectionString(_environmentsWrapper.dpsConnectionString))
         {
 
             try
@@ -102,7 +102,7 @@ public class RegistrationService : IRegistrationService
                 {
                     ProvisioningStatus = ProvisioningStatus.Enabled,
                     DeviceId = deviceId,
-                    IotHubHostName = iotHubHostName
+                    IotHubHostName = _iotHubHostName
                 };
 
                 var result = await provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);
@@ -115,7 +115,7 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    private async Task SendCertificateToAgent(X509Certificate2 certificate, string password)
+    internal async Task SendCertificateToAgent(X509Certificate2 certificate, string password)
     {
         var pfxBytes = certificate.Export(X509ContentType.Pkcs12, password);
         string certificateBase64 = Convert.ToBase64String(pfxBytes);
@@ -125,9 +125,26 @@ public class RegistrationService : IRegistrationService
             Certificate = certificateBase64,
             Password = password
         };
-        var c2dMessage =  _messageFactory.PrepareC2DMessage(message);
-        var device =  _deviceClientWrapper.CreateFromConnectionString("a");
-        _deviceClientWrapper.SendAsync(device, deviceId, c2dMessage);
-        // await serviceClient.SendAsync(deviceId, c2dMessage);
+        var c2dMessage = _messageFactory.PrepareC2DMessage(message);
+        await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
+    }
+
+    private string GetIOTHubHostName()
+    {
+        string[] parts = _environmentsWrapper.iothubConnectionString.Split(';');
+
+        string iotHubHostName = string.Empty;
+
+        foreach (var part in parts)
+        {
+            if (part.StartsWith("HostName="))
+            {
+                iotHubHostName = part.Substring("HostName=".Length);
+                break;
+            }
+        }
+
+        ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
+        return iotHubHostName;
     }
 }

@@ -1,4 +1,4 @@
 public interface IRegistrationService
 {
-    Task Register(string deviceId, string OneMDKey, string iotHubHostName, string password);
+    Task Register(string deviceId, string OneMDKey, string password);
 }

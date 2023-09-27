@@ -6,5 +6,6 @@ public interface IEnvironmentsWrapper
     string secretName { get; }
     string secretKey { get; }
     string iothubConnectionString { get; }
+    string dpsConnectionString { get; }
 
 }

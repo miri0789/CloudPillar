@@ -1,7 +1,7 @@
 ﻿using Backend.Keyholder.Interfaces;
 
 namespace Backend.Keyholder.Wrappers;
-public class EnvironmentsWrapper: IEnvironmentsWrapper
+public class EnvironmentsWrapper : IEnvironmentsWrapper
 {
 
     private const string _kubernetesServiceHost = "KubernetesServiceHost";
@@ -9,6 +9,8 @@ public class EnvironmentsWrapper: IEnvironmentsWrapper
     private const string _secretName = "SecretName";
     private const string _secretKey = "SecretKey";
     private const string _iothubConnectionString = "IothubConnectionString";
+
+    private const string _dpsConnectionString = "DPSConnectionString";
 
     public string kubernetesServiceHost
     {
@@ -29,6 +31,11 @@ public class EnvironmentsWrapper: IEnvironmentsWrapper
     public string iothubConnectionString
     {
         get { return GetVariable(_iothubConnectionString); }
+    }
+
+    public string dpsConnectionString
+    {
+        get { return GetVariable(_dpsConnectionString); }
     }
 
     private string GetVariable(string name)
