@@ -3,6 +3,7 @@ using Backend.Keyholder.Services;
 using Backend.Keyholder.Wrappers;
 using System.Reflection;
 using Shared.Logger;
+using Backend.Keyholder.Wrappers.Interfaces;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -13,6 +14,7 @@ var builder = LoggerHostCreator.Configure("keyholder", WebApplication.CreateBuil
 builder.Services.AddSingleton<ISigningService, SigningService>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<IIndividualEnrollmentWrapper, IndividualEnrollmentWrapper>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
