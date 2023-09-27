@@ -5,31 +5,49 @@ RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/m
 # Set the working directory
 WORKDIR /src
 ARG DLL
-
+RUN echo "=======1========"
+RUN echo $DLL
+RUN echo "=======1========"
 # Copy the .csproj file and restore the dependencies
 COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY nuget.config backend/${DLL}/
 ARG FEED_ACCESSTOKEN
 ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
 RUN dotnet nuget locals all --clear
+RUN echo "=======2========"
+RUN echo $DLL
+RUN echo "=======2========"
 RUN dotnet restore backend/${DLL}/${DLL}.csproj
-
+RUN echo "======3========="
+RUN echo $DLL
+RUN echo "=======3========"
 COPY . .
 WORKDIR /src/backend/${DLL}
 
-
+RUN echo "======4========="
+RUN echo $DLL
+RUN echo "=======4========"
 
 # Build the application for release
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
-
+RUN echo "========5======="
+RUN echo $DLL
+RUN echo "========5======="
 FROM build AS publish
 RUN dotnet publish -c Release -o /app/publish
 
-
+RUN echo "=======6========"
+RUN echo $DLL
+RUN echo "=======6========"
 # Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
-
+RUN echo "=======7========"
+RUN echo $DLL
+RUN echo "========7======="
 WORKDIR /app
 COPY --from=publish /app/publish .
+RUN echo "=======8========"
+RUN echo $DLL
+RUN echo "========8======="
 ENTRYPOINT ["dotnet", "${DLL}.dll"]
 
