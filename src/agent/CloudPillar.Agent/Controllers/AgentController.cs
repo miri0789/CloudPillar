@@ -75,7 +75,7 @@ public class AgentController : ControllerBase
                 }
                 else
                 {
-                    return BadRequest("Failed to provisioning");
+                    return BadRequest("Failed provisioning");
                 }
             }
             return await _twinHandler.GetTwinJsonAsync();

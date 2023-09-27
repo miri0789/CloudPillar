@@ -21,19 +21,31 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     private readonly ILoggerHandler _logger;
 
     private IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IX509StoreWrapper _storeWrapper;
+    private readonly IX509CertificateWrapper _X509CertificateWrapper;
 
-    public X509DPSProvisioningDeviceClientHandler(ILoggerHandler loggerHandler, IDeviceClientWrapper deviceClientWrapper)
+    public X509DPSProvisioningDeviceClientHandler(
+        ILoggerHandler loggerHandler,
+        IDeviceClientWrapper deviceClientWrapper,
+        IX509StoreWrapper storeWrapper,
+        IX509CertificateWrapper X509CertificateWrapper)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _storeWrapper = storeWrapper ?? throw new ArgumentNullException(nameof(storeWrapper));
+        _X509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
     }
 
-    public X509Certificate2 GetCertificate()
+    public X509Certificate2? GetCertificate()
     {
-        using (X509Store store = new X509Store(StoreLocation.CurrentUser))
+        using (X509Store store = _storeWrapper.Create(StoreLocation.CurrentUser))
         {
             store.Open(OpenFlags.ReadOnly);
             X509Certificate2Collection certificates = store.Certificates;
+            if (certificates == null)
+            {
+                return null;
+            }
             var filteredCertificate = certificates.Cast<X509Certificate2>()
                .Where(cert => cert.Subject.StartsWith(CLOUD_PILLAR_SUBJECT))
                .FirstOrDefault();
@@ -50,7 +62,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
-        if (await IsDeviceInitialized())
+        if (await IsDeviceInitializedAsync())
         {
             return true;
         }
@@ -63,18 +75,19 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             _logger.Error($"AuthorizationAsync certificate must have iotHubHostName extention");
             return false;
         }
-        
-        return await AuthorizeDevice(deviceId, iotHubHostName, userCertificate);
+
+        return await AuthorizeDeviceAsync(deviceId, iotHubHostName, userCertificate);
     }
 
-    public async Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint = "global.azure-devices-provisioning.net")
+    public async Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint)
     {
-        ArgumentNullException.ThrowIfNull(dpsScopeId);
+        ArgumentNullException.ThrowIfNullOrEmpty(dpsScopeId);
+        ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
         ArgumentNullException.ThrowIfNull(certificate);
 
         try
         {
-            using var security = new SecurityProviderX509Certificate(certificate);
+            using var security = _X509CertificateWrapper.CreateSecurityProvider(certificate);
 
             _logger.Debug($"Initializing the device provisioning client...");
 
@@ -93,20 +106,21 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             _logger.Debug($"Registration status: {result.Status}.");
             if (result.Status != ProvisioningRegistrationStatusType.Assigned)
             {
-                throw new Exception("Registration status did not assign a hub.");
+                _logger.Error("Registration status did not assign a hub.");
+                return false;
             }
-            _logger.Debug($"Device {result.DeviceId} registered to {result.AssignedHub}.");
+            _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error($"Failed on Provisioning - {ex.Message}");
+            _logger.Error($"Provisioning failed", ex);
             return false;
         }
 
     }
 
-    private async Task<bool> IsDeviceInitialized()
+    private async Task<bool> IsDeviceInitializedAsync()
     {
         try
         {
@@ -116,12 +130,17 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         catch
         {
+            _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized.");
             return false;
         }
     }
 
     private string GetDeviceIdFromCertificate(X509Certificate2 userCertificate)
     {
+        if(string.IsNullOrEmpty(userCertificate.Subject))
+        {
+            throw new ArgumentNullException(nameof(userCertificate.Subject));
+        }
         return userCertificate.Subject.Replace(CERTIFICATE_SUBJECT, string.Empty);
     }
 
@@ -139,12 +158,12 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return iotHubHostName;
     }
 
-    private async Task<bool> AuthorizeDevice(string deviceId, string iotHubHostName, X509Certificate2 userCertificate)
+    private async Task<bool> AuthorizeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate)
     {
         try
         {
 
-            using var auth = new DeviceAuthenticationWithX509Certificate(deviceId, userCertificate);
+            using var auth = _X509CertificateWrapper.CreateDeviceAuthentication(deviceId, userCertificate);
             var iotClient = DeviceClient.Create(iotHubHostName, auth, _deviceClientWrapper.GetTransportType());
             if (iotClient != null)
             {
@@ -157,12 +176,12 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
                 }
             }
 
-            _logger.Info($"Device {deviceId}, is not exist in {iotHubHostName}");
+            _logger.Info($"Device {deviceId} does not exist in {iotHubHostName}.");
             return false;
         }
         catch (Exception ex)
         {
-            _logger.Error($"Exception during IoT Hub connection: {ex.Message}");
+            _logger.Error($"Exception during IoT Hub connection: ", ex);
             return false;
         }
     }
