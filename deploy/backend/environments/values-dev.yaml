@@ -32,7 +32,9 @@ controllers:
     #     fieldRef:
     #       fieldPath: metadata.namespace
   - title: "iotlistener"
-    kind: StatefulSet
+    # kind: StatefulSet
+    path: /iotlistener-service
+    port: 8080
     env:
     - name: LogswriteTopic
       value: "logswrite-topic"
