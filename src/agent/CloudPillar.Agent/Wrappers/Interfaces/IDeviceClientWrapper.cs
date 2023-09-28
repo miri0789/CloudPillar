@@ -5,7 +5,7 @@ using Microsoft.Azure.Devices.Shared;
 namespace CloudPillar.Agent.Wrappers;
 public interface IDeviceClientWrapper
 {
-    Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod);
+    Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken);
 
     string GetDeviceId();
 
@@ -18,7 +18,7 @@ public interface IDeviceClientWrapper
 
     Task CompleteAsync(Message message);
 
-    Task<Twin> GetTwinAsync();
+    Task<Twin> GetTwinAsync(CancellationToken cancellationToken);
 
     Task UpdateReportedPropertiesAsync(string key, object value);
 

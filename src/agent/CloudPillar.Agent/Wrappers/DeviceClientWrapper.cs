@@ -9,7 +9,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 {
     private DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-
     private readonly ILoggerHandler _logger;
     private const int kB = 1024;
 
@@ -20,12 +19,12 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// <exception cref="NullReferenceException"></exception>
     public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper)); ;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
 
-    public async Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod)
+    public async Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(hostname);
         ArgumentNullException.ThrowIfNull(authenticationMethod);
@@ -34,7 +33,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         if (iotClient != null)
         {
             // iotClient never return null also if device not exist, so to check if device is exist, or the certificate is valid we try to get the device twin.
-            var twin = await iotClient.GetTwinAsync();
+            var twin = await iotClient.GetTwinAsync(cancellationToken);
             if (twin != null)
             {
                 _deviceClient = iotClient;
@@ -117,9 +116,9 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         await _deviceClient.CompleteAsync(message);
     }
 
-    public async Task<Twin> GetTwinAsync()
+    public async Task<Twin> GetTwinAsync(CancellationToken cancellationToken)
     {
-        var twin = await _deviceClient.GetTwinAsync();
+        var twin = await _deviceClient.GetTwinAsync(cancellationToken);
         return twin;
     }
 

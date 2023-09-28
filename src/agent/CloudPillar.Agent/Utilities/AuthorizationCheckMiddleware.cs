@@ -23,7 +23,7 @@ public class AuthorizationCheckMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-
+        CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
         Endpoint endpoint = context.GetEndpoint();
         if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
         {
@@ -43,7 +43,7 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate);
+            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";

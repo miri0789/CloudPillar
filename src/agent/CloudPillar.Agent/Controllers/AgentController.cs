@@ -53,7 +53,7 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId, string enrollmentId, string globalDeviceEndpoint)
+    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId, string enrollmentId, string globalDeviceEndpoint, CancellationToken cancellationToken)
     {
         try
         {
@@ -66,12 +66,12 @@ public class AgentController : ControllerBase
                 return Unauthorized(error);
             }
 
-            var isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert);
+            var isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert, cancellationToken);
             if (!isAuthorized)
             {
                 try
                 {
-                    await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint);
+                    await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint, cancellationToken);
                 }
                 catch (Exception ex)
                 {

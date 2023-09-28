@@ -35,7 +35,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     public X509Certificate2? GetCertificate()
     {
-        using (X509Store store = _X509CertificateWrapper.CreateStore(StoreLocation.CurrentUser))
+        using (X509Store store = _X509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
         {
             store.Open(OpenFlags.ReadOnly);
             X509Certificate2Collection certificates = store.Certificates;
@@ -51,7 +51,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
     }
 
-    public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate)
+    public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate, CancellationToken cancellationToken)
     {
         if (userCertificate == null)
         {
@@ -68,16 +68,16 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
-        return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate);
+        return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
     }
 
-    public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint)
+    public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(dpsScopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
         ArgumentNullException.ThrowIfNull(certificate);
 
-        using var security = _X509CertificateWrapper.CreateSecurityProvider(certificate);
+        using var security = _X509CertificateWrapper.GetSecurityProvider(certificate);
 
         _logger.Debug($"Initializing the device provisioning client...");
 
@@ -100,7 +100,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
-        await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate);
+        await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
 
     }
 
@@ -118,12 +118,12 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return iotHubHostName;
     }
 
-    private async Task<bool> IsDeviceInitializedAsync()
+    private async Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken)
     {
         try
         {
             // Check if the device is already initialized
-            await _deviceClientWrapper.GetTwinAsync();
+            await _deviceClientWrapper.GetTwinAsync(cancellationToken);
             return true;
         }
         catch
@@ -142,13 +142,13 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return userCertificate.Subject.Replace(CERTIFICATE_SUBJECT, string.Empty);
     }
 
-    private async Task<bool> CheckAuthorizationAndInitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate)
+    private async Task<bool> CheckAuthorizationAndInitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
     {
         try
         {
-            using var auth = _X509CertificateWrapper.CreateDeviceAuthentication(deviceId, userCertificate);
-            await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth);
-            return await IsDeviceInitializedAsync();
+            using var auth = _X509CertificateWrapper.GetDeviceAuthentication(deviceId, userCertificate);
+            await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+            return await IsDeviceInitializedAsync(cancellationToken);
         }
         catch (Exception ex)
         {
