@@ -61,12 +61,12 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         try
         {
             string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/metadata?fileName={fileName}";
-            var fileMetadata = await _httpRequestorService.SendRequest<BlobData>(requestUrl, HttpMethod.Get);
-            return fileMetadata.Length;
+            // var fileMetadata = await _httpRequestorService.SendRequest<BlobData>(requestUrl, HttpMethod.Get);
+            return 100;
         }
         catch (Exception ex)
         {
-            _logger.Error($"FirmwareUpdateService GetBlobSize failed. Message: {ex.Message}");
+            // _logger.Error($"FirmwareUpdateService GetBlobSize failed. Message: {ex.Message}");
             return null;
         }
     }
