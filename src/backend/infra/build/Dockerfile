@@ -29,7 +29,7 @@ WORKDIR /app
 EXPOSE 8080
 ENV ASPNETCORE_URLS http://+:8080
 COPY --from=publish /app/publish .
-COPY /src/backend/${DLL}/log4net.config .
+COPY src/backend/${DLL}/log4net.config .
 ARG DLL
 ENV DLL_NAME=${DLL}.dll
 RUN echo "Building for $DLL_NAME"
