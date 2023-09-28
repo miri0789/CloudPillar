@@ -7,6 +7,7 @@ WORKDIR /src
 ARG DLL
 # Copy the .csproj file and restore the dependencies
 COPY backend/${DLL}/*.csproj backend/${DLL}/
+COPY backend/${DLL}/log4net.config backend/${DLL}/log4net.config
 COPY backend/infra/common/common.csproj backend/infra/common/
 COPY nuget.config backend/${DLL}/
 COPY nuget.config backend/infra/common/
