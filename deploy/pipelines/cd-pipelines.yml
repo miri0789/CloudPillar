@@ -16,7 +16,7 @@ parameters:
   type: object
   default:
   - BlobStreamer
-  - Iotlistener
+  - Iotlistener1
   - Keyholder  
 trigger:
   batch: true
