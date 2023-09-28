@@ -6,9 +6,9 @@ RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/m
 WORKDIR /src
 ARG DLL
 # Copy the .csproj file and restore the dependencies
-COPY backend/${DLL}/*.csproj backend/${DLL}/
-COPY backend/${DLL}/log4net.config backend/${DLL}/log4net.config
-COPY backend/infra/common/common.csproj backend/infra/common/
+# COPY backend/${DLL}/*.csproj backend/${DLL}/
+# COPY backend/${DLL}/log4net.config backend/${DLL}/log4net.config
+# COPY backend/infra/common/common.csproj backend/infra/common/
 COPY nuget.config backend/${DLL}/
 COPY nuget.config backend/infra/common/
 ARG FEED_ACCESSTOKEN
@@ -23,7 +23,7 @@ WORKDIR /src/backend/${DLL}
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
-COPY log4net.config /app/publish
+# COPY log4net.config /app/publish
 
 # Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
