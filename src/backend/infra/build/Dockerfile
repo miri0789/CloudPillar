@@ -9,7 +9,6 @@ ARG DLL
 COPY backend/${DLL}/*.csproj backend/${DLL}/
 COPY backend/infra/common/common.csproj backend/infra/common/
 COPY nuget.config backend/${DLL}/
-COPY backend/${DLL}/log4net.config backend/${DLL}/
 COPY nuget.config backend/infra/common/
 ARG FEED_ACCESSTOKEN
 ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
@@ -30,6 +29,7 @@ WORKDIR /app
 EXPOSE 8080
 ENV ASPNETCORE_URLS http://+:8080
 COPY --from=publish /app/publish .
+COPY /src/backend/${DLL}/log4net.config .
 ARG DLL
 ENV DLL_NAME=${DLL}.dll
 RUN echo "Building for $DLL_NAME"
