@@ -33,7 +33,7 @@ public class TwinActionConverter : JsonConverter
 
     private TwinAction CreateTwinAction(JToken token)
     {
-        string actionTypeString = token["action"]?.Value<string>();
+        string actionTypeString = (token["action"] ?? token["Action"])?.Value<string>();
         if (!Enum.TryParse<TwinActionType>(actionTypeString, out TwinActionType actionType))
         {
             return null;
