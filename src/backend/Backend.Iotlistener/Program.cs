@@ -65,3 +65,4 @@ logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
 // await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
 
 // await eventProcessorHost.UnregisterEventProcessorAsync();
+app.Run();
