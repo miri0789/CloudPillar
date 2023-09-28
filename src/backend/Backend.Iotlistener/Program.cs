@@ -12,7 +12,7 @@ using Backend.Iotlistener.Processors;
 using Shared.Logger;
 
 
-var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
+var builder =WebApplication.CreateBuilder(args);// LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
 builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
