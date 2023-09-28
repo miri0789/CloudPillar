@@ -22,7 +22,7 @@ WORKDIR /src/backend/${DLL}
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
-COPY /src/backend/${DLL}/log4net.config /app/publish
+COPY log4net.config /app/publish
 
 # Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
