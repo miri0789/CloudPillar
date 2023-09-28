@@ -23,10 +23,10 @@ public class RegisterByCertificateController : ControllerBase
 
     [HttpPost("Register")]
 
-    public IActionResult Register(string deviceId, string OneMDKey, string password)
+    public IActionResult Register(string deviceId, string OneMDKey)
     {
 
-        _registrationService.Register(deviceId, OneMDKey, password);
+        _registrationService.Register(deviceId, OneMDKey);
 
         return Ok();
     }

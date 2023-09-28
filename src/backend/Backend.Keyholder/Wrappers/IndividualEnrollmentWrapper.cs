@@ -1,3 +1,4 @@
+using Backend.Keyholder.Wrappers.Interfaces;
 using Microsoft.Azure.Devices.Provisioning.Service;
 
 namespace Backend.Keyholder.Wrappers;

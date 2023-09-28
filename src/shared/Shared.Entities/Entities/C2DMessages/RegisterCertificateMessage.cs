@@ -1,15 +1,19 @@
 
 namespace Shared.Entities.Messages;
 
-public class RegisterCertificateMessage : C2DMessages
+public class ReProvisioningMessage : C2DMessages
 {
-    public string  Certificate { get; set; }
+    public string Certificate { get; set; }
 
-    public string Password { get; set; }
+    public string EnrollmentId { get; set; }
 
-    public RegisterCertificateMessage()
+    public string ScopedId { get; set; }
+
+    public string PasswordFunc { get; set; }
+    
+    public ReProvisioningMessage()
     {
-        MessageType = C2DMessageType.RegisterCertificate;
+        MessageType = C2DMessageType.ReProvisioning;
     }
 
     public override string GetMessageId()

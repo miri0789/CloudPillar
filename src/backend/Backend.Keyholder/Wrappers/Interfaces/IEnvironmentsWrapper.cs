@@ -7,5 +7,6 @@ public interface IEnvironmentsWrapper
     string secretKey { get; }
     string iothubConnectionString { get; }
     string dpsConnectionString { get; }
+    int certificateExpiredDays { get; }
 
 }
