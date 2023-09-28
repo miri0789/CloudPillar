@@ -13,7 +13,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
     // private readonly IHttpRequestorService _httpRequestorService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     // private readonly ILoggerHandler _logger;
-    public FirmwareUpdateService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper)
+    public FirmwareUpdateService(IEnvironmentsWrapper environmentsWrapper)
     {
         // _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
