@@ -26,8 +26,10 @@ RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
 WORKDIR /app
 EXPOSE 8080
-ENV ASPNETCORE_URLS http://+:8080
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+ENV DOTNET_RUNNING_IN_CONTAINER=true \
+      ASPNETCORE_URLS=http://+:8080
+    
+RUN apk add --no-cache icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib
 COPY --from=publish /app/publish .
 ARG DLL
 ENV DLL_NAME=${DLL}.dll
