@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Builder;
 using Backend.Iotlistener.Wrappers;
 using Backend.Iotlistener.Processors;
 
-// using Shared.Logger;
+using Shared.Logger;
 
 
-var builder =WebApplication.CreateBuilder(args);// LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
+var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
 // builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
 // builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
@@ -51,8 +51,8 @@ var eventProcessorOptions = new EventProcessorOptions
 var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
 var signingService = app.Services.GetService<ISigningService>();
 var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
-// var logger = app.Services.GetService<ILoggerHandler>();
-var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable,  PartitionId);
+var logger = app.Services.GetService<ILoggerHandler>();
+var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable, logger, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 
