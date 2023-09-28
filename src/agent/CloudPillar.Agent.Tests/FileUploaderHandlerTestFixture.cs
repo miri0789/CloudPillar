@@ -4,7 +4,7 @@ using CloudPillar.Agent.Handlers;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Devices.Client.Transport;
-using Microsoft.Azure.Storage.Blob;
+using Shared.Logger;
 
 [TestFixture]
 public class FileUploaderHandlerTestFixture
@@ -12,6 +12,7 @@ public class FileUploaderHandlerTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
     private Mock<IBlobStorageFileUploaderHandler> _blobStorageFileUploaderHandlerMock;
     private Mock<IStreamingFileUploaderHandler> _streamingFileUploaderHandlerMock;
+    private Mock<ILoggerHandler> _loggerMock;
     private IFileUploaderHandler _target;
     FileUploadSasUriResponse sasUriResponse = new FileUploadSasUriResponse()
     {
@@ -28,11 +29,12 @@ public class FileUploaderHandlerTestFixture
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
         _blobStorageFileUploaderHandlerMock = new Mock<IBlobStorageFileUploaderHandler>();
         _streamingFileUploaderHandlerMock = new Mock<IStreamingFileUploaderHandler>();
+        _loggerMock = new Mock<ILoggerHandler>();
 
         _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sasUriResponse);
 
-        _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object);
+        _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object, _loggerMock.Object);
     }
 
 

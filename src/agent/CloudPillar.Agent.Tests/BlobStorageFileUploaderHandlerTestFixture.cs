@@ -20,7 +20,7 @@ public class BlobStorageFileUploaderHandlerTestFixture
     [Test]
     public async Task UploadFromStreamAsync_ValidInput_UploadsStreamToBlob()
     {
-        var storageUri = new Uri("https://nechama.blob.core.windows.net/nechama-container");
+        var storageUri = new Uri("https://mockstorage.example.com/mock-container");
         var readStream = new MemoryStream(new byte[] { 1, 2, 3 });
         var cancellationToken = CancellationToken.None;
         var _mockBlockBlob = new Mock<CloudBlockBlob>(storageUri);
