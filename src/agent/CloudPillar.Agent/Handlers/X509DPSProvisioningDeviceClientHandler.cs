@@ -1,4 +1,5 @@
 
+using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
@@ -13,11 +14,13 @@ namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
 {
-    private const string CLOUD_PILLAR_SUBJECT = "CN=CloudPillar-";
+    private const string CLOUD_PILLAR_SUBJECT = "CloudPillar-";
     private const string CERTIFICATE_SUBJECT = "CN=";
 
     //that the code of iotHubHostName in extention in certificate
     private const string IOT_HUB_HOST_NAME_EXTENTION_KEY = "2.2.2.2";
+    private const char CERTIFICATE_NAME_SEPARATOR = '@';
+    private const string IOT_HUB_NAME_SUFFIX = ".azure-devices.net";
     private readonly ILoggerHandler _logger;
 
     private IDeviceClientWrapper _deviceClientWrapper;
@@ -44,7 +47,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
                 return null;
             }
             var filteredCertificate = certificates.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(CLOUD_PILLAR_SUBJECT))
+               .Where(cert => cert.Subject.StartsWith(CERTIFICATE_SUBJECT + CLOUD_PILLAR_SUBJECT))
                .FirstOrDefault();
 
             return filteredCertificate;
@@ -59,15 +62,28 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
-        var deviceId = GetDeviceIdFromCertificate(userCertificate);
-        var iotHubHostName = GetIotHubHostNameFromCertificate(userCertificate);
+        var friendlyName = userCertificate?.FriendlyName ?? throw new ArgumentNullException(nameof(userCertificate.FriendlyName));
+        var parts = friendlyName.Split(CERTIFICATE_NAME_SEPARATOR);
 
-        if (string.IsNullOrEmpty(iotHubHostName))
+        if (parts.Length != 2)
         {
-            _logger.Error($"AuthorizationAsync certificate must have iotHubHostName extention");
-            return false;
+            var error = "The FriendlyName is not in the expected format.";
+            _logger.Error(error);
+            throw new ArgumentException(error);
         }
 
+        var deviceId = parts[0];
+        var iotHubHostName = parts[1];
+
+        if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(iotHubHostName))
+        {
+            var error = "The deviceId or the iotHubHostName cant be null.";
+            _logger.Error(error);
+            throw new ArgumentException(error);
+        }
+
+        deviceId = CLOUD_PILLAR_SUBJECT + deviceId;
+        iotHubHostName += IOT_HUB_NAME_SUFFIX;
         return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
     }
 
@@ -81,7 +97,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         _logger.Debug($"Initializing the device provisioning client...");
 
-        using ProvisioningTransportHandler transport = GetTransportHandler();
+        using ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler();
         var provClient = ProvisioningDeviceClient.Create(
             globalDeviceEndpoint,
             dpsScopeId,
@@ -104,20 +120,6 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     }
 
-    private string GetIotHubHostNameFromCertificate(X509Certificate2 userCertificate)
-    {
-        var iotHubHostName = string.Empty;
-        foreach (X509Extension extension in userCertificate.Extensions)
-        {
-
-            if (extension.Oid?.Value == IOT_HUB_HOST_NAME_EXTENTION_KEY)
-            {
-                iotHubHostName = Encoding.UTF8.GetString(extension.RawData);
-            }
-        }
-        return iotHubHostName;
-    }
-
     private async Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken)
     {
         try
@@ -135,11 +137,17 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     private string GetDeviceIdFromCertificate(X509Certificate2 userCertificate)
     {
-        if (string.IsNullOrEmpty(userCertificate.Subject))
-        {
-            throw new ArgumentNullException(nameof(userCertificate.Subject));
-        }
-        return userCertificate.Subject.Replace(CERTIFICATE_SUBJECT, string.Empty);
+        ArgumentNullException.ThrowIfNullOrEmpty(userCertificate?.FriendlyName);
+
+        var friendlyName = userCertificate.FriendlyName;
+        return friendlyName.Split("@")[0];
+    }
+    private string GetIotHubHostNameFromCertificate(X509Certificate2 userCertificate)
+    {
+        ArgumentNullException.ThrowIfNullOrEmpty(userCertificate?.FriendlyName);
+
+        var friendlyName = userCertificate.FriendlyName;
+        return friendlyName.Split("@")[1];
     }
 
     private async Task<bool> CheckAuthorizationAndInitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
@@ -155,21 +163,6 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             _logger.Error($"Exception during IoT Hub connection: ", ex);
             return false;
         }
-    }
-
-    private ProvisioningTransportHandler GetTransportHandler()
-    {
-        return _deviceClientWrapper.GetTransportType() switch
-        {
-            TransportType.Mqtt => new ProvisioningTransportHandlerMqtt(),
-            TransportType.Mqtt_Tcp_Only => new ProvisioningTransportHandlerMqtt(TransportFallbackType.TcpOnly),
-            TransportType.Mqtt_WebSocket_Only => new ProvisioningTransportHandlerMqtt(TransportFallbackType.WebSocketOnly),
-            TransportType.Amqp => new ProvisioningTransportHandlerAmqp(),
-            TransportType.Amqp_Tcp_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.TcpOnly),
-            TransportType.Amqp_WebSocket_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.WebSocketOnly),
-            TransportType.Http1 => new ProvisioningTransportHandlerHttp(),
-            _ => throw new NotSupportedException($"Unsupported transport type {_deviceClientWrapper.GetTransportType()}"),
-        };
-    }
+    }    
 
 }

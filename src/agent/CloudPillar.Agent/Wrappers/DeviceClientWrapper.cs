@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Devices.Client.Transport;
+using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
 
@@ -45,6 +46,21 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
     }
 
+
+    public ProvisioningTransportHandler GetProvisioningTransportHandler()
+    {
+        return GetTransportType() switch
+        {
+            TransportType.Mqtt => new ProvisioningTransportHandlerMqtt(),
+            TransportType.Mqtt_Tcp_Only => new ProvisioningTransportHandlerMqtt(TransportFallbackType.TcpOnly),
+            TransportType.Mqtt_WebSocket_Only => new ProvisioningTransportHandlerMqtt(TransportFallbackType.WebSocketOnly),
+            TransportType.Amqp => new ProvisioningTransportHandlerAmqp(),
+            TransportType.Amqp_Tcp_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.TcpOnly),
+            TransportType.Amqp_WebSocket_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.WebSocketOnly),
+            TransportType.Http1 => new ProvisioningTransportHandlerHttp(),
+            _ => throw new NotSupportedException($"Unsupported transport type {GetTransportType()}"),
+        };
+    }
 
 
     /// <summary>
