@@ -2,8 +2,6 @@ using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
