@@ -1,6 +1,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
+using System.Reflection;
 using Shared.Logger;
 
 
