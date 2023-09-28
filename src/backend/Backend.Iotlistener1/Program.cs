@@ -4,6 +4,7 @@ using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Backend.Iotlistener.Wrappers;
 using Backend.Iotlistener.Interfaces;
+using Backend.Iotlistener.Services;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
