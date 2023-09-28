@@ -20,6 +20,7 @@ namespace Shared.Logger
             {
                 builder = WebApplication.CreateBuilder(args);
             }
+            builder.Services.AddHttpContextAccessor();
             IConfigurationRefresher? refresher = null;
             string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
             var lo4NetPath = "log4net.config";
