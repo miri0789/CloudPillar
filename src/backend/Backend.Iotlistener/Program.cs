@@ -10,11 +10,7 @@ using Backend.Iotlistener.Wrappers;
 using Backend.Iotlistener.Processors;
 
 using Shared.Logger;
-using System.Reflection;
 
-var informationalVersion = Assembly.GetEntryAssembly()?
-                               .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                               .InformationalVersion;
 
 var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
 builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
@@ -57,7 +53,7 @@ var signingService = app.Services.GetService<ISigningService>();
 var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
 var logger = app.Services.GetService<ILoggerHandler>();
 
-logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
+logger.Info($"Informational Version: ");
 var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
