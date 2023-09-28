@@ -54,7 +54,7 @@ var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkSer
 // var logger = app.Services.GetService<ILoggerHandler>();
 var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable,  PartitionId);
 
-await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory);
+await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 
 await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
 
