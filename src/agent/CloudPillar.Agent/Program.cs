@@ -36,6 +36,7 @@ builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
+builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderHandler>();
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();

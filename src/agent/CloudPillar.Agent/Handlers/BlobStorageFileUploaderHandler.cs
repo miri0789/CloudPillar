@@ -1,6 +1,6 @@
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Azure.Storage.Blob;
 
 namespace CloudPillar.Agent.Entities
 {

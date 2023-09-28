@@ -4,7 +4,7 @@ using CloudPillar.Agent.Handlers;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Devices.Client.Transport;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Azure.Storage.Blob;
 
 [TestFixture]
 public class FileUploaderHandlerTestFixture

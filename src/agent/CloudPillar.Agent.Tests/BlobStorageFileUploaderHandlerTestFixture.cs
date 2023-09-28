@@ -1,7 +1,7 @@
 using Moq;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Entities;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Azure.Storage.Blob;
 using CloudPillar.Agent.Wrappers;
 
 [TestFixture]
