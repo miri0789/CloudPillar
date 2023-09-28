@@ -2,7 +2,7 @@
 using common;
 using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Models.Enums;
-using Shared.Logger;
+// using Shared.Logger;
 using Backend.Iotlistener.Models;
 using Shared.Entities.Messages;
 
@@ -10,15 +10,14 @@ namespace Backend.Iotlistener.Services;
 
 public class FirmwareUpdateService : IFirmwareUpdateService
 {
-    private readonly IHttpRequestorService _httpRequestorService;
+    // private readonly IHttpRequestorService _httpRequestorService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-    private readonly ILoggerHandler _logger;
-    public FirmwareUpdateService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper,
-     ILoggerHandler logger)
+    // private readonly ILoggerHandler _logger;
+    public FirmwareUpdateService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        // _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
-        _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
+        // _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
     }
 
     public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)
@@ -37,21 +36,21 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 {
                     rangeSize = (long)data.EndPosition - data.StartPosition;
                     string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionId={data.ActionId}&fileSize={blobSize}";
-                    requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                    // requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
                 }
                 else
                 {
                     for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
                     {
                         string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
-                        requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                        // requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
                     }
                 }
                 await Task.WhenAll(requests);
             }
             catch (Exception ex)
             {
-                _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
+                // _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
 
             }
         }
