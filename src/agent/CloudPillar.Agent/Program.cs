@@ -27,6 +27,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
+builder.Services.AddSingleton<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
@@ -41,8 +42,7 @@ builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploa
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
-builder.Services.AddScoped<IX509StoreWrapper, X509StoreWrapper>();
-builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
+
 
 
 builder.Services.AddControllers(options =>

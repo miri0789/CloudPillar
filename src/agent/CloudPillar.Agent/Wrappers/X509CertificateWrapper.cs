@@ -6,6 +6,13 @@ using Microsoft.Azure.Devices.Shared;
 namespace CloudPillar.Agent.Wrappers;
 public class X509CertificateWrapper : IX509CertificateWrapper
 {
+
+    public X509Store CreateStore(StoreLocation storeLocation)
+    {
+        ArgumentNullException.ThrowIfNull(storeLocation);
+        return new X509Store(storeLocation);
+    }
+    
     public DeviceAuthenticationWithX509Certificate CreateDeviceAuthentication(string deviceId, X509Certificate2 certificate)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);

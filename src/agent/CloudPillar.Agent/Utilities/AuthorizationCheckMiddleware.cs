@@ -34,7 +34,7 @@ public class AuthorizationCheckMiddleware
         if (IsActionMethod(endpoint))
         {
 
-            X509Certificate2 userCertificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
+            X509Certificate2? userCertificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
 
             if (userCertificate == null)
             {

@@ -25,13 +25,25 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
     }
 
-    public void DeviceInitialization(DeviceClient deviceClient)
+    public async Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod)
     {
-        if (deviceClient == null)
+        ArgumentNullException.ThrowIfNullOrEmpty(hostname);
+        ArgumentNullException.ThrowIfNull(authenticationMethod);
+
+        var iotClient = DeviceClient.Create(hostname, authenticationMethod, GetTransportType());
+        if (iotClient != null)
         {
-            throw new ArgumentNullException(nameof(deviceClient));
+            // iotClient never return null also if device not exist, so to check if device is exist, or the certificate is valid we try to get the device twin.
+            var twin = await iotClient.GetTwinAsync();
+            if (twin != null)
+            {
+                _deviceClient = iotClient;
+            }
+            else
+            {
+                _logger.Info($"Device does not exist in {hostname}.");
+            }
         }
-        _deviceClient = deviceClient;        
     }
 
 

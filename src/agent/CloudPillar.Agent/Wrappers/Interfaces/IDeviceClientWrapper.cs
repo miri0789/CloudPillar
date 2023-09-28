@@ -5,7 +5,7 @@ using Microsoft.Azure.Devices.Shared;
 namespace CloudPillar.Agent.Wrappers;
 public interface IDeviceClientWrapper
 {
-    void DeviceInitialization(DeviceClient deviceClient);
+    Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod);
 
     string GetDeviceId();
 

@@ -21,24 +21,21 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     private readonly ILoggerHandler _logger;
 
     private IDeviceClientWrapper _deviceClientWrapper;
-    private readonly IX509StoreWrapper _storeWrapper;
     private readonly IX509CertificateWrapper _X509CertificateWrapper;
 
     public X509DPSProvisioningDeviceClientHandler(
         ILoggerHandler loggerHandler,
         IDeviceClientWrapper deviceClientWrapper,
-        IX509StoreWrapper storeWrapper,
         IX509CertificateWrapper X509CertificateWrapper)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
-        _storeWrapper = storeWrapper ?? throw new ArgumentNullException(nameof(storeWrapper));
         _X509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
     }
 
     public X509Certificate2? GetCertificate()
     {
-        using (X509Store store = _storeWrapper.Create(StoreLocation.CurrentUser))
+        using (X509Store store = _X509CertificateWrapper.CreateStore(StoreLocation.CurrentUser))
         {
             store.Open(OpenFlags.ReadOnly);
             X509Certificate2Collection certificates = store.Certificates;
@@ -62,11 +59,6 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
-        if (await IsDeviceInitializedAsync())
-        {
-            return true;
-        }
-
         var deviceId = GetDeviceIdFromCertificate(userCertificate);
         var iotHubHostName = GetIotHubHostNameFromCertificate(userCertificate);
 
@@ -76,48 +68,54 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
-        return await AuthorizeDeviceAsync(deviceId, iotHubHostName, userCertificate);
+        return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate);
     }
 
-    public async Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint)
+    public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(dpsScopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
         ArgumentNullException.ThrowIfNull(certificate);
 
-        try
+        using var security = _X509CertificateWrapper.CreateSecurityProvider(certificate);
+
+        _logger.Debug($"Initializing the device provisioning client...");
+
+        using ProvisioningTransportHandler transport = GetTransportHandler();
+        var provClient = ProvisioningDeviceClient.Create(
+            globalDeviceEndpoint,
+            dpsScopeId,
+            security,
+            transport);
+
+        _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
+
+        DeviceRegistrationResult result = await provClient.RegisterAsync();
+
+        _logger.Debug($"Registration status: {result.Status}.");
+        if (result.Status != ProvisioningRegistrationStatusType.Assigned)
         {
-            using var security = _X509CertificateWrapper.CreateSecurityProvider(certificate);
+            _logger.Error("Registration status did not assign a hub.");
+            return;
+        }
+        _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
-            _logger.Debug($"Initializing the device provisioning client...");
+        await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate);
 
-            using ProvisioningTransportHandler transport = GetTransportHandler();
-            var provClient = ProvisioningDeviceClient.Create(
-                globalDeviceEndpoint,
-                dpsScopeId,
-                security,
-                transport);
+    }
 
-            _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
+    private string GetIotHubHostNameFromCertificate(X509Certificate2 userCertificate)
+    {
+        var iotHubHostName = string.Empty;
+        foreach (X509Extension extension in userCertificate.Extensions)
+        {
 
-            _logger.Debug("Registering with the device provisioning service... ");
-            DeviceRegistrationResult result = await provClient.RegisterAsync();
-
-            _logger.Debug($"Registration status: {result.Status}.");
-            if (result.Status != ProvisioningRegistrationStatusType.Assigned)
+            if (extension.Oid?.Value == IOT_HUB_HOST_NAME_EXTENTION_KEY)
             {
-                _logger.Error("Registration status did not assign a hub.");
-                return false;
+                iotHubHostName = Encoding.UTF8.GetString(extension.RawData);
             }
-            _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
-            return true;
         }
-        catch (Exception ex)
-        {
-            _logger.Error($"Provisioning failed", ex);
-            return false;
-        }
-
+        return iotHubHostName;
     }
 
     private async Task<bool> IsDeviceInitializedAsync()
@@ -137,47 +135,20 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     private string GetDeviceIdFromCertificate(X509Certificate2 userCertificate)
     {
-        if(string.IsNullOrEmpty(userCertificate.Subject))
+        if (string.IsNullOrEmpty(userCertificate.Subject))
         {
             throw new ArgumentNullException(nameof(userCertificate.Subject));
         }
         return userCertificate.Subject.Replace(CERTIFICATE_SUBJECT, string.Empty);
     }
 
-    private string GetIotHubHostNameFromCertificate(X509Certificate2 userCertificate)
-    {
-        var iotHubHostName = string.Empty;
-        foreach (X509Extension extension in userCertificate.Extensions)
-        {
-
-            if (extension.Oid?.Value == IOT_HUB_HOST_NAME_EXTENTION_KEY)
-            {
-                iotHubHostName = Encoding.UTF8.GetString(extension.RawData);
-            }
-        }
-        return iotHubHostName;
-    }
-
-    private async Task<bool> AuthorizeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate)
+    private async Task<bool> CheckAuthorizationAndInitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate)
     {
         try
         {
-
             using var auth = _X509CertificateWrapper.CreateDeviceAuthentication(deviceId, userCertificate);
-            var iotClient = DeviceClient.Create(iotHubHostName, auth, _deviceClientWrapper.GetTransportType());
-            if (iotClient != null)
-            {
-                // iotClient never return null also if device not exist, so to check if device is exist, or the certificate is valid we try to get the device twin.
-                var twin = await iotClient.GetTwinAsync();
-                if (twin != null)
-                {
-                    _deviceClientWrapper.DeviceInitialization(iotClient);
-                    return true;
-                }
-            }
-
-            _logger.Info($"Device {deviceId} does not exist in {iotHubHostName}.");
-            return false;
+            await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth);
+            return await IsDeviceInitializedAsync();
         }
         catch (Exception ex)
         {
