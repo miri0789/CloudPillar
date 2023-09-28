@@ -10,52 +10,58 @@ using Backend.Iotlistener.Wrappers;
 using Backend.Iotlistener.Processors;
 
 using Shared.Logger;
+using System.Reflection;
 
+var informationalVersion = Assembly.GetEntryAssembly()?
+                               .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                               .InformationalVersion;
 
 var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
 // builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
 // builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
-builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
-builder.Services.AddScoped<ISigningService, SigningService>();
-builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
-builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
-builder.Services.AddHttpClient();
+// builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
+// builder.Services.AddScoped<ISigningService, SigningService>();
+// builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
+// builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+// builder.Services.AddHttpClient();
 
-var cts = new CancellationTokenSource();
-AssemblyLoadContext.Default.Unloading += context =>
-{
-    cts.Cancel();
-};
+// var cts = new CancellationTokenSource();
+// AssemblyLoadContext.Default.Unloading += context =>
+// {
+//     cts.Cancel();
+// };
 var app = builder.Build();
 
-var _envirementVariable = app.Services.GetService<IEnvironmentsWrapper>();
+// var _envirementVariable = app.Services.GetService<IEnvironmentsWrapper>();
 
-string? PartitionId = _envirementVariable.partitionId?.Split('-')?.Last();
+// string? PartitionId = _envirementVariable.partitionId?.Split('-')?.Last();
 
-EventProcessorHost eventProcessorHost = new EventProcessorHost(
-        Guid.NewGuid().ToString(),
-        _envirementVariable.iothubEventHubCompatiblePath,
-        PartitionReceiver.DefaultConsumerGroupName,
-        _envirementVariable.iothubEventHubCompatibleEndpoint,
-        _envirementVariable.storageConnectionString,
-        _envirementVariable.blobContainerName);
+// EventProcessorHost eventProcessorHost = new EventProcessorHost(
+//         Guid.NewGuid().ToString(),
+//         _envirementVariable.iothubEventHubCompatiblePath,
+//         PartitionReceiver.DefaultConsumerGroupName,
+//         _envirementVariable.iothubEventHubCompatibleEndpoint,
+//         _envirementVariable.storageConnectionString,
+//         _envirementVariable.blobContainerName);
 
-var eventProcessorOptions = new EventProcessorOptions
-{
-    MaxBatchSize = 100,
-    PrefetchCount = 10,
-    ReceiveTimeout = TimeSpan.FromSeconds(40),
-    InvokeProcessorAfterReceiveTimeout = true,
-};
+// var eventProcessorOptions = new EventProcessorOptions
+// {
+//     MaxBatchSize = 100,
+//     PrefetchCount = 10,
+//     ReceiveTimeout = TimeSpan.FromSeconds(40),
+//     InvokeProcessorAfterReceiveTimeout = true,
+// };
 
-var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
-var signingService = app.Services.GetService<ISigningService>();
-var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
+// var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
+// var signingService = app.Services.GetService<ISigningService>();
+// var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
 var logger = app.Services.GetService<ILoggerHandler>();
-var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable, PartitionId);
 
-await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
+logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
+// var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable, PartitionId);
 
-await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
+// await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 
-await eventProcessorHost.UnregisterEventProcessorAsync();
+// await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
+
+// await eventProcessorHost.UnregisterEventProcessorAsync();
