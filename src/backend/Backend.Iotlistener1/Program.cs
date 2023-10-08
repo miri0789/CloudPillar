@@ -15,7 +15,7 @@ var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                .InformationalVersion;
 
-var builder = LoggerHostCreator.Configure("Iotlistener1", WebApplication.CreateBuilder(args));
+var builder = LoggerHostCreator.Configure("Iotlistener", WebApplication.CreateBuilder(args));
 
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
