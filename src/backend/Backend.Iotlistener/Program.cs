@@ -23,8 +23,8 @@ builder.Services.AddScoped<ISigningService, SigningService>();
 builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
 builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
+builder.Services.AddHttpClient();
 var app = builder.Build();
-app.Run();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
@@ -58,7 +58,6 @@ var eventProcessorOptions = new EventProcessorOptions
 var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
 var signingService = app.Services.GetService<ISigningService>();
 var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
-builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable, logger, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
@@ -68,3 +67,4 @@ await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
 await eventProcessorHost.UnregisterEventProcessorAsync();
 
 
+app.Run();
