@@ -12,7 +12,7 @@ public class SigningService : ISigningService
     // private readonly IHttpRequestorService _httpRequestorService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
-    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler _logger)
+    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     { 
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
