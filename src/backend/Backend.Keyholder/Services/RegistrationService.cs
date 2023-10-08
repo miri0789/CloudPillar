@@ -152,8 +152,9 @@ public class RegistrationService : IRegistrationService
             {
                 Data = pfxBytes,
                 EnrollmentId = individualEnrollment.RegistrationId,
-                ScopedId = _environmentsWrapper.dpsIdScope,
-                DeviceEndpoint = DEVICE_ENDPOINT
+                DeviceEndpoint = DEVICE_ENDPOINT,
+                // TODO: get the scopeid from the dps, not from the env
+                ScopedId = _environmentsWrapper.dpsIdScope
             };
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
             await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
