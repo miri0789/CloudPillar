@@ -19,7 +19,7 @@ public class AgentController : ControllerBase
     private readonly ITwinHandler _twinHandler;
 
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
-    
+
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
@@ -37,7 +37,7 @@ public class AgentController : ControllerBase
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
     }
-   
+
     [HttpPost("AddRecipe")]
     public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
     {
@@ -53,7 +53,7 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId, string globalDeviceEndpoint)
+    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId, string enrollmentId, string globalDeviceEndpoint, CancellationToken cancellationToken)
     {
         try
         {
@@ -61,28 +61,29 @@ public class AgentController : ControllerBase
             var cert = _dPSProvisioningDeviceClientHandler.GetCertificate();
             if (cert == null)
             {
-                var error  = "No certificate exist in agent";
+                var error = "No certificate exist in agent";
                 _logger.Error(error);
                 return Unauthorized(error);
             }
 
-            var isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert);
+            var isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert, cancellationToken);
             if (!isAuthorized)
             {
-                if (await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint))
+                try
                 {
-                    await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert);
+                    await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint, cancellationToken);
                 }
-                else
+                catch (Exception ex)
                 {
-                    return BadRequest("Failed to provisioning");
+                    _logger.Error($"Provisioning failed", ex);
+                    return BadRequest("Provisioning failed");
                 }
             }
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)
         {
-            _logger.Error($"InitiateProvisioning error: {ex.Message}");
+            _logger.Error($"InitiateProvisioning error: ", ex);
             throw;
         }
     }

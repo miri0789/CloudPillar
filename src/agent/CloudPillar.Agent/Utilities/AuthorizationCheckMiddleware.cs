@@ -8,33 +8,33 @@ using Shared.Logger;
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
 {
-    private readonly RequestDelegate _next;
+    private readonly RequestDelegate _requestDelegate;
 
     private ILoggerHandler _logger;
 
     private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
-    public AuthorizationCheckMiddleware(RequestDelegate next, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
+    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
     {
-        _next = next;
+        _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task Invoke(HttpContext context)
     {
-
+        CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
         Endpoint endpoint = context.GetEndpoint();
         if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
         {
             // The action has [AllowAnonymous], so allow the request to proceed
-            await _next(context);
+            await _requestDelegate(context);
             return;
         }
         if (IsActionMethod(endpoint))
         {
 
-            X509Certificate2 userCertificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
+            X509Certificate2? userCertificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
 
             if (userCertificate == null)
             {
@@ -43,7 +43,7 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate);
+            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
@@ -51,11 +51,11 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await _next(context);
+            await _requestDelegate(context);
         }
         else
         {
-            await _next(context);
+            await _requestDelegate(context);
         }
 
     }

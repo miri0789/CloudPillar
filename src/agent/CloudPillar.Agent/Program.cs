@@ -5,6 +5,7 @@ using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Shared.Entities.Factories;
+using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -26,11 +27,14 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
+builder.Services.AddSingleton<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
 builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
+builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddScoped<ITwinHandler, TwinHandler>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
@@ -39,8 +43,9 @@ builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderH
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
-builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
+builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
+
 
 
 builder.Services.AddControllers(options =>
