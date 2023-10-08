@@ -41,9 +41,9 @@ controllers:
     - name: BlobContainerName
       value: "iotcontainer"
     - name: BlobStreamerUrl
-      value: "blobstreamer-service"
+      value: "http://blobstreamer-service:8080/"
     - name: SigningUrl
-      value: "keyholder-service"
+      value: "http://keyholder-service:8080/"
     - name: RangeCalculateType
       value: "percent"
     - name: RangePercent
