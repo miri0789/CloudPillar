@@ -17,7 +17,7 @@ public class RegistrationService : IRegistrationService
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
     private const string HOST_NAME_EXTENTION_NAME = "iotHubHostName";
     private const int KEY_SIZE_IN_BITS = 4096;
-
+    private const string DEVICE_ENDPOINT = "global.azure-devices-provisioning.net";
     private readonly ILoggerHandler _loggerHandler;
 
     private readonly IMessageFactory _messageFactory;
@@ -55,18 +55,25 @@ public class RegistrationService : IRegistrationService
 
     public async Task Register(string deviceId, string oneMDKey)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
-        ArgumentNullException.ThrowIfNullOrEmpty(oneMDKey);
-
-        var certificate = GenerateCertificate(deviceId, oneMDKey);
-        var enrollment = await CreateEnrollmentAsync(certificate, deviceId);
-        await SendCertificateToAgent(deviceId, oneMDKey, certificate, enrollment);
+        try
+        {
+            var certificate = GenerateCertificate(deviceId, oneMDKey);
+            var enrollment = await CreateEnrollmentAsync(certificate, deviceId);
+            await SendCertificateToAgent(deviceId, oneMDKey, certificate, enrollment);
+        }
+        catch (Exception ex)
+        {
+            _loggerHandler.Error("Faild to register ", ex);
+            throw;
+        }
     }
 
 
 
     internal X509Certificate2 GenerateCertificate(string deviceId, string OneMDKey)
     {
+        ArgumentNullException.ThrowIfNullOrEmpty(OneMDKey);
+        ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
@@ -94,14 +101,22 @@ public class RegistrationService : IRegistrationService
 
     internal async Task<IndividualEnrollment> CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId)
     {
+        ArgumentNullException.ThrowIfNull(certificate);
+        ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
         using (ProvisioningServiceClient provisioningServiceClient =
                     ProvisioningServiceClient.CreateFromConnectionString(_environmentsWrapper.dpsConnectionString))
         {
-            ArgumentNullException.ThrowIfNull(certificate);
-            ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
-
             var cer = _x509CertificateWrapper.CreateCertificate(certificate.Export(X509ContentType.Cert));
             Attestation attestation = X509Attestation.CreateFromClientCertificates(cer);
+
+            try
+            {
+                await provisioningServiceClient.DeleteIndividualEnrollmentAsync(deviceId);
+            }
+            catch (ProvisioningServiceClientException ex)
+            {
+                //If the enrollment does not exist, it throws an exception when attempting to delete it.
+            }            
 
             var individualEnrollment = _individualEnrollmentWrapper.Create(deviceId, attestation);
 
@@ -109,7 +124,7 @@ public class RegistrationService : IRegistrationService
             individualEnrollment.DeviceId = deviceId;
             individualEnrollment.IotHubHostName = _iotHubHostName;
 
-            return await provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);
+            return await provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment);
 
         }
     }
@@ -119,15 +134,27 @@ public class RegistrationService : IRegistrationService
         ArgumentNullException.ThrowIfNull(certificate);
         ArgumentNullException.ThrowIfNull(individualEnrollment);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
-        var pfxBytes = certificate.Export(X509ContentType.Pkcs12, "");
-        string certificateBase64 = Convert.ToBase64String(pfxBytes);
-        var message = new ReProvisioningMessage()
+        ArgumentNullException.ThrowIfNullOrEmpty(oneMDKey);
+        using (SHA256 sha256 = SHA256.Create())
         {
-            Certificate = certificateBase64,
-            EnrollmentId = individualEnrollment.RegistrationId
-        };
-        var c2dMessage = _messageFactory.PrepareC2DMessage(message);
-        await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
+            // Compute the hash
+            byte[] passwordBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(oneMDKey));
+
+            // Convert the hash to a hexadecimal string
+            string passwordString = BitConverter.ToString(passwordBytes).Replace("-", "").ToLower();
+
+            var pfxBytes = certificate.Export(X509ContentType.Pkcs12, passwordString);
+            //string certificateBase64 = Convert.ToBase64String(pfxBytes);
+            var message = new ReProvisioningMessage()
+            {
+                Data = pfxBytes,
+                EnrollmentId = individualEnrollment.RegistrationId,
+                ScopedId = _environmentsWrapper.dpsIdScope,
+                DeviceEndpoint = DEVICE_ENDPOINT
+            };
+            var c2dMessage = _messageFactory.PrepareC2DMessage(message);
+            await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
+        }
     }
 
     private string GetIOTHubHostName()

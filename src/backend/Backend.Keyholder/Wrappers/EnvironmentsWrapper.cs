@@ -13,6 +13,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _iothubConnectionString = "IothubConnectionString";
 
     private const string _dpsConnectionString = "DPSConnectionString";
+    private const string _dpsIdScope = "DPSIdScope";
 
     private const string _certificateExpiredDays = "CertificateExpiredDays";
 
@@ -41,6 +42,12 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return GetVariable(_dpsConnectionString); }
     }
+
+    public string dpsIdScope
+    {
+        get { return GetVariable(_dpsIdScope); }
+    }
+
 
     public int certificateExpiredDays
     {
