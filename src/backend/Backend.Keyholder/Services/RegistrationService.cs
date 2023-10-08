@@ -15,7 +15,6 @@ using Backend.Keyholder.Wrappers.Interfaces;
 public class RegistrationService : IRegistrationService
 {
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
-    private const string HOST_NAME_EXTENTION_NAME = "iotHubHostName";
     private const int KEY_SIZE_IN_BITS = 4096;
     private const string DEVICE_ENDPOINT = "global.azure-devices-provisioning.net";
     private readonly ILoggerHandler _loggerHandler;
@@ -74,6 +73,7 @@ public class RegistrationService : IRegistrationService
     {
         ArgumentNullException.ThrowIfNullOrEmpty(OneMDKey);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
+        _loggerHandler.Debug($"GenerateCertificate for deviceId {deviceId}");
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
@@ -103,6 +103,7 @@ public class RegistrationService : IRegistrationService
     {
         ArgumentNullException.ThrowIfNull(certificate);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
+        _loggerHandler.Debug($"CreateEnrollmentAsync for deviceId {deviceId}");
         using (ProvisioningServiceClient provisioningServiceClient =
                     ProvisioningServiceClient.CreateFromConnectionString(_environmentsWrapper.dpsConnectionString))
         {
@@ -112,6 +113,7 @@ public class RegistrationService : IRegistrationService
             try
             {
                 await provisioningServiceClient.DeleteIndividualEnrollmentAsync(deviceId);
+                 _loggerHandler.Debug($"Individual enrollment for deviceId {deviceId} was deleted");
             }
             catch (ProvisioningServiceClientException ex)
             {
@@ -131,6 +133,7 @@ public class RegistrationService : IRegistrationService
 
     internal async Task SendCertificateToAgent(string deviceId, string oneMDKey, X509Certificate2 certificate, IndividualEnrollment individualEnrollment)
     {
+         _loggerHandler.Debug($"SendCertificateToAgent for deviceId {deviceId}.");
         ArgumentNullException.ThrowIfNull(certificate);
         ArgumentNullException.ThrowIfNull(individualEnrollment);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);

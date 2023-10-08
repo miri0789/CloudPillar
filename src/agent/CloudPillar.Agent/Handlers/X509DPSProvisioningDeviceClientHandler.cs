@@ -43,7 +43,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
                 return null;
             }
             var filteredCertificate = certificates.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(CertificateConstants.CLOUD_PILLAR_SUBJECT))
+               .Where(cert => cert.Subject.StartsWith(CertificateConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
                .FirstOrDefault();
 
             return filteredCertificate;
@@ -78,7 +78,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             throw new ArgumentException(error);
         }
 
-        deviceId = CLOUD_PILLAR_SUBJECT + deviceId;
+        deviceId = CertificateConstants.CLOUD_PILLAR_SUBJECT + deviceId;
         iotHubHostName += IOT_HUB_NAME_SUFFIX;
         return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
     }

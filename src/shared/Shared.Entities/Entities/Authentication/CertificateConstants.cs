@@ -1,6 +1,8 @@
 public class CertificateConstants
 {
-    public const string CLOUD_PILLAR_SUBJECT = "CN=CloudPillar-";
+    public const string CLOUD_PILLAR_SUBJECT = "CloudPillar-";
+    
+    public const string CERTIFICATE_SUBJECT = "CN=";
 
     public const string IOT_HUB_HOST_NAME_EXTENTION_KEY = "2.2.2.2";
 
