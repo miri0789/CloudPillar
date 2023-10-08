@@ -3,10 +3,6 @@
 # Declare variables to be passed into your templates.
 
 controllers:
-  # - title: "analyzer"
-  # - title: "beapi"
-  #   path: /cloudpillar/api
-  #   port: 8089
   - title: "blobstreamer"
     path: /blobstreamer-service
     port: 8080

@@ -18,10 +18,5 @@ terraform {
 
 provider "azurerm" {
   features {}
-}
-
-provider "azurerm" {
-  alias = "prod"
-  features {}
   subscription_id = "a147112f-bc59-4e9e-ac2f-5b4585e6542e"
 }
