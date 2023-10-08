@@ -55,9 +55,6 @@ resource "azurerm_iothub_route" "device_lifecycle" {
   enabled       = true
 }
 resource "azurerm_iothub_file_upload" "iot" {  
-  depends_on = [
-    azurerm_iothub.iot
-  ]
   iothub_id         = azurerm_iothub.iot.id
   connection_string = azurerm_storage_account.iot.primary_blob_connection_string
   container_name    = azurerm_storage_container.iot.name

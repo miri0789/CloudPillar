@@ -33,7 +33,7 @@ controllers:
     - name: LogswriteTopic
       value: "logswrite-topic"
     - name: IothubEventHubCompatibleEndpoint
-      value: "Endpoint=sb://iothub-ns-cp-dev-iot-25265827-69d8d8cde4.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=9rvwvS9LH8uF2tv30QOjqZc0u3y9UlVTjAIoTCFYTQI=;EntityPath=cp-dev-iothub"
+      value: "Endpoint=sb://iothub-ns-cp-dev-iot-25287979-68405f75ab.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M=;EntityPath=cp-dev-iothub"
     - name: IothubEventHubCompatiblePath
       value: "cp-dev-iothub"
     - name: StorageConnectionString
