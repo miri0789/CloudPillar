@@ -29,6 +29,7 @@ EXPOSE 8080
 ENV DOTNET_RUNNING_IN_CONTAINER=true \
       ASPNETCORE_URLS=http://+:8080
     
+RUN apk add --no-cache icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib
 COPY --from=publish /app/publish .
 ARG DLL
 ENV DLL_NAME=${DLL}.dll
