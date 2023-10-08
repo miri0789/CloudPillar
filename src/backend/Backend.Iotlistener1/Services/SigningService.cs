@@ -1,7 +1,7 @@
 ﻿// using common;
 using Backend.Iotlistener.Interfaces;
 using Shared.Entities.Messages;
-// using Shared.Logger;
+using Shared.Logger;
 
 namespace Backend.Iotlistener.Services;
 
@@ -11,10 +11,10 @@ public class SigningService : ISigningService
 
     // private readonly IHttpRequestorService _httpRequestorService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-    // private readonly ILoggerHandler _logger;
-    public SigningService(IEnvironmentsWrapper environmentsWrapper)
+    private readonly ILoggerHandler _logger;
+    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler _logger)
     { 
-        // _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         // _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
     }
@@ -28,7 +28,7 @@ public class SigningService : ISigningService
         }
         catch (Exception ex)
         {
-            // _logger.Error($"SigningService CreateTwinKeySignature failed.", ex);
+            _logger.Error($"SigningService CreateTwinKeySignature failed.", ex);
         }
     }
 
