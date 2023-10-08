@@ -20,4 +20,7 @@
     <!-- 05/2023: This package has no known vulnerabilities. https://nuget.qite.be/feeds/Default/Swashbuckle.AspNetCore.SwaggerUI/versions/vulnerabilities -->
   
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\infra\common\common.csproj" />
+  </ItemGroup>
 </Project>

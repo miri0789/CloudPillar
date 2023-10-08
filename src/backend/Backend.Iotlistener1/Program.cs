@@ -9,6 +9,7 @@ using Backend.Iotlistener.Processors;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using System.Runtime.Loader;
+using common;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -20,7 +21,8 @@ builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
 builder.Services.AddScoped<ISigningService, SigningService>();
 builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
-
+builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
+builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 var app = builder.Build();
 app.Run();
 
