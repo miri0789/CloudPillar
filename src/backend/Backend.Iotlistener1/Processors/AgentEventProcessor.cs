@@ -15,23 +15,24 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     private readonly IStreamingUploadChunkService _streamingUploadChunkService;
     private readonly string _partitionId;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly ILoggerHandler _logger;
 
     public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService,
-     ISigningService signingService, IStreamingUploadChunkService streamingUploadChunkService, IEnvironmentsWrapper environmentsWrapper, string partitionId)
+     ISigningService signingService, IStreamingUploadChunkService streamingUploadChunkService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, string partitionId)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _partitionId = partitionId;
-        // _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public IEventProcessor CreateEventProcessor(PartitionContext context)
     {
         if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
         {
-            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _streamingUploadChunkService, _environmentsWrapper);
+            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _streamingUploadChunkService, _environmentsWrapper, _logger);
         }
 
         return new NullEventProcessor();
@@ -43,40 +44,40 @@ public class AgentEventProcessor : IEventProcessor
     private readonly ISigningService _signingService;
     private readonly IStreamingUploadChunkService _streamingUploadChunkService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-    // private readonly ILoggerHandler _logger;
+    private readonly ILoggerHandler _logger;
 
     public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService,
-     ISigningService signingService, IStreamingUploadChunkService streamingUploadChunkService, IEnvironmentsWrapper environmentsWrapper)
+     ISigningService signingService, IStreamingUploadChunkService streamingUploadChunkService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
-        // _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public Task OpenAsync(PartitionContext context)
     {
-        Console.WriteLine($"AgentEventProcessor initialized. Partition: '{context.PartitionId}'");
+        _logger.Info($"AgentEventProcessor initialized. Partition: '{context.PartitionId}'");
         return Task.CompletedTask;
     }
 
     public Task CloseAsync(PartitionContext context, CloseReason reason)
     {
-        Console.WriteLine($"AgentEventProcessor closing. Partition: '{context.PartitionId}', Reason: '{reason}'");
+        _logger.Info($"AgentEventProcessor closing. Partition: '{context.PartitionId}', Reason: '{reason}'");
         return Task.CompletedTask;
     }
 
     public Task ProcessErrorAsync(PartitionContext context, Exception error)
     {
-        Console.WriteLine($"AgentEventProcessor error on Partition: {context.PartitionId}, Error: {error}");
+        _logger.Info($"AgentEventProcessor error on Partition: {context.PartitionId}, Error: {error}");
         return Task.CompletedTask;
     }
 
     // Process events received from the Event Hubs
     public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
     {
-        Console.WriteLine($"AgentEventProcessor ProcessEventsAsync. Partition: '{context.PartitionId}'.");
+        _logger.Info($"AgentEventProcessor ProcessEventsAsync. Partition: '{context.PartitionId}'.");
 
         string drainD2cQueues = _environmentsWrapper.drainD2cQueues;
 
@@ -84,7 +85,7 @@ public class AgentEventProcessor : IEventProcessor
         {
             if (DateTime.UtcNow - eventData.SystemProperties.EnqueuedTimeUtc > TimeSpan.FromMinutes(_environmentsWrapper.messageTimeoutMinutes))
             {
-                Console.WriteLine($"Ignoring message older than {_environmentsWrapper.messageTimeoutMinutes} minutes.");
+                _logger.Warn($"Ignoring message older than {_environmentsWrapper.messageTimeoutMinutes} minutes.");
                 continue;
             }
             await HandleMessageAsync(eventData, !String.IsNullOrWhiteSpace(drainD2cQueues), context.PartitionId);
@@ -101,7 +102,7 @@ public class AgentEventProcessor : IEventProcessor
 
             if (d2CMessage == null || isDrainMode)
             {
-                Console.WriteLine($"Draining on Partition: {partitionId}, Event: {data}");
+                _logger.Warn($"Draining on Partition: {partitionId}, Event: {data}");
                 return;
             }
 
@@ -136,7 +137,7 @@ public class AgentEventProcessor : IEventProcessor
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed parsing message on Partition: {partitionId}, Error: {ex.Message} - Ignoring");
+            _logger.Error($"Failed parsing message on Partition: {partitionId}, Error: {ex.Message} - Ignoring");
         }
     }
 

@@ -1,7 +1,7 @@
-﻿using common;
-using Backend.Iotlistener.Interfaces;
+﻿using Backend.Iotlistener.Interfaces;
 using Shared.Entities.Messages;
 using Shared.Logger;
+using common;
 
 namespace Backend.Iotlistener.Services;
 
