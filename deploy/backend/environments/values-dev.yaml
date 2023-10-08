@@ -37,7 +37,7 @@ controllers:
     - name: IothubEventHubCompatiblePath
       value: "cp-dev-iothub"
     - name: StorageConnectionString
-      value: "DefaultEndpointsProtocol=https;AccountName=cpiotdevfiles;AccountKey=CSd3tecNZy82mqFfxvYB5PvoDbhQRjPWyJaMshFgz6WRshqcKURlqGKtZk2tFLQgh8VRdbCFLUqe+AStnJhc2g==;EndpointSuffix=core.windows.net"
+      value: "DefaultEndpointsProtocol=https;AccountName=cpiotdevfiles;AccountKey=4xnzVu7YbBcaclEdyoQnR1Ej7z51cOYWIsnnocN7X6UOP4xNN523FNntSKM8NhBscybkvIxdl+rz+AStree0GA==;EndpointSuffix=core.windows.net"
     - name: BlobContainerName
       value: "iotcontainer"
     - name: BlobStreamerUrl
