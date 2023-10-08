@@ -22,6 +22,7 @@ builder.Services.AddScoped<ISigningService, SigningService>();
 builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
 
 var app = builder.Build();
+app.Run();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
@@ -64,4 +65,3 @@ await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
 await eventProcessorHost.UnregisterEventProcessorAsync();
 
 
-app.Run();
