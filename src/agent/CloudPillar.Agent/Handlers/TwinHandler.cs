@@ -20,8 +20,8 @@ public class TwinHandler : ITwinHandler
     private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
-
     private readonly ILoggerHandler _logger;
+
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
                        IFileUploaderHandler fileUploaderHandler,
@@ -42,7 +42,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var twin = await _deviceClient.GetTwinAsync();
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             string desiredJson = twin.Properties.Desired.ToJson();
@@ -84,14 +84,14 @@ public class TwinHandler : ITwinHandler
                         var twinReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         if (twinReport != null)
                         {
-                            await UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
+                            await UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1), cancellationToken);
                         }
                         break;
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
                         var actionToReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
-                        await UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
+                        await UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
                         break;
 
                     default:
@@ -102,7 +102,7 @@ public class TwinHandler : ITwinHandler
                 }
                 //TODO : queue - FIFO
                 // https://dev.azure.com/BiosenseWebsterIs/CloudPillar/_backlogs/backlog/CloudPillar%20Team/Epics/?workitem=9782
-                await UpdateReportActionAsync(new List<ActionToReport>() { action });
+                await UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -205,11 +205,11 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported)
+    public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported, CancellationToken cancellationToken)
     {
         try
         {
-            var twin = await _deviceClient.GetTwinAsync();
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             actionsToReported.ToList().ForEach(actionToReport =>
@@ -244,11 +244,11 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    public async Task<string> GetTwinJsonAsync()
+    public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var twin = await _deviceClient.GetTwinAsync();
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             if (twin != null)
             {
                 return twin.ToJson();

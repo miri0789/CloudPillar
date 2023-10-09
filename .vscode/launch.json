@@ -164,7 +164,7 @@
                 "SigningPem": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSHVBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFqQklIV01JSFRBZ0VCQkVJQml5QWE3YVJIRkRDaDJxZ2EKOXNUVUdJTkU1akhBRm5tTTh4V2VUL3VuaTVJNHROcWhWNVh4MHBEcm1DVjltYnJvRnRmRWEwWFZmS3VNQXh4ZgpaNkxNL3lLaGdZa0RnWVlBQkFHQnpnZG5QNzk4RnNMdVdZVEREUUE3YzByM0JWazhOblJVU2V4cFFVc1JpbFBOCnYzU2NoTzBsUnc5UnU4Nngxa2huVkR4K2R1cTRCaURGY3ZsU0FjeWpMQUNKdmp2b3lUTEppQStUUUZkbXJlYXIKak1pWk5FMjVwVDJ5V1AxTlVuZEp4UGN2VnRmQlc0OGtQT212a1k0V2xxUDViQXdDWHdic0tyQ2drNnhic3AxMgpldz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0=",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
-                "IothubConnectionString": "HostName=iot-dicom-dev-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=M3PM2vdanS3QhCnjKyD8m/QObHFSR5e0ZK2wHU1Ywh8=",
+                "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
             }
         },
         {
@@ -195,10 +195,7 @@
             "program": "${workspaceFolder}/src/agent/CloudPillar.Agent/bin/Debug/net7.0/CloudPillar.Agent.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
-            "console": "internalConsole",
-            "env": {
-                "DeviceConnectionString": "HostName=iot-bracha-dev.azure-devices.net;DeviceId=nechama-device;SharedAccessKey=vyzvjBHuxD1a7hoBPvqJ8ORD8QNWOEMjxz+/jYIzklU="
-            },
+            "console": "internalConsole",            
             "stopAtEntry": false
         }
     ]

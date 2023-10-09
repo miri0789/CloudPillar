@@ -1,14 +1,15 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Devices.Client.Transport;
+using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
-    private readonly DeviceClient _deviceClient;
+    private DeviceClient _deviceClient;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-
     private readonly ILoggerHandler _logger;
     private const int kB = 1024;
 
@@ -19,24 +20,48 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// <exception cref="NullReferenceException"></exception>
     public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper)); ;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        var _transportType = GetTransportType();
-        try
-        {
-            _deviceClient = DeviceClient.CreateFromConnectionString(_environmentsWrapper.deviceConnectionString, _transportType);
-            if (_deviceClient == null)
-            {
-                throw new NullReferenceException("CreateDeviceClient FromConnectionString failed the device is null");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"CreateFromConnectionString failed {ex.Message}");
-            throw;
-        }
 
     }
+
+    public async Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNullOrEmpty(hostname);
+        ArgumentNullException.ThrowIfNull(authenticationMethod);
+
+        var iotClient = DeviceClient.Create(hostname, authenticationMethod, GetTransportType());
+        if (iotClient != null)
+        {
+            // iotClient never return null also if device not exist, so to check if device is exist, or the certificate is valid we try to get the device twin.
+            var twin = await iotClient.GetTwinAsync(cancellationToken);
+            if (twin != null)
+            {
+                _deviceClient = iotClient;
+            }
+            else
+            {
+                _logger.Info($"Device does not exist in {hostname}.");
+            }
+        }
+    }
+
+
+    public ProvisioningTransportHandler GetProvisioningTransportHandler()
+    {
+        return GetTransportType() switch
+        {
+            TransportType.Mqtt => new ProvisioningTransportHandlerMqtt(),
+            TransportType.Mqtt_Tcp_Only => new ProvisioningTransportHandlerMqtt(TransportFallbackType.TcpOnly),
+            TransportType.Mqtt_WebSocket_Only => new ProvisioningTransportHandlerMqtt(TransportFallbackType.WebSocketOnly),
+            TransportType.Amqp => new ProvisioningTransportHandlerAmqp(),
+            TransportType.Amqp_Tcp_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.TcpOnly),
+            TransportType.Amqp_WebSocket_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.WebSocketOnly),
+            TransportType.Http1 => new ProvisioningTransportHandlerHttp(),
+            _ => throw new NotSupportedException($"Unsupported transport type {GetTransportType()}"),
+        };
+    }
+
 
     /// <summary>
     /// Extracts the device ID from the device connection string
@@ -107,9 +132,9 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         await _deviceClient.CompleteAsync(message);
     }
 
-    public async Task<Twin> GetTwinAsync()
+    public async Task<Twin> GetTwinAsync(CancellationToken cancellationToken)
     {
-        var twin = await _deviceClient.GetTwinAsync();
+        var twin = await _deviceClient.GetTwinAsync(cancellationToken);
         return twin;
     }
 

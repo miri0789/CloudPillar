@@ -25,6 +25,10 @@ builder.Services.AddCors(options =>
             });
         });
 
+builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
+builder.Services.AddSingleton<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
@@ -32,9 +36,7 @@ builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddScoped<ITwinHandler, TwinHandler>();
-builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
-builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderHandler>();
@@ -45,6 +47,7 @@ builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
 
+
 builder.Services.AddControllers(options =>
     {
         options.Filters.Add<LogActionFilter>();
@@ -52,14 +55,13 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
