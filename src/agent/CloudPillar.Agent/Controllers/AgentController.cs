@@ -23,7 +23,7 @@ public class AgentController : ControllerBase
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
-    private readonly IPreSharedKeyProvisioningDeviceClientHandler _preSharedKeyProvisioningDeviceClientHandler;
+    private readonly ISymmetricKeyWrapperDeviceClientHandler _symmetricKeyWrapperDeviceClientHandler;
 
 private readonly IFileUploaderHandler _fileUploaderHandler;
 
@@ -31,7 +31,7 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
     public AgentController(ITwinHandler twinHandler,
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
-     IPreSharedKeyProvisioningDeviceClientHandler preSharedKeyProvisioningDeviceClientHandler,
+     ISymmetricKeyWrapperDeviceClientHandler symmetricKeyWrapperDeviceClientHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IFileUploaderHandler fileUploaderHandler,
      ILoggerHandler logger)
@@ -40,7 +40,7 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
-        _preSharedKeyProvisioningDeviceClientHandler = preSharedKeyProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(preSharedKeyProvisioningDeviceClientHandler));
+        _symmetricKeyWrapperDeviceClientHandler = symmetricKeyWrapperDeviceClientHandler ?? throw new ArgumentNullException(nameof(symmetricKeyWrapperDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
     }
 
@@ -62,12 +62,12 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
     {
         try
         {
-            var isAuthorized = await _preSharedKeyProvisioningDeviceClientHandler.AuthorizationAsync(CancellationToken.None);
+            var isAuthorized = await _symmetricKeyWrapperDeviceClientHandler.AuthorizationAsync(CancellationToken.None);
             if (!isAuthorized)
             {
                 try
                 {
-                    await _preSharedKeyProvisioningDeviceClientHandler.ProvisionWithSymmetricKeyAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint);
+                    await _symmetricKeyWrapperDeviceClientHandler.ProvisionWithSymmetricKeyAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint);
                 }
                 catch (Exception ex)
                 {
