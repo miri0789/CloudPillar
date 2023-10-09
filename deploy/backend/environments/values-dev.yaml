@@ -67,7 +67,7 @@ controllers:
     - name: SecretKey
       value: "signKey"
     - name: IothubConnectionString
-      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=9rvwvS9LH8uF2tv30QOjqZc0u3y9UlVTjAIoTCFYTQI="
+      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
 
 replicaCount: 1
 
