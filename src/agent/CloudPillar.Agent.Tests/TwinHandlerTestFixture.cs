@@ -67,7 +67,7 @@ public class TwinHandlerTestFixture
         twinProp.Reported = new TwinCollection(_baseReported);
         var twin = new Twin(twinProp);
 
-        _deviceClientMock.Setup(x => x.GetTwinAsync()).ReturnsAsync(twin);
+        _deviceClientMock.Setup(x => x.GetTwinAsync(CancellationToken.None)).ReturnsAsync(twin);
 
         var target = await _target.GetTwinJsonAsync();
 
@@ -351,7 +351,7 @@ public class TwinHandlerTestFixture
             Reported = new TwinCollection(JsonConvert.SerializeObject(reportedJson, settings))
         };
         var twin = new Twin(twinProp);
-        _deviceClientMock.Setup(dc => dc.GetTwinAsync()).ReturnsAsync(twin);
+        _deviceClientMock.Setup(dc => dc.GetTwinAsync(CancellationToken.None)).ReturnsAsync(twin);
     }
 
 
