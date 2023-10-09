@@ -7,6 +7,7 @@ using Shared.Entities.Messages;
 using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 using Shared.Logger;
+using Backend.Iotlistener.Processors;
 
 namespace Backend.Iotlistener.Tests;
 
@@ -19,6 +20,7 @@ public class AgentEventProcessorTestFixture
     private Mock<ISigningService> _signingServiceMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
     private Mock<ILoggerHandler> _mockLoggerHandler;
+    private Mock<IStreamingUploadChunkService> _streamingUploadChunkService;
 
     private string _iothubConnectionDeviceId;
 
@@ -30,11 +32,11 @@ public class AgentEventProcessorTestFixture
         _signingServiceMock = new Mock<ISigningService>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLoggerHandler = new Mock<ILoggerHandler>();
+        _streamingUploadChunkService = new Mock<IStreamingUploadChunkService>();
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(30);
         _mockEnvironmentsWrapper.Setup(f => f.iothubConnectionDeviceId).Returns(_iothubConnectionDeviceId);
         _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
-        _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
-
+        _signingServiceMock.Object,_streamingUploadChunkService.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
 
 

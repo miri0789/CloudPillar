@@ -6,6 +6,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Shared.Logger;
 using Shared.Entities.Messages;
+using Shared.Entities.Factories;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -15,8 +16,8 @@ namespace CloudPillar.Agent.Tests
 
         private Mock<IDeviceClientWrapper> _deviceClientMock;
         private Mock<ILoggerHandler> _loggerMock;
+        private Mock<IMessageFactory> _messageFactory;
         private ID2CMessengerHandler _target;
-
         private const string FILE_NAME = "fileName.txt";
         private const string ACTION_ID = "action123";
         private const long START_POSITION = 10;
@@ -28,8 +29,8 @@ namespace CloudPillar.Agent.Tests
         {
             _deviceClientMock = new Mock<IDeviceClientWrapper>();
             _loggerMock = new Mock<ILoggerHandler>();
-
-            _target = new D2CMessengerHandler(_deviceClientMock.Object, _loggerMock.Object);
+            _messageFactory = new Mock<IMessageFactory>();
+            _target = new D2CMessengerHandler(_deviceClientMock.Object,_messageFactory.Object, _loggerMock.Object);
 
         }
 
