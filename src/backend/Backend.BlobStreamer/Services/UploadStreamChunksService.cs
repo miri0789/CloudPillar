@@ -59,7 +59,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     {
                         await VerifyStreamChecksum(checkSum, blob);
                     }
-
                 }
             }
         }
@@ -76,9 +75,20 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         await blob.DownloadToStreamAsync(azureStream);
 
         string newCheckSum = await _checkSumService.CalculateCheckSumAsync(azureStream);
-        if (newCheckSum.Equals(originalCheckSum))
-        {
+        var uploadSuccess = newCheckSum.Equals(originalCheckSum);
 
+        if (uploadSuccess)
+        {
+            _logger.Debug($"Blobstreamer UploadFromStreamAsync: File uploaded successfully");
         }
+        else
+        {
+            _logger.Debug($"Blobstreamer UploadFromStreamAsync Failed");
+            
+            //TO DO
+            //add recipe to desired
+        }
+
+
     }
 }

@@ -7,4 +7,5 @@ public class TwinActionReported
     public float? Progress { get; set; }
     public string ResultCode { get; set; }
     public string ResultText { get; set; }
+    public string CheckSum { get; set; }
 }

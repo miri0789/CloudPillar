@@ -4,6 +4,7 @@ using CloudPillar.Agent.Handlers;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Devices.Client.Transport;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Shared.Logger;
 
 [TestFixture]
@@ -12,6 +13,7 @@ public class FileUploaderHandlerTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
     private Mock<IBlobStorageFileUploaderHandler> _blobStorageFileUploaderHandlerMock;
     private Mock<IStreamingFileUploaderHandler> _streamingFileUploaderHandlerMock;
+    private Mock<ITwinActionsHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerMock;
     private IFileUploaderHandler _target;
 
@@ -28,12 +30,18 @@ public class FileUploaderHandlerTestFixture
         _streamingFileUploaderHandlerMock = new Mock<IStreamingFileUploaderHandler>();
         _loggerMock = new Mock<ILoggerHandler>();
 
+        _twinActionsHandler = new Mock<ITwinActionsHandler>();
         _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sasUriResponse);
 
         _deviceClientWrapperMock.Setup(device => device.GetBlobUriAsync(It.IsAny<FileUploadSasUriResponse>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(STORAGE_URI);
-        _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object, _loggerMock.Object);
+        _loggerMock = new Mock<ILoggerHandler>();
+        _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(sasUriResponse);
+
+        _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object,
+        _twinActionsHandler.Object, _loggerMock.Object);
     }
 
 
@@ -61,8 +69,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = BAES_PATH,
-            Enabled = true
+            FileName = BAES_PATH
         };
 
         var actionToReport = new ActionToReport
@@ -81,8 +88,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = $"{BAES_PATH}\\test.txt",
-            Enabled = true
+            FileName = $"{BAES_PATH}\\test.txt"
         };
 
         var actionToReport = new ActionToReport
@@ -101,8 +107,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = $"{BAES_PATH}\\no-exists.txt",
-            Enabled = true
+            FileName = $"{BAES_PATH}\\no-exists.txt"
         };
 
         var actionToReport = new ActionToReport
@@ -121,8 +126,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = $"{BAES_PATH}\\no-exists-folder",
-            Enabled = true
+            FileName = $"{BAES_PATH}\\no-exists-folder"
         };
 
         var actionToReport = new ActionToReport
@@ -141,8 +145,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = $"{BAES_PATH}\\EmptyFolder",
-            Enabled = true
+            FileName = $"{BAES_PATH}\\EmptyFolder"
         };
 
         var actionToReport = new ActionToReport
@@ -162,8 +165,7 @@ public class FileUploaderHandlerTestFixture
 
         var uploadAction = new UploadAction
         {
-            FileName = "",
-            Enabled = true
+            FileName = ""
         };
 
         var actionToReport = new ActionToReport

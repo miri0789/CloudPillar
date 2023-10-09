@@ -36,6 +36,8 @@ builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddScoped<ITwinHandler, TwinHandler>();
+builder.Services.AddScoped<ITwinActionsHandler, TwinActionsHandler>();
+builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();

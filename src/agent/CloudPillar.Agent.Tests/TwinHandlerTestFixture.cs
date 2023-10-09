@@ -7,7 +7,6 @@ using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -18,6 +17,7 @@ public class TwinHandlerTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientMock;
     private Mock<IFileDownloadHandler> _fileDownloadHandlerMock;
     private Mock<IFileUploaderHandler> _fileUploaderHandlerMock;
+    private Mock<ITwinActionsHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
@@ -42,6 +42,7 @@ public class TwinHandlerTestFixture
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _fileDownloadHandlerMock = new Mock<IFileDownloadHandler>();
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
+        _twinActionsHandler = new Mock<ITwinActionsHandler>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
@@ -54,6 +55,7 @@ public class TwinHandlerTestFixture
         _target = new TwinHandler(_deviceClientMock.Object,
           _fileDownloadHandlerMock.Object,
           _fileUploaderHandlerMock.Object,
+          _twinActionsHandler.Object,
           _loggerHandlerMock.Object,
           _runtimeInformationWrapper.Object,
           _fileStreamerWrapper.Object);
@@ -291,18 +293,6 @@ public class TwinHandlerTestFixture
 
         await _target.InitReportDeviceParamsAsync();
         _loggerHandlerMock.Verify(logger => logger.Error($"InitReportedDeviceParams failed: {expectedErrorMessage}"), Times.Once);
-    }
-
-
-    [Test]
-    public async Task UpdateReportActionAsync_ValidReport_CallToUpdateReport()
-    {
-        var actionsToReported = CreateReportForUpdating();
-
-        await _target.UpdateReportActionAsync(actionsToReported);
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
-            nameof(TwinReported.ChangeSpec), It.IsAny<string>()), Times.Once);
     }
 
     private List<ActionToReport> CreateReportForUpdating()
