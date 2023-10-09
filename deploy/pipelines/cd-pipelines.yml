@@ -143,6 +143,7 @@ stages:
       name: CloudPillar-Pool
       demands:
       - agent.name -equals cpaks-${{ parameters.env }}-vm-agent
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
     steps:
     - task: HelmDeploy@0
       inputs:
