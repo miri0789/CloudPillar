@@ -50,7 +50,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
     }
 
-    public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate, CancellationToken cancellationToken)
+    public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate, string XdeviceId, string XoneMd, CancellationToken cancellationToken)
     {
         if (userCertificate == null)
         {
@@ -70,6 +70,13 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         var deviceId = parts[0];
         var iotHubHostName = parts[1];
+
+        if (!(XdeviceId.Equals(deviceId) && XoneMd.Equals(iotHubHostName)))
+        {
+            var error = "The deviceId or the iotHubHostName are incorrect.";
+            _logger.Error(error);
+            throw new UnauthorizedAccessException();
+        }
 
         if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(iotHubHostName))
         {
@@ -147,5 +154,4 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
     }
-
 }

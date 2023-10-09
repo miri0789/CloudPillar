@@ -42,8 +42,13 @@ public class AuthorizationCheckMiddleware
                 await UnauthorizedResponseAsync(context, error);
                 return;
             }
+            IHeaderDictionary requestHeaders = context.Request.Headers;
 
-            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate, cancellationToken);
+            // Get a specific request header by name
+            string xDeviceId= requestHeaders["x-device-id"];
+            string xOneMD = requestHeaders["x-oneMD"];
+            
+            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate,xDeviceId,xOneMD, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
