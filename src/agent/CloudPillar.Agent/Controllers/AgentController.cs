@@ -23,28 +23,33 @@ public class AgentController : ControllerBase
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
     private readonly IC2DEventHandler _c2DEventHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
+    private readonly ISymmetricKeyWrapperDeviceClientHandler _symmetricKeyWrapperDeviceClientHandler;
 
+private readonly IFileUploaderHandler _fileUploaderHandler;
 
 
     public AgentController(ITwinHandler twinHandler,
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
+     ISymmetricKeyWrapperDeviceClientHandler symmetricKeyWrapperDeviceClientHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IC2DEventHandler c2DEventHandler,
+     IFileUploaderHandler fileUploaderHandler,
      ILoggerHandler logger)
     {
+        _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
+        _symmetricKeyWrapperDeviceClientHandler = symmetricKeyWrapperDeviceClientHandler ?? throw new ArgumentNullException(nameof(symmetricKeyWrapperDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(C2DEventHandler));
     }
 
     [HttpPost("AddRecipe")]
-    public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
+    public async Task<IActionResult> AddRecipe()
     {
-        _twinDesiredPropsValidator.ValidateAndThrow(recipe);
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 
     [HttpGet("GetDeviceState")]
@@ -55,11 +60,38 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId, string enrollmentId, string globalDeviceEndpoint, CancellationToken cancellationToken)
+    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId="0ne00B07A2A", string globalDeviceEndpoint="global.azure-devices-provisioning.net", string registrationId="pre-shread-key-enrollment", string primaryKey="aUKETVe/YWlAxbYHAzLbyzR6rfLjWPOH4jYgs0XEOq/G9uwCijli/B25QldZcwp5zy1+TLO018RAf3lOvrRjHw==", CancellationToken cancellationToken = default)
     {
         try
         {
+            var isAuthorized = await _symmetricKeyWrapperDeviceClientHandler.AuthorizationAsync(CancellationToken.None);
+            if (!isAuthorized)
+            {
+                try
+                {
+                    await _symmetricKeyWrapperDeviceClientHandler.ProvisionWithSymmetricKeyAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"Provisioning failed", ex);
+                    return BadRequest("Provisioning failed");
+                }
+            }
+            return await _twinHandler.GetTwinJsonAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"InitiateProvisioning error: ", ex);
+            throw;
+        }
+    }
 
+    [AllowAnonymous]
+    [HttpPost("Initiatex509Provisioning")]
+    public async Task<ActionResult<string>> Initiatex509Provisioning(string dpsScopeId, string globalDeviceEndpoint, string registrationId, string primaryKey, CancellationToken cancellationToken)
+    {
+        try
+        {
             var cert = _dPSProvisioningDeviceClientHandler.GetCertificate();
             if (cert == null)
             {
@@ -99,22 +131,22 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("SetBusy")]
-    public async Task<ActionResult<string>> SetBusy()
+    public async Task<IActionResult> SetBusy()
     {
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 
     [HttpPost("SetReady")]
-    public async Task<ActionResult<string>> SetReady()
+    public async Task<IActionResult> SetReady()
     {
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 
     [HttpPut("UpdateReportedProps")]
-    public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
+    public async Task<IActionResult> UpdateReportedProps(UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return await _twinHandler.GetTwinJsonAsync();
+        return Ok();
     }
 }
 
