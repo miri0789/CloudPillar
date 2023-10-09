@@ -4,6 +4,8 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _deviceConnectionString = "DeviceConnectionString";
     private const string _transportType = "TransportType";
     private const string _periodicUploadInterval = "PeriodicUploadInterval";
+    private const string _dpsScopeId = "DpsScopeId";
+    private const string _globalDeviceEndpoint = "GlobalDeviceEndpoint";
 
     public string deviceConnectionString
     {
@@ -17,7 +19,14 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return GetVariable(_periodicUploadInterval); }
     }
-
+    public string dpsScopeId
+    {
+        get { return GetVariable(_dpsScopeId); }
+    }
+    public string globalDeviceEndpoint
+    {
+        get { return GetVariable(_globalDeviceEndpoint); }
+    }
     private string GetVariable(string name)
     {
         return Environment.GetEnvironmentVariable(name);

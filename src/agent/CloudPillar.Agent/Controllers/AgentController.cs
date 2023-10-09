@@ -5,6 +5,7 @@ using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Devices.Provisioning.Service;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -25,7 +26,8 @@ public class AgentController : ControllerBase
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyWrapperDeviceClientHandler _symmetricKeyWrapperDeviceClientHandler;
 
-private readonly IFileUploaderHandler _fileUploaderHandler;
+    private readonly IFileUploaderHandler _fileUploaderHandler;
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -35,6 +37,7 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IC2DEventHandler c2DEventHandler,
      IFileUploaderHandler fileUploaderHandler,
+     IEnvironmentsWrapper environmentsWrapper,
      ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
@@ -43,7 +46,8 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _symmetricKeyWrapperDeviceClientHandler = symmetricKeyWrapperDeviceClientHandler ?? throw new ArgumentNullException(nameof(symmetricKeyWrapperDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
-        _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(C2DEventHandler));
+        _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
     }
 
     [HttpPost("AddRecipe")]
@@ -60,10 +64,13 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId="0ne00B07A2A", string globalDeviceEndpoint="global.azure-devices-provisioning.net", string registrationId="pre-shread-key-enrollment", string primaryKey="aUKETVe/YWlAxbYHAzLbyzR6rfLjWPOH4jYgs0XEOq/G9uwCijli/B25QldZcwp5zy1+TLO018RAf3lOvrRjHw==", CancellationToken cancellationToken = default)
+    public async Task<ActionResult<string>> InitiateProvisioning(string registrationId = "pre-shread-key-enrollment", string primaryKey = "aUKETVe/YWlAxbYHAzLbyzR6rfLjWPOH4jYgs0XEOq/G9uwCijli/B25QldZcwp5zy1+TLO018RAf3lOvrRjHw==", CancellationToken cancellationToken = default)
     {
         try
         {
+            var dpsScopeId = _environmentsWrapper.dpsScopeId;
+            var globalDeviceEndpoint = _environmentsWrapper.globalDeviceEndpoint;
+
             var isAuthorized = await _symmetricKeyWrapperDeviceClientHandler.AuthorizationAsync(CancellationToken.None);
             if (!isAuthorized)
             {
@@ -77,6 +84,9 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
                     return BadRequest("Provisioning failed");
                 }
             }
+
+            await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
+            
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)

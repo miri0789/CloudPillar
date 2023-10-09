@@ -23,22 +23,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-
-        //This code is temporary, pending the completion of the pre-shared key task.
-        var _transportType = GetTransportType();
-        try
-        {
-            _deviceClient = DeviceClient.CreateFromConnectionString(_environmentsWrapper.deviceConnectionString, _transportType);
-            if (_deviceClient == null)
-            {
-                throw new NullReferenceException("CreateDeviceClient from ConnectionString failed the device is null");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"CreateFromConnectionString failed {ex.Message}");
-            throw;
-        }
+        
 
     }
 
@@ -93,24 +78,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     }
 
 
-    /// <summary>
-    /// Extracts the device ID from the device connection string
-    /// </summary>
-    /// <returns>Device Id</returns>
-    /// <exception cref="ArgumentException"></exception>
-    public string GetDeviceId()
-    {
-        var items = _environmentsWrapper.deviceConnectionString.Split(';');
-        foreach (var item in items)
-        {
-            if (item.StartsWith("DeviceId"))
-            {
-                return item.Split('=')[1];
-            }
-        }
-
-        throw new ArgumentException("DeviceId not found in the connection string");
-    }
 
     public TransportType GetTransportType()
     {
