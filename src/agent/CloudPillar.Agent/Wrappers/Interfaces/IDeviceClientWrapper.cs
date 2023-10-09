@@ -7,7 +7,7 @@ namespace CloudPillar.Agent.Wrappers;
 public interface IDeviceClientWrapper
 {
     Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken);
-
+    Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken);
     string GetDeviceId();
 
     TransportType GetTransportType();

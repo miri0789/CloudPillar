@@ -120,21 +120,6 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     }
 
-    private async Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Check if the device is already initialized
-            await _deviceClientWrapper.GetTwinAsync(cancellationToken);
-            return true;
-        }
-        catch
-        {
-            _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized.");
-            return false;
-        }
-    }
-
     private string GetDeviceIdFromCertificate(X509Certificate2 userCertificate)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(userCertificate?.FriendlyName);
@@ -156,7 +141,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             using var auth = _X509CertificateWrapper.GetDeviceAuthentication(deviceId, userCertificate);
             await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
-            return await IsDeviceInitializedAsync(cancellationToken);
+            return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
         }
         catch (Exception ex)
         {

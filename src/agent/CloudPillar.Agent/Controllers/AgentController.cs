@@ -58,7 +58,7 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId="0ne00B07A2A", string globalDeviceEndpoint="global.azure-devices-provisioning.net", string registrationId="pre-shread-key-enrollment", string primaryKey="aUKETVe/YWlAxbYHAzLbyzR6rfLjWPOH4jYgs0XEOq/G9uwCijli/B25QldZcwp5zy1+TLO018RAf3lOvrRjHw==")
+    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId="0ne00B07A2A", string globalDeviceEndpoint="global.azure-devices-provisioning.net", string registrationId="pre-shread-key-enrollment", string primaryKey="aUKETVe/YWlAxbYHAzLbyzR6rfLjWPOH4jYgs0XEOq/G9uwCijli/B25QldZcwp5zy1+TLO018RAf3lOvrRjHw==", CancellationToken cancellationToken = default)
     {
         try
         {
@@ -67,7 +67,7 @@ private readonly IFileUploaderHandler _fileUploaderHandler;
             {
                 try
                 {
-                    await _symmetricKeyWrapperDeviceClientHandler.ProvisionWithSymmetricKeyAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint);
+                    await _symmetricKeyWrapperDeviceClientHandler.ProvisionWithSymmetricKeyAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
                 }
                 catch (Exception ex)
                 {
