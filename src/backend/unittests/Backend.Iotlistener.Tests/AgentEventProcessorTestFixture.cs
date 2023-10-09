@@ -99,7 +99,8 @@ public class AgentEventProcessorTestFixture
     {
         var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(1);
-        _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object, _signingServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
+        _signingServiceMock.Object,_streamingUploadChunkService.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
