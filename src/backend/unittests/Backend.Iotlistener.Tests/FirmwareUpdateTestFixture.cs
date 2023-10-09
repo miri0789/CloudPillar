@@ -34,7 +34,7 @@ public class FirmwareUpdateTestFixture
         _mockEnvironmentsWrapper.Setup(f => f.rangeCalculateType).Returns(Models.Enums.RangeCalculateType.Bytes);
         _mockEnvironmentsWrapper.Setup(f => f.rangeBytes).Returns(_rangeSize);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
-        _target = new FirmwareUpdateService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new FirmwareUpdateService(_mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object, _httpRequestorServiceMock.Object);
     }
 
     private void SetMockBlobProperties(long blobSize)

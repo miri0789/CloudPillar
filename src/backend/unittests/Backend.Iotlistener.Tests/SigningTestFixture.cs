@@ -26,7 +26,7 @@ public class SigningTestFixture
         _signingUrl = new Uri("http://example.com/");
         _mockEnvironmentsWrapper.Setup(f => f.signingUrl).Returns(_signingUrl.AbsoluteUri);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
-        _target = new SigningService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new SigningService(_mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object, _httpRequestorServiceMock.Object);
     }
 
     [Test]
