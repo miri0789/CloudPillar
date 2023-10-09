@@ -62,7 +62,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         break;
                     case C2DMessageType.ReProvisioning:
                         var reProvisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReProvisioningMessage>(receivedMessage);
-                        await _messageSubscriber.HandleReProvisioningMessageAsync(reProvisioningMessage);
+                        await _messageSubscriber.HandleReProvisioningMessageAsync(reProvisioningMessage, cancellationToken);
 
                         break;
                     default:

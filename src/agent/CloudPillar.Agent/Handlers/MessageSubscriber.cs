@@ -18,8 +18,8 @@ public class MessageSubscriber : IMessageSubscriber
         return await _fileDownloadHandler.HandleDownloadMessageAsync(message);
     }
 
-    public async Task HandleReProvisioningMessageAsync(ReProvisioningMessage message)
+    public async Task HandleReProvisioningMessageAsync(ReProvisioningMessage message, CancellationToken cancellationToken)
     {
-       await _reProvisioningHandler.HandleReProvisioningMessageAsync(message);
+       await _reProvisioningHandler.HandleReProvisioningMessageAsync(message, cancellationToken);
     }
 }

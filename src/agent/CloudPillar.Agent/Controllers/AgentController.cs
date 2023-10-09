@@ -38,6 +38,7 @@ public class AgentController : ControllerBase
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(C2DEventHandler));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpPost("AddRecipe")]

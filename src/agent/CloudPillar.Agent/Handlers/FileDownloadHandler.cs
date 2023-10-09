@@ -93,7 +93,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
     }
 
-    public Task HandleReProvisioningMessageAsync(ReProvisioningMessage message)
+    public Task HandleReProvisioningMessageAsync(ReProvisioningMessage message, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
