@@ -39,13 +39,10 @@ public class BlobService : IBlobService
 
     public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, long fileSize)
     {
-        _logger.Error("blob1");
         CloudBlockBlob blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         chunkSize = GetMaxChunkSize(chunkSize);
-        _logger.Error("blob2" +chunkSize);
         for (long offset = startPosition, chunkIndex = 0; offset < rangeSize + startPosition && offset < fileSize; offset += chunkSize, chunkIndex++)
         {
-        _logger.Error("blob3" +offset);
             var rangeEndSize = rangeSize + startPosition > fileSize ? fileSize : rangeSize + startPosition;
             var bytesRemaining = rangeEndSize - offset;
             var length = bytesRemaining > chunkSize ? chunkSize : (int)bytesRemaining;
@@ -67,12 +64,10 @@ public class BlobService : IBlobService
             {
                 blobMessage.RangeSize = rangeEndSize;
             }
-        _logger.Error("blob4" +offset);
 
             var c2dMessage = _messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
             await SendMessage(c2dMessage, deviceId);
             
-        _logger.Error("blob5" +offset);
         }
     }
 
