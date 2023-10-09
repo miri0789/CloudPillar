@@ -35,7 +35,7 @@ controllers:
     - name: IothubEventHubCompatibleEndpoint
       value: "Endpoint=sb://iothub-ns-cp-tst-iot-25288010-c5e892cf95.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=8a7f+ZemfsU4cebSOm9v//9fqjp9lv/BpAIoTIvMVYk=;EntityPath=cp-tst-iothub"
     - name: IothubEventHubCompatiblePath
-      value: "cp-dev-iothub"
+      value: "cp-tst-iothub"
     - name: StorageConnectionString
       value: "DefaultEndpointsProtocol=https;AccountName=cpiottstfiles;AccountKey=sTOAuCDc6YbXdWRwQerkxGeLhn02q/a1J0B29d22+p6YWiR3Va/yXdNGgHFLbdtJDYhyM8q071yx+AStKo6XLw==;EndpointSuffix=core.windows.net"
     - name: BlobContainerName
@@ -76,6 +76,6 @@ replicaCount: 1
 #     value: DevEU
 
 image:
-  acr: "cpdevacr.azurecr.io"
+  acr: "cptstacr.azurecr.io"
   tag: latest
 
