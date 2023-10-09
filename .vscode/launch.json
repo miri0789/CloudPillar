@@ -120,8 +120,8 @@
             "console": "internalConsole",
             "env": {
                 "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
-               "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
-               "BlobContainerName": "iotcontainer",
+                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
+                "BlobContainerName": "iotcontainer",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
                 "RetryPolicyExponent": "3"
@@ -165,7 +165,7 @@
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
                 "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
-                "DPSConnectionString" :"HostName=DPS-Bracha.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=f3+8+rqrtH0T7nlSuIshUSn2K6rbIb7mUHQwTcztRzg=",
+                "DPSConnectionString": "HostName=DPS-Bracha.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=f3+8+rqrtH0T7nlSuIshUSn2K6rbIb7mUHQwTcztRzg=",
                 "DPSIdScope": "0ne00B07A2A"
             }
         },
@@ -197,8 +197,17 @@
             "program": "${workspaceFolder}/src/agent/CloudPillar.Agent/bin/Debug/net7.0/CloudPillar.Agent.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
-            "console": "internalConsole",            
+            "console": "internalConsole",
+            "env": {
+                "DeviceConnectionString": "HostName=iot-bracha-dev.azure-devices.net;DeviceId=key_holder;SharedAccessKey=Ubdsg3edV3J+O1KBwe9Zj3dJ2SL/Hmk1/AIoTGYnvzE="
+            },
             "stopAtEntry": false
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Server/Client",
+            "configurations": ["Cloud Pillar Agent", "Key Holder Service"]
         }
     ]
 }

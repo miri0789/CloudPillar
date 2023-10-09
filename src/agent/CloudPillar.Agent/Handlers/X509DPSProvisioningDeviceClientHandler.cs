@@ -100,6 +100,8 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             security,
             transport);
 
+
+
         _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
 
         DeviceRegistrationResult result = await provClient.RegisterAsync();

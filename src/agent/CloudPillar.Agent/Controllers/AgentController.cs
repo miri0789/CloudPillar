@@ -21,7 +21,7 @@ public class AgentController : ControllerBase
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
 
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
-
+    private readonly IC2DEventHandler _c2DEventHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
 
@@ -30,12 +30,14 @@ public class AgentController : ControllerBase
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
+     IC2DEventHandler c2DEventHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
+        _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(C2DEventHandler));
     }
 
     [HttpPost("AddRecipe")]
@@ -88,6 +90,13 @@ public class AgentController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
+    [HttpPost("Message")]
+    public async Task<ActionResult<string>> Message(CancellationToken cancellationToken)
+    {
+        await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
+        return await _twinHandler.GetTwinJsonAsync();
+    }
 
     [HttpPost("SetBusy")]
     public async Task<ActionResult<string>> SetBusy()

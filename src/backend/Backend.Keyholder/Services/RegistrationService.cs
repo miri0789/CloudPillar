@@ -146,7 +146,7 @@ public class RegistrationService : IRegistrationService
             // Convert the hash to a hexadecimal string
             string passwordString = BitConverter.ToString(passwordBytes).Replace("-", "").ToLower();
 
-            var pfxBytes = certificate.Export(X509ContentType.Pkcs12, passwordString);
+            var pfxBytes = certificate.Export(X509ContentType.Pkcs12, "1234");
             //string certificateBase64 = Convert.ToBase64String(pfxBytes);
             var message = new ReProvisioningMessage()
             {
@@ -154,7 +154,8 @@ public class RegistrationService : IRegistrationService
                 EnrollmentId = individualEnrollment.RegistrationId,
                 DeviceEndpoint = DEVICE_ENDPOINT,
                 // TODO: get the scopeid from the dps, not from the env
-                ScopedId = _environmentsWrapper.dpsIdScope
+                ScopedId = _environmentsWrapper.dpsIdScope,
+                DPSConnectionString = _environmentsWrapper.dpsConnectionString
             };
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
             await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);

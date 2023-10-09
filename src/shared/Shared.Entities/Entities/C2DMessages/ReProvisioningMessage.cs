@@ -9,6 +9,8 @@ public class ReProvisioningMessage : C2DMessages
 
     public string DeviceEndpoint { get; set; }
 
+    public string DPSConnectionString { get; set; }
+
     public string PasswordFunc { get; set; }
 
     public ReProvisioningMessage()

@@ -60,6 +60,11 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
                         await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;
+                    case C2DMessageType.ReProvisioning:
+                        var reProvisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReProvisioningMessage>(receivedMessage);
+                        await _messageSubscriber.HandleReProvisioningMessageAsync(reProvisioningMessage);
+
+                        break;
                     default:
                         _logger.Info("Receive  message was not processed");
                         break;

@@ -45,7 +45,7 @@ builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
-
+builder.Services.AddScoped<IReProvisioningHandler, ReProvisioningHandler>();
 
 
 builder.Services.AddControllers(options =>
