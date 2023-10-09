@@ -14,14 +14,11 @@ public class FileUploaderHandlerTestFixture
     private Mock<IStreamingFileUploaderHandler> _streamingFileUploaderHandlerMock;
     private Mock<ILoggerHandler> _loggerMock;
     private IFileUploaderHandler _target;
-    FileUploadSasUriResponse sasUriResponse = new FileUploadSasUriResponse()
-    {
-        BlobName = "nechama-device/C_driveroot_/git.dev/CloudPillar/UploadFolder/uploadFileInFolder.txt",
-        ContainerName = "nechama-container",
-        CorrelationId = "MjAyMzA5MDcwOTI5XzNlZjBmOWM1LTQ3NTEtNDM4OC1hMWJjLWJlZGVmZmI0ZTdiM19DX2RyaXZlcm9vdF8vZ2l0LmRldi9DbG91ZFBpbGxhci9VcGxvYWRGb2xkZXIvdXBsb2FkRmlsZUluRm9sZGVyLnR4dF92ZXIyLjA=",
-        HostName = "nechama.blob.core.windows.net",
-        SasToken = "?sv=2018-03-28&sr=b&sig=wwdV5O%2FY2O3TVaAHn2jHZ17fQeKSW0rgkr1jcSxcTwE%3D&se=2023-09-07T09%3A19%3A58Z&sp=rw"
-    };
+
+    const string BAES_PATH = "c:\\demo";
+    private Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
+
+    FileUploadSasUriResponse sasUriResponse = new FileUploadSasUriResponse();
 
     [SetUp]
     public void Setup()
@@ -34,6 +31,8 @@ public class FileUploaderHandlerTestFixture
         _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sasUriResponse);
 
+        _deviceClientWrapperMock.Setup(device => device.GetBlobUriAsync(It.IsAny<FileUploadSasUriResponse>(), It.IsAny<CancellationToken>()))
+        .ReturnsAsync(STORAGE_URI);
         _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object, _loggerMock.Object);
     }
 
@@ -44,7 +43,7 @@ public class FileUploaderHandlerTestFixture
 
         var uploadAction = new UploadAction
         {
-            FileName = "C:\\upload"
+            FileName = BAES_PATH
         };
 
         var actionToReport = new ActionToReport
@@ -62,7 +61,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = "C:\\git.dev\\CloudPillar\\UploadFolder",
+            FileName = BAES_PATH,
             Enabled = true
         };
 
@@ -82,7 +81,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = "C:\\git.dev\\CloudPillar\\uploadFile.txt",
+            FileName = $"{BAES_PATH}\\test.txt",
             Enabled = true
         };
 
@@ -102,7 +101,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = "C:\\git.dev\\CloudPillar\\no-exists.txt",
+            FileName = $"{BAES_PATH}\\no-exists.txt",
             Enabled = true
         };
 
@@ -122,7 +121,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = "C:\\git.dev\\CloudPillar\\no-exists-folder",
+            FileName = $"{BAES_PATH}\\no-exists-folder",
             Enabled = true
         };
 
@@ -142,7 +141,7 @@ public class FileUploaderHandlerTestFixture
     {
         var uploadAction = new UploadAction
         {
-            FileName = "C:\\git.dev\\CloudPillar\\EmptyFolder",
+            FileName = $"{BAES_PATH}\\EmptyFolder",
             Enabled = true
         };
 

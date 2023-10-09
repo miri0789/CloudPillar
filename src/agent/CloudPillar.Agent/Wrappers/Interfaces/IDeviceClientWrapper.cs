@@ -24,6 +24,7 @@ public interface IDeviceClientWrapper
     Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties);
 
     Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default);
+    Task<Uri> GetBlobUriAsync(FileUploadSasUriResponse sasUri, CancellationToken cancellationToken = default);
     Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default);
     Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default);
 
