@@ -38,7 +38,13 @@ stages:
     steps:
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to NuGet'
-
+    
+    - task: UseDotNet@2
+      displayName: 'Use .NET SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '7.x'
+    
     - task: DotNetCoreCLI@2
       displayName: 'Run Unit Tests'
       inputs:
