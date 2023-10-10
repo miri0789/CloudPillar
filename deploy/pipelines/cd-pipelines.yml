@@ -66,12 +66,6 @@ stages:
       condition: and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/${{variables.mainbranch}}'))
 
 
-    - task: DotNetCoreCLI@2
-      displayName: Build
-      inputs:
-        command: build
-        projects: '**/*.csproj'
-        arguments: '--configuration $(buildConfiguration)'
 
     - task: DotNetCoreCLI@2
       displayName: Unit Tests
@@ -79,7 +73,6 @@ stages:
         command: test
         projects: |
           **/*Tests/*.csproj
-          !**/*AutomationTests*/**
         arguments: '--configuration $(buildConfiguration)'
   # - job: RunUnitTests
   #   displayName: 'Run_Unit_Tests'
