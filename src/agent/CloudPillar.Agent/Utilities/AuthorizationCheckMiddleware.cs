@@ -1,8 +1,10 @@
+using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Azure.Devices.Client.Exceptions;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Utilities;
@@ -14,6 +16,9 @@ public class AuthorizationCheckMiddleware
 
     private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
+    const string X_DEVICE_ID = "X-device-id";
+    const string X_SECRET_KEY = "X-secret-key";
+    
     public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
@@ -43,12 +48,17 @@ public class AuthorizationCheckMiddleware
                 return;
             }
             IHeaderDictionary requestHeaders = context.Request.Headers;
+            var xDeviceId = requestHeaders[X_DEVICE_ID];
+            var xSecretKey = requestHeaders[X_SECRET_KEY];
 
-            // Get a specific request header by name
-            string xDeviceId= requestHeaders["x-device-id"];
-            string xOneMD = requestHeaders["x-oneMD"];
-            
-            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate,xDeviceId,xOneMD, cancellationToken);
+            if (!string.IsNullOrEmpty(xDeviceId) || !string.IsNullOrEmpty(xSecretKey))
+            {
+                var error = "No require header was provided";
+                await UnauthorizedResponseAsync(context, error);
+                return;
+            }
+
+            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate, xDeviceId, xSecretKey, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";

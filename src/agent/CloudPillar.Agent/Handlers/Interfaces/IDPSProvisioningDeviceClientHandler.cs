@@ -8,5 +8,5 @@ public interface IDPSProvisioningDeviceClientHandler
 
     X509Certificate2? GetCertificate();
 
-    Task<bool> AuthorizationAsync(X509Certificate2 userCertificate,string XdeviceId, string XoneMd, CancellationToken cancellationToken);
+    Task<bool> AuthorizationAsync(X509Certificate2 userCertificate,string XdeviceId, string XSecretKey, CancellationToken cancellationToken);
 }
