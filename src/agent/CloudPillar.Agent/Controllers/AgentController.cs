@@ -48,6 +48,7 @@ public class AgentController : ControllerBase
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpPost("AddRecipe")]
@@ -86,7 +87,7 @@ public class AgentController : ControllerBase
             }
 
             await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
-            
+
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)

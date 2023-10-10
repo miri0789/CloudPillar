@@ -77,7 +77,7 @@ public class RegistrationService : IRegistrationService
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}", rsa
+                $"{CertificateConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(OneMDKey);
@@ -104,6 +104,7 @@ public class RegistrationService : IRegistrationService
         ArgumentNullException.ThrowIfNull(certificate);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
         _loggerHandler.Debug($"CreateEnrollmentAsync for deviceId {deviceId}");
+        var enrollmentName = CertificateConstants.CLOUD_PILLAR_SUBJECT + deviceId;
         using (ProvisioningServiceClient provisioningServiceClient =
                     ProvisioningServiceClient.CreateFromConnectionString(_environmentsWrapper.dpsConnectionString))
         {
@@ -112,15 +113,15 @@ public class RegistrationService : IRegistrationService
 
             try
             {
-                await provisioningServiceClient.DeleteIndividualEnrollmentAsync(deviceId);
-                 _loggerHandler.Debug($"Individual enrollment for deviceId {deviceId} was deleted");
+                await provisioningServiceClient.DeleteIndividualEnrollmentAsync(enrollmentName);
+                _loggerHandler.Debug($"Individual enrollment for deviceId {deviceId} was deleted");
             }
             catch (ProvisioningServiceClientException ex)
             {
                 //If the enrollment does not exist, it throws an exception when attempting to delete it.
-            }            
+            }
 
-            var individualEnrollment = _individualEnrollmentWrapper.Create(deviceId, attestation);
+            var individualEnrollment = _individualEnrollmentWrapper.Create(enrollmentName, attestation);
 
             individualEnrollment.ProvisioningStatus = ProvisioningStatus.Enabled;
             individualEnrollment.DeviceId = deviceId;
@@ -133,7 +134,7 @@ public class RegistrationService : IRegistrationService
 
     internal async Task SendCertificateToAgent(string deviceId, string oneMDKey, X509Certificate2 certificate, IndividualEnrollment individualEnrollment)
     {
-         _loggerHandler.Debug($"SendCertificateToAgent for deviceId {deviceId}.");
+        _loggerHandler.Debug($"SendCertificateToAgent for deviceId {deviceId}.");
         ArgumentNullException.ThrowIfNull(certificate);
         ArgumentNullException.ThrowIfNull(individualEnrollment);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);

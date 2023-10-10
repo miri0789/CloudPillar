@@ -6,5 +6,5 @@ public interface IMessageSubscriber
 {
     Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message);
 
-    Task HandleReProvisioningMessageAsync(ReProvisioningMessage message);
+    Task HandleReProvisioningMessageAsync(ReProvisioningMessage message, CancellationToken cancellationToken);
 }
