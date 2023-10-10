@@ -14,9 +14,6 @@ namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
 {
-    private const char CERTIFICATE_NAME_SEPARATOR = '@';
-    private const string IOT_HUB_NAME_SUFFIX = ".azure-devices.net";
-
     private readonly ILoggerHandler _logger;
 
     private IDeviceClientWrapper _deviceClientWrapper;
@@ -59,7 +56,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
 
         var friendlyName = userCertificate?.FriendlyName ?? throw new ArgumentNullException(nameof(userCertificate.FriendlyName));
-        var parts = friendlyName.Split(CERTIFICATE_NAME_SEPARATOR);
+        var parts = friendlyName.Split(CertificateConstants.CERTIFICATE_NAME_SEPARATOR);
 
         if (parts.Length != 2)
         {
@@ -77,9 +74,8 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             _logger.Error(error);
             throw new ArgumentException(error);
         }
-
-        deviceId = CertificateConstants.CLOUD_PILLAR_SUBJECT + deviceId;
-        iotHubHostName += IOT_HUB_NAME_SUFFIX;
+        
+        iotHubHostName += CertificateConstants.IOT_HUB_NAME_SUFFIX;
         return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
     }
 

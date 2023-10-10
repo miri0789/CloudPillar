@@ -19,8 +19,7 @@ public class ReProvisioningHandler : IReProvisioningHandler
 
     private readonly ILoggerHandler _logger;
 
-    private const char CERTIFICATE_NAME_SEPARATOR = '@';
-    private const string IOT_HUB_NAME_SUFFIX = ".azure-devices.net";
+
 
     public ReProvisioningHandler(IDeviceClientWrapper deviceClientWrapper,
         IX509CertificateWrapper X509CertificateWrapper,
@@ -67,7 +66,7 @@ public class ReProvisioningHandler : IReProvisioningHandler
 
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
 
-        certificate.FriendlyName = $"{deviceId}{CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(IOT_HUB_NAME_SUFFIX, string.Empty)}";
+        certificate.FriendlyName = $"{deviceId}{CertificateConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(CertificateConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
 
 
         using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
