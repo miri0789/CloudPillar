@@ -6,6 +6,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Shared.Logger;
 using Shared.Entities.Messages;
+using Shared.Entities.Factories;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -14,6 +15,7 @@ namespace CloudPillar.Agent.Tests
     {
 
         private Mock<IDeviceClientWrapper> _deviceClientMock;
+        private Mock<IMessageFactory> _messageFactory;
         private Mock<ILoggerHandler> _loggerMock;
         private ID2CMessengerHandler _target;
 
@@ -27,9 +29,10 @@ namespace CloudPillar.Agent.Tests
         public void Setup()
         {
             _deviceClientMock = new Mock<IDeviceClientWrapper>();
+            _messageFactory = new Mock<IMessageFactory>();
             _loggerMock = new Mock<ILoggerHandler>();
 
-            _target = new D2CMessengerHandler(_deviceClientMock.Object, _loggerMock.Object);
+            _target = new D2CMessengerHandler(_deviceClientMock.Object, _messageFactory.Object, _loggerMock.Object);
 
         }
 

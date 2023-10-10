@@ -27,19 +27,22 @@ public class SymmetricKeyProvisioningDeviceClientHandlerTestFixure
         _target = new SymmetricKeyProvisioningDeviceClientHandler(_loggerHandlerMock.Object, _deviceClientMock.Object, _symmetricKeyWrapperMock.Object);
 
         var _securityMock = new Mock<SecurityProviderSymmetricKey>();
-        _symmetricKeyWrapperMock.Setup(f => f.GetSecurityProvider(It.IsAny<string>(), It.IsAny<string>(),It.IsAny<string>()))
+        _symmetricKeyWrapperMock.Setup(f => f.GetSecurityProvider(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
         .Returns(() => _securityMock);
-        
+
         var _deviceAuthentication = new Mock<DeviceAuthenticationWithRegistrySymmetricKey>();
-        _symmetricKeyWrapperMock.Setup(f => f.GetDeviceAuthentication(It.IsAny<string>(),It.IsAny<string>()))
-        .Returns(()=>_deviceAuthentication);
+        _symmetricKeyWrapperMock.Setup(f => f.GetDeviceAuthentication(It.IsAny<string>(), It.IsAny<string>()))
+        .Returns(() => _deviceAuthentication);
     }
 
 
 
     [Test]
-    public async Task VerifySignature_ValidSignature_ReturnsTrue()
+    public async Task ProvisionWithSymmetricKeyAsync_ValidData_NotThrowing()
     {
+        await _target.ProvisionWithSymmetricKeyAsync(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>());
 
+        _deviceClientMock.Verify(dc => dc.IsDeviceInitializedAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

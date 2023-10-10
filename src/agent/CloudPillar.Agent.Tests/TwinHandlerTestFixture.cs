@@ -23,6 +23,7 @@ public class TwinHandlerTestFixture
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private ITwinHandler _target;
 
+    private CancellationToken cancellationToken = CancellationToken.None;
     private string _baseDesierd = @"{
             '$metadata': {
                 '$lastUpdated': '2023-08-29T12:30:36.4167057Z'
@@ -67,7 +68,7 @@ public class TwinHandlerTestFixture
         twinProp.Reported = new TwinCollection(_baseReported);
         var twin = new Twin(twinProp);
 
-        _deviceClientMock.Setup(x => x.GetTwinAsync()).ReturnsAsync(twin);
+        _deviceClientMock.Setup(x => x.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
 
         var target = await _target.GetTwinJsonAsync();
 
@@ -116,7 +117,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()));
 
-        _target.HandleTwinActionsAsync(CancellationToken.None);
+        await _target.HandleTwinActionsAsync(cancellationToken);
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
     }
 
@@ -148,7 +149,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
 
-        _target.HandleTwinActionsAsync(CancellationToken.None);
+        await _target.HandleTwinActionsAsync(cancellationToken);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Never);
     }
 
@@ -171,7 +172,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
 
-        _target.HandleTwinActionsAsync(CancellationToken.None);
+        await _target.HandleTwinActionsAsync(cancellationToken);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Once);
     }
 
@@ -205,7 +206,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()));
 
-        _target.HandleTwinActionsAsync(CancellationToken.None);
+        await _target.HandleTwinActionsAsync(cancellationToken);
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Exactly(3));
     }
 
@@ -217,7 +218,7 @@ public class TwinHandlerTestFixture
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState))
                        .Returns(Task.CompletedTask);
 
-        _target.UpdateDeviceStateAsync(deviceState);
+        await _target.UpdateDeviceStateAsync(deviceState);
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.DeviceState), deviceState), Times.Once);
     }
@@ -229,7 +230,7 @@ public class TwinHandlerTestFixture
         var deviceState = DeviceStateType.Buzy;
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState))
                        .ThrowsAsync(new Exception(expectedErrorMessage));
-        _target.UpdateDeviceStateAsync(deviceState);
+        await _target.UpdateDeviceStateAsync(deviceState);
         _loggerHandlerMock.Verify(logger => logger.Error($"UpdateDeviceStateAsync failed: {expectedErrorMessage}"), Times.Once);
     }
 
@@ -351,7 +352,7 @@ public class TwinHandlerTestFixture
             Reported = new TwinCollection(JsonConvert.SerializeObject(reportedJson, settings))
         };
         var twin = new Twin(twinProp);
-        _deviceClientMock.Setup(dc => dc.GetTwinAsync()).ReturnsAsync(twin);
+        _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
     }
 
 
