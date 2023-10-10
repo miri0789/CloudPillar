@@ -32,55 +32,55 @@ stages:
   
   jobs:
   - job: cartonetBE_build_and_test
-  pool:
-    vmImage: 'windows-latest'
+    pool:
+      vmImage: 'windows-latest'
 
-  variables:
-    solution: '**/*.sln'
-    buildPlatform: 'Any CPU'
-    buildConfiguration: 'Release'
+    variables:
+      solution: '**/*.sln'
+      buildPlatform: 'Any CPU'
+      buildConfiguration: 'Release'
 
-  steps:
-  - checkout: self
-    persistCredentials: true
-    clean: true
+    steps:
+    - checkout: self
+      persistCredentials: true
+      clean: true
 
-  - task: NuGetToolInstaller@1
-    displayName: Install Nuget
+    - task: NuGetToolInstaller@1
+      displayName: Install Nuget
 
-  - task: NuGetCommand@2
-    displayName: Restore
-    inputs:
-      restoreSolution: '$(solution)'
-      
-  - task: NuGetAuthenticate@1
-    displayName: 'Authenticate to NuGet'
+    - task: NuGetCommand@2
+      displayName: Restore
+      inputs:
+        restoreSolution: '$(solution)'
+        
+    - task: NuGetAuthenticate@1
+      displayName: 'Authenticate to NuGet'
 
-  - task: Assembly-Info-NetCore@2
-    displayName: 'Set Assembly Manifest Data'
-    inputs:
-      # Path: '$(Build.SourcesDirectory)'
-      InsertAttributes: true
-      VersionNumber: '$(Build.BuildNumber)'
-      FileVersionNumber: '$(Build.BuildNumber)'
-    condition: and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/${{variables.mainbranch}}'))
+    - task: Assembly-Info-NetCore@2
+      displayName: 'Set Assembly Manifest Data'
+      inputs:
+        # Path: '$(Build.SourcesDirectory)'
+        InsertAttributes: true
+        VersionNumber: '$(Build.BuildNumber)'
+        FileVersionNumber: '$(Build.BuildNumber)'
+      condition: and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/${{variables.mainbranch}}'))
 
 
-  - task: DotNetCoreCLI@2
-    displayName: Build
-    inputs:
-      command: build
-      projects: '**/*.csproj'
-      arguments: '--configuration $(buildConfiguration)'
+    - task: DotNetCoreCLI@2
+      displayName: Build
+      inputs:
+        command: build
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
 
-  - task: DotNetCoreCLI@2
-    displayName: Unit Tests
-    inputs:
-      command: test
-      projects: |
-        **/*Tests/*.csproj
-        !**/*AutomationTests*/**
-      arguments: '--configuration $(buildConfiguration)'
+    - task: DotNetCoreCLI@2
+      displayName: Unit Tests
+      inputs:
+        command: test
+        projects: |
+          **/*Tests/*.csproj
+          !**/*AutomationTests*/**
+        arguments: '--configuration $(buildConfiguration)'
   # - job: RunUnitTests
   #   displayName: 'Run_Unit_Tests'
   #   pool:
