@@ -29,7 +29,7 @@ builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddSingleton<IX509CertificateWrapper, X509CertificateWrapper>();
-builder.Services.AddScoped<ISymmetricKeyWrapperDeviceClientHandler, SymmetricKeyWrapperDeviceClientHandler>();
+builder.Services.AddScoped<ISymmetricKeyProvisioningDeviceClientHandler, SymmetricKeyProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();

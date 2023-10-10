@@ -1,5 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
-using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 
@@ -8,6 +6,15 @@ public class SymmetricKeyWrapper : ISymmetricKeyWrapper
 {
     public SecurityProviderSymmetricKey GetSecurityProvider(string registrationId, string primaryKey, string? secondKey)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(registrationId);
+        ArgumentNullException.ThrowIfNull(primaryKey);
+        return new SecurityProviderSymmetricKey(registrationId, primaryKey, secondKey);
+    }
+
+    public DeviceAuthenticationWithRegistrySymmetricKey GetDeviceAuthentication(string deviceId, string deviceKey)
+    {
+        ArgumentNullException.ThrowIfNull(deviceId);
+        ArgumentNullException.ThrowIfNull(deviceKey);
+        return new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey);
     }
 }
