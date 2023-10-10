@@ -1,15 +1,9 @@
 
-using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices;
-using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
-using TransportType = Microsoft.Azure.Devices.Client.TransportType;
 namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
@@ -50,7 +44,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
     }
 
-    public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate, CancellationToken cancellationToken)
+    public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate, string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
     {
         if (userCertificate == null)
         {
@@ -70,6 +64,14 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         var deviceId = parts[0];
         var iotHubHostName = parts[1];
+        var oneMd = userCertificate.Extensions.First(x => x.Oid?.Value == CertificateConstants.ONE_MD_EXTENTION_KEY).RawData.ToString();
+
+        if (!(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
+        {
+            var error = "The deviceId or the SecretKey are incorrect.";
+            _logger.Error(error);
+            throw new UnauthorizedAccessException();
+        }
 
         if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(iotHubHostName))
         {
@@ -147,5 +149,4 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
     }
-
 }

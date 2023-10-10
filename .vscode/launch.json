@@ -200,7 +200,9 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                "DeviceConnectionString": "HostName=iot-bracha-dev.azure-devices.net;DeviceId=key_holder;SharedAccessKey=Ubdsg3edV3J+O1KBwe9Zj3dJ2SL/Hmk1/AIoTGYnvzE="
+                "DeviceConnectionString": "HostName=iot-bracha-dev.azure-devices.net;DeviceId=key_holder;SharedAccessKey=Ubdsg3edV3J+O1KBwe9Zj3dJ2SL/Hmk1/AIoTGYnvzE=",
+                "DpsScopeId": "0ne00B07A2A",
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net"
             },
             "stopAtEntry": false
         }

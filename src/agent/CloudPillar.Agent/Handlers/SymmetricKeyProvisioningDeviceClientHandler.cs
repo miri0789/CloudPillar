@@ -1,22 +1,25 @@
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 
-public class SymmetricKeyDeviceClientHandler : ISymmetricKeyDeviceClientHandler
+public class SymmetricKeyProvisioningDeviceClientHandler : ISymmetricKeyProvisioningDeviceClientHandler
 {
     private readonly ILoggerHandler _logger;
 
     private IDeviceClientWrapper _deviceClientWrapper;
+    private ISymmetricKeyWrapper _symmetricKeyWrapper;
 
-    public SymmetricKeyDeviceClientHandler(ILoggerHandler loggerHandler, IDeviceClientWrapper deviceClientWrapper)
+
+    public SymmetricKeyProvisioningDeviceClientHandler(ILoggerHandler loggerHandler,
+     IDeviceClientWrapper deviceClientWrapper,
+     ISymmetricKeyWrapper symmetricKeyWrapper)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _symmetricKeyWrapper = symmetricKeyWrapper ?? throw new ArgumentNullException(nameof(symmetricKeyWrapper));
     }
 
     public async Task<bool> AuthorizationAsync(CancellationToken cancellationToken)
@@ -32,7 +35,7 @@ public class SymmetricKeyDeviceClientHandler : ISymmetricKeyDeviceClientHandler
         ArgumentNullException.ThrowIfNullOrEmpty(scopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
 
-        using (var security = new SecurityProviderSymmetricKey(registrationId, primaryKey, null))
+        using (var security = _symmetricKeyWrapper.GetSecurityProvider(registrationId, primaryKey, null))
         {
             _logger.Debug($"Initializing the device provisioning client...");
 
@@ -60,7 +63,7 @@ public class SymmetricKeyDeviceClientHandler : ISymmetricKeyDeviceClientHandler
     {
         try
         {
-            var auth = new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey);
+            var auth = _symmetricKeyWrapper.GetDeviceAuthentication(deviceId, deviceKey);
             await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
             return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
         }
