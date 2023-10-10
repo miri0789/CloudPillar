@@ -21,8 +21,9 @@ public class AgentController : ControllerBase
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
 
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
-
+    private readonly IC2DEventHandler _c2DEventHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
+    private readonly ISymmetricKeyWrapperDeviceClientHandler _symmetricKeyWrapperDeviceClientHandler;
 
 
 
@@ -30,12 +31,18 @@ public class AgentController : ControllerBase
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
+     ISymmetricKeyWrapperDeviceClientHandler symmetricKeyWrapperDeviceClientHandler,
+     IValidator<TwinDesired> twinDesiredPropsValidator,
+     IC2DEventHandler c2DEventHandler,
+     IFileUploaderHandler fileUploaderHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
+        _symmetricKeyWrapperDeviceClientHandler = symmetricKeyWrapperDeviceClientHandler ?? throw new ArgumentNullException(nameof(symmetricKeyWrapperDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
+        _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(C2DEventHandler));
     }
 
     [HttpPost("AddRecipe")]
@@ -53,10 +60,31 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId, string enrollmentId, string globalDeviceEndpoint, CancellationToken cancellationToken)
+    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId="0ne00B07A2A", string globalDeviceEndpoint="global.azure-devices-provisioning.net", string registrationId="pre-shread-key-enrollment", string primaryKey="aUKETVe/YWlAxbYHAzLbyzR6rfLjWPOH4jYgs0XEOq/G9uwCijli/B25QldZcwp5zy1+TLO018RAf3lOvrRjHw==", CancellationToken cancellationToken = default)
     {
         try
         {
+            var isAuthorized = await _symmetricKeyWrapperDeviceClientHandler.AuthorizationAsync(CancellationToken.None);
+            if (!isAuthorized)
+            {
+                try
+                {
+                    await _symmetricKeyWrapperDeviceClientHandler.ProvisionWithSymmetricKeyAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"Provisioning failed", ex);
+                    return BadRequest("Provisioning failed");
+                }
+            }
+            return await _twinHandler.GetTwinJsonAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"InitiateProvisioning error: ", ex);
+            throw;
+        }
+    }
 
             var cert = _dPSProvisioningDeviceClientHandler.GetCertificate();
             if (cert == null)
@@ -88,6 +116,13 @@ public class AgentController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
+    [HttpPost("Message")]
+    public async Task<ActionResult<string>> Message(CancellationToken cancellationToken)
+    {
+        await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
+        return await _twinHandler.GetTwinJsonAsync();
+    }
 
     [HttpPost("SetBusy")]
     public async Task<ActionResult<string>> SetBusy()
