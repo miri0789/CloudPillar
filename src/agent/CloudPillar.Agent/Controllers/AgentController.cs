@@ -75,7 +75,7 @@ public class AgentController : ControllerBase
             {
                 try
                 {
-                    await _symmetricKeyWrapperDeviceClientHandler.ProvisionWithSymmetricKeyAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
+                    await _symmetricKeyWrapperDeviceClientHandler.ProvisioningAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
                 }
                 catch (Exception ex)
                 {
