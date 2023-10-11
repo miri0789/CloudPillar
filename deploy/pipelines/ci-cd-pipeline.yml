@@ -75,40 +75,41 @@ stages:
         artifactName: 'cloudpillar'
         publishLocation: 'Container'  
 
-  - job: '${{ item }}_CI_Job'
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: NuGetAuthenticate@1
-      displayName: 'Authenticate to NuGet'
+  - ${{each item in parameters.services}}:    
+    - job: '${{ item }}_CI_Job'
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      - task: NuGetAuthenticate@1
+        displayName: 'Authenticate to NuGet'
           
-    - task: Docker@2
-      displayName: '${{ item }} Dockerize'
-      inputs:
-        repository: 'cloudpillar${{ lower(item) }}service'
-        containerRegistry: 'CP ${{ parameters.env }} docker registry'
-        command: 'build'
-        Dockerfile: './src/backend/infra/build/Dockerfile'
-        buildContext: src
-        tags: '$(imagetag)'
-        arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
+      - task: Docker@2
+        displayName: '${{ item }} Dockerize'
+        inputs:
+          repository: 'cloudpillar${{ lower(item) }}service'
+          containerRegistry: 'CP ${{ parameters.env }} docker registry'
+          command: 'build'
+          Dockerfile: './src/backend/infra/build/Dockerfile'
+          buildContext: src
+          tags: '$(imagetag)'
+          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
             
-    - script: |
-        SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
-        echo "$SCAN_RESULT" 
-        if [[ $SCAN_RESULT == *"CRITICAL"* && "$SCAN_RESULT" != *"CRITICAL: 0"* ]]; then
-          echo "Critical vulnerabilities found. Failing the pipeline."
-          exit 1  # This will cause the pipeline to fail
-        fi
-      displayName: '${{ item }} Security Scan'
+      - script: |
+          SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
+          echo "$SCAN_RESULT" 
+          if [[ $SCAN_RESULT == *"CRITICAL"* && "$SCAN_RESULT" != *"CRITICAL: 0"* ]]; then
+            echo "Critical vulnerabilities found. Failing the pipeline."
+            exit 1  # This will cause the pipeline to fail
+          fi
+        displayName: '${{ item }} Security Scan'
 
-    - task: Docker@2
-      displayName: '${{ item }} Docker Push'
-      inputs:
-        command: 'push' 
-        repository: 'cloudpillar${{ lower(item) }}service'
-        containerRegistry: 'cp ${{ parameters.env }} docker registry'
-        tags: '$(imagetag)'
+      - task: Docker@2
+        displayName: '${{ item }} Docker Push'
+        inputs:
+          command: 'push' 
+          repository: 'cloudpillar${{ lower(item) }}service'
+          containerRegistry: 'cp ${{ parameters.env }} docker registry'
+          tags: '$(imagetag)'
 
 
 - stage: CD_Stage
