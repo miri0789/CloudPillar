@@ -64,8 +64,6 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     case C2DMessageType.ReProvisioning:
                         var reProvisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReProvisioningMessage>(receivedMessage);
                         _messageSubscriber.HandleReProvisioningMessageAsync(reProvisioningMessage, cancellationToken);
-                        //await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(new ActionToReport(), 1));
-                        // _logger.Debug("f");
                         break;
                     default:
                         _logger.Info("Receive  message was not processed");

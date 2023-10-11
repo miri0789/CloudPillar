@@ -25,7 +25,7 @@ public class SymmetricKeyWrapperDeviceClientHandler : ISymmetricKeyWrapperDevice
         return res;
     }
 
-    public async Task ProvisionWithSymmetricKeyAsync(string registrationId, string primaryKey, string scopeId, string globalDeviceEndpoint, CancellationToken cancellationToken)
+    public async Task ProvisioningAsync(string registrationId, string primaryKey, string scopeId, string globalDeviceEndpoint, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(registrationId);
         ArgumentNullException.ThrowIfNullOrEmpty(primaryKey);

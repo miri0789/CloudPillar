@@ -25,8 +25,6 @@ public class AgentController : ControllerBase
     private readonly IC2DEventHandler _c2DEventHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyWrapperDeviceClientHandler _symmetricKeyWrapperDeviceClientHandler;
-
-    private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
 
@@ -36,11 +34,9 @@ public class AgentController : ControllerBase
      ISymmetricKeyWrapperDeviceClientHandler symmetricKeyWrapperDeviceClientHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IC2DEventHandler c2DEventHandler,
-     IFileUploaderHandler fileUploaderHandler,
      IEnvironmentsWrapper environmentsWrapper,
      ILoggerHandler logger)
     {
-        _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
@@ -52,10 +48,12 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("AddRecipe")]
-    public async Task<IActionResult> AddRecipe()
+    public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
     {
-        return Ok();
+        _twinDesiredPropsValidator.ValidateAndThrow(recipe);
+        return await _twinHandler.GetTwinJsonAsync();
     }
+
 
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceState()
@@ -65,7 +63,7 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string registrationId = "pre-shread-key-enrollment", string primaryKey = "aUKETVe/YWlAxbYHAzLbyzR6rfLjWPOH4jYgs0XEOq/G9uwCijli/B25QldZcwp5zy1+TLO018RAf3lOvrRjHw==", CancellationToken cancellationToken = default)
+    public async Task<ActionResult<string>> InitiateProvisioning(string registrationId, string primaryKey, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -98,22 +96,22 @@ public class AgentController : ControllerBase
     }   
 
     [HttpPost("SetBusy")]
-    public async Task<IActionResult> SetBusy()
+    public async Task<ActionResult<string>> SetBusy()
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPost("SetReady")]
-    public async Task<IActionResult> SetReady()
+    public async Task<ActionResult<string>> SetReady()
     {
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPut("UpdateReportedProps")]
-    public async Task<IActionResult> UpdateReportedProps(UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 }
 
