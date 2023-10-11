@@ -71,9 +71,9 @@ controllers:
 
 replicaCount: 1
 
-# env:
-#   - name: ASPNETCORE_ENVIRONMENT
-#     value: DevEU
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: Dev
 
 image:
   acr: "cpdevacr.azurecr.io"

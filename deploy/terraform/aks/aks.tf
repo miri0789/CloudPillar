@@ -18,11 +18,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
   dns_prefix              = "cp-${var.env}-dns"
   sku_tier                = "Free"
   kubernetes_version      = "1.25.6"
-  private_cluster_enabled = var.env != "dev"
+  private_cluster_enabled = var.env != "dev" && var.env != "tst"
   
   default_node_pool {
     name                  = "agentpool"
-    vm_size               = "Standard_D4s_v3"
+    vm_size               = "Standard_B2s_v2"
     zones                 = [ "1", "2", "3" ]
     enable_auto_scaling   = true
     min_count             = 1

@@ -1,0 +1,100 @@
+variables:
+- name: imagetag
+  value: 1.0.$(Build.BuildNumber)
+parameters:
+- name: env
+  displayName: Select Environment to deploy
+  type: string
+  default: dev
+  values:
+  - tst
+  - dev
+  - stg
+  - prd   
+- name: services
+  displayName: Select services to deploy
+  type: object
+  default:
+  - BlobStreamer
+  - Iotlistener
+  - Keyholder  
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
+stages:
+  
+- stage: CI_Stage
+  
+  jobs:
+  - job: RunUnitTests
+    displayName: 'Run_Unit_Tests'
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - task: NuGetAuthenticate@1
+      displayName: 'Authenticate to NuGet'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Unit Tests'
+      inputs:
+        command: 'test'
+        projects: '**/*Tests/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '**/TestResults/*.trx'
+
+
+  - job: Agent_CI_Job
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: NuGetAuthenticate@1
+      displayName: 'Authenticate to NuGet'
+    - task: Docker@2
+      displayName: Agent Dockerize
+      inputs:
+        command: build
+        repository: agent
+        dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
+        buildContext: src
+        tags: aux-build
+        arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+ 
+
+  - ${{each item in parameters.services}}:
+      - job: '${{ item }}_CI_Job'
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: NuGetAuthenticate@1
+          displayName: 'Authenticate to NuGet'
+          
+        - task: Docker@2
+          displayName: '${{ item }} Dockerize'
+          inputs:
+            repository: 'cloudpillar${{ lower(item) }}service'
+            containerRegistry: 'CP ${{ parameters.env }} docker registry'
+            command: 'build'
+            Dockerfile: './src/backend/infra/build/Dockerfile'
+            buildContext: src
+            tags: '$(imagetag)'
+            arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
+            
+        - script: |
+            SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
+            echo "$SCAN_RESULT" 
+            if [[ $SCAN_RESULT == *"CRITICAL"* && "$SCAN_RESULT" != *"CRITICAL: 0"* ]]; then
+              echo "Critical vulnerabilities found. Failing the pipeline."
+              exit 1  # This will cause the pipeline to fail
+            fi
+          displayName: '${{ item }} Security Scan'
+

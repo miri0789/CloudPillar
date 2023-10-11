@@ -1,0 +1,129 @@
+variables:
+- name: imagetag
+  value: 1.0.$(Build.BuildNumber)
+parameters:
+- name: env
+  displayName: Select Environment to deploy
+  type: string
+  default: dev
+  values:
+  - tst
+  - dev
+  - stg
+  - prd 
+
+trigger:
+- none
+
+
+stages:  
+- stage: CI_Stage  
+  jobs:
+  - job: Agent_CI_Job
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: NuGetAuthenticate@1
+      displayName: 'Authenticate to NuGet'
+    - task: Docker@2
+      displayName: Agent Dockerize
+      inputs:
+        command: build
+        repository: agent
+        dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
+        buildContext: src
+        tags: aux-build
+        arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+
+    - script: |
+        CONTAINER_ID=$(docker create agent:aux-build)
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL agent:aux-build
+        docker cp $CONTAINER_ID:/app/cloudpillar.zip .
+        docker rm $CONTAINER_ID
+        mv ./cloudpillar.zip ./cloudpillar-agent-$(imagetag).zip
+        ls -al ./cloudpillar-agent-$(imagetag).zip
+      displayName: 'Run Agent Security Scan & Extract cloudpillar.zip from Image'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish cloudpillar.zip to Artifacts'
+      inputs:
+        pathtoPublish: ./cloudpillar-agent-$(imagetag).zip
+        artifactName: 'cloudpillar'
+        publishLocation: 'Container'  
+
+    - job: '${{ item }}_CI_Job'
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      - task: NuGetAuthenticate@1
+        displayName: 'Authenticate to NuGet'
+          
+      - task: Docker@2
+        displayName: '${{ item }} Dockerize'
+        inputs:
+          repository: 'cloudpillar${{ lower(item) }}service'
+          containerRegistry: 'CP ${{ parameters.env }} docker registry'
+          command: 'build'
+          Dockerfile: './src/backend/infra/build/Dockerfile'
+          buildContext: src
+          tags: '$(imagetag)'
+          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'
+
+      - task: Docker@2
+        displayName: '${{ item }} Docker Push'
+        inputs:
+          command: 'push' 
+          repository: 'cloudpillar${{ lower(item) }}service'
+          containerRegistry: 'cp ${{ parameters.env }} docker registry'
+          tags: '$(imagetag)'
+
+
+- stage: CD_Stage
+  jobs:  
+  - job: Start_VM_Job
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - checkout: none
+    - task: AzureCLI@1
+      displayName: 'Start VM'
+      inputs:
+        azureSubscription: 'CloudPillar ${{ parameters.env }}'
+        scriptLocation: inlineScript
+        inlineScript: |
+          az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
+          
+  - job: CD_Job
+    dependsOn: Start_VM_Job
+    pool:
+      name: CloudPillar-Pool
+      demands:
+      - agent.name -equals cpaks-${{ parameters.env }}-vm-agent
+    steps:
+    - task: HelmDeploy@0
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: CloudPillar ${{ parameters.env }}
+        azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
+        kubernetesCluster: 'cp-${{ parameters.env }}-aks'
+        command: 'upgrade'
+        chartType: 'FilePath'
+        chartPath: 'deploy/backend/'
+        releaseName: 'cloudpillarback'
+        overrideValues: 'image.tag=$(imagetag)'
+        valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
+        arguments: '--debug --timeout 5m0s'
+        
+  - job: Stop_VM_Job
+    dependsOn: CD_Job
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - checkout: none
+    - task: AzureCLI@1
+      displayName: 'Stop VM'
+      inputs:
+        azureSubscription: 'CloudPillar ${{ parameters.env }}'
+        scriptLocation: inlineScript
+        inlineScript: |
+          az vm deallocate -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
