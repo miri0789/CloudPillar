@@ -141,20 +141,18 @@ public class RegistrationService : IRegistrationService
         ArgumentNullException.ThrowIfNullOrEmpty(oneMDKey);
         using (SHA256 sha256 = SHA256.Create())
         {
-            // Compute the hash
             byte[] passwordBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(oneMDKey));
 
-            // Convert the hash to a hexadecimal string
             string passwordString = BitConverter.ToString(passwordBytes).Replace("-", "").ToLower();
 
+            // The password is temporary and will be fixed in task 11505
             var pfxBytes = certificate.Export(X509ContentType.Pkcs12, "1234");
-            //string certificateBase64 = Convert.ToBase64String(pfxBytes);
             var message = new ReProvisioningMessage()
             {
                 Data = pfxBytes,
                 EnrollmentId = individualEnrollment.RegistrationId,
                 DeviceEndpoint = DEVICE_ENDPOINT,
-                // TODO: get the scopeid from the dps, not from the env
+                // TODO: get the scopeid from the dps, not from the env, + do not send the dps connection string
                 ScopedId = _environmentsWrapper.dpsIdScope,
                 DPSConnectionString = _environmentsWrapper.dpsConnectionString
             };

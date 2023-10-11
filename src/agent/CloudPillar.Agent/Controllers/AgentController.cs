@@ -95,51 +95,7 @@ public class AgentController : ControllerBase
             _logger.Error($"InitiateProvisioning error: ", ex);
             throw;
         }
-    }
-
-    [AllowAnonymous]
-    [HttpPost("Initiatex509Provisioning")]
-    public async Task<ActionResult<string>> Initiatex509Provisioning(string dpsScopeId, string globalDeviceEndpoint, string registrationId, string primaryKey, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var cert = _dPSProvisioningDeviceClientHandler.GetCertificate();
-            if (cert == null)
-            {
-                var error = "No certificate exist in agent";
-                _logger.Error(error);
-                return Unauthorized(error);
-            }
-
-            var isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert, cancellationToken);
-            if (!isAuthorized)
-            {
-                try
-                {
-                    await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error($"Provisioning failed", ex);
-                    return BadRequest("Provisioning failed");
-                }
-            }
-            return await _twinHandler.GetTwinJsonAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"InitiateProvisioning error: ", ex);
-            throw;
-        }
-    }
-
-    [AllowAnonymous]
-    [HttpPost("Message")]
-    public async Task<ActionResult<string>> Message(CancellationToken cancellationToken)
-    {
-        await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
-        return await _twinHandler.GetTwinJsonAsync();
-    }
+    }   
 
     [HttpPost("SetBusy")]
     public async Task<IActionResult> SetBusy()

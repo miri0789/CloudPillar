@@ -37,22 +37,14 @@ public class ReProvisioningHandler : IReProvisioningHandler
         ArgumentNullException.ThrowIfNull(message);
 
         var certificateBytes = message.Data;
+        // The password is temporary and will be fixed in task 11505
         X509Certificate2 certificate = new X509Certificate2(certificateBytes, "1234");
 
 
         var deviceId = certificate.Subject.Replace(CertificateConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT, string.Empty); ;
-        // var secretKey = string.Empty;
-        // foreach (X509Extension extension in certificate.Extensions)
-        // {
-
-        //     if (extension.Oid?.Value == CertificateConstants.ONE_MD_EXTENTION_KEY)
-        //     {
-        //         secretKey = Encoding.UTF8.GetString(extension.RawData);
-        //     }
-        // }
+       
 
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
-        // ArgumentNullException.ThrowIfNullOrEmpty(secretKey);
 
 
 
