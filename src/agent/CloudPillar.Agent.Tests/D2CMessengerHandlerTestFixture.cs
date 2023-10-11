@@ -24,7 +24,7 @@ namespace CloudPillar.Agent.Tests
         private const long END_POSITION = 20;
         private const int KB = 1024;
         private const int MQQT_KB = 32 * KB;
-        private Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
+        private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
         private MemoryStream READ_STREAM = new MemoryStream(new byte[] { 1, 2, 3 });
         private string checkSum;
 

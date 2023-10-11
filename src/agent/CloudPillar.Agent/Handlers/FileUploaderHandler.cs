@@ -14,18 +14,21 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private readonly ILoggerHandler _logger;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
     private readonly IStreamingFileUploaderHandler _streamingFileUploaderHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
+        IFileStreamerWrapper fileStreamerWrapper,
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
         IStreamingFileUploaderHandler StreamingFileUploaderHandler,
         ITwinActionsHandler twinActionsHandler,
         ILoggerHandler logger)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _blobStorageFileUploaderHandler = blobStorageFileUploaderHandler ?? throw new ArgumentNullException(nameof(blobStorageFileUploaderHandler));
         _streamingFileUploaderHandler = StreamingFileUploaderHandler ?? throw new ArgumentNullException(nameof(StreamingFileUploaderHandler));
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
@@ -53,7 +56,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
         finally
         {
-            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
+            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         }
     }
 
@@ -61,22 +64,22 @@ public class FileUploaderHandler : IFileUploaderHandler
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
-        string directoryPath = Path.GetDirectoryName(filePathPattern) ?? "";
-        string searchPattern = Path.GetFileName(filePathPattern);
+        string directoryPath = _fileStreamerWrapper.GetDirectoryName(filePathPattern) ?? "";
+        string searchPattern = _fileStreamerWrapper.GetFileName(filePathPattern);
 
         // Get a list of all matching files
-        string[] files = Directory.GetFiles(directoryPath, searchPattern);
+        string[] files = _fileStreamerWrapper.GetFiles(directoryPath, searchPattern);
         // Get a list of all matching directories
-        string[] directories = Directory.GetDirectories(directoryPath, searchPattern);
+        string[] directories = _fileStreamerWrapper.GetDirectories(directoryPath, searchPattern);
 
-        string[] filesToUpload = files.Concat(directories).ToArray();
+        string[] filesToUpload = _fileStreamerWrapper.Concat(files, directories);
 
         if (filesToUpload.Length == 0)
         {
             throw new ArgumentNullException($"The file {filePathPattern} not found");
         }
         // Upload each file
-        foreach (string fullFilePath in files.Concat(directories))
+        foreach (string fullFilePath in _fileStreamerWrapper.Concat(files, directories))
         {
             string blobname = BuildBlobName(fullFilePath);
 
@@ -92,7 +95,12 @@ public class FileUploaderHandler : IFileUploaderHandler
         _logger.Info($"BuildBlobName");
 
         string blobname = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
-        if (Directory.Exists(fullFilePath))
+        // string fullFilePathReplaced = _fileStreamerWrapper.TextReplace(fullFilePath, "//:", "_protocol_");
+        // fullFilePathReplaced = _fileStreamerWrapper.TextReplace(fullFilePathReplaced, "\\", "/");
+        // fullFilePathReplaced = _fileStreamerWrapper.TextReplace(fullFilePathReplaced, ":/", "_driveroot_/");
+
+        // string blobname = _fileStreamerWrapper.RegexReplace(fullFilePathReplaced, "^\\/", "_root_");
+        if (_fileStreamerWrapper.DirectoryExists(fullFilePath))
         {
             blobname += ".zip";
         }
@@ -106,15 +114,15 @@ public class FileUploaderHandler : IFileUploaderHandler
         var memoryStream = new MemoryStream();
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
-            string baseDir = Path.GetFileName(fullFilePath);
-            string[] filesDir = Directory.GetFiles(fullFilePath, "*", SearchOption.AllDirectories);
+            string baseDir = _fileStreamerWrapper.GetFileName(fullFilePath);
+            string[] filesDir = _fileStreamerWrapper.GetFiles(fullFilePath, "*", SearchOption.AllDirectories);
             if (filesDir.Length == 0)
             {
                 throw new ArgumentNullException($"Directory {baseDir} is empty");
             }
             foreach (string file in filesDir)
             {
-                string relativePath = Path.Combine(baseDir, file.Substring(fullFilePath.Length + 1));
+                string relativePath = _fileStreamerWrapper.Combine(baseDir, file.Substring(fullFilePath.Length + 1));
                 archive.CreateEntryFromFile(file, relativePath);
             }
         }
@@ -130,16 +138,17 @@ public class FileUploaderHandler : IFileUploaderHandler
         Stream readStream;
 
         // Check if the path is a directory
-        if (Directory.Exists(fullFilePath))
+        if (_fileStreamerWrapper.DirectoryExists(fullFilePath))
         {
             readStream = CreateZipArchive(fullFilePath); // Will read from memory where the zip file was formed
         }
         else
         {
-            var fileStream = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true)
-            {
-                Position = 0
-            };
+            var fileStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true);
+            if(fileStream == null){
+                throw new ArgumentNullException("invalid file stream");
+            }
+            fileStream.Position = 0;
             readStream = fileStream;
         }
         return readStream;

@@ -58,7 +58,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     case C2DMessageType.DownloadChunk:
                         var message = _messageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                         var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
-                        await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
+                        await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
                         break;
                     default:
                         _logger.Info("Receive  message was not processed");

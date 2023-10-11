@@ -96,7 +96,7 @@ public class TwinHandler : ITwinHandler
                     default:
                         action.TwinReport.Status = StatusType.Failed;
                         action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
-                        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action });
+                        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
@@ -162,7 +162,7 @@ public class TwinHandler : ITwinHandler
             }
             if (isReportedChanged)
             {
-                await UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
+                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
             }
             return actions;
         }
@@ -203,22 +203,6 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    private async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec)
-    {
-        var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
-          Formatting.None,
-          new JsonSerializerSettings
-          {
-              ContractResolver = new CamelCasePropertyNamesContractResolver(),
-              Converters = { new StringEnumConverter() },
-              Formatting = Formatting.Indented,
-              NullValueHandling = NullValueHandling.Ignore
-          }));
-        var changeSpecKey = nameof(TwinReported.ChangeSpec);
-        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey, changeSpecJson);
-
-    }
-
     public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -249,7 +233,7 @@ public class TwinHandler : ITwinHandler
             supportedShells.Add(ShellType.Cmd);
             supportedShells.Add(ShellType.Powershell);
             // Check if WSL is installed
-            if (_fileStreamerWrapper.Exists(windowsBashPath))
+            if (_fileStreamerWrapper.FileExists(windowsBashPath))
             {
                 supportedShells.Add(ShellType.Bash);
             }
@@ -259,7 +243,7 @@ public class TwinHandler : ITwinHandler
             supportedShells.Add(ShellType.Bash);
 
             // Add PowerShell if it's installed on Linux or macOS
-            if (_fileStreamerWrapper.Exists(linuxPsPath1) || _fileStreamerWrapper.Exists(linuxPsPath2))
+            if (_fileStreamerWrapper.FileExists(linuxPsPath1) || _fileStreamerWrapper.FileExists(linuxPsPath2))
             {
                 supportedShells.Add(ShellType.Powershell);
             }

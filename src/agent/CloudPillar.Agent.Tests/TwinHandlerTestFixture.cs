@@ -22,7 +22,7 @@ public class TwinHandlerTestFixture
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private ITwinHandler _target;
-
+    private CancellationToken cancellationToken = CancellationToken.None;
     private string _baseDesierd = @"{
             '$metadata': {
                 '$lastUpdated': '2023-08-29T12:30:36.4167057Z'
@@ -69,7 +69,7 @@ public class TwinHandlerTestFixture
         twinProp.Reported = new TwinCollection(_baseReported);
         var twin = new Twin(twinProp);
 
-        _deviceClientMock.Setup(x => x.GetTwinAsync()).ReturnsAsync(twin);
+        _deviceClientMock.Setup(x => x.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
 
         var target = await _target.GetTwinJsonAsync();
 
@@ -254,7 +254,7 @@ public class TwinHandlerTestFixture
     {
         var supportedShellsKey = nameof(TwinReported.SupportedShells);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Windows)).Returns(true);
-        _fileStreamerWrapper.Setup(dc => dc.Exists(It.IsAny<string>())).Returns(true);
+        _fileStreamerWrapper.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
 
         CreateTarget();
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey, It.IsAny<object>()))
@@ -272,7 +272,7 @@ public class TwinHandlerTestFixture
         var supportedShellsKey = nameof(TwinReported.SupportedShells);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Linux)).Returns(true);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Windows)).Returns(false);
-        _fileStreamerWrapper.Setup(dc => dc.Exists(It.IsAny<string>())).Returns(true);
+        _fileStreamerWrapper.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
 
         CreateTarget();
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey, It.IsAny<object>()))
@@ -341,7 +341,7 @@ public class TwinHandlerTestFixture
             Reported = new TwinCollection(JsonConvert.SerializeObject(reportedJson, settings))
         };
         var twin = new Twin(twinProp);
-        _deviceClientMock.Setup(dc => dc.GetTwinAsync()).ReturnsAsync(twin);
+        _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
     }
 
 

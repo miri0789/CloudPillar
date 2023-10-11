@@ -22,7 +22,7 @@ namespace CloudPillar.Agent.Tests
         private const int CHUNK_SIZE = 1024;
         private const int NUM_OF_CHUNKS = 4;
         private const string CORRELATION_ID = "abc";
-        private Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
+        private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
         private ActionToReport actionToReport = new ActionToReport();
 
         [SetUp]

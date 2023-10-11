@@ -15,7 +15,7 @@ namespace Backend.BlobStreamer.Tests
         private Mock<ICloudBlockBlobWrapper> _mockCloudBlockBlobWrapper;
         private Mock<ILoggerHandler> _mockLogger;
         private IUploadStreamChunksService _target;
-        private Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
+        private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
         private byte[] BYTES = { 1, 2, 3 };
         private const long _startPosition = 0;
         private const string _checkSum = "xxx";

@@ -29,6 +29,7 @@ public class TwinActionsHandlerTestFixture
             '$version': 1,
         }";
 
+    private CancellationToken cancellationToken = CancellationToken.None;
 
     [SetUp]
     public void Setup()
@@ -45,7 +46,7 @@ public class TwinActionsHandlerTestFixture
     {
         var actionsToReported = CreateReportForUpdating();
 
-        await _target.UpdateReportActionAsync(actionsToReported);
+        await _target.UpdateReportActionAsync(actionsToReported, cancellationToken);
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
             nameof(TwinReported.ChangeSpec), It.IsAny<JObject>()), Times.Once);
@@ -97,6 +98,6 @@ public class TwinActionsHandlerTestFixture
             Reported = new TwinCollection(JsonConvert.SerializeObject(reportedJson, settings))
         };
         var twin = new Twin(twinProp);
-        _deviceClientMock.Setup(dc => dc.GetTwinAsync()).ReturnsAsync(twin);
+        _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
     }
 }
