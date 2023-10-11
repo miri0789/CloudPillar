@@ -78,7 +78,7 @@ stages:
         docker rm $CONTAINER_ID
         mv ./cloudpillar.zip ./cloudpillar-agent-$(imagetag).zip
         ls -al ./cloudpillar-agent-$(imagetag).zip
-      displayName: 'Run Agent Security Scan & Extract cloudpillar.zip from Image'
+      displayName: 'Extract cloudpillar.zip from Image'
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cloudpillar.zip to Artifacts'
