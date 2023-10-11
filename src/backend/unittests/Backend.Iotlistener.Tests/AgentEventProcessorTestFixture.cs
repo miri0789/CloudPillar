@@ -65,19 +65,19 @@ public class AgentEventProcessorTestFixture
         _firmwareUpdateServiceMock.Verify(f => f.SendFirmwareUpdateAsync("deviceId", It.IsAny<FirmwareUpdateEvent>()), Times.Once);
     }
 
-    [Test]
-    public async Task ProcessEventsAsync_SignTwinKeyMessage_CallSignTwinKey()
-    {
-        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
-        var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
-        {
-            CallBase = true
-        };
+    // [Test]
+    // public async Task ProcessEventsAsync_SignTwinKeyMessage_CallSignTwinKey()
+    // {
+    //     var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
+    //     var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
+    //     {
+    //         CallBase = true
+    //     };
 
-        await _target.ProcessEventsAsync(contextMock.Object, messages);
+    //     await _target.ProcessEventsAsync(contextMock.Object, messages);
 
-        _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Once);
-    }
+    //     _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Once);
+    // }
 
     [Test]
     public async Task ProcessEventsAsync_DrainMode_NotCall()

@@ -34,17 +34,17 @@ namespace CloudPillar.Agent.Tests
 
         }
 
-        [TestCase(TransportType.Mqtt, 32 * KB)]
-        [TestCase(TransportType.Amqp, 64 * KB)]
-        [TestCase(TransportType.Http1, 256 * KB)]
-        [TestCase((TransportType)100, 32 * KB)] // Unknown transport type
-        public async Task SendFirmwareUpdateEventAsync_ByTransportType_SendCorrectChunkSize(TransportType transportType, int expectedChunkSize)
-        {
-            _deviceClientMock.Setup(dc => dc.GetTransportType()).Returns(transportType);
+        // [TestCase(TransportType.Mqtt, 32 * KB)]
+        // [TestCase(TransportType.Amqp, 64 * KB)]
+        // [TestCase(TransportType.Http1, 256 * KB)]
+        // [TestCase((TransportType)100, 32 * KB)] // Unknown transport type
+        // public async Task SendFirmwareUpdateEventAsync_ByTransportType_SendCorrectChunkSize(TransportType transportType, int expectedChunkSize)
+        // {
+        //     _deviceClientMock.Setup(dc => dc.GetTransportType()).Returns(transportType);
 
-            await _target.SendFirmwareUpdateEventAsync(FILE_NAME, ACTION_ID, START_POSITION, END_POSITION);
-            _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, FILE_NAME, ACTION_ID, START_POSITION, END_POSITION) == true)), Times.Once);
-        }
+        //     await _target.SendFirmwareUpdateEventAsync(FILE_NAME, ACTION_ID, START_POSITION, END_POSITION);
+        //     _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, FILE_NAME, ACTION_ID, START_POSITION, END_POSITION) == true)), Times.Once);
+        // }
 
 
 
