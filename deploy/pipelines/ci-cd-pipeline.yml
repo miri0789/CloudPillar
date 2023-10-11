@@ -127,7 +127,7 @@ stages:
 - stage: CD_Stage
   jobs:  
   - job: Start_VM_Job
-    condition: eq(variables['isCD'], 'true')
+    condition: eq(parameters['isCD'], 'true')
     pool:
       vmImage: ubuntu-latest
     steps:
