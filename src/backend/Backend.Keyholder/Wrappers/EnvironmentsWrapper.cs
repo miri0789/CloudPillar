@@ -15,8 +15,6 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _dpsConnectionString = "DPSConnectionString";
     private const string _dpsIdScope = "DPSIdScope";
 
-    private const string _certificateExpiredDays = "CertificateExpiredDays";
-
     public string kubernetesServiceHost
     {
         get { return GetVariable(_kubernetesServiceHost); }
@@ -48,14 +46,6 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
         get { return GetVariable(_dpsIdScope); }
     }
 
-
-    public int certificateExpiredDays
-    {
-        get
-        {
-            return int.TryParse(GetVariable(_certificateExpiredDays), out int value) ? value : 365;
-        }
-    }
 
     private string GetVariable(string name)
     {

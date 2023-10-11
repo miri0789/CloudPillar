@@ -205,7 +205,8 @@
             "console": "internalConsole",
             "env": {
                 "DpsScopeId": "0ne00B07A2A",
-                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net"
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                "CertificateExpiredDays": "365"
             },
             "stopAtEntry": false
         }

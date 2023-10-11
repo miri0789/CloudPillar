@@ -11,6 +11,8 @@ using Shared.Entities.Factories;
 using Shared.Entities.DeviceClient;
 using Microsoft.Azure.Devices;
 using Backend.Keyholder.Wrappers.Interfaces;
+using Shared.Entities.Authentication;
+using Newtonsoft.Json;
 
 public class RegistrationService : IRegistrationService
 {
@@ -52,13 +54,29 @@ public class RegistrationService : IRegistrationService
         _iotHubHostName = GetIOTHubHostName();
     }
 
-    public async Task Register(string deviceId, string oneMDKey)
+    public async Task Register(string deviceId, string secretKey)
     {
         try
         {
-            var certificate = GenerateCertificate(deviceId, oneMDKey);
-            var enrollment = await CreateEnrollmentAsync(certificate, deviceId);
-            await SendCertificateToAgent(deviceId, oneMDKey, certificate, enrollment);
+            _loggerHandler.Debug($"SendCertificateToAgent for deviceId {deviceId}.");
+            ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
+            ArgumentNullException.ThrowIfNullOrEmpty(secretKey);
+            var authonticationKeys = JsonConvert.SerializeObject(new AuthonticationKeys()
+            {
+                DeviceId = deviceId,
+                SecretKey = secretKey
+            });
+
+            var message = new RequestDeviceCertificateMessage()
+            {
+                Data = Encoding.ASCII.GetBytes(authonticationKeys)
+            };
+            
+            var c2dMessage = _messageFactory.PrepareC2DMessage(message);
+            await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
+            // var certificate = GenerateCertificate(deviceId, oneMDKey);
+            // var enrollment = await CreateEnrollmentAsync(certificate, deviceId);
+            // await SendCertificateToAgent(deviceId, oneMDKey, certificate, enrollment);
         }
         catch (Exception ex)
         {

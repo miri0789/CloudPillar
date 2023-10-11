@@ -22,4 +22,9 @@ public class MessageSubscriber : IMessageSubscriber
     {
        await _reProvisioningHandler.HandleReProvisioningMessageAsync(message, cancellationToken);
     }
+
+    public Task HandleRequestDeviceCertificate(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }

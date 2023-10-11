@@ -7,4 +7,6 @@ public interface IMessageSubscriber
     Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message);
 
     Task HandleReProvisioningMessageAsync(ReProvisioningMessage message, CancellationToken cancellationToken);
+
+    Task HandleRequestDeviceCertificate(RequestDeviceCertificateMessage message, CancellationToken cancellationToken);
 }

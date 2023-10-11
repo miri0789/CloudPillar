@@ -6,6 +6,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _periodicUploadInterval = "PeriodicUploadInterval";
     private const string _dpsScopeId = "DpsScopeId";
     private const string _globalDeviceEndpoint = "GlobalDeviceEndpoint";
+    private const string _certificateExpiredDays = "CertificateExpiredDays";
 
     public string deviceConnectionString
     {
@@ -26,6 +27,13 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public string globalDeviceEndpoint
     {
         get { return GetVariable(_globalDeviceEndpoint); }
+    }
+    public int certificateExpiredDays
+    {
+        get
+        {
+            return int.TryParse(GetVariable(_certificateExpiredDays), out int value) ? value : 365;
+        }
     }
     private string GetVariable(string name)
     {

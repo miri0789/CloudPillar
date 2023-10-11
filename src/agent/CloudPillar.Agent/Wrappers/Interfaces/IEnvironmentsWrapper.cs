@@ -7,4 +7,5 @@ public interface IEnvironmentsWrapper
     string periodicUploadInterval { get; }
     string dpsScopeId { get; }
     string globalDeviceEndpoint { get; }
+    int certificateExpiredDays { get; }
 }

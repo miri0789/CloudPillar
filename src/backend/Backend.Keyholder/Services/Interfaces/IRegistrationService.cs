@@ -1,4 +1,4 @@
 public interface IRegistrationService
 {
-    Task Register(string deviceId, string OneMDKey);
+    Task Register(string deviceId, string secretKey);
 }
