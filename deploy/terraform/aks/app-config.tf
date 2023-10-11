@@ -1,7 +1,8 @@
 resource "azurerm_app_configuration" "aks" {
-  name                = "cp-${var.env}-config"
+  name                = "cp-${var.env}-conf"
   resource_group_name = azurerm_resource_group.aks.name
   location            = var.location
+  sku                 = "free"
 }
 
 
