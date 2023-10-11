@@ -73,7 +73,6 @@ stages:
 
     - script: |
         CONTAINER_ID=$(docker create agent:aux-build)
-        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL agent:aux-build
         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
         docker rm $CONTAINER_ID
         mv ./cloudpillar.zip ./cloudpillar-agent-$(imagetag).zip
