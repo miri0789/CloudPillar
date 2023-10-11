@@ -14,9 +14,21 @@ parameters:
 - name: isCD
   type: boolean
   default: false
-
+- name: services
+  displayName: Select services to deploy
+  type: object
+  default:
+  - BlobStreamer
+  - Iotlistener
+  - Keyholder  
 trigger:
-- none
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
 
 
 stages:  
