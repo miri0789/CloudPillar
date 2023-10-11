@@ -5,7 +5,7 @@ using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 
-public class SymmetricKeyProvisioningHandler  : ISymmetricKeyProvisioningHandler 
+public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 {
     private readonly ILoggerHandler _logger;
 
@@ -13,7 +13,7 @@ public class SymmetricKeyProvisioningHandler  : ISymmetricKeyProvisioningHandler
     private ISymmetricKeyWrapper _symmetricKeyWrapper;
 
 
-    public SymmetricKeyProvisioningHandler (ILoggerHandler loggerHandler,
+    public SymmetricKeyProvisioningHandler(ILoggerHandler loggerHandler,
      IDeviceClientWrapper deviceClientWrapper,
      ISymmetricKeyWrapper symmetricKeyWrapper)
     {
@@ -35,26 +35,27 @@ public class SymmetricKeyProvisioningHandler  : ISymmetricKeyProvisioningHandler
         ArgumentNullException.ThrowIfNullOrEmpty(scopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
 
-        var security = _symmetricKeyWrapper.GetSecurityProvider(registrationId, primaryKey, null);
-
-        _logger.Debug($"Initializing the device provisioning client...");
-
-        using ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler();
+        using (var security = _symmetricKeyWrapper.GetSecurityProvider(registrationId, primaryKey, null))
         {
-            var provisioningClient = ProvisioningDeviceClient.Create(globalDeviceEndpoint, scopeId, security, transport);
+            _logger.Debug($"Initializing the device provisioning client...");
 
-            _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
-
-            var result = await provisioningClient.RegisterAsync();
-
-            _logger.Debug($"Registration status: {result.Status}.");
-
-            if (result.Status != ProvisioningRegistrationStatusType.Assigned)
+            using (ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler())
             {
-                _logger.Error("Registration status did not assign a hub.");
-                return;
+                var provisioningClient = ProvisioningDeviceClient.Create(globalDeviceEndpoint, scopeId, security, transport);
+
+                _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
+
+                var result = await provisioningClient.RegisterAsync();
+
+                _logger.Debug($"Registration status: {result.Status}.");
+
+                if (result.Status != ProvisioningRegistrationStatusType.Assigned)
+                {
+                    _logger.Error("Registration status did not assign a hub.");
+                    return;
+                }
+                await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, primaryKey, cancellationToken);
             }
-            await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, primaryKey, cancellationToken);
         }
     }
 
