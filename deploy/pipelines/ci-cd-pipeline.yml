@@ -126,8 +126,8 @@ stages:
 
 - stage: CD_Stage
   jobs:  
+  - ${{ if eq(parameters.isCD, true) }}:
   - job: Start_VM_Job
-    condition: eq(parameters['isCD'], 'true')
     pool:
       vmImage: ubuntu-latest
     steps:
