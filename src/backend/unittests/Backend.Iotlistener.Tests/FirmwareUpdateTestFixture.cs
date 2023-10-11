@@ -48,32 +48,32 @@ public class FirmwareUpdateTestFixture
     }
 
 
-    // [Test]
-    // public async Task SendFirmwareUpdateAsync_SendsRangeRequests()
-    // {
-    //     var actionId = "123";
+    [Test]
+    public async Task SendFirmwareUpdateAsync_SendsRangeRequests()
+    {
+        var actionId = "123";
 
-    //     _httpRequestorServiceMock
-    //                 .Setup(service => service.SendRequest(It.IsAny<string>(), HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()));
+        _httpRequestorServiceMock
+                    .Setup(service => service.SendRequest(It.IsAny<string>(), HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()));
 
-    //     SetMockBlobProperties(_blobSize);
+        SetMockBlobProperties(_blobSize);
 
-    //     await _target.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
-    //     {
-    //         FileName = _fileName,
-    //         ChunkSize = _chunkSize,
-    //         StartPosition = 0,
-    //         ActionId = actionId
-    //     });
+        await _target.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
+        {
+            FileName = _fileName,
+            ChunkSize = _chunkSize,
+            StartPosition = 0,
+            ActionId = actionId
+        });
 
-    //     for (long offset = _startPosition, rangeIndex = 0; offset < _blobSize; offset += _rangeSize, rangeIndex++)
-    //     {
-    //         string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _blobSize, rangeIndex, offset);
-    //         _httpRequestorServiceMock.Verify(service =>
-    //             service.SendRequest(blobRangeUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
-    //             Times.Once);
-    //     }
-    // }
+        for (long offset = _startPosition, rangeIndex = 0; offset < _blobSize; offset += _rangeSize, rangeIndex++)
+        {
+            string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _blobSize, rangeIndex, offset);
+            _httpRequestorServiceMock.Verify(service =>
+                service.SendRequest(blobRangeUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+    }
     private string BuildBlobRangeUrl(Uri blobStreamerUrl, string deviceId, string fileName, int chunkSize, long rangeSize, string actionId, long fileSize, long rangeIndex = 0, long offset = 0)
     {
         return $"{blobStreamerUrl.AbsoluteUri}blob/range?deviceId={deviceId}&fileName={fileName}&chunkSize={chunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={actionId}&fileSize={fileSize}";
@@ -103,30 +103,30 @@ public class FirmwareUpdateTestFixture
 
 
 
-    // [Test]
-    // public async Task SendFirmwareUpdateAsync_RequestFails_ThrowsException()
-    // {
-    //     var actionId = "123";
+    [Test]
+    public async Task SendFirmwareUpdateAsync_RequestFails_ThrowsException()
+    {
+        var actionId = "123";
 
-    //     string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _rangeSize);
-    //     _httpRequestorServiceMock.Setup(service =>
-    //         service.SendRequest(blobRangeUrl,
-    //          HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
-    //         .ThrowsAsync(new Exception("Failed to send request."));
+        string blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _rangeSize);
+        _httpRequestorServiceMock.Setup(service =>
+            service.SendRequest(blobRangeUrl,
+             HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Failed to send request."));
 
-    //     SetMockBlobProperties(_rangeSize);
+        SetMockBlobProperties(_rangeSize);
 
-    //     await _target.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
-    //     {
-    //         FileName = _fileName,
-    //         ChunkSize = _chunkSize,
-    //         StartPosition = 0,
-    //         ActionId = actionId
-    //     });
-    //      blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _rangeSize);
-    //     _httpRequestorServiceMock.Verify(service =>
-    //         service.SendRequest(blobRangeUrl,
-    //          HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
-    // }
+        await _target.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent
+        {
+            FileName = _fileName,
+            ChunkSize = _chunkSize,
+            StartPosition = 0,
+            ActionId = actionId
+        });
+         blobRangeUrl = BuildBlobRangeUrl(_blobStreamerUrl, _deviceId, _fileName, _chunkSize, _rangeSize, actionId, _rangeSize);
+        _httpRequestorServiceMock.Verify(service =>
+            service.SendRequest(blobRangeUrl,
+             HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
 }
