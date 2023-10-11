@@ -16,7 +16,7 @@ The log levels can be configured in Azure App Configuration, for Azure Applicati
 *Azure App Configuration details*
 * The App Configuration Connection String is set in appsettings.json, for example:
     "ConnectionStrings": {
-        "AppConfig": "Endpoint=https://cp-dev-config.azconfig.io;Id=2dAV;Secret=z0o7LzNOYfgHu57+01B6MrazgdYv0MMdogvwM7kWFfU="
+        "AppConfig": "Endpoint=https://******"
     }
 
 * The Configuration Keys to be added are:
