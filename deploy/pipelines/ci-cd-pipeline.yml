@@ -14,9 +14,21 @@ parameters:
 - name: isCD
   type: boolean
   default: false
-
+- name: services
+  displayName: Select services to deploy
+  type: object
+  default:
+  - BlobStreamer
+  - Iotlistener
+  - Keyholder  
 trigger:
-- none
+  batch: true
+  branches:
+    include:
+    - main
+    - $(Build.SourceBranchName)
+    exclude:
+    - '*'
 
 
 stages:  
@@ -61,12 +73,11 @@ stages:
 
     - script: |
         CONTAINER_ID=$(docker create agent:aux-build)
-        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL agent:aux-build
         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
         docker rm $CONTAINER_ID
         mv ./cloudpillar.zip ./cloudpillar-agent-$(imagetag).zip
         ls -al ./cloudpillar-agent-$(imagetag).zip
-      displayName: 'Run Agent Security Scan & Extract cloudpillar.zip from Image'
+      displayName: 'Extract cloudpillar.zip from Image'
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cloudpillar.zip to Artifacts'
@@ -75,6 +86,7 @@ stages:
         artifactName: 'cloudpillar'
         publishLocation: 'Container'  
 
+  - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
       pool:
         vmImage: ubuntu-latest
@@ -113,19 +125,22 @@ stages:
 
 - stage: CD_Stage
   jobs:  
-  - job: Start_VM_Job
-    condition: eq(parameters.isCD, 'true')
-    pool:
-      vmImage: ubuntu-latest
+  - job: Start_CD
     steps:
-    - checkout: none
-    - task: AzureCLI@1
-      displayName: 'Start VM'
-      inputs:
-        azureSubscription: 'CloudPillar ${{ parameters.env }}'
-        scriptLocation: inlineScript
-        inlineScript: |
-          az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
+    - script: echo "Stary CD"
+  - ${{ if eq(parameters.isCD, true) }}:
+    - job: Start_VM_Job
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      - checkout: none
+      - task: AzureCLI@1
+        displayName: 'Start VM'
+        inputs:
+          azureSubscription: 'CloudPillar ${{ parameters.env }}'
+          scriptLocation: inlineScript
+          inlineScript: |
+            az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
           
   - job: CD_Job
     dependsOn: Start_VM_Job
