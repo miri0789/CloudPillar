@@ -6,6 +6,7 @@ using Microsoft.Azure.Storage.Blob;
 using Moq;
 using Shared.Entities.Messages;
 using Shared.Logger;
+using Backend.Iotlistener.Models;
 
 namespace Backend.Iotlistener.Tests;
 public class FirmwareUpdateTestFixture
@@ -39,11 +40,11 @@ public class FirmwareUpdateTestFixture
 
     private void SetMockBlobProperties(long blobSize)
     {
-        var mockBlobProperties = new BlobProperties();
-        typeof(BlobProperties).GetProperty("Length", BindingFlags.Public | BindingFlags.Instance)?.SetValue(mockBlobProperties, blobSize);
+        var mockBlobProperties = new BlobData();
+        mockBlobProperties.Length = blobSize;
 
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest<BlobProperties>(It.IsAny<string>(), HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.SendRequest<BlobData>(It.IsAny<string>(), HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(mockBlobProperties);
     }
 

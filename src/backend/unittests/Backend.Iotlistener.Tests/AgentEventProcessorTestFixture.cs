@@ -53,7 +53,7 @@ public class AgentEventProcessorTestFixture
     [Test]
     public async Task ProcessEventsAsync_FirmwareUpdateMessage_CallFirmwareUpdate()
     {
-        var messages = InitMessage("{\"EventType\": 0, \"FileName\": \"fileName1\",\"ChunkSize\": 1234, \"ActionGuid\": \"" + new Guid() + "\"}");
+        var messages = InitMessage("{\"MessageType\": 0, \"FileName\": \"fileName1\",\"ChunkSize\": 1234, \"ActionGuid\": \"" + new Guid() + "\"}");
 
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
@@ -68,7 +68,7 @@ public class AgentEventProcessorTestFixture
     [Test]
     public async Task ProcessEventsAsync_SignTwinKeyMessage_CallSignTwinKey()
     {
-        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
+        var messages = InitMessage("{\"MessageType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
@@ -83,7 +83,7 @@ public class AgentEventProcessorTestFixture
     public async Task ProcessEventsAsync_DrainMode_NotCall()
     {
         _mockEnvironmentsWrapper.Setup(f => f.drainD2cQueues).Returns("drainD2cQueues");
-        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
+        var messages = InitMessage("{\"MessageType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true
@@ -97,7 +97,7 @@ public class AgentEventProcessorTestFixture
     [Test]
     public async Task ProcessEventsAsync_ExpiredTimeOutMessage_NotCall()
     {
-        var messages = InitMessage("{\"EventType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
+        var messages = InitMessage("{\"MessageType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(1);
         _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
         _signingServiceMock.Object,_streamingUploadChunkService.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
