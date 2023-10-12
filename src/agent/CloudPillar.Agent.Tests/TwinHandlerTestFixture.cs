@@ -6,7 +6,6 @@ using Microsoft.Azure.Devices.Shared;
 using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -23,18 +22,6 @@ public class TwinHandlerTestFixture
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private ITwinHandler _target;
     private CancellationToken cancellationToken = CancellationToken.None;
-    private string _baseDesierd = @"{
-            '$metadata': {
-                '$lastUpdated': '2023-08-29T12:30:36.4167057Z'
-            },
-            '$version': 1,
-        }";
-    private string _baseReported = @"{
-            '$metadata': {
-                '$lastUpdated': '2023-08-29T12:30:36.4167057Z'
-            },
-            '$version': 1,
-        }";
 
     [SetUp]
     public void Setup()
@@ -65,8 +52,8 @@ public class TwinHandlerTestFixture
     public async Task GetTwinJsonAsync_ValidTwin_ReturnJson()
     {
         var twinProp = new TwinProperties();
-        twinProp.Desired = new TwinCollection(_baseDesierd);
-        twinProp.Reported = new TwinCollection(_baseReported);
+        twinProp.Desired = new TwinCollection(MockHelper._baseDesierd);
+        twinProp.Reported = new TwinCollection(MockHelper._baseReported);
         var twin = new Twin(twinProp);
 
         _deviceClientMock.Setup(x => x.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
@@ -315,34 +302,10 @@ public class TwinHandlerTestFixture
         return actionsToReported;
     }
 
-    private void CreateTwinMock(TwinChangeSpec desired, TwinReportedChangeSpec reported)
+    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec)
     {
-        var desiredJson = JObject.Parse(_baseDesierd);
-        desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinDesired()
-        {
-            ChangeSpec = desired
-        })));
-        var reportedJson = JObject.Parse(_baseReported);
-        reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinReported()
-        {
-            ChangeSpec = reported
-        })));
-        var settings = new JsonSerializerSettings
-        {
-            ContractResolver = new DefaultContractResolver
-            {
-                NamingStrategy = new CamelCaseNamingStrategy()
-            },
-            Formatting = Formatting.Indented
-        };
-        var twinProp = new TwinProperties()
-        {
-            Desired = new TwinCollection(JsonConvert.SerializeObject(desiredJson, settings)),
-            Reported = new TwinCollection(JsonConvert.SerializeObject(reportedJson, settings))
-        };
-        var twin = new Twin(twinProp);
+        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
+
     }
-
-
 }
