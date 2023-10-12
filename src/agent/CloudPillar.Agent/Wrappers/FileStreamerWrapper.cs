@@ -1,4 +1,5 @@
 ﻿
+using System.Text.RegularExpressions;
 
 namespace CloudPillar.Agent.Wrappers;
 public class FileStreamerWrapper : IFileStreamerWrapper
@@ -56,7 +57,20 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     public bool DirectoryExists(string fullFilePath)
     {
         return Directory.Exists(fullFilePath);
-    }    
+    }
+    public string Combine(string baseDir, string path)
+    {
+        return Path.Combine(baseDir, path);
+    }
+
+    public string GetDirectoryName(string filePathPattern)
+    {
+        return Path.GetDirectoryName(filePathPattern) ?? "";
+    }
+    public string GetFileName(string filePathPattern)
+    {
+        return Path.GetFileName(filePathPattern);
+    }
     public string[] GetFiles(string directoryPath, string searchPattern)
     {
         return Directory.GetFiles(directoryPath, searchPattern);
@@ -74,5 +88,4 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return files.Concat(directoories).ToArray();
     }
-
 }

@@ -64,8 +64,8 @@ public class FileUploaderHandler : IFileUploaderHandler
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
-        string directoryPath = Path.GetDirectoryName(filePathPattern) ?? "";
-        string searchPattern = Path.GetFileName(filePathPattern);
+        string directoryPath = _fileStreamerWrapper.GetDirectoryName(filePathPattern) ?? "";
+        string searchPattern = _fileStreamerWrapper.GetFileName(filePathPattern);
 
         // Get a list of all matching files
         string[] files = _fileStreamerWrapper.GetFiles(directoryPath, searchPattern);

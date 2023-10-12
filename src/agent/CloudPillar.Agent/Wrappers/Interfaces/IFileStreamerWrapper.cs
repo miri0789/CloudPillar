@@ -16,6 +16,11 @@ public interface IFileStreamerWrapper
 
     bool DirectoryExists(string fullFilePath);
 
+    string Combine(string baseDir, string path);
+
+    string GetDirectoryName(string filePathPattern);
+
+    string GetFileName(string filePathPattern);
 
     string[] GetFiles(string directoryPath, string searchPattern);
 
