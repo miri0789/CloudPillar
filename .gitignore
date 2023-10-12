@@ -16,4 +16,4 @@ src/agent/dotnet/Microsoft Azure Storage Explorer.app.zip
 src/agent/dotnet/CartoPatch*
 src/agent/dotnet/VelysPatch*
 **/tfplan
-**/.terraform*
+**/*terraform*

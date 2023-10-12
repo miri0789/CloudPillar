@@ -31,4 +31,6 @@ public interface IDeviceClientWrapper
 
     ProvisioningTransportHandler GetProvisioningTransportHandler();
 
+    Task SetDesiredPropertyUpdateCallbackAsync(DesiredPropertyUpdateCallback callback, CancellationToken cancellationToken = default);
+
 }

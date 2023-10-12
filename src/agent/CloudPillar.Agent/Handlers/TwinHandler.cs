@@ -8,6 +8,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Shared.Logger;
+using Microsoft.Azure.Devices.Shared;
+using Microsoft.Azure.Devices.Client;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -38,7 +40,7 @@ public class TwinHandler : ITwinHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    private async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
     {
         try
         {
@@ -60,6 +62,22 @@ public class TwinHandler : ITwinHandler
             {
                 await HandleTwinActionsAsync(actions, cancellationToken);
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+        }
+    }
+    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
+                            {
+                                Console.WriteLine($"{DateTime.Now}: Desired properties were updated.");
+                                await OnDesiredPropertiesUpdate(cancellationToken);
+                            };
+            await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
         }
         catch (Exception ex)
         {
