@@ -13,7 +13,7 @@ namespace CloudPillar.Agent.Tests
     {
         private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
         private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
-        private Mock<ILoggerHandler> _loggerHandlerMock;
+        private Mock<ILoggerHandler> _loggerMock;
         private IFileDownloadHandler _target;
 
         private DownloadAction _downloadAction = new DownloadAction()
@@ -33,8 +33,9 @@ namespace CloudPillar.Agent.Tests
         {
             _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
-            _loggerHandlerMock = new Mock<ILoggerHandler>();
-            _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object, _d2CMessengerHandlerMock.Object, _loggerHandlerMock.Object);
+            _loggerMock = new Mock<ILoggerHandler>();
+
+            _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object, _d2CMessengerHandlerMock.Object, _loggerMock.Object);
         }
 
 

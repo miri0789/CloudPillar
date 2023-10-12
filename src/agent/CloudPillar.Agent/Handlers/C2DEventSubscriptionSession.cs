@@ -12,19 +12,19 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     private readonly IMessageSubscriber _messageSubscriber;
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IMessageFactory _messageFactory;
-    private readonly ITwinHandler _twinHandler;
+    private readonly ITwinActionsHandler _twinActionsHandler;
 
     private readonly ILoggerHandler _logger;
     public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
                                        IMessageSubscriber messageSubscriber,
                                        IMessageFactory messageFactory,
-                                       ITwinHandler twinHandler,
+                                       ITwinActionsHandler twinActionsHandler,
                                        ILoggerHandler logger)
     {
         _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _messageSubscriber = messageSubscriber ?? throw new ArgumentNullException(nameof(messageSubscriber));
-        _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
+        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -58,7 +58,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     case C2DMessageType.DownloadChunk:
                         var message = _messageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                         var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
-                        await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
+                        await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
                         break;
                     default:
                         _logger.Info("Receive  message was not processed");

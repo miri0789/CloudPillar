@@ -33,7 +33,7 @@ internal class Program
         builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
         builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
         builder.Services.AddSingleton<IX509CertificateWrapper, X509CertificateWrapper>();
-        builder.Services.AddScoped<ISymmetricKeyProvisioningHandler , SymmetricKeyProvisioningHandler >();
+        builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
         builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
         builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
         builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
@@ -51,7 +51,8 @@ internal class Program
         builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
         builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
         builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
-
+        builder.Services.AddScoped<ITwinActionsHandler, TwinActionsHandler>();
+        builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 
 
         builder.Services.AddControllers(options =>

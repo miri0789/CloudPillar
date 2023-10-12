@@ -184,4 +184,8 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             return false;
         }
     }
+    public async Task<Uri> GetBlobUriAsync(FileUploadSasUriResponse sasUri, CancellationToken cancellationToken)
+    {
+        return sasUri.GetBlobUri();
+    }
 }

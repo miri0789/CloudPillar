@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Core" Version="1.35.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.10" />
+    <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Client" Version="1.19.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Mqtt" Version="1.17.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Http" Version="1.15.3" />
@@ -17,6 +18,6 @@
     <PackageReference Include="SharedEntities" Version="1.0.77" />
     <PackageReference Include="SharedLogger" Version="1.0.10"/>
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
-  </ItemGroup>  
+  </ItemGroup>
 
 </Project>
