@@ -64,8 +64,8 @@ public class FileUploaderHandler : IFileUploaderHandler
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
-        string directoryPath = _fileStreamerWrapper.GetDirectoryName(filePathPattern) ?? "";
-        string searchPattern = _fileStreamerWrapper.GetFileName(filePathPattern);
+        string directoryPath = Path.GetDirectoryName(filePathPattern) ?? "";
+        string searchPattern = Path.GetFileName(filePathPattern);
 
         // Get a list of all matching files
         string[] files = _fileStreamerWrapper.GetFiles(directoryPath, searchPattern);
@@ -83,7 +83,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             string blobname = BuildBlobName(fullFilePath);
 
-            using (Stream readStream = CreateStream(fullFilePath))
+            using (Stream readStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true))
             {
                 await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, cancellationToken);
             }
@@ -95,11 +95,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         _logger.Info($"BuildBlobName");
 
         string blobname = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
-        // string fullFilePathReplaced = _fileStreamerWrapper.TextReplace(fullFilePath, "//:", "_protocol_");
-        // fullFilePathReplaced = _fileStreamerWrapper.TextReplace(fullFilePathReplaced, "\\", "/");
-        // fullFilePathReplaced = _fileStreamerWrapper.TextReplace(fullFilePathReplaced, ":/", "_driveroot_/");
 
-        // string blobname = _fileStreamerWrapper.RegexReplace(fullFilePathReplaced, "^\\/", "_root_");
         if (_fileStreamerWrapper.DirectoryExists(fullFilePath))
         {
             blobname += ".zip";
@@ -114,7 +110,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         var memoryStream = new MemoryStream();
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
-            string baseDir = _fileStreamerWrapper.GetFileName(fullFilePath);
+            string baseDir = Path.GetFileName(fullFilePath);
             string[] filesDir = _fileStreamerWrapper.GetFiles(fullFilePath, "*", SearchOption.AllDirectories);
             if (filesDir.Length == 0)
             {
@@ -122,7 +118,7 @@ public class FileUploaderHandler : IFileUploaderHandler
             }
             foreach (string file in filesDir)
             {
-                string relativePath = _fileStreamerWrapper.Combine(baseDir, file.Substring(fullFilePath.Length + 1));
+                string relativePath = Path.Combine(baseDir, file.Substring(fullFilePath.Length + 1));
                 archive.CreateEntryFromFile(file, relativePath);
             }
         }
@@ -145,7 +141,8 @@ public class FileUploaderHandler : IFileUploaderHandler
         else
         {
             var fileStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true);
-            if(fileStream == null){
+            if (fileStream == null)
+            {
                 throw new ArgumentNullException("invalid file stream");
             }
             fileStream.Position = 0;

@@ -1,10 +1,9 @@
 ﻿
-using System.Text.RegularExpressions;
 
 namespace CloudPillar.Agent.Wrappers;
 public class FileStreamerWrapper : IFileStreamerWrapper
 {
-    public FileStream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync)
+    public Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync)
     {
         return new FileStream(fullFilePath, fileMode, fileAccess, fileShare, BufferSize, useAsync);
     }
@@ -57,20 +56,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     public bool DirectoryExists(string fullFilePath)
     {
         return Directory.Exists(fullFilePath);
-    }
-    public string Combine(string baseDir, string path)
-    {
-        return Path.Combine(baseDir, path);
-    }
-
-    public string GetDirectoryName(string filePathPattern)
-    {
-        return Path.GetDirectoryName(filePathPattern) ?? "";
-    }
-    public string GetFileName(string filePathPattern)
-    {
-        return Path.GetFileName(filePathPattern);
-    }
+    }    
     public string[] GetFiles(string directoryPath, string searchPattern)
     {
         return Directory.GetFiles(directoryPath, searchPattern);
@@ -89,12 +75,4 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return files.Concat(directoories).ToArray();
     }
 
-    public string RegexReplace(string fullFilePath, string pattern, string replacment)
-    {
-        return Regex.Replace(fullFilePath, pattern, replacment);
-    }
-    public string TextReplace(string fullFilePath, string oldValu, string newValue)
-    {
-        return fullFilePath.Replace(oldValu, newValue);
-    }
 }
