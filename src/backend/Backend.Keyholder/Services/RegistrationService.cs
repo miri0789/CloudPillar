@@ -54,6 +54,8 @@ public class RegistrationService : IRegistrationService
         _iotHubHostName = GetIOTHubHostName();
     }
 
+
+
     public async Task Register(string deviceId, string secretKey)
     {
         try
@@ -71,7 +73,7 @@ public class RegistrationService : IRegistrationService
             {
                 Data = Encoding.ASCII.GetBytes(authonticationKeys)
             };
-            
+
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
             await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
             // var certificate = GenerateCertificate(deviceId, oneMDKey);
@@ -85,36 +87,14 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-
-
-    internal X509Certificate2 GenerateCertificate(string deviceId, string OneMDKey)
+    public async Task ProvisionDeviceCertificate(string deviceId, byte[] certificate)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(OneMDKey);
-        ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
-        _loggerHandler.Debug($"GenerateCertificate for deviceId {deviceId}");
-        using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
-        {
-            var request = new CertificateRequest(
-                $"{CertificateConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}", rsa
-                , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-
-            byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(OneMDKey);
-            var OneMDKeyExtension = new X509Extension(
-                new Oid(CertificateConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
-                oneMDKeyValue, false
-               );
+        ArgumentNullException.ThrowIfNull(certificate);
+        var cert = new X509Certificate2(certificate);
+        await CreateEnrollmentAsync(cert, deviceId);
 
 
-            request.CertificateExtensions.Add(OneMDKeyExtension);
 
-            var certificate = request.CreateSelfSigned(
-                DateTimeOffset.Now.AddDays(-1),
-                DateTimeOffset.Now.AddDays(_environmentsWrapper.certificateExpiredDays));
-
-            return certificate;
-
-
-        }
     }
 
     internal async Task<IndividualEnrollment> CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId)
@@ -150,33 +130,22 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    internal async Task SendCertificateToAgent(string deviceId, string oneMDKey, X509Certificate2 certificate, IndividualEnrollment individualEnrollment)
+    internal async Task SendReprovisioningMessageToAgent(string deviceId, IndividualEnrollment individualEnrollment)
     {
-        _loggerHandler.Debug($"SendCertificateToAgent for deviceId {deviceId}.");
-        ArgumentNullException.ThrowIfNull(certificate);
+        _loggerHandler.Debug($"SendReprovisioningMessageToAgent for deviceId {deviceId}.");
         ArgumentNullException.ThrowIfNull(individualEnrollment);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
-        ArgumentNullException.ThrowIfNullOrEmpty(oneMDKey);
-        using (SHA256 sha256 = SHA256.Create())
+        var message = new ReprovisioningMessage()
         {
-            byte[] passwordBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(oneMDKey));
+            Data = Encoding.ASCII.GetBytes(individualEnrollment.RegistrationId),
+            DeviceEndpoint = DEVICE_ENDPOINT,
+            // TODO: get the scopeid from the dps, not from the env, + do not send the dps connection string
+            ScopedId = _environmentsWrapper.dpsIdScope,
+            DPSConnectionString = _environmentsWrapper.dpsConnectionString
+        };
+        var c2dMessage = _messageFactory.PrepareC2DMessage(message);
+        await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
 
-            string passwordString = BitConverter.ToString(passwordBytes).Replace("-", "").ToLower();
-
-            // The password is temporary and will be fixed in task 11505
-            var pfxBytes = certificate.Export(X509ContentType.Pkcs12, "1234");
-            var message = new ReProvisioningMessage()
-            {
-                Data = pfxBytes,
-                EnrollmentId = individualEnrollment.RegistrationId,
-                DeviceEndpoint = DEVICE_ENDPOINT,
-                // TODO: get the scopeid from the dps, not from the env, + do not send the dps connection string
-                ScopedId = _environmentsWrapper.dpsIdScope,
-                DPSConnectionString = _environmentsWrapper.dpsConnectionString
-            };
-            var c2dMessage = _messageFactory.PrepareC2DMessage(message);
-            await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
-        }
     }
 
     private string GetIOTHubHostName()

@@ -1,15 +1,10 @@
 
-using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices;
-using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Microsoft.Azure.Devices.Shared;
+using Shared.Entities.Authentication;
 using Shared.Logger;
-using TransportType = Microsoft.Azure.Devices.Client.TransportType;
 namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler

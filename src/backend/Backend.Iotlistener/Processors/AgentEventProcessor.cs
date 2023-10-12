@@ -98,7 +98,7 @@ public class AgentEventProcessor : IEventProcessor
         try
         {
             var data = Encoding.UTF8.GetString(eventData!.Body!.Array!, eventData.Body.Offset, eventData.Body.Count);
-            D2CMessage d2CMessage= JsonSerializer.Deserialize<D2CMessage>(data)!;
+            D2CMessage d2CMessage = JsonSerializer.Deserialize<D2CMessage>(data)!;
 
             if (d2CMessage == null || isDrainMode)
             {
@@ -128,7 +128,12 @@ public class AgentEventProcessor : IEventProcessor
                     case D2CMessageType.StreamingUploadChunk:
                         {
                             var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
-                            await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent );
+                            await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent);
+                            break;
+                        }
+                    case D2CMessageType.ProvisionDeviceCertificate:
+                        {
+                            var provisionDeviceCertificateEvent = JsonSerializer.Deserialize<ProvisionDeviceCertificateEvent>(data)!;
                             break;
                         }
                 }

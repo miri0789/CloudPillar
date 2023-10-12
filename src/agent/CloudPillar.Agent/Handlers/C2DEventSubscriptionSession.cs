@@ -61,14 +61,14 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
                         await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
                         break;
-                    case C2DMessageType.ReProvisioning:
-                        var reProvisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReProvisioningMessage>(receivedMessage);
-                        _messageSubscriber.HandleReProvisioningMessageAsync(reProvisioningMessage, cancellationToken);
+                    case C2DMessageType.Reprovisioning:
+                        var reprovisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
+                        _messageSubscriber.HandleReprovisioningMessageAsync(reprovisioningMessage, cancellationToken);
                         //await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(new ActionToReport(), 1));
                         // _logger.Debug("f");
                         break;
                     case C2DMessageType.RequestDeviceCertificate:
-                        var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<ReProvisioningMessage>(receivedMessage);
+                        var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
                         
                         break;
                     default:

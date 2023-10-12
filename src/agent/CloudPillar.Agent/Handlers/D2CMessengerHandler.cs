@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
@@ -52,6 +53,18 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     }
 
 
+    public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate)
+    {
+        var ProvisionDeviceCertificateEvent = new ProvisionDeviceCertificateEvent()
+        {
+            Data = certificate.Export(X509ContentType.Cert),
+            ActionId = Guid.NewGuid().ToString()
+        };
+
+        await SendMessageAsync(ProvisionDeviceCertificateEvent);
+    }
+
+
 
     private async Task SendMessageAsync(D2CMessage d2CMessage)
     {
@@ -74,4 +87,5 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         }
         return message;
     }
+
 }
