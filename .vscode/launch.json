@@ -147,7 +147,7 @@
                 "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "iotcontainer",
                 "BlobStreamerUrl": "http://localhost:5019/",
-                "KeyHolderUrl": "http://localhost:5164",
+                "KeyHolderUrl": "http://localhost:5164/",
                 "MessageTimeoutMinutes": "10",
                 "RangeCalculateType": "percent",
                 "RangePercent": "25",
@@ -216,7 +216,8 @@
             "name": "Server/Client",
             "configurations": [
                 "Cloud Pillar Agent",
-                "Key Holder Service"
+                "Key Holder Service",
+                "Iot Listener Service"
             ]
         }
     ]

@@ -8,5 +8,5 @@ public interface IMessageSubscriber
 
     Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken);
 
-    Task HandleRequestDeviceCertificate(RequestDeviceCertificateMessage message, CancellationToken cancellationToken);
+    Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken);
 }

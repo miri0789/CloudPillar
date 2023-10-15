@@ -5,12 +5,12 @@ namespace CloudPillar.Agent.Handlers;
 public class MessageSubscriber : IMessageSubscriber
 {
     private readonly IFileDownloadHandler _fileDownloadHandler;
-    private readonly IReprovisioningHandler _reProvisioningHandler;
+    private readonly IReprovisioningHandler _reprovisioningHandler;
 
-    public MessageSubscriber(IFileDownloadHandler fileDownloadHandler, IReprovisioningHandler reProvisioningHandler)
+    public MessageSubscriber(IFileDownloadHandler fileDownloadHandler, IReprovisioningHandler reprovisioningHandler)
     {
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
-        _reProvisioningHandler = reProvisioningHandler ?? throw new ArgumentNullException(nameof(reProvisioningHandler));
+        _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
     }
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
@@ -20,11 +20,11 @@ public class MessageSubscriber : IMessageSubscriber
 
     public async Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
     {
-       await _reProvisioningHandler.HandleReprovisioningMessageAsync(message, cancellationToken);
+       await _reprovisioningHandler.HandleReprovisioningMessageAsync(message, cancellationToken);
     }
 
-    public Task HandleRequestDeviceCertificate(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
+    public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+       await _reprovisioningHandler.HandleRequestDeviceCertificateAsync(message, cancellationToken);
     }
 }

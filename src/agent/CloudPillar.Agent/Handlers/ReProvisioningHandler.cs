@@ -59,35 +59,11 @@ public class ReprovisioningHandler : IReprovisioningHandler
         using (ProvisioningServiceClient provisioningServiceClient =
                            ProvisioningServiceClient.CreateFromConnectionString(message.DPSConnectionString))
         {
-            var enrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(Encoding.ASCII.GetString(message.Data));
+            var enrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(Encoding.ASCII.GetString(message.Data), cancellationToken);
             iotHubHostName = enrollment.IotHubHostName;
         }
 
-        ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
-
-        
-
-
-        // using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
-        // {
-        //     store.Open(OpenFlags.ReadWrite);
-
-        //     X509Certificate2Collection certificates = store.Certificates;
-        //     if (certificates != null)
-        //     {
-
-        //         var filteredCertificates = certificates.Cast<X509Certificate2>()
-        //            .Where(cert => cert.Subject.StartsWith(CertificateConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
-        //            .ToArray();
-        //         if (filteredCertificates != null && filteredCertificates.Length > 0)
-        //         {
-        //             var certificateCollection = new X509Certificate2Collection(filteredCertificates);
-        //             store.RemoveRange(certificateCollection);
-        //         }
-        //     }
-
-        //     store.Add(certificate);
-        // }
+        ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);       
 
         try
         {
@@ -99,28 +75,27 @@ public class ReprovisioningHandler : IReprovisioningHandler
                 X509Certificate2Collection certificates = store.Certificates;
                 if (certificates != null)
                 {
-                    X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
-
-                    if (collection.Count > 0)
-                    {
-                        X509Certificate2 cert = collection[0];
-
-                        cert.FriendlyName =  $"{deviceId}{CertificateConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(CertificateConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";;
-
-                        store.Close();
-                    }
-
                     var filteredCertificates = certificates.Cast<X509Certificate2>()
-                       .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
+                       .Where(cert => cert.Subject.StartsWith(CertificateConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
                        .ToArray();
                     if (filteredCertificates != null && filteredCertificates.Length > 0)
                     {
                         var certificateCollection = new X509Certificate2Collection(filteredCertificates);
                         store.RemoveRange(certificateCollection);
                     }
-                }
 
-                store.Add(certificate);
+                    X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
+
+                    if (collection.Count > 0)
+                    {
+                        X509Certificate2 cert = collection[0];
+
+                        cert.FriendlyName = $"{deviceId}{CertificateConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(CertificateConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}"; ;
+
+                        store.Close();
+                    }
+
+                }
             }
 
         }

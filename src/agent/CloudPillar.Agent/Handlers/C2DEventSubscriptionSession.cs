@@ -63,13 +63,11 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         break;
                     case C2DMessageType.Reprovisioning:
                         var reprovisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
-                        _messageSubscriber.HandleReprovisioningMessageAsync(reprovisioningMessage, cancellationToken);
-                        //await _twinHandler.UpdateReportActionAsync(Enumerable.Repeat(new ActionToReport(), 1));
-                        // _logger.Debug("f");
+                        await _messageSubscriber.HandleReprovisioningMessageAsync(reprovisioningMessage, cancellationToken);
                         break;
                     case C2DMessageType.RequestDeviceCertificate:
-                        var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
-                        
+                        var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<RequestDeviceCertificateMessage>(receivedMessage);
+                        await _messageSubscriber.HandleRequestDeviceCertificateAsync(requestDeviceCertificateMessage, cancellationToken);
                         break;
                     default:
                         _logger.Info("Receive  message was not processed");

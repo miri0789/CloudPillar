@@ -91,10 +91,8 @@ public class RegistrationService : IRegistrationService
     {
         ArgumentNullException.ThrowIfNull(certificate);
         var cert = new X509Certificate2(certificate);
-        await CreateEnrollmentAsync(cert, deviceId);
-
-
-
+        var enrollment = await CreateEnrollmentAsync(cert, deviceId);
+        await SendReprovisioningMessageToAgentAsync(deviceId, enrollment);
     }
 
     internal async Task<IndividualEnrollment> CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId)
@@ -130,7 +128,7 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    internal async Task SendReprovisioningMessageToAgent(string deviceId, IndividualEnrollment individualEnrollment)
+    internal async Task SendReprovisioningMessageToAgentAsync(string deviceId, IndividualEnrollment individualEnrollment)
     {
         _loggerHandler.Debug($"SendReprovisioningMessageToAgent for deviceId {deviceId}.");
         ArgumentNullException.ThrowIfNull(individualEnrollment);
