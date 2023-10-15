@@ -63,7 +63,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                         break;
                     case C2DMessageType.Reprovisioning:
                         var reprovisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
-                        await _messageSubscriber.HandleReprovisioningMessageAsync(reprovisioningMessage, cancellationToken);
+                        _messageSubscriber.HandleReprovisioningMessageAsync(reprovisioningMessage, cancellationToken);
                         break;
                     case C2DMessageType.RequestDeviceCertificate:
                         var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<RequestDeviceCertificateMessage>(receivedMessage);

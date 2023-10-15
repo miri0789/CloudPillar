@@ -63,7 +63,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
             iotHubHostName = enrollment.IotHubHostName;
         }
 
-        ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);       
+        ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
 
         try
         {
@@ -156,30 +156,31 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
             var pfxBytes = certificate.Export(X509ContentType.Pkcs12, passwordString);
 
-            certificate.FriendlyName = TEMPORARY_CERTIFICATE_NAME;
+            var privateCertificate = new X509Certificate2(pfxBytes, passwordString);
+
+            privateCertificate.FriendlyName = TEMPORARY_CERTIFICATE_NAME;
 
 
-        }
-
-        using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
-        {
-            store.Open(OpenFlags.ReadWrite);
-
-            X509Certificate2Collection certificates = store.Certificates;
-            if (certificates != null)
+            using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
             {
+                store.Open(OpenFlags.ReadWrite);
 
-                var filteredCertificates = certificates.Cast<X509Certificate2>()
-                   .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
-                   .ToArray();
-                if (filteredCertificates != null && filteredCertificates.Length > 0)
+                X509Certificate2Collection certificates = store.Certificates;
+                if (certificates != null)
                 {
-                    var certificateCollection = new X509Certificate2Collection(filteredCertificates);
-                    store.RemoveRange(certificateCollection);
-                }
-            }
 
-            store.Add(certificate);
+                    var filteredCertificates = certificates.Cast<X509Certificate2>()
+                       .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
+                       .ToArray();
+                    if (filteredCertificates != null && filteredCertificates.Length > 0)
+                    {
+                        var certificateCollection = new X509Certificate2Collection(filteredCertificates);
+                        store.RemoveRange(certificateCollection);
+                    }
+                }
+
+                store.Add(privateCertificate);
+            }
         }
 
     }
