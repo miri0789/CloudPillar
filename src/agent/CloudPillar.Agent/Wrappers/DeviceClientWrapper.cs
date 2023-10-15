@@ -167,20 +167,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
     }
 
-    public async Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Check if the device is already initialized
-            await GetTwinAsync(cancellationToken);
-            return true;
-        }
-        catch
-        {
-            _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized.");
-            return false;
-        }
-    }
     public async Task<Uri> GetBlobUriAsync(FileUploadSasUriResponse sasUri, CancellationToken cancellationToken)
     {
         return sasUri.GetBlobUri();
