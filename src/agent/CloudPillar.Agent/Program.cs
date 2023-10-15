@@ -40,8 +40,10 @@ builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
 builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
+builder.Services.AddScoped<ITwinActionsHandler, TwinActionsHandler>();
 builder.Services.AddScoped<ITwinHandler, TwinHandler>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
+builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderHandler>();
@@ -51,8 +53,6 @@ builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsV
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
-builder.Services.AddScoped<ITwinActionsHandler, TwinActionsHandler>();
-builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 
 builder.Services.AddHttpsRedirection(options =>
 {
