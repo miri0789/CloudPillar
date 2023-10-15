@@ -116,10 +116,10 @@ public class AgentController : ControllerBase
     }
 
     [HttpPut("UpdateReportedProps")]
-    public async Task<IActionResult> UpdateReportedProps(UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return Ok();
+        return await _twinHandler.GetTwinJsonAsync();
     }
 }
 
