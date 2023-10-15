@@ -8,7 +8,6 @@ public interface IDeviceClientWrapper
 {
     Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken);
     Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken);
-
     TransportType GetTransportType();
     int GetChunkSizeByTransportType();
 
@@ -25,6 +24,7 @@ public interface IDeviceClientWrapper
     Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties);
 
     Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default);
+    Task<Uri> GetBlobUriAsync(FileUploadSasUriResponse sasUri, CancellationToken cancellationToken = default);
     Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default);
     Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default);
 

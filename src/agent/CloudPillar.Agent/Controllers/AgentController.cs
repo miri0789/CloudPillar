@@ -24,26 +24,27 @@ public class AgentController : ControllerBase
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
     private readonly IC2DEventHandler _c2DEventHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
-    private readonly ISymmetricKeyWrapperDeviceClientHandler _symmetricKeyWrapperDeviceClientHandler;
+    private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
 
     public AgentController(ITwinHandler twinHandler,
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
-     ISymmetricKeyWrapperDeviceClientHandler symmetricKeyWrapperDeviceClientHandler,
+     ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IC2DEventHandler c2DEventHandler,
+     IFileUploaderHandler fileUploaderHandler,
      IEnvironmentsWrapper environmentsWrapper,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
-        _symmetricKeyWrapperDeviceClientHandler = symmetricKeyWrapperDeviceClientHandler ?? throw new ArgumentNullException(nameof(symmetricKeyWrapperDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -70,12 +71,12 @@ public class AgentController : ControllerBase
             var dpsScopeId = _environmentsWrapper.dpsScopeId;
             var globalDeviceEndpoint = _environmentsWrapper.globalDeviceEndpoint;
 
-            var isAuthorized = await _symmetricKeyWrapperDeviceClientHandler.AuthorizationAsync(CancellationToken.None);
+            var isAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationAsync(cancellationToken);
             if (!isAuthorized)
             {
                 try
                 {
-                    await _symmetricKeyWrapperDeviceClientHandler.ProvisioningAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
+                    await _symmetricKeyProvisioningHandler.ProvisioningAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
                 }
                 catch (Exception ex)
                 {
