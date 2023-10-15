@@ -1,3 +1,4 @@
+using System.Net;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Utilities;
@@ -13,13 +14,16 @@ const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 const string CONFIG_PORT = "Port";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(CONFIG_PORT, 8099);
+var sslPort = builder.Configuration.GetValue(CONFIG_PORT, 8199);
 var url = $"http://localhost:{port}";
-builder.WebHost.UseUrls(url);
+var sslUrl = $"https://localhost:{sslPort}";
+
+builder.WebHost.UseUrls(url, sslUrl);
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(url)
+                b.WithOrigins(url, sslUrl)
                        .AllowAnyHeader()
                        .AllowAnyMethod();
             });
@@ -49,6 +53,11 @@ builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
 
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
+    options.HttpsPort = sslPort;
+});
 
 builder.Services.AddControllers(options =>
     {
@@ -63,6 +72,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
 app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
