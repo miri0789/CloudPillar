@@ -1,5 +1,6 @@
 
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
@@ -61,7 +62,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         var deviceId = parts[0];
         var iotHubHostName = parts[1];
-        var oneMd = userCertificate.Extensions.First(x => x.Oid?.Value == CertificateConstants.ONE_MD_EXTENTION_KEY).RawData.ToString();
+        var oneMd =Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == CertificateConstants.ONE_MD_EXTENTION_KEY).RawData);
 
         if (!(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
         {

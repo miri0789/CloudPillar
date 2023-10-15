@@ -18,7 +18,7 @@ public class AuthorizationCheckMiddleware
 
     const string X_DEVICE_ID = "X-device-id";
     const string X_SECRET_KEY = "X-secret-key";
-    
+
     public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
@@ -48,10 +48,17 @@ public class AuthorizationCheckMiddleware
                 return;
             }
             IHeaderDictionary requestHeaders = context.Request.Headers;
-            var xDeviceId = requestHeaders[X_DEVICE_ID];
-            var xSecretKey = requestHeaders[X_SECRET_KEY];
-
-            if (!string.IsNullOrEmpty(xDeviceId) || !string.IsNullOrEmpty(xSecretKey))
+            var xDeviceId = string.Empty;
+            var xSecretKey = string.Empty;
+            if (requestHeaders.ContainsKey(X_DEVICE_ID))
+            {
+                xDeviceId = requestHeaders[X_DEVICE_ID];
+            }
+            if (requestHeaders.ContainsKey(X_SECRET_KEY))
+            {
+                xSecretKey = requestHeaders[X_SECRET_KEY];
+            }
+            if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
             {
                 var error = "No require header was provided";
                 await UnauthorizedResponseAsync(context, error);
