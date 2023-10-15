@@ -1,7 +1,14 @@
 ﻿
+using System.Text.RegularExpressions;
+
 namespace CloudPillar.Agent.Wrappers;
 public class FileStreamerWrapper : IFileStreamerWrapper
 {
+    public Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync)
+    {
+        return new FileStream(fullFilePath, fileMode, fileAccess, fileShare, BufferSize, useAsync);
+    }
+
     public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {
         using (FileStream fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
@@ -35,4 +42,50 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         }
     }
 
+    public async Task<string> ReadAllTextAsync(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            return await File.ReadAllTextAsync(filePath);
+        }
+        return null;
+    }
+    public bool FileExists(string filePath)
+    {
+        return File.Exists(filePath);
+    }
+    public bool DirectoryExists(string fullFilePath)
+    {
+        return Directory.Exists(fullFilePath);
+    }
+    public string Combine(string baseDir, string path)
+    {
+        return Path.Combine(baseDir, path);
+    }
+
+    public string GetDirectoryName(string filePathPattern)
+    {
+        return Path.GetDirectoryName(filePathPattern) ?? "";
+    }
+    public string GetFileName(string filePathPattern)
+    {
+        return Path.GetFileName(filePathPattern);
+    }
+    public string[] GetFiles(string directoryPath, string searchPattern)
+    {
+        return Directory.GetFiles(directoryPath, searchPattern);
+    }
+
+    public string[] GetFiles(string fullFilePath, string searchPattern, SearchOption searchOption)
+    {
+        return Directory.GetFiles(fullFilePath, searchPattern, searchOption);
+    }
+    public string[] GetDirectories(string directoryPath, string searchPattern)
+    {
+        return Directory.GetDirectories(directoryPath, searchPattern);
+    }
+    public string[] Concat(string[] files, string[] directoories)
+    {
+        return files.Concat(directoories).ToArray();
+    }
 }

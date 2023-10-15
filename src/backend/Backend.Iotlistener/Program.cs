@@ -17,6 +17,7 @@ builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
 builder.Services.AddScoped<ISigningService, SigningService>();
+builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddHttpClient();
 
@@ -49,8 +50,9 @@ var eventProcessorOptions = new EventProcessorOptions
 
 var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
 var signingService = app.Services.GetService<ISigningService>();
+var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
 var logger = app.Services.GetService<ILoggerHandler>();
-var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, _envirementVariable, logger, PartitionId);
+var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable, logger, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 

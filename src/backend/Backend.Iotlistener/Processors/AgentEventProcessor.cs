@@ -3,7 +3,7 @@ using System.Text.Json;
 using Backend.Iotlistener.Interfaces;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
-using Shared.Entities.Events;
+using Shared.Entities.Messages;
 using Shared.Logger;
 
 namespace Backend.Iotlistener.Processors;
@@ -12,15 +12,17 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
 {
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
+    private readonly IStreamingUploadChunkService _streamingUploadChunkService;
     private readonly string _partitionId;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
     public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService,
-     ISigningService signingService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, string partitionId)
+     ISigningService signingService, IStreamingUploadChunkService streamingUploadChunkService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, string partitionId)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
+        _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _partitionId = partitionId;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -30,7 +32,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     {
         if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
         {
-            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _environmentsWrapper, _logger);
+            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _streamingUploadChunkService, _environmentsWrapper, _logger);
         }
 
         return new NullEventProcessor();
@@ -40,14 +42,16 @@ public class AgentEventProcessor : IEventProcessor
 {
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
+    private readonly IStreamingUploadChunkService _streamingUploadChunkService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
     public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService,
-     ISigningService signingService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
+     ISigningService signingService, IStreamingUploadChunkService streamingUploadChunkService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
+        _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -94,9 +98,9 @@ public class AgentEventProcessor : IEventProcessor
         try
         {
             var data = Encoding.UTF8.GetString(eventData!.Body!.Array!, eventData.Body.Offset, eventData.Body.Count);
-            AgentEvent agentEvent = JsonSerializer.Deserialize<AgentEvent>(data)!;
+            D2CMessage d2CMessage= JsonSerializer.Deserialize<D2CMessage>(data)!;
 
-            if (agentEvent == null || isDrainMode)
+            if (d2CMessage == null || isDrainMode)
             {
                 _logger.Warn($"Draining on Partition: {partitionId}, Event: {data}");
                 return;
@@ -105,20 +109,26 @@ public class AgentEventProcessor : IEventProcessor
             string iothubConnectionDeviceId = _environmentsWrapper.iothubConnectionDeviceId;
             string? deviceId = eventData.SystemProperties[iothubConnectionDeviceId]?.ToString();
 
-            if (!String.IsNullOrWhiteSpace(deviceId) && agentEvent.EventType != null)
+            if (!String.IsNullOrWhiteSpace(deviceId) && d2CMessage.MessageType != null)
             {
-                switch (agentEvent.EventType)
+                switch (d2CMessage.MessageType)
                 {
-                    case EventType.FirmwareUpdateReady:
+                    case D2CMessageType.FirmwareUpdateReady:
                         {
                             var firmwareUpdateEvent = JsonSerializer.Deserialize<FirmwareUpdateEvent>(data)!;
                             await _firmwareUpdateService.SendFirmwareUpdateAsync(deviceId, firmwareUpdateEvent);
                             break;
                         }
-                    case EventType.SignTwinKey:
+                    case D2CMessageType.SignTwinKey:
                         {
                             var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;
                             await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);
+                            break;
+                        }
+                    case D2CMessageType.StreamingUploadChunk:
+                        {
+                            var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
+                            await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent );
                             break;
                         }
                 }

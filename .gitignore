@@ -1,15 +1,21 @@
 **/*bin
 **/obj
 **/dbg
-src/agent/dotnet/publish/linux*
-src/agent/dotnet/publish/win*
-src/agent/dotnet/publish/osx*
-src/agent/dotnet/publish/*.zip
+src/agent/poc/publish/linux*
+src/agent/poc/publish/win*
+src/agent/poc/publish/osx*
+src/agent/poc/publish/*.zip
+src/agent/CloudPillar.Agent/publish/linux*
+src/agent/CloudPillar.Agent/publish/win*
+src/agent/CloudPillar.Agent/publish/osx*
+src/agent/CloudPillar.Agent/publish/*.zip
 .venv
 .conda
 **/.DS_Store
 src/agent/dotnet/Microsoft Azure Storage Explorer.app.zip
 src/agent/dotnet/CartoPatch*
 src/agent/dotnet/VelysPatch*
+src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/FileContentIndex
+src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/DesignTimeBuild
 **/tfplan
 **/.terraform*

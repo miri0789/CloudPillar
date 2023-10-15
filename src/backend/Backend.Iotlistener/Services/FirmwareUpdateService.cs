@@ -4,6 +4,7 @@ using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Models.Enums;
 using Shared.Logger;
 using Backend.Iotlistener.Models;
+using Shared.Entities.Messages;
 
 namespace Backend.Iotlistener.Services;
 

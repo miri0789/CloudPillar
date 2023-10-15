@@ -5,27 +5,38 @@ using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Shared.Logger;
+using Newtonsoft.Json.Converters;
 
 namespace CloudPillar.Agent.Handlers;
+
+
 public class TwinHandler : ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
+    private readonly ITwinActionsHandler _twinActionsHandler;
+    private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
+    private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
-
     private readonly ILoggerHandler _logger;
+
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
                        IFileUploaderHandler fileUploaderHandler,
-                       ILoggerHandler loggerHandler)
+                       ITwinActionsHandler twinActionsHandler,
+                       ILoggerHandler loggerHandler,
+                       IRuntimeInformationWrapper runtimeInformationWrapper,
+                       IFileStreamerWrapper fileStreamerWrapper)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
+        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
+        _runtimeInformationWrapper = runtimeInformationWrapper ?? throw new ArgumentNullException(nameof(runtimeInformationWrapper));
+        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _supportedShells = GetSupportedShells();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -34,7 +45,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var twin = await _deviceClient.GetTwinAsync();
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             string desiredJson = twin.Properties.Desired.ToJson();
@@ -60,22 +71,6 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    private async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec)
-    {
-        var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
-          Formatting.None,
-          new JsonSerializerSettings
-          {
-              ContractResolver = new CamelCasePropertyNamesContractResolver(),
-              Converters = { new StringEnumConverter() },
-              Formatting = Formatting.Indented,
-              NullValueHandling = NullValueHandling.Ignore
-          }));
-        var changeSpecKey = nameof(TwinReported.ChangeSpec);
-        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey, changeSpecJson);
-
-    }
-
     private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
     {
         try
@@ -88,28 +83,25 @@ public class TwinHandler : ITwinHandler
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
                     case TwinActionType.SingularUpload:
-                        var twinReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
-                        if (twinReport != null)
-                        {
-                            await UpdateReportActionAsync(Enumerable.Repeat(twinReport, 1));
-                        }
+                        _logger.Info("Start SingularUpload");
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+
                         break;
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
-                        var actionToReport = await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
-                        await UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1));
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         break;
 
                     default:
                         action.TwinReport.Status = StatusType.Failed;
                         action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
+                        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
                 //TODO : queue - FIFO
                 // https://dev.azure.com/BiosenseWebsterIs/CloudPillar/_backlogs/backlog/CloudPillar%20Team/Epics/?workitem=9782
-                await UpdateReportActionAsync(new List<ActionToReport>() { action });
             }
         }
         catch (Exception ex)
@@ -117,7 +109,6 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
     }
-
     private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
     {
         try
@@ -171,7 +162,7 @@ public class TwinHandler : ITwinHandler
             }
             if (isReportedChanged)
             {
-                await UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
+                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
             }
             return actions;
         }
@@ -203,7 +194,7 @@ public class TwinHandler : ITwinHandler
             var supportedShellsKey = nameof(TwinReported.SupportedShells);
             await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells);
             var agentPlatformKey = nameof(TwinReported.AgentPlatform);
-            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, RuntimeInformation.OSDescription);
+            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, _runtimeInformationWrapper.GetOSDescription());
             _logger.Info("InitReportedDeviceParams success");
         }
         catch (Exception ex)
@@ -212,34 +203,11 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported)
+    public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var twin = await _deviceClient.GetTwinAsync();
-            string reportedJson = twin.Properties.Reported.ToJson();
-            var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-            actionsToReported.ToList().ForEach(actionToReport =>
-            {
-                var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
-                var reportedValue = (TwinActionReported[])reportedProp.GetValue(twinReported.ChangeSpec.Patch);
-                reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
-                reportedProp.SetValue(twinReported.ChangeSpec.Patch, reportedValue);
-            });
-            await UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UpdateReportedAction failed: {ex.Message}");
-        }
-
-    }
-
-    public async Task<string> GetTwinJsonAsync()
-    {
-        try
-        {
-            var twin = await _deviceClient.GetTwinAsync();
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             if (twin != null)
             {
                 return twin.ToJson();
@@ -260,22 +228,22 @@ public class TwinHandler : ITwinHandler
         const string linuxPsPath2 = @"/usr/local/bin/pwsh";
 
         var supportedShells = new List<ShellType>();
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (_runtimeInformationWrapper.IsOSPlatform(OSPlatform.Windows))
         {
             supportedShells.Add(ShellType.Cmd);
             supportedShells.Add(ShellType.Powershell);
             // Check if WSL is installed
-            if (File.Exists(windowsBashPath))
+            if (_fileStreamerWrapper.FileExists(windowsBashPath))
             {
                 supportedShells.Add(ShellType.Bash);
             }
         }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        else if (_runtimeInformationWrapper.IsOSPlatform(OSPlatform.Linux) || _runtimeInformationWrapper.IsOSPlatform(OSPlatform.OSX))
         {
             supportedShells.Add(ShellType.Bash);
 
             // Add PowerShell if it's installed on Linux or macOS
-            if (File.Exists(linuxPsPath1) || File.Exists(linuxPsPath2))
+            if (_fileStreamerWrapper.FileExists(linuxPsPath1) || _fileStreamerWrapper.FileExists(linuxPsPath2))
             {
                 supportedShells.Add(ShellType.Powershell);
             }

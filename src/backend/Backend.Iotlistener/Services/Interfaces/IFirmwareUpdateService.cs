@@ -1,4 +1,6 @@
-﻿namespace Backend.Iotlistener.Interfaces;
+﻿using Shared.Entities.Messages;
+
+namespace Backend.Iotlistener.Interfaces;
 
 public interface IFirmwareUpdateService
 {
