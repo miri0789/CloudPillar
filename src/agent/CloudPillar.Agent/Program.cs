@@ -19,6 +19,8 @@ var url = $"http://localhost:{port}";
 var sslUrl = $"https://localhost:{sslPort}";
 
 builder.WebHost.UseUrls(url, sslUrl);
+builder.Configuration.AddJsonFile("appsettings.json");
+
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
@@ -52,6 +54,8 @@ builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsV
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
+var appSettingsSection = builder.Configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(appSettingsSection);
 
 builder.Services.AddHttpsRedirection(options =>
 {
@@ -63,6 +67,7 @@ builder.Services.AddControllers(options =>
     {
         options.Filters.Add<LogActionFilter>();
     });
+
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
