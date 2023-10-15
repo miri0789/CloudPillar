@@ -1,3 +1,4 @@
+using System.Net;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Utilities;
@@ -8,13 +9,19 @@ using Shared.Entities.Factories;
 using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
+const string CONFIG_PORT = "Port";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
+var port = builder.Configuration.GetValue(CONFIG_PORT, 8099);
+var sslPort = builder.Configuration.GetValue(CONFIG_PORT, 8199);
+var url = $"http://localhost:{port}";
+var sslUrl = $"https://localhost:{sslPort}";
 
+builder.WebHost.UseUrls(url, sslUrl);
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins("http://localhost")
+                b.WithOrigins(url, sslUrl)
                        .AllowAnyHeader()
                        .AllowAnyMethod();
             });
@@ -36,6 +43,11 @@ builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploa
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
+    options.HttpsPort = sslPort;
+});
 
 builder.Services.AddControllers(options =>
     {
@@ -53,6 +65,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
