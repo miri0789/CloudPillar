@@ -5,6 +5,9 @@ namespace CloudPillar.Agent.Handlers;
 public class StrictModeHandler : IStrictModeHandler
 {
     private readonly AppSettings _appSettings;
+    public const string AUTHENTICATION_SAS = "SAS";
+    public const string AUTHENTICATION_X509 = "X509";
+
     public StrictModeHandler(IOptions<AppSettings> appSettings)
     {
         _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
