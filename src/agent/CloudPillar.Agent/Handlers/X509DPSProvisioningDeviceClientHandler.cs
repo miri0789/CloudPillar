@@ -80,7 +80,6 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
 
         iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
-        deviceId = CertificateConstants.CLOUD_PILLAR_SUBJECT + deviceId;
 
         return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
     }
