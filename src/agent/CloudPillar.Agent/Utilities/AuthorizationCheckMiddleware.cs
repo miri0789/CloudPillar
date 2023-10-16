@@ -16,9 +16,6 @@ public class AuthorizationCheckMiddleware
 
     private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
-    const string X_DEVICE_ID = "X-device-id";
-    const string X_SECRET_KEY = "X-secret-key";
-
     public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
@@ -50,13 +47,13 @@ public class AuthorizationCheckMiddleware
             IHeaderDictionary requestHeaders = context.Request.Headers;
             var xDeviceId = string.Empty;
             var xSecretKey = string.Empty;
-            if (requestHeaders.ContainsKey(X_DEVICE_ID))
+            if (requestHeaders.ContainsKey(AuthorizationConstants.X_DEVICE_ID))
             {
-                xDeviceId = requestHeaders[X_DEVICE_ID];
+                xDeviceId = requestHeaders[AuthorizationConstants.X_DEVICE_ID];
             }
-            if (requestHeaders.ContainsKey(X_SECRET_KEY))
+            if (requestHeaders.ContainsKey(AuthorizationConstants.X_SECRET_KEY))
             {
-                xSecretKey = requestHeaders[X_SECRET_KEY];
+                xSecretKey = requestHeaders[AuthorizationConstants.X_SECRET_KEY];
             }
             if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
             {
