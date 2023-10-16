@@ -53,7 +53,7 @@ builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsV
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
-builder.Services.AddScoped<IReProvisioningHandler, ReProvisioningHandler>();
+builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
 
 
 builder.Services.AddHttpsRedirection(options =>

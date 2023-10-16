@@ -8,6 +8,4 @@ public interface IEnvironmentsWrapper
     string iothubConnectionString { get; }
     string dpsConnectionString { get; }
     string dpsIdScope { get; }
-    int certificateExpiredDays { get; }
-
 }

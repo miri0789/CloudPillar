@@ -11,7 +11,7 @@ public class SigningTestFixture
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
     private Mock<ILoggerHandler> _mockLoggerHandler;
     private ISigningService _target;
-    private Uri _signingUrl;
+    private Uri _keyHolderUrl;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
 
     const string deviceId = "testDeviceId";
@@ -23,8 +23,8 @@ public class SigningTestFixture
     {
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLoggerHandler = new Mock<ILoggerHandler>();
-        _signingUrl = new Uri("http://example.com/");
-        _mockEnvironmentsWrapper.Setup(f => f.signingUrl).Returns(_signingUrl.AbsoluteUri);
+        _keyHolderUrl = new Uri("http://example.com/");
+        _mockEnvironmentsWrapper.Setup(f => f.keyHolderUrl).Returns(_keyHolderUrl.AbsoluteUri);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
         _target = new SigningService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
@@ -38,7 +38,7 @@ public class SigningTestFixture
             SignatureKey = signatureKey
         };
 
-        string requestUrl = $"{_signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
+        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
 
         await _target.CreateTwinKeySignature(deviceId, signEvent);
 
@@ -57,7 +57,7 @@ public class SigningTestFixture
             SignatureKey = signatureKey
         };
 
-        string requestUrl = $"{_signingUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
+        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
 
         _httpRequestorServiceMock
             .Setup(service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))

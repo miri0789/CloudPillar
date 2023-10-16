@@ -1,26 +1,24 @@
 
+using System.Text;
+
 namespace Shared.Entities.Messages;
 
-public class ReProvisioningMessage : C2DMessages
+public class ReprovisioningMessage : C2DMessages
 {
-    public string EnrollmentId { get; set; }
-
     public string ScopedId { get; set; }
 
     public string DeviceEndpoint { get; set; }
 
     public string DPSConnectionString { get; set; }
 
-    public string PasswordFunc { get; set; }
-
-    public ReProvisioningMessage()
+    public ReprovisioningMessage()
     {
-        MessageType = C2DMessageType.ReProvisioning;
+        MessageType = C2DMessageType.Reprovisioning;
     }
 
     public override string GetMessageId()
     {
-        return $"sendCertificate_{this.EnrollmentId}";
+        return $"sendCertificate_{Encoding.ASCII.GetString(Data)}";
     }
 
 }

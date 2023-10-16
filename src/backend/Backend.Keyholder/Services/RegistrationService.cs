@@ -11,6 +11,8 @@ using Shared.Entities.Factories;
 using Shared.Entities.DeviceClient;
 using Microsoft.Azure.Devices;
 using Backend.Keyholder.Wrappers.Interfaces;
+using Shared.Entities.Authentication;
+using Newtonsoft.Json;
 
 public class RegistrationService : IRegistrationService
 {
@@ -52,13 +54,28 @@ public class RegistrationService : IRegistrationService
         _iotHubHostName = GetIOTHubHostName();
     }
 
-    public async Task Register(string deviceId, string oneMDKey)
+
+
+    public async Task Register(string deviceId, string secretKey)
     {
         try
         {
-            var certificate = GenerateCertificate(deviceId, oneMDKey);
-            var enrollment = await CreateEnrollmentAsync(certificate, deviceId);
-            await SendCertificateToAgent(deviceId, oneMDKey, certificate, enrollment);
+            _loggerHandler.Debug($"Register for deviceId {deviceId}.");
+            ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
+            ArgumentNullException.ThrowIfNullOrEmpty(secretKey);
+            var authonticationKeys = JsonConvert.SerializeObject(new AuthonticationKeys()
+            {
+                DeviceId = deviceId,
+                SecretKey = secretKey
+            });
+
+            var message = new RequestDeviceCertificateMessage()
+            {
+                Data = Encoding.ASCII.GetBytes(authonticationKeys)
+            };
+
+            var c2dMessage = _messageFactory.PrepareC2DMessage(message);
+            await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
         }
         catch (Exception ex)
         {
@@ -67,35 +84,20 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-
-
-    internal X509Certificate2 GenerateCertificate(string deviceId, string OneMDKey)
+    public async Task ProvisionDeviceCertificate(string deviceId, byte[] certificate)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(OneMDKey);
-        ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
-        _loggerHandler.Debug($"GenerateCertificate for deviceId {deviceId}");
-        using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
+        _loggerHandler.Debug($"ProvisionDeviceCertificate for deviceId {deviceId}.");
+        ArgumentNullException.ThrowIfNull(certificate);
+        try
         {
-            var request = new CertificateRequest(
-                $"{CertificateConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}", rsa
-                , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-
-            byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(OneMDKey);
-            var OneMDKeyExtension = new X509Extension(
-                new Oid(CertificateConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
-                oneMDKeyValue, false
-               );
-
-
-            request.CertificateExtensions.Add(OneMDKeyExtension);
-
-            var certificate = request.CreateSelfSigned(
-                DateTimeOffset.Now.AddDays(-1),
-                DateTimeOffset.Now.AddDays(_environmentsWrapper.certificateExpiredDays));
-
-            return certificate;
-
-
+            var cert = new X509Certificate2(certificate);
+            var enrollment = await CreateEnrollmentAsync(cert, deviceId);
+            await SendReprovisioningMessageToAgentAsync(deviceId, enrollment);
+        }
+        catch (Exception ex)
+        {
+            _loggerHandler.Error("ProvisionDeviceCertificate ", ex);
+            throw;
         }
     }
 
@@ -132,49 +134,32 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    internal async Task SendCertificateToAgent(string deviceId, string oneMDKey, X509Certificate2 certificate, IndividualEnrollment individualEnrollment)
+    internal async Task SendReprovisioningMessageToAgentAsync(string deviceId, IndividualEnrollment individualEnrollment)
     {
-        _loggerHandler.Debug($"SendCertificateToAgent for deviceId {deviceId}.");
-        ArgumentNullException.ThrowIfNull(certificate);
+        _loggerHandler.Debug($"SendReprovisioningMessageToAgent for deviceId {deviceId}.");
         ArgumentNullException.ThrowIfNull(individualEnrollment);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
-        ArgumentNullException.ThrowIfNullOrEmpty(oneMDKey);
-        using (SHA256 sha256 = SHA256.Create())
+        var message = new ReprovisioningMessage()
         {
-            byte[] passwordBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(oneMDKey));
+            Data = Encoding.ASCII.GetBytes(individualEnrollment.RegistrationId),
+            DeviceEndpoint = DEVICE_ENDPOINT,
+            // TODO: get the scopeid from the dps, not from the env, + do not send the dps connection string
+            ScopedId = _environmentsWrapper.dpsIdScope,
+            DPSConnectionString = _environmentsWrapper.dpsConnectionString
+        };
+        var c2dMessage = _messageFactory.PrepareC2DMessage(message);
+        await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
 
-            string passwordString = BitConverter.ToString(passwordBytes).Replace("-", "").ToLower();
-
-            // The password is temporary and will be fixed in task 11505
-            var pfxBytes = certificate.Export(X509ContentType.Pkcs12, "1234");
-            var message = new ReProvisioningMessage()
-            {
-                Data = pfxBytes,
-                EnrollmentId = individualEnrollment.RegistrationId,
-                DeviceEndpoint = DEVICE_ENDPOINT,
-                // TODO: get the scopeid from the dps, not from the env, + do not send the dps connection string
-                ScopedId = _environmentsWrapper.dpsIdScope,
-                DPSConnectionString = _environmentsWrapper.dpsConnectionString
-            };
-            var c2dMessage = _messageFactory.PrepareC2DMessage(message);
-            await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
-        }
     }
 
     private string GetIOTHubHostName()
-    {
-        string[] parts = _environmentsWrapper.iothubConnectionString.Split(';');
+    {      
 
-        string iotHubHostName = string.Empty;
-
-        foreach (var part in parts)
-        {
-            if (part.StartsWith("HostName="))
-            {
-                iotHubHostName = part.Substring("HostName=".Length);
-                break;
-            }
-        }
+        string iotHubHostName = _environmentsWrapper.iothubConnectionString
+        .Split(';')
+        .Select(part => part.Trim())
+        .FirstOrDefault(part => part.StartsWith("HostName=", StringComparison.OrdinalIgnoreCase))
+?.Substring("HostName=".Length);
 
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
         return iotHubHostName;

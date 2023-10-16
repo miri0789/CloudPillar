@@ -6,7 +6,7 @@ public interface IEnvironmentsWrapper
 {
 
     string blobStreamerUrl { get; }
-    string signingUrl { get; }
+    string keyHolderUrl { get; }
     int rangePercent { get; }
     long rangeBytes { get; }
     int messageTimeoutMinutes { get; }
