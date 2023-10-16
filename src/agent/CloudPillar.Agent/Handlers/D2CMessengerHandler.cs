@@ -75,7 +75,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     private Message PrepareD2CMessage(D2CMessage d2CMessage)
     {
         var messageString = JsonConvert.SerializeObject(d2CMessage);
-        Message message = new Message(Encoding.ASCII.GetBytes(messageString));
+        Message message = new Message(Encoding.UTF8.GetBytes(messageString));
 
         PropertyInfo[] properties = d2CMessage.GetType().GetProperties();
         foreach (var property in properties)

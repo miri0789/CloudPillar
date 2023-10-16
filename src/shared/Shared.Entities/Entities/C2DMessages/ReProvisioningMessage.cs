@@ -18,7 +18,7 @@ public class ReprovisioningMessage : C2DMessages
 
     public override string GetMessageId()
     {
-        return $"sendCertificate_{Encoding.ASCII.GetString(Data)}";
+        return $"sendCertificate_{Encoding.Unicode.GetString(Data)}";
     }
 
 }

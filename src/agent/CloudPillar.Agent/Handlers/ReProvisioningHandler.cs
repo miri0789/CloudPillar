@@ -59,7 +59,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         using (ProvisioningServiceClient provisioningServiceClient =
                            ProvisioningServiceClient.CreateFromConnectionString(message.DPSConnectionString))
         {
-            var enrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(Encoding.ASCII.GetString(message.Data), cancellationToken);
+            var enrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(Encoding.Unicode.GetString(message.Data), cancellationToken);
             iotHubHostName = enrollment.IotHubHostName;
         }
 
@@ -112,7 +112,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
     public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
-        var data = JsonConvert.DeserializeObject<AuthonticationKeys>(Encoding.ASCII.GetString(message.Data));
+        var data = JsonConvert.DeserializeObject<AuthonticationKeys>(Encoding.Unicode.GetString(message.Data));
         ArgumentNullException.ThrowIfNull(data);
         var certificate = GenerateCertificate(message, data);
         InstallTemporaryCertificate(certificate, data.SecretKey);

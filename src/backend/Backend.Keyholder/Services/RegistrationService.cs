@@ -71,7 +71,7 @@ public class RegistrationService : IRegistrationService
 
             var message = new RequestDeviceCertificateMessage()
             {
-                Data = Encoding.ASCII.GetBytes(authonticationKeys)
+                Data = Encoding.Unicode.GetBytes(authonticationKeys)
             };
 
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
@@ -141,7 +141,7 @@ public class RegistrationService : IRegistrationService
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
         var message = new ReprovisioningMessage()
         {
-            Data = Encoding.ASCII.GetBytes(individualEnrollment.RegistrationId),
+            Data = Encoding.Unicode.GetBytes(individualEnrollment.RegistrationId),
             DeviceEndpoint = DEVICE_ENDPOINT,
             // TODO: get the scopeid from the dps, not from the env, + do not send the dps connection string
             ScopedId = _environmentsWrapper.dpsIdScope,
