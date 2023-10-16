@@ -48,6 +48,7 @@ public class AgentController : ControllerBase
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceState()
     {
+        await _twinHandler.HandleTwinActionsAsync(CancellationToken.None);
         return await _twinHandler.GetTwinJsonAsync();
     }
 

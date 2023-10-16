@@ -4,10 +4,7 @@ using CloudPillar.Agent.Wrappers;
 using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Shared.Logger;
-using Newtonsoft.Json.Converters;
 using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Handlers;
