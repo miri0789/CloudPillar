@@ -60,7 +60,7 @@ public class RegistrationService : IRegistrationService
     {
         try
         {
-            _loggerHandler.Debug($"SendCertificateToAgent for deviceId {deviceId}.");
+            _loggerHandler.Debug($"Register for deviceId {deviceId}.");
             ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
             ArgumentNullException.ThrowIfNullOrEmpty(secretKey);
             var authonticationKeys = JsonConvert.SerializeObject(new AuthonticationKeys()
@@ -76,9 +76,6 @@ public class RegistrationService : IRegistrationService
 
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
             await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
-            // var certificate = GenerateCertificate(deviceId, oneMDKey);
-            // var enrollment = await CreateEnrollmentAsync(certificate, deviceId);
-            // await SendCertificateToAgent(deviceId, oneMDKey, certificate, enrollment);
         }
         catch (Exception ex)
         {
@@ -89,10 +86,19 @@ public class RegistrationService : IRegistrationService
 
     public async Task ProvisionDeviceCertificate(string deviceId, byte[] certificate)
     {
+        _loggerHandler.Debug($"ProvisionDeviceCertificate for deviceId {deviceId}.");
         ArgumentNullException.ThrowIfNull(certificate);
-        var cert = new X509Certificate2(certificate);
-        var enrollment = await CreateEnrollmentAsync(cert, deviceId);
-        await SendReprovisioningMessageToAgentAsync(deviceId, enrollment);
+        try
+        {
+            var cert = new X509Certificate2(certificate);
+            var enrollment = await CreateEnrollmentAsync(cert, deviceId);
+            await SendReprovisioningMessageToAgentAsync(deviceId, enrollment);
+        }
+        catch (Exception ex)
+        {
+            _loggerHandler.Error("ProvisionDeviceCertificate ", ex);
+            throw;
+        }
     }
 
     internal async Task<IndividualEnrollment> CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId)
@@ -147,19 +153,13 @@ public class RegistrationService : IRegistrationService
     }
 
     private string GetIOTHubHostName()
-    {
-        string[] parts = _environmentsWrapper.iothubConnectionString.Split(';');
+    {      
 
-        string iotHubHostName = string.Empty;
-
-        foreach (var part in parts)
-        {
-            if (part.StartsWith("HostName="))
-            {
-                iotHubHostName = part.Substring("HostName=".Length);
-                break;
-            }
-        }
+        string iotHubHostName = _environmentsWrapper.iothubConnectionString
+        .Split(';')
+        .Select(part => part.Trim())
+        .FirstOrDefault(part => part.StartsWith("HostName=", StringComparison.OrdinalIgnoreCase))
+?.Substring("HostName=".Length);
 
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
         return iotHubHostName;
