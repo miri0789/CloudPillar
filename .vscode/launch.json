@@ -201,7 +201,9 @@
             "env": {
                 "DpsScopeId": "0ne00B07A2A",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
-                "CertificateExpiredDays": "365"
+                "CertificateExpiredDays": "365",
+                "GroupEnrollmentName":"pre-shared-group",
+                "GroupEnrollmentPrimaryKey":"zeuIXU7CbwMS6YfF5+i5Nn71ZGNj/boUA1UuLuYXuZLiqQqWs09ftT63iZQ6iOEmpJEs1F58WFV6EelxY+KvDA=="
             },
             "stopAtEntry": false
         }

@@ -11,15 +11,17 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
     private IDeviceClientWrapper _deviceClientWrapper;
     private ISymmetricKeyWrapper _symmetricKeyWrapper;
-
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
 
     public SymmetricKeyProvisioningHandler(ILoggerHandler loggerHandler,
      IDeviceClientWrapper deviceClientWrapper,
-     ISymmetricKeyWrapper symmetricKeyWrapper)
+     ISymmetricKeyWrapper symmetricKeyWrapper,
+     IEnvironmentsWrapper environmentsWrapper)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _symmetricKeyWrapper = symmetricKeyWrapper ?? throw new ArgumentNullException(nameof(symmetricKeyWrapper));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper)); ;
     }
 
     public async Task<bool> AuthorizationAsync(CancellationToken cancellationToken)
@@ -28,14 +30,17 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         return res;
     }
 
-    public async Task ProvisioningAsync(string registrationId, string primaryKey, string scopeId, string globalDeviceEndpoint, CancellationToken cancellationToken)
+    public async Task ProvisioningAsync(string scopeId, string globalDeviceEndpoint, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(registrationId);
-        ArgumentNullException.ThrowIfNullOrEmpty(primaryKey);
         ArgumentNullException.ThrowIfNullOrEmpty(scopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.groupEnrollmentName);
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.groupEnrollmentPrimaryKey);
 
-        using (var security = _symmetricKeyWrapper.GetSecurityProvider(registrationId, primaryKey, null))
+        var enrollmentName = _environmentsWrapper.groupEnrollmentName;
+        var primaryKey = _environmentsWrapper.groupEnrollmentPrimaryKey;
+
+        using (var security = _symmetricKeyWrapper.GetSecurityProvider(enrollmentName, primaryKey, null))
         {
             _logger.Debug($"Initializing the device provisioning client...");
 

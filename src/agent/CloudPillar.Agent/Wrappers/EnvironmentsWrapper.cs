@@ -7,6 +7,8 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _dpsScopeId = "DpsScopeId";
     private const string _globalDeviceEndpoint = "GlobalDeviceEndpoint";
     private const string _certificateExpiredDays = "CertificateExpiredDays";
+    private const string _groupEnrollmentPrimaryKey ="GroupEnrollmentPrimaryKey";
+    private const string _groupEnrollmentName = "GroupEnrollmentName";
 
     public string deviceConnectionString
     {
@@ -27,6 +29,15 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public string globalDeviceEndpoint
     {
         get { return GetVariable(_globalDeviceEndpoint); }
+    }
+    public string groupEnrollmentName
+    {
+        get { return GetVariable(_groupEnrollmentName); }
+    }
+
+    public string groupEnrollmentPrimaryKey
+    {
+        get { return GetVariable(_groupEnrollmentPrimaryKey); }
     }
     public int certificateExpiredDays
     {

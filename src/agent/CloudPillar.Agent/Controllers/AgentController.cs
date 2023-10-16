@@ -64,12 +64,13 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string registrationId, string primaryKey, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<string>> InitiateProvisioning(CancellationToken cancellationToken = default)
     {
         try
         {
             var dpsScopeId = _environmentsWrapper.dpsScopeId;
             var globalDeviceEndpoint = _environmentsWrapper.globalDeviceEndpoint;
+                        
 
             var isAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationAsync(cancellationToken);
             if (!isAuthorized)
