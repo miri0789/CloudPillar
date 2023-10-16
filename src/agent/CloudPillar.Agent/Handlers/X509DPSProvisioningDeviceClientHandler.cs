@@ -1,5 +1,6 @@
 
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
@@ -35,7 +36,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
                 return null;
             }
             var filteredCertificate = certificates.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(CertificateConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
                .FirstOrDefault();
 
             return filteredCertificate;
@@ -51,7 +52,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
 
         var friendlyName = userCertificate?.FriendlyName ?? throw new ArgumentNullException(nameof(userCertificate.FriendlyName));
-        var parts = friendlyName.Split(CertificateConstants.CERTIFICATE_NAME_SEPARATOR);
+        var parts = friendlyName.Split(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR);
 
         if (parts.Length != 2)
         {
@@ -62,7 +63,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         var deviceId = parts[0];
         var iotHubHostName = parts[1];
-        var oneMd =Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == CertificateConstants.ONE_MD_EXTENTION_KEY).RawData);
+        var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENTION_KEY).RawData);
 
         if (!(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
         {
@@ -78,9 +79,9 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             throw new ArgumentException(error);
         }
 
-        iotHubHostName += CertificateConstants.IOT_HUB_NAME_SUFFIX;
+        iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
         deviceId = CertificateConstants.CLOUD_PILLAR_SUBJECT + deviceId;
-        
+
         return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
     }
 

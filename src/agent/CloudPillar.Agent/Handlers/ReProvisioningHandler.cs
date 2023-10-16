@@ -52,7 +52,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var certificate = GetTempCertificate();
         ArgumentNullException.ThrowIfNull(certificate);
 
-        var deviceId = certificate.Subject.Replace($"{CertificateConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}", string.Empty);
+        var deviceId = certificate.Subject.Replace($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}", string.Empty);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
 
         var iotHubHostName = string.Empty;
@@ -76,7 +76,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
                 if (certificates != null)
                 {
                     var filteredCertificates = certificates.Cast<X509Certificate2>()
-                       .Where(cert => cert.Subject.StartsWith(CertificateConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
+                       .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
                        && cert.Thumbprint != certificate.Thumbprint)
                        .ToArray();
                     if (filteredCertificates != null && filteredCertificates.Length > 0)
@@ -91,7 +91,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
                     {
                         X509Certificate2 cert = collection[0];
 
-                        cert.FriendlyName = $"{deviceId}{CertificateConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(CertificateConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}"; ;
+                        cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}"; ;
 
                         store.Close();
                     }
@@ -126,12 +126,12 @@ public class ReprovisioningHandler : IReprovisioningHandler
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{CertificateConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{data.DeviceId}", rsa
+                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{data.DeviceId}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(data.SecretKey);
             var OneMDKeyExtension = new X509Extension(
-                new Oid(CertificateConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
+                new Oid(ProvisioningConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
                 oneMDKeyValue, false
                );
 
