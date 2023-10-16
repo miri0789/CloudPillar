@@ -76,7 +76,8 @@ public class ReprovisioningHandler : IReprovisioningHandler
                 if (certificates != null)
                 {
                     var filteredCertificates = certificates.Cast<X509Certificate2>()
-                       .Where(cert => cert.Subject.StartsWith(CertificateConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
+                       .Where(cert => cert.Subject.StartsWith(CertificateConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
+                       && cert.Thumbprint != certificate.Thumbprint)
                        .ToArray();
                     if (filteredCertificates != null && filteredCertificates.Length > 0)
                     {
