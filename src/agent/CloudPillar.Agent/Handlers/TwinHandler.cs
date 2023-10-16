@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Logger;
 using Newtonsoft.Json.Converters;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -21,6 +22,7 @@ public class TwinHandler : ITwinHandler
     private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
+    private readonly AppSettings _appSettings;
     private readonly ILoggerHandler _logger;
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -29,7 +31,8 @@ public class TwinHandler : ITwinHandler
                        ITwinActionsHandler twinActionsHandler,
                        ILoggerHandler loggerHandler,
                        IRuntimeInformationWrapper runtimeInformationWrapper,
-                       IFileStreamerWrapper fileStreamerWrapper)
+                       IFileStreamerWrapper fileStreamerWrapper,
+                       IOptions<AppSettings> appSettings)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
@@ -38,6 +41,7 @@ public class TwinHandler : ITwinHandler
         _runtimeInformationWrapper = runtimeInformationWrapper ?? throw new ArgumentNullException(nameof(runtimeInformationWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _supportedShells = GetSupportedShells();
+        _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
@@ -92,7 +96,18 @@ public class TwinHandler : ITwinHandler
                         //implement the while loop with interval like poc
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         break;
-
+                    case TwinActionType.ExecuteOnce:
+                        if (_appSettings.StrictMode == true)
+                        {
+                            var message = "Strict Mode is active, Bash/PowerShell actions are not allowed";
+                            _logger.Info(message);
+                            action.TwinReport.Status = StatusType.Failed;
+                            action.TwinReport.ResultCode = "BashAndPowerShellNotAllowed";
+                            action.TwinReport.ResultText = message;
+                            await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
+                            return;
+                        }
+                        break;
                     default:
                         action.TwinReport.Status = StatusType.Failed;
                         action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
