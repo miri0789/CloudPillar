@@ -22,7 +22,7 @@ public class AgentController : ControllerBase
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
 
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
-    private readonly IC2DEventHandler _c2DEventHandler;
+    private readonly IStateMachine _stateMachine;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
@@ -33,8 +33,7 @@ public class AgentController : ControllerBase
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
-     IC2DEventHandler c2DEventHandler,
-     IFileUploaderHandler fileUploaderHandler,
+    IStateMachine stateMachine,
      IEnvironmentsWrapper environmentsWrapper,
      ILoggerHandler logger)
     {
@@ -42,7 +41,7 @@ public class AgentController : ControllerBase
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
-        _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
+        _stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -76,6 +75,7 @@ public class AgentController : ControllerBase
             {
                 try
                 {
+                    _stateMachine.SetState(DeviceStateType.Provisioning);
                     await _symmetricKeyProvisioningHandler.ProvisioningAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
                 }
                 catch (Exception ex)
@@ -85,7 +85,6 @@ public class AgentController : ControllerBase
                 }
             }
 
-            await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
 
             return await _twinHandler.GetTwinJsonAsync();
         }
@@ -94,17 +93,20 @@ public class AgentController : ControllerBase
             _logger.Error($"InitiateProvisioning error: ", ex);
             throw;
         }
-    }   
+    }
 
     [HttpPost("SetBusy")]
     public async Task<ActionResult<string>> SetBusy()
     {
-        return await _twinHandler.GetTwinJsonAsync();
+        var twin = await _twinHandler.GetTwinJsonAsync();
+        _stateMachine.SetState(DeviceStateType.Busy);
+        return twin;
     }
 
     [HttpPost("SetReady")]
     public async Task<ActionResult<string>> SetReady()
     {
+        _stateMachine.SetState(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
     }
 

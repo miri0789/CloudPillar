@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Logger;
 using Newtonsoft.Json.Converters;
+using Microsoft.Azure.Devices.Client;
 
 namespace CloudPillar.Agent.Handlers;
 
