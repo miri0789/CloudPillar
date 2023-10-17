@@ -23,6 +23,7 @@ public class AgentController : ControllerBase
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
+    private readonly IGitIgnoreCheckerHandler _gitIgnoreCheckerHandler;
 
 
 
@@ -30,11 +31,13 @@ public class AgentController : ControllerBase
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
+     IGitIgnoreCheckerHandler gitIgnoreCheckerHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
+        _gitIgnoreCheckerHandler = gitIgnoreCheckerHandler ?? throw new ArgumentNullException(nameof(gitIgnoreCheckerHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
     }
 
@@ -49,6 +52,13 @@ public class AgentController : ControllerBase
     public async Task<ActionResult<string>> GetDeviceState()
     {
         return await _twinHandler.GetTwinJsonAsync();
+    }
+    [AllowAnonymous]
+    [HttpGet("TestGitIgnore")]
+    public async Task<ActionResult<bool>> TestGitIgnore(string filePath)
+    {
+        bool res = _gitIgnoreCheckerHandler.IsIgnored(filePath);
+        return Ok(res);
     }
 
     [AllowAnonymous]
