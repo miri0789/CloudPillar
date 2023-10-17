@@ -94,13 +94,11 @@ public class TwinHandler : ITwinHandler
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         break;
                     case TwinActionType.ExecuteOnce:
-                        if (_appSettings.StrictMode == true)
+                        if (_appSettings.StrictMode)
                         {
-                            var message = "Strict Mode is active, Bash/PowerShell actions are not allowed";
-                            _logger.Info(message);
+                            _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
                             action.TwinReport.Status = StatusType.Failed;
-                            action.TwinReport.ResultCode = "BashAndPowerShellNotAllowed";
-                            action.TwinReport.ResultText = message;
+                            action.TwinReport.ResultCode = ResultCode.StrictMode.ToString();
                             await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
                             return;
                         }
