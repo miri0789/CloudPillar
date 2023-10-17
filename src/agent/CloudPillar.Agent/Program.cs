@@ -13,8 +13,8 @@ using Shared.Logger;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 const string CONFIG_PORT = "Port";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
-var port = builder.Configuration.GetValue(CONFIG_PORT, 8099);
-var sslPort = builder.Configuration.GetValue(CONFIG_PORT, 8199);
+var port = builder.Configuration.GetValue(CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
+var sslPort = builder.Configuration.GetValue(CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
 var sslUrl = $"https://localhost:{sslPort}";
 
@@ -55,13 +55,6 @@ builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
 
-
-// builder.Services.AddHttpsRedirection(options =>
-// {
-//     options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
-//     options.HttpsPort = sslPort;
-// });
-
 builder.Services.AddSwaggerGen(c=>{
     c.OperationFilter<SwaggerHeader>();
 });
@@ -80,7 +73,6 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
-// app.UseHttpsRedirection();
 app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 

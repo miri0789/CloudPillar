@@ -1,10 +1,7 @@
-using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
-using CloudPillar.Agent.Wrappers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.Azure.Devices.Client.Exceptions;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Utilities;
@@ -70,13 +67,24 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await _requestDelegate(context);
+            await NextWithRedirectAsync(context);
         }
         else
         {
+            await NextWithRedirectAsync(context);
+        }
+    }
+    private async Task NextWithRedirectAsync(HttpContext context)
+    {
+        if (context.Request.IsHttps)
+        {
             await _requestDelegate(context);
+            return;
         }
 
+        var newUrl = $"https://localhost:{Constants.HTTPS_DEFAULT_PORT}{context.Request.Path}{context.Request.QueryString}";
+        context.Response.StatusCode = StatusCodes.Status307TemporaryRedirect;
+        context.Response.Headers["Location"] = newUrl;
     }
 
     private async Task UnauthorizedResponseAsync(HttpContext context, string error)
