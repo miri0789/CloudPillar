@@ -19,7 +19,6 @@ var url = $"http://localhost:{port}";
 var sslUrl = $"https://localhost:{sslPort}";
 
 builder.WebHost.UseUrls(url, sslUrl);
-builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services.AddCors(options =>
         {
