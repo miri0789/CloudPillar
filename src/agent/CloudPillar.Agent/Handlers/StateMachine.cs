@@ -45,14 +45,14 @@ namespace CloudPillar.Agent.Handlers
         private async Task SetProvisioning()
         {
             _cts = new CancellationTokenSource();
-            _c2DEventHandler.CreateSubscribeAsync(_cts.Token, true);
+            _c2DEventHandler.CreateSubscribe(_cts.Token, true);
         }
 
         private async Task SetReady()
         {
             _cts.Cancel();
             _cts = new CancellationTokenSource();
-            _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
+            _c2DEventHandler.CreateSubscribe(_cts.Token, false);
             await _twinHandler.HandleTwinActionsAsync(_cts.Token);
         }
 

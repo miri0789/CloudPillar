@@ -53,7 +53,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 {
                     if (isProvisioning)
                     {
-                        await HandleMessage(receivedMessage, cancellationToken, messageType);
+                        await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
                     }
                     else
                     {
