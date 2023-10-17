@@ -77,7 +77,9 @@ public class AgentController : ControllerBase
             {
                 try
                 {
-                    await _symmetricKeyProvisioningHandler.ProvisioningAsync(dpsScopeId, globalDeviceEndpoint, cancellationToken);
+                    //don't need to explicitly check if the header exists; it's already verified in the middleware.
+                    var deviceId = HttpContext.Request.Headers[AuthorizationConstants.X_DEVICE_ID].ToString();
+                    await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
                 }
                 catch (Exception ex)
                 {

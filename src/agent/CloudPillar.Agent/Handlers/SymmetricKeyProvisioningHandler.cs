@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
@@ -30,23 +32,25 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         return res;
     }
 
-    public async Task ProvisioningAsync(string scopeId, string globalDeviceEndpoint, CancellationToken cancellationToken)
+    public async Task ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(scopeId);
-        ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.groupEnrollmentName);
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.dpsScopeId);
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.globalDeviceEndpoint);
         ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.groupEnrollmentPrimaryKey);
 
-        var enrollmentName = _environmentsWrapper.groupEnrollmentName;
+        var deviceName = deviceId;
         var primaryKey = _environmentsWrapper.groupEnrollmentPrimaryKey;
+        var drivedDevice = ComputeDerivedSymmetricKey(primaryKey, deviceName);
 
-        using (var security = _symmetricKeyWrapper.GetSecurityProvider(enrollmentName, primaryKey, null))
+
+
+        using (var security = _symmetricKeyWrapper.GetSecurityProvider(deviceName, drivedDevice, null))
         {
             _logger.Debug($"Initializing the device provisioning client...");
 
             using (ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler())
             {
-                var provisioningClient = ProvisioningDeviceClient.Create(globalDeviceEndpoint, scopeId, security, transport);
+                var provisioningClient = ProvisioningDeviceClient.Create(_environmentsWrapper.globalDeviceEndpoint, _environmentsWrapper.dpsScopeId, security, transport);
 
                 _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
 
@@ -77,5 +81,16 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
             _logger.Error($"Exception during IoT Hub connection: ", ex);
             return false;
         }
+    }
+
+    private static string ComputeDerivedSymmetricKey(string enrollmentKey, string registrationId)
+    {
+        if (string.IsNullOrWhiteSpace(enrollmentKey))
+        {
+            return enrollmentKey;
+        }
+
+        using var hmac = new HMACSHA256(Convert.FromBase64String(enrollmentKey));
+        return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registrationId)));
     }
 }
