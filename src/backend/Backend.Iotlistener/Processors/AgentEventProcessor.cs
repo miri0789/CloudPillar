@@ -13,16 +13,23 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
     private readonly IStreamingUploadChunkService _streamingUploadChunkService;
+    private readonly IProvisionDeviceCertificateService _provisionDeviceCertificateService;
     private readonly string _partitionId;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
     public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService,
-     ISigningService signingService, IStreamingUploadChunkService streamingUploadChunkService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, string partitionId)
+    ISigningService signingService,
+    IStreamingUploadChunkService streamingUploadChunkService,
+    IProvisionDeviceCertificateService provisionDeviceCertificateService,
+    IEnvironmentsWrapper environmentsWrapper,
+    ILoggerHandler logger,
+    string partitionId)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
+        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService)); ;
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _partitionId = partitionId;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -32,7 +39,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     {
         if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
         {
-            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _streamingUploadChunkService, _environmentsWrapper, _logger);
+            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _streamingUploadChunkService,_provisionDeviceCertificateService, _environmentsWrapper, _logger);
         }
 
         return new NullEventProcessor();
@@ -43,15 +50,21 @@ public class AgentEventProcessor : IEventProcessor
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
     private readonly IStreamingUploadChunkService _streamingUploadChunkService;
+    private readonly IProvisionDeviceCertificateService _provisionDeviceCertificateService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
     public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService,
-     ISigningService signingService, IStreamingUploadChunkService streamingUploadChunkService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
+    ISigningService signingService,
+    IStreamingUploadChunkService streamingUploadChunkService,
+    IProvisionDeviceCertificateService provisionDeviceCertificateService,
+    IEnvironmentsWrapper environmentsWrapper,
+    ILoggerHandler logger)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
+        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService)); ;
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -98,7 +111,7 @@ public class AgentEventProcessor : IEventProcessor
         try
         {
             var data = Encoding.UTF8.GetString(eventData!.Body!.Array!, eventData.Body.Offset, eventData.Body.Count);
-            D2CMessage d2CMessage= JsonSerializer.Deserialize<D2CMessage>(data)!;
+            D2CMessage d2CMessage = JsonSerializer.Deserialize<D2CMessage>(data)!;
 
             if (d2CMessage == null || isDrainMode)
             {
@@ -128,7 +141,13 @@ public class AgentEventProcessor : IEventProcessor
                     case D2CMessageType.StreamingUploadChunk:
                         {
                             var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
-                            await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent );
+                            await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent);
+                            break;
+                        }
+                    case D2CMessageType.ProvisionDeviceCertificate:
+                        {
+                            var provisionDeviceCertificateEvent = JsonSerializer.Deserialize<ProvisionDeviceCertificateEvent>(data)!;
+                            await _provisionDeviceCertificateService.ProvisionDeviceCertificateAsync(deviceId, provisionDeviceCertificateEvent);
                             break;
                         }
                 }

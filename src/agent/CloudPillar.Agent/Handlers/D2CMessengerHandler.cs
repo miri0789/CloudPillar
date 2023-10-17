@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
@@ -14,7 +15,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly ILoggerHandler _logger;
 
-    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, IMessageFactory messageFactory, ILoggerHandler logger)
+    public D2CMessengerHandler(IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
@@ -52,6 +53,18 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     }
 
 
+    public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate)
+    {
+        var ProvisionDeviceCertificateEvent = new ProvisionDeviceCertificateEvent()
+        {
+            Data = certificate.Export(X509ContentType.Cert),
+            ActionId = Guid.NewGuid().ToString()
+        };
+
+        await SendMessageAsync(ProvisionDeviceCertificateEvent);
+    }
+
+
 
     private async Task SendMessageAsync(D2CMessage d2CMessage)
     {
@@ -62,7 +75,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     private Message PrepareD2CMessage(D2CMessage d2CMessage)
     {
         var messageString = JsonConvert.SerializeObject(d2CMessage);
-        Message message = new Message(Encoding.ASCII.GetBytes(messageString));
+        Message message = new Message(Encoding.UTF8.GetBytes(messageString));
 
         PropertyInfo[] properties = d2CMessage.GetType().GetProperties();
         foreach (var property in properties)
@@ -72,6 +85,8 @@ public class D2CMessengerHandler : ID2CMessengerHandler
                 message.Properties.Add(property.Name, property.GetValue(d2CMessage)?.ToString());
             }
         }
+        _logger.Debug($"D2CMessengerHandler PrepareD2CMessage. message title: {d2CMessage.MessageType.ToString()}, properties: {string.Join(Environment.NewLine, message.Properties)}");
         return message;
     }
+
 }

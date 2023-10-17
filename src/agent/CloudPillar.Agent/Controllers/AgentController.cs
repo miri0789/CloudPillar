@@ -5,6 +5,7 @@ using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Devices.Provisioning.Service;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -21,21 +22,30 @@ public class AgentController : ControllerBase
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
 
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
-
+    private readonly IC2DEventHandler _c2DEventHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
-
+    private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
 
 
     public AgentController(ITwinHandler twinHandler,
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
+     ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
+     IC2DEventHandler c2DEventHandler,
+     IFileUploaderHandler fileUploaderHandler,
+     IEnvironmentsWrapper environmentsWrapper,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
+        _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpPost("AddRecipe")]
@@ -45,6 +55,7 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
 
+
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceState()
     {
@@ -53,25 +64,19 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string dpsScopeId, string enrollmentId, string globalDeviceEndpoint, CancellationToken cancellationToken)
+    public async Task<ActionResult<string>> InitiateProvisioning(string registrationId, string primaryKey, CancellationToken cancellationToken = default)
     {
         try
         {
+            var dpsScopeId = _environmentsWrapper.dpsScopeId;
+            var globalDeviceEndpoint = _environmentsWrapper.globalDeviceEndpoint;
 
-            var cert = _dPSProvisioningDeviceClientHandler.GetCertificate();
-            if (cert == null)
-            {
-                var error = "No certificate exist in agent";
-                _logger.Error(error);
-                return Unauthorized(error);
-            }
-
-            var isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(cert, cancellationToken);
+            var isAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationAsync(cancellationToken);
             if (!isAuthorized)
             {
                 try
                 {
-                    await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(dpsScopeId, cert, globalDeviceEndpoint, cancellationToken);
+                    await _symmetricKeyProvisioningHandler.ProvisioningAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -79,6 +84,9 @@ public class AgentController : ControllerBase
                     return BadRequest("Provisioning failed");
                 }
             }
+
+            await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
+
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)
@@ -86,8 +94,7 @@ public class AgentController : ControllerBase
             _logger.Error($"InitiateProvisioning error: ", ex);
             throw;
         }
-    }
-
+    }   
 
     [HttpPost("SetBusy")]
     public async Task<ActionResult<string>> SetBusy()

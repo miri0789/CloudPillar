@@ -15,5 +15,7 @@ src/agent/CloudPillar.Agent/publish/*.zip
 src/agent/dotnet/Microsoft Azure Storage Explorer.app.zip
 src/agent/dotnet/CartoPatch*
 src/agent/dotnet/VelysPatch*
+src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/FileContentIndex
+src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/DesignTimeBuild
 **/tfplan
 **/*terraform*

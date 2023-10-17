@@ -23,6 +23,8 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+        
+
     }
 
     public async Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
@@ -46,7 +48,20 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
     }
 
-
+    public async Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Check if the device is already initialized
+            await GetTwinAsync(cancellationToken);
+            return true;
+        }
+        catch
+        {
+            _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized.");
+            return false;
+        }
+    }
     public ProvisioningTransportHandler GetProvisioningTransportHandler()
     {
         return GetTransportType() switch
@@ -63,24 +78,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     }
 
 
-    /// <summary>
-    /// Extracts the device ID from the device connection string
-    /// </summary>
-    /// <returns>Device Id</returns>
-    /// <exception cref="ArgumentException"></exception>
-    public string GetDeviceId()
-    {
-        var items = _environmentsWrapper.deviceConnectionString.Split(';');
-        foreach (var item in items)
-        {
-            if (item.StartsWith("DeviceId"))
-            {
-                return item.Split('=')[1];
-            }
-        }
-
-        throw new ArgumentException("DeviceId not found in the connection string");
-    }
 
     public TransportType GetTransportType()
     {
@@ -168,6 +165,11 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             IsSuccess = isSuccess
         };
         await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
+    }
+
+    public async Task<Uri> GetBlobUriAsync(FileUploadSasUriResponse sasUri, CancellationToken cancellationToken)
+    {
+        return sasUri.GetBlobUri();
     }
 
     public async Task SetDesiredPropertyUpdateCallbackAsync(DesiredPropertyUpdateCallback callback, CancellationToken cancellationToken = default) 

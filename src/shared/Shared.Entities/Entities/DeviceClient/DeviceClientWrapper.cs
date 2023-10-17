@@ -1,7 +1,5 @@
 using Microsoft.Azure.Devices;
-using Backend.BlobStreamer.Interfaces;
-
-namespace Backend.BlobStreamer.Wrappers;
+namespace Shared.Entities.DeviceClient;
 
 public class DeviceClientWrapper : IDeviceClientWrapper
 {

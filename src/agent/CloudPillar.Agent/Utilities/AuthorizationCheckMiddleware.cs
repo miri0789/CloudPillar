@@ -1,8 +1,10 @@
+using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Azure.Devices.Client.Exceptions;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Utilities;
@@ -42,8 +44,25 @@ public class AuthorizationCheckMiddleware
                 await UnauthorizedResponseAsync(context, error);
                 return;
             }
+            IHeaderDictionary requestHeaders = context.Request.Headers;
+            var xDeviceId = string.Empty;
+            var xSecretKey = string.Empty;
+            if (requestHeaders.ContainsKey(AuthorizationConstants.X_DEVICE_ID))
+            {
+                xDeviceId = requestHeaders[AuthorizationConstants.X_DEVICE_ID];
+            }
+            if (requestHeaders.ContainsKey(AuthorizationConstants.X_SECRET_KEY))
+            {
+                xSecretKey = requestHeaders[AuthorizationConstants.X_SECRET_KEY];
+            }
+            if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
+            {
+                var error = "No require header was provided";
+                await UnauthorizedResponseAsync(context, error);
+                return;
+            }
 
-            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate, cancellationToken);
+            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate, xDeviceId, xSecretKey, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
