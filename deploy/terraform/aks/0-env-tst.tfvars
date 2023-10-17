@@ -1,3 +1,0 @@
-location            = "westeurope"
-env                 = "tst"
-
