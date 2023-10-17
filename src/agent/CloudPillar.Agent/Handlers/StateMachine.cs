@@ -33,6 +33,7 @@ namespace CloudPillar.Agent.Handlers
                 case DeviceStateType.Busy: SetBusy(); break;
             }
             await _twinHandler.UpdateDeviceStateAsync(state);
+            _logger.Info($"Set device state: {state.ToString()}");
 
         }
 

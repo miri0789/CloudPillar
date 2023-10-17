@@ -76,7 +76,7 @@ public class TwinHandler : ITwinHandler
         {
             DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
                             {
-                                Console.WriteLine($"{DateTime.Now}: Desired properties were updated.");
+                                _logger.Info($"Desired properties were updated.");
                                 await OnDesiredPropertiesUpdate(cancellationToken);
                             };
             await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
