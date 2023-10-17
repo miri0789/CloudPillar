@@ -16,7 +16,7 @@ The log levels can be configured in Azure App Configuration, for Azure Applicati
 *Azure App Configuration details*
 * The App Configuration Connection String is set in appsettings.json, for example:
     "ConnectionStrings": {
-        "AppConfig": "Endpoint=https://iot-app-config-svc.azconfig.io;Id=N6SW;Secret=PHj7anTdfJ2tuCvw3bSt4rA76Ff97uY2lE5bDv2bzMk="
+        "AppConfig": "Endpoint=https://******"
     }
 
 * The Configuration Keys to be added are:
