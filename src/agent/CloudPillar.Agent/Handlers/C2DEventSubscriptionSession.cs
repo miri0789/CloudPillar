@@ -29,7 +29,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     }
 
 
-    public async Task ReceiveC2DMessagesAsync(CancellationToken cancellationToken)
+    public async Task ReceiveC2DMessagesAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -53,6 +53,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 {
                     messageType = parsedMessageType;
                 }
+                
                 switch (messageType)
                 {
                     case C2DMessageType.DownloadChunk:

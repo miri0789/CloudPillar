@@ -21,11 +21,11 @@ public class C2DEventHandler : IC2DEventHandler
     }
 
 
-    public async Task CreateSubscribeAsync(CancellationToken cancellationToken)
+    public void CreateSubscribeAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
         _logger.Info("Subscribing to C2D messages...");
 
-        await Task.Run(() => _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken));
+        Task.Run(() => _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken, isProvisioning));
     }
 
 }

@@ -1,7 +1,7 @@
 using CloudPillar.Agent.Handlers;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace CloudPillar.Agent.Entities
+namespace CloudPillar.Agent.Handlers
 {
     public class BlobStorageFileUploaderHandler : IBlobStorageFileUploaderHandler
     {

@@ -213,7 +213,7 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task UpdateDeviceStateAsync_ValidState_Success()
     {
-        var deviceState = DeviceStateType.Buzy;
+        var deviceState = DeviceStateType.Busy;
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState))
                        .Returns(Task.CompletedTask);
 
@@ -226,7 +226,7 @@ public class TwinHandlerTestFixture
     public async Task UpdateDeviceStateAsync_OnUpdateReportFailed_LogFailure()
     {
         var expectedErrorMessage = "my error";
-        var deviceState = DeviceStateType.Buzy;
+        var deviceState = DeviceStateType.Busy;
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState))
                        .ThrowsAsync(new Exception(expectedErrorMessage));
         _target.UpdateDeviceStateAsync(deviceState);
