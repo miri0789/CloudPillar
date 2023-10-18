@@ -19,6 +19,7 @@ var url = $"http://localhost:{port}";
 var sslUrl = $"https://localhost:{sslPort}";
 
 builder.WebHost.UseUrls(url, sslUrl);
+
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
@@ -33,6 +34,7 @@ builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddSingleton<IX509CertificateWrapper, X509CertificateWrapper>();
+builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
@@ -52,6 +54,8 @@ builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsV
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
+var appSettingsSection = builder.Configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(appSettingsSection);
 
 builder.Services.AddHttpsRedirection(options =>
 {
@@ -71,13 +75,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
 app.UseHttpsRedirection();
 app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
-app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.MapControllers();
+
+var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
+strictModeHandler.CheckAuthentucationMethodValue();
 
 
 app.Run();
