@@ -84,7 +84,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         }
     }
 
-    private static string ComputeDerivedSymmetricKey(string primaryKey, string registrationId)
+    private string ComputeDerivedSymmetricKey(string primaryKey, string registrationId)
     {
         if (string.IsNullOrWhiteSpace(primaryKey))
         {
