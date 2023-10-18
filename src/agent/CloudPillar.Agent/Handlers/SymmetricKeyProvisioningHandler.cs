@@ -91,7 +91,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
             return primaryKey;
         }
 
-        using var hmac = new HMACSHA256(Convert.FromBase64String(primaryKey));
+         var hmac = new HMACSHA256(Convert.FromBase64String(primaryKey));
         return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registrationId)));
     }
 }
