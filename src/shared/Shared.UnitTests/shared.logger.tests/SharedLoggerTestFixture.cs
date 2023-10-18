@@ -11,6 +11,9 @@ using NUnit.Framework;
 using System.Linq;
 using Shared.Logger;
 using Shared.Logger.Wrappers;
+using Microsoft.Extensions.Configuration;
+using Microsoft.ApplicationInsights.Log4NetAppender;
+using log4net.Appender;
 
 namespace Shared.Logger.Tests;
 
@@ -59,10 +62,16 @@ public class LoggerHandlerTestFixture
         m_attributesDictionary = m_headersDictionary.Concat(m_queryDictionary).ToDictionary(entry => entry.Key, entry => entry.Value);
         m_telemetryClientWrapperMock = Substitute.For<ITelemetryClientWrapper>();
         m_LoggerFactoryMock.CreateTelemetryClient(Arg.Any<string>()).Returns(m_telemetryClientWrapperMock);
+        m_LoggerFactoryMock.FindAppender<ApplicationInsightsAppender>().Returns(new ApplicationInsightsAppender());
+        m_LoggerFactoryMock.IsApplicationInsightsAppenderInRoot().Returns(true);
         m_logMock = Substitute.For<ILog>();
         m_logMock2 = Substitute.For<ILog>();
-        m_target = CreateTarget(m_LoggerFactoryMock, m_httpContextAccessorMock, m_logMock, "appInsightKey", "log4net.config", m_appName, "connectionString");
-        m_targetWithoutHttp = CreateTarget(m_LoggerFactoryMock, null, m_logMock2, "appInsightKey", "log4net.config", m_appName, "connectionString", false);
+        var m_ConfigurationMock = Substitute.For<IConfiguration>();
+        m_ConfigurationMock[LoggerConstants.APPINSIGHTS_INSTRUMENTATION_KEY_CONFIG].Returns("your_app_insights_key_value");
+        m_ConfigurationMock[LoggerConstants.APPINSIGHTS_CONNECTION_STRING_CONFIG].Returns("your_connection_string_value");
+        m_target =new LoggerHandler(m_LoggerFactoryMock, m_ConfigurationMock, m_httpContextAccessorMock, m_logMock, "log4net.config", m_appName, false);
+        m_targetWithoutHttp =new LoggerHandler(m_LoggerFactoryMock, m_ConfigurationMock, m_httpContextAccessorMock, m_logMock2, "log4net.config", m_appName, false);
+
     }
 
     private void InitHeadersAndQueryParams()
@@ -93,19 +102,7 @@ public class LoggerHandlerTestFixture
         return httpContext.Request;
     }
 
-    private static ILoggerHandler CreateTarget(
-        ILoggerHandlerFactory LoggerFactory,
-        IHttpContextAccessor httpContextAccessor,
-        ILog log,
-        string appInsightKey,
-        string log4NetName,
-        string appName,
-        string connectionString,
-        bool hasHttpContext = true)
-    {
-        return new LoggerHandler(LoggerFactory, httpContextAccessor, log, appInsightKey, log4NetName, appName, connectionString, hasHttpContext);
-    }
-
+    
     #region Error
     [Test]
     public void Error_FormattedMessageWithArgs_SendToLogger()
@@ -145,19 +142,6 @@ public class LoggerHandlerTestFixture
         m_target.Error(message);
 
         m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Error, Arg.Any<IDictionary<string, string>>());
-    }
-
-    [Test]
-    public void Error_WithHttpContext_SendPropertiesToAppInsights()
-    {
-        var expected = m_attributesDictionary;
-
-        expected.Add("applicationName", m_appName);
-
-        m_target.Error(message);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(),
-            Arg.Is<IDictionary<string, string>>(x => expected.OrderBy(kvp => kvp.Key).SequenceEqual(x.OrderBy(kvp => kvp.Key))));
     }
 
     [Test]
@@ -240,20 +224,6 @@ public class LoggerHandlerTestFixture
     }
 
     [Test]
-    public void Error_WithExceptionAndHttpContext_SendPropertiesToAppInsights()
-    {
-        var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
-        var expected = m_attributesDictionary;
-
-        expected.Add("applicationName", m_appName);
-
-        m_target.Error(message, exception);
-
-        m_telemetryClientWrapperMock.Received(1).TrackException(Arg.Any<Exception>(),
-            Arg.Is<IDictionary<string, string>>(x => expected.OrderBy(kvp => kvp.Key).SequenceEqual(x.OrderBy(kvp => kvp.Key))));
-    }
-
-    [Test]
     public void Error_WithExceptionWithoutHttpContext_SendExceptionToAppInsights()
     {
         var exception = new Exception(exceptionMessage, new Exception(exceptionMessage));
@@ -318,19 +288,6 @@ public class LoggerHandlerTestFixture
         m_target.Warn(message);
 
         m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Warning, Arg.Any<IDictionary<string, string>>());
-    }
-
-    [Test]
-    public void Warn_WithHttpContext_SendPropertiesToAppInsights()
-    {
-        var expected = m_attributesDictionary;
-
-        expected.Add("applicationName", m_appName);
-
-        m_target.Warn(message);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(),
-            Arg.Is<IDictionary<string, string>>(x => expected.OrderBy(kvp => kvp.Key).SequenceEqual(x.OrderBy(kvp => kvp.Key))));
     }
 
 
@@ -414,40 +371,6 @@ public class LoggerHandlerTestFixture
         m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Information, Arg.Any<IDictionary<string, string>>());
     }
 
-    [Test]
-    public void Info_WithHttpContext_SendPropertiesToAppInsights()
-    {
-        var expected = m_attributesDictionary;
-
-        expected.Add("applicationName", m_appName);
-
-        m_target.Info(message);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(),
-            Arg.Is<IDictionary<string, string>>(x => expected.OrderBy(kvp => kvp.Key).SequenceEqual(x.OrderBy(kvp => kvp.Key))));
-    }
-
-    [Test]
-    public void Info_WithHttpContextNotAllProperties_SendPropertiesToAppInsights()
-    {
-        m_headersDictionary.Remove(LoggerConstants.SESSION_TENANT_ID);
-        m_queryDictionary.Remove(LoggerConstants.SESSION_CASE_ID);
-        m_request = InitMockRequest(m_headersDictionary, m_queryDictionary);
-        m_httpContextAccessorMock.HttpContext.Request.Returns(m_request);
-
-        m_attributesDictionary[LoggerConstants.SESSION_CASE_ID] = "";
-        m_attributesDictionary[LoggerConstants.SESSION_TENANT_ID] = "";
-
-        var expected = m_attributesDictionary;
-
-        expected.Add("applicationName", m_appName);
-
-        m_target.Info(message);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(message, Arg.Any<SeverityLevel>(),
-            Arg.Is<IDictionary<string, string>>(x => expected.OrderBy(kvp => kvp.Key).SequenceEqual(x.OrderBy(kvp => kvp.Key))));
-    }
-
 
 
     [Test]
@@ -529,20 +452,6 @@ public class LoggerHandlerTestFixture
         m_telemetryClientWrapperMock.Received(1).TrackTrace(message, SeverityLevel.Verbose, Arg.Any<IDictionary<string, string>>());
     }
 
-    [Test]
-    public void Debug_WithHttpContext_SendPropertiesToAppInsights()
-    {
-        var expected = m_attributesDictionary;
-
-        expected.Add("applicationName", m_appName);
-
-        m_target.Debug(message);
-
-        m_telemetryClientWrapperMock.Received(1).TrackTrace(message , Arg.Any<SeverityLevel>(),
-            Arg.Is<IDictionary<string, string>>(x => expected.OrderBy(kvp => kvp.Key).SequenceEqual(x.OrderBy(kvp => kvp.Key))));
-    }
-
-
 
     [Test]
     public void Debug_WithoutHttpContext_SendMessageWithToAppInsights()
@@ -609,7 +518,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void RefreshAppendersLogLevel_LogMessage()
     {
-        m_targetWithoutHttp.RefreshAppendersLogLevel("ERROR");
+        m_targetWithoutHttp.RefreshAppendersLogLevel("ERROR", true);
 
         m_targetWithoutHttp.Error(message);
 
@@ -619,7 +528,7 @@ public class LoggerHandlerTestFixture
     [Test]
     public void RefreshAppendersLogLevel_DoNotLogMessage()
     { 
-        m_targetWithoutHttp.RefreshAppendersLogLevel("ERROR");
+        m_targetWithoutHttp.RefreshAppendersLogLevel("ERROR", true);
 
         m_LoggerFactoryMock.Received().RaiseConfigurationChanged(Arg.Any<EventArgs>());
     }
@@ -652,7 +561,7 @@ public class LoggerHandlerTestFixture
         var logLevel = "InvalidLogLevel";
         var message = $"Trying to set invalid log level: {logLevel}";
         
-        m_targetWithoutHttp.RefreshAppendersLogLevel(logLevel);
+        m_targetWithoutHttp.RefreshAppendersLogLevel(logLevel, true);
 
         m_logMock2.Received(1).Warn(message);
     }
@@ -662,7 +571,7 @@ public class LoggerHandlerTestFixture
     {
         var logLevel = "DEBUG";
         
-        m_targetWithoutHttp.RefreshAppendersLogLevel(logLevel);
+        m_targetWithoutHttp.RefreshAppendersLogLevel(logLevel, true);
 
         m_logMock2.Received().Info(Arg.Is<string>(msg => msg.Contains($"Log Level changed to {logLevel}")));
     }

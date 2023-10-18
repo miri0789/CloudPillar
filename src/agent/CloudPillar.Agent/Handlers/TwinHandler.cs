@@ -219,6 +219,20 @@ public class TwinHandler : ITwinHandler
         }
     }
 
+    public async Task UpdateDeviceSecretKeyAsync(string secretKey)
+    {
+        try
+        {
+            var deviceSecretKey = nameof(TwinReported.SecretKey);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey);
+            _logger.Info($"UpdateDeviceSecretKeyAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceSecretKeyAsync failed: {ex.Message}");
+        }
+    }
+
     public async Task InitReportDeviceParamsAsync()
     {
         try
