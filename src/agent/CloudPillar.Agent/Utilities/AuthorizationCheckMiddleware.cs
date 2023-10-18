@@ -83,8 +83,7 @@ public class AuthorizationCheckMiddleware
         }
 
         var newUrl = $"https://localhost:{Constants.HTTPS_DEFAULT_PORT}{context.Request.Path}{context.Request.QueryString}";
-        context.Response.StatusCode = StatusCodes.Status307TemporaryRedirect;
-        context.Response.Headers["Location"] = newUrl;
+        context.Response.Redirect(newUrl, false, true);
     }
 
     private async Task UnauthorizedResponseAsync(HttpContext context, string error)
