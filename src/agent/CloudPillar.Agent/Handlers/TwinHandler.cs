@@ -21,6 +21,7 @@ public class TwinHandler : ITwinHandler
     private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
+    private readonly IStrictModeHandler _strictModeHandler;
     private readonly ILoggerHandler _logger;
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -29,6 +30,7 @@ public class TwinHandler : ITwinHandler
                        ITwinActionsHandler twinActionsHandler,
                        ILoggerHandler loggerHandler,
                        IRuntimeInformationWrapper runtimeInformationWrapper,
+                       IStrictModeHandler strictModeHandler,
                        IFileStreamerWrapper fileStreamerWrapper)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
@@ -37,6 +39,7 @@ public class TwinHandler : ITwinHandler
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _runtimeInformationWrapper = runtimeInformationWrapper ?? throw new ArgumentNullException(nameof(runtimeInformationWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
+        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _supportedShells = GetSupportedShells();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -80,16 +83,23 @@ public class TwinHandler : ITwinHandler
                 switch (action.TwinAction.Action)
                 {
                     case TwinActionType.SingularDownload:
+                        var singularDownload = (DownloadAction)action.TwinAction;
+                        _strictModeHandler.CheckRestrictedZones(TwinActionType.SingularDownload, singularDownload.DestinationPath);
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
                     case TwinActionType.SingularUpload:
                         _logger.Info("Start SingularUpload");
+                        var singularUpload = (UploadAction)action.TwinAction;
+                        _strictModeHandler.CheckRestrictedZones(TwinActionType.SingularUpload, singularUpload.FileName);
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
 
                         break;
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
+                        var periodicUpload = (UploadAction)action.TwinAction;
+                        _strictModeHandler.CheckRestrictedZones(TwinActionType.SingularUpload, periodicUpload.FileName);
+
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         break;
 

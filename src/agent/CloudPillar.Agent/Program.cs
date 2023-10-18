@@ -52,7 +52,6 @@ builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploa
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
-builder.Services.AddScoped<IGitIgnoreCheckerHandler, GitIgnoreCheckerHandler>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
@@ -78,7 +77,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseMiddleware<AuthorizationCheckMiddleware>();
+// app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
