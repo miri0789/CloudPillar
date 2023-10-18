@@ -6,9 +6,11 @@ namespace CloudPillar.Agent.Handlers;
 
 public class StrictModeHandler : IStrictModeHandler
 {
-    private readonly AppSettings _appSettings;
     public const string AUTHENTICATION_SAS = "SAS";
     public const string AUTHENTICATION_X509 = "X509";
+    public const string UPLOAD_ACTION = "Upload";
+    public const string DOWNLOAD_ACTION = "Download";
+    private readonly AppSettings _appSettings;
 
     public StrictModeHandler(IOptions<AppSettings> appSettings)
     {
@@ -31,22 +33,22 @@ public class StrictModeHandler : IStrictModeHandler
     public void CheckRestrictedZones(TwinActionType actionType, string fileName)
     {
         var verbatimFileName = @$"{fileName.Replace("\\", "/")}";
-
-        KeyValuePair<string, Restrictions> fileRestrictions = GetRestrinctionsByZone(fileName);
-        List<string> allowPatterns = fileRestrictions.Value.AllowPatterns;
-        foreach (var pattern in allowPatterns)
-        {
-            if (!string.IsNullOrWhiteSpace(pattern) && !pattern.StartsWith("#"))
-            {
-                var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
-                var isMatch = IsMatch(verbatimFileName, regexPattern);
-                if (isMatch)
-                {
-                    return;
-                }
-            }
-            throw new Exception("Denied by the lack of local allowance");
-        }
+        var list = _appSettings.FilesRestrictions;
+        // KeyValuePair<string, FileRestrictionDetails> fileRestrictions = GetRestrinctionsByZone(verbatimFileName);
+        // List<string> allowPatterns = fileRestrictions.Value.AllowPatterns;
+        // foreach (var pattern in allowPatterns)
+        // {
+        //     if (!string.IsNullOrWhiteSpace(pattern) && !pattern.StartsWith("#"))
+        //     {
+        //         var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
+        //         var isMatch = IsMatch(verbatimFileName, regexPattern);
+        //         if (isMatch)
+        //         {
+        //             return;
+        //         }
+        //     }
+        //     throw new Exception("Denied by the lack of local allowance");
+        // }
     }
 
     public bool IsMatch(string filePath, Regex pattern)
@@ -69,9 +71,20 @@ public class StrictModeHandler : IStrictModeHandler
 
         return new Regex(regexPattern, RegexOptions.IgnoreCase);
     }
-
-    private KeyValuePair<string, Restrictions> GetRestrinctionsByZone(string fileName)
-    {
-        return _appSettings.filesRestrictions.Restrictions.FirstOrDefault(x => fileName.Contains(x.Value.Root));
-    }
+    // private Dictionary<string, FileRestrictionDetails> GetRestrinctionsByAction(TwinActionType actionType)
+    // {
+    // switch (actionType)
+    // {
+    //     case TwinActionType.SingularDownload:
+    //         return (Dictionary<string, FileRestrictionDetails>)_appSettings.FilesRestrictions.Values.Where(x => x.Type == DOWNLOAD_ACTION);
+    //     case TwinActionType.SingularUpload:
+    //     case TwinActionType.PeriodicUpload:
+    //         return (Dictionary<string, FileRestrictionDetails>)_appSettings.FilesRestrictions.Values.Where(x => x.Type == UPLOAD_ACTION);
+    //     default: return _appSettings.FilesRestrictions;
+    // }
+    // }
+    // private KeyValuePair<string, FileRestrictionDetails> GetRestrinctionsByZone(string fileName)
+    // {
+    //     return _appSettings.FilesRestrictions.FirstOrDefault(x => fileName.Contains(x.Value.Root));
+    // }
 }
