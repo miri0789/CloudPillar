@@ -11,10 +11,9 @@ using Shared.Entities.Twin;
 using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
-const string CONFIG_PORT = "Port";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
-var port = builder.Configuration.GetValue(CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
-var sslPort = builder.Configuration.GetValue(CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
+var sslPort = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
 var sslUrl = $"https://localhost:{sslPort}";
 
