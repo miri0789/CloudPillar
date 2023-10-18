@@ -63,7 +63,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                     _logger.Error("Registration status did not assign a hub.");
                     return;
                 }
-                await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, primaryKey, cancellationToken);
+                await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
             }
         }
     }
@@ -83,14 +83,14 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         }
     }
 
-    private static string ComputeDerivedSymmetricKey(string enrollmentKey, string registrationId)
+    private static string ComputeDerivedSymmetricKey(string primaryKey, string registrationId)
     {
-        if (string.IsNullOrWhiteSpace(enrollmentKey))
+        if (string.IsNullOrWhiteSpace(primaryKey))
         {
-            return enrollmentKey;
+            return primaryKey;
         }
 
-        using var hmac = new HMACSHA256(Convert.FromBase64String(enrollmentKey));
+        using var hmac = new HMACSHA256(Convert.FromBase64String(primaryKey));
         return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registrationId)));
     }
 }
