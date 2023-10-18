@@ -12,8 +12,8 @@ parameters:
   - stg
   - prd 
 - name: isCD
-  type: boolean
-  default: false
+  type: boolean  
+  value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
 - name: services
   displayName: Select services to deploy
   type: object
