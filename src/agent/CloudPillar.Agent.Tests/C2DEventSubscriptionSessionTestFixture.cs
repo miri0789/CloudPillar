@@ -20,7 +20,7 @@ public class C2DEventSubscriptionSessionTestFixture
     private IC2DEventSubscriptionSession _target;
     private const string MESSAGE_TYPE_PROP = "MessageType";
     private DownloadBlobChunkMessage _downloadBlobChunkMessage = new DownloadBlobChunkMessage() { MessageType = C2DMessageType.DownloadChunk };
-
+    private RequestDeviceCertificateMessage _requestDeviceCertificateMessage = new RequestDeviceCertificateMessage() { MessageType = C2DMessageType.RequestDeviceCertificate };
 
     [SetUp]
     public void Setup()
@@ -68,6 +68,15 @@ public class C2DEventSubscriptionSessionTestFixture
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
 
         _twinActionsHandler.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task ReceiveC2DMessagesAsync_ValidRequestDeviceCertificateMessage_CallDownloadHandler()
+    {
+        _messageSubscriberMock
+     .Setup(ms => ms.HandleRequestDeviceCertificateAsync(_requestDeviceCertificateMessage, GetCancellationToken()));
+        await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
+        _messageSubscriberMock.Verify(ms => ms.HandleRequestDeviceCertificateAsync(_requestDeviceCertificateMessage, GetCancellationToken()), Times.Once);
     }
 
     [Test]
