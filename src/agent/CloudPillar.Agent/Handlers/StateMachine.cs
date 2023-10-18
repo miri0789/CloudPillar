@@ -25,6 +25,7 @@ namespace CloudPillar.Agent.Handlers
         public async Task InitStateMachine()
         {
             _currentState = await _twinHandler.GetDeviceStateAsync() ?? DeviceStateType.Uninitsalized;
+            _logger.Info($"init device state: {_currentState.ToString()}");
             await HandleStateAction();
         }
 

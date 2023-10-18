@@ -6,6 +6,8 @@ namespace CloudPillar.Agent.Handlers
     public interface IStateMachine
     {
         Task SetState(DeviceStateType state);
+
+        Task InitStateMachine();
     }
 
 }
