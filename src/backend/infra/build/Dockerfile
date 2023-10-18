@@ -30,6 +30,7 @@ ENV DOTNET_RUNNING_IN_CONTAINER=true \
       ASPNETCORE_URLS=http://+:8080    
 
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+RUN apk add --no-cache icu-libs
 COPY --from=publish /app/publish .
 ARG DLL
 ENV DLL_NAME=${DLL}.dll
