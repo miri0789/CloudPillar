@@ -66,7 +66,7 @@ public class BlobService : IBlobService
             }
 
             var c2dMessage = _messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
-            await SendMessage(c2dMessage, deviceId);            
+            await SendMessage(c2dMessage, deviceId);
         }
     }
 
