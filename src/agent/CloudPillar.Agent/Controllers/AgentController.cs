@@ -89,10 +89,6 @@ public class AgentController : ControllerBase
                     return BadRequest("Provisioning failed");
                 }
             }
-            else
-            {
-                await _stateMachine.SetState(DeviceStateType.Ready);
-            }
 
 
             return (await _twinHandler.GetTwinJsonAsync())?.ToJson();
