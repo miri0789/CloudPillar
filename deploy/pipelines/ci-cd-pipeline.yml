@@ -106,7 +106,7 @@ stages:
           arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
             
       - script: |
-          SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
+          SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
           echo "$SCAN_RESULT" 
           if [[ $SCAN_RESULT == *"CRITICAL"* && "$SCAN_RESULT" != *"CRITICAL: 0"* ]]; then
             echo "Critical vulnerabilities found. Failing the pipeline."
