@@ -18,11 +18,11 @@ public class StrictModeHandler : IStrictModeHandler
 
         if (!_appSettings.PermanentAuthentucationMethods.Equals(AUTHENTICATION_X509))
         {
-            throw new InvalidOperationException($"PermanentAuthentucationMethods value in appSettings.json must be X509, The value {_appSettings.PermanentAuthentucationMethods} is not valid");
+            throw new InvalidOperationException($"PermanentAuthentucationMethods value must be X509, The value {_appSettings.PermanentAuthentucationMethods} is not valid");
         }
         if (!_appSettings.ProvisionalAuthentucationMethods.Equals(AUTHENTICATION_SAS))
         {
-            throw new InvalidOperationException($"ProvisionalAuthentucationMethods value in appSettings.json must be SAS, The value {_appSettings.ProvisionalAuthentucationMethods} is not valid");
+            throw new InvalidOperationException($"ProvisionalAuthentucationMethods value must be SAS, The value {_appSettings.ProvisionalAuthentucationMethods} is not valid");
         }
     }
 }
