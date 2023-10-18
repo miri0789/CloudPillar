@@ -9,6 +9,7 @@ using Newtonsoft.Json.Serialization;
 using Shared.Logger;
 using Newtonsoft.Json.Converters;
 using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -46,7 +47,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var twin = await GetTwinJsonAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             string desiredJson = twin.Properties.Desired.ToJson();
@@ -203,6 +204,20 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
         }
     }
+    public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {            
+            var twin = await GetTwinJsonAsync(cancellationToken);
+            var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reprted.DeviceState;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetDeviceStateAsync failed: {ex.Message}");
+            return null;
+        }
+    }
 
     public async Task InitReportDeviceParamsAsync()
     {
@@ -220,16 +235,12 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
+    public async Task<Twin> GetTwinJsonAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            if (twin != null)
-            {
-                return twin.ToJson();
-            }
-            return null;
+            return twin;
         }
         catch (Exception ex)
         {

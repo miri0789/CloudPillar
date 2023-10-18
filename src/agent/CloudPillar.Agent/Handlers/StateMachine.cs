@@ -20,21 +20,31 @@ namespace CloudPillar.Agent.Handlers
             _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
             _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
 
+        public async Task InitStateMachine()
+        {
+            _currentState = await _twinHandler.GetDeviceStateAsync() ?? DeviceStateType.Uninitsalized;
+            await HandleStateAction();
         }
 
         public async Task SetState(DeviceStateType state)
         {
             _currentState = state;
-            switch (state)
+            await _twinHandler.UpdateDeviceStateAsync(state);
+            await HandleStateAction();
+            _logger.Info($"Set device state: {state.ToString()}");
+
+        }
+
+        private async Task HandleStateAction()
+        {
+            switch (_currentState)
             {
                 case DeviceStateType.Provisioning: await SetProvisioning(); break;
                 case DeviceStateType.Ready: await SetReady(); break;
                 case DeviceStateType.Busy: SetBusy(); break;
             }
-            await _twinHandler.UpdateDeviceStateAsync(state);
-            _logger.Info($"Set device state: {state.ToString()}");
-
         }
 
         public DeviceStateType GetState()
@@ -50,7 +60,7 @@ namespace CloudPillar.Agent.Handlers
 
         private async Task SetReady()
         {
-            _cts.Cancel();
+            _cts?.Cancel();
             _cts = new CancellationTokenSource();
             _c2DEventHandler.CreateSubscribe(_cts.Token, false);
             await _twinHandler.HandleTwinActionsAsync(_cts.Token);
@@ -58,7 +68,7 @@ namespace CloudPillar.Agent.Handlers
 
         private void SetBusy()
         {
-            _cts.Cancel();
+            _cts?.Cancel();
         }
     }
 }

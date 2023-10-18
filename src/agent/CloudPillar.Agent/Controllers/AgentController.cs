@@ -51,14 +51,14 @@ public class AgentController : ControllerBase
     public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
     {
         _twinDesiredPropsValidator.ValidateAndThrow(recipe);
-        return await _twinHandler.GetTwinJsonAsync();
+        return (await _twinHandler.GetTwinJsonAsync())?.ToJson();
     }
 
 
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceState()
     {
-        return await _twinHandler.GetTwinJsonAsync();
+        return (await _twinHandler.GetTwinJsonAsync())?.ToJson();
     }
 
     [AllowAnonymous]
@@ -75,8 +75,8 @@ public class AgentController : ControllerBase
             {
                 try
                 {
-                    _stateMachine.SetState(DeviceStateType.Provisioning);
                     await _symmetricKeyProvisioningHandler.ProvisioningAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
+                    await _stateMachine.SetState(DeviceStateType.Provisioning);
                 }
                 catch (Exception ex)
                 {
@@ -84,9 +84,13 @@ public class AgentController : ControllerBase
                     return BadRequest("Provisioning failed");
                 }
             }
+            else
+            {
+                await _stateMachine.SetState(DeviceStateType.Ready);
+            }
 
 
-            return await _twinHandler.GetTwinJsonAsync();
+            return (await _twinHandler.GetTwinJsonAsync())?.ToJson();
         }
         catch (Exception ex)
         {
@@ -100,21 +104,21 @@ public class AgentController : ControllerBase
     {
         var twin = await _twinHandler.GetTwinJsonAsync();
         _stateMachine.SetState(DeviceStateType.Busy);
-        return twin;
+        return twin?.ToJson();
     }
 
     [HttpPost("SetReady")]
     public async Task<ActionResult<string>> SetReady()
     {
         _stateMachine.SetState(DeviceStateType.Ready);
-        return await _twinHandler.GetTwinJsonAsync();
+        return (await _twinHandler.GetTwinJsonAsync())?.ToJson();
     }
 
     [HttpPut("UpdateReportedProps")]
     public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return await _twinHandler.GetTwinJsonAsync();
+        return (await _twinHandler.GetTwinJsonAsync())?.ToJson();
     }
 }
 
