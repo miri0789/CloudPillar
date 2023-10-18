@@ -57,10 +57,4 @@ public class LoggerHandlerFactory : ILoggerHandlerFactory
     {
         return m_repository.IsAppenderInRoot<ApplicationInsightsAppender>();     
     }
-    
-    public T? FindAppender<T>() where T : IAppender
-    {
-        var appenders = GetAppenders();
-        return appenders.OfType<T>().FirstOrDefault();
-    }
 }

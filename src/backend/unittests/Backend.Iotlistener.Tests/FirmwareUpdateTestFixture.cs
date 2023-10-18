@@ -6,7 +6,6 @@ using Microsoft.Azure.Storage.Blob;
 using Moq;
 using Shared.Entities.Messages;
 using Shared.Logger;
-using Backend.Iotlistener.Models;
 
 namespace Backend.Iotlistener.Tests;
 public class FirmwareUpdateTestFixture
@@ -35,16 +34,16 @@ public class FirmwareUpdateTestFixture
         _mockEnvironmentsWrapper.Setup(f => f.rangeCalculateType).Returns(Models.Enums.RangeCalculateType.Bytes);
         _mockEnvironmentsWrapper.Setup(f => f.rangeBytes).Returns(_rangeSize);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
-        _target = new FirmwareUpdateService(_mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object, _httpRequestorServiceMock.Object);
+        _target = new FirmwareUpdateService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
 
     private void SetMockBlobProperties(long blobSize)
     {
-        var mockBlobProperties = new BlobData();
-        mockBlobProperties.Length = blobSize;
+        var mockBlobProperties = new BlobProperties();
+        typeof(BlobProperties).GetProperty("Length", BindingFlags.Public | BindingFlags.Instance)?.SetValue(mockBlobProperties, blobSize);
 
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest<BlobData>(It.IsAny<string>(), HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.SendRequest<BlobProperties>(It.IsAny<string>(), HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(mockBlobProperties);
     }
 

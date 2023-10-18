@@ -17,6 +17,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IDeviceClientWrapper> _deviceClientMock;
         private Mock<ILoggerHandler> _loggerMock;
         private ID2CMessengerHandler _target;
+
         private const string FILE_NAME = "fileName.txt";
         private const string ACTION_ID = "action123";
         private const long START_POSITION = 10;
@@ -33,6 +34,7 @@ namespace CloudPillar.Agent.Tests
             checkSum = CalculateMdsCheckSumAsync(READ_STREAM).Result;
             _deviceClientMock = new Mock<IDeviceClientWrapper>();
             _loggerMock = new Mock<ILoggerHandler>();
+
             _target = new D2CMessengerHandler(_deviceClientMock.Object, _loggerMock.Object);
 
         }

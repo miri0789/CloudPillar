@@ -7,6 +7,10 @@ using Moq;
 using Shared.Entities.Factories;
 using Shared.Entities.Messages;
 using Shared.Logger;
+using System.Reflection;
+using Shared.Logger;
+using Shared.Entities.Messages;
+using Shared.Entities.Factories;
 
 namespace Backend.BlobStreamer.Tests
 {
