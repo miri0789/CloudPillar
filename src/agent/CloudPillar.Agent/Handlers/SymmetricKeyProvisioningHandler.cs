@@ -64,6 +64,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                     return;
                 }
                 await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
+                
             }
         }
     }
