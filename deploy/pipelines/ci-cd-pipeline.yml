@@ -106,7 +106,6 @@ stages:
           
       - task: Docker@2
         displayName: '${{ item }} Dockerize'
-        dependsOn: DetermineServicePorts
         inputs:
           repository: 'cloudpillar${{ lower(item) }}service'
           containerRegistry: 'CP ${{ parameters.env }} docker registry'
