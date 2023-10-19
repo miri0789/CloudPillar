@@ -15,20 +15,22 @@ ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":
 RUN dotnet nuget locals all --clear
 RUN dotnet restore backend/${DLL}/${DLL}.csproj
 COPY . .
+
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
 WORKDIR /src/backend/${DLL}
 
-RUN apk update && apk add --no-cache icu-libs
+EXPOSE 8080
+ENV DOTNET_RUNNING_IN_CONTAINER=true \
+      ASPNETCORE_URLS=http://+:8080   
+
+RUN apk add --no-cache icu-libs
 
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
-WORKDIR /app
-EXPOSE 8080
-ENV DOTNET_RUNNING_IN_CONTAINER=true \
-      ASPNETCORE_URLS=http://+:8080    
-
+FROM base AS final
+WORKDIR /app 
 
 COPY --from=publish /app/publish .
 ARG DLL
