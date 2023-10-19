@@ -1,11 +1,6 @@
 variables:
 - name: imagetag
   value: 1.0.$(Build.BuildNumber)
-- name: services
-  value:
-    - BlobStreamer
-    - Iotlistener
-    - Keyholder
 parameters:
 - name: env
   displayName: Select Environment to deploy
@@ -19,6 +14,13 @@ parameters:
 - name: isCD
   type: boolean
   default: false
+- name: services
+  displayName: Select services to deploy
+  type: object
+  default:
+  - BlobStreamer
+  - Iotlistener
+  - Keyholder  
 trigger:
   batch: true
   branches:
@@ -84,7 +86,7 @@ stages:
   #       artifactName: 'cloudpillar'
   #       publishLocation: 'Container'  
 
-  - ${{each item in services}}:    
+  - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
       pool:
         vmImage: ubuntu-latest
