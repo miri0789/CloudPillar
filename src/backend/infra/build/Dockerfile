@@ -17,18 +17,18 @@ RUN dotnet restore backend/${DLL}/${DLL}.csproj
 COPY . .
 WORKDIR /src/backend/${DLL}
 
-# Build the application for release
-RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 RUN apk add --no-cache icu-libs
+
+RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 
-# Use the official .NET Core Runtime image as the base image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
 WORKDIR /app
 EXPOSE 8080
 ENV DOTNET_RUNNING_IN_CONTAINER=true \
       ASPNETCORE_URLS=http://+:8080    
+
 
 COPY --from=publish /app/publish .
 ARG DLL
