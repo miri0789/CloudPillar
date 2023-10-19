@@ -1881,12 +1881,68 @@ This detailed breakdown of the messages and the relevant components within the b
 (Content here)
 ### 14.3.2. Integration with Azure IoT Edge
 (Content here)
-### 14.3.3. Substage A. CPE Connected Mode
+### 14.3.3. Preliminary solution: FSE laptop
+# Kubernetes Setups on Windows Laptop
+
+This document outlines two possible setups for running a Kubernetes cluster on a single Windows laptop, using MicroK8s and K3s respectively.
+
+## MicroK8s Setup
+
+::: mermaid
+flowchart TD
+    subgraph Windows Laptop
+        subgraph Linux VM ["Linux VM (Control Plane)"]
+            A1[MicroK8s Master] -->|Controls| A2["MicroK8s Node Agent (Linux VM)"]
+            A3[NVIDIA GPU Operator] -->|Enables GPU Support| A2
+            A4[Multus CNI] -->|Manages Networking| A2
+        end
+        subgraph Workloads Node ["Windows VM (Workloads)"]
+            subgraph Workloads ["Node Workloads"]
+                 B4 --> B5[(Interim Cases Storage)]
+                 B5 --> B6[Native Windows Analyzer case processor]
+                 B6 --> B7[(Python Analysis microservice)]
+                 B7 --> B8[Analyzed data shared storage]
+            end
+            B3[CloudPillar IoT Agent] -->|Controls| Workloads
+            A2 -->|Manages| Workloads
+        end
+        subgraph CARTOSMART VM ["CARTOSMART VM"]
+            B8 -->|Shared Access| C1[CARTOSMART UI/Reports]
+            B3 -->|Controls| C1
+        end
+    end
+    CARTO -->|Export Case| B4[DICOM Listener]
+:::
+
+::: mermaid
+graph TD;
+    subgraph Windows Laptop
+        subgraph Linux VM ["Linux VM (Control Plane)"]
+            A1[K3s Server] -->|Controls| A2["K3s Agent (Linux VM)"]
+            A3[nvidia-container-runtime] -->|Enables GPU Support| A2
+            A4[Flannel CNI] -->|Manages Networking| A2
+        end
+        subgraph Windows VM ["Windows VM (Workloads)"]
+            A2 -->|Manages| B1[Windows Workloads]
+            B3[CloudPillar IoT Agent] -->|Runs| B1
+            B1 -->|Data Flow| B4[DICOM Listener]
+            B4 --> B5[Interim Cases Storage]
+            B5 --> B6[native Windows Analyzer case processor]
+            B6 --> B7[Python Analysis microservice]
+            B7 --> B8[Analyzed data shared storage]
+        end
+        subgraph CARTOSMART VM ["CARTOSMART VM (UI/Reports)"]
+            B8 -->|Shared Access| C1[CARTOSMART UI/Reports]
+            B3 -->|Runs| C1
+        end
+    end
+:::
+### 14.3.4. Substage A. CPE Connected Mode
 ![image.png](.images/cpeconnected.png)
-### 14.3.3. Substage B. CPE Disconnected Mode
+### 14.3.5. Substage B. CPE Disconnected Mode
 ![image.png](.images/cpedisconnected.png)
 ![image.png](.images/cpediconnected-sync.png)
-### 14.3.3. CPE Compatible Hardware
+### 14.3.6. CPE Compatible Hardware
 
 ## 14.4. High-Level Transition Strategy between Stages
 (Content here)
