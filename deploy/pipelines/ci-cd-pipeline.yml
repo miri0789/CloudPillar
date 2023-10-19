@@ -99,6 +99,7 @@ stages:
             *) PORT=8080 ;;
           esac
           echo "Port for ${{ item }}: $PORT"
+        displayName: 'Set service port'
 
       - task: NuGetAuthenticate@1
         displayName: 'Authenticate to NuGet'
