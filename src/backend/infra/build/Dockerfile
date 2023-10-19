@@ -25,12 +25,9 @@ RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
 WORKDIR /app
 ARG PORT
-RUN echo "Setting port to $PORT";
-RUN if [[ -n "$PORT" ]] ; then \
-    RUN echo "11Setting port to $PORT"; \
-    EXPOSE ${PORT}; \
-    ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:${PORT}; \
-fi  
+RUN echo "Setting port to $PORT"
+EXPOSE ${PORT}
+ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:${PORT}  
 
 RUN apk add --no-cache icu-libs
 COPY --from=publish /app/publish .
