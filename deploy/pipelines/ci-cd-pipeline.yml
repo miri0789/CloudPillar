@@ -1,6 +1,11 @@
 variables:
 - name: imagetag
   value: 1.0.$(Build.BuildNumber)
+- name: services
+  value:
+  - BlobStreamer
+  - Iotlistener
+  - Keyholder
 parameters:
 - name: env
   displayName: Select Environment to deploy
@@ -14,13 +19,6 @@ parameters:
 - name: isCD
   type: boolean
   default: false
-- name: services
-  displayName: Select services to deploy
-  type: object
-  default:
-  - BlobStreamer
-  - Iotlistener
-  - Keyholder  
 trigger:
   batch: true
   branches:
@@ -86,16 +84,26 @@ stages:
   #       artifactName: 'cloudpillar'
   #       publishLocation: 'Container'  
 
-  - ${{each item in parameters.services}}:    
+  - ${{each item in services}}:    
     - job: '${{ item }}_CI_Job'
       pool:
         vmImage: ubuntu-latest
       steps:
+        
+      - script: |
+          case "${{ item }}" in
+            "BlobStreamer") PORT=8081 ;;
+            "Keyholder") PORT=8082 ;;
+            *) PORT=8080 ;;
+          esac
+          echo "Port for ${{ item }}: $PORT"
+
       - task: NuGetAuthenticate@1
         displayName: 'Authenticate to NuGet'
           
       - task: Docker@2
         displayName: '${{ item }} Dockerize'
+        dependsOn: DetermineServicePorts
         inputs:
           repository: 'cloudpillar${{ lower(item) }}service'
           containerRegistry: 'CP ${{ parameters.env }} docker registry'
@@ -103,7 +111,7 @@ stages:
           Dockerfile: './src/backend/infra/build/Dockerfile'
           buildContext: src
           tags: '$(imagetag)'
-          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }}'        
+          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }} --build-arg PORT=$PORT'        
             
       - script: |
           SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
