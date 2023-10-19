@@ -17,7 +17,7 @@ RUN dotnet restore backend/${DLL}/${DLL}.csproj
 COPY . .
 WORKDIR /src/backend/${DLL}
 
-RUN apk add --no-cache icu-libs
+RUN apk update && apk add --no-cache icu-libs
 
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
