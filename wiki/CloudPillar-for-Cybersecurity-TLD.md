@@ -1884,7 +1884,7 @@ This detailed breakdown of the messages and the relevant components within the b
 ### 14.3.3. Preliminary solution: FSE laptop
 # Kubernetes Setups on Windows Laptop
 
-This document outlines two possible setups for running a Kubernetes cluster on a single Windows laptop, using MicroK8s and K3s respectively.
+This chapter presents two Kubernetes setups on a Windows laptop using MicroK8s and K3s respectively, fulfilling the requirements of running native Windows container workloads with GPU support.
 
 ## MicroK8s Setup
 
@@ -1902,9 +1902,11 @@ flowchart TD
                  B5 --> B6[Native Windows Analyzer case processor]
                  B6 --> B7[Python Analysis microservice]
                  B7 --> B8[(Analyzed data shared storage)]
+                 B3[CloudPillar IoT Agent]
             end
-            B3[CloudPillar IoT Agent] -->|Controls| Workloads
-            A2 -->|Manages| Workloads
+            A1[MicroK8s Master] -->|Controls| B9["MicroK8s Node Agent (Windows VM)"]
+            B9 -->|Manages| Workloads
+            A4 -->|Manages Networking| B9
         end
         subgraph CARTOSMART VM ["CARTOSMART VM"]
             B8 -->|Shared Access| C1[CARTOSMART UI/Reports]
@@ -1914,29 +1916,50 @@ flowchart TD
     CARTO -->|Export Case| B4[DICOM Listener]
 :::
 
+### Explanations:
+- **Linux VM (Control Plane)**: Hosts the MicroK8s master components, NVIDIA GPU Operator for GPU support, and Multus CNI for networking.
+- **Windows VM (Workloads)**: Hosts the MicroK8s Node Agent, and the listed node workloads along with the CloudPillar IoT Agent. Multus CNI also manages networking on this node.
+- **CARTOSMART VM**: Hosts the CARTOSMART UI/Reports, which interacts with the analyzed data shared storage and is controlled by the CloudPillar IoT Agent.
+
+## K3s Setup
+
 ::: mermaid
-graph TD;
+flowchart TD
     subgraph Windows Laptop
         subgraph Linux VM ["Linux VM (Control Plane)"]
             A1[K3s Server] -->|Controls| A2["K3s Agent (Linux VM)"]
-            A3[nvidia-container-runtime] -->|Enables GPU Support| A2
+            A3[NVIDIA Container Runtime] -->|Enables GPU Support| A2
             A4[Flannel CNI] -->|Manages Networking| A2
         end
-        subgraph Windows VM ["Windows VM (Workloads)"]
-            A2 -->|Manages| B1[Windows Workloads]
-            B3[CloudPillar IoT Agent] -->|Runs| B1
-            B1 -->|Data Flow| B4[DICOM Listener]
-            B4 --> B5[Interim Cases Storage]
-            B5 --> B6[native Windows Analyzer case processor]
-            B6 --> B7[Python Analysis microservice]
-            B7 --> B8[Analyzed data shared storage]
+        subgraph Workloads Node ["Windows VM (Workloads)"]
+            subgraph Workloads ["Node Workloads"]
+                 B4 --> B5[(Interim Cases Storage)]
+                 B5 --> B6[Native Windows Analyzer case processor]
+                 B6 --> B7[Python Analysis microservice]
+                 B7 --> B8[(Analyzed data shared storage)]
+                 B3[CloudPillar IoT Agent]
+            end
+            A1[K3s Server] -->|Controls| B9["K3s Agent (Windows VM)"]
+            B9 -->|Manages| Workloads
+            A4 -->|Manages Networking| B9
         end
-        subgraph CARTOSMART VM ["CARTOSMART VM (UI/Reports)"]
+        subgraph CARTOSMART VM ["CARTOSMART VM"]
             B8 -->|Shared Access| C1[CARTOSMART UI/Reports]
-            B3 -->|Runs| C1
+            B3 -->|Controls| C1
         end
     end
+    CARTO -->|Export Case| B4[DICOM Listener]
 :::
+
+### Explanations:
+- **Linux VM (Control Plane)**: Hosts the K3s server components, NVIDIA Container Runtime for GPU support, and Flannel CNI for networking.
+- **Windows VM (Workloads)**: Hosts the K3s Agent, and the listed node workloads along with the CloudPillar IoT Agent. Flannel CNI also manages networking on this node.
+- **CARTOSMART VM**: Hosts the CARTOSMART UI/Reports, which interacts with the analyzed data shared storage and is controlled by the CloudPillar IoT Agent.
+
+## Notes
+- In both setups, each VM node has its own instance of the networking plugin to manage the pod network on that node.
+- The data flow from Windows Workloads to CARTOSMART UI/Reports is represented with a simple arrow, indicating a data pipeline or networking setup facilitating this flow.
+
 ### 14.3.4. Substage A. CPE Connected Mode
 ![image.png](.images/cpeconnected.png)
 ### 14.3.5. Substage B. CPE Disconnected Mode
