@@ -19,9 +19,13 @@ public class StrictModeHandler : IStrictModeHandler
         _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    public void CheckAuthentucationMethodValue()
+
+    public void ValidateAuthenticationSettings()
     {
-        if (_appSettings.StrictMode == false) { return; }
+        if (!_appSettings.StrictMode)
+        {
+            return;
+        }
 
         if (!_appSettings.PermanentAuthentucationMethods.Equals(AUTHENTICATION_X509))
         {
@@ -33,7 +37,21 @@ public class StrictModeHandler : IStrictModeHandler
         }
     }
 
-    public void CheckRestrictedZones(TwinActionType actionType, string fileName)
+    public string ReplaceRootById(string fileName)
+    {
+        var pattern = @"\${(.*?)}";
+
+        string replacedString = Regex.Replace(fileName, pattern, match =>
+        {
+            string key = match.Groups[1].Value;
+            ArgumentNullException.ThrowIfNullOrEmpty(key);
+
+            return GetRootById(key);
+        });
+        return replacedString;
+    }
+
+    public async void CheckFileAccessPermissions(TwinActionType actionType, string fileName)
     {
         if (!_appSettings.StrictMode)
         {
@@ -42,7 +60,15 @@ public class StrictModeHandler : IStrictModeHandler
 
         string verbatimFileName = @$"{fileName.Replace("\\", "/")}";
 
-        List<string> allowPatterns = GetAllowRestrictions(actionType, verbatimFileName);
+        List<FileRestrictionDetails> actionRestrictions = await GetRestrictionsByActionTypeAsync(actionType);
+        FileRestrictionDetails zoneRestrictions = await GetRestrinctionsByZoneAsync(fileName, actionRestrictions);
+        if (zoneRestrictions == null)
+        {
+            return;
+        }
+        HandleSizeStrictMode(zoneRestrictions, fileName);
+
+        List<string> allowPatterns = await GetAllowRestrictionsAsync(zoneRestrictions);
         if (allowPatterns.Count == 0)
         {
             return;
@@ -85,7 +111,7 @@ public class StrictModeHandler : IStrictModeHandler
         return new Regex(regexPattern, RegexOptions.IgnoreCase);
     }
 
-    private List<FileRestrictionDetails> GetRestrinctionsByAction(TwinActionType actionType)
+    private async Task<List<FileRestrictionDetails>> GetRestrictionsByActionTypeAsync(TwinActionType actionType)
     {
         _logger.Info($"Get restrictions for {actionType} action");
 
@@ -100,16 +126,29 @@ public class StrictModeHandler : IStrictModeHandler
         }
     }
 
-    private FileRestrictionDetails GetRestrinctionsByZone(List<FileRestrictionDetails> restrictions, string fileName)
+    private async Task<FileRestrictionDetails> GetRestrinctionsByZoneAsync(string fileName, List<FileRestrictionDetails> restrictions)
     {
+        ArgumentNullException.ThrowIfNull(restrictions);
         return restrictions.FirstOrDefault(x => fileName.Contains(x.Root));
     }
 
-    private List<string> GetAllowRestrictions(TwinActionType actionType, string fileName)
+    private FileRestrictionDetails GetRestrinctionsById(string id)
+    {
+        return _appSettings.FilesRestrictions.FirstOrDefault(x => x.Id.Equals(id));
+    }
+
+    private string GetRootById(string id)
+    {
+        FileRestrictionDetails restriction = GetRestrinctionsById(id);
+
+        ArgumentNullException.ThrowIfNull(restriction);
+        ArgumentNullException.ThrowIfNullOrEmpty(restriction.Root);
+        return restriction.Root;
+    }
+
+    private async Task<List<string>> GetAllowRestrictionsAsync(FileRestrictionDetails zoneRestrictions)
     {
         List<string> allowPatterns = new List<string>();
-        List<FileRestrictionDetails> actionRestrictions = GetRestrinctionsByAction(actionType);
-        FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(actionRestrictions, fileName);
         if (zoneRestrictions != null)
         {
             allowPatterns = zoneRestrictions.AllowPatterns;
@@ -122,9 +161,23 @@ public class StrictModeHandler : IStrictModeHandler
         return allowPatterns;
     }
 
+    private void HandleSizeStrictMode(FileRestrictionDetails zoneRestrictions, string fileName)
+    {
+        if (zoneRestrictions.Type == UPLOAD_ACTION || zoneRestrictions.Size == 0)
+        {
+            return;
+        }
+        long size = new FileInfo(fileName).Length;
+        if (size > zoneRestrictions.Size)
+        {
+            HandleError("The file size is larger than allowed");
+        }
+    }
+
     private void HandleError(string message)
     {
         _logger.Error(message);
         throw new Exception(message);
     }
+
 }

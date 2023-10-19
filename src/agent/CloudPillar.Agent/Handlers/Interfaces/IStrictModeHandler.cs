@@ -4,6 +4,7 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface IStrictModeHandler
 {
-    void CheckAuthentucationMethodValue();
-    void CheckRestrictedZones(TwinActionType actionType, string fileName);
+    void ValidateAuthenticationSettings();
+    void CheckFileAccessPermissions(TwinActionType actionType, string fileName);
+    string ReplaceRootById(string fileName);
 }

@@ -84,7 +84,7 @@ app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.MapControllers();
 
 var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
-strictModeHandler.CheckAuthentucationMethodValue();
+strictModeHandler.ValidateAuthenticationSettings();
 
 
 app.Run();

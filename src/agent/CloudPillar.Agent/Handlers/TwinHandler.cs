@@ -80,34 +80,22 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
+                HandleStrictModeAndReplacmentPath(action);
+
                 switch (action.TwinAction.Action)
                 {
                     case TwinActionType.SingularDownload:
-                        var singularDownload = (DownloadAction)action.TwinAction;
-                        _strictModeHandler.CheckRestrictedZones(TwinActionType.SingularDownload, singularDownload.DestinationPath);
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
-                    case TwinActionType.SingularUpload:
-                        _logger.Info("Start SingularUpload");
-                        var singularUpload = (UploadAction)action.TwinAction;
-                        _strictModeHandler.CheckRestrictedZones(TwinActionType.SingularUpload, singularUpload.FileName);
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
 
+                    case TwinActionType.SingularUpload:
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         break;
+
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
-                        var periodicUpload = (UploadAction)action.TwinAction;
-                        _strictModeHandler.CheckRestrictedZones(TwinActionType.SingularUpload, periodicUpload.FileName);
-
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
-                        break;
-
-                    default:
-                        action.TwinReport.Status = StatusType.Failed;
-                        action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
-                        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
-                        _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
                 //TODO : queue - FIFO
@@ -119,6 +107,29 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
     }
+    private void HandleStrictModeAndReplacmentPath(ActionToReport action)
+    {
+        string fileName = GetFileNameByAction(action);
+        fileName = _strictModeHandler.ReplaceRootById(fileName);
+        _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
+    }
+
+    private string GetFileNameByAction(ActionToReport action)
+    {
+        string fileName = string.Empty;
+        switch (action.TwinAction.Action)
+        {
+            case TwinActionType.SingularDownload:
+                fileName = Path.Combine(((DownloadAction)action.TwinAction).DestinationPath, ((DownloadAction)action.TwinAction).Source);
+                break;
+            case TwinActionType.SingularUpload:
+            case TwinActionType.PeriodicUpload:
+                fileName = ((UploadAction)action.TwinAction).FileName;
+                break;
+        }
+        return fileName;
+    }
+
     private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
     {
         try
