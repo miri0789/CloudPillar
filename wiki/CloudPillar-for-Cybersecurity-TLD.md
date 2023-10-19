@@ -1900,8 +1900,8 @@ flowchart TD
             subgraph Workloads ["Node Workloads"]
                  B4 --> B5[(Interim Cases Storage)]
                  B5 --> B6[Native Windows Analyzer case processor]
-                 B6 --> B7[(Python Analysis microservice)]
-                 B7 --> B8[Analyzed data shared storage]
+                 B6 --> B7[Python Analysis microservice]
+                 B7 --> B8[(Analyzed data shared storage)]
             end
             B3[CloudPillar IoT Agent] -->|Controls| Workloads
             A2 -->|Manages| Workloads
