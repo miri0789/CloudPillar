@@ -19,6 +19,7 @@ WORKDIR /src/backend/${DLL}
 
 # Build the application for release
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
+RUN apk add --no-cache icu-libs
 FROM build AS publish
 RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 
@@ -29,7 +30,6 @@ EXPOSE 8080
 ENV DOTNET_RUNNING_IN_CONTAINER=true \
       ASPNETCORE_URLS=http://+:8080    
 
-RUN apk add --no-cache icu-libs
 COPY --from=publish /app/publish .
 ARG DLL
 ENV DLL_NAME=${DLL}.dll
