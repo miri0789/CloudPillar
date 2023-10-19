@@ -58,7 +58,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             var error = "The FriendlyName is not in the expected format.";
             _logger.Error(error);
-            throw new ArgumentException(error);
+            return false;
         }
 
         var deviceId = parts[0];
@@ -69,14 +69,14 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             var error = "The deviceId or the SecretKey are incorrect.";
             _logger.Error(error);
-            throw new UnauthorizedAccessException();
+            return false;
         }
 
         if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(iotHubHostName))
         {
             var error = "The deviceId or the iotHubHostName cant be null.";
             _logger.Error(error);
-            throw new ArgumentException(error);
+             return false;
         }
 
         iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;

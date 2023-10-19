@@ -8,4 +8,5 @@ public interface IEnvironmentsWrapper
     string dpsScopeId { get; }
     string globalDeviceEndpoint { get; }
     int certificateExpiredDays { get; }
+    string groupEnrollmentPrimaryKey { get; }
 }

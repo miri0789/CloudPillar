@@ -26,6 +26,24 @@ public class AuthorizationCheckMiddleware
     {
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
         Endpoint endpoint = context.GetEndpoint();
+
+        IHeaderDictionary requestHeaders = context.Request.Headers;
+        var xDeviceId = string.Empty;
+        var xSecretKey = string.Empty;
+        if (requestHeaders.ContainsKey(AuthorizationConstants.X_DEVICE_ID))
+        {
+            xDeviceId = requestHeaders[AuthorizationConstants.X_DEVICE_ID];
+        }
+        if (requestHeaders.ContainsKey(AuthorizationConstants.X_SECRET_KEY))
+        {
+            xSecretKey = requestHeaders[AuthorizationConstants.X_SECRET_KEY];
+        }
+        if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
+        {
+            var error = "No require header was provided";
+            await UnauthorizedResponseAsync(context, error);
+            return;
+        }
         if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
         {
             // The action has [AllowAnonymous], so allow the request to proceed
