@@ -3,9 +3,9 @@ variables:
   value: 1.0.$(Build.BuildNumber)
 - name: services
   value:
-  - BlobStreamer
-  - Iotlistener
-  - Keyholder
+    - BlobStreamer
+    - Iotlistener
+    - Keyholder
 parameters:
 - name: env
   displayName: Select Environment to deploy
