@@ -49,7 +49,7 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("AddRecipe")]
-    public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
+    public async Task<ActionResult<string>> AddRecipe([FromBody]TwinDesired recipe)
     {
         _twinDesiredPropsValidator.ValidateAndThrow(recipe);
         return await _twinHandler.GetTwinJsonAsync();
@@ -64,19 +64,24 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(string registrationId, string primaryKey, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<string>> InitiateProvisioning(CancellationToken cancellationToken = default)
     {
         try
         {
             var dpsScopeId = _environmentsWrapper.dpsScopeId;
             var globalDeviceEndpoint = _environmentsWrapper.globalDeviceEndpoint;
+                        
 
             var isAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationAsync(cancellationToken);
             if (!isAuthorized)
             {
                 try
                 {
-                    await _symmetricKeyProvisioningHandler.ProvisioningAsync(registrationId, primaryKey, dpsScopeId, globalDeviceEndpoint, cancellationToken);
+                    //don't need to explicitly check if the header exists; it's already verified in the middleware.
+                    var deviceId = HttpContext.Request.Headers[AuthorizationConstants.X_DEVICE_ID].ToString();
+                    var secretKey = HttpContext.Request.Headers[AuthorizationConstants.X_SECRET_KEY].ToString();
+                    await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
+                    await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey);
                 }
                 catch (Exception ex)
                 {
@@ -109,7 +114,7 @@ public class AgentController : ControllerBase
     }
 
     [HttpPut("UpdateReportedProps")]
-    public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedProps([FromBody]UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
         return await _twinHandler.GetTwinJsonAsync();

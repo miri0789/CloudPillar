@@ -62,7 +62,7 @@ public class LoggerHandler : ILoggerHandler
         _applicationName = applicationName;
 
 
-        _appInsightsAppender = FindAppender<ApplicationInsightsAppender>() as ApplicationInsightsAppender;
+        _appInsightsAppender = _loggerHandlerFactory.FindAppender<ApplicationInsightsAppender>() as ApplicationInsightsAppender;
 
         if (_appInsightsAppender != null && _loggerHandlerFactory.IsApplicationInsightsAppenderInRoot())
         {
@@ -94,7 +94,7 @@ public class LoggerHandler : ILoggerHandler
 
 
         // Add Console Appender if not configured
-        if (FindAppender<ConsoleAppender>() == null)
+        if (_loggerHandlerFactory.FindAppender<ConsoleAppender>() == null)
         {
             var hierarchy = ((log4net.Core.ILoggerWrapper)_logger).Logger.Repository as log4net.Repository.Hierarchy.Hierarchy;
             if (hierarchy != null)
@@ -119,12 +119,6 @@ public class LoggerHandler : ILoggerHandler
         appender.ActivateOptions();
 
         return appender;
-    }
-
-    public T? FindAppender<T>() where T : IAppender
-    {
-        var appenders = _loggerHandlerFactory.GetAppenders();
-        return appenders.OfType<T>().FirstOrDefault();
     }
 
     public void Error(string message, params object[] args)
