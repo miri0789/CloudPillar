@@ -14,17 +14,16 @@ public class AuthorizationCheckMiddleware
 
     private ILoggerHandler _logger;
 
-    private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
-    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
+    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
-        _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context,IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
     {
+        ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
         Endpoint endpoint = context.GetEndpoint();
         if (IsActionMethod(endpoint))
@@ -55,7 +54,7 @@ public class AuthorizationCheckMiddleware
             }
 
 
-            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(xDeviceId, xSecretKey, cancellationToken);
+            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationAsync(xDeviceId, xSecretKey, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
