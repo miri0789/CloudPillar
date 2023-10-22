@@ -91,7 +91,8 @@ stages:
       pool:
         vmImage: ubuntu-latest
       steps:
-        
+      - script: echo Source branch is $(Build.SourceBranch)
+ 
       - script: |
           case "${{ item }}" in
             "BlobStreamer") PORT=8081 ;;
