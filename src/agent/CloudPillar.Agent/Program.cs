@@ -78,7 +78,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
 app.UseHttpsRedirection();
-// app.UseMiddleware<AuthorizationCheckMiddleware>();
+app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
