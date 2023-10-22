@@ -39,11 +39,13 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return filteredCertificate;
     }
 
-    public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate, string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
+    public async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
     {
+        X509Certificate2? userCertificate = GetCertificate();
+
         if (userCertificate == null)
         {
-            _logger.Error($"AuthorizationAsync certificate cant be null");
+            _logger.Error("no certificate found in the store");
             return false;
         }
 
