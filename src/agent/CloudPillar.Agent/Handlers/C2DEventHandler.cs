@@ -15,8 +15,8 @@ public class C2DEventHandler : IC2DEventHandler
      IC2DEventSubscriptionSession c2DEventSubscriptionSession,
      ILoggerHandler logger)
     {
-        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(_deviceClient));
-        _c2DEventSubscriptionSession = c2DEventSubscriptionSession ?? throw new ArgumentNullException(nameof(_c2DEventSubscriptionSession));
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _c2DEventSubscriptionSession = c2DEventSubscriptionSession ?? throw new ArgumentNullException(nameof(c2DEventSubscriptionSession));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
