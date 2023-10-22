@@ -60,11 +60,11 @@ builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
 
-// builder.Services.AddHttpsRedirection(options =>
-// {
-//     options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
-//     options.HttpsPort = sslPort;
-// });
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
+    options.HttpsPort = sslPort;
+});
 
 builder.Services.AddSwaggerGen(c=>{
     c.OperationFilter<SwaggerHeader>();
@@ -85,7 +85,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
