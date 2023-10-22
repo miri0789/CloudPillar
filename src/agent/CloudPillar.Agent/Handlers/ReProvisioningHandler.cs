@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Azure.Devices.Provisioning.Client;
@@ -23,10 +24,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ILoggerHandler _logger;
-
-    private const int KEY_SIZE_IN_BITS = 4096;
-
-    private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
     private const string TEMPORARY_CERTIFICATE_NAME = "temporaryCertificate";
 
     public ReprovisioningHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -114,37 +111,9 @@ public class ReprovisioningHandler : IReprovisioningHandler
         ArgumentNullException.ThrowIfNull(message);
         var data = JsonConvert.DeserializeObject<AuthonticationKeys>(Encoding.Unicode.GetString(message.Data));
         ArgumentNullException.ThrowIfNull(data);
-        var certificate = GenerateCertificate(message, data);
+        var certificate = X509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _environmentsWrapper.certificateExpiredDays);
         InstallTemporaryCertificate(certificate, data.SecretKey);
         await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate);
-    }
-
-
-
-    private X509Certificate2 GenerateCertificate(RequestDeviceCertificateMessage message, AuthonticationKeys data)
-    {
-        using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
-        {
-            var request = new CertificateRequest(
-                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{data.DeviceId}", rsa
-                , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-
-            byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(data.SecretKey);
-            var OneMDKeyExtension = new X509Extension(
-                new Oid(ProvisioningConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
-                oneMDKeyValue, false
-               );
-
-
-            request.CertificateExtensions.Add(OneMDKeyExtension);
-
-            var certificate = request.CreateSelfSigned(
-                DateTimeOffset.Now.AddDays(-1),
-                DateTimeOffset.Now.AddDays(_environmentsWrapper.certificateExpiredDays));
-
-            return certificate;
-
-        }
     }
 
     private void InstallTemporaryCertificate(X509Certificate2 certificate, string secretKey)

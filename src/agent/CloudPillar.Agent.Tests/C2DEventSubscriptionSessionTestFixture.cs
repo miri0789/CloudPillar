@@ -73,10 +73,16 @@ public class C2DEventSubscriptionSessionTestFixture
     [Test]
     public async Task ReceiveC2DMessagesAsync_ValidRequestDeviceCertificateMessage_CallDownloadHandler()
     {
+        var receivedMessage = SetRecivedMessageWithDurationMock(C2DMessageType.RequestDeviceCertificate.ToString());
+
+        _messageFactoryMock
+            .Setup(mf => mf.CreateC2DMessageFromMessage<RequestDeviceCertificateMessage>(It.IsAny<Message>()))
+            .Returns(_requestDeviceCertificateMessage);
+
         _messageSubscriberMock
-     .Setup(ms => ms.HandleRequestDeviceCertificateAsync(_requestDeviceCertificateMessage, GetCancellationToken()));
+     .Setup(ms => ms.HandleRequestDeviceCertificateAsync(_requestDeviceCertificateMessage, CancellationToken.None));
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
-        _messageSubscriberMock.Verify(ms => ms.HandleRequestDeviceCertificateAsync(_requestDeviceCertificateMessage, GetCancellationToken()), Times.Once);
+        _messageSubscriberMock.Verify(ms => ms.HandleRequestDeviceCertificateAsync(_requestDeviceCertificateMessage,  CancellationToken.None), Times.Once);
     }
 
     [Test]
@@ -130,7 +136,7 @@ public class C2DEventSubscriptionSessionTestFixture
     private CancellationToken GetCancellationToken()
     {
         var cts = new CancellationTokenSource();
-        var timeout = TimeSpan.FromMilliseconds(100);
+        var timeout = TimeSpan.FromMilliseconds(10000);
         cts.CancelAfter(timeout);
         return cts.Token;
     }

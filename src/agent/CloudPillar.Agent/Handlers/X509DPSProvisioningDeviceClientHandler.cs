@@ -27,20 +27,16 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     public X509Certificate2? GetCertificate()
     {
-        using (X509Store store = _X509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
+        var certificates = _X509CertificateWrapper.GetCertificates(OpenFlags.ReadOnly);
+        if (certificates == null)
         {
-            store.Open(OpenFlags.ReadOnly);
-            X509Certificate2Collection certificates = store.Certificates;
-            if (certificates == null)
-            {
-                return null;
-            }
-            var filteredCertificate = certificates.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
-               .FirstOrDefault();
-
-            return filteredCertificate;
+            return null;
         }
+        var filteredCertificate = certificates.Cast<X509Certificate2>()
+           .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
+           .FirstOrDefault();
+
+        return filteredCertificate;
     }
 
     public async Task<bool> AuthorizationAsync(X509Certificate2 userCertificate, string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
@@ -76,7 +72,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             var error = "The deviceId or the iotHubHostName cant be null.";
             _logger.Error(error);
-             return false;
+            return false;
         }
 
         iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;

@@ -7,6 +7,7 @@ namespace CloudPillar.Agent.Wrappers;
 public interface IX509CertificateWrapper
 {
     X509Store GetStore(StoreLocation storeLocation);
+    X509Certificate2Collection GetCertificates(OpenFlags openFlags);
     
     SecurityProviderX509Certificate GetSecurityProvider(X509Certificate2 certificate);
 
