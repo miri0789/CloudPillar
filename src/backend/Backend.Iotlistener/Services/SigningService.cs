@@ -23,7 +23,7 @@ public class SigningService : ISigningService
     {
         try
         {
-            string requestUrl = $"{_environmentsWrapper.signingUrl}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
+            string requestUrl = $"{_environmentsWrapper.keyHolderUrl}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
             await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
         }
         catch (Exception ex)

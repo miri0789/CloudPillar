@@ -1,4 +1,4 @@
-﻿namespace Backend.Keyholder.Interfaces;
+﻿namespace Backend.Keyholder.Wrappers.Interfaces;
 public interface IEnvironmentsWrapper
 {
     string kubernetesServiceHost { get; }
@@ -6,5 +6,6 @@ public interface IEnvironmentsWrapper
     string secretName { get; }
     string secretKey { get; }
     string iothubConnectionString { get; }
-
+    string dpsConnectionString { get; }
+    string dpsIdScope { get; }
 }

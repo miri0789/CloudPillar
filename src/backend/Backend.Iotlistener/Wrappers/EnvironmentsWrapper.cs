@@ -6,7 +6,7 @@ namespace Backend.Iotlistener.Wrappers;
 public class EnvironmentsWrapper: IEnvironmentsWrapper
 {
     public static readonly string _blobStreamerUrl = "BlobStreamerUrl";
-    public static readonly string _signingUrl = "SigningUrl";
+    public static readonly string _keyHolderUrl = "KeyHolderUrl";
     public static readonly string _rangeCalculateType = "RangeCalculateType";
     public static readonly string _rangePercent = "RangePercent";
     public static readonly string _rangeBytes = "RangeBytes";
@@ -23,9 +23,9 @@ public class EnvironmentsWrapper: IEnvironmentsWrapper
     {
         get { return GetVariable(_blobStreamerUrl); }
     }
-    public string signingUrl
+    public string keyHolderUrl
     {
-        get { return GetVariable(_signingUrl); }
+        get { return GetVariable(_keyHolderUrl); }
     }
     public int rangePercent
     {

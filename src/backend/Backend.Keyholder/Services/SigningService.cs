@@ -6,6 +6,7 @@ using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json.Linq;
 using Shared.Logger;
+using Backend.Keyholder.Wrappers.Interfaces;
 
 namespace Backend.Keyholder.Services;
 

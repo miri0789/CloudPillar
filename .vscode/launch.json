@@ -120,8 +120,8 @@
             "console": "internalConsole",
             "env": {
                 "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
-               "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
-               "BlobContainerName": "iotcontainer",
+                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
+                "BlobContainerName": "iotcontainer",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
                 "RetryPolicyExponent": "3"
@@ -142,7 +142,7 @@
                 "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "iotcontainer",
                 "BlobStreamerUrl": "http://localhost:5019/",
-                "SigningUrl": "http://localhost:5164",
+                "KeyHolderUrl": "http://localhost:5164/",
                 "MessageTimeoutMinutes": "10",
                 "RangeCalculateType": "percent",
                 "RangePercent": "25",
@@ -165,6 +165,8 @@
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
                 "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
+                "DPSConnectionString": "HostName=DPS-Bracha.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=f3+8+rqrtH0T7nlSuIshUSn2K6rbIb7mUHQwTcztRzg=",
+                "DPSIdScope": "0ne00B07A2A"
             }
         },
         {
@@ -197,9 +199,22 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                "DeviceConnectionString": "HostName=iot-bracha-dev.azure-devices.net;DeviceId=nechama-device;SharedAccessKey=ovieFfX4XSsVsorpq6SuChCzr+XEPQdluRN8HbWLduI="
+                "DpsScopeId": "0ne00B07A2A",
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                "CertificateExpiredDays": "365",
+                "GroupEnrollmentPrimaryKey":"zeuIXU7CbwMS6YfF5+i5Nn71ZGNj/boUA1UuLuYXuZLiqQqWs09ftT63iZQ6iOEmpJEs1F58WFV6EelxY+KvDA=="
             },
             "stopAtEntry": false
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Server/Client",
+            "configurations": [
+                "Cloud Pillar Agent",
+                "Key Holder Service",
+                "Iot Listener Service"
+            ]
         }
     ]
 }

@@ -1,7 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
-using CloudPillar.Agent.Wrappers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Shared.Logger;
 
@@ -11,39 +11,48 @@ public class AuthorizationCheckMiddleware
     private readonly RequestDelegate _requestDelegate;
 
     private ILoggerHandler _logger;
-
-    private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
-
-    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
+    private readonly IConfiguration _configuration;
+    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfiguration configuration)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
-        _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
     {
+        ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
         Endpoint endpoint = context.GetEndpoint();
-        if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
-        {
-            // The action has [AllowAnonymous], so allow the request to proceed
-            await _requestDelegate(context);
-            return;
-        }
         if (IsActionMethod(endpoint))
         {
-
-            X509Certificate2? userCertificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
-
-            if (userCertificate == null)
+            // check the headers for all the actions also for the AllowAnonymous.
+            IHeaderDictionary requestHeaders = context.Request.Headers;
+            var xDeviceId = string.Empty;
+            var xSecretKey = string.Empty;
+            if (requestHeaders.ContainsKey(Constants.X_DEVICE_ID))
             {
-                var error = "no certificate found in the store";
+                xDeviceId = requestHeaders[Constants.X_DEVICE_ID];
+            }
+            if (requestHeaders.ContainsKey(Constants.X_SECRET_KEY))
+            {
+                xSecretKey = requestHeaders[Constants.X_SECRET_KEY];
+            }
+            if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
+            {
+                var error = "No require header was provided";
                 await UnauthorizedResponseAsync(context, error);
                 return;
             }
+            if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+            {
+                // The action has [AllowAnonymous], so allow the request to proceed
+                await _requestDelegate(context);
+                return;
+            }
 
-            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate, cancellationToken);
+
+            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationAsync(xDeviceId, xSecretKey, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
@@ -51,13 +60,25 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await _requestDelegate(context);
+            await NextWithRedirectAsync(context);
         }
         else
         {
+            await NextWithRedirectAsync(context);
+        }
+    }
+    private async Task NextWithRedirectAsync(HttpContext context)
+    {
+        if (context.Request.IsHttps)
+        {
             await _requestDelegate(context);
+            return;
         }
 
+        var port = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
+        var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+        var newUrl = context.Request.GetDisplayUrl().Replace("http", "https").Replace(port.ToString(), sslPort.ToString());
+        context.Response.Redirect(newUrl, false, true);
     }
 
     private async Task UnauthorizedResponseAsync(HttpContext context, string error)
@@ -77,4 +98,5 @@ public class AuthorizationCheckMiddleware
         var actionDescriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
         return actionDescriptor != null;
     }
+
 }
