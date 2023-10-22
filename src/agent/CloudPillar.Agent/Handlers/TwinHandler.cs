@@ -81,7 +81,8 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
-                HandleStrictModeAndReplacmentPath(action);
+                var strictModeSuccess = await HandleStrictModeAndReplacmentPathAsync(action, cancellationToken);
+                if (!strictModeSuccess) return;
 
                 switch (action.TwinAction.Action)
                 {
@@ -102,16 +103,12 @@ public class TwinHandler : ITwinHandler
                         if (_appSettings.StrictMode)
                         {
                             _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
-                            action.TwinReport.Status = StatusType.Failed;
-                            action.TwinReport.ResultCode = ResultCode.StrictMode.ToString();
-                            await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
+                            await UpdateTwinReported(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
                             return;
                         }
                         break;
                     default:
-                        action.TwinReport.Status = StatusType.Failed;
-                        action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
-                        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
+                        await UpdateTwinReported(action, StatusType.Failed, ResultCode.NotFound.ToString(), cancellationToken);
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
@@ -124,11 +121,28 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
     }
-    private void HandleStrictModeAndReplacmentPath(ActionToReport action)
+   
+    private async Task<bool> HandleStrictModeAndReplacmentPathAsync(ActionToReport action, CancellationToken cancellationToken)
     {
-        string fileName = GetFileNameByAction(action);
-        fileName = _strictModeHandler.ReplaceRootById(fileName);
-        _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
+        try
+        {
+            string fileName = GetFileNameByAction(action);
+            fileName = await _strictModeHandler.ReplaceRootByIdAsync(fileName);
+            await _strictModeHandler.CheckFileAccessPermissionsAsync(action.TwinAction.Action.Value, fileName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await UpdateTwinReported(action, StatusType.Failed, ex.Message, cancellationToken);
+            return false;
+        }
+    }
+
+    private async Task UpdateTwinReported(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
+    {
+        action.TwinReport.Status = statusType;
+        action.TwinReport.ResultCode = resultCode;
+        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
     }
 
     private string GetFileNameByAction(ActionToReport action)

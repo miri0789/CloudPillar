@@ -29,15 +29,15 @@ public class StrictModeHandler : IStrictModeHandler
 
         if (!_appSettings.PermanentAuthentucationMethods.Equals(AUTHENTICATION_X509))
         {
-            HandleError($"PermanentAuthentucationMethods value in appSettings.json must be X509, The value {_appSettings.PermanentAuthentucationMethods} is not valid");
+            throw new Exception($"PermanentAuthentucationMethods value in appSettings.json must be X509, The value {_appSettings.PermanentAuthentucationMethods} is not valid");
         }
         if (!_appSettings.ProvisionalAuthentucationMethods.Equals(AUTHENTICATION_SAS))
         {
-            HandleError($"ProvisionalAuthentucationMethods value in appSettings.json must be SAS, The value {_appSettings.ProvisionalAuthentucationMethods} is not valid");
+            throw new Exception($"ProvisionalAuthentucationMethods value in appSettings.json must be SAS, The value {_appSettings.ProvisionalAuthentucationMethods} is not valid");
         }
     }
 
-    public string ReplaceRootById(string fileName)
+    public async Task<string> ReplaceRootByIdAsync(string fileName)
     {
         var pattern = @"\${(.*?)}";
 
@@ -51,7 +51,7 @@ public class StrictModeHandler : IStrictModeHandler
         return replacedString;
     }
 
-    public async void CheckFileAccessPermissions(TwinActionType actionType, string fileName)
+    public async Task CheckFileAccessPermissionsAsync(TwinActionType actionType, string fileName)
     {
         if (!_appSettings.StrictMode)
         {
@@ -66,7 +66,7 @@ public class StrictModeHandler : IStrictModeHandler
         {
             return;
         }
-        HandleSizeStrictMode(zoneRestrictions, fileName);
+        await HandleSizeStrictModeAsync(zoneRestrictions, fileName);
 
         List<string> allowPatterns = await GetAllowRestrictionsAsync(zoneRestrictions);
         if (allowPatterns.Count == 0)
@@ -87,7 +87,8 @@ public class StrictModeHandler : IStrictModeHandler
                 }
             }
         }
-        HandleError("Denied by the lack of local allowance");
+        _logger.Error("Denied by the lack of local allowance");
+        throw new Exception(ResultCode.StrictModePattern.ToString());
     }
 
     private bool IsMatch(string filePath, Regex pattern)
@@ -161,23 +162,17 @@ public class StrictModeHandler : IStrictModeHandler
         return allowPatterns;
     }
 
-    private void HandleSizeStrictMode(FileRestrictionDetails zoneRestrictions, string fileName)
+    private async Task HandleSizeStrictModeAsync(FileRestrictionDetails zoneRestrictions, string fileName)
     {
-        if (zoneRestrictions.Type == UPLOAD_ACTION || zoneRestrictions.Size == 0)
+        if (zoneRestrictions.Type == UPLOAD_ACTION || zoneRestrictions.MaxSize == 0)
         {
             return;
         }
         long size = new FileInfo(fileName).Length;
-        if (size > zoneRestrictions.Size)
+        if (size > zoneRestrictions.MaxSize)
         {
-            HandleError("The file size is larger than allowed");
+            _logger.Error("The file size is larger than allowed");
+            throw new Exception(ResultCode.StrictModeSize.ToString());
         }
     }
-
-    private void HandleError(string message)
-    {
-        _logger.Error(message);
-        throw new Exception(message);
-    }
-
 }
