@@ -5,14 +5,14 @@ using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers
 {
-    public class StateMachine : IStateMachine
+    public class StateMachineHandler : IStateMachineHandler
     {
         private readonly ITwinHandler _twinHandler;
         private readonly ILoggerHandler _logger;
 
         private readonly IC2DEventHandler _c2DEventHandler;
         private CancellationTokenSource _cts;
-        public StateMachine(ITwinHandler twinHandler,
+        public StateMachineHandler(ITwinHandler twinHandler,
          ILoggerHandler logger,
          IC2DEventHandler c2DEventHandler)
         {
@@ -22,10 +22,10 @@ namespace CloudPillar.Agent.Handlers
         }
 
 
-        public async Task InitStateMachine()
+        public async Task InitStateMachineHandler()
         {
             var state = await GetState();
-            _logger.Info($"init device state: {state.ToString()}");
+            _logger.Info($"InitStateMachineHandler: init device state: {state.ToString()}");
             await HandleStateAction(state);
         }
 
@@ -44,6 +44,7 @@ namespace CloudPillar.Agent.Handlers
                 case DeviceStateType.Provisioning: await SetProvisioning(); break;
                 case DeviceStateType.Ready: await SetReady(); break;
                 case DeviceStateType.Busy: SetBusy(); break;
+                default: break;
             }
         }
 

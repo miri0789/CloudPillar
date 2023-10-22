@@ -55,7 +55,7 @@ builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper
 builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
-builder.Services.AddScoped<IStateMachine, StateMachine>();
+builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
@@ -92,8 +92,8 @@ using (var scope = app.Services.CreateScope())
     var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
     await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
 
-    var stateMachineService = scope.ServiceProvider.GetService<IStateMachine>();
-    await stateMachineService.InitStateMachine();
+    var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
+    await StateMachineHandlerService.InitStateMachineHandler();
 }
 
 

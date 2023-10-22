@@ -3,11 +3,11 @@ using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers
 {
-    public interface IStateMachine
+    public interface IStateMachineHandler
     {
         Task SetState(DeviceStateType state);
 
-        Task InitStateMachine();
+        Task InitStateMachineHandler();
 
         Task<DeviceStateType> GetState();
     }

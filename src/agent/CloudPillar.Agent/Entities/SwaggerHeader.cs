@@ -12,7 +12,7 @@ public class SwaggerHeader : IOperationFilter
 
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "AuthorizationConstants.X_DEVICE_ID",
+            Name = AuthorizationConstants.X_DEVICE_ID,
             In = ParameterLocation.Header,
             Description = "The device id",
             Required = false,
@@ -24,7 +24,7 @@ public class SwaggerHeader : IOperationFilter
 
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "AuthorizationConstants.X_SECRET_KEY",
+            Name = AuthorizationConstants.X_SECRET_KEY,
             In = ParameterLocation.Header,
             Required = false,
             Description = "The OneMD value",

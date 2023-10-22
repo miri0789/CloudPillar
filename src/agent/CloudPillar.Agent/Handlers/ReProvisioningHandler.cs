@@ -122,7 +122,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var certificate = GenerateCertificate(message, data);
         InstallTemporaryCertificate(certificate, data.SecretKey);
         await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate);
-        // await _stateMachine.SetState(DeviceStateType.Ready);
     }
 
 
