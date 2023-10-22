@@ -170,4 +170,9 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     {
         return sasUri.GetBlobUri();
     }
+
+    public async Task SetDesiredPropertyUpdateCallbackAsync(DesiredPropertyUpdateCallback callback, CancellationToken cancellationToken = default) 
+    {
+        await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, null, cancellationToken);
+    }
 }

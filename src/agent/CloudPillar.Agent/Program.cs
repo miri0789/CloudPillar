@@ -33,7 +33,7 @@ builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
-builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();
+builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
@@ -55,6 +55,7 @@ builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper
 builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
+builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
@@ -83,8 +84,18 @@ app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
-
 var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
 strictModeHandler.CheckAuthentucationMethodValue();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
+    await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
+
+    var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
+    await StateMachineHandlerService.InitStateMachineHandler();
+}
+
+
 app.Run();
+

@@ -1,5 +1,6 @@
 namespace CloudPillar.Agent.Handlers;
 public interface IC2DEventHandler
 {
-    Task CreateSubscribeAsync(CancellationToken cancellationToken);
+    void CreateSubscribe(CancellationToken cancellationToken);
+    Task<bool> CreateProvisioningSubscribe(CancellationToken cancellationToken);
 }
