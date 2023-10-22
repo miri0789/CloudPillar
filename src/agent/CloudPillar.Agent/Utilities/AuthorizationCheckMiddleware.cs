@@ -1,10 +1,8 @@
-using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
-using CloudPillar.Agent.Wrappers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.Azure.Devices.Client.Exceptions;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Utilities;
@@ -13,15 +11,15 @@ public class AuthorizationCheckMiddleware
     private readonly RequestDelegate _requestDelegate;
 
     private ILoggerHandler _logger;
-
-
-    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger)
+    private readonly IConfiguration _configuration;
+    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfiguration configuration)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
-    public async Task Invoke(HttpContext context,IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
+    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
     {
         ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
@@ -32,13 +30,13 @@ public class AuthorizationCheckMiddleware
             IHeaderDictionary requestHeaders = context.Request.Headers;
             var xDeviceId = string.Empty;
             var xSecretKey = string.Empty;
-            if (requestHeaders.ContainsKey(AuthorizationConstants.X_DEVICE_ID))
+            if (requestHeaders.ContainsKey(Constants.X_DEVICE_ID))
             {
-                xDeviceId = requestHeaders[AuthorizationConstants.X_DEVICE_ID];
+                xDeviceId = requestHeaders[Constants.X_DEVICE_ID];
             }
-            if (requestHeaders.ContainsKey(AuthorizationConstants.X_SECRET_KEY))
+            if (requestHeaders.ContainsKey(Constants.X_SECRET_KEY))
             {
-                xSecretKey = requestHeaders[AuthorizationConstants.X_SECRET_KEY];
+                xSecretKey = requestHeaders[Constants.X_SECRET_KEY];
             }
             if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
             {
@@ -62,13 +60,25 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await _requestDelegate(context);
+            await NextWithRedirectAsync(context);
         }
         else
         {
+            await NextWithRedirectAsync(context);
+        }
+    }
+    private async Task NextWithRedirectAsync(HttpContext context)
+    {
+        if (context.Request.IsHttps)
+        {
             await _requestDelegate(context);
+            return;
         }
 
+        var port = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
+        var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+        var newUrl = context.Request.GetDisplayUrl().Replace("http", "https").Replace(port.ToString(), sslPort.ToString());
+        context.Response.Redirect(newUrl, false, true);
     }
 
     private async Task UnauthorizedResponseAsync(HttpContext context, string error)
@@ -88,5 +98,5 @@ public class AuthorizationCheckMiddleware
         var actionDescriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
         return actionDescriptor != null;
     }
-    
+
 }
