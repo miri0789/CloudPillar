@@ -3,6 +3,7 @@ using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Shared;
+using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -20,6 +21,7 @@ public class TwinHandlerTestFixture
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
+    private Mock<IOptions<AppSettings>> _appSettings;
     private ITwinHandler _target;
     private CancellationToken cancellationToken = CancellationToken.None;
 
@@ -33,6 +35,11 @@ public class TwinHandlerTestFixture
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
+        _appSettings = new Mock<IOptions<AppSettings>>();
+        var appSettings = new AppSettings
+        {
+        };
+        _appSettings.Setup(x => x.Value).Returns(appSettings);
         CreateTarget();
     }
 
@@ -45,7 +52,8 @@ public class TwinHandlerTestFixture
           _twinActionsHandler.Object,
           _loggerHandlerMock.Object,
           _runtimeInformationWrapper.Object,
-          _fileStreamerWrapper.Object);
+          _fileStreamerWrapper.Object,
+          _appSettings.Object);
     }
 
     [Test]
