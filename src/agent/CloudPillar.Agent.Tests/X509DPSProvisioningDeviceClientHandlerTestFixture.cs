@@ -2,11 +2,7 @@ using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices.Provisioning.Client;
-using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Microsoft.Azure.Devices.Shared;
 using Moq;
-using Shared.Entities.Authentication;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Tests;

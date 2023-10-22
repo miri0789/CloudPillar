@@ -43,8 +43,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
     }
     public async Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(message);
-        ArgumentNullException.ThrowIfNull(message.Data);
+        ValidateReprovisioningMessage(message);
 
         var certificate = GetTempCertificate();
         ArgumentNullException.ThrowIfNull(certificate);
@@ -52,16 +51,44 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var deviceId = certificate.Subject.Replace($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}", string.Empty);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
 
-        var iotHubHostName = string.Empty;
-        using (ProvisioningServiceClient provisioningServiceClient =
-                           ProvisioningServiceClient.CreateFromConnectionString(message.DPSConnectionString))
-        {
-            var enrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(Encoding.Unicode.GetString(message.Data), cancellationToken);
-            iotHubHostName = enrollment.IotHubHostName;
-        }
-
+        string iotHubHostName = await GetIotHubHostNameAsync(message.DPSConnectionString, message.Data, cancellationToken);
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
 
+        await ProvisionDeviceAndCleanupCertificatesAsync(message, certificate, deviceId, iotHubHostName, cancellationToken);
+    }
+
+    public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        var data = JsonConvert.DeserializeObject<AuthonticationKeys>(Encoding.Unicode.GetString(message.Data));
+        ArgumentNullException.ThrowIfNull(data);
+        var certificate = X509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _environmentsWrapper.certificateExpiredDays);
+        InstallTemporaryCertificate(certificate, data.SecretKey);
+        await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate);
+    }
+
+
+    private void ValidateReprovisioningMessage(ReprovisioningMessage message)
+    {
+        if (message == null || message.Data == null)
+        {
+            throw new ArgumentNullException("Invalid message.");
+        }
+    }
+
+    private async Task<string> GetIotHubHostNameAsync(string dpsConnectionString, byte[] data, CancellationToken cancellationToken)
+    {
+        using (ProvisioningServiceClient provisioningServiceClient =
+                           ProvisioningServiceClient.CreateFromConnectionString(dpsConnectionString))
+        {
+            var enrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(Encoding.Unicode.GetString(data), cancellationToken);
+            return enrollment.IotHubHostName;
+        }
+    }
+
+
+    private async Task ProvisionDeviceAndCleanupCertificatesAsync(ReprovisioningMessage message, X509Certificate2 certificate, string deviceId, string iotHubHostName, CancellationToken cancellationToken)
+    {
         try
         {
             await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
@@ -103,17 +130,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
             throw;
         }
 
-
-    }
-
-    public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(message);
-        var data = JsonConvert.DeserializeObject<AuthonticationKeys>(Encoding.Unicode.GetString(message.Data));
-        ArgumentNullException.ThrowIfNull(data);
-        var certificate = X509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _environmentsWrapper.certificateExpiredDays);
-        InstallTemporaryCertificate(certificate, data.SecretKey);
-        await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate);
     }
 
     private void InstallTemporaryCertificate(X509Certificate2 certificate, string secretKey)
