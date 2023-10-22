@@ -12,7 +12,6 @@ namespace CloudPillar.Agent.Handlers
 
         private readonly IC2DEventHandler _c2DEventHandler;
         private CancellationTokenSource _cts;
-        private DeviceStateType _currentState;
         public StateMachine(ITwinHandler twinHandler,
          ILoggerHandler logger,
          IC2DEventHandler c2DEventHandler)
@@ -22,25 +21,25 @@ namespace CloudPillar.Agent.Handlers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+
         public async Task InitStateMachine()
         {
-            _currentState = await _twinHandler.GetDeviceStateAsync() ?? DeviceStateType.Uninitialized;
-            _logger.Info($"init device state: {_currentState.ToString()}");
-            await HandleStateAction();
+            var state = await GetState();
+            _logger.Info($"init device state: {state.ToString()}");
+            await HandleStateAction(state);
         }
 
         public async Task SetState(DeviceStateType state)
         {
-            _currentState = state;
             await _twinHandler.UpdateDeviceStateAsync(state);
-            await HandleStateAction();
+            await HandleStateAction(state);
             _logger.Info($"Set device state: {state.ToString()}");
 
         }
 
-        private async Task HandleStateAction()
+        private async Task HandleStateAction(DeviceStateType state)
         {
-            switch (_currentState)
+            switch (state)
             {
                 case DeviceStateType.Provisioning: await SetProvisioning(); break;
                 case DeviceStateType.Ready: await SetReady(); break;
@@ -48,22 +47,27 @@ namespace CloudPillar.Agent.Handlers
             }
         }
 
-        public DeviceStateType GetState()
+        public async Task<DeviceStateType> GetState()
         {
-            return _currentState;
+            var state = await _twinHandler.GetDeviceStateAsync() ?? DeviceStateType.Uninitialized;
+            return state;
         }
 
         private async Task SetProvisioning()
         {
             _cts = new CancellationTokenSource();
-            _c2DEventHandler.CreateSubscribe(_cts.Token, true);
+            var result = await _c2DEventHandler.CreateProvisioningSubscribe(_cts.Token);
+            if (result)
+            {
+                await SetState(DeviceStateType.Ready);
+            }
         }
 
         private async Task SetReady()
         {
             _cts?.Cancel();
             _cts = new CancellationTokenSource();
-            _c2DEventHandler.CreateSubscribe(_cts.Token, false);
+            _c2DEventHandler.CreateSubscribe(_cts.Token);
             await _twinHandler.HandleTwinActionsAsync(_cts.Token);
         }
 

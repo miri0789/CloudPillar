@@ -8,6 +8,8 @@ namespace CloudPillar.Agent.Handlers
         Task SetState(DeviceStateType state);
 
         Task InitStateMachine();
+
+        Task<DeviceStateType> GetState();
     }
 
 }

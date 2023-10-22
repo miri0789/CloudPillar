@@ -23,7 +23,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
-    private readonly IStateMachine _stateMachine;
     private readonly ILoggerHandler _logger;
 
     private const int KEY_SIZE_IN_BITS = 4096;
@@ -36,19 +35,18 @@ public class ReprovisioningHandler : IReprovisioningHandler
         IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
         IEnvironmentsWrapper environmentsWrapper,
         ID2CMessengerHandler d2CMessengerHandler,
-        ILoggerHandler logger,
-        IStateMachine stateMachine)
+        ILoggerHandler logger
+        )
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
-        _stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
-    public async Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
+    public async Task<bool> HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
         ArgumentNullException.ThrowIfNull(message.Data);
@@ -98,10 +96,13 @@ public class ReprovisioningHandler : IReprovisioningHandler
                         cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}"; ;
 
                         store.Close();
+
+                        return true;
                     }
 
                 }
             }
+            return false;
 
         }
         catch (Exception ex)
@@ -121,7 +122,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var certificate = GenerateCertificate(message, data);
         InstallTemporaryCertificate(certificate, data.SecretKey);
         await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate);
-        await _stateMachine.SetState(DeviceStateType.Ready);
+        // await _stateMachine.SetState(DeviceStateType.Ready);
     }
 
 

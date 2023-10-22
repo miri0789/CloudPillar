@@ -48,8 +48,8 @@ public class TwinHandler : ITwinHandler
     private async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
     {
         try
-        {
-            var twin = await GetTwinJsonAsync(cancellationToken);
+        {            
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             string desiredJson = twin.Properties.Desired.ToJson();
@@ -218,8 +218,8 @@ public class TwinHandler : ITwinHandler
     public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
     {
         try
-        {            
-            var twin = await GetTwinJsonAsync(cancellationToken);
+        {                        
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
             return reprted.DeviceState;
         }
@@ -260,17 +260,21 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task<Twin> GetTwinJsonAsync(CancellationToken cancellationToken = default)
+    public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            return twin;
+            if (twin != null)
+            {
+                return twin.ToJson();
+            }
+            return null;
         }
         catch (Exception ex)
         {
             _logger.Error($"GetTwinJsonAsync failed: {ex.Message}");
-            throw ex;
+            throw;
         }
     }
 

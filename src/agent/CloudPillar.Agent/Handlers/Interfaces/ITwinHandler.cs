@@ -8,8 +8,7 @@ public interface ITwinHandler
     Task UpdateDeviceStateAsync(DeviceStateType deviceState);
     Task HandleTwinActionsAsync(CancellationToken cancellationToken);
     Task InitReportDeviceParamsAsync();
-    Task<Twin> GetTwinJsonAsync(CancellationToken cancellationToken = default);
+    Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default);
     Task UpdateDeviceSecretKeyAsync(string secretKey);
-
     Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default);
 }
