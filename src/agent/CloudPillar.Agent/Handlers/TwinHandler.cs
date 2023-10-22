@@ -270,7 +270,7 @@ public class TwinHandler : ITwinHandler
         catch (Exception ex)
         {
             _logger.Error($"GetTwinJsonAsync failed: {ex.Message}");
-            throw;
+            throw ex;
         }
     }
 

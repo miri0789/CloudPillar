@@ -2,7 +2,7 @@ namespace Shared.Entities.Twin;
 
 public enum DeviceStateType
 {
-    Uninitsalized,
+    Uninitialized,
     Provisioning,
     Ready,
     Busy
