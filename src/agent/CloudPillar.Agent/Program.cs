@@ -75,12 +75,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
 app.UseHttpsRedirection();
 // app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
-app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.MapControllers();
 
 var strictModeHandler = app.Services.GetService<IStrictModeHandler>();

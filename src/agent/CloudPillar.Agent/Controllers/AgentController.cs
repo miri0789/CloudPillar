@@ -37,7 +37,7 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("AddRecipe")]
-    public async Task<ActionResult<string>> AddRecipe(TwinDesired recipe)
+    public async Task<ActionResult<string>> AddRecipe([FromBody]TwinDesired recipe)
     {
         _twinDesiredPropsValidator.ValidateAndThrow(recipe);
         return await _twinHandler.GetTwinJsonAsync();
@@ -101,7 +101,7 @@ public class AgentController : ControllerBase
     }
 
     [HttpPut("UpdateReportedProps")]
-    public async Task<ActionResult<string>> UpdateReportedProps(UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedProps([FromBody]UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
         return await _twinHandler.GetTwinJsonAsync();
