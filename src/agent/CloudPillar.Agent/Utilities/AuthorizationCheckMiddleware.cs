@@ -14,56 +14,47 @@ public class AuthorizationCheckMiddleware
 
     private ILoggerHandler _logger;
 
-    private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
-    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, ILoggerHandler logger)
+    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
-        _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context,IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
     {
+        ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
         Endpoint endpoint = context.GetEndpoint();
-
-        IHeaderDictionary requestHeaders = context.Request.Headers;
-        var xDeviceId = string.Empty;
-        var xSecretKey = string.Empty;
-        if (requestHeaders.ContainsKey(AuthorizationConstants.X_DEVICE_ID))
-        {
-            xDeviceId = requestHeaders[AuthorizationConstants.X_DEVICE_ID];
-        }
-        if (requestHeaders.ContainsKey(AuthorizationConstants.X_SECRET_KEY))
-        {
-            xSecretKey = requestHeaders[AuthorizationConstants.X_SECRET_KEY];
-        }
-        if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
-        {
-            var error = "No require header was provided";
-            await UnauthorizedResponseAsync(context, error);
-            return;
-        }
-        if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
-        {
-            // The action has [AllowAnonymous], so allow the request to proceed
-            await _requestDelegate(context);
-            return;
-        }
         if (IsActionMethod(endpoint))
         {
-
-            X509Certificate2? userCertificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
-
-            if (userCertificate == null)
+            // check the headers for all the actions also for the AllowAnonymous.
+            IHeaderDictionary requestHeaders = context.Request.Headers;
+            var xDeviceId = string.Empty;
+            var xSecretKey = string.Empty;
+            if (requestHeaders.ContainsKey(AuthorizationConstants.X_DEVICE_ID))
             {
-                var error = "no certificate found in the store";
+                xDeviceId = requestHeaders[AuthorizationConstants.X_DEVICE_ID];
+            }
+            if (requestHeaders.ContainsKey(AuthorizationConstants.X_SECRET_KEY))
+            {
+                xSecretKey = requestHeaders[AuthorizationConstants.X_SECRET_KEY];
+            }
+            if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
+            {
+                var error = "No require header was provided";
                 await UnauthorizedResponseAsync(context, error);
                 return;
             }
+            if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+            {
+                // The action has [AllowAnonymous], so allow the request to proceed
+                await _requestDelegate(context);
+                return;
+            }
 
-            bool isAuthorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(userCertificate, xDeviceId, xSecretKey, cancellationToken);
+
+            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationAsync(xDeviceId, xSecretKey, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
@@ -97,4 +88,5 @@ public class AuthorizationCheckMiddleware
         var actionDescriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
         return actionDescriptor != null;
     }
+    
 }
