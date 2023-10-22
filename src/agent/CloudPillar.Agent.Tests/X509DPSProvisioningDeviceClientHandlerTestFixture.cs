@@ -2,6 +2,9 @@ using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Azure.Devices.Provisioning.Client;
+using Microsoft.Azure.Devices.Provisioning.Client.Transport;
+using Microsoft.Azure.Devices.Shared;
 using Moq;
 using Shared.Entities.Authentication;
 using Shared.Logger;
@@ -71,7 +74,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _deviceClientWrapperMock.Setup(x => x.IsDeviceInitializedAsync(CancellationToken.None)).ReturnsAsync(true);
 
 
-        var result = await _target.AuthorizationAsync(_unitTestCertificate, XdeviceId, XSecretKey, CancellationToken.None);
+        var result = await _target.AuthorizationAsync(XdeviceId, XSecretKey, CancellationToken.None);
 
         Assert.IsTrue(result, "AuthorizationAsync should return true for a valid certificate and parameters.");
     }
@@ -82,7 +85,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _x509CertificateWrapperMock.Setup(x => x.GetCertificates(OpenFlags.ReadOnly))
             .Returns(new X509Certificate2Collection());
 
-        var result = await _target.AuthorizationAsync(_unitTestCertificate, DEVICE_ID, SECRET_KEY, CancellationToken.None);
+        var result = await _target.AuthorizationAsync(DEVICE_ID, SECRET_KEY, CancellationToken.None);
 
         // Assert
         Assert.IsFalse(result, "AuthorizationAsync should return false for an invalid certificate.");
@@ -90,7 +93,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
 
     [Test]
     public async Task AuthorizationAsync_InvalidParameters_ReturnsFalse()
-    { 
+    {
 
         _unitTestCertificate.FriendlyName = "InvalidFriendlyName";
         var XdeviceId = DEVICE_ID;
@@ -99,9 +102,8 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _x509CertificateWrapperMock.Setup(x => x.GetCertificates(OpenFlags.ReadOnly))
             .Returns(new X509Certificate2Collection(_unitTestCertificate));
 
-        var result = await _target.AuthorizationAsync(_unitTestCertificate, XdeviceId, XSecretKey, CancellationToken.None);
+        var result = await _target.AuthorizationAsync(XdeviceId, XSecretKey, CancellationToken.None);
 
         Assert.IsFalse(result, "AuthorizationAsync should return false for invalid parameters.");
-    }
-
+    } 
 }
