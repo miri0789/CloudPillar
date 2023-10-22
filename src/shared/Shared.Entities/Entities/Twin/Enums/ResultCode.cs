@@ -4,5 +4,6 @@ public enum ResultCode
 {
     Done,
     FinishedTransit,
-    NotFound
+    NotFound,
+    StrictMode
 }
