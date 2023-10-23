@@ -10,6 +10,7 @@ using Microsoft.Azure.Devices.Provisioning.Service;
 using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
+using Shared.Entities.Twin;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
@@ -34,7 +35,8 @@ public class ReprovisioningHandler : IReprovisioningHandler
         IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
         IEnvironmentsWrapper environmentsWrapper,
         ID2CMessengerHandler d2CMessengerHandler,
-        ILoggerHandler logger)
+        ILoggerHandler logger
+        )
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
@@ -44,7 +46,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
-    public async Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
+    public async Task<bool> HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
         ArgumentNullException.ThrowIfNull(message.Data);
@@ -94,10 +96,13 @@ public class ReprovisioningHandler : IReprovisioningHandler
                         cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}"; ;
 
                         store.Close();
+
+                        return true;
                     }
 
                 }
             }
+            return false;
 
         }
         catch (Exception ex)

@@ -43,7 +43,17 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
     }
 
+    public async Task<bool> InitAuthorizationAsync()
+    {
+        return await AuthorizationAsync("", "", default, true);
+    }
+
     public async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
+    {
+        return await AuthorizationAsync(XdeviceId, XSecretKey, cancellationToken);
+    }
+
+    private async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool IsInitializedLoad = false)
     {
         X509Certificate2? userCertificate = GetCertificate();
 
@@ -67,7 +77,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         var iotHubHostName = parts[1];
         var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENTION_KEY).RawData);
 
-        if (!(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
+        if (!IsInitializedLoad && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
         {
             var error = "The deviceId or the SecretKey are incorrect.";
             _logger.Error(error);
