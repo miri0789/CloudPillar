@@ -99,7 +99,6 @@ public class AgentController : ControllerBase
     [HttpPost("SetReady")]
     public async Task<ActionResult<string>> SetReady()
     {
-        await _twinHandler.HandleTwinActionsAsync(CancellationToken.None);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
