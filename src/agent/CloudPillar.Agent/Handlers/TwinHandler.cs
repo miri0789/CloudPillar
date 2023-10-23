@@ -134,7 +134,7 @@ public class TwinHandler : ITwinHandler
     {
         string fileName = GetFileNameByAction(action);
 
-        fileName = _strictModeHandler.ReplaceRootById(fileName);
+        fileName = _strictModeHandler.ReplaceRootById(fileName, action.TwinAction.Action.Value);
         _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
         return fileName;
     }

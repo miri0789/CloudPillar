@@ -37,7 +37,7 @@ public class StrictModeHandler : IStrictModeHandler
         }
     }
 
-    public string ReplaceRootById(string fileName)
+    public string ReplaceRootById(string fileName, TwinActionType actionType)
     {
         var pattern = @"\${(.*?)}";
 
@@ -46,7 +46,7 @@ public class StrictModeHandler : IStrictModeHandler
             string key = match.Groups[1].Value;
             ArgumentNullException.ThrowIfNullOrEmpty(key);
 
-            return GetRootById(key);
+            return GetRootById(key, actionType);
         });
         return replacedString;
     }
@@ -160,14 +160,10 @@ public class StrictModeHandler : IStrictModeHandler
         return allowPatterns;
     }
 
-    private FileRestrictionDetails GetRestrinctionsById(string id)
+    private string GetRootById(string id, TwinActionType actionType)
     {
-        return _appSettings.FilesRestrictions.FirstOrDefault(x => x.Id.Equals(id));
-    }
-
-    private string GetRootById(string id)
-    {
-        FileRestrictionDetails restriction = GetRestrinctionsById(id);
+        List<FileRestrictionDetails> fileRestrictionDetails = GetRestrictionsByActionType(actionType);
+        FileRestrictionDetails restriction = fileRestrictionDetails.FirstOrDefault(x => x.Id.Equals(id));
 
         if (string.IsNullOrWhiteSpace(restriction?.Root))
         {

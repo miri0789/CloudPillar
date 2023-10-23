@@ -56,7 +56,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.TotalBytes = message.FileSize;
         }
         var filePath = file.DownloadAction.DestinationPath + file.DownloadAction.Source;
-       
+
         try
         {
             filePath = HandleReplacePathAndCheckSize(file.DownloadAction.Action.Value, filePath, file.TotalBytes);
@@ -91,9 +91,8 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private string HandleReplacePathAndCheckSize(TwinActionType actionType, string filePath, long size)
     {
-        filePath = _strictModeHandler.ReplaceRootById(filePath);
-        _strictModeHandler.CheckSizeStrictMode(size, filePath, TwinActionType.SingularDownload);
-        _strictModeHandler.CheckFileAccessPermissions(actionType, filePath);
+        filePath = _strictModeHandler.ReplaceRootById(filePath, actionType);
+        _strictModeHandler.CheckSizeStrictMode(size, filePath, actionType);
 
         return filePath;
     }
