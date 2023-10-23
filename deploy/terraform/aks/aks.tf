@@ -26,7 +26,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     zones                 = [ "1", "2", "3" ]
     enable_auto_scaling   = true
     min_count             = 1
-    max_count             = 6
+    max_count             = 5
     enable_node_public_ip = false
     os_disk_type          = "Managed"
     os_sku                = "Ubuntu"
