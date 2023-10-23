@@ -877,15 +877,15 @@ The flow comprises:
 By offering these functionalities, the API underscores its pivotal role in granting users and backend systems nuanced control over the Agent, promoting both adaptability and efficiency in the overarching system operations.
 #### 5.1.2.2.1. API Endpoints
 
-| Name                 | HTTP Method | Parameters                  | Request Body Format                              | Success Response                             | Error Response                                      |
-|----------------------|-------------|----------------------|--------------------------------------------------|-----------------------------------------------|-----------------------------------------------------|
-| InitiateProvisioning | POST        | DPS details (e.g., scopeId, registrationId)  | None                                             | Updated device twin after provisioning       | Error message with reason                          |
-| SetBusy              | POST        | None                  | None                                             | Updated device twin after transition to BUSY | Error message with reason                          |
-| SetReady             | POST        | None                  | None                                             | Updated device twin after transition to READY| Error message with reason                          |
-| UpdateReportedProps  | PUT         | None                  | JSON (list of updated properties)               | Updated device twin after properties updated | Error message with reason                          |
-| GetDeviceState       | GET         | None                  | None                                             | Updated device twin (current state)          | Error message with reason                          |
-| AddRecipe            | POST        | None                  | JSON (Recipe details)                           | Updated device twin with added recipe        | Error message with reason                          |
-| RunDiagnostics            | GET        | None                  | None                           | A JSON with each stage execution metrics, after all diagnostics finished.       | Error message with stage, reason. ** If a second call is attempted while a previous one is in progress - fail the call                       |
+| Name                 | HTTP Method | Parameters                  | Headers | Request Body Format                              | Success Response                             | Error Response                                      |
+|----------------------|-------------|-----------------------------|---------|--------------------------------------------------|----------------------------------------------|-----------------------------------------------------|
+| InitiateProvisioning | POST        | DPS details (e.g., scopeId, registrationId)  || None                                             | Updated device twin after provisioning       | Error message with reason                          |
+| SetBusy              | POST        | None                  |CP-DEVICE-ID - the device Id string; CP-SECRET-KEY - the pre-shared secret, usually OneMD Key| None                                             | Updated device twin after transition to BUSY | Error message with reason                          |
+| SetReady             | POST        | None                  || None                                             | Updated device twin after transition to READY| Error message with reason                          |
+| UpdateReportedProps  | PUT         | None                  || JSON (list of updated properties)               | Updated device twin after properties updated | Error message with reason                          |
+| GetDeviceState       | GET         | None                  || None                                             | Updated device twin (current state)          | Error message with reason                          |
+| AddRecipe            | POST        | None                  || JSON (Recipe details)                           | Updated device twin with added recipe        | Error message with reason                          |
+| RunDiagnostics            | GET        | None                  || None                           | A JSON with each stage execution metrics, after all diagnostics finished.       | Error message with stage, reason. ** If a second call is attempted while a previous one is in progress - fail the call                       |
 
 **Note on UpdateReportedProps JSON Format**:
 For the `UpdateReportedProps` API call, the request body requires a JSON format containing a list of updated properties. The JSON structure can be like:
