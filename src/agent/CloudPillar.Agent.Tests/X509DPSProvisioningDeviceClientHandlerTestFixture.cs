@@ -36,7 +36,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     [Test]
     public void GetCertificate_ValidCertificateExists_ReturnsCertificate()
     {
-        _x509CertificateWrapperMock.Setup(x509 => x509.GetCertificates(It.IsAny<OpenFlags>())).Returns(() =>
+        _x509CertificateWrapperMock.Setup(x509 => x509.Certificates).Returns(() =>
         {
             var certificates = new X509Certificate2Collection();
             certificates.Add(_unitTestCertificate);
@@ -51,7 +51,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     public void GetCertificate_NoValidCertificateExists_ReturnsNull()
     {
         var certificates = new X509Certificate2Collection();
-        _x509CertificateWrapperMock.Setup(x509 => x509.GetCertificates(It.IsAny<OpenFlags>())).Returns(certificates);
+        _x509CertificateWrapperMock.Setup(x509 => x509.Certificates).Returns(certificates);
         var target = _target.GetCertificate();
         Assert.IsNull(target);
     }
@@ -64,7 +64,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         var XdeviceId = DEVICE_ID;
         var XSecretKey = SECRET_KEY;
 
-        _x509CertificateWrapperMock.Setup(x => x.GetCertificates(OpenFlags.ReadOnly))
+        _x509CertificateWrapperMock.Setup(x => x.Certificates)
             .Returns(new X509Certificate2Collection(_unitTestCertificate));
 
         _deviceClientWrapperMock.Setup(x => x.IsDeviceInitializedAsync(CancellationToken.None)).ReturnsAsync(true);
@@ -78,7 +78,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     [Test]
     public async Task AuthorizationAsync_InvalidCertificate_ReturnsFalse()
     {
-        _x509CertificateWrapperMock.Setup(x => x.GetCertificates(OpenFlags.ReadOnly))
+        _x509CertificateWrapperMock.Setup(x => x.Certificates)
             .Returns(new X509Certificate2Collection());
 
         var result = await _target.AuthorizationAsync(DEVICE_ID, SECRET_KEY, CancellationToken.None);
@@ -95,7 +95,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         var XdeviceId = DEVICE_ID;
         var XSecretKey = SECRET_KEY;
 
-        _x509CertificateWrapperMock.Setup(x => x.GetCertificates(OpenFlags.ReadOnly))
+        _x509CertificateWrapperMock.Setup(x => x.Certificates)
             .Returns(new X509Certificate2Collection(_unitTestCertificate));
 
         var result = await _target.AuthorizationAsync(XdeviceId, XSecretKey, CancellationToken.None);
