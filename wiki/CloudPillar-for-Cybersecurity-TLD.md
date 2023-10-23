@@ -876,6 +876,11 @@ The flow comprises:
   - Comparing the downloaded file to the original.
 By offering these functionalities, the API underscores its pivotal role in granting users and backend systems nuanced control over the Agent, promoting both adaptability and efficiency in the overarching system operations.
 #### 5.1.2.2.1. API Endpoints
+**Note on the authentication headers**: All of the API calls below require mandatory headers bearing the device Id and the pre-shared secret. 
+- The InitiateProvisioning is allowed always if not in the Busy state.
+- In case the device is in the Provisioning state and isn't authenticated for the pre-shared key authentication, a new DPS provisioning attempt will be made with a shared enrollment, whose attributes are taken from the app config. If it is authenticated, the headers will be checked against the current authentication device Id and secret, and if it does not match - the call will be failed with 401 Unauthorized.
+- In case the device is in the Ready state, the headers will be checked against the claims in the current certificate, if it does not match - the call will be failed with 401 Unauthorized.
+- In case the device is in the Busy state, all calls are blocked (returning 503 Service Unavailable), except for GetDeviceState and InitiateProvisioning
 
 | Name                 | HTTP Method | Parameters                  | Headers | Request Body Format                              | Success Response                             | Error Response                                      |
 |----------------------|-------------|-----------------------------|---------|--------------------------------------------------|----------------------------------------------|-----------------------------------------------------|
