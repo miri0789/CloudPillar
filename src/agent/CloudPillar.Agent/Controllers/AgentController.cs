@@ -93,8 +93,8 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
 
-    [HttpPost("SetReadyAsync")]
-    public async Task<ActionResult<string>> SetReadyAsync()
+    [HttpPost("SetReady")]
+    public async Task<ActionResult<string>> SetReady()
     {
         _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
