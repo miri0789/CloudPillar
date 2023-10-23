@@ -882,7 +882,7 @@ By offering these functionalities, the API underscores its pivotal role in grant
 - In case the device is in the Ready state, the headers will be checked against the claims in the current certificate, if it does not match - the call will be failed with 401 Unauthorized.
 - In case the device is in the Busy state, all calls are blocked (returning 503 Service Unavailable), except for GetDeviceState and InitiateProvisioning
 - SetBusy not only changes the state and pauses all downloads / uploads, but actually disconnects the connections via the IoT SDK
-- SetReady restores the connections, re-authenticates AND resumes paused downloads / uploads
+- SetReady restores the connections, re-authenticates AND resumes paused downloads / uploads. Resuming download includes either continue receiving chunks queued previously, or, if chunk do not arrive from the queue during some interval of time, re-requesting missing segment of the file from the backend. Resuming upload does not require re-transmission.
 - GetDeviceState is designed for periodic usage (for instance once in 5 minutes) and will do the "lazy" device provisioning, e.g. "if not provisioned, do initial provisioning".
 
 | Name                 | HTTP Method | Parameters                  | Headers | Request Body Format                              | Success Response                             | Error Response                                      |
