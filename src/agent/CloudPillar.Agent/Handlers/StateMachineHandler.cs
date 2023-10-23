@@ -24,16 +24,16 @@ namespace CloudPillar.Agent.Handlers
         }
 
 
-        public async Task InitStateMachineHandler()
+        public async Task InitStateMachineHandlerAsync()
         {
-            var state = await GetState();
-            _logger.Info($"InitStateMachineHandler: init device state: {state.ToString()}");
+            var state = await GetStateAsync();
+            _logger.Info($"InitStateMachineHandlerAsync: init device state: {state.ToString()}");
             await HandleStateAction(state);
         }
 
-        public async Task SetState(DeviceStateType state)
+        public async Task SetStateAsync(DeviceStateType state)
         {
-            var currentState = await GetState();
+            var currentState = await GetStateAsync();
             if (currentState != state)
             {
                 await _twinHandler.UpdateDeviceStateAsync(state);
@@ -47,30 +47,30 @@ namespace CloudPillar.Agent.Handlers
         {
             switch (state)
             {
-                case DeviceStateType.Provisioning: await SetProvisioning(); break;
-                case DeviceStateType.Ready: await SetReady(); break;
+                case DeviceStateType.Provisioning: await SetProvisioningAsync(); break;
+                case DeviceStateType.Ready: await SetReadyAsync(); break;
                 case DeviceStateType.Busy: SetBusy(); break;
                 default: break;
             }
         }
 
-        public async Task<DeviceStateType> GetState()
+        public async Task<DeviceStateType> GetStateAsync()
         {
             var state = await _twinHandler.GetDeviceStateAsync() ?? DeviceStateType.Uninitialized;
             return state;
         }
 
-        private async Task SetProvisioning()
+        private async Task SetProvisioningAsync()
         {
             var _cts = _stateMachineTokenHandler.StartToken();
             var result = await _c2DEventHandler.CreateProvisioningSubscribe(_cts.Token);
             if (result)
             {
-                await SetState(DeviceStateType.Ready);
+                await SetStateAsync(DeviceStateType.Ready);
             }
         }
 
-        private async Task SetReady()
+        private async Task SetReadyAsync()
         {
             _stateMachineTokenHandler.CancelToken();
              var _cts = _stateMachineTokenHandler.StartToken();

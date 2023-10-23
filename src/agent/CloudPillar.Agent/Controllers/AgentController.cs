@@ -21,10 +21,9 @@ public class AgentController : ControllerBase
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
-    public readonly IStateMachineHandler _StateMachineHandler;
+    public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -33,15 +32,13 @@ public class AgentController : ControllerBase
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler StateMachineHandler,
-     IEnvironmentsWrapper environmentsWrapper,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
-        _StateMachineHandler = StateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _stateMachineHandler = StateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -92,14 +89,14 @@ public class AgentController : ControllerBase
     [HttpPost("SetBusy")]
     public async Task<ActionResult<string>> SetBusy()
     {
-        _StateMachineHandler.SetState(DeviceStateType.Busy);
+        _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
-    [HttpPost("SetReady")]
-    public async Task<ActionResult<string>> SetReady()
+    [HttpPost("SetReadyAsync")]
+    public async Task<ActionResult<string>> SetReadyAsync()
     {
-        _StateMachineHandler.SetState(DeviceStateType.Ready);
+        _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
@@ -117,7 +114,7 @@ public class AgentController : ControllerBase
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
-        _StateMachineHandler.SetState(DeviceStateType.Provisioning);
+        _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning);
         await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey);
     }
 }
