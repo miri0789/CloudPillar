@@ -5,6 +5,7 @@ namespace CloudPillar.Agent.Handlers;
 public interface IStrictModeHandler
 {
     void ValidateAuthenticationSettings();
-    Task CheckFileAccessPermissionsAsync(TwinActionType actionType, string fileName);
-    Task<string> ReplaceRootByIdAsync(string fileName);
+    void CheckFileAccessPermissions(TwinActionType actionType, string fileName);
+    string ReplaceRootById(string fileName);
+    void CheckSizeStrictMode(long size, string fileName, TwinActionType actionType);
 }

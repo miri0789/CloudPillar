@@ -84,7 +84,6 @@ app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
 
-var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
-strictModeHandler.ValidateAuthenticationSettings();
+app.ValidateAuthenticationSettings();
 
 app.Run();

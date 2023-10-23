@@ -29,15 +29,15 @@ public class StrictModeHandler : IStrictModeHandler
 
         if (!_appSettings.PermanentAuthentucationMethods.Equals(AUTHENTICATION_X509))
         {
-            throw new Exception($"PermanentAuthentucationMethods value in appSettings.json must be X509, The value {_appSettings.PermanentAuthentucationMethods} is not valid");
+            throw new Exception($"PermanentAuthentucationMethods value must be X509, The value {_appSettings.PermanentAuthentucationMethods} is not valid");
         }
         if (!_appSettings.ProvisionalAuthentucationMethods.Equals(AUTHENTICATION_SAS))
         {
-            throw new Exception($"ProvisionalAuthentucationMethods value in appSettings.json must be SAS, The value {_appSettings.ProvisionalAuthentucationMethods} is not valid");
+            throw new Exception($"ProvisionalAuthentucationMethods value must be SAS, The value {_appSettings.ProvisionalAuthentucationMethods} is not valid");
         }
     }
 
-    public async Task<string> ReplaceRootByIdAsync(string fileName)
+    public string ReplaceRootById(string fileName)
     {
         var pattern = @"\${(.*?)}";
 
@@ -51,7 +51,21 @@ public class StrictModeHandler : IStrictModeHandler
         return replacedString;
     }
 
-    public async Task CheckFileAccessPermissionsAsync(TwinActionType actionType, string fileName)
+    public void CheckSizeStrictMode(long size, string fileName, TwinActionType actionType)
+    {
+        FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
+        if (zoneRestrictions.Type == UPLOAD_ACTION || zoneRestrictions.MaxSize == 0)
+        {
+            return;
+        }
+        if (size > zoneRestrictions.MaxSize)
+        {
+            _logger.Error("The file size is larger than allowed");
+            throw new Exception(ResultCode.StrictModeSize.ToString());
+        }
+    }
+
+    public void CheckFileAccessPermissions(TwinActionType actionType, string fileName)
     {
         if (!_appSettings.StrictMode)
         {
@@ -60,32 +74,33 @@ public class StrictModeHandler : IStrictModeHandler
 
         string verbatimFileName = @$"{fileName.Replace("\\", "/")}";
 
-        List<FileRestrictionDetails> actionRestrictions = await GetRestrictionsByActionTypeAsync(actionType);
-        FileRestrictionDetails zoneRestrictions = await GetRestrinctionsByZoneAsync(fileName, actionRestrictions);
+        FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
+
         if (zoneRestrictions == null)
         {
             return;
         }
-        await HandleSizeStrictModeAsync(zoneRestrictions, fileName);
 
-        List<string> allowPatterns = await GetAllowRestrictionsAsync(zoneRestrictions);
-        if (allowPatterns.Count == 0)
+        List<string> allowPatterns = GetAllowRestrictions(zoneRestrictions);
+        if (allowPatterns?.Count == 0)
         {
             return;
         }
 
         foreach (var pattern in allowPatterns)
         {
-            if (!string.IsNullOrWhiteSpace(pattern) && !pattern.StartsWith("#"))
+            if (string.IsNullOrWhiteSpace(pattern))
             {
-                var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
-                var isMatch = IsMatch(verbatimFileName, regexPattern);
-                if (isMatch)
-                {
-                    _logger.Info($"{fileName} is match to pattern: {pattern}");
-                    return;
-                }
+                return;
             }
+            var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
+            var isMatch = IsMatch(verbatimFileName, regexPattern);
+            if (isMatch)
+            {
+                _logger.Info($"{fileName} is match to pattern: {pattern}");
+                return;
+            }
+
         }
         _logger.Error("Denied by the lack of local allowance");
         throw new Exception(ResultCode.StrictModePattern.ToString());
@@ -112,7 +127,7 @@ public class StrictModeHandler : IStrictModeHandler
         return new Regex(regexPattern, RegexOptions.IgnoreCase);
     }
 
-    private async Task<List<FileRestrictionDetails>> GetRestrictionsByActionTypeAsync(TwinActionType actionType)
+    private List<FileRestrictionDetails> GetRestrictionsByActionType(TwinActionType actionType)
     {
         _logger.Info($"Get restrictions for {actionType} action");
 
@@ -127,10 +142,22 @@ public class StrictModeHandler : IStrictModeHandler
         }
     }
 
-    private async Task<FileRestrictionDetails> GetRestrinctionsByZoneAsync(string fileName, List<FileRestrictionDetails> restrictions)
+    private FileRestrictionDetails GetRestrinctionsByZone(string fileName, TwinActionType actionType)
     {
-        ArgumentNullException.ThrowIfNull(restrictions);
-        return restrictions.FirstOrDefault(x => fileName.Contains(x.Root));
+        List<FileRestrictionDetails> actionRestrictions = GetRestrictionsByActionType(actionType);
+        FileRestrictionDetails zoneRestrictions = actionRestrictions.FirstOrDefault(x => fileName.Contains(x.Root));
+        return zoneRestrictions;
+    }
+    private List<string> GetAllowRestrictions(FileRestrictionDetails zoneRestrictions)
+    {
+        List<string> allowPatterns = zoneRestrictions?.AllowPatterns ?? new List<string>();
+        if (_appSettings.GlobalPatterns != null)
+        {
+            allowPatterns?.AddRange(_appSettings.GlobalPatterns);
+        }
+
+        _logger.Info($"{allowPatterns?.Count} allow pattern was found");
+        return allowPatterns;
     }
 
     private FileRestrictionDetails GetRestrinctionsById(string id)
@@ -142,37 +169,12 @@ public class StrictModeHandler : IStrictModeHandler
     {
         FileRestrictionDetails restriction = GetRestrinctionsById(id);
 
-        ArgumentNullException.ThrowIfNull(restriction);
-        ArgumentNullException.ThrowIfNullOrEmpty(restriction.Root);
+        if (string.IsNullOrWhiteSpace(restriction?.Root))
+        {
+            _logger.Error($"No Root found for Id: {id}");
+            throw new Exception(ResultCode.StrictModeRootNotFound.ToString());
+        }
+
         return restriction.Root;
-    }
-
-    private async Task<List<string>> GetAllowRestrictionsAsync(FileRestrictionDetails zoneRestrictions)
-    {
-        List<string> allowPatterns = new List<string>();
-        if (zoneRestrictions != null)
-        {
-            allowPatterns = zoneRestrictions.AllowPatterns;
-            if (_appSettings.GlobalPatterns != null)
-            {
-                allowPatterns.AddRange(_appSettings.GlobalPatterns);
-            }
-        }
-        _logger.Info($"{allowPatterns.Count} allow pattern was found");
-        return allowPatterns;
-    }
-
-    private async Task HandleSizeStrictModeAsync(FileRestrictionDetails zoneRestrictions, string fileName)
-    {
-        if (zoneRestrictions.Type == UPLOAD_ACTION || zoneRestrictions.MaxSize == 0)
-        {
-            return;
-        }
-        long size = new FileInfo(fileName).Length;
-        if (size > zoneRestrictions.MaxSize)
-        {
-            _logger.Error("The file size is larger than allowed");
-            throw new Exception(ResultCode.StrictModeSize.ToString());
-        }
     }
 }

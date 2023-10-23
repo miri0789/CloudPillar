@@ -7,5 +7,6 @@ public enum ResultCode
     NotFound,
     StrictModeSize,
     StrictModePattern,
-    StrictModeBashPowerShell
+    StrictModeBashPowerShell,
+    StrictModeRootNotFound
 }

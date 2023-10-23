@@ -35,23 +35,23 @@ public class FileUploaderHandler : IFileUploaderHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
+    public async Task FileUploadAsync(UploadAction uploadAction, string fileName, ActionToReport actionToReport, CancellationToken cancellationToken)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(uploadAction.FileName))
+            if (string.IsNullOrWhiteSpace(fileName))
             {
                 throw new ArgumentException("No file to upload");
             }
             if (uploadAction.Enabled)
             {
-                await UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, actionToReport, cancellationToken);
+                await UploadFilesToBlobStorageAsync(fileName, uploadAction, actionToReport, cancellationToken);
                 SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString());
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error uploading file '{uploadAction.FileName}': {ex.Message}");
+            Console.WriteLine($"Error uploading file '{fileName}': {ex.Message}");
             SetReportProperties(actionToReport, StatusType.Failed, ex.Message, ex.GetType().Name);
         }
         finally

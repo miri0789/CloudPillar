@@ -21,9 +21,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        
-
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));        
     }
 
     public async Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)

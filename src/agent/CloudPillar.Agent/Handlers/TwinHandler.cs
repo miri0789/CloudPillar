@@ -81,8 +81,17 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
-                var strictModeSuccess = await HandleStrictModeAndReplacmentPathAsync(action, cancellationToken);
-                if (!strictModeSuccess) return;
+                var fileName = string.Empty;
+                
+                try
+                {
+                    fileName = HandleReplacePathAndStrictMode(action);
+                }
+                catch (Exception ex)
+                {
+                    await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
+                    continue;
+                }
 
                 switch (action.TwinAction.Action)
                 {
@@ -91,24 +100,24 @@ public class TwinHandler : ITwinHandler
                         break;
 
                     case TwinActionType.SingularUpload:
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, fileName, action, cancellationToken);
                         break;
 
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, fileName, action, cancellationToken);
                         break;
                     case TwinActionType.ExecuteOnce:
                         if (_appSettings.StrictMode)
                         {
                             _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
-                            await UpdateTwinReported(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
-                            return;
+                            await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
+                            continue;
                         }
                         break;
                     default:
-                        await UpdateTwinReported(action, StatusType.Failed, ResultCode.NotFound.ToString(), cancellationToken);
+                        await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.NotFound.ToString(), cancellationToken);
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
@@ -121,24 +130,16 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
     }
-   
-    private async Task<bool> HandleStrictModeAndReplacmentPathAsync(ActionToReport action, CancellationToken cancellationToken)
+    private string HandleReplacePathAndStrictMode(ActionToReport action)
     {
-        try
-        {
-            string fileName = GetFileNameByAction(action);
-            fileName = await _strictModeHandler.ReplaceRootByIdAsync(fileName);
-            await _strictModeHandler.CheckFileAccessPermissionsAsync(action.TwinAction.Action.Value, fileName);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            await UpdateTwinReported(action, StatusType.Failed, ex.Message, cancellationToken);
-            return false;
-        }
+        string fileName = GetFileNameByAction(action);
+
+        fileName = _strictModeHandler.ReplaceRootById(fileName);
+        _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
+        return fileName;
     }
 
-    private async Task UpdateTwinReported(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
+    private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
     {
         action.TwinReport.Status = statusType;
         action.TwinReport.ResultCode = resultCode;
@@ -151,7 +152,18 @@ public class TwinHandler : ITwinHandler
         switch (action.TwinAction.Action)
         {
             case TwinActionType.SingularDownload:
-                fileName = Path.Combine(((DownloadAction)action.TwinAction).DestinationPath, ((DownloadAction)action.TwinAction).Source);
+                var destination = ((DownloadAction)action.TwinAction).DestinationPath;
+                var source = ((DownloadAction)action.TwinAction).Source;
+
+                ArgumentNullException.ThrowIfNullOrEmpty(destination);
+                if (string.IsNullOrWhiteSpace(source))
+                {
+                    fileName = destination;
+                }
+                else
+                {
+                    fileName = destination + source;
+                }
                 break;
             case TwinActionType.SingularUpload:
             case TwinActionType.PeriodicUpload:
