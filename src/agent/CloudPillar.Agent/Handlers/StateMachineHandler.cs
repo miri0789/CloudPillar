@@ -11,14 +11,16 @@ namespace CloudPillar.Agent.Handlers
         private readonly ILoggerHandler _logger;
 
         private readonly IC2DEventHandler _c2DEventHandler;
-        private CancellationTokenSource _cts;
+        private readonly IStateMachineTokenHandler _stateMachineTokenHandler;
         public StateMachineHandler(ITwinHandler twinHandler,
          ILoggerHandler logger,
-         IC2DEventHandler c2DEventHandler)
+         IC2DEventHandler c2DEventHandler,
+         IStateMachineTokenHandler stateMachineTokenHandler)
         {
             _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
             _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _stateMachineTokenHandler = stateMachineTokenHandler ?? throw new ArgumentNullException(nameof(stateMachineTokenHandler));
         }
 
 
@@ -31,9 +33,13 @@ namespace CloudPillar.Agent.Handlers
 
         public async Task SetState(DeviceStateType state)
         {
-            await _twinHandler.UpdateDeviceStateAsync(state);
-            await HandleStateAction(state);
-            _logger.Info($"Set device state: {state.ToString()}");
+            var currentState = await GetState();
+            if (currentState != state)
+            {
+                await _twinHandler.UpdateDeviceStateAsync(state);
+                await HandleStateAction(state);
+                _logger.Info($"Set device state: {state.ToString()}");
+            }
 
         }
 
@@ -56,7 +62,7 @@ namespace CloudPillar.Agent.Handlers
 
         private async Task SetProvisioning()
         {
-            _cts = new CancellationTokenSource();
+            var _cts = _stateMachineTokenHandler.StartToken();
             var result = await _c2DEventHandler.CreateProvisioningSubscribe(_cts.Token);
             if (result)
             {
@@ -66,15 +72,15 @@ namespace CloudPillar.Agent.Handlers
 
         private async Task SetReady()
         {
-            _cts?.Cancel();
-            _cts = new CancellationTokenSource();
+            _stateMachineTokenHandler.CancelToken();
+             var _cts = _stateMachineTokenHandler.StartToken();
             _c2DEventHandler.CreateSubscribe(_cts.Token);
             await _twinHandler.HandleTwinActionsAsync(_cts.Token);
         }
 
         private void SetBusy()
         {
-            _cts?.Cancel();
+            _stateMachineTokenHandler.CancelToken();
         }
     }
 }
