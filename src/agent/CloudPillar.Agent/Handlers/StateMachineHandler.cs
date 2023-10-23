@@ -11,29 +11,35 @@ namespace CloudPillar.Agent.Handlers
         private readonly ILoggerHandler _logger;
 
         private readonly IC2DEventHandler _c2DEventHandler;
-        private CancellationTokenSource _cts;
+        private readonly IStateMachineTokenHandler _stateMachineTokenHandler;
         public StateMachineHandler(ITwinHandler twinHandler,
          ILoggerHandler logger,
-         IC2DEventHandler c2DEventHandler)
+         IC2DEventHandler c2DEventHandler,
+         IStateMachineTokenHandler stateMachineTokenHandler)
         {
             _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
             _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _stateMachineTokenHandler = stateMachineTokenHandler ?? throw new ArgumentNullException(nameof(stateMachineTokenHandler));
         }
 
 
-        public async Task InitStateMachineHandler()
+        public async Task InitStateMachineHandlerAsync()
         {
-            var state = await GetState();
-            _logger.Info($"InitStateMachineHandler: init device state: {state.ToString()}");
+            var state = await GetStateAsync();
+            _logger.Info($"InitStateMachineHandlerAsync: init device state: {state.ToString()}");
             await HandleStateAction(state);
         }
 
-        public async Task SetState(DeviceStateType state)
+        public async Task SetStateAsync(DeviceStateType state)
         {
-            await _twinHandler.UpdateDeviceStateAsync(state);
-            await HandleStateAction(state);
-            _logger.Info($"Set device state: {state.ToString()}");
+            var currentState = await GetStateAsync();
+            if (currentState != state)
+            {
+                await _twinHandler.UpdateDeviceStateAsync(state);
+                await HandleStateAction(state);
+                _logger.Info($"Set device state: {state.ToString()}");
+            }
 
         }
 
@@ -41,40 +47,40 @@ namespace CloudPillar.Agent.Handlers
         {
             switch (state)
             {
-                case DeviceStateType.Provisioning: await SetProvisioning(); break;
-                case DeviceStateType.Ready: await SetReady(); break;
+                case DeviceStateType.Provisioning: await SetProvisioningAsync(); break;
+                case DeviceStateType.Ready: await SetReadyAsync(); break;
                 case DeviceStateType.Busy: SetBusy(); break;
                 default: break;
             }
         }
 
-        public async Task<DeviceStateType> GetState()
+        public async Task<DeviceStateType> GetStateAsync()
         {
             var state = await _twinHandler.GetDeviceStateAsync() ?? DeviceStateType.Uninitialized;
             return state;
         }
 
-        private async Task SetProvisioning()
+        private async Task SetProvisioningAsync()
         {
-            _cts = new CancellationTokenSource();
+            var _cts = _stateMachineTokenHandler.StartToken();
             var result = await _c2DEventHandler.CreateProvisioningSubscribe(_cts.Token);
             if (result)
             {
-                await SetState(DeviceStateType.Ready);
+                await SetStateAsync(DeviceStateType.Ready);
             }
         }
 
-        private async Task SetReady()
+        private async Task SetReadyAsync()
         {
-            _cts?.Cancel();
-            _cts = new CancellationTokenSource();
+            _stateMachineTokenHandler.CancelToken();
+             var _cts = _stateMachineTokenHandler.StartToken();
             _c2DEventHandler.CreateSubscribe(_cts.Token);
             await _twinHandler.HandleTwinActionsAsync(_cts.Token);
         }
 
         private void SetBusy()
         {
-            _cts?.Cancel();
+            _stateMachineTokenHandler.CancelToken();
         }
     }
 }
