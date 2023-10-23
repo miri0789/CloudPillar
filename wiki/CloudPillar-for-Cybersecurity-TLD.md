@@ -881,6 +881,9 @@ By offering these functionalities, the API underscores its pivotal role in grant
 - In case the device is in the Provisioning state and isn't authenticated for the pre-shared key authentication, a new DPS provisioning attempt will be made with a shared enrollment, whose attributes are taken from the app config. If it is authenticated, the headers will be checked against the current authentication device Id and secret, and if it does not match - the call will be failed with 401 Unauthorized.
 - In case the device is in the Ready state, the headers will be checked against the claims in the current certificate, if it does not match - the call will be failed with 401 Unauthorized.
 - In case the device is in the Busy state, all calls are blocked (returning 503 Service Unavailable), except for GetDeviceState and InitiateProvisioning
+- SetBusy not only changes the state and pauses all downloads / uploads, but actually disconnects the connections via the IoT SDK
+- SetReady restores the connections, re-authenticates AND resumes paused downloads / uploads
+- GetDeviceState is designed for periodic usage (for instance once in 5 minutes) and will do the "lazy" device provisioning, e.g. "if not provisioned, do initial provisioning".
 
 | Name                 | HTTP Method | Parameters                  | Headers | Request Body Format                              | Success Response                             | Error Response                                      |
 |----------------------|-------------|-----------------------------|---------|--------------------------------------------------|----------------------------------------------|-----------------------------------------------------|
