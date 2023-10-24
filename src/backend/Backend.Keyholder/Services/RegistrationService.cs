@@ -16,8 +16,6 @@ using Newtonsoft.Json;
 
 public class RegistrationService : IRegistrationService
 {
-    private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
-    private const int KEY_SIZE_IN_BITS = 4096;
     private const string DEVICE_ENDPOINT = "global.azure-devices-provisioning.net";
     private readonly ILoggerHandler _loggerHandler;
 

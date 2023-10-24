@@ -27,7 +27,7 @@ namespace CloudPillar.Agent.Handlers
         public async Task InitStateMachineHandlerAsync()
         {
             var state = await GetStateAsync();
-            _logger.Info($"InitStateMachineHandlerAsync: init device state: {state.ToString()}");
+            _logger.Info($"InitStateMachineHandlerAsync: init device state: {state}");
             await HandleStateAction(state);
         }
 
@@ -38,19 +38,27 @@ namespace CloudPillar.Agent.Handlers
             {
                 await _twinHandler.UpdateDeviceStateAsync(state);
                 await HandleStateAction(state);
-                _logger.Info($"Set device state: {state.ToString()}");
+                _logger.Info($"Set device state: {state}");
             }
 
         }
 
         private async Task HandleStateAction(DeviceStateType state)
         {
+            _logger.Info($"Handle state action, state: {state}");
             switch (state)
             {
-                case DeviceStateType.Provisioning: await SetProvisioningAsync(); break;
-                case DeviceStateType.Ready: await SetReadyAsync(); break;
-                case DeviceStateType.Busy: SetBusy(); break;
-                default: break;
+                case DeviceStateType.Provisioning:
+                    await SetProvisioningAsync();
+                    break;
+                case DeviceStateType.Ready:
+                    await SetReadyAsync();
+                    break;
+                case DeviceStateType.Busy:
+                    SetBusy();
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -73,7 +81,7 @@ namespace CloudPillar.Agent.Handlers
         private async Task SetReadyAsync()
         {
             _stateMachineTokenHandler.CancelToken();
-             var _cts = _stateMachineTokenHandler.StartToken();
+            var _cts = _stateMachineTokenHandler.StartToken();
             _c2DEventHandler.CreateSubscribe(_cts.Token);
             await _twinHandler.HandleTwinActionsAsync(_cts.Token);
         }

@@ -70,7 +70,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"OnDesiredPropertiesUpdate failed", ex);
         }
     }
     public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
@@ -86,7 +86,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"HandleTwinActionsAsync failed", ex);
         }
 
     }
@@ -135,7 +135,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"HandleTwinActions failed", ex);
         }
     }
     private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
@@ -207,7 +207,7 @@ public class TwinHandler : ITwinHandler
         try
         {
             var deviceStateKey = nameof(TwinReported.DeviceState);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString());
             _logger.Info($"UpdateDeviceStateAsync success");
         }
         catch (Exception ex)
@@ -240,7 +240,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"UpdateDeviceSecretKeyAsync failed: {ex.Message}");
+            _logger.Error($"UpdateDeviceSecretKeyAsync failed", ex);
         }
     }
 

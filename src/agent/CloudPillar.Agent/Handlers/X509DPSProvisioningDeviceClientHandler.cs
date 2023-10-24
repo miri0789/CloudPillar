@@ -59,7 +59,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         if (userCertificate == null)
         {
-            _logger.Error("no certificate found in the store");
+            _logger.Error("No certificate found in the store");
             return false;
         }
 
@@ -93,7 +93,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
 
-        return await CheckAuthorizationAndInitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
+        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
     }
 
     public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, CancellationToken cancellationToken)
@@ -127,7 +127,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
-        await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
+        await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
 
     }
 
@@ -146,7 +146,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return friendlyName.Split("@")[1];
     }
 
-    private async Task<bool> CheckAuthorizationAndInitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
+    private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
     {
         try
         {

@@ -11,7 +11,7 @@ public class DeviceStateFilterAttribute : ActionFilterAttribute
         var controller = context.Controller as AgentController;
         if (controller != null)
         {
-            var deviceState = await controller._StateMachineHandler.GetStateAsync();
+            var deviceState = await controller._stateMachineHandler.GetStateAsync();
 
             if (deviceState != DeviceStateType.Ready)
             {

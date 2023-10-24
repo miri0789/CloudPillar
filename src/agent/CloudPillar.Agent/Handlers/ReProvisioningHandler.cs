@@ -93,7 +93,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
                     {
                         X509Certificate2 cert = collection[0];
 
-                        cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}"; ;
+                        cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
 
                         store.Close();
 

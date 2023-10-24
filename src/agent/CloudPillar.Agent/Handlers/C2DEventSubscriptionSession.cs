@@ -32,7 +32,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 
     public async Task<bool> ReceiveC2DMessagesAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
-        const string messageTypeProp = "MessageType";
+        const string MESSAGE_TYPE_PROP = "MessageType";
         while (!cancellationToken.IsCancellationRequested)
         {
             Message receivedMessage;
@@ -43,13 +43,13 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                _logger.Error($"Exception hit when receiving the message, ignoring it: {ex.Message}");
+                _logger.Error("Exception hit when receiving the message, ignoring it", ex);
                 continue;
             }
 
             try
             {
-                if (Enum.TryParse(receivedMessage.Properties[messageTypeProp], out C2DMessageType messageType))
+                if (Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType))
                 {
                     if (isProvisioning)
                     {
@@ -72,13 +72,13 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                _logger.Error($"Exception hit when parsing the message, ignoring it: {ex.Message}");
+                _logger.Error("Exception hit when parsing the message, ignoring it", ex);
                 continue;
             }
             finally
             {
                 await _deviceClient.CompleteAsync(receivedMessage);
-                _logger.Info($"Receive message of type: {receivedMessage.Properties[messageTypeProp]} completed");
+                _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
             }
         }
         return false;
@@ -98,7 +98,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 await _messageSubscriber.HandleRequestDeviceCertificateAsync(requestDeviceCertificateMessage, cancellationToken);
                 break;
             default:
-                _logger.Info($"Receive  message was not processed type: {messageType?.ToString()} , provisioning mode");
+                _logger.Warn($"Receive message was not processed type: {messageType?.ToString()} , provisioning mode");
                 break;
         }
 
@@ -115,7 +115,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
                 break;
             default:
-                _logger.Info($"Receive  message was not processed type: {messageType?.ToString()}");
+                _logger.Warn($"Receive  message was not processed type: {messageType?.ToString()}");
                 break;
         }
     }
