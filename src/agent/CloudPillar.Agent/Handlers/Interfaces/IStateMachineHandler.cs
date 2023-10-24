@@ -5,11 +5,11 @@ namespace CloudPillar.Agent.Handlers
 {
     public interface IStateMachineHandler
     {
-        Task SetState(DeviceStateType state);
+        Task SetStateAsync(DeviceStateType state);
 
-        Task InitStateMachineHandler();
+        Task InitStateMachineHandlerAsync();
 
-        Task<DeviceStateType> GetState();
+        Task<DeviceStateType> GetStateAsync();
     }
 
 }
