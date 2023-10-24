@@ -19,6 +19,7 @@ public class TwinHandler : ITwinHandler
     private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
+    private readonly IStrictModeHandler _strictModeHandler;
     private readonly AppSettings _appSettings;
     private readonly ILoggerHandler _logger;
 
@@ -28,6 +29,7 @@ public class TwinHandler : ITwinHandler
                        ITwinActionsHandler twinActionsHandler,
                        ILoggerHandler loggerHandler,
                        IRuntimeInformationWrapper runtimeInformationWrapper,
+                       IStrictModeHandler strictModeHandler,
                        IFileStreamerWrapper fileStreamerWrapper,
                        IOptions<AppSettings> appSettings)
     {
@@ -37,6 +39,7 @@ public class TwinHandler : ITwinHandler
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _runtimeInformationWrapper = runtimeInformationWrapper ?? throw new ArgumentNullException(nameof(runtimeInformationWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
+        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _supportedShells = GetSupportedShells();
         _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
@@ -68,6 +71,7 @@ public class TwinHandler : ITwinHandler
         catch (Exception ex)
         {
             _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            throw ex;
         }
 
     }
@@ -78,35 +82,43 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
+                var fileName = string.Empty;
+                
+                try
+                {
+                    fileName = HandleReplacePathAndStrictMode(action);
+                }
+                catch (Exception ex)
+                {
+                    await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
+                    continue;
+                }
+
                 switch (action.TwinAction.Action)
                 {
                     case TwinActionType.SingularDownload:
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
-                    case TwinActionType.SingularUpload:
-                        _logger.Info("Start SingularUpload");
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
 
+                    case TwinActionType.SingularUpload:
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, fileName, action, cancellationToken);
                         break;
+
                     case TwinActionType.PeriodicUpload:
                         //TO DO 
                         //implement the while loop with interval like poc
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, fileName, action, cancellationToken);
                         break;
                     case TwinActionType.ExecuteOnce:
                         if (_appSettings.StrictMode)
                         {
                             _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
-                            action.TwinReport.Status = StatusType.Failed;
-                            action.TwinReport.ResultCode = ResultCode.StrictMode.ToString();
-                            await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
-                            return;
+                            await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
+                            continue;
                         }
                         break;
                     default:
-                        action.TwinReport.Status = StatusType.Failed;
-                        action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
-                        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
+                        await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.NotFound.ToString(), cancellationToken);
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
@@ -119,6 +131,49 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed: {ex.Message}");
         }
     }
+    private string HandleReplacePathAndStrictMode(ActionToReport action)
+    {
+        string fileName = GetFileNameByAction(action);
+
+        fileName = _strictModeHandler.ReplaceRootById(fileName, action.TwinAction.Action.Value);
+        _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
+        return fileName;
+    }
+
+    private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
+    {
+        action.TwinReport.Status = statusType;
+        action.TwinReport.ResultCode = resultCode;
+        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
+    }
+
+    private string GetFileNameByAction(ActionToReport action)
+    {
+        string fileName = string.Empty;
+        switch (action.TwinAction.Action)
+        {
+            case TwinActionType.SingularDownload:
+                var destination = ((DownloadAction)action.TwinAction).DestinationPath;
+                var source = ((DownloadAction)action.TwinAction).Source;
+
+                ArgumentNullException.ThrowIfNullOrEmpty(destination);
+                if (string.IsNullOrWhiteSpace(source))
+                {
+                    fileName = destination;
+                }
+                else
+                {
+                    fileName = destination + source;
+                }
+                break;
+            case TwinActionType.SingularUpload:
+            case TwinActionType.PeriodicUpload:
+                fileName = ((UploadAction)action.TwinAction).FileName;
+                break;
+        }
+        return fileName;
+    }
+
     private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
     {
         try
@@ -195,7 +250,7 @@ public class TwinHandler : ITwinHandler
         {
             _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
         }
-    }
+    }   
 
     public async Task InitReportDeviceParamsAsync()
     {

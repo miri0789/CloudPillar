@@ -57,11 +57,6 @@ builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
 
-builder.Services.AddHttpsRedirection(options =>
-{
-    options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
-    options.HttpsPort = sslPort;
-});
 
 builder.Services.AddControllers(options =>
     {
@@ -77,14 +72,12 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
-app.UseHttpsRedirection();
 app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
 
-var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
-strictModeHandler.CheckAuthentucationMethodValue();
+app.ValidateAuthenticationSettings();
 
 
 app.Run();
