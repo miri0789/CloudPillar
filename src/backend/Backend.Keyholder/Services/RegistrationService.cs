@@ -56,7 +56,7 @@ public class RegistrationService : IRegistrationService
 
 
 
-    public async Task Register(string deviceId, string secretKey)
+    public async Task RegisterAsync(string deviceId, string secretKey)
     {
         try
         {
@@ -84,7 +84,7 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    public async Task ProvisionDeviceCertificate(string deviceId, byte[] certificate)
+    public async Task ProvisionDeviceCertificateAsync(string deviceId, byte[] certificate)
     {
         _loggerHandler.Debug($"ProvisionDeviceCertificate for deviceId {deviceId}.");
         ArgumentNullException.ThrowIfNull(certificate);
@@ -121,6 +121,7 @@ public class RegistrationService : IRegistrationService
             catch (ProvisioningServiceClientException ex)
             {
                 //If the enrollment does not exist, it throws an exception when attempting to delete it.
+                _loggerHandler.Debug($"There is no individual enrollment for deviceId {deviceId} for deleted");
             }
 
             var individualEnrollment = _individualEnrollmentWrapper.Create(enrollmentName, attestation);

@@ -28,7 +28,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private const int KEY_SIZE_IN_BITS = 4096;
 
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
-    private const string TEMPORARY_CERTIFICATE_NAME = "temporaryCertificate";
+    private const string TEMPORARY_CERTIFICATE_NAME = "CPTemporaryCertificate";
 
     public ReprovisioningHandler(IDeviceClientWrapper deviceClientWrapper,
         IX509CertificateWrapper X509CertificateWrapper,
@@ -81,7 +81,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
                        .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
                        && cert.Thumbprint != certificate.Thumbprint)
                        .ToArray();
-                    if (filteredCertificates != null && filteredCertificates.Length > 0)
+                    if (filteredCertificates?.Length > 0)
                     {
                         var certificateCollection = new X509Certificate2Collection(filteredCertificates);
                         store.RemoveRange(certificateCollection);
@@ -178,7 +178,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
                     var filteredCertificates = certificates.Cast<X509Certificate2>()
                        .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
                        .ToArray();
-                    if (filteredCertificates != null && filteredCertificates.Length > 0)
+                    if (filteredCertificates?.Length > 0)
                     {
                         var certificateCollection = new X509Certificate2Collection(filteredCertificates);
                         store.RemoveRange(certificateCollection);
