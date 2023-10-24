@@ -19,3 +19,4 @@ src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/FileContentIndex
 src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/DesignTimeBuild
 **/tfplan
 **/*terraform*
+terraform.tfstate*
