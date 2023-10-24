@@ -30,7 +30,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     }
 
 
-    public async Task<bool> ReceiveC2DMessagesAsync(CancellationToken cancellationToken, bool isProvisioning)
+    public async Task ReceiveC2DMessagesAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
         const string MESSAGE_TYPE_PROP = "MessageType";
         while (!cancellationToken.IsCancellationRequested)
@@ -53,11 +53,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 {
                     if (isProvisioning)
                     {
-                        var isFinishRecived = await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
-                        if (isFinishRecived)
-                        {
-                            return isFinishRecived;
-                        }
+                        await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
                     }
                     else
                     {
@@ -81,17 +77,15 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
             }
         }
-        return false;
     }
 
-    private async Task<bool> HandleProvisioningMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
+    private async Task HandleProvisioningMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
     {
-        var isReprovisioning = false;
         switch (messageType)
         {
             case C2DMessageType.Reprovisioning:
                 var reprovisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
-                isReprovisioning = await _messageSubscriber.HandleReprovisioningMessageAsync(reprovisioningMessage, cancellationToken);
+                await _messageSubscriber.HandleReprovisioningMessageAsync(reprovisioningMessage, cancellationToken);
                 break;
             case C2DMessageType.RequestDeviceCertificate:
                 var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<RequestDeviceCertificateMessage>(receivedMessage);
@@ -102,7 +96,6 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 break;
         }
 
-        return isReprovisioning;
     }
 
     private async Task HandleMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)

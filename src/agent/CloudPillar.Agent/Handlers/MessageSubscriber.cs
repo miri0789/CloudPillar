@@ -18,9 +18,9 @@ public class MessageSubscriber : IMessageSubscriber
         return await _fileDownloadHandler.HandleDownloadMessageAsync(message);
     }
 
-    public async Task<bool> HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
+    public async Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
     {
-       return await _reprovisioningHandler.HandleReprovisioningMessageAsync(message, cancellationToken);
+       await _reprovisioningHandler.HandleReprovisioningMessageAsync(message, cancellationToken);
     }
 
     public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)

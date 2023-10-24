@@ -46,7 +46,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
-    public async Task<bool> HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
+    public async Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
         ArgumentNullException.ThrowIfNull(message.Data);
@@ -96,13 +96,10 @@ public class ReprovisioningHandler : IReprovisioningHandler
                         cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
 
                         store.Close();
-
-                        return true;
                     }
 
                 }
             }
-            return false;
 
         }
         catch (Exception ex)

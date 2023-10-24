@@ -20,20 +20,14 @@ public class C2DEventHandler : IC2DEventHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-
-    public void CreateSubscribe(CancellationToken cancellationToken)
-    {
-        _logger.Info("Subscribing to C2D messages...");
-
-        Task.Run(() => _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken, false));
-    }
+    
 
 
-    public async Task<bool> CreateProvisioningSubscribe(CancellationToken cancellationToken)
+    public async Task CreateSubscribeAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
         _logger.Info("Subscribing to Provisioning C2D messages...");
 
-        return await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken, true);
+        await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken, isProvisioning);
     }
 
 }
