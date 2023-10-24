@@ -16,7 +16,7 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "DEVICE_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;DeviceId=carto3ag1;SharedAccessKey=JP25Buy7v47bTIxm4umXnhGsku4keCqrz7qB+vEcmbo="
+                "DEVICE_CONNECTION_STRING": ""
             },
             "stopAtEntry": false
         },
@@ -35,10 +35,10 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
-                "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub",
+                "IOTHUB_CONNECTION_STRING": "",
+                "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "",
                 "IOTHUB_EVENT_HUB_COMPATIBLE_PATH": "szlabs-iot-hub",
-                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "STORAGE_CONNECTION_STRING": "",
                 "BLOB_CONTAINER_NAME": "iot-firmware",
                 // "PARTITION_ID":                         "0"
             },
@@ -78,10 +78,10 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
-                "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub",
+                "IOTHUB_CONNECTION_STRING": "",
+                "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "",
                 "IOTHUB_EVENT_HUB_COMPATIBLE_PATH": "szlabs-iot-hub",
-                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "STORAGE_CONNECTION_STRING": "",
                 "BLOB_CONTAINER_NAME": "iot-firmware",
                 "DRAIN_D2C_QUEUES": "true",
                 // "PARTITION_ID":                         "0"
@@ -101,10 +101,10 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env": {
-                "IOTHUB_CONNECTION_STRING": "HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=",
-                "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "Endpoint=sb://iothub-ns-szlabs-iot-24863501-f5f2fbc92a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=XMuOJh0spASmuLLKcdvBJ8zqjirW6XX1NAgxu1hSXf4=;EntityPath=szlabs-iot-hub",
+                "IOTHUB_CONNECTION_STRING": "",
+                "IOTHUB_EVENT_HUB_COMPATIBLE_ENDPOINT": "",
                 "IOTHUB_EVENT_HUB_COMPATIBLE_PATH": "szlabs-iot-hub",
-                "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=szlaaa12026ce;AccountKey=ZCspYG/5HjJTVdY+9Hf/ZkzHHspd2BGXH8cVPUkgDzmvA5JCyRWk5B6aFG1izNq7YC+i/VsDrxOb+AStciDLcw==;EndpointSuffix=core.windows.net",
+                "STORAGE_CONNECTION_STRING": "",
                 "BLOB_CONTAINER_NAME": "iot-firmware",
                 // "D2C_PARTITION_ID": "0"
             }
@@ -119,8 +119,8 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.BlobStreamer",
             "console": "internalConsole",
             "env": {
-                "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
+                "IothubConnectionString": "",
+                "StorageConnectionString": "",
                 "BlobContainerName": "iotcontainer",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
@@ -137,9 +137,9 @@
             "cwd": "${workspaceFolder}/src/backend/Backend.Iotlistener",
             "console": "internalConsole",
             "env": {
-                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-iot-bracha-25252981-8c43c79e79.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=;EntityPath=iot-bracha-dev",
+                "IothubEventHubCompatibleEndpoint": "",
                 "IothubEventHubCompatiblePath": "iot-bracha-dev",
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
+                "StorageConnectionString": "",
                 "BlobContainerName": "iotcontainer",
                 "BlobStreamerUrl": "http://localhost:5019/",
                 "KeyHolderUrl": "http://localhost:5164/",
@@ -164,9 +164,9 @@
                 "SigningPem": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSHVBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFqQklIV01JSFRBZ0VCQkVJQml5QWE3YVJIRkRDaDJxZ2EKOXNUVUdJTkU1akhBRm5tTTh4V2VUL3VuaTVJNHROcWhWNVh4MHBEcm1DVjltYnJvRnRmRWEwWFZmS3VNQXh4ZgpaNkxNL3lLaGdZa0RnWVlBQkFHQnpnZG5QNzk4RnNMdVdZVEREUUE3YzByM0JWazhOblJVU2V4cFFVc1JpbFBOCnYzU2NoTzBsUnc5UnU4Nngxa2huVkR4K2R1cTRCaURGY3ZsU0FjeWpMQUNKdmp2b3lUTEppQStUUUZkbXJlYXIKak1pWk5FMjVwVDJ5V1AxTlVuZEp4UGN2VnRmQlc0OGtQT212a1k0V2xxUDViQXdDWHdic0tyQ2drNnhic3AxMgpldz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0=",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
-                "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
-                "DPSConnectionString": "HostName=DPS-Bracha.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=f3+8+rqrtH0T7nlSuIshUSn2K6rbIb7mUHQwTcztRzg=",
-                "DPSIdScope": "0ne00B07A2A"
+                "IothubConnectionString": "",
+                "DPSConnectionString": "",
+                "DPSIdScope": ""
             }
         },
         {
@@ -181,9 +181,9 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "env": {
-                "TENANT_ID": "63d53a16-04d5-4981-b530-4f38d3b16281", // tenant-id
-                "CLIENT_ID": "947edf6d-b41d-4f18-9912-b007670e71b3", // client-id 
-                "CLIENT_SECRET": "kaJ8Q~y2~z3meNKe87FV9BFb9bFCdncWOt1Fbb2h", // client-secret
+                "TENANT_ID": "", // tenant-id
+                "CLIENT_ID": "", // client-id 
+                "CLIENT_SECRET": "", // client-secret
                 "RESOURCE": "https://dicom.healthcareapis.azure.com",
                 "AUTHORITY": "https://login.microsoftonline.com"
             },
@@ -199,10 +199,10 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                "DpsScopeId": "0ne00B07A2A",
+                "DpsScopeId": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "CertificateExpiredDays": "365",
-                "GroupEnrollmentPrimaryKey":"zeuIXU7CbwMS6YfF5+i5Nn71ZGNj/boUA1UuLuYXuZLiqQqWs09ftT63iZQ6iOEmpJEs1F58WFV6EelxY+KvDA=="
+                "GroupEnrollmentPrimaryKey":""
             },
             "stopAtEntry": false
         }
