@@ -57,10 +57,11 @@ public class AgentController : ControllerBase
     {
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
-        var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
+        var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();        
         bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
         if (!isX509Authorized)
         {
+            _logger.Info("GetDeviceStateAsync, the device is unAuthorized, check i");
             var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationAsync(cancellationToken);
             if (!isSymetricKeyAuthorized)
             {

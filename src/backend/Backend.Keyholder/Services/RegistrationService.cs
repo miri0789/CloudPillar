@@ -16,7 +16,6 @@ using Newtonsoft.Json;
 
 public class RegistrationService : IRegistrationService
 {
-    private const string DEVICE_ENDPOINT = "global.azure-devices-provisioning.net";
     private readonly ILoggerHandler _loggerHandler;
 
     private readonly IMessageFactory _messageFactory;
@@ -141,7 +140,7 @@ public class RegistrationService : IRegistrationService
         var message = new ReprovisioningMessage()
         {
             Data = Encoding.Unicode.GetBytes(individualEnrollment.RegistrationId),
-            DeviceEndpoint = DEVICE_ENDPOINT,
+            DeviceEndpoint = _environmentsWrapper.globalDeviceEndpoint,
             // TODO: get the scopeid from the dps, not from the env, + do not send the dps connection string
             ScopedId = _environmentsWrapper.dpsIdScope,
             DPSConnectionString = _environmentsWrapper.dpsConnectionString
