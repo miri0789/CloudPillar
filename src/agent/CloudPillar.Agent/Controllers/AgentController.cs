@@ -48,7 +48,7 @@ public class AgentController : ControllerBase
 
     [HttpPost("AddRecipe")]
     [DeviceStateFilter]
-    public async Task<ActionResult<string>> AddRecipe([FromBody] TwinDesired recipe)
+    public async Task<ActionResult<string>> AddRecipeAsync([FromBody] TwinDesired recipe)
     {
         _twinDesiredPropsValidator.ValidateAndThrow(recipe);
         return await _twinHandler.GetTwinJsonAsync();
@@ -56,18 +56,18 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet("GetDeviceState")]
-    public async Task<ActionResult<string>> GetDeviceState(CancellationToken cancellationToken)
+    public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
-        bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationAsync(deviceId, secretKey, cancellationToken);
+        bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
         if (!isX509Authorized)
         {
             var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationAsync(cancellationToken);
             if (!isSymetricKeyAuthorized)
             {
-                await ProvisinigSymetricKey(cancellationToken);
+                await ProvisinigSymetricKeyAsync(cancellationToken);
             }
         }
         return await _twinHandler.GetTwinJsonAsync();
@@ -75,11 +75,11 @@ public class AgentController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
-    public async Task<ActionResult<string>> InitiateProvisioning(CancellationToken cancellationToken)
+    public async Task<ActionResult<string>> InitiateProvisioningAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await ProvisinigSymetricKey(cancellationToken);
+            await ProvisinigSymetricKeyAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)
@@ -90,14 +90,14 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("SetBusy")]
-    public async Task<ActionResult<string>> SetBusy()
+    public async Task<ActionResult<string>> SetBusyAsync()
     {
         _StateMachineHandler.SetState(DeviceStateType.Busy);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPost("SetReady")]
-    public async Task<ActionResult<string>> SetReady()
+    public async Task<ActionResult<string>> SetReadyAsync()
     {
         _StateMachineHandler.SetState(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
@@ -105,13 +105,13 @@ public class AgentController : ControllerBase
 
     [HttpPut("UpdateReportedProps")]
     [DeviceStateFilter]
-    public async Task<ActionResult<string>> UpdateReportedProps([FromBody] UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
-    private async Task ProvisinigSymetricKey(CancellationToken cancellationToken)
+    private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
     {
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();

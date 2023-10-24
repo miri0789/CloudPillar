@@ -45,10 +45,10 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     public async Task<bool> InitAuthorizationAsync()
     {
-        return await AuthorizationAsync("", "", default, true);
+        return await AuthorizationAsync(string.Empty, string.Empty, default, true);
     }
 
-    public async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
+    public async Task<bool> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
     {
         return await AuthorizationAsync(XdeviceId, XSecretKey, cancellationToken);
     }

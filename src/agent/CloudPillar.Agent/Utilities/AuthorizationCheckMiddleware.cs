@@ -52,7 +52,7 @@ public class AuthorizationCheckMiddleware
             }
 
 
-            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationAsync(xDeviceId, xSecretKey, cancellationToken);
+            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
