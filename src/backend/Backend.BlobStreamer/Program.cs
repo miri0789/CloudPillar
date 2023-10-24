@@ -22,7 +22,6 @@ builder.Services.AddScoped<IUploadStreamChunksService, UploadStreamChunksService
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
