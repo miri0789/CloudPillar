@@ -20,23 +20,6 @@ public class StrictModeHandler : IStrictModeHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public void ValidateAuthenticationSettings()
-    {
-        if (!_appSettings.StrictMode)
-        {
-            return;
-        }
-
-        if (!_appSettings.PermanentAuthentucationMethods.Equals(AUTHENTICATION_X509))
-        {
-            throw new Exception($"PermanentAuthentucationMethods value must be X509, The value {_appSettings.PermanentAuthentucationMethods} is not valid");
-        }
-        if (!_appSettings.ProvisionalAuthentucationMethods.Equals(AUTHENTICATION_SAS))
-        {
-            throw new Exception($"ProvisionalAuthentucationMethods value must be SAS, The value {_appSettings.ProvisionalAuthentucationMethods} is not valid");
-        }
-    }
-
     public string ReplaceRootById(string fileName, TwinActionType actionType)
     {
         var pattern = @"\${(.*?)}";
