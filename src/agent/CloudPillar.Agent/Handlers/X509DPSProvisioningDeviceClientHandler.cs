@@ -27,7 +27,8 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     public X509Certificate2? GetCertificate()
     {
-        var certificates = _X509CertificateWrapper.GetCertificates(OpenFlags.ReadOnly);
+        _X509CertificateWrapper.Open(OpenFlags.ReadOnly);
+        var certificates = _X509CertificateWrapper.Certificates;
         if (certificates == null)
         {
             return null;
