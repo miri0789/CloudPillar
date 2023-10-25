@@ -35,7 +35,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task FileUploadAsync(UploadAction uploadAction, string fileName, ActionToReport actionToReport, CancellationToken cancellationToken)
+    public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string fileName, CancellationToken cancellationToken)
     {
         try
         {
@@ -51,7 +51,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error uploading file '{fileName}': {ex.Message}");
+            _logger.Error($"Error uploading file '{fileName}': {ex.Message}");
             SetReportProperties(actionToReport, StatusType.Failed, ex.Message, ex.GetType().Name);
         }
         finally
