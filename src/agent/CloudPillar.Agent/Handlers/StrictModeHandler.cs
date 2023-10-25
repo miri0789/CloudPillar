@@ -125,7 +125,6 @@ public class StrictModeHandler : IStrictModeHandler
             case TwinActionType.SingularDownload:
                 return _appSettings.FilesRestrictions.Where(x => x.Type == DOWNLOAD_ACTION).ToList();
             case TwinActionType.SingularUpload:
-            case TwinActionType.PeriodicUpload:
                 return _appSettings.FilesRestrictions.Where(x => x.Type == UPLOAD_ACTION).ToList();
             default: return _appSettings.FilesRestrictions;
         }

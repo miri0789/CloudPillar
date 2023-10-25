@@ -107,12 +107,7 @@ public class TwinHandler : ITwinHandler
                     case TwinActionType.SingularUpload:
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, fileName, cancellationToken);
                         break;
-
-                    case TwinActionType.PeriodicUpload:
-                        //TO DO 
-                        //implement the while loop with interval like poc
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, fileName, cancellationToken);
-                        break;
+                   
                     case TwinActionType.ExecuteOnce:
                         if (_appSettings.StrictMode)
                         {
@@ -163,7 +158,6 @@ public class TwinHandler : ITwinHandler
                 }
                 break;
             case TwinActionType.SingularUpload:
-            case TwinActionType.PeriodicUpload:
                 fileName = ((UploadAction)action.TwinAction).FileName;
                 break;
         }
