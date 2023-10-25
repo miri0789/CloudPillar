@@ -21,11 +21,10 @@ public class SymmetricKeyProvisioningHandlerTestFixture
 
 
     private const string DEVICE_ID = "UnitTest";
-    private const string SECRET_KEY = "secert";
     private const string IOT_HUB_HOST_NAME = "IoTHubHostName";
     const string DPS_SCOPE_ID = "dpsScopeId";
     const string GLOBAL_DEVICE_ENDPOINT = "globalDeviceEndpoint";
-    const string GROUP_ENROLLMENT_PRMARY_KEY = "asdasd";//"VGVzdEtleQ==";
+    const string GROUP_ENROLLMENT_PRIMARY_KEY ="groupEnrollmentPrimaryKey";
     const string PRIMARY_KEY = "VGVzdEtleQ==";
     const string? SECONDARY_KEY = "";
 
@@ -38,16 +37,15 @@ public class SymmetricKeyProvisioningHandlerTestFixture
         _symmetricKeyWrapperMock = new Mock<ISymmetricKeyWrapper>();
         _provisioningDeviceClientWrapperMock = new Mock<IProvisioningDeviceClientWrapper>();
         _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
+
         _environmentsWrapperMock.Setup(x => x.dpsScopeId).Returns(DPS_SCOPE_ID);
         _environmentsWrapperMock.Setup(x => x.globalDeviceEndpoint).Returns(GLOBAL_DEVICE_ENDPOINT);
-        _environmentsWrapperMock.Setup(x => x.groupEnrollmentPrimaryKey).Returns(GROUP_ENROLLMENT_PRMARY_KEY);
+        _environmentsWrapperMock.Setup(x => x.groupEnrollmentPrimaryKey).Returns(GROUP_ENROLLMENT_PRIMARY_KEY);
 
         _symmetricKeyWrapperMock.Setup(x => x.CreateHMAC(It.IsAny<string>())).Returns(new HMACSHA256(Convert.FromBase64String(PRIMARY_KEY)));
         _symmetricKeyWrapperMock.Setup(x => x.GetSecurityProvider(DEVICE_ID, PRIMARY_KEY, SECONDARY_KEY)).Returns(new SecurityProviderSymmetricKey(DEVICE_ID, PRIMARY_KEY, SECONDARY_KEY));
         _deviceClientWrapperMock.Setup(x => x.GetProvisioningTransportHandler()).Returns(Mock.Of<ProvisioningTransportHandler>());
 
-        _deviceClientWrapperMock.Setup(x => x.DeviceInitializationAsync(It.IsAny<string>(), It.IsAny<DeviceAuthenticationWithX509Certificate>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
         _deviceClientWrapperMock.Setup(x => x.IsDeviceInitializedAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         _target = new SymmetricKeyProvisioningHandler(_loggerMock.Object, _deviceClientWrapperMock.Object, _symmetricKeyWrapperMock.Object, _environmentsWrapperMock.Object, _provisioningDeviceClientWrapperMock.Object);
