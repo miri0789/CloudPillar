@@ -48,9 +48,9 @@ public class X509CertificateWrapper : IX509CertificateWrapper
         _store.Add(x509Certificate);
     }
     
-    public X509Certificate2 CreateFromBytes(byte[] rawData, string password)
+    public X509Certificate2 CreateFromBytes(byte[] rawData, string password, X509KeyStorageFlags keyStorageFlags)
     {
-        return new X509Certificate2(rawData, password);
+        return new X509Certificate2(rawData, password, keyStorageFlags);
     }
     
     public DeviceAuthenticationWithX509Certificate GetDeviceAuthentication(string deviceId, X509Certificate2 certificate)

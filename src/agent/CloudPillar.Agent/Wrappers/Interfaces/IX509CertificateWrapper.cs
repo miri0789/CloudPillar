@@ -20,7 +20,7 @@ public interface IX509CertificateWrapper
 
     X509Certificate2Collection CreateCertificateCollecation(X509Certificate2[] certificates);
 
-    X509Certificate2 CreateFromBytes(byte[] rawData, string password);
+    X509Certificate2 CreateFromBytes(byte[] rawData, string password, X509KeyStorageFlags keyStorageFlags);
     
     SecurityProviderX509Certificate GetSecurityProvider(X509Certificate2 certificate);
 

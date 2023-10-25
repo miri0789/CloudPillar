@@ -14,8 +14,8 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService)); ;
-        _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper)); ;
+        _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
+        _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
     }
 
     public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum)

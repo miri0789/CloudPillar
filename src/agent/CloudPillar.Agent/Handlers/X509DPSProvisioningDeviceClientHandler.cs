@@ -14,15 +14,18 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     private IDeviceClientWrapper _deviceClientWrapper;
     private readonly IX509CertificateWrapper _X509CertificateWrapper;
+    private readonly IProvisioningDeviceClientWrapper _provisioningDeviceClientWrapper;
 
     public X509DPSProvisioningDeviceClientHandler(
         ILoggerHandler loggerHandler,
         IDeviceClientWrapper deviceClientWrapper,
-        IX509CertificateWrapper X509CertificateWrapper)
+        IX509CertificateWrapper X509CertificateWrapper,
+        IProvisioningDeviceClientWrapper provisioningDeviceClientWrapper)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _X509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
+        _provisioningDeviceClientWrapper = provisioningDeviceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningDeviceClientWrapper));
     }
 
     public X509Certificate2? GetCertificate()
@@ -94,17 +97,19 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         _logger.Debug($"Initializing the device provisioning client...");
 
         using ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler();
-        var provClient = ProvisioningDeviceClient.Create(
-            globalDeviceEndpoint,
-            dpsScopeId,
-            security,
-            transport);
-
-
 
         _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
 
-        DeviceRegistrationResult result = await provClient.RegisterAsync();
+        DeviceRegistrationResult result = await _provisioningDeviceClientWrapper.RegisterAsync(globalDeviceEndpoint,
+            dpsScopeId,
+            security,
+            transport);
+            
+        if (result == null)
+        {
+            _logger.Error("RegisterAsync failed");
+            return;
+        }
 
         _logger.Debug($"Registration status: {result.Status}.");
         if (result.Status != ProvisioningRegistrationStatusType.Assigned)

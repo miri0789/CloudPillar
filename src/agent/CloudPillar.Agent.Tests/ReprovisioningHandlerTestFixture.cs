@@ -59,7 +59,9 @@ public class ReprovisioningHandlerTestFixture
             DPSConnectionString = "dpsConnectionString"
         };
 
-        _certificate =  X509Provider.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60);
+        _certificate = X509Provider.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60);
+        _x509CertificateWrapperMock.Setup(x => x.CreateFromBytes(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<X509KeyStorageFlags>())).Returns(_certificate).Verifiable();
+          _sHA256WrapperMock.Setup(x => x.ComputeHash(It.IsAny<byte[]>())).Returns(Encoding.UTF8.GetBytes("hash")).Verifiable();
 
 
         _target = new ReprovisioningHandler(_deviceClientWrapperMock.Object,
@@ -74,7 +76,7 @@ public class ReprovisioningHandlerTestFixture
 
     [Test]
     public async Task HandleReprovisioningMessageAsync_ValidMessage_CallsProvisioningMethod()
-    {        
+    {
         _certificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
         _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite)).Verifiable();
         _x509CertificateWrapperMock.Setup(x => x.Certificates).Returns(new X509Certificate2Collection() { _certificate });
@@ -106,7 +108,7 @@ public class ReprovisioningHandlerTestFixture
     [Test]
     public async Task HandleReprovisioningMessageAsync_InvalidCertificate_ThrowException()
     {
-        
+
         _certificate.FriendlyName = "invalidCertificate";
 
         _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite)).Verifiable();
@@ -120,7 +122,7 @@ public class ReprovisioningHandlerTestFixture
 
     [Test]
     public async Task HandleReprovisioningMessageAsync_Valid_CertificateFriendlyNameChanged()
-    {       
+    {
         _certificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
 
         _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite)).Verifiable();
@@ -142,26 +144,39 @@ public class ReprovisioningHandlerTestFixture
             Data = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(new AuthonticationKeys { DeviceId = DEVICE_ID, SecretKey = SECRET_KEY })),
         };
 
-        _x509CertificateWrapperMock.Setup(x => x.CreateFromBytes(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(_certificate).Verifiable();
-        _sHA256WrapperMock.Setup(x => x.ComputeHash(It.IsAny<byte[]>())).Returns(Encoding.UTF8.GetBytes("hash")).Verifiable();
+
         _d2CMessengerHandlerMock.Setup(x => x.ProvisionDeviceCertificateEventAsync(_certificate)).Returns(Task.CompletedTask).Verifiable();
 
         await _target.HandleRequestDeviceCertificateAsync(message, CancellationToken.None);
-     
+
         _d2CMessengerHandlerMock.Verify(d => d.ProvisionDeviceCertificateEventAsync(It.IsAny<X509Certificate2>()), Times.Once);
     }
 
-       [Test]
+    [Test]
     public async Task HandleRequestDeviceCertificateAsync_InvalidMessage_ThrowException()
     {
         var message = new RequestDeviceCertificateMessage();
 
-        _x509CertificateWrapperMock.Setup(x => x.CreateFromBytes(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(_certificate).Verifiable();
-        _sHA256WrapperMock.Setup(x => x.ComputeHash(It.IsAny<byte[]>())).Returns(Encoding.UTF8.GetBytes("hash")).Verifiable();
+      
         _d2CMessengerHandlerMock.Setup(x => x.ProvisionDeviceCertificateEventAsync(_certificate)).Returns(Task.CompletedTask).Verifiable();
 
-         Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleRequestDeviceCertificateAsync(message, CancellationToken.None));
+        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleRequestDeviceCertificateAsync(message, CancellationToken.None));
     }
+
+    [Test]
+    public async Task HandleRequestDeviceCertificateAsync_InvalidDataInMessage_ThrowException()
+    {
+        var message = new RequestDeviceCertificateMessage()
+        {
+            Data = null
+        };
+
+        _d2CMessengerHandlerMock.Setup(x => x.ProvisionDeviceCertificateEventAsync(_certificate)).Returns(Task.CompletedTask).Verifiable();
+
+        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleRequestDeviceCertificateAsync(message, CancellationToken.None));
+    }
+
+
 
 
 

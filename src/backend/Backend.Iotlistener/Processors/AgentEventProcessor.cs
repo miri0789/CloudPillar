@@ -29,7 +29,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
-        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService)); ;
+        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _partitionId = partitionId;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -64,7 +64,7 @@ public class AgentEventProcessor : IEventProcessor
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
-        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService)); ;
+        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }

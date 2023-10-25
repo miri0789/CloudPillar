@@ -141,7 +141,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         var pfxBytes = certificate.Export(X509ContentType.Pkcs12, passwordString);
 
-        var privateCertificate = _x509CertificateWrapper.CreateFromBytes(pfxBytes, passwordString);
+        var privateCertificate = _x509CertificateWrapper.CreateFromBytes(pfxBytes, passwordString, X509KeyStorageFlags.PersistKeySet);
 
         privateCertificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
 
