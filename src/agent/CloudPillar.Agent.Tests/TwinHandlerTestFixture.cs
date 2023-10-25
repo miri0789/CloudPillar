@@ -209,21 +209,21 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task UpdateDeviceStateAsync_ValidState_Success()
     {
-        var deviceState = DeviceStateType.Busy.ToString();
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState))
+        var deviceState = DeviceStateType.Busy;
+        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<string>()))
                        .Returns(Task.CompletedTask);
 
         _target.UpdateDeviceStateAsync(deviceState);
 
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.DeviceState), deviceState), Times.Once);
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.DeviceState), deviceState.ToString()), Times.Once);
     }
 
     [Test]
     public async Task UpdateDeviceStateAsync_OnUpdateReportFailed_LogFailure()
     {
         var expectedErrorMessage = "my error";
-        var deviceState = DeviceStateType.Busy.ToString();
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState))
+        var deviceState = DeviceStateType.Busy;
+        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState.ToString()))
                        .ThrowsAsync(new Exception(expectedErrorMessage));
         _target.UpdateDeviceStateAsync(deviceState);
         _loggerHandlerMock.Verify(logger => logger.Error($"UpdateDeviceStateAsync failed: {expectedErrorMessage}"), Times.Once);
