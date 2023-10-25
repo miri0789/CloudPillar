@@ -20,7 +20,7 @@ public class StrictModeHandler : IStrictModeHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public string ReplaceRootById(string fileName, TwinActionType actionType)
+    public string ReplaceRootById(TwinActionType actionType, string fileName)
     {
         var pattern = @"\${(.*?)}";
 
@@ -34,7 +34,7 @@ public class StrictModeHandler : IStrictModeHandler
         return replacedString;
     }
 
-    public void CheckSizeStrictMode(long size, string fileName, TwinActionType actionType)
+    public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
         FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
         if (zoneRestrictions.Type == UPLOAD_ACTION || zoneRestrictions.MaxSize == 0)
@@ -44,7 +44,7 @@ public class StrictModeHandler : IStrictModeHandler
         if (size > zoneRestrictions.MaxSize)
         {
             _logger.Error("The file size is larger than allowed");
-            throw new Exception(ResultCode.StrictModeSize.ToString());
+            throw new ArgumentException(ResultCode.StrictModeSize.ToString());
         }
     }
 
@@ -67,6 +67,7 @@ public class StrictModeHandler : IStrictModeHandler
         List<string> allowPatterns = GetAllowRestrictions(zoneRestrictions);
         if (allowPatterns?.Count == 0)
         {
+            _logger.Info("No allow patterns were found");
             return;
         }
 
@@ -74,6 +75,7 @@ public class StrictModeHandler : IStrictModeHandler
         {
             if (string.IsNullOrWhiteSpace(pattern))
             {
+                _logger.Info("The pattern is empty");
                 return;
             }
             var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
@@ -86,7 +88,7 @@ public class StrictModeHandler : IStrictModeHandler
 
         }
         _logger.Error("Denied by the lack of local allowance");
-        throw new Exception(ResultCode.StrictModePattern.ToString());
+        throw new FormatException(ResultCode.StrictModePattern.ToString());
     }
 
     private bool IsMatch(string filePath, Regex pattern)
@@ -132,14 +134,14 @@ public class StrictModeHandler : IStrictModeHandler
     private FileRestrictionDetails GetRestrinctionsByZone(string fileName, TwinActionType actionType)
     {
         List<FileRestrictionDetails> actionRestrictions = GetRestrictionsByActionType(actionType);
-        
-        actionRestrictions = actionRestrictions.Where(x=>fileName.Contains(x.Root)).ToList();
+
+        actionRestrictions = actionRestrictions.Where(x => fileName.Contains(x.Root)).ToList();
         var bestMatch = actionRestrictions
                    .OrderByDescending(f => fileName.StartsWith(f.Root) ? f.Root.Length : 0)
                    .FirstOrDefault();
         return bestMatch;
     }
- 
+
     private List<string> GetAllowRestrictions(FileRestrictionDetails zoneRestrictions)
     {
         List<string> allowPatterns = zoneRestrictions?.AllowPatterns ?? new List<string>();
@@ -160,7 +162,7 @@ public class StrictModeHandler : IStrictModeHandler
         if (string.IsNullOrWhiteSpace(restriction?.Root))
         {
             _logger.Error($"No Root found for Id: {id}");
-            throw new Exception(ResultCode.StrictModeRootNotFound.ToString());
+            throw new KeyNotFoundException(ResultCode.StrictModeRootNotFound.ToString());
         }
 
         return restriction.Root;

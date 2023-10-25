@@ -59,7 +59,9 @@ public class FileDownloadHandler : IFileDownloadHandler
 
         try
         {
-            filePath = HandleReplacePathAndCheckSize(file.DownloadAction.Action.Value, filePath, file.TotalBytes);
+            //strict mode
+            filePath = _strictModeHandler.ReplaceRootById(file.DownloadAction.Action.Value, filePath);
+            _strictModeHandler.CheckSizeStrictMode(file.DownloadAction.Action.Value, file.TotalBytes, filePath);
         }
         catch (Exception ex)
         {
@@ -89,14 +91,6 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     }
 
-    private string HandleReplacePathAndCheckSize(TwinActionType actionType, string filePath, long size)
-    {
-        filePath = _strictModeHandler.ReplaceRootById(filePath, actionType);
-        _strictModeHandler.CheckSizeStrictMode(size, filePath, actionType);
-
-        return filePath;
-    }
-
     private float CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
     {
         const double KB = 1024.0;
@@ -117,5 +111,4 @@ public class FileDownloadHandler : IFileDownloadHandler
             await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, startPosition, endPosition);
         }
     }
-    
 }
