@@ -3,6 +3,7 @@ using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Shared;
+using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,8 +19,10 @@ public class TwinHandlerTestFixture
     private Mock<IFileUploaderHandler> _fileUploaderHandlerMock;
     private Mock<ITwinActionsHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerHandlerMock;
+    private Mock<IStrictModeHandler> _strictModeHandlerMock;
+    private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
+    private Mock<IOptions<AppSettings>> _appSettingsMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
-    private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private ITwinHandler _target;
     private CancellationToken cancellationToken = CancellationToken.None;
 
@@ -31,8 +34,10 @@ public class TwinHandlerTestFixture
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
         _twinActionsHandler = new Mock<ITwinActionsHandler>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
+        _strictModeHandlerMock = new Mock<IStrictModeHandler>();
+        _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
+        _appSettingsMock = new Mock<IOptions<AppSettings>>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
-        _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
         CreateTarget();
     }
 
@@ -45,7 +50,9 @@ public class TwinHandlerTestFixture
           _twinActionsHandler.Object,
           _loggerHandlerMock.Object,
           _runtimeInformationWrapper.Object,
-          _fileStreamerWrapper.Object);
+          _strictModeHandlerMock.Object,
+          _fileStreamerWrapperMock.Object,
+          _appSettingsMock.Object);
     }
 
     [Test]
@@ -241,7 +248,7 @@ public class TwinHandlerTestFixture
     {
         var supportedShellsKey = nameof(TwinReported.SupportedShells);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Windows)).Returns(true);
-        _fileStreamerWrapper.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
+        _fileStreamerWrapperMock.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
 
         CreateTarget();
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey, It.IsAny<object>()))
@@ -259,7 +266,7 @@ public class TwinHandlerTestFixture
         var supportedShellsKey = nameof(TwinReported.SupportedShells);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Linux)).Returns(true);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Windows)).Returns(false);
-        _fileStreamerWrapper.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
+        _fileStreamerWrapperMock.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
 
         CreateTarget();
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey, It.IsAny<object>()))
