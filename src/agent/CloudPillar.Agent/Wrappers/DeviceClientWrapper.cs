@@ -55,7 +55,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             await GetTwinAsync(cancellationToken);
             return true;
         }
-        catch
+        catch(Exception ex)
         {
             _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized.");
             return false;

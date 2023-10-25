@@ -192,14 +192,14 @@ public class ReprovisioningHandler : IReprovisioningHandler
         {
             store.Open(OpenFlags.ReadOnly);
             X509Certificate2Collection certificates = store.Certificates;
-            if (certificates == null)
-            {
-                return null;
-            }
-            var filteredCertificate = certificates.Cast<X509Certificate2>()
+            var filteredCertificate = certificates?.Cast<X509Certificate2>()
                .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
                .FirstOrDefault();
 
+            if (filteredCertificate == null)
+            {
+                _logger.Info("GetTempCertificate not find certificate");
+            }
             return filteredCertificate;
         }
 

@@ -19,4 +19,7 @@
     <PackageReference Include="SharedLogger" Version="1.0.10" />
     <PackageReference Include="SharedEntities" Version="1.0.99" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\infra\common\common.csproj" />
+  </ItemGroup>
 </Project>

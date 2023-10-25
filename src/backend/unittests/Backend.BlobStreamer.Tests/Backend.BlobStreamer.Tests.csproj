@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Backend.BlobStreamer\Backend.BlobStreamer.csproj" />
+    <ProjectReference Include="..\..\infra\common\common.csproj" />
   </ItemGroup>
 
 </Project>

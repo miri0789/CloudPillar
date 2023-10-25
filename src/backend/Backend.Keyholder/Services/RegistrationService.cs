@@ -1,18 +1,16 @@
 using Microsoft.Azure.Devices.Provisioning.Service;
-using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
 using System;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
 using System.Text;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
-using Shared.Entities.DeviceClient;
+using common;
 using Microsoft.Azure.Devices;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Authentication;
 using Newtonsoft.Json;
+using common;
 
 public class RegistrationService : IRegistrationService
 {
