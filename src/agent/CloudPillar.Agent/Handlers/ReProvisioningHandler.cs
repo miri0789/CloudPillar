@@ -16,7 +16,6 @@ using Shared.Logger;
 namespace CloudPillar.Agent.Handlers;
 public class ReprovisioningHandler : IReprovisioningHandler
 {
-    private readonly IDeviceClientWrapper _deviceClientWrapper;
 
     private readonly IX509CertificateWrapper _x509CertificateWrapper;
 
@@ -30,15 +29,13 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
     private const string TEMPORARY_CERTIFICATE_NAME = "CPTemporaryCertificate";
 
-    public ReprovisioningHandler(IDeviceClientWrapper deviceClientWrapper,
-        IX509CertificateWrapper X509CertificateWrapper,
+    public ReprovisioningHandler(IX509CertificateWrapper X509CertificateWrapper,
         IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
         IEnvironmentsWrapper environmentsWrapper,
         ID2CMessengerHandler d2CMessengerHandler,
         ILoggerHandler logger
         )
     {
-        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));

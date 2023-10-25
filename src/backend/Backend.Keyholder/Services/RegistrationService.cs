@@ -151,13 +151,13 @@ public class RegistrationService : IRegistrationService
     }
 
     private string GetIOTHubHostName()
-    {      
+    {
 
         string iotHubHostName = _environmentsWrapper.iothubConnectionString
         .Split(';')
         .Select(part => part.Trim())
         .FirstOrDefault(part => part.StartsWith("HostName=", StringComparison.OrdinalIgnoreCase))
-?.Substring("HostName=".Length);
+        ?.Substring("HostName=".Length);
 
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
         return iotHubHostName;
