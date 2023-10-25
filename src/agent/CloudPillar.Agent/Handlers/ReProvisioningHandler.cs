@@ -64,45 +64,39 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
 
-        try
+        await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
+        using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
         {
-            await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
-            using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
+            store.Open(OpenFlags.ReadWrite);
+
+            X509Certificate2Collection certificates = store.Certificates;
+            if (certificates == null)
             {
-                store.Open(OpenFlags.ReadWrite);
-
-                X509Certificate2Collection certificates = store.Certificates;
-                if (certificates != null)
-                {
-                    var filteredCertificates = certificates.Cast<X509Certificate2>()
-                       .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
-                       && cert.Thumbprint != certificate.Thumbprint)
-                       .ToArray();
-                    if (filteredCertificates?.Length > 0)
-                    {
-                        var certificateCollection = new X509Certificate2Collection(filteredCertificates);
-                        store.RemoveRange(certificateCollection);
-                    }
-
-                    X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
-
-                    if (collection.Count > 0)
-                    {
-                        X509Certificate2 cert = collection[0];
-
-                        cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
-
-                        store.Close();
-                    }
-
-                }
+                throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
             }
 
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Provisioning failed", ex);
-            throw;
+            var filteredCertificates = certificates.Cast<X509Certificate2>()
+               .Where(cert => cert.Subject.StartsWith($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}")
+               && cert.Thumbprint != certificate.Thumbprint)
+               .ToArray();
+            if (filteredCertificates?.Length > 0)
+            {
+                var certificateCollection = new X509Certificate2Collection(filteredCertificates);
+                store.RemoveRange(certificateCollection);
+            }
+
+            X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
+            if (collection.Count == 0)
+            {
+                throw new ArgumentNullException("certificates", "Certificates collection must contains temporary cert.");
+            }
+
+            X509Certificate2 cert = collection[0];
+
+            cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
+
+            store.Close();
+
         }
 
 
