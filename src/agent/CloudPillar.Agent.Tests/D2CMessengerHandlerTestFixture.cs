@@ -91,7 +91,7 @@ namespace CloudPillar.Agent.Tests
 
         private bool CheckMessageContent(Message msg, int chunkSize, string fileName, string actionId, long? startPosition, long? endPosition)
         {
-            string messageString = Encoding.Unicode.GetString(msg.GetBytes());
+            string messageString = Encoding.UTF8.GetString(msg.GetBytes());
             FirmwareUpdateEvent firmwareUpdateEvent = JsonConvert.DeserializeObject<FirmwareUpdateEvent>(messageString);
             return firmwareUpdateEvent.ChunkSize == chunkSize &&
                   firmwareUpdateEvent.StartPosition == startPosition &&

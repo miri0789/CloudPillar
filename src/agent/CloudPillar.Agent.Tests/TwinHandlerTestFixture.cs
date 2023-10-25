@@ -84,7 +84,7 @@ public class TwinHandlerTestFixture
     }
 
     [Test]
-    public async Task HandleTwinActionsAsync_NoNewActions_NotUpdateReport()
+    public async Task OnDesiredPropertiesUpdate_NoNewActions_NotUpdateReport()
     {
         var desired = new TwinChangeSpec()
         {
@@ -113,12 +113,12 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()));
 
-        _target.HandleTwinActionsAsync(CancellationToken.None);
+        _target.OnDesiredPropertiesUpdate(CancellationToken.None);
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
     }
 
     [Test]
-    public async Task HandleTwinActionsAsync_SuccessDownloadAction_NotExecuteDownload()
+    public async Task OnDesiredPropertiesUpdate_SuccessDownloadAction_NotExecuteDownload()
     {
         var desired = new TwinChangeSpec()
         {
@@ -145,12 +145,12 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
 
-        _target.HandleTwinActionsAsync(CancellationToken.None);
+        _target.OnDesiredPropertiesUpdate(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Never);
     }
 
     [Test]
-    public async Task HandleTwinActionsAsync_NewDownloadAction_ExecuteDownload()
+    public async Task OnDesiredPropertiesUpdate_NewDownloadAction_ExecuteDownload()
     {
         var desired = new TwinChangeSpec()
         {
@@ -168,12 +168,12 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
 
-        _target.HandleTwinActionsAsync(CancellationToken.None);
+        _target.OnDesiredPropertiesUpdate(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Once);
     }
 
     [Test]
-    public async Task HandleTwinActionsAsync_NewDesiredId_ExecuteAllActions()
+    public async Task OnDesiredPropertiesUpdate_NewDesiredId_ExecuteAllActions()
     {
         var desired = new TwinChangeSpec()
         {
@@ -201,7 +201,7 @@ public class TwinHandlerTestFixture
 
         CreateTwinMock(desired, reported);
         _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()));
-        _target.HandleTwinActionsAsync(CancellationToken.None);
+        _target.OnDesiredPropertiesUpdate(CancellationToken.None);
         _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()), Times.Once);
     }
 
@@ -209,7 +209,7 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task UpdateDeviceStateAsync_ValidState_Success()
     {
-        var deviceState = DeviceStateType.Busy;
+        var deviceState = DeviceStateType.Busy.ToString();
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState))
                        .Returns(Task.CompletedTask);
 
@@ -222,7 +222,7 @@ public class TwinHandlerTestFixture
     public async Task UpdateDeviceStateAsync_OnUpdateReportFailed_LogFailure()
     {
         var expectedErrorMessage = "my error";
-        var deviceState = DeviceStateType.Busy;
+        var deviceState = DeviceStateType.Busy.ToString();
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState))
                        .ThrowsAsync(new Exception(expectedErrorMessage));
         _target.UpdateDeviceStateAsync(deviceState);

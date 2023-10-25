@@ -11,4 +11,5 @@ public interface ITwinHandler
     Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default);
     Task UpdateDeviceSecretKeyAsync(string secretKey);
     Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default);
+    Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken);
 }

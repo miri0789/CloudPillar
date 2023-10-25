@@ -45,7 +45,7 @@ public class TwinHandler : ITwinHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    private async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
+    public async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
     {
         try
         {            
