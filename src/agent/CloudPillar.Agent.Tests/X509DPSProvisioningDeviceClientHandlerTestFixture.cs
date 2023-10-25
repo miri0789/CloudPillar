@@ -147,5 +147,16 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _deviceClientWrapperMock.Verify(x => x.DeviceInitializationAsync(It.IsAny<string>(), It.IsAny<DeviceAuthenticationWithX509Certificate>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Test]
+    public async Task ProvisioningAsync_InvalidParameters_ThrowException()
+    {
+        _provisioningDeviceClientWrapperMock.Setup(x => x.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SecurityProvider>(), It.IsAny<ProvisioningTransportHandler>())).ReturnsAsync(() =>
+        {
+            return new DeviceRegistrationResult(DEVICE_ID, null, IOT_HUB_HOST_NAME, DEVICE_ID, ProvisioningRegistrationStatusType.Failed, "generationId", null, 0, string.Empty, string.Empty);
+        });
+        Assert.ThrowsAsync<ArgumentException>(async () => await _target.ProvisioningAsync(string.Empty, _unitTestCertificate, string.Empty, CancellationToken.None));
+
+    }
+
 
 }
