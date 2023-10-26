@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: {{ .kind | default "Deployment" }}
 metadata:
-  name: {{ .title }}_{{ eq (.kind | default "Deployment") "Deployment" | ternary "D" (eq .kind "ReplicationController" | ternary "RC" (eq .kind "ReplicaSet" | ternary "RS" (eq .kind "DaemonSet" | ternary "DS" (eq .kind "StatefulSet" | ternary "SS" (eq .kind "Job" | ternary "J" (eq .kind "CronJob" | ternary "CJ" "other")))))) }}
+  name: {{ .title }}-{{ eq (.kind | default "Deployment") "Deployment" | ternary "d" (eq .kind "ReplicationController" | ternary "rc" (eq .kind "ReplicaSet" | ternary "rs" (eq .kind "DaemonSet" | ternary "ds" (eq .kind "StatefulSet" | ternary "ss" (eq .kind "Job" | ternary "j" (eq .kind "CronJob" | ternary "cj" "other")))))) }}
   labels:
     app: {{ .title }}
 spec:
@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: {{ .title }}
-        image: "{{ $.Values.image.acr }}/{{ .title }}:{{ .tag | default $.Values.image.tag }}"
+        image: "{{ $.Values.image.acr }}/cloudpillar{{ .title }}service:{{ $.Values.image.tag }}"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

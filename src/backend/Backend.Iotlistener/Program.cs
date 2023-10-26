@@ -1,33 +1,40 @@
-﻿using System.Runtime.Loader;
-using common;
+using System.Reflection;
+using Shared.Logger;
+using Shared.Entities.Factories;
+using Shared.Entities.Services;
+using Backend.Iotlistener.Wrappers;
 using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Services;
+using Backend.Iotlistener.Processors;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
-using Backend.Iotlistener.Wrappers;
-using Backend.Iotlistener.Processors;
+using System.Runtime.Loader;
+using common;
 
-using Shared.Logger;
+var informationalVersion = Assembly.GetEntryAssembly()?
+                               .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                               .InformationalVersion;
 
+var builder = LoggerHostCreator.Configure("Iotlistener", WebApplication.CreateBuilder(args));
 
-var builder = LoggerHostCreator.Configure("iotlistener", WebApplication.CreateBuilder(args));
-builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
-builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
+builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
 builder.Services.AddScoped<ISigningService, SigningService>();
 builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
-builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
+builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 builder.Services.AddHttpClient();
+var app = builder.Build();
+
+var logger = app.Services.GetRequiredService<ILoggerHandler>();
+logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
+
 
 var cts = new CancellationTokenSource();
 AssemblyLoadContext.Default.Unloading += context =>
 {
     cts.Cancel();
 };
-var app = builder.Build();
-
 var _envirementVariable = app.Services.GetService<IEnvironmentsWrapper>();
 
 string? PartitionId = _envirementVariable.partitionId?.Split('-')?.Last();
@@ -51,7 +58,6 @@ var eventProcessorOptions = new EventProcessorOptions
 var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
 var signingService = app.Services.GetService<ISigningService>();
 var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
-var logger = app.Services.GetService<ILoggerHandler>();
 var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable, logger, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
@@ -59,3 +65,6 @@ await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessor
 await Task.Delay(Timeout.Infinite, cts.Token).ContinueWith(_ => { });
 
 await eventProcessorHost.UnregisterEventProcessorAsync();
+
+
+app.Run();

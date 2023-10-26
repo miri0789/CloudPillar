@@ -23,6 +23,8 @@ public class TwinHandlerTestFixture
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private Mock<IOptions<AppSettings>> _appSettingsMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
+    private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
+    private Mock<IOptions<AppSettings>> _appSettings;
     private ITwinHandler _target;
     private CancellationToken cancellationToken = CancellationToken.None;
 
@@ -38,6 +40,12 @@ public class TwinHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _appSettingsMock = new Mock<IOptions<AppSettings>>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
+        _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
+        _appSettings = new Mock<IOptions<AppSettings>>();
+        var appSettings = new AppSettings
+        {
+        };
+        _appSettings.Setup(x => x.Value).Returns(appSettings);
         CreateTarget();
     }
 
@@ -51,8 +59,8 @@ public class TwinHandlerTestFixture
           _loggerHandlerMock.Object,
           _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
-          _fileStreamerWrapperMock.Object,
-          _appSettingsMock.Object);
+          _fileStreamerWrapper.Object,
+          _appSettings.Object);
     }
 
     [Test]
@@ -199,10 +207,9 @@ public class TwinHandlerTestFixture
         };
 
         CreateTwinMock(desired, reported);
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()));
-
+        _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()));
         _target.HandleTwinActionsAsync(CancellationToken.None);
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Exactly(3));
+        _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()), Times.Once);
     }
 
 
@@ -257,7 +264,7 @@ public class TwinHandlerTestFixture
         await _target.InitReportDeviceParamsAsync();
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey,
-        new List<ShellType>() { ShellType.Cmd, ShellType.Powershell, ShellType.Bash }), Times.Once);
+        new List<ShellType>() { ShellType.Cmd, ShellType.Powershell }), Times.Once);
     }
 
     [Test]
@@ -275,7 +282,7 @@ public class TwinHandlerTestFixture
         await _target.InitReportDeviceParamsAsync();
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey,
-        new List<ShellType>() { ShellType.Bash, ShellType.Powershell }), Times.Once);
+        new List<ShellType>() { ShellType.Bash }), Times.Once);
     }
 
     [Test]

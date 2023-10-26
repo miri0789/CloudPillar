@@ -15,7 +15,6 @@ builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
