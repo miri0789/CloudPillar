@@ -62,7 +62,7 @@ public class AgentController : ControllerBase
         if (!isX509Authorized)
         {
             _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");
-            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationAsync(cancellationToken);
+            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
             if (!isSymetricKeyAuthorized)
             {
                 _logger.Info("GetDeviceStateAsync, the device is symmetric key unAuthorized, start provisinig proccess");

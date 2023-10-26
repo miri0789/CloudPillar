@@ -97,9 +97,8 @@ using (var scope = app.Services.CreateScope())
     await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
 
     var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
-    await StateMachineHandlerService.InitStateMachineHandlerAsync();
+    StateMachineHandlerService.InitStateMachineHandlerAsync();
 }
-
 
 app.Run();
 

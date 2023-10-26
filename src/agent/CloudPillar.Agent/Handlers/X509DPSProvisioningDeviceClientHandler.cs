@@ -133,22 +133,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
 
-    }
-
-    private string GetDeviceIdFromCertificate(X509Certificate2 userCertificate)
-    {
-        ArgumentNullException.ThrowIfNullOrEmpty(userCertificate?.FriendlyName);
-
-        var friendlyName = userCertificate.FriendlyName;
-        return friendlyName.Split("@")[0];
-    }
-    private string GetIotHubHostNameFromCertificate(X509Certificate2 userCertificate)
-    {
-        ArgumentNullException.ThrowIfNullOrEmpty(userCertificate?.FriendlyName);
-
-        var friendlyName = userCertificate.FriendlyName;
-        return friendlyName.Split("@")[1];
-    }
+    }    
 
     private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
     {
