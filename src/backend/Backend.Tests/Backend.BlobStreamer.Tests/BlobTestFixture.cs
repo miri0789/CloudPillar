@@ -7,7 +7,7 @@ using Moq;
 using Shared.Entities.Factories;
 using Shared.Entities.Messages;
 using Shared.Logger;
-using common;
+using Backend.Infra.Common;
 
 namespace Backend.BlobStreamer.Tests
 {

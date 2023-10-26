@@ -1,4 +1,4 @@
-﻿namespace common;
+﻿namespace Backend.Infra.Common;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using System.Collections.Concurrent;

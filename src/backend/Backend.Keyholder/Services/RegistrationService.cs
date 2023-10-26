@@ -5,12 +5,12 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
-using common;
+using Backend.Infra.Common;
 using Microsoft.Azure.Devices;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Authentication;
 using Newtonsoft.Json;
-using common;
+using Backend.Infra.Common;
 
 public class RegistrationService : IRegistrationService
 {

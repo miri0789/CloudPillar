@@ -1,5 +1,5 @@
 ﻿using Microsoft.Azure.Storage.Blob;
-using common;
+using Backend.Infra.Common;
 using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Models.Enums;
 using Shared.Logger;

@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using common;
+using Backend.Infra.Common;
 using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 using Microsoft.Azure.Storage.Blob;

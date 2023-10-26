@@ -1,6 +1,6 @@
 using Microsoft.Azure.Devices;
 
-namespace common;
+namespace Backend.Infra.Common;
 public interface IDeviceClientWrapper
 {
     ServiceClient CreateFromConnectionString(string connString);

@@ -5,7 +5,7 @@ using Shared.Entities.Messages;
 using Shared.Entities.Factories;
 using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
-using common;
+using Backend.Infra.Common;
 
 namespace Backend.BlobStreamer.Services;
 

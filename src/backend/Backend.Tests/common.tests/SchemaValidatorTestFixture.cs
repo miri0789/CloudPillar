@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using Moq;
 using Shared.Logger;
-using common;
+using Backend.Infra.Common;
 
 [TestFixture]
 public class SchemaValidatorTestFixture

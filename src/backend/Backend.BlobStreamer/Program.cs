@@ -4,7 +4,7 @@ using Backend.BlobStreamer.Wrappers;
 using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
-using common;
+using Backend.Infra.Common;
 using Shared.Entities.Services;
 
 var informationalVersion = Assembly.GetEntryAssembly()?

@@ -2,7 +2,7 @@
 using System.Text;
 using Shared.Logger;
 
-namespace common;
+namespace Backend.Infra.Common;
 
 public interface IHttpRequestorService
 {

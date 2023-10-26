@@ -9,7 +9,7 @@ using Backend.Iotlistener.Processors;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using System.Runtime.Loader;
-using common;
+using Backend.Infra.Common;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?

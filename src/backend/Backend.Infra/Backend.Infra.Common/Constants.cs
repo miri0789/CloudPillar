@@ -1,4 +1,4 @@
-﻿namespace common;
+﻿namespace Backend.Infra.Common;
 public static class CommonConstants
 {
     #region envirementVariables

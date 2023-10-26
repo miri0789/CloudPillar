@@ -1,5 +1,5 @@
 using Microsoft.Azure.Devices;
-namespace common;
+namespace Backend.Infra.Common;
 
 public class DeviceClientWrapper : IDeviceClientWrapper
 {

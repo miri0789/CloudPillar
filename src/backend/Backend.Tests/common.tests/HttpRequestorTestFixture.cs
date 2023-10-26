@@ -3,9 +3,9 @@ using Moq;
 using System.Net;
 using System.Text;
 using Shared.Logger;
-using common;
+using Backend.Infra.Common;
 
-namespace common.tests;
+namespace Backend.Infra.Common.tests;
 public class HttpRequestorTestFixture
 {
     private IHttpRequestorService _target;
