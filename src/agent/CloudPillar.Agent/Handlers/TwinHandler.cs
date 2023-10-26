@@ -51,7 +51,7 @@ public class TwinHandler : ITwinHandler
     public async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
     {
         try
-        {            
+        {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
@@ -100,31 +100,18 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
-                var fileName = string.Empty;
-
-                try
-                {
-                    //strict mode
-                    var actionFileName = GetFileNameByAction(action);
-
-                    fileName = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName);
-                    _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
-
-                }
-                catch (Exception ex)
-                {
-                    await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
-                    continue;
-                }
-
                 switch (action.TwinAction.Action)
                 {
                     case TwinActionType.SingularDownload:
+                        var fileName = await HandleStrictMode(action, cancellationToken);
+                        if (string.IsNullOrEmpty(fileName)) { continue; }
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
 
                     case TwinActionType.SingularUpload:
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, fileName, cancellationToken);
+                        var uploadFileName = await HandleStrictMode(action, cancellationToken);
+                        if (string.IsNullOrEmpty(uploadFileName)) { continue; }
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, uploadFileName, cancellationToken);
                         break;
                     case TwinActionType.ExecuteOnce:
                         if (_appSettings.StrictMode)
@@ -139,8 +126,6 @@ public class TwinHandler : ITwinHandler
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
-                //TODO : queue - FIFO
-                // https://dev.azure.com/BiosenseWebsterIs/CloudPillar/_backlogs/backlog/CloudPillar%20Team/Epics/?workitem=9782
             }
         }
         catch (Exception ex)
@@ -149,6 +134,23 @@ public class TwinHandler : ITwinHandler
         }
     }
 
+    private async Task<string> HandleStrictMode(ActionToReport action, CancellationToken cancellationToken)
+    {
+        var fileName = string.Empty;
+        try
+        {
+            var actionFileName = GetFileNameByAction(action);
+
+            fileName = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName);
+            _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
+
+        }
+        catch (Exception ex)
+        {
+            await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
+        }
+        return fileName;
+    }
     private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
     {
         action.TwinReport.Status = statusType;
@@ -254,7 +256,7 @@ public class TwinHandler : ITwinHandler
     public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
     {
         try
-        {                        
+        {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
             return reprted.DeviceState;
