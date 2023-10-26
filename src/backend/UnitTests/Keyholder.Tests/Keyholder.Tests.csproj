@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Backend.Keyholder\Backend.Keyholder.csproj" />
+    <ProjectReference Include="..\..\Keyholder\Keyholder.csproj" />
   </ItemGroup>
 
 </Project>

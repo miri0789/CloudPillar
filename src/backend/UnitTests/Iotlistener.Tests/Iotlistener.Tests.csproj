@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Backend.Iotlistener\Backend.Iotlistener.csproj" />
+    <ProjectReference Include="..\..\Iotlistener\Iotlistener.csproj" />
   </ItemGroup>
 
 </Project>
