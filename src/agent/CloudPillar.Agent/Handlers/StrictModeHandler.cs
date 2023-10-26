@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using Shared.Logger;
@@ -27,7 +28,7 @@ public class StrictModeHandler : IStrictModeHandler
         string replacedString = Regex.Replace(fileName, pattern, match =>
         {
             string key = match.Groups[1].Value;
-            ArgumentNullException.ThrowIfNullOrEmpty(key);
+            ArgumentException.ThrowIfNullOrEmpty(key);
 
             return GetRootById(key, actionType);
         });
@@ -37,7 +38,7 @@ public class StrictModeHandler : IStrictModeHandler
     public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
         FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
-        if (zoneRestrictions.Type == UPLOAD_ACTION || zoneRestrictions.MaxSize == 0)
+        if (zoneRestrictions.Type == UPLOAD_ACTION || !zoneRestrictions.MaxSize.HasValue || zoneRestrictions.MaxSize == 0)
         {
             return;
         }
@@ -79,7 +80,7 @@ public class StrictModeHandler : IStrictModeHandler
                 return;
             }
             var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
-            var isMatch = IsMatch(verbatimFileName, regexPattern);
+            var isMatch = regexPattern.IsMatch(verbatimFileName);
             if (isMatch)
             {
                 _logger.Info($"{fileName} is match to pattern: {pattern}");
@@ -89,11 +90,6 @@ public class StrictModeHandler : IStrictModeHandler
         }
         _logger.Error("Denied by the lack of local allowance");
         throw new FormatException(ResultCode.StrictModePattern.ToString());
-    }
-
-    private bool IsMatch(string filePath, Regex pattern)
-    {
-        return pattern.IsMatch(filePath);
     }
 
     private Regex ConvertToRegexPattern(string pattern)
