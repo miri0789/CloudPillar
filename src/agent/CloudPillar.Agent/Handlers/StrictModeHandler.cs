@@ -78,7 +78,8 @@ public class StrictModeHandler : IStrictModeHandler
                 _logger.Info("The pattern is empty");
                 return;
             }
-            var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
+            var regexPattern = ConvertToRegexPattern(pattern.Trim());
+            // var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
             var isMatch = IsMatch(verbatimFileName, regexPattern);
             if (isMatch)
             {
@@ -102,16 +103,22 @@ public class StrictModeHandler : IStrictModeHandler
         {
             pattern += "*";
         }
-
-        string regexPattern = "^" + Regex.Escape(pattern)
-                                    .Replace("\\*", ".*")
-                                    .Replace("\\?", ".")
-                                    .Replace(@"\[\!", "[^")
-                                    .Replace(@"\[", "[")
-                                    .Replace(@"\]", "]")
-                                    .Replace(@"\!", "!")
-                                    .Replace("/", "\\/")
-                                    .Replace("\\.\\*", ".*") + "$";
+        if (pattern.StartsWith("*/"))
+        {
+            pattern = ".+/".TrimEnd('/') + pattern.TrimStart('*');
+        }
+        if (pattern.StartsWith("**/"))
+        {
+            pattern = pattern.Replace("**/", ".+/.*?/");// ".+/.*?/" + pattern.TrimStart('*');
+        }
+        string regexPattern =  Regex.Escape(pattern)
+                                          .Replace("\\*", ".*")
+                                          .Replace("\\?", ".")
+                                          .Replace(@"\[\!", "[^")
+                                          .Replace(@"\[", "[")
+                                          .Replace(@"\]", "]")
+                                          .Replace(@"\!", "!")+ "$";
+                                          //.Replace("/", "\\/") 
 
         return new Regex(regexPattern, RegexOptions.IgnoreCase);
     }

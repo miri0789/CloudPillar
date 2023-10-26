@@ -22,6 +22,22 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        var _transportType = GetTransportType();
+        try
+        {
+            _deviceClient = DeviceClient.CreateFromConnectionString(_environmentsWrapper.deviceConnectionString, _transportType);
+            if (_deviceClient == null)
+            {
+                throw new NullReferenceException("CreateDeviceClient FromConnectionString failed the device is null");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"CreateFromConnectionString failed {ex.Message}");
+            throw;
+        }
+
+
     }
 
     public async Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
