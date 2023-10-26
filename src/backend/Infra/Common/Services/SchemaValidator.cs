@@ -1,10 +1,10 @@
-﻿namespace Backend.Infra.Common;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using System.Collections.Concurrent;
 using System.IO;
 using Shared.Logger;
 
+namespace Backend.Infra.Common;
 public interface ISchemaValidator
 {
     bool ValidatePayloadSchema(string payload, string schemaPath, bool isRequest);

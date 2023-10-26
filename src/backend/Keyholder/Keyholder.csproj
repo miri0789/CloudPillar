@@ -20,6 +20,6 @@
     <PackageReference Include="SharedEntities" Version="1.0.99" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Backend.Infra\Backend.Infra.Common\Backend.Infra.Common.csproj" />
+    <ProjectReference Include="..\Infra\Common\Common.csproj" />
   </ItemGroup>
 </Project>
