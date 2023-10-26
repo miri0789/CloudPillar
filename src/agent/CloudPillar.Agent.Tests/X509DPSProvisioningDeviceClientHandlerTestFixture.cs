@@ -73,7 +73,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     }
 
     [Test]
-    public async Task AuthorizationAsync_ValidCertificateAndParameters_ReturnsTrue()
+    public async Task AuthorizationDeviceAsync_ValidCertificateAndParameters_ReturnsTrue()
     {
 
         _unitTestCertificate.FriendlyName = $"{DEVICE_ID}@{IOT_HUB_HOST_NAME}";
@@ -86,25 +86,25 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _deviceClientWrapperMock.Setup(x => x.IsDeviceInitializedAsync(CancellationToken.None)).ReturnsAsync(true);
 
 
-        var result = await _target.AuthorizationAsync(XdeviceId, XSecretKey, CancellationToken.None);
+        var result = await _target.AuthorizationDeviceAsync(XdeviceId, XSecretKey, CancellationToken.None);
 
-        Assert.IsTrue(result, "AuthorizationAsync should return true for a valid certificate and parameters.");
+        Assert.IsTrue(result, "AuthorizationDeviceAsync should return true for a valid certificate and parameters.");
     }
 
     [Test]
-    public async Task AuthorizationAsync_InvalidCertificate_ReturnsFalse()
+    public async Task AuthorizationDeviceAsync_InvalidCertificate_ReturnsFalse()
     {
         _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>()))
             .Returns(new X509Certificate2Collection());
 
-        var result = await _target.AuthorizationAsync(DEVICE_ID, SECRET_KEY, CancellationToken.None);
+        var result = await _target.AuthorizationDeviceAsync(DEVICE_ID, SECRET_KEY, CancellationToken.None);
 
         // Assert
-        Assert.IsFalse(result, "AuthorizationAsync should return false for an invalid certificate.");
+        Assert.IsFalse(result, "AuthorizationDeviceAsync should return false for an invalid certificate.");
     }
 
     [Test]
-    public async Task AuthorizationAsync_InvalidParameters_ReturnsFalse()
+    public async Task AuthorizationDeviceAsync_InvalidParameters_ReturnsFalse()
     {
 
         _unitTestCertificate.FriendlyName = "InvalidFriendlyName";
@@ -114,9 +114,9 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>()))
             .Returns(new X509Certificate2Collection(_unitTestCertificate));
 
-        var result = await _target.AuthorizationAsync(XdeviceId, XSecretKey, CancellationToken.None);
+        var result = await _target.AuthorizationDeviceAsync(XdeviceId, XSecretKey, CancellationToken.None);
 
-        Assert.IsFalse(result, "AuthorizationAsync should return false for invalid parameters.");
+        Assert.IsFalse(result, "AuthorizationDeviceAsync should return false for invalid parameters.");
     }
 
     [Test]

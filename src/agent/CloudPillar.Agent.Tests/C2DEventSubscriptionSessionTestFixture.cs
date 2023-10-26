@@ -84,7 +84,7 @@ public class C2DEventSubscriptionSessionTestFixture
         _messageSubscriberMock
        .Setup(ms => ms.HandleRequestDeviceCertificateAsync(_requestDeviceCertificateMessage, It.IsAny<CancellationToken>()));
 
-        await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
+        await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), true);
 
         _messageSubscriberMock.Verify(ms => ms.HandleRequestDeviceCertificateAsync(It.IsAny<RequestDeviceCertificateMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -101,7 +101,7 @@ public class C2DEventSubscriptionSessionTestFixture
         _messageSubscriberMock
        .Setup(ms => ms.HandleReprovisioningMessageAsync(_reprovisioningMessage, It.IsAny<CancellationToken>()));
 
-        await _target.ReceiveC2DMessagesAsync(GetCancellationToken());
+        await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), true);
 
         _messageSubscriberMock.Verify(ms => ms.HandleReprovisioningMessageAsync(It.IsAny<ReprovisioningMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }

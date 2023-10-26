@@ -81,7 +81,7 @@ public class ReprovisioningHandlerTestFixture
         _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite)).Verifiable();
         _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>())).Returns(new X509Certificate2Collection() { _certificate });
         _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509Store>(), It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns(new X509Certificate2Collection());
+            .Returns(new X509Certificate2Collection(){ _certificate });
         _dPSProvisioningDeviceClientHandlerMock.Setup(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 

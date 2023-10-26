@@ -11,10 +11,10 @@ using Shared.Logger;
 using Backend.Keyholder.Services;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Factories;
-using Shared.Entities.DeviceClient;
 using Shared.Entities.Messages;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Devices.Provisioning.Service;
+using common;
 
 namespace Backend.Keyholder.Tests;
 
