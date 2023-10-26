@@ -1,6 +1,6 @@
 using Microsoft.Azure.Devices;
 
-namespace Backend.BlobStreamer.Interfaces;
+namespace common;
 public interface IDeviceClientWrapper
 {
     ServiceClient CreateFromConnectionString(string connString);

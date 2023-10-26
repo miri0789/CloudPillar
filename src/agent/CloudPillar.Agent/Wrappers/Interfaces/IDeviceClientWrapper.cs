@@ -7,9 +7,7 @@ namespace CloudPillar.Agent.Wrappers;
 public interface IDeviceClientWrapper
 {
     Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken);
-
-    string GetDeviceId();
-
+    Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken);
     TransportType GetTransportType();
     int GetChunkSizeByTransportType();
 
@@ -31,5 +29,7 @@ public interface IDeviceClientWrapper
     Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default);
 
     ProvisioningTransportHandler GetProvisioningTransportHandler();
+
+    Task SetDesiredPropertyUpdateCallbackAsync(DesiredPropertyUpdateCallback callback, CancellationToken cancellationToken = default);
 
 }

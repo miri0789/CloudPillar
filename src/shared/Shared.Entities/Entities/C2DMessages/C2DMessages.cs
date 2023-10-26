@@ -1,11 +1,6 @@
 
 namespace Shared.Entities.Messages;
 
-public enum C2DMessageType
-{
-    DownloadChunk
-}
-
 public abstract class C2DMessages
 {
     public C2DMessageType MessageType { get; set; }

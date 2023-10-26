@@ -18,6 +18,8 @@ public class AgentEventProcessorTestFixture
     private AgentEventProcessor _target;
     private Mock<IFirmwareUpdateService> _firmwareUpdateServiceMock;
     private Mock<ISigningService> _signingServiceMock;
+    private Mock<IStreamingUploadChunkService> _streamingUploadChunkServiceMock;
+    private Mock<IProvisionDeviceCertificateService> _provisionDeviceCertificateServiceMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
     private Mock<ILoggerHandler> _mockLoggerHandler;
     private Mock<IStreamingUploadChunkService> _streamingUploadChunkService;
@@ -30,13 +32,20 @@ public class AgentEventProcessorTestFixture
         _iothubConnectionDeviceId = "abcd1234";
         _firmwareUpdateServiceMock = new Mock<IFirmwareUpdateService>();
         _signingServiceMock = new Mock<ISigningService>();
+        _provisionDeviceCertificateServiceMock = new Mock<IProvisionDeviceCertificateService>();
+        _streamingUploadChunkServiceMock = new Mock<IStreamingUploadChunkService>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLoggerHandler = new Mock<ILoggerHandler>();
         _streamingUploadChunkService = new Mock<IStreamingUploadChunkService>();
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(30);
         _mockEnvironmentsWrapper.Setup(f => f.iothubConnectionDeviceId).Returns(_iothubConnectionDeviceId);
         _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
-        _signingServiceMock.Object,_streamingUploadChunkService.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _signingServiceMock.Object,
+        _streamingUploadChunkServiceMock.Object,
+        _provisionDeviceCertificateServiceMock.Object,
+        _mockEnvironmentsWrapper.Object,
+        _mockLoggerHandler.Object);
+
     }
 
 
@@ -99,8 +108,13 @@ public class AgentEventProcessorTestFixture
     {
         var messages = InitMessage("{\"MessageType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(1);
-        _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
-        _signingServiceMock.Object,_streamingUploadChunkService.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new AgentEventProcessor(
+        _firmwareUpdateServiceMock.Object,
+        _signingServiceMock.Object,
+        _streamingUploadChunkServiceMock.Object,
+        _provisionDeviceCertificateServiceMock.Object,
+        _mockEnvironmentsWrapper.Object,
+        _mockLoggerHandler.Object);
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {
             CallBase = true

@@ -7,10 +7,7 @@ using Moq;
 using Shared.Entities.Factories;
 using Shared.Entities.Messages;
 using Shared.Logger;
-using System.Reflection;
-using Shared.Logger;
-using Shared.Entities.Messages;
-using Shared.Entities.Factories;
+using common;
 
 namespace Backend.BlobStreamer.Tests
 {
@@ -19,11 +16,11 @@ namespace Backend.BlobStreamer.Tests
     public class BlobTestFixture
     {
         private Mock<ICloudStorageWrapper> _mockCloudStorageWrapper;
-        private Mock<IDeviceClientWrapper> _mockDeviceClientWrapper;
         private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
         private Mock<CloudBlockBlob> _mockBlockBlob;
         private Mock<ILoggerHandler> _mockLogger;
         private Mock<IMessageFactory> _mockMessageFactory;
+        private Mock<IDeviceClientWrapper> _mockDeviceClientWrapper;
         private IBlobService _target;
 
 
@@ -38,12 +35,12 @@ namespace Backend.BlobStreamer.Tests
         public void Setup()
         {
             _mockCloudStorageWrapper = new Mock<ICloudStorageWrapper>();
-            _mockDeviceClientWrapper = new Mock<IDeviceClientWrapper>();
             _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
             _mockLogger = new Mock<ILoggerHandler>();
             _mockMessageFactory = new Mock<IMessageFactory>();
             _mockMessageFactory.Setup(c => c.PrepareC2DMessage(It.IsAny<C2DMessages>(), It.IsAny<int>())).Returns(new Message());
             _mockEnvironmentsWrapper.Setup(c => c.retryPolicyExponent).Returns(3);
+            _mockDeviceClientWrapper = new Mock<IDeviceClientWrapper>();
             _mockDeviceClientWrapper.Setup(c => c.CreateFromConnectionString(It.IsAny<string>()))
             .Returns(new ServiceClient());
 

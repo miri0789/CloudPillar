@@ -19,6 +19,7 @@ var builder = LoggerHostCreator.Configure("Iotlistener", WebApplication.CreateBu
 
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
+builder.Services.AddScoped<IProvisionDeviceCertificateService, ProvisionDeviceCertificateService>();
 builder.Services.AddScoped<ISigningService, SigningService>();
 builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
 builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
@@ -58,7 +59,8 @@ var eventProcessorOptions = new EventProcessorOptions
 var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
 var signingService = app.Services.GetService<ISigningService>();
 var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
-var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, _envirementVariable, logger, PartitionId);
+var provisionDeviceCertificateService = app.Services.GetService<IProvisionDeviceCertificateService>();
+var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent,provisionDeviceCertificateService, _envirementVariable, logger, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 

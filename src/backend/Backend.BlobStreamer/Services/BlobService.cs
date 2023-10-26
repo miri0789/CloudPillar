@@ -5,6 +5,7 @@ using Shared.Entities.Messages;
 using Shared.Entities.Factories;
 using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
+using common;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -21,11 +22,11 @@ public class BlobService : IBlobService
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
      IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory messageFactory)
     {
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper)); ;
-        _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper)); ;
-        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper)); ;
-        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory)); ;
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
         _serviceClient = _deviceClient.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
