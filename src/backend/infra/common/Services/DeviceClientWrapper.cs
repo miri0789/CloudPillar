@@ -1,5 +1,5 @@
 using Microsoft.Azure.Devices;
-namespace Shared.Entities.DeviceClient;
+namespace common;
 
 public class DeviceClientWrapper : IDeviceClientWrapper
 {

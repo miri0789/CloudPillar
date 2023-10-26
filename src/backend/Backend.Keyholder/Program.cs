@@ -5,7 +5,7 @@ using System.Reflection;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Factories;
-using Shared.Entities.DeviceClient;
+using common;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -23,7 +23,6 @@ builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();

@@ -1,24 +1,19 @@
 using Microsoft.Azure.Devices.Provisioning.Service;
-using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
 using System;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
 using System.Text;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
-using Shared.Entities.DeviceClient;
+using common;
 using Microsoft.Azure.Devices;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Authentication;
 using Newtonsoft.Json;
+using common;
 
 public class RegistrationService : IRegistrationService
 {
-    private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
-    private const int KEY_SIZE_IN_BITS = 4096;
-    private const string DEVICE_ENDPOINT = "global.azure-devices-provisioning.net";
     private readonly ILoggerHandler _loggerHandler;
 
     private readonly IMessageFactory _messageFactory;
@@ -56,7 +51,7 @@ public class RegistrationService : IRegistrationService
 
 
 
-    public async Task Register(string deviceId, string secretKey)
+    public async Task RegisterAsync(string deviceId, string secretKey)
     {
         try
         {
@@ -84,7 +79,7 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    public async Task ProvisionDeviceCertificate(string deviceId, byte[] certificate)
+    public async Task ProvisionDeviceCertificateAsync(string deviceId, byte[] certificate)
     {
         _loggerHandler.Debug($"ProvisionDeviceCertificate for deviceId {deviceId}.");
         ArgumentNullException.ThrowIfNull(certificate);
@@ -121,6 +116,7 @@ public class RegistrationService : IRegistrationService
             catch (ProvisioningServiceClientException ex)
             {
                 //If the enrollment does not exist, it throws an exception when attempting to delete it.
+                _loggerHandler.Debug($"There is no individual enrollment for deviceId {deviceId} for deleted");
             }
 
             var individualEnrollment = _individualEnrollmentWrapper.Create(enrollmentName, attestation);
@@ -142,7 +138,7 @@ public class RegistrationService : IRegistrationService
         var message = new ReprovisioningMessage()
         {
             Data = Encoding.Unicode.GetBytes(individualEnrollment.RegistrationId),
-            DeviceEndpoint = DEVICE_ENDPOINT,
+            DeviceEndpoint = _environmentsWrapper.globalDeviceEndpoint,
             // TODO: get the scopeid from the dps, not from the env, + do not send the dps connection string
             ScopedId = _environmentsWrapper.dpsIdScope,
             DPSConnectionString = _environmentsWrapper.dpsConnectionString
@@ -153,13 +149,13 @@ public class RegistrationService : IRegistrationService
     }
 
     private string GetIOTHubHostName()
-    {      
+    {
 
         string iotHubHostName = _environmentsWrapper.iothubConnectionString
         .Split(';')
         .Select(part => part.Trim())
         .FirstOrDefault(part => part.StartsWith("HostName=", StringComparison.OrdinalIgnoreCase))
-?.Substring("HostName=".Length);
+        ?.Substring("HostName=".Length);
 
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
         return iotHubHostName;

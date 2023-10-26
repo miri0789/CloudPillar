@@ -10,12 +10,12 @@ using Microsoft.Azure.Devices.Provisioning.Service;
 using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
+using Shared.Entities.Twin;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 public class ReprovisioningHandler : IReprovisioningHandler
 {
-    private readonly IDeviceClientWrapper _deviceClientWrapper;
 
     private readonly IX509CertificateWrapper _x509CertificateWrapper;
 
@@ -27,16 +27,15 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private const int KEY_SIZE_IN_BITS = 4096;
 
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
-    private const string TEMPORARY_CERTIFICATE_NAME = "temporaryCertificate";
+    private const string TEMPORARY_CERTIFICATE_NAME = "CPTemporaryCertificate";
 
-    public ReprovisioningHandler(IDeviceClientWrapper deviceClientWrapper,
-        IX509CertificateWrapper X509CertificateWrapper,
+    public ReprovisioningHandler(IX509CertificateWrapper X509CertificateWrapper,
         IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
         IEnvironmentsWrapper environmentsWrapper,
         ID2CMessengerHandler d2CMessengerHandler,
-        ILoggerHandler logger)
+        ILoggerHandler logger
+        )
     {
-        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
@@ -65,45 +64,39 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
 
-        try
+        await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
+        using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
         {
-            await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
-            using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
+            store.Open(OpenFlags.ReadWrite);
+
+            X509Certificate2Collection certificates = store.Certificates;
+            if (certificates == null)
             {
-                store.Open(OpenFlags.ReadWrite);
-
-                X509Certificate2Collection certificates = store.Certificates;
-                if (certificates != null)
-                {
-                    var filteredCertificates = certificates.Cast<X509Certificate2>()
-                       .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
-                       && cert.Thumbprint != certificate.Thumbprint)
-                       .ToArray();
-                    if (filteredCertificates != null && filteredCertificates.Length > 0)
-                    {
-                        var certificateCollection = new X509Certificate2Collection(filteredCertificates);
-                        store.RemoveRange(certificateCollection);
-                    }
-
-                    X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
-
-                    if (collection.Count > 0)
-                    {
-                        X509Certificate2 cert = collection[0];
-
-                        cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}"; ;
-
-                        store.Close();
-                    }
-
-                }
+                throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
             }
 
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Provisioning failed", ex);
-            throw;
+            var filteredCertificates = certificates.Cast<X509Certificate2>()
+               .Where(cert => cert.Subject.StartsWith($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}")
+               && cert.Thumbprint != certificate.Thumbprint)
+               .ToArray();
+            if (filteredCertificates?.Length > 0)
+            {
+                var certificateCollection = new X509Certificate2Collection(filteredCertificates);
+                store.RemoveRange(certificateCollection);
+            }
+
+            X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
+            if (collection.Count == 0)
+            {
+                throw new ArgumentNullException("certificates", "Certificates collection must contains temporary cert.");
+            }
+
+            X509Certificate2 cert = collection[0];
+
+            cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
+
+            store.Close();
+
         }
 
 
@@ -173,7 +166,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
                     var filteredCertificates = certificates.Cast<X509Certificate2>()
                        .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
                        .ToArray();
-                    if (filteredCertificates != null && filteredCertificates.Length > 0)
+                    if (filteredCertificates?.Length > 0)
                     {
                         var certificateCollection = new X509Certificate2Collection(filteredCertificates);
                         store.RemoveRange(certificateCollection);
@@ -193,14 +186,14 @@ public class ReprovisioningHandler : IReprovisioningHandler
         {
             store.Open(OpenFlags.ReadOnly);
             X509Certificate2Collection certificates = store.Certificates;
-            if (certificates == null)
-            {
-                return null;
-            }
-            var filteredCertificate = certificates.Cast<X509Certificate2>()
+            var filteredCertificate = certificates?.Cast<X509Certificate2>()
                .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
                .FirstOrDefault();
 
+            if (filteredCertificate == null)
+            {
+                _logger.Info("GetTempCertificate not find certificate");
+            }
             return filteredCertificate;
         }
 

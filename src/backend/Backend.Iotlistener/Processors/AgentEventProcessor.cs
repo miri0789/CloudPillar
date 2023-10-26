@@ -29,7 +29,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
-        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService)); ;
+        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _partitionId = partitionId;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -39,7 +39,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     {
         if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
         {
-            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _streamingUploadChunkService,_provisionDeviceCertificateService, _environmentsWrapper, _logger);
+            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _streamingUploadChunkService, _provisionDeviceCertificateService, _environmentsWrapper, _logger);
         }
 
         return new NullEventProcessor();
@@ -64,7 +64,7 @@ public class AgentEventProcessor : IEventProcessor
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
-        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService)); ;
+        _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -127,29 +127,21 @@ public class AgentEventProcessor : IEventProcessor
                 switch (d2CMessage.MessageType)
                 {
                     case D2CMessageType.FirmwareUpdateReady:
-                        {
-                            var firmwareUpdateEvent = JsonSerializer.Deserialize<FirmwareUpdateEvent>(data)!;
-                            await _firmwareUpdateService.SendFirmwareUpdateAsync(deviceId, firmwareUpdateEvent);
-                            break;
-                        }
+                        var firmwareUpdateEvent = JsonSerializer.Deserialize<FirmwareUpdateEvent>(data)!;
+                        await _firmwareUpdateService.SendFirmwareUpdateAsync(deviceId, firmwareUpdateEvent);
+                        break;
                     case D2CMessageType.SignTwinKey:
-                        {
-                            var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;
-                            await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);
-                            break;
-                        }
+                        var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;
+                        await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);
+                        break;
                     case D2CMessageType.StreamingUploadChunk:
-                        {
-                            var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
-                            await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent);
-                            break;
-                        }
+                        var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
+                        await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent);
+                        break;
                     case D2CMessageType.ProvisionDeviceCertificate:
-                        {
-                            var provisionDeviceCertificateEvent = JsonSerializer.Deserialize<ProvisionDeviceCertificateEvent>(data)!;
-                            await _provisionDeviceCertificateService.ProvisionDeviceCertificateAsync(deviceId, provisionDeviceCertificateEvent);
-                            break;
-                        }
+                        var provisionDeviceCertificateEvent = JsonSerializer.Deserialize<ProvisionDeviceCertificateEvent>(data)!;
+                        await _provisionDeviceCertificateService.ProvisionDeviceCertificateAsync(deviceId, provisionDeviceCertificateEvent);
+                        break;
                 }
 
             }

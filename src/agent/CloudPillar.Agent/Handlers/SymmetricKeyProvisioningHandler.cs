@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
@@ -11,37 +13,43 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
     private IDeviceClientWrapper _deviceClientWrapper;
     private ISymmetricKeyWrapper _symmetricKeyWrapper;
-
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
 
     public SymmetricKeyProvisioningHandler(ILoggerHandler loggerHandler,
      IDeviceClientWrapper deviceClientWrapper,
-     ISymmetricKeyWrapper symmetricKeyWrapper)
+     ISymmetricKeyWrapper symmetricKeyWrapper,
+     IEnvironmentsWrapper environmentsWrapper)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _symmetricKeyWrapper = symmetricKeyWrapper ?? throw new ArgumentNullException(nameof(symmetricKeyWrapper));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
     }
 
     public async Task<bool> AuthorizationAsync(CancellationToken cancellationToken)
     {
-        bool res = await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
-        return res;
+        return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
     }
 
-    public async Task ProvisioningAsync(string registrationId, string primaryKey, string scopeId, string globalDeviceEndpoint, CancellationToken cancellationToken)
+    public async Task ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(registrationId);
-        ArgumentNullException.ThrowIfNullOrEmpty(primaryKey);
-        ArgumentNullException.ThrowIfNullOrEmpty(scopeId);
-        ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.dpsScopeId);
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.globalDeviceEndpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.groupEnrollmentPrimaryKey);
 
-        using (var security = _symmetricKeyWrapper.GetSecurityProvider(registrationId, primaryKey, null))
+        var deviceName = deviceId;
+        var primaryKey = _environmentsWrapper.groupEnrollmentPrimaryKey;
+        var drivedDevice = ComputeDerivedSymmetricKey(primaryKey, deviceName);
+
+
+
+        using (var security = _symmetricKeyWrapper.GetSecurityProvider(deviceName, drivedDevice, null))
         {
             _logger.Debug($"Initializing the device provisioning client...");
 
             using (ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler())
             {
-                var provisioningClient = ProvisioningDeviceClient.Create(globalDeviceEndpoint, scopeId, security, transport);
+                var provisioningClient = ProvisioningDeviceClient.Create(_environmentsWrapper.globalDeviceEndpoint, _environmentsWrapper.dpsScopeId, security, transport);
 
                 _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
 
@@ -54,23 +62,34 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                     _logger.Error("Registration status did not assign a hub.");
                     return;
                 }
-                await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, primaryKey, cancellationToken);
+                await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
+                
             }
         }
     }
 
-    private async Task<bool> CheckAuthorizationAndInitializeDeviceAsync(string deviceId, string iotHubHostName, string deviceKey, CancellationToken cancellationToken)
+    private async Task InitializeDeviceAsync(string deviceId, string iotHubHostName, string deviceKey, CancellationToken cancellationToken)
     {
         try
         {
             var auth = _symmetricKeyWrapper.GetDeviceAuthentication(deviceId, deviceKey);
             await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
-            return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
+            await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.Error($"Exception during IoT Hub connection: ", ex);
-            return false;
         }
+    }
+
+    private string ComputeDerivedSymmetricKey(string primaryKey, string registrationId)
+    {
+        if (string.IsNullOrWhiteSpace(primaryKey))
+        {
+            return primaryKey;
+        }
+
+         var hmac = new HMACSHA256(Convert.FromBase64String(primaryKey));
+        return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registrationId)));
     }
 }

@@ -2,7 +2,7 @@ using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Storage.Blob;
 
-namespace CloudPillar.Agent.Entities
+namespace CloudPillar.Agent.Handlers
 {
     public class BlobStorageFileUploaderHandler : IBlobStorageFileUploaderHandler
     {

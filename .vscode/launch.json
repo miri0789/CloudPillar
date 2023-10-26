@@ -166,7 +166,8 @@
                 "SecretKey": "signKey",
                 "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
                 "DPSConnectionString": "HostName=DPS-Bracha.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=f3+8+rqrtH0T7nlSuIshUSn2K6rbIb7mUHQwTcztRzg=",
-                "DPSIdScope": "0ne00B07A2A"
+                "DPSIdScope": "0ne00B07A2A",
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
             }
         },
         {
@@ -201,7 +202,8 @@
             "env": {
                 "DpsScopeId": "0ne00B07A2A",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
-                "CertificateExpiredDays": "365"
+                "CertificateExpiredDays": "365",
+                "GroupEnrollmentPrimaryKey":"zeuIXU7CbwMS6YfF5+i5Nn71ZGNj/boUA1UuLuYXuZLiqQqWs09ftT63iZQ6iOEmpJEs1F58WFV6EelxY+KvDA=="
             },
             "stopAtEntry": false
         }

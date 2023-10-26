@@ -6,6 +6,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,9 @@
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Service" Version="1.18.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="SharedLogger" Version="1.0.10" />
-    <PackageReference Include="SharedEntities" Version="1.0.88" />
+    <PackageReference Include="SharedEntities" Version="1.0.99" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\infra\common\common.csproj" />
   </ItemGroup>
 </Project>

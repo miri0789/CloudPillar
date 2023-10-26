@@ -14,6 +14,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
 
     private const string _dpsConnectionString = "DPSConnectionString";
     private const string _dpsIdScope = "DPSIdScope";
+    private const string _globalDeviceEndpoint = "GlobalDeviceEndpoint";
 
     public string kubernetesServiceHost
     {
@@ -44,6 +45,11 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public string dpsIdScope
     {
         get { return GetVariable(_dpsIdScope); }
+    }
+
+    public string globalDeviceEndpoint
+    {
+        get { return GetVariable(_globalDeviceEndpoint); }
     }
 
 

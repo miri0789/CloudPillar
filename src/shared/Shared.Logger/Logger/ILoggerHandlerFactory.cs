@@ -21,4 +21,6 @@ public interface ILoggerHandlerFactory
     ITelemetryClientWrapper CreateTelemetryClient(string connectionString);
 
     bool IsApplicationInsightsAppenderInRoot();
+
+    T? FindAppender<T>() where T : IAppender;
 }
