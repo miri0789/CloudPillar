@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
 using Shared.Logger;
+using Newtonsoft.Json.Converters;
+using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Handlers;
@@ -45,10 +48,10 @@ public class TwinHandler : ITwinHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    public async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
     {
         try
-        {
+        {            
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
@@ -70,7 +73,23 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"OnDesiredPropertiesUpdate failed", ex);
+        }
+    }
+    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
+                            {
+                                _logger.Info($"Desired properties were updated.");
+                                await OnDesiredPropertiesUpdate(cancellationToken);
+                            };
+            await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"HandleTwinActionsAsync failed", ex);
         }
 
     }
@@ -127,7 +146,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"HandleTwinActions failed", ex);
         }
     }
 
@@ -233,12 +252,40 @@ public class TwinHandler : ITwinHandler
         try
         {
             var deviceStateKey = nameof(TwinReported.DeviceState);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString());
             _logger.Info($"UpdateDeviceStateAsync success");
         }
         catch (Exception ex)
         {
             _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
+        }
+    }
+    public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {                        
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reprted.DeviceState;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetDeviceStateAsync failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task UpdateDeviceSecretKeyAsync(string secretKey)
+    {
+        try
+        {
+            var deviceSecretKey = nameof(TwinReported.SecretKey);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey);
+            _logger.Info($"UpdateDeviceSecretKeyAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceSecretKeyAsync failed", ex);
         }
     }
 

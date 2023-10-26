@@ -24,8 +24,6 @@ trigger:
     include:
     - main
     - $(Build.SourceBranchName)
-    exclude:
-    - '*'
 
 
 stages:  
@@ -106,10 +104,10 @@ stages:
           repository: 'cloudpillar${{ lower(item) }}service'
           containerRegistry: 'CP ${{ parameters.env }} docker registry'
           command: 'build'
-          Dockerfile: './src/backend/infra/build/Dockerfile'
+          Dockerfile: './src/backend/Infra/build/Dockerfile'
           buildContext: src
           tags: '$(imagetag)'
-          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }} --build-arg PORT=$PORT'        
+          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT=$PORT'        
             
       - script: |
           SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
@@ -120,13 +118,14 @@ stages:
           fi
         displayName: '${{ item }} Security Scan'
 
-      - task: Docker@2
-        displayName: '${{ item }} Docker Push'
-        inputs:
-          command: 'push' 
-          repository: 'cloudpillar${{ lower(item) }}service'
-          containerRegistry: 'cp ${{ parameters.env }} docker registry'
-          tags: '$(imagetag)'
+      - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+        - task: Docker@2
+          displayName: '${{ item }} Docker Push'
+          inputs:
+            command: 'push' 
+            repository: 'cloudpillar${{ lower(item) }}service'
+            containerRegistry: 'cp ${{ parameters.env }} docker registry'
+            tags: '$(imagetag)'
 
 
 - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
