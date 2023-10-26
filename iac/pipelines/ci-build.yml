@@ -24,8 +24,6 @@ trigger:
     include:
     - main
     - $(Build.SourceBranchName)
-    exclude:
-    - '*'
 
 
 stages:  
