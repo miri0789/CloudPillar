@@ -42,7 +42,7 @@ stages:
       inputs:
         command: 'test'
         projects: '**/*Tests/*.csproj'
-        arguments: '--configuration $(buildConfiguration)'
+        arguments: '--configuration $(buildConfiguration) /p:CollectCoverage=true'
 
     - task: PublishTestResults@2
       displayName: 'Publish Test Results'
@@ -55,6 +55,8 @@ stages:
       inputs:
         codeCoverageTool: 'cobertura'
         summaryFileLocation: '$(Agent.TempDirectory)/TestResults/*/coverage.cobertura.xml'
+        reportDirectory: '$(Agent.TempDirectory)/TestResults'
+        failIfCoverageEmpty: true
       displayName: 'Publish Code Coverage Results'
 
   - job: Agent_CI_Job
