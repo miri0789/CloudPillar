@@ -106,7 +106,7 @@ stages:
           repository: 'cloudpillar${{ lower(item) }}service'
           containerRegistry: 'CP ${{ parameters.env }} docker registry'
           command: 'build'
-          Dockerfile: './src/backend/infra/build/Dockerfile'
+          Dockerfile: './src/backend/Backend.Infra/build/Dockerfile'
           buildContext: src
           tags: '$(imagetag)'
           arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backend.${{ item }} --build-arg PORT=$PORT'        
