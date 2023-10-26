@@ -7,7 +7,7 @@ WORKDIR /src
 ARG DLL
 # Copy the .csproj file and restore the dependencies
 COPY backend/${DLL}/*.csproj backend/${DLL}/
-COPY backend/backend/Backend.Infra/Backend.Infra.Common/Backend.Infra.Common.csproj backend/backend/Backend.Infra/Backend.Infra.Common/
+COPY backend/Backend.Infra/Backend.Infra.Common/Backend.Infra.Common.csproj backend/backend/Backend.Infra/Backend.Infra.Common/
 COPY nuget.config backend/${DLL}/
 COPY nuget.config backend/Backend.Infra/Backend.Infra.Common/
 ARG FEED_ACCESSTOKEN
