@@ -50,6 +50,13 @@ stages:
         testResultsFormat: 'VSTest'
         testResultsFiles: '**/TestResults/*.trx'
 
+        
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'cobertura'
+        summaryFileLocation: '$(Agent.TempDirectory)/TestResults/*/coverage.cobertura.xml'
+      displayName: 'Publish Code Coverage Results'
+
   - job: Agent_CI_Job
     pool:
       vmImage: ubuntu-latest
