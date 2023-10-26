@@ -10,7 +10,6 @@
     <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Service" Version="1.18.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Client" Version="1.19.3" />
-    <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Service" Version="1.18.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Mqtt" Version="1.17.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Http" Version="1.15.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Amqp" Version="1.16.5" />

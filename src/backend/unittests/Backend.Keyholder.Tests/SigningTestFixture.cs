@@ -4,7 +4,6 @@ using Newtonsoft.Json.Linq;
 using Microsoft.Azure.Devices;
 using Moq;
 using k8s;
-using k8s.Models;
 using Microsoft.Azure.Devices.Shared;
 using Backend.Keyholder.Interfaces;
 using Shared.Logger;

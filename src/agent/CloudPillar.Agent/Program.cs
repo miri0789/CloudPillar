@@ -58,6 +58,8 @@ builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
 builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
+builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
+builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
@@ -86,8 +88,18 @@ app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
-
 var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
 strictModeHandler.CheckAuthentucationMethodValue();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
+    await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
+
+    var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
+    await StateMachineHandlerService.InitStateMachineHandlerAsync();
+}
+
+
 app.Run();
+

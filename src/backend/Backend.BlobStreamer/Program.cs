@@ -4,7 +4,7 @@ using Backend.BlobStreamer.Wrappers;
 using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
-using Shared.Entities.DeviceClient;
+using common;
 using Shared.Entities.Services;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
@@ -23,7 +23,6 @@ builder.Services.AddScoped<IUploadStreamChunksService, UploadStreamChunksService
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();

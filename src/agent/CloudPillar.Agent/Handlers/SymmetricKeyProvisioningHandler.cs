@@ -28,8 +28,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
     public async Task<bool> AuthorizationAsync(CancellationToken cancellationToken)
     {
-        bool res = await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
-        return res;
+        return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
     }
 
     public async Task ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
@@ -63,24 +62,23 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                     _logger.Error("Registration status did not assign a hub.");
                     return;
                 }
-                await CheckAuthorizationAndInitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
+                await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
                 
             }
         }
     }
 
-    private async Task<bool> CheckAuthorizationAndInitializeDeviceAsync(string deviceId, string iotHubHostName, string deviceKey, CancellationToken cancellationToken)
+    private async Task InitializeDeviceAsync(string deviceId, string iotHubHostName, string deviceKey, CancellationToken cancellationToken)
     {
         try
         {
             var auth = _symmetricKeyWrapper.GetDeviceAuthentication(deviceId, deviceKey);
             await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
-            return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
+            await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.Error($"Exception during IoT Hub connection: ", ex);
-            return false;
         }
     }
 
