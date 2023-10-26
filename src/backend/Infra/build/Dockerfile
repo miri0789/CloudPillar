@@ -7,9 +7,9 @@ WORKDIR /src
 ARG DLL
 # Copy the .csproj file and restore the dependencies
 COPY backend/${DLL}/*.csproj backend/${DLL}/
-COPY backend/Backend.Infra/Backend.Infra.Common/Backend.Infra.Common.csproj backend/Backend.Infra/Backend.Infra.Common/
+COPY backend/Infra/Common/Common.csproj backend/Infra/Common/
 COPY nuget.config backend/${DLL}/
-COPY nuget.config backend/Backend.Infra/Backend.Infra.Common/
+COPY nuget.config backend/Infra/Common/
 ARG FEED_ACCESSTOKEN
 ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
 RUN dotnet nuget locals all --clear
