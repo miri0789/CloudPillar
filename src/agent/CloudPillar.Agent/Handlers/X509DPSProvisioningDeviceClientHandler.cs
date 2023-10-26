@@ -30,17 +30,19 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     public X509Certificate2? GetCertificate()
     {
-        _X509CertificateWrapper.Open(OpenFlags.ReadOnly);
-        var certificates = _X509CertificateWrapper.Certificates;
-        if (certificates == null)
+        using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {
-            return null;
-        }
-        var filteredCertificate = certificates.Cast<X509Certificate2>()
-           .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
-           .FirstOrDefault();
+            var certificates = _X509CertificateWrapper.GetCertificates(store);
+            if (certificates == null)
+            {
+                return null;
+            }
+            var filteredCertificate = certificates.Cast<X509Certificate2>()
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
+               .FirstOrDefault();
 
-        return filteredCertificate;
+            return filteredCertificate;
+        }
     }
 
     public async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
@@ -104,7 +106,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             dpsScopeId,
             security,
             transport);
-            
+
         if (result == null)
         {
             _logger.Error("RegisterAsync failed");

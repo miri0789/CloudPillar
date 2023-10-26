@@ -79,8 +79,8 @@ public class ReprovisioningHandlerTestFixture
     {
         _certificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
         _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite)).Verifiable();
-        _x509CertificateWrapperMock.Setup(x => x.Certificates).Returns(new X509Certificate2Collection() { _certificate });
-        _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
+        _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>())).Returns(new X509Certificate2Collection() { _certificate });
+        _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509Store>(), It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(new X509Certificate2Collection());
         _dPSProvisioningDeviceClientHandlerMock.Setup(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -98,8 +98,8 @@ public class ReprovisioningHandlerTestFixture
         _certificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
 
         _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite)).Verifiable();
-        _x509CertificateWrapperMock.Setup(x => x.Certificates).Returns(new X509Certificate2Collection() { _certificate });
-        _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
+        _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>())).Returns(new X509Certificate2Collection() { _certificate });
+        _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509Store>(),It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(new X509Certificate2Collection());
 
         Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleReprovisioningMessageAsync(message, CancellationToken.None));
@@ -112,8 +112,8 @@ public class ReprovisioningHandlerTestFixture
         _certificate.FriendlyName = "invalidCertificate";
 
         _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite)).Verifiable();
-        _x509CertificateWrapperMock.Setup(x => x.Certificates).Returns(new X509Certificate2Collection() { _certificate });
-        _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
+        _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>())).Returns(new X509Certificate2Collection() { _certificate });
+        _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509Store>(), It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(new X509Certificate2Collection());
 
         Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleReprovisioningMessageAsync(_validReprovisioningMessage, CancellationToken.None));
@@ -126,8 +126,8 @@ public class ReprovisioningHandlerTestFixture
         _certificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
 
         _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite)).Verifiable();
-        _x509CertificateWrapperMock.Setup(x => x.Certificates).Returns(new X509Certificate2Collection() { _certificate });
-        _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
+        _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>())).Returns(new X509Certificate2Collection() { _certificate });
+        _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509Store>(), It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(new X509Certificate2Collection(_certificate));
 
         await _target.HandleReprovisioningMessageAsync(_validReprovisioningMessage, CancellationToken.None);

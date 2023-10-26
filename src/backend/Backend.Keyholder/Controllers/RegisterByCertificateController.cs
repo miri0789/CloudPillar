@@ -24,14 +24,14 @@ public class RegisterByCertificateController : ControllerBase
     [HttpPost("Register")]
     public async Task<IActionResult> Register(string deviceId, string secretKey)
     {
-        await _registrationService.Register(deviceId, secretKey);
+        await _registrationService.RegisterAsync(deviceId, secretKey);
         return Ok();
     }
 
     [HttpPost("ProvisionDeviceCertificate")]
     public async Task<IActionResult> ProvisionDeviceCertificate(string deviceId, [FromBody] byte[] certificate)
     {
-        await _registrationService.ProvisionDeviceCertificate(deviceId, certificate);
+        await _registrationService.ProvisionDeviceCertificateAsync(deviceId, certificate);
         return Ok();
     }
 

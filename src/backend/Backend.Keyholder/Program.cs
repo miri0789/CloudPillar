@@ -20,6 +20,7 @@ builder.Services.AddScoped<IIndividualEnrollmentWrapper, IndividualEnrollmentWra
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
+builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();

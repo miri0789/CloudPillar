@@ -71,7 +71,6 @@ public class AgentController : ControllerBase
                 await ProvisinigSymetricKey(cancellationToken);
             }
         }
-         await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
@@ -82,6 +81,7 @@ public class AgentController : ControllerBase
         try
         {
             await ProvisinigSymetricKey(cancellationToken);
+            await _c2DEventHandler.CreateSubscribeAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)

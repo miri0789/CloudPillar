@@ -9,33 +9,26 @@ using Shared.Entities.Authentication;
 namespace CloudPillar.Agent.Wrappers;
 public class X509CertificateWrapper : IX509CertificateWrapper
 {
-    private readonly X509Store _store;
-
-    public X509CertificateWrapper()
+    public X509Store Open(OpenFlags flags)
     {
-        _store = new X509Store(StoreLocation.CurrentUser);
+        var store = new X509Store(StoreLocation.CurrentUser);
+        store.Open(flags);
+        return store;
     }
 
-    public void Open(OpenFlags flags)
+    public X509Certificate2Collection GetCertificates(X509Store store)
     {
-        _store.Open(flags);
+        return store.Certificates;
     }
 
-    public X509Certificate2Collection Certificates => _store.Certificates;
-
-    public X509Certificate2Collection Find(X509FindType findType, string findValue, bool validOnly)
+    public X509Certificate2Collection Find(X509Store store, X509FindType findType, string findValue, bool validOnly)
     {
-        return _store.Certificates.Find(findType, findValue, validOnly);
+        return store.Certificates.Find(findType, findValue, validOnly);
     }
 
-    public void RemoveRange(X509Certificate2Collection collection)
+    public void RemoveRange(X509Store store, X509Certificate2Collection collection)
     {
-        _store.RemoveRange(collection);
-    }
-
-    public void Close()
-    {
-        _store.Close();
+        store.RemoveRange(collection);
     }
 
     public X509Certificate2Collection CreateCertificateCollecation(X509Certificate2[] certificates)
@@ -43,16 +36,16 @@ public class X509CertificateWrapper : IX509CertificateWrapper
         return new X509Certificate2Collection(certificates);
     }
 
-    public void Add(X509Certificate2 x509Certificate)
+    public void Add(X509Store store, X509Certificate2 x509Certificate)
     {
-        _store.Add(x509Certificate);
+        store.Add(x509Certificate);
     }
-    
+
     public X509Certificate2 CreateFromBytes(byte[] rawData, string password, X509KeyStorageFlags keyStorageFlags)
     {
         return new X509Certificate2(rawData, password, keyStorageFlags);
     }
-    
+
     public DeviceAuthenticationWithX509Certificate GetDeviceAuthentication(string deviceId, X509Certificate2 certificate)
     {
         return new DeviceAuthenticationWithX509Certificate(deviceId, certificate);
