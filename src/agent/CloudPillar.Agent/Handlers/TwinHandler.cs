@@ -126,7 +126,6 @@ public class TwinHandler : ITwinHandler
                     case TwinActionType.SingularUpload:
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, fileName, cancellationToken);
                         break;
-                   
                     case TwinActionType.ExecuteOnce:
                         if (_appSettings.StrictMode)
                         {
@@ -166,15 +165,7 @@ public class TwinHandler : ITwinHandler
                 var destination = ((DownloadAction)action.TwinAction).DestinationPath;
                 var source = ((DownloadAction)action.TwinAction).Source;
 
-                ArgumentNullException.ThrowIfNullOrEmpty(destination);
-                if (string.IsNullOrWhiteSpace(source))
-                {
-                    fileName = destination;
-                }
-                else
-                {
-                    fileName = destination + source;
-                }
+                fileName = destination + source;
                 break;
             case TwinActionType.SingularUpload:
                 fileName = ((UploadAction)action.TwinAction).FileName;

@@ -7,8 +7,6 @@ namespace CloudPillar.Agent.Handlers;
 
 public class StrictModeHandler : IStrictModeHandler
 {
-    public const string AUTHENTICATION_SAS = "SAS";
-    public const string AUTHENTICATION_X509 = "X509";
     public const string UPLOAD_ACTION = "Upload";
     public const string DOWNLOAD_ACTION = "Download";
     private readonly AppSettings _appSettings;
@@ -73,13 +71,7 @@ public class StrictModeHandler : IStrictModeHandler
 
         foreach (var pattern in allowPatterns)
         {
-            if (string.IsNullOrWhiteSpace(pattern))
-            {
-                _logger.Info("The pattern is empty");
-                return;
-            }
-            var regexPattern = ConvertToRegexPattern(pattern.Trim());
-            // var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
+            var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
             var isMatch = IsMatch(verbatimFileName, regexPattern);
             if (isMatch)
             {
@@ -157,7 +149,8 @@ public class StrictModeHandler : IStrictModeHandler
         }
 
         _logger.Info($"{allowPatterns?.Count} allow pattern was found");
-        return allowPatterns;
+        var nonEmptyPatterns = allowPatterns.Where(pattern => !string.IsNullOrWhiteSpace(pattern)).ToList();
+        return nonEmptyPatterns;
     }
 
     private string GetRootById(string id, TwinActionType actionType)
