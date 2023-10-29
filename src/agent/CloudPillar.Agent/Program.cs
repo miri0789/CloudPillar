@@ -1,4 +1,5 @@
 using System.Net;
+using System.Runtime.InteropServices;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Utilities;
@@ -74,6 +75,19 @@ builder.Services.AddControllers(options =>
         options.Filters.Add<LogActionFilter>();
     });
 builder.Services.AddSwaggerGen();
+bool runAsService = args != null && args.Length > 0 && args[0] == "--winsrv";
+
+if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    builder.Services.AddHostedService<Worker>();
+    builder.Services.AddWindowsService();
+    InstallWindowsService();
+
+}
+// else
+// {
+
+// }
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
@@ -101,4 +115,123 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+    
+public partial class Program
+    {
+        // P/Invoke declarations
+        [DllImport("advapi32.dll", SetLastError = true)]
+        private static extern IntPtr OpenSCManager(string machineName, string databaseName, uint dwAccess);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        private static extern IntPtr CreateService(IntPtr hSCManager, string lpServiceName, string lpDisplayName, uint dwDesiredAccess, uint dwServiceType, uint dwStartType, uint dwErrorControl, string lpBinaryPathName, string lpLoadOrderGroup, IntPtr lpdwTagId, string lpDependencies, string lpServiceStartName, string lpPassword);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseServiceHandle(IntPtr hSCObject);
+
+        // Constants
+        private const uint SC_MANAGER_CREATE_SERVICE = 0x0002;
+        private const uint SERVICE_WIN32_SHARE_PROCESS = 0x00000020;
+        private const uint SERVICE_AUTO_START = 0x00000002;
+        private const uint SERVICE_ERROR_NORMAL = 0x00000001;
+
+        public static void InstallWindowsService()
+    {
+        IntPtr scm = OpenSCManager(null, null, SC_MANAGER_CREATE_SERVICE);
+        if (scm == IntPtr.Zero)
+        {
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+        }
+
+        //string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName + " --winsrv";
+        string exePath = AppDomain.CurrentDomain.BaseDirectory + "CloudPillar.Agent.exe" + " --winsrv" ;
+
+        IntPtr svc = CreateService(scm, "CP_Agent_Service1", "Cloud Pillar Agent Service1", SC_MANAGER_CREATE_SERVICE, SERVICE_WIN32_SHARE_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, null, null);
+
+        if (svc == IntPtr.Zero)
+        {
+            CloseServiceHandle(scm);
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+        }
+
+        CloseServiceHandle(svc);
+        CloseServiceHandle(scm);
+    }
+}
+
+public class Worker : BackgroundService
+    {
+        private readonly ILogger<Worker> _logger;
+
+        public Worker(ILogger<Worker> logger)
+        {
+            _logger = logger;
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+        _logger.LogInformation("Worker is starting.");
+
+        stoppingToken.Register(() => _logger.LogInformation("Worker is stopping."));
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            _logger.LogInformation("Worker is doing background work.");
+
+            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+        }
+
+        _logger.LogInformation("Worker has stopped.");
+
+        }
+
+        public override Task StartAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                 _logger.LogInformation("Worker is starting at: {time}", DateTimeOffset.Now);
+
+            // Your setup logic here
+
+            return base.StartAsync(cancellationToken);
+            }
+            catch (System.Exception)
+            {
+                
+                throw;
+            }
+           
+        }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Worker is stopping.");
+
+            // Your graceful shutdown logic here
+
+            return base.StopAsync(cancellationToken);
+        }
+
+        // public override async Task PauseAsync(CancellationToken cancellationToken)
+        // {
+        //     _logger.LogInformation("Worker is pausing.");
+
+        //     // Your graceful pause logic here
+
+        //     await base.PauseAsync(cancellationToken);
+        // }
+
+        // public override async Task ResumeAsync(CancellationToken cancellationToken)
+        // {
+        //     _logger.LogInformation("Worker is resuming.");
+
+        //     // Your graceful resume logic here
+
+        //     await base.ResumeAsync(cancellationToken);
+        // }
+    }
+
+
+
+
 
