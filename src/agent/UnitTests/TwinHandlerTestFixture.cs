@@ -25,6 +25,7 @@ public class TwinHandlerTestFixture
     private ITwinHandler _target;
     private CancellationToken cancellationToken = CancellationToken.None;
 
+
     [SetUp]
     public void Setup()
     {

@@ -26,7 +26,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
     }
 
-    public async Task<bool> AuthorizationAsync(CancellationToken cancellationToken)
+    public async Task<bool> AuthorizationDeviceAsync(CancellationToken cancellationToken)
     {
         return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
     }

@@ -99,7 +99,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/backend/Backend.Iotlistener/Backend.Iotlistener.csproj",
+                "${workspaceFolder}/src/backend/Iotlistener/Iotlistener.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -115,7 +115,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/backend/Backend.Keyholder/Backend.Keyholder.csproj",
+                "${workspaceFolder}/src/backend/Keyholder/Keyholder.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],

@@ -14,28 +14,26 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     private IDeviceClientWrapper _deviceClientWrapper;
     private readonly IX509CertificateWrapper _X509CertificateWrapper;
+    private readonly IProvisioningDeviceClientWrapper _provisioningDeviceClientWrapper;
 
     public X509DPSProvisioningDeviceClientHandler(
         ILoggerHandler loggerHandler,
         IDeviceClientWrapper deviceClientWrapper,
-        IX509CertificateWrapper X509CertificateWrapper)
+        IX509CertificateWrapper X509CertificateWrapper,
+        IProvisioningDeviceClientWrapper provisioningDeviceClientWrapper)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _X509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
+        _provisioningDeviceClientWrapper = provisioningDeviceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningDeviceClientWrapper));
     }
 
     public X509Certificate2? GetCertificate()
     {
-        using (X509Store store = _X509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
+        using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {
-            store.Open(OpenFlags.ReadOnly);
-            X509Certificate2Collection certificates = store.Certificates;
-            if (certificates == null)
-            {
-                return null;
-            }
-            var filteredCertificate = certificates.Cast<X509Certificate2>()
+            var certificates = _X509CertificateWrapper.GetCertificates(store);           
+            var filteredCertificate = certificates?.Cast<X509Certificate2>()
                .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
                .FirstOrDefault();
 
@@ -107,17 +105,19 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         _logger.Debug($"Initializing the device provisioning client...");
 
         using ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler();
-        var provClient = ProvisioningDeviceClient.Create(
-            globalDeviceEndpoint,
+
+        _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
+
+        DeviceRegistrationResult result = await _provisioningDeviceClientWrapper.RegisterAsync(globalDeviceEndpoint,
             dpsScopeId,
             security,
             transport);
 
-
-
-        _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
-
-        DeviceRegistrationResult result = await provClient.RegisterAsync();
+        if (result == null)
+        {
+            _logger.Error("RegisterAsync failed");
+            return;
+        }
 
         _logger.Debug($"Registration status: {result.Status}.");
         if (result.Status != ProvisioningRegistrationStatusType.Assigned)
@@ -129,22 +129,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
 
-    }
-
-    private string GetDeviceIdFromCertificate(X509Certificate2 userCertificate)
-    {
-        ArgumentNullException.ThrowIfNullOrEmpty(userCertificate?.FriendlyName);
-
-        var friendlyName = userCertificate.FriendlyName;
-        return friendlyName.Split("@")[0];
-    }
-    private string GetIotHubHostNameFromCertificate(X509Certificate2 userCertificate)
-    {
-        ArgumentNullException.ThrowIfNullOrEmpty(userCertificate?.FriendlyName);
-
-        var friendlyName = userCertificate.FriendlyName;
-        return friendlyName.Split("@")[1];
-    }
+    }    
 
     private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
     {
