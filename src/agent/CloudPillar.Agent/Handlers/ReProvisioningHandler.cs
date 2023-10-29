@@ -88,7 +88,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
 
     private async Task ProvisionDeviceAndCleanupCertificatesAsync(ReprovisioningMessage message, X509Certificate2 certificate, string deviceId, string iotHubHostName, CancellationToken cancellationToken)
-    {        
+    {
         try
         {
             await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
@@ -101,16 +101,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
                     throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
                 }
 
-                var filteredCertificates = certificates.Cast<X509Certificate2>()
-                   .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
-                   && cert.Thumbprint != certificate.Thumbprint)
-                   .ToArray();
-
-                if (filteredCertificates?.Length > 0)
-                {
-                    var certificateCollection = _x509CertificateWrapper.CreateCertificateCollecation(filteredCertificates);
-                    _x509CertificateWrapper.RemoveRange(store, certificateCollection);
-                }
+                RemoveCertificatesFromStore(store, certificate.Thumbprint);
 
                 X509Certificate2Collection collection = _x509CertificateWrapper.Find(store, X509FindType.FindByThumbprint, certificate.Thumbprint, false);
                 if (collection.Count == 0)
@@ -147,22 +138,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite))
         {
-            var certificates = _x509CertificateWrapper.GetCertificates(store);
-
-            if (certificates != null)
-            {
-
-                var filteredCertificates = certificates.Cast<X509Certificate2>()
-                   .Where(cert => cert.FriendlyName == CertificateConstants.TEMPORARY_CERTIFICATE_NAME)
-                   .ToArray();
-
-                if (filteredCertificates?.Length > 0)
-                {
-                    var certificateCollection = _x509CertificateWrapper.CreateCertificateCollecation(filteredCertificates);
-                    _x509CertificateWrapper.RemoveRange(store, certificateCollection);
-                }
-            }
-
+            RemoveCertificatesFromStore(store, string.Empty);
             _x509CertificateWrapper.Add(store, privateCertificate);
         }
 
@@ -174,11 +150,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         {
             X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
 
-            if (certificates == null)
-            {
-                return null;
-            }
-            var filteredCertificate = certificates.Cast<X509Certificate2>()
+            var filteredCertificate = certificates?.Cast<X509Certificate2>()
                .Where(cert => cert.FriendlyName == CertificateConstants.TEMPORARY_CERTIFICATE_NAME)
                .FirstOrDefault();
 
@@ -187,6 +159,23 @@ public class ReprovisioningHandler : IReprovisioningHandler
                 _logger.Info("GetTempCertificate not find certificate");
             }
             return filteredCertificate;
+        }
+    }
+
+    private void RemoveCertificatesFromStore(X509Store store, string thumbprint)
+    {
+        var certificates = _x509CertificateWrapper.GetCertificates(store);
+
+        var filteredCertificates = certificates?.Cast<X509Certificate2>()
+           .Where(cert => string.IsNullOrEmpty(thumbprint) ? cert.FriendlyName == CertificateConstants.TEMPORARY_CERTIFICATE_NAME :
+            (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
+           && cert.Thumbprint != thumbprint))
+           .ToArray();
+
+        if (filteredCertificates?.Length > 0)
+        {
+            var certificateCollection = _x509CertificateWrapper.CreateCertificateCollecation(filteredCertificates);
+            _x509CertificateWrapper.RemoveRange(store, certificateCollection);
         }
     }
 }

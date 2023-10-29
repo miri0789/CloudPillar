@@ -32,12 +32,8 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     {
         using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {
-            var certificates = _X509CertificateWrapper.GetCertificates(store);
-            if (certificates == null)
-            {
-                return null;
-            }
-            var filteredCertificate = certificates.Cast<X509Certificate2>()
+            var certificates = _X509CertificateWrapper.GetCertificates(store);           
+            var filteredCertificate = certificates?.Cast<X509Certificate2>()
                .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
                .FirstOrDefault();
 

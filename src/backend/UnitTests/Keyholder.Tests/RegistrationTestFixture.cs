@@ -48,6 +48,11 @@ public class RegistrationTestFixture
         _environmentsWrapperMock.Setup(c => c.dpsConnectionString).Returns("dpsConnectionString");
         _environmentsWrapperMock.Setup(c => c.iothubConnectionString).Returns("HostName=unitTest;SharedAccessKeyName=iothubowner;");
 
+        var enrollment = new IndividualEnrollment("", new SymmetricKeyAttestation("", ""));
+        _x509CertificateWrapperMock.Setup(x => x.CreateCertificate(It.IsAny<byte[]>())).Returns(new X509Certificate2(GenerateCertificate().Export(X509ContentType.Cert)));
+        _individualEnrollmentWrapperMock.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<Attestation>())).Returns(enrollment);
+        _provisioningServiceClientWrapperMock.Setup(x => x.CreateOrUpdateIndividualEnrollmentAsync(It.IsAny<ProvisioningServiceClient>(), It.IsAny<IndividualEnrollment>())).ReturnsAsync(enrollment);
+
 
         _target = new RegistrationService(_messageFactoryMock.Object,
          _deviceClientWrapperMock.Object,
@@ -85,13 +90,7 @@ public class RegistrationTestFixture
 
     [Test]
     public async Task ProvisionDeviceCertificateAsync_ValidParameter_MessageSendToAgent()
-    {
-        var enrollment = new IndividualEnrollment("", new SymmetricKeyAttestation("", ""));
-        _x509CertificateWrapperMock.Setup(x => x.CreateCertificate(It.IsAny<byte[]>())).Returns(new X509Certificate2(GenerateCertificate().Export(X509ContentType.Cert)));
-        _individualEnrollmentWrapperMock.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<Attestation>())).Returns(enrollment);
-
-
-        _provisioningServiceClientWrapperMock.Setup(x => x.CreateOrUpdateIndividualEnrollmentAsync(It.IsAny<ProvisioningServiceClient>(), It.IsAny<IndividualEnrollment>())).ReturnsAsync(enrollment);
+    {       
         await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, new byte[100]);
 
         _deviceClientWrapperMock.Verify(x => x.SendAsync(It.IsAny<ServiceClient>(), It.IsAny<string>(), It.IsAny<Message>()), Times.Once);
@@ -99,25 +98,13 @@ public class RegistrationTestFixture
 
     [Test]
     public async Task ProvisionDeviceCertificateAsync_InvalidCertificateParameter_ThrowException()
-    {
-        var enrollment = new IndividualEnrollment("", new SymmetricKeyAttestation("", ""));
-        _x509CertificateWrapperMock.Setup(x => x.CreateCertificate(It.IsAny<byte[]>())).Returns(new X509Certificate2(GenerateCertificate().Export(X509ContentType.Cert)));
-        _individualEnrollmentWrapperMock.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<Attestation>())).Returns(enrollment);
-
-
-        _provisioningServiceClientWrapperMock.Setup(x => x.CreateOrUpdateIndividualEnrollmentAsync(It.IsAny<ProvisioningServiceClient>(), It.IsAny<IndividualEnrollment>())).ReturnsAsync(enrollment);
+    {       
         Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, null));
 
     }
         [Test]
     public async Task ProvisionDeviceCertificateAsync_InvalidDeviceIdParameter_ThrowException()
     {
-        var enrollment = new IndividualEnrollment("", new SymmetricKeyAttestation("", ""));
-        _x509CertificateWrapperMock.Setup(x => x.CreateCertificate(It.IsAny<byte[]>())).Returns(new X509Certificate2(GenerateCertificate().Export(X509ContentType.Cert)));
-        _individualEnrollmentWrapperMock.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<Attestation>())).Returns(enrollment);
-
-
-        _provisioningServiceClientWrapperMock.Setup(x => x.CreateOrUpdateIndividualEnrollmentAsync(It.IsAny<ProvisioningServiceClient>(), It.IsAny<IndividualEnrollment>())).ReturnsAsync(enrollment);
         Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.ProvisionDeviceCertificateAsync(null, new byte[100]));
     }
 
