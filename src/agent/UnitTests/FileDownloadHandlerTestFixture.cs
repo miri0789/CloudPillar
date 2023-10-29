@@ -139,7 +139,7 @@ namespace CloudPillar.Agent.Tests
             {
                 ActionId = "action123",
                 Source = "test.txt",
-                DestinationPath = "${" + StrictModeMockHelper.DOWNLOAD_KEY + "}",
+                DestinationPath = $"${{{StrictModeMockHelper.DOWNLOAD_KEY}}}"
             };
             await _target.InitFileDownloadAsync(_downloadActionForSM, _actionToReport);
 
@@ -163,7 +163,7 @@ namespace CloudPillar.Agent.Tests
             {
                 ActionId = "action123",
                 Source = "test.txt",
-                DestinationPath = "${" + StrictModeMockHelper.DOWNLOAD_KEY + "}",
+                DestinationPath = $"${{{StrictModeMockHelper.DOWNLOAD_KEY}}}",
             };
             await _target.InitFileDownloadAsync(_downloadActionForSM, _actionToReport);
             _strictModeHandlerMock.Setup(th => th.CheckSizeStrictMode(It.IsAny<TwinActionType>(), It.IsAny<long>(), It.IsAny<string>())).Throws<ArgumentException>();
@@ -189,16 +189,16 @@ namespace CloudPillar.Agent.Tests
             var message = new DownloadBlobChunkMessage
             {
                 ActionId = "abc",
-                FileName = "${" + StrictModeMockHelper.DOWNLOAD_KEY + "}test.txt",
+                FileName = $"${{{StrictModeMockHelper.DOWNLOAD_KEY}}}test.txt",
                 Offset = 0,
                 Data = new byte[1024],
                 FileSize = 2048
             };
 
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                       {
-                           await _target.HandleDownloadMessageAsync(message);
-                       });
+                           {
+                               await _target.HandleDownloadMessageAsync(message);
+                           });
         }
     }
 }

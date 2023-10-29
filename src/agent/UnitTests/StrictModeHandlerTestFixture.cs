@@ -30,7 +30,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         [Test]
         public void ReplaceRootById_ValidData_ReturnReplacedString()
         {
-            var fileName = "${" + StrictModeMockHelper.UPLOAD_KEY + "}test.txt";
+            var fileName = $"${{{StrictModeMockHelper.UPLOAD_KEY}}}test.txt";
             var replacedFileName = $"{StrictModeMockHelper.ROOT_UPLOAD}test.txt";
 
             var res = _target.ReplaceRootById(UPLAOD_ACTION, fileName);
@@ -42,7 +42,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void ReplaceRootById_NoRootValue_ThrowException()
         {
 
-            var fileName = "${" + StrictModeMockHelper.UPLOAD_KEY + "}test.txt";
+            var fileName = $"${{{StrictModeMockHelper.UPLOAD_KEY}}}test.txt";
             mockAppSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).Root = "";
 
             Assert.Throws<KeyNotFoundException>(() =>

@@ -24,13 +24,19 @@ public class TwinHandlerTestFixture
     private Mock<IOptions<AppSettings>> _appSettingsMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
-    private Mock<IOptions<AppSettings>> _appSettings;
     private ITwinHandler _target;
+    private AppSettings mockAppSettingsValue = new AppSettings();
+    private Mock<IOptions<AppSettings>> mockAppSettings;
     private CancellationToken cancellationToken = CancellationToken.None;
 
     [SetUp]
     public void Setup()
     {
+        mockAppSettingsValue = StrictModeMockHelper.SetAppSettingsValueMock();
+        mockAppSettings = new Mock<IOptions<AppSettings>>();
+        mockAppSettings.Setup(x => x.Value).Returns(mockAppSettingsValue);
+
+
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _fileDownloadHandlerMock = new Mock<IFileDownloadHandler>();
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
@@ -41,11 +47,6 @@ public class TwinHandlerTestFixture
         _appSettingsMock = new Mock<IOptions<AppSettings>>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
-        _appSettings = new Mock<IOptions<AppSettings>>();
-        var appSettings = new AppSettings
-        {
-        };
-        _appSettings.Setup(x => x.Value).Returns(appSettings);
         CreateTarget();
     }
 
@@ -60,7 +61,7 @@ public class TwinHandlerTestFixture
           _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
-          _appSettings.Object);
+          mockAppSettings.Object);
     }
 
     [Test]
@@ -235,6 +236,14 @@ public class TwinHandlerTestFixture
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Never);
     }
 
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_StrictModeTrue_BashAndPowerShellActionsNotAllowed()
+    {
+        mockAppSettingsValue.StrictMode = true;
+
+        _target.OnDesiredPropertiesUpdate(CancellationToken.None);
+        _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
+    }
 
     [Test]
     public async Task UpdateDeviceStateAsync_ValidState_Success()
