@@ -133,7 +133,7 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleDownloadMessageAsync_PassStrictMode_NotThrowException()
+        public async Task HandleDownloadMessageAsync_PassStrictMode_Success()
         {
             var _downloadActionForSM = new DownloadAction()
             {
