@@ -37,13 +37,6 @@ stages:
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to NuGet'
 
-    # - task: DotNetCoreCLI@2
-    #   displayName: 'Run Unit Tests'
-    #   inputs:
-    #     command: 'test'
-    #     projects: '**/*Tests/*.csproj'
-    #     arguments: '--configuration $(buildConfiguration) /p:CollectCoverage=true'
-
     - task: DotNetCoreCLI@2
       displayName: 'Run Unit Tests'
       inputs:
@@ -57,22 +50,6 @@ stages:
       inputs:
         codeCoverageTool: 'Cobertura'
         summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
-
-
-    # - task: PublishTestResults@2
-    #   displayName: 'Publish Test Results'
-    #   inputs:
-    #     testResultsFormat: 'VSTest'
-    #     testResultsFiles: '**/TestResults/*.trx'
-
-        
-    - task: PublishCodeCoverageResults@1
-      inputs:
-        codeCoverageTool: 'cobertura'
-        summaryFileLocation: '$(Agent.TempDirectory)/TestResults/*/coverage.cobertura.xml'
-        reportDirectory: '$(Agent.TempDirectory)/TestResults'
-        failIfCoverageEmpty: true
-      displayName: 'Publish Code Coverage Results'
 
   - job: Agent_CI_Job
     pool:
