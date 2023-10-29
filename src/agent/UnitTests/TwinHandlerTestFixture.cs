@@ -212,6 +212,29 @@ public class TwinHandlerTestFixture
         _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()), Times.Once);
     }
 
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_NotMatchStrictModeRuleDownloadAction_NotExecuteDownload()
+    {
+        var desired = new TwinChangeSpec()
+        {
+            Id = "123",
+            Patch = new TwinPatch()
+            {
+                InstallSteps = new List<TwinAction>()
+                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath=""},
+                    }.ToArray()
+            }
+        };
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported);
+        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
+
+        _target.OnDesiredPropertiesUpdate(CancellationToken.None);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Never);
+    }
+
 
     [Test]
     public async Task UpdateDeviceStateAsync_ValidState_Success()
