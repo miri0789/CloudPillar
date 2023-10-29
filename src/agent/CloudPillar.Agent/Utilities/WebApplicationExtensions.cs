@@ -1,7 +1,5 @@
 public static class WebApplicationExtensions
 {
-    // private const AuthenticationMethod AUTHENTICATION_X509 = AuthenticationMethod.X509;
-    // private const AuthenticationMethod AUTHENTICATION_SAS = AuthenticationMethod.SAS;
     private const string APP_SETTINGS_SECTION = "AppSettings";
 
     public static void ValidateAuthenticationSettings(this WebApplication webApp)
