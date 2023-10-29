@@ -19,7 +19,7 @@ namespace AzureIoTHubExample
         {
             Console.WriteLine($"Sending C2D message to device {deviceId}...");
 
-            var message = new Message(System.Text.Encoding.ASCII.GetBytes("Hello from .NET Core!"));
+            var message = new Message(System.Text.Encoding.Unicode.GetBytes("Hello from .NET Core!"));
             await serviceClient.SendAsync(deviceId, message);
 
             Console.WriteLine("C2D message sent.");

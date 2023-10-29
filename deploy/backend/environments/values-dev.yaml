@@ -3,19 +3,16 @@
 # Declare variables to be passed into your templates.
 
 controllers:
-  - title: "analyzer"
-  - title: "beapi"
-    path: /cloudpillar/api
-    port: 8089
   - title: "blobstreamer"
-    port: 8089
+    path: /blobstreamer-service
+    port: 8081
     env:
     - name: BlobContainerName
       value: "iotcontainer"
     - name: IothubConnectionString
-      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28="
+      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
     - name: StorageConnectionString
-      value: "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net"
+      value: "DefaultEndpointsProtocol=https;AccountName=cpiotdevfiles;AccountKey=4xnzVu7YbBcaclEdyoQnR1Ej7z51cOYWIsnnocN7X6UOP4xNN523FNntSKM8NhBscybkvIxdl+rz+AStree0GA==;EndpointSuffix=core.windows.net"
     - name: MessageExpiredMinutes
       value: "60"
     - name: RetryPolicyBaseDelay
@@ -36,17 +33,17 @@ controllers:
     - name: LogswriteTopic
       value: "logswrite-topic"
     - name: IothubEventHubCompatibleEndpoint
-      value: "Endpoint=sb://iothub-ns-cp-dev-iot-25232063-aa3e0e76e7.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28=;EntityPath=cp-dev-iothub"
+      value: "Endpoint=sb://iothub-ns-cp-dev-iot-25287979-68405f75ab.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M=;EntityPath=cp-dev-iothub"
     - name: IothubEventHubCompatiblePath
       value: "cp-dev-iothub"
     - name: StorageConnectionString
-      value: "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=yJ27t5jneB/+zod2qIJPwue+k3uzerqRuEXw+n0/1ddf+RdDtY1eFbkcm3hQsVrGB8lipgENqZ9i+AStT3BnYQ==;EndpointSuffix=core.windows.net"
+      value: "DefaultEndpointsProtocol=https;AccountName=cpiotdevfiles;AccountKey=4xnzVu7YbBcaclEdyoQnR1Ej7z51cOYWIsnnocN7X6UOP4xNN523FNntSKM8NhBscybkvIxdl+rz+AStree0GA==;EndpointSuffix=core.windows.net"
     - name: BlobContainerName
       value: "iotcontainer"
     - name: BlobStreamerUrl
-      value: "blobstreamer-service"
+      value: "http://blobstreamer-service:8081/"
     - name: SigningUrl
-      value: "signing-service"
+      value: "http://keyholder-service:8082/"
     - name: RangeCalculateType
       value: "percent"
     - name: RangePercent
@@ -58,7 +55,8 @@ controllers:
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
-    port: 8089
+    path: /keyholder-service
+    port: 8082
     env:
     - name: KubernetesServiceHost
       value: ""
@@ -69,15 +67,15 @@ controllers:
     - name: SecretKey
       value: "signKey"
     - name: IothubConnectionString
-      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=DzFgnLA+njemaX+uHJ4sSfIVxxOBz5PB3AIoTPrxp28="
+      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
 
 replicaCount: 1
 
-# env:
-#   - name: ASPNETCORE_ENVIRONMENT
-#     value: DevEU
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: Dev
 
 image:
-  acr: "iotimageacr.azurecr.io"
+  acr: "cpdevacr.azurecr.io"
   tag: latest
 

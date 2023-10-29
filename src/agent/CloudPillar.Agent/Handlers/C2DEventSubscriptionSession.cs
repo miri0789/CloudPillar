@@ -4,6 +4,7 @@ using Shared.Entities.Messages;
 using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Factories;
 using Shared.Logger;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -29,8 +30,9 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     }
 
 
-    public async Task ReceiveC2DMessagesAsync(CancellationToken cancellationToken)
+    public async Task ReceiveC2DMessagesAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
+        const string MESSAGE_TYPE_PROP = "MessageType";
         while (!cancellationToken.IsCancellationRequested)
         {
             Message receivedMessage;
@@ -41,40 +43,73 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                _logger.Error($"{DateTime.Now}: Exception hit when receiving the message, ignoring it: {ex.Message}");
+                _logger.Error("Exception hit when receiving the message, ignoring it", ex);
                 continue;
             }
 
             try
             {
-                const string messageTypeProp = "MessageType";
-                C2DMessageType? messageType = null;
-                if (Enum.TryParse(receivedMessage.Properties[messageTypeProp], out C2DMessageType parsedMessageType))
+                if (Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType))
                 {
-                    messageType = parsedMessageType;
+                    if (isProvisioning)
+                    {
+                        await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
+                    }
+                    else
+                    {
+                        await HandleMessage(receivedMessage, cancellationToken, messageType);
+                    }
                 }
-                switch (messageType)
+                else
                 {
-                    case C2DMessageType.DownloadChunk:
-                        var message = _messageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
-                        var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
-                        await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
-                        break;
-                    default:
-                        _logger.Info("Receive  message was not processed");
-                        break;
+                    _logger.Error($"Unknown recived message type");
                 }
-                _logger.Info($"{DateTime.Now}: Receive message of type: {messageType.ToString()} completed");
+
             }
             catch (Exception ex)
             {
-                _logger.Error($"{DateTime.Now}: Exception hit when parsing the message, ignoring it: {ex.Message}");
+                _logger.Error("Exception hit when parsing the message, ignoring it", ex);
                 continue;
             }
             finally
             {
                 await _deviceClient.CompleteAsync(receivedMessage);
+                _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
             }
+        }
+    }
+
+    private async Task HandleProvisioningMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
+    {
+        switch (messageType)
+        {
+            case C2DMessageType.Reprovisioning:
+                var reprovisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
+                await _messageSubscriber.HandleReprovisioningMessageAsync(reprovisioningMessage, cancellationToken);
+                break;
+            case C2DMessageType.RequestDeviceCertificate:
+                var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<RequestDeviceCertificateMessage>(receivedMessage);
+                await _messageSubscriber.HandleRequestDeviceCertificateAsync(requestDeviceCertificateMessage, cancellationToken);
+                break;
+            default:
+                _logger.Warn($"Receive message was not processed type: {messageType?.ToString()} , provisioning mode");
+                break;
+        }
+
+    }
+
+    private async Task HandleMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
+    {
+        switch (messageType)
+        {
+            case C2DMessageType.DownloadChunk:
+                var message = _messageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
+                var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
+                await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+                break;
+            default:
+                _logger.Warn($"Receive  message was not processed type: {messageType?.ToString()}");
+                break;
         }
     }
 

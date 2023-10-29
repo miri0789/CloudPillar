@@ -1,7 +1,7 @@
 public static class WebApplicationExtensions
 {
-    private const string AUTHENTICATION_X509 = "X509";
-    private const string AUTHENTICATION_SAS = "SAS";
+    private const AuthenticationMethod AUTHENTICATION_X509 = AuthenticationMethod.X509;
+    private const AuthenticationMethod AUTHENTICATION_SAS = AuthenticationMethod.SAS;
     private const string APP_SETTINGS_SECTION = "AppSettings";
 
     public static void ValidateAuthenticationSettings(this WebApplication webApp)
@@ -14,11 +14,11 @@ public static class WebApplicationExtensions
             return;
         }
 
-        if (!appSettings.PermanentAuthentucationMethods.Equals(AUTHENTICATION_X509))
+        if (!appSettings.PermanentAuthentucationMethods.Equals(AUTHENTICATION_X509.ToString()))
         {
             throw new ArgumentException($"PermanentAuthentucationMethods value must be X509. The value {appSettings.PermanentAuthentucationMethods} is not valid");
         }
-        if (!appSettings.ProvisionalAuthentucationMethods.Equals(AUTHENTICATION_SAS))
+        if (!appSettings.ProvisionalAuthentucationMethods.Equals(AUTHENTICATION_SAS.ToString()))
         {
             throw new ArgumentException($"ProvisionalAuthentucationMethods value must be SAS. The value {appSettings.ProvisionalAuthentucationMethods} is not valid");
         }

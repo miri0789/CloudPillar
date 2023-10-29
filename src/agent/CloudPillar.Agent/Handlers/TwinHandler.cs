@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
 using Shared.Logger;
+using Newtonsoft.Json.Converters;
+using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Handlers;
@@ -45,7 +48,7 @@ public class TwinHandler : ITwinHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    public async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
     {
         try
         {
@@ -70,7 +73,23 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"OnDesiredPropertiesUpdate failed", ex);
+        }
+    }
+    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
+                            {
+                                _logger.Info($"Desired properties were updated.");
+                                await OnDesiredPropertiesUpdate(cancellationToken);
+                            };
+            await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"HandleTwinActionsAsync failed", ex);
         }
 
     }
@@ -81,33 +100,19 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
-                var fileName = string.Empty;
-
-                try
-                {
-                    //strict mode
-                    var actionFileName = GetFileNameByAction(action);
-
-                    fileName = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName);
-                    _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
-
-                }
-                catch (Exception ex)
-                {
-                    await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
-                    continue;
-                }
-
                 switch (action.TwinAction.Action)
                 {
                     case TwinActionType.SingularDownload:
+                        var fileName = await HandleStrictMode(action, cancellationToken);
+                        if (string.IsNullOrEmpty(fileName)) { continue; }
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
 
                     case TwinActionType.SingularUpload:
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, fileName, cancellationToken);
+                        var uploadFileName = await HandleStrictMode(action, cancellationToken);
+                        if (string.IsNullOrEmpty(uploadFileName)) { continue; }
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, uploadFileName, cancellationToken);
                         break;
-                   
                     case TwinActionType.ExecuteOnce:
                         if (_appSettings.StrictMode)
                         {
@@ -121,16 +126,31 @@ public class TwinHandler : ITwinHandler
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
-                //TODO : queue - FIFO
-                // https://dev.azure.com/BiosenseWebsterIs/CloudPillar/_backlogs/backlog/CloudPillar%20Team/Epics/?workitem=9782
             }
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"HandleTwinActions failed", ex);
         }
     }
 
+    private async Task<string> HandleStrictMode(ActionToReport action, CancellationToken cancellationToken)
+    {
+        var fileName = string.Empty;
+        try
+        {
+            var actionFileName = GetFileNameByAction(action);
+
+            fileName = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName) ?? actionFileName;
+            _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
+
+        }
+        catch (Exception ex)
+        {
+            await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
+        }
+        return fileName;
+    }
     private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
     {
         action.TwinReport.Status = statusType;
@@ -147,15 +167,7 @@ public class TwinHandler : ITwinHandler
                 var destination = ((DownloadAction)action.TwinAction).DestinationPath;
                 var source = ((DownloadAction)action.TwinAction).Source;
 
-                ArgumentNullException.ThrowIfNullOrEmpty(destination);
-                if (string.IsNullOrWhiteSpace(source))
-                {
-                    fileName = destination;
-                }
-                else
-                {
-                    fileName = destination + source;
-                }
+                fileName = destination + source;
                 break;
             case TwinActionType.SingularUpload:
                 fileName = ((UploadAction)action.TwinAction).FileName;
@@ -233,12 +245,40 @@ public class TwinHandler : ITwinHandler
         try
         {
             var deviceStateKey = nameof(TwinReported.DeviceState);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString());
             _logger.Info($"UpdateDeviceStateAsync success");
         }
         catch (Exception ex)
         {
             _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
+        }
+    }
+    public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reprted.DeviceState;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetDeviceStateAsync failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task UpdateDeviceSecretKeyAsync(string secretKey)
+    {
+        try
+        {
+            var deviceSecretKey = nameof(TwinReported.SecretKey);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey);
+            _logger.Info($"UpdateDeviceSecretKeyAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceSecretKeyAsync failed", ex);
         }
     }
 

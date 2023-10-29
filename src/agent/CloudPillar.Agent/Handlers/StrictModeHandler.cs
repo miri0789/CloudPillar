@@ -8,10 +8,6 @@ namespace CloudPillar.Agent.Handlers;
 
 public class StrictModeHandler : IStrictModeHandler
 {
-    public const string AUTHENTICATION_SAS = "SAS";
-    public const string AUTHENTICATION_X509 = "X509";
-    public const string UPLOAD_ACTION = "Upload";
-    public const string DOWNLOAD_ACTION = "Download";
     private readonly AppSettings _appSettings;
     private readonly ILoggerHandler _logger;
 
@@ -38,7 +34,7 @@ public class StrictModeHandler : IStrictModeHandler
     public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
         FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
-        if (zoneRestrictions.Type == UPLOAD_ACTION || !zoneRestrictions.MaxSize.HasValue || zoneRestrictions.MaxSize == 0)
+        if (zoneRestrictions.Type == StrictModeAction.Upload.ToString() || !zoneRestrictions.MaxSize.HasValue || zoneRestrictions.MaxSize == 0)
         {
             return;
         }
@@ -74,11 +70,6 @@ public class StrictModeHandler : IStrictModeHandler
 
         foreach (var pattern in allowPatterns)
         {
-            if (string.IsNullOrWhiteSpace(pattern))
-            {
-                _logger.Info("The pattern is empty");
-                return;
-            }
             var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
             var isMatch = regexPattern.IsMatch(verbatimFileName);
             if (isMatch)
@@ -98,16 +89,22 @@ public class StrictModeHandler : IStrictModeHandler
         {
             pattern += "*";
         }
-
-        string regexPattern = "^" + Regex.Escape(pattern)
-                                    .Replace("\\*", ".*")
-                                    .Replace("\\?", ".")
-                                    .Replace(@"\[\!", "[^")
-                                    .Replace(@"\[", "[")
-                                    .Replace(@"\]", "]")
-                                    .Replace(@"\!", "!")
-                                    .Replace("/", "\\/")
-                                    .Replace("\\.\\*", ".*") + "$";
+        if (pattern.StartsWith("*/"))
+        {
+            pattern = ".+/".TrimEnd('/') + pattern.TrimStart('*');
+        }
+        if (pattern.StartsWith("**/"))
+        {
+            pattern = pattern.Replace("**/", ".+/.*?/");// ".+/.*?/" + pattern.TrimStart('*');
+        }
+        string regexPattern =  Regex.Escape(pattern)
+                                          .Replace("\\*", ".*")
+                                          .Replace("\\?", ".")
+                                          .Replace(@"\[\!", "[^")
+                                          .Replace(@"\[", "[")
+                                          .Replace(@"\]", "]")
+                                          .Replace(@"\!", "!")+ "$";
+                                          //.Replace("/", "\\/") 
 
         return new Regex(regexPattern, RegexOptions.IgnoreCase);
     }
@@ -119,9 +116,9 @@ public class StrictModeHandler : IStrictModeHandler
         switch (actionType)
         {
             case TwinActionType.SingularDownload:
-                return _appSettings.FilesRestrictions.Where(x => x.Type == DOWNLOAD_ACTION).ToList();
+                return _appSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Dwonload.ToString()).ToList();
             case TwinActionType.SingularUpload:
-                return _appSettings.FilesRestrictions.Where(x => x.Type == UPLOAD_ACTION).ToList();
+                return _appSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Upload.ToString()).ToList();
             default: return _appSettings.FilesRestrictions;
         }
     }
@@ -146,7 +143,8 @@ public class StrictModeHandler : IStrictModeHandler
         }
 
         _logger.Info($"{allowPatterns?.Count} allow pattern was found");
-        return allowPatterns;
+        var nonEmptyPatterns = allowPatterns.Where(pattern => !string.IsNullOrWhiteSpace(pattern)).ToList();
+        return nonEmptyPatterns;
     }
 
     private string GetRootById(string id, TwinActionType actionType)
