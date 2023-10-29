@@ -113,14 +113,14 @@ public class StrictModeHandler : IStrictModeHandler
     {
         _logger.Info($"Get restrictions for {actionType} action");
 
-        switch (actionType)
+        if (actionType == TwinActionType.SingularDownload)
         {
-            case TwinActionType.SingularDownload:
-                return _appSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Download.ToString()).ToList();
-            case TwinActionType.SingularUpload:
-                return _appSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Upload.ToString()).ToList();
-            default: return _appSettings.FilesRestrictions;
+            return _appSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Download.ToString()).ToList();
         }
+        else
+        {
+            return _appSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Upload.ToString()).ToList();
+        }       
     }
 
     private FileRestrictionDetails GetRestrinctionsByZone(string fileName, TwinActionType actionType)
