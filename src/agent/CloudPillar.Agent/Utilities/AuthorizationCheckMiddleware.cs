@@ -3,6 +3,7 @@ using CloudPillar.Agent.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using System.Text.RegularExpressions;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Utilities;
@@ -37,6 +38,12 @@ public class AuthorizationCheckMiddleware
                 await UnauthorizedResponseAsync(context, error);
                 return;
             }
+
+            if (!await IsValidDeviceId(context, xDeviceId))
+            {
+                return;
+            }
+            
             if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
             {
                 // The action has [AllowAnonymous], so allow the request to proceed
@@ -91,6 +98,22 @@ public class AuthorizationCheckMiddleware
 
         var actionDescriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
         return actionDescriptor != null;
+    }
+
+    private async Task<bool> IsValidDeviceId(HttpContext context, string deviceId)
+    {
+        string pattern = @"^[A-Za-z0-9\-:.+%_#*?!(),=@$']{1,128}$";
+        var regex = new Regex(pattern);
+        if (!regex.IsMatch(deviceId))
+        {
+            var error = "Device ID contains one or more invalid character. ID may contain [Aa-Zz] [0-9] and [-:.+%_#*?!(),=@$']";
+            _logger.Error(error);
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsync(error);
+            return false;
+        }
+        return true;
+
     }
 
 }
