@@ -165,7 +165,7 @@ public class TwinHandlerTestFixture
             Patch = new TwinPatch()
             {
                 InstallSteps = new List<TwinAction>()
-                    {   new TwinAction() { ActionId = "123", Action = TwinActionType.SingularDownload},
+                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath="abc"},
                     }.ToArray()
             }
         };
