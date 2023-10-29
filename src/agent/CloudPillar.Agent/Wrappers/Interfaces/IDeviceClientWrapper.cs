@@ -29,6 +29,7 @@ public interface IDeviceClientWrapper
     Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default);
 
     ProvisioningTransportHandler GetProvisioningTransportHandler();
+    Task Reconnect();
 
     Task SetDesiredPropertyUpdateCallbackAsync(DesiredPropertyUpdateCallback callback, CancellationToken cancellationToken = default);
 

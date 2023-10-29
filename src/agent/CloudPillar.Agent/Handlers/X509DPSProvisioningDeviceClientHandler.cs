@@ -36,7 +36,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
                 return null;
             }
             var filteredCertificate = certificates.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT) && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR))
                .FirstOrDefault();
 
             return filteredCertificate;

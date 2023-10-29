@@ -22,6 +22,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
+    private readonly IDeviceClientWrapper deviceClientWrapper;
     private readonly ILoggerHandler _logger;
 
     private const int KEY_SIZE_IN_BITS = 4096;
@@ -33,6 +34,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
         IEnvironmentsWrapper environmentsWrapper,
         ID2CMessengerHandler d2CMessengerHandler,
+        IDeviceClientWrapper deviceClientWrapper,
         ILoggerHandler logger
         )
     {
@@ -40,6 +42,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
+        this.deviceClientWrapper = deviceClientWrapper;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
@@ -99,7 +102,42 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         }
 
+        var sCer = GenerateCertificate(new RequestDeviceCertificateMessage(), new AuthonticationKeys() { DeviceId = deviceId, SecretKey = "1" });
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            byte[] passwordBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes("1"));
 
+            string passwordString = BitConverter.ToString(passwordBytes).Replace("-", "").ToLower();
+
+            var pfxBytes = sCer.Export(X509ContentType.Pkcs12, passwordString);
+
+            var privateCertificate = new X509Certificate2(pfxBytes, passwordString);
+
+            privateCertificate.FriendlyName = TEMPORARY_CERTIFICATE_NAME;
+
+
+            using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
+            {
+                store.Open(OpenFlags.ReadWrite);
+
+                X509Certificate2Collection certificates = store.Certificates;
+
+                store.Add(privateCertificate);
+            }
+        }
+
+        using (ProvisioningServiceClient provisioningServiceClient =
+                           ProvisioningServiceClient.CreateFromConnectionString(message.DPSConnectionString))
+        {
+            var enrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(Encoding.Unicode.GetString(message.Data), cancellationToken);
+            //  var cer = _x509CertificateWrapper.CreateCertificate(certificate.Export(X509ContentType.Cert));
+            Attestation attestation = X509Attestation.CreateFromClientCertificates(new X509Certificate2(certificate.Export(X509ContentType.Cert)), new X509Certificate2(sCer.Export(X509ContentType.Cert)));
+            enrollment.Attestation = attestation;
+            await provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(enrollment);
+
+        }
+        await deviceClientWrapper.Reconnect();
+       // await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
     }
 
     public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)

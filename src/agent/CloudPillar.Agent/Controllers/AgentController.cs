@@ -22,6 +22,7 @@ public class AgentController : ControllerBase
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
 
     public readonly IStateMachineHandler _stateMachineHandler;
+    private readonly IDeviceClientWrapper deviceClientWrapper;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
 
@@ -32,6 +33,7 @@ public class AgentController : ControllerBase
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
+     IDeviceClientWrapper deviceClientWrapper,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
@@ -39,6 +41,7 @@ public class AgentController : ControllerBase
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
+        this.deviceClientWrapper = deviceClientWrapper;
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -48,6 +51,7 @@ public class AgentController : ControllerBase
     public async Task<ActionResult<string>> AddRecipeAsync([FromBody] TwinDesired recipe)
     {
         _twinDesiredPropsValidator.ValidateAndThrow(recipe);
+       await deviceClientWrapper.Reconnect();
         return await _twinHandler.GetTwinJsonAsync();
     }
 
