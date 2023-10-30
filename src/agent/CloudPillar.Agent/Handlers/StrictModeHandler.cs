@@ -66,6 +66,7 @@ public class StrictModeHandler : IStrictModeHandler
             _logger.Info("No allow patterns were found");
             return;
         }
+        var res = UseGitignore(allowPatterns, verbatimFileName, zoneRestrictions.Root);
 
         foreach (var pattern in allowPatterns)
         {
@@ -101,14 +102,14 @@ public class StrictModeHandler : IStrictModeHandler
         {
             pattern = pattern.Replace("**/", ".+/.*?/");// ".+/.*?/" + pattern.TrimStart('*');
         }
-        string regexPattern =  Regex.Escape(pattern)
+        string regexPattern = Regex.Escape(pattern)
                                           .Replace("\\*", ".*")
                                           .Replace("\\?", ".")
                                           .Replace(@"\[\!", "[^")
                                           .Replace(@"\[", "[")
                                           .Replace(@"\]", "]")
-                                          .Replace(@"\!", "!")+ "$";
-                                          //.Replace("/", "\\/") 
+                                          .Replace(@"\!", "!") + "$";
+        //.Replace("/", "\\/") 
 
         return new Regex(regexPattern, RegexOptions.IgnoreCase);
     }
@@ -124,7 +125,7 @@ public class StrictModeHandler : IStrictModeHandler
         else
         {
             return _appSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Upload.ToString()).ToList();
-        }       
+        }
     }
 
     private FileRestrictionDetails GetRestrinctionsByZone(string fileName, TwinActionType actionType)
@@ -163,5 +164,12 @@ public class StrictModeHandler : IStrictModeHandler
         }
 
         return restriction.Root;
+    }
+
+    private bool UseGitignore(List<string> patterns, string fileName, string rootPath)
+    {
+        GitIgnoreMatcher matcher = new GitIgnoreMatcher(rootPath, patterns.ToArray());
+        bool isMatch = matcher.IsMatch(fileName);
+        return isMatch;
     }
 }
