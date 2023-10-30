@@ -59,18 +59,16 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
                 if (result == null)
                 {
-                    _logger.Error("RegisterAsync failed");
-                    return;
+                    HandleError("RegisterAsync failed");
                 }
 
                 _logger.Debug($"Registration status: {result.Status}.");
 
                 if (result.Status != ProvisioningRegistrationStatusType.Assigned)
                 {
-                    _logger.Error("Registration status did not assign a hub.");
-                    return;
+                    HandleError("Registration status did not assign a hub");
                 }
-                await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);            
+                await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
             }
         }
     }
@@ -98,5 +96,11 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
         var hmac = _symmetricKeyWrapper.CreateHMAC(primaryKey);
         return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registrationId)));
+    }
+
+    private void HandleError(string errorMsg)
+    {
+        _logger.Error(errorMsg);
+        throw new Exception(errorMsg);
     }
 }
