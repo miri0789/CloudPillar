@@ -11,52 +11,62 @@ using Shared.Entities.Twin;
 using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
-const string CONFIG_PORT = "Port";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
-var port = builder.Configuration.GetValue(CONFIG_PORT, 8099);
-var sslPort = builder.Configuration.GetValue(CONFIG_PORT, 8199);
+var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
+var sslPort = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
 var sslUrl = $"https://localhost:{sslPort}";
 
 builder.WebHost.UseUrls(url, sslUrl);
+
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
                 b.WithOrigins(url, sslUrl)
-                       .AllowAnyHeader()
-                       .AllowAnyMethod();
+                               .AllowAnyHeader()
+                               .AllowAnyMethod();
             });
         });
 
-builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
-builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
-builder.Services.AddSingleton<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
-builder.Services.AddSingleton<IX509CertificateWrapper, X509CertificateWrapper>();
+builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
+builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
+builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
+builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
 builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
-builder.Services.AddScoped<ITwinHandler, TwinHandler>();
 builder.Services.AddScoped<ITwinActionsHandler, TwinActionsHandler>();
+builder.Services.AddScoped<ITwinHandler, TwinHandler>();
 builder.Services.AddScoped<IFileDownloadHandler, FileDownloadHandler>();
-builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
+builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderHandler>();
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
 builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
+builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
+builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
+builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
+builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
+builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
+builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
+builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
+var appSettingsSection = builder.Configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(appSettingsSection);
 
-builder.Services.AddHttpsRedirection(options =>
+builder.Services.AddSwaggerGen(c =>
 {
-    options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
-    options.HttpsPort = sslPort;
+    c.OperationFilter<SwaggerHeader>();
 });
 
 builder.Services.AddControllers(options =>
@@ -71,13 +81,24 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors(MY_ALLOW_SPECIFICORIGINS);
+app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
-app.UseHttpsRedirection();
 app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
-app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.MapControllers();
+var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
+strictModeHandler.CheckAuthentucationMethodValue();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
+    await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
+
+    var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
+    StateMachineHandlerService.InitStateMachineHandlerAsync();
+}
 
 app.Run();
+

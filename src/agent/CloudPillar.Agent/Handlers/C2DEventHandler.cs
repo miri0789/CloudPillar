@@ -15,17 +15,19 @@ public class C2DEventHandler : IC2DEventHandler
      IC2DEventSubscriptionSession c2DEventSubscriptionSession,
      ILoggerHandler logger)
     {
-        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(_deviceClient));
-        _c2DEventSubscriptionSession = c2DEventSubscriptionSession ?? throw new ArgumentNullException(nameof(_c2DEventSubscriptionSession));
+        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _c2DEventSubscriptionSession = c2DEventSubscriptionSession ?? throw new ArgumentNullException(nameof(c2DEventSubscriptionSession));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    
 
-    public async Task CreateSubscribeAsync(CancellationToken cancellationToken)
+
+    public async Task CreateSubscribeAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
-        _logger.Info("Subscribing to C2D messages...");
+        _logger.Info("Subscribing to Provisioning C2D messages...");
 
-        await Task.Run(() => _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken));
+        await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken, isProvisioning);
     }
 
 }

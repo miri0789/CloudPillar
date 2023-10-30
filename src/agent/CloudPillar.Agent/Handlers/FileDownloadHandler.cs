@@ -92,5 +92,4 @@ public class FileDownloadHandler : IFileDownloadHandler
             await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, startPosition, endPosition);
         }
     }
-    
 }

@@ -4,10 +4,11 @@ using CloudPillar.Agent.Wrappers;
 using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Shared.Logger;
 using Newtonsoft.Json.Converters;
+using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -21,6 +22,7 @@ public class TwinHandler : ITwinHandler
     private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
+    private readonly AppSettings _appSettings;
     private readonly ILoggerHandler _logger;
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -29,7 +31,8 @@ public class TwinHandler : ITwinHandler
                        ITwinActionsHandler twinActionsHandler,
                        ILoggerHandler loggerHandler,
                        IRuntimeInformationWrapper runtimeInformationWrapper,
-                       IFileStreamerWrapper fileStreamerWrapper)
+                       IFileStreamerWrapper fileStreamerWrapper,
+                       IOptions<AppSettings> appSettings)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
@@ -38,13 +41,14 @@ public class TwinHandler : ITwinHandler
         _runtimeInformationWrapper = runtimeInformationWrapper ?? throw new ArgumentNullException(nameof(runtimeInformationWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _supportedShells = GetSupportedShells();
+        _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    public async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
     {
         try
-        {
+        {            
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
@@ -66,7 +70,23 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"OnDesiredPropertiesUpdate failed", ex);
+        }
+    }
+    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
+                            {
+                                _logger.Info($"Desired properties were updated.");
+                                await OnDesiredPropertiesUpdate(cancellationToken);
+                            };
+            await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"HandleTwinActionsAsync failed", ex);
         }
 
     }
@@ -92,7 +112,16 @@ public class TwinHandler : ITwinHandler
                         //implement the while loop with interval like poc
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         break;
-
+                    case TwinActionType.ExecuteOnce:
+                        if (_appSettings.StrictMode)
+                        {
+                            _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
+                            action.TwinReport.Status = StatusType.Failed;
+                            action.TwinReport.ResultCode = ResultCode.StrictMode.ToString();
+                            await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
+                            return;
+                        }
+                        break;
                     default:
                         action.TwinReport.Status = StatusType.Failed;
                         action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
@@ -106,7 +135,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed: {ex.Message}");
+            _logger.Error($"HandleTwinActions failed", ex);
         }
     }
     private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
@@ -178,12 +207,40 @@ public class TwinHandler : ITwinHandler
         try
         {
             var deviceStateKey = nameof(TwinReported.DeviceState);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString());
             _logger.Info($"UpdateDeviceStateAsync success");
         }
         catch (Exception ex)
         {
             _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
+        }
+    }
+    public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {                        
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reprted.DeviceState;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetDeviceStateAsync failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task UpdateDeviceSecretKeyAsync(string secretKey)
+    {
+        try
+        {
+            var deviceSecretKey = nameof(TwinReported.SecretKey);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey);
+            _logger.Info($"UpdateDeviceSecretKeyAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceSecretKeyAsync failed", ex);
         }
     }
 
