@@ -3,6 +3,7 @@ using CloudPillar.Agent.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using System.Text.RegularExpressions;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Utilities;
@@ -28,22 +29,21 @@ public class AuthorizationCheckMiddleware
         {
             // check the headers for all the actions also for the AllowAnonymous.
             IHeaderDictionary requestHeaders = context.Request.Headers;
-            var xDeviceId = string.Empty;
-            var xSecretKey = string.Empty;
-            if (requestHeaders.ContainsKey(Constants.X_DEVICE_ID))
-            {
-                xDeviceId = requestHeaders[Constants.X_DEVICE_ID];
-            }
-            if (requestHeaders.ContainsKey(Constants.X_SECRET_KEY))
-            {
-                xSecretKey = requestHeaders[Constants.X_SECRET_KEY];
-            }
+            var xDeviceId = requestHeaders.TryGetValue(Constants.X_DEVICE_ID, out var deviceId) ? deviceId.ToString() : string.Empty;
+            var xSecretKey = requestHeaders.TryGetValue(Constants.X_SECRET_KEY, out var secretKey) ? secretKey.ToString() : string.Empty;
+
             if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
             {
-                var error = "No require header was provided";
+                var error = "Require headers were not provided";
                 await UnauthorizedResponseAsync(context, error);
                 return;
             }
+
+            if (!await IsValidDeviceId(context, xDeviceId))
+            {
+                return;
+            }
+            
             if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
             {
                 // The action has [AllowAnonymous], so allow the request to proceed
@@ -52,7 +52,7 @@ public class AuthorizationCheckMiddleware
             }
 
 
-            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationAsync(xDeviceId, xSecretKey, cancellationToken);
+            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
@@ -70,17 +70,16 @@ public class AuthorizationCheckMiddleware
     private async Task NextWithRedirectAsync(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
     {
         await _requestDelegate(context);
-        return;
-        // if (context.Request.IsHttps)
-        // {
-        //     await _requestDelegate(context);
-        //     return;
-        // }
-        // var port = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
-        // var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
-        // var newUrl = context.Request.GetDisplayUrl().Replace("http", "https").Replace(port.ToString(), sslPort.ToString());
-        // context.Response.Redirect(newUrl, false, true);
+        return;      
 
+        // var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+        // var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
+        // {
+        //     Scheme = Uri.UriSchemeHttps,
+        //     Port = sslPort
+        // };
+
+        // context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
     }
 
     private async Task UnauthorizedResponseAsync(HttpContext context, string error)
@@ -99,6 +98,22 @@ public class AuthorizationCheckMiddleware
 
         var actionDescriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
         return actionDescriptor != null;
+    }
+
+    private async Task<bool> IsValidDeviceId(HttpContext context, string deviceId)
+    {
+        string pattern = @"^[A-Za-z0-9\-:.+%_#*?!(),=@$']{1,128}$";
+        var regex = new Regex(pattern);
+        if (!regex.IsMatch(deviceId))
+        {
+            var error = "Device ID contains one or more invalid character. ID may contain [Aa-Zz] [0-9] and [-:.+%_#*?!(),=@$']";
+            _logger.Error(error);
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsync(error);
+            return false;
+        }
+        return true;
+
     }
 
 }

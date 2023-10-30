@@ -816,18 +816,31 @@ Managing the Agent's states and transitions is imperative for both efficient ope
 **Defined States and Descriptions**:
 
 **PROVISIONING**: The Agent is undergoing Provisional Authentication. During this state, it establishes an initial connection with the backend and awaits full access permissions.
+
 **READY**: The Agent has successfully completed both Provisional and Permanent Authentication. It's now fully authenticated and prepared to handle all functionalities.
+
 **BUSY**: The Agent recognizes that the device is preoccupied with its primary functions, thereby limiting or deferring the Agent's operations to avoid any hindrance.
+
 **PATCH_INTRANSIT**: The Agent is in the process of downloading a patch – be it for the device application or for the local endpoint security software.
+
 **PATCH_READY**: The downloaded patch is now available on the device and is prepared for installation but hasn't been applied yet.
+
 **PATCH_WAITCONFIRM**: The Agent is awaiting a confirmation signal (either from the backend or the device user) to apply the downloaded patch.
+
 **PATCH_APPLYING**: The Agent has received the necessary confirmations and is currently applying the patch.
+
 **UPDATE_INTRANSIT**: The Agent is downloading a complete firmware update for the device.
+
 **UPDATE_READY**: The full firmware update is downloaded and is set for installation but hasn't been executed yet.
+
 **UPDATE_WAITCONFIRM**: The Agent awaits a confirmation to apply the comprehensive firmware update.
+
 **UPDATE_APPLYING**: Post-confirmation, the Agent is actively updating the device's firmware.
+
 **UPLOAD_INTRANSIT**: The Agent is transmitting logs or any relevant data to the backend.
+
 **ACTION_INPROGRESS**: The Agent is currently processing an instruction received from the backend, translating it into tangible actions on the device.
+
 #### 5.1.2.1. Functional Implications of Each State:
 
 - **State Transitions**: Transitions between states are primarily triggered by specific events or commands arriving via the local API.
@@ -853,18 +866,34 @@ The Agent's API provides a versatile interface that facilitates several crucial 
 - **State Query**:
   - The API offers a `GetDeviceState` method, allowing users or backend systems to query the current state of the device. 
   - Upon invocation, this call responds with the updated device twin JSON, offering a comprehensive view of both the device's desired and reported states, thereby serving as a snapshot of the device's current standing and configurations.
-
+- **Diagnostics**: the `RunDiagnistics` method allows the Agent to self-test end-to-end sanity. It orchestrates an end-to-end flow involving many (if not all) Agent and Backend components.
+The flow comprises:
+  - Creation of a small file with random content (128kB)
+  - Streaming uploading the file to the cloud, with a temporary persistency (1 hour)
+  - Signing the file on the backend
+  - Streaming downloading the file back to the Agent
+  - Verifying the signature
+  - Comparing the downloaded file to the original.
 By offering these functionalities, the API underscores its pivotal role in granting users and backend systems nuanced control over the Agent, promoting both adaptability and efficiency in the overarching system operations.
 #### 5.1.2.2.1. API Endpoints
+**Note on the authentication headers**: All of the API calls below require mandatory headers bearing the device Id and the pre-shared secret. 
+- The InitiateProvisioning is allowed always if not in the Busy state.
+- In case the device is in the Provisioning state and isn't authenticated for the pre-shared key authentication, a new DPS provisioning attempt will be made with a shared enrollment, whose attributes are taken from the app config. If it is authenticated, the headers will be checked against the current authentication device Id and secret, and if it does not match - the call will be failed with 401 Unauthorized.
+- In case the device is in the Ready state, the headers will be checked against the claims in the current certificate, if it does not match - the call will be failed with 401 Unauthorized.
+- In case the device is in the Busy state, all calls are blocked (returning 503 Service Unavailable), except for GetDeviceState and InitiateProvisioning
+- SetBusy not only changes the state and pauses all downloads / uploads, but actually disconnects the connections via the IoT SDK
+- SetReady restores the connections, re-authenticates AND resumes paused downloads / uploads. Resuming download includes either continue receiving chunks queued previously, or, if chunk do not arrive from the queue during some interval of time, re-requesting missing segment of the file from the backend. Resuming upload does not require re-transmission.
+- GetDeviceState is designed for periodic usage (for instance once in 5 minutes) and will do the "lazy" device provisioning, e.g. "if not provisioned, do initial provisioning".
 
-| Name                 | HTTP Method | Parameters                  | Request Body Format                              | Success Response                             | Error Response                                      |
-|----------------------|-------------|----------------------|--------------------------------------------------|-----------------------------------------------|-----------------------------------------------------|
-| InitiateProvisioning | POST        | DPS details (e.g., scopeId, registrationId)  | None                                             | Updated device twin after provisioning       | Error message with reason                          |
-| SetBusy              | POST        | None                  | None                                             | Updated device twin after transition to BUSY | Error message with reason                          |
-| SetReady             | POST        | None                  | None                                             | Updated device twin after transition to READY| Error message with reason                          |
-| UpdateReportedProps  | PUT         | None                  | JSON (list of updated properties)               | Updated device twin after properties updated | Error message with reason                          |
-| GetDeviceState       | GET         | None                  | None                                             | Updated device twin (current state)          | Error message with reason                          |
-| AddRecipe            | POST        | None                  | JSON (Recipe details)                           | Updated device twin with added recipe        | Error message with reason                          |
+| Name                 | HTTP Method | Parameters                  | Headers | Request Body Format                              | Success Response                             | Error Response                                      |
+|----------------------|-------------|-----------------------------|---------|--------------------------------------------------|----------------------------------------------|-----------------------------------------------------|
+| InitiateProvisioning | POST        | DPS details (e.g., scopeId, registrationId)  |CP-DEVICE-ID - the device Id string; CP-SECRET-KEY - the pre-shared secret, usually OneMD Key| None                                             | Updated device twin after provisioning       | Error message with reason                          |
+| SetBusy              | POST        | None                  |CP-DEVICE-ID - the device Id string; CP-SECRET-KEY - the pre-shared secret, usually OneMD Key| None                                             | Updated device twin after transition to BUSY | Error message with reason                          |
+| SetReady             | POST        | None                  |CP-DEVICE-ID - the device Id string; CP-SECRET-KEY - the pre-shared secret, usually OneMD Key| None                                             | Updated device twin after transition to READY| Error message with reason                          |
+| UpdateReportedProps  | PUT         | None                  |CP-DEVICE-ID - the device Id string; CP-SECRET-KEY - the pre-shared secret, usually OneMD Key| JSON (list of updated properties)               | Updated device twin after properties updated | Error message with reason                          |
+| GetDeviceState       | GET         | None                  |CP-DEVICE-ID - the device Id string; CP-SECRET-KEY - the pre-shared secret, usually OneMD Key| None                                             | Updated device twin (current state)          | Error message with reason                          |
+| AddRecipe            | POST        | None                  |CP-DEVICE-ID - the device Id string; CP-SECRET-KEY - the pre-shared secret, usually OneMD Key| JSON (Recipe details)                           | Updated device twin with added recipe        | Error message with reason                          |
+| RunDiagnostics            | GET        | None                  |CP-DEVICE-ID - the device Id string; CP-SECRET-KEY - the pre-shared secret, usually OneMD Key| None                           | A JSON with each stage execution metrics, after all diagnostics finished.       | Error message with stage, reason. ** If a second call is attempted while a previous one is in progress - fail the call                       |
 
 **Note on UpdateReportedProps JSON Format**:
 For the `UpdateReportedProps` API call, the request body requires a JSON format containing a list of updated properties. The JSON structure can be like:
@@ -1264,6 +1293,16 @@ Security is paramount in any healthcare system, and the following sections detai
 ### 5.1.4.5. Secure Key Management for Windows Endpoints
 
 ![Windows Certificate Store Options](.images/certstoreopts.png)
+- **Local persistence** of the certificates on the device is achieved via Windows Certificate Store. 
+The storage options should be configured to disable export of the key - _the key should NOT be exportable_.
+
+- **The name of the key** serves as a well known identifier for the certificate, designating the device Id, similar to the following: 
+
+- **The interim certificate** (generated by the Agent but not yet provisioned) is also kept in WCS, under a separate key - **CPTemporaryCertificate**.
+
+#### TPM support [OUT OF SCOPE]
+Further subtopics refer to the TPM capabilities that are currently out of the scope.
+
 For Windows endpoints, our approach to secure key management focuses on utilizing Cryptography Next Generation (CNG) with Key Storage Providers (KSP), allowing the integration with TPM 1.2. This ensures the protection of keys, certificates, and other secrets, leveraging the hardware-based security provided by TPM.
 
 #### 5.1.4.5.1. Referense TPM support
@@ -1566,7 +1605,8 @@ Each zone:
 - Allows specification of id / name
 - Allows specification of the action type (Upload / Download)
 - Allows specification of the restriction type (Allow / Deny). [Deny zone - a future requirement]
-- Allows specification of upload and download directories, with wild-card restrictions.
+- Allows specification of upload and download directories, with wild-card restrictions. **Note: Best reference for wildcard specifications is the one from [.gitignore files](https://git-scm.com/docs/gitignore#_pattern_format).
+
 - Allows specification of maximal size of a downloading file in each zone. Files exceeding the maximal size restriction will not be downloaded. 
 
 Every file being considered by the Agent to initiate upload or download, will be checked against all restrictions. If any of Deny zones or no one of Allow zones match the full file name along with the desired action type, the considered operation is rejected, and the reject cause for the Reported section will be 'Denied by local a restriction "DENY_ZONE_NAME"' or 'Denied by the lack of local allowance'.
@@ -1582,6 +1622,11 @@ When resolving actions in the Device Twin, the Agent will support specifying fil
 [Device Agent v1 API - Digital Surgery Platform Help - Confluence (jnj.com)](https://confluence.jnj.com/pages/viewpage.action?spaceKey=VAXJ&title=Device%20Agent%20v1%20API)
 [dspagent.json](/.images/dspagent-8fd836ae-d614-4b50-b486-788823520b11.json)
 - To clarify, in addition to the Swagger above, the API and the Agent must support both remote and disk-on-key artifacts installation and collection.
+#### 5.1.6.2. FSE Impersonation Support for Offline Device Transfers
+
+In several cases, Velys devices are typically situated in hospital basements where network connectivity is nearly unattainable. To address data transfers from such devices, CloudPillar introduces the Offline Device Transfer capability. Before a scheduled visit, the Field Service Engineer (FSE) uses their laptop, equipped with the CloudPillar agent, to emulate the target device. They then generate a data transfer package. Once on-site, this package is applied through the device's CloudPillar Agent. Subsequently, the device's Agent assembles a data return package. This not only contains crucial update statuses for the Device Twin's reported section but also includes intended data uploads, such as logs, telemetry, and clinical data. The FSE must then transport this return package to their laptop. Once the FSE's impersonating Agent regains connectivity (be it at home, a hotel, or office), this data can be uploaded to the cloud.
+
+However, to ensure cybersecurity, the FSE cannot utilize the device's X.509 certificate since sharing digital identities is not recommended. Instead, the FSE, through the Asset Management UI, requests the CloudPillar backend to produce a unique, temporary identity (an X.509 certificate specific to that visit). This certificate is then saved on the FSE's laptop's Certificate Store and used by the CloudPillar agent for data package creation. To maintain the authenticity of the device's original X.509 certificate, this temporary certificate is registered in the IoT Hub as a secondary thumbprint, ensuring that the primary certificate always remains tied to the device itself.
 
 ### 5.2. Backend Functional Requirements
 
@@ -1854,12 +1899,91 @@ This detailed breakdown of the messages and the relevant components within the b
 (Content here)
 ### 14.3.2. Integration with Azure IoT Edge
 (Content here)
-### 14.3.3. Substage A. CPE Connected Mode
+### 14.3.3. Preliminary solution: FSE laptop
+# Kubernetes Setups on Windows Laptop
+
+This chapter presents two Kubernetes setups on a Windows laptop using MicroK8s and K3s respectively, fulfilling the requirements of running native Windows container workloads with GPU support.
+
+## MicroK8s Setup
+
+::: mermaid
+flowchart TD
+    subgraph Windows Laptop
+        subgraph Linux VM ["Linux VM (Control Plane)"]
+            A1[MicroK8s Master] -->|Controls| A2["MicroK8s Node Agent (Linux VM)"]
+            A3[NVIDIA GPU Operator] -->|Enables GPU Support| A2
+            A4[Multus CNI] -->|Manages Networking| A2
+        end
+        subgraph Workloads Node ["Windows VM (Workloads)"]
+            subgraph Workloads ["Node Workloads"]
+                 B4 --> B5[(Interim Cases Storage)]
+                 B5 --> B6[Native Windows Analyzer case processor]
+                 B6 --> B7[Python Analysis microservice]
+                 B7 --> B8[(Analyzed data shared storage)]
+                 B3[CloudPillar IoT Agent]
+            end
+            A1[MicroK8s Master] -->|Controls| B9["MicroK8s Node Agent (Windows VM)"]
+            B9 -->|Manages| Workloads
+            A4 -->|Manages Networking| B9
+        end
+        subgraph CARTOSMART VM ["CARTOSMART VM"]
+            B8 -->|Shared Access| C1[CARTOSMART UI/Reports]
+            B3 -->|Controls| C1
+        end
+    end
+    CARTO -->|Export Case| B4[DICOM Listener]
+:::
+
+### Explanations:
+- **Linux VM (Control Plane)**: Hosts the MicroK8s master components, NVIDIA GPU Operator for GPU support, and Multus CNI for networking.
+- **Windows VM (Workloads)**: Hosts the MicroK8s Node Agent, and the listed node workloads along with the CloudPillar IoT Agent. Multus CNI also manages networking on this node.
+- **CARTOSMART VM**: Hosts the CARTOSMART UI/Reports, which interacts with the analyzed data shared storage and is controlled by the CloudPillar IoT Agent.
+
+## K3s Setup
+
+::: mermaid
+flowchart TD
+    subgraph Windows Laptop
+        subgraph Linux VM ["Linux VM (Control Plane)"]
+            A1[K3s Server] -->|Controls| A2["K3s Agent (Linux VM)"]
+            A3[NVIDIA Container Runtime] -->|Enables GPU Support| A2
+            A4[Flannel CNI] -->|Manages Networking| A2
+        end
+        subgraph Workloads Node ["Windows VM (Workloads)"]
+            subgraph Workloads ["Node Workloads"]
+                 B4 --> B5[(Interim Cases Storage)]
+                 B5 --> B6[Native Windows Analyzer case processor]
+                 B6 --> B7[Python Analysis microservice]
+                 B7 --> B8[(Analyzed data shared storage)]
+                 B3[CloudPillar IoT Agent]
+            end
+            A1[K3s Server] -->|Controls| B9["K3s Agent (Windows VM)"]
+            B9 -->|Manages| Workloads
+            A4 -->|Manages Networking| B9
+        end
+        subgraph CARTOSMART VM ["CARTOSMART VM"]
+            B8 -->|Shared Access| C1[CARTOSMART UI/Reports]
+            B3 -->|Controls| C1
+        end
+    end
+    CARTO -->|Export Case| B4[DICOM Listener]
+:::
+
+### Explanations:
+- **Linux VM (Control Plane)**: Hosts the K3s server components, NVIDIA Container Runtime for GPU support, and Flannel CNI for networking.
+- **Windows VM (Workloads)**: Hosts the K3s Agent, and the listed node workloads along with the CloudPillar IoT Agent. Flannel CNI also manages networking on this node.
+- **CARTOSMART VM**: Hosts the CARTOSMART UI/Reports, which interacts with the analyzed data shared storage and is controlled by the CloudPillar IoT Agent.
+
+## Notes
+- In both setups, each VM node has its own instance of the networking plugin to manage the pod network on that node.
+- The data flow from Windows Workloads to CARTOSMART UI/Reports is represented with a simple arrow, indicating a data pipeline or networking setup facilitating this flow.
+
+### 14.3.4. Substage A. CPE Connected Mode
 ![image.png](.images/cpeconnected.png)
-### 14.3.3. Substage B. CPE Disconnected Mode
+### 14.3.5. Substage B. CPE Disconnected Mode
 ![image.png](.images/cpedisconnected.png)
 ![image.png](.images/cpediconnected-sync.png)
-### 14.3.3. CPE Compatible Hardware
+### 14.3.6. CPE Compatible Hardware
 
 ## 14.4. High-Level Transition Strategy between Stages
 (Content here)

@@ -6,22 +6,20 @@ using Microsoft.Azure.Devices.Shared;
 namespace CloudPillar.Agent.Wrappers;
 public interface IX509CertificateWrapper
 {
-    void Open(OpenFlags flags);
+    X509Store Open(OpenFlags flags);
 
-    X509Certificate2Collection Certificates { get; }
+    X509Certificate2Collection GetCertificates(X509Store store);
 
-    X509Certificate2Collection Find(X509FindType findType, string findValue, bool validOnly);
+    X509Certificate2Collection Find(X509Store store, X509FindType findType, string findValue, bool validOnly);
 
-    void RemoveRange(X509Certificate2Collection collection);
+    void RemoveRange(X509Store store, X509Certificate2Collection collection);
 
-    void Add(X509Certificate2 x509Certificate);
-
-    void Close();
+    void Add(X509Store store, X509Certificate2 x509Certificate);
 
     X509Certificate2Collection CreateCertificateCollecation(X509Certificate2[] certificates);
 
     X509Certificate2 CreateFromBytes(byte[] rawData, string password, X509KeyStorageFlags keyStorageFlags);
-    
+
     SecurityProviderX509Certificate GetSecurityProvider(X509Certificate2 certificate);
 
     DeviceAuthenticationWithX509Certificate GetDeviceAuthentication(string deviceId, X509Certificate2 certificate);
