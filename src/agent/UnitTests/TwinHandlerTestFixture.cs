@@ -214,7 +214,7 @@ public class TwinHandlerTestFixture
     }
 
     [Test]
-    public async Task OnDesiredPropertiesUpdate_NotMatchStrictModeRuleDownloadAction_NotExecuteDownload()
+    public async Task OnDesiredPropertiesUpdate_StrictModeWrongDestination_NotExecuteDownload()
     {
         var desired = new TwinChangeSpec()
         {
