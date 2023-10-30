@@ -51,7 +51,7 @@ public class AgentController : ControllerBase
     public async Task<ActionResult<string>> AddRecipeAsync([FromBody] TwinDesired recipe)
     {
         _twinDesiredPropsValidator.ValidateAndThrow(recipe);
-       await deviceClientWrapper.Reconnect();
+      // await deviceClientWrapper.Reconnect();
         return await _twinHandler.GetTwinJsonAsync();
     }
 

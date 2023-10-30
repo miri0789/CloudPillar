@@ -133,11 +133,13 @@ public class ReprovisioningHandler : IReprovisioningHandler
             //  var cer = _x509CertificateWrapper.CreateCertificate(certificate.Export(X509ContentType.Cert));
             Attestation attestation = X509Attestation.CreateFromClientCertificates(new X509Certificate2(certificate.Export(X509ContentType.Cert)), new X509Certificate2(sCer.Export(X509ContentType.Cert)));
             enrollment.Attestation = attestation;
+           // enrollment.ReprovisionPolicy = new ReprovisionPolicy(ReprovisionType.Reprovision);
             await provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(enrollment);
+            var a = await provisioningServiceClient.GetDeviceRegistrationStateAsync(enrollment.RegistrationId);
 
         }
-        await deviceClientWrapper.Reconnect();
-       // await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
+       // await deviceClientWrapper.Reconnect();
+       await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
     }
 
     public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)

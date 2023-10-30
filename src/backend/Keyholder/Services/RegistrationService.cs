@@ -121,9 +121,11 @@ public class RegistrationService : IRegistrationService
 
             var individualEnrollment = _individualEnrollmentWrapper.Create(enrollmentName, attestation);
 
+
             individualEnrollment.ProvisioningStatus = ProvisioningStatus.Enabled;
             individualEnrollment.DeviceId = deviceId;
             individualEnrollment.IotHubHostName = _iotHubHostName;
+            individualEnrollment.ReprovisionPolicy = new ReprovisionPolicy() { MigrateDeviceData = true, UpdateHubAssignment = true };
 
             return await provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment);
 
