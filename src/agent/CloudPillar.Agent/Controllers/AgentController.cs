@@ -24,6 +24,7 @@ public class AgentController : ControllerBase
     public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
+    private readonly IC2DEventHandler _c2DEventHandler;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -32,6 +33,7 @@ public class AgentController : ControllerBase
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
+     IC2DEventHandler c2DEventHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
@@ -40,6 +42,7 @@ public class AgentController : ControllerBase
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
+        _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -70,6 +73,12 @@ public class AgentController : ControllerBase
             }
         }
         return await _twinHandler.GetTwinJsonAsync();
+    }
+    [AllowAnonymous]
+    [HttpPost("Messages")]
+    public async Task Messages(CancellationToken cancellationToken)
+    {
+        await _c2DEventHandler.CreateSubscribeAsync(cancellationToken, true);
     }
 
     [AllowAnonymous]
