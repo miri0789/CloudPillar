@@ -55,6 +55,9 @@ builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper
 builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
 builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
+builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
+builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
+builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
@@ -94,9 +97,8 @@ using (var scope = app.Services.CreateScope())
     await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
 
     var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
-    await StateMachineHandlerService.InitStateMachineHandlerAsync();
+    StateMachineHandlerService.InitStateMachineHandlerAsync();
 }
-
 
 app.Run();
 

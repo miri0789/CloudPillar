@@ -8,6 +8,7 @@ using Shared.Entities.Messages;
 using Shared.Logger;
 using Shared.Logger;
 
+namespace CloudPillar.Agent.Tests;
 [TestFixture]
 public class C2DEventSubscriptionSessionTestFixture
 {
@@ -20,7 +21,8 @@ public class C2DEventSubscriptionSessionTestFixture
     private IC2DEventSubscriptionSession _target;
     private const string MESSAGE_TYPE_PROP = "MessageType";
     private DownloadBlobChunkMessage _downloadBlobChunkMessage = new DownloadBlobChunkMessage() { MessageType = C2DMessageType.DownloadChunk };
-
+    private RequestDeviceCertificateMessage _requestDeviceCertificateMessage = new RequestDeviceCertificateMessage() { MessageType = C2DMessageType.RequestDeviceCertificate };
+    private ReprovisioningMessage _reprovisioningMessage = new ReprovisioningMessage() { MessageType = C2DMessageType.Reprovisioning };
 
     [SetUp]
     public void Setup()
@@ -68,6 +70,40 @@ public class C2DEventSubscriptionSessionTestFixture
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
 
         _twinActionsHandler.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task ReceiveC2DMessagesAsync_ValidRequestDeviceCertificateMessage_CalleRequestDeviceCertificateHandler()
+    {
+        var receivedMessage = SetRecivedMessageWithDurationMock(C2DMessageType.RequestDeviceCertificate.ToString());
+
+        _messageFactoryMock
+            .Setup(mf => mf.CreateC2DMessageFromMessage<RequestDeviceCertificateMessage>(It.IsAny<Message>()))
+            .Returns(_requestDeviceCertificateMessage);
+
+        _messageSubscriberMock
+       .Setup(ms => ms.HandleRequestDeviceCertificateAsync(_requestDeviceCertificateMessage, It.IsAny<CancellationToken>()));
+
+        await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), true);
+
+        _messageSubscriberMock.Verify(ms => ms.HandleRequestDeviceCertificateAsync(It.IsAny<RequestDeviceCertificateMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task ReceiveC2DMessagesAsync_ValidReprovisioningMessage_CallReprovisioningHandler()
+    {
+        var receivedMessage = SetRecivedMessageWithDurationMock(C2DMessageType.Reprovisioning.ToString());
+
+        _messageFactoryMock
+            .Setup(mf => mf.CreateC2DMessageFromMessage<ReprovisioningMessage>(It.IsAny<Message>()))
+            .Returns(_reprovisioningMessage);
+
+        _messageSubscriberMock
+       .Setup(ms => ms.HandleReprovisioningMessageAsync(_reprovisioningMessage, It.IsAny<CancellationToken>()));
+
+        await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), true);
+
+        _messageSubscriberMock.Verify(ms => ms.HandleReprovisioningMessageAsync(It.IsAny<ReprovisioningMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
