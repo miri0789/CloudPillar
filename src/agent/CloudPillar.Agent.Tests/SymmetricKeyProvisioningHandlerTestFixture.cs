@@ -22,9 +22,10 @@ public class SymmetricKeyProvisioningHandlerTestFixture
 
     private const string DEVICE_ID = "UnitTest";
     private const string IOT_HUB_HOST_NAME = "IoTHubHostName";
+    private const string GENERATION_ID = "generationId";
     const string DPS_SCOPE_ID = "dpsScopeId";
     const string GLOBAL_DEVICE_ENDPOINT = "globalDeviceEndpoint";
-    const string GROUP_ENROLLMENT_PRIMARY_KEY ="groupEnrollmentPrimaryKey";
+    const string GROUP_ENROLLMENT_PRIMARY_KEY = "groupEnrollmentPrimaryKey";
     const string PRIMARY_KEY = "VGVzdEtleQ==";
     const string? SECONDARY_KEY = "";
 
@@ -57,7 +58,7 @@ public class SymmetricKeyProvisioningHandlerTestFixture
 
         _provisioningDeviceClientWrapperMock.Setup(x => x.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SecurityProvider>(), It.IsAny<ProvisioningTransportHandler>())).ReturnsAsync(() =>
     {
-        return new DeviceRegistrationResult(DEVICE_ID, null, IOT_HUB_HOST_NAME, DEVICE_ID, ProvisioningRegistrationStatusType.Assigned, "generationId", null, 0, string.Empty, string.Empty);
+        return GetDeviceRegistrationResult(ProvisioningRegistrationStatusType.Assigned);
     });
 
         await _target.ProvisioningAsync(DPS_SCOPE_ID, CancellationToken.None);
@@ -69,9 +70,9 @@ public class SymmetricKeyProvisioningHandlerTestFixture
     public async Task ProvisioningAsync_RegisterFaild_RegistersDeviceNotCalled()
     {
         _provisioningDeviceClientWrapperMock.Setup(x => x.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SecurityProvider>(), It.IsAny<ProvisioningTransportHandler>())).ReturnsAsync(() =>
-    {
-        return new DeviceRegistrationResult(DEVICE_ID, null, IOT_HUB_HOST_NAME, DEVICE_ID, ProvisioningRegistrationStatusType.Failed, "generationId", null, 0, string.Empty, string.Empty);
-    });
+        {
+            return GetDeviceRegistrationResult(ProvisioningRegistrationStatusType.Failed);
+        });
 
         await _target.ProvisioningAsync(DPS_SCOPE_ID, CancellationToken.None);
 
@@ -87,5 +88,9 @@ public class SymmetricKeyProvisioningHandlerTestFixture
 
     }
 
+    private DeviceRegistrationResult GetDeviceRegistrationResult(ProvisioningRegistrationStatusType statusType)
+    {
+        return new DeviceRegistrationResult(DEVICE_ID, null, IOT_HUB_HOST_NAME, DEVICE_ID, statusType, GENERATION_ID, null, 0, string.Empty, string.Empty);
+    }
 
 }
