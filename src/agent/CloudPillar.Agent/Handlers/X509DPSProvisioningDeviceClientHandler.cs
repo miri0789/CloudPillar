@@ -32,9 +32,9 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     {
         using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {
-            var certificates = _X509CertificateWrapper.GetCertificates(store);           
+            var certificates = _X509CertificateWrapper.GetCertificates(store);
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT) && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR))
                .FirstOrDefault();
 
             return filteredCertificate;
@@ -129,7 +129,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
 
-    }    
+    }
 
     private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
     {
