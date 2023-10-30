@@ -84,7 +84,7 @@ public class AgentController : ControllerBase
         catch (Exception ex)
         {
             _logger.Error("InitiateProvisioning failed ", ex);
-            return BadRequest("An error occurred while processing the request.");
+            return BadRequest($"An error occurred while processing the request: {ex.Message}");
         }
     }
 

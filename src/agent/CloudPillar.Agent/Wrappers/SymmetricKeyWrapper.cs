@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 
@@ -16,5 +17,9 @@ public class SymmetricKeyWrapper : ISymmetricKeyWrapper
         ArgumentNullException.ThrowIfNull(deviceId);
         ArgumentNullException.ThrowIfNull(deviceKey);
         return new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey);
+    }
+    public HMACSHA256 CreateHMAC(string primaryKey)
+    {
+        return new HMACSHA256(Convert.FromBase64String(primaryKey));
     }
 }
