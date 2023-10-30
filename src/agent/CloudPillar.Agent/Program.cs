@@ -10,7 +10,7 @@ using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Logger;
-
+using Microsoft.AspNetCore.Authentication.Certificate;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
@@ -20,17 +20,16 @@ var sslUrl = $"https://localhost:{sslPort}";
 
 builder.WebHost.UseUrls(url, sslUrl);
 
-X509Certificate2 x509Certificate = X509Helper.GetCertificate();
-if (x509Certificate != null)
-{
-    builder.WebHost.UseKestrel(options =>
-    {
-        options.Listen(IPAddress.Any, sslPort, listenOptions =>
-        {
-            listenOptions.UseHttps(x509Certificate);
-        });
-    });
-}
+// X509Certificate2 x509Certificate = X509Helper.GetCertificate();
+// if (x509Certificate != null)
+// {
+//     builder.WebHost.UseHttpSys(options =>
+//     {
+//         // options.Authentication.Schemes = AuthenticationSchemes.Ntlm | AuthenticationSchemes.Negotiate;
+//         // options.UrlPrefixes.Add(sslUrl); // replace with your desired port
+//         options.UseHttps(new X509Certificate2("certificatePath", "certificatePassword"));
+//     });
+// }
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
@@ -73,6 +72,9 @@ builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceC
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
+builder.Services.AddAuthentication(
+        CertificateAuthenticationDefaults.AuthenticationScheme)
+    .AddCertificate();
 
 
 
