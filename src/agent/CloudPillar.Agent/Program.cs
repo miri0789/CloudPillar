@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Utilities;
@@ -19,6 +20,17 @@ var sslUrl = $"https://localhost:{sslPort}";
 
 builder.WebHost.UseUrls(url, sslUrl);
 
+X509Certificate2 x509Certificate = X509Helper.GetCertificate();
+if (x509Certificate != null)
+{
+    builder.WebHost.UseKestrel(options =>
+    {
+        options.Listen(IPAddress.Any, sslPort, listenOptions =>
+        {
+            listenOptions.UseHttps(x509Certificate);
+        });
+    });
+}
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
@@ -61,6 +73,9 @@ builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceC
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
+
+
+
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
 
@@ -76,6 +91,8 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

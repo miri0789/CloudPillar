@@ -119,6 +119,14 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
 
+
+    [HttpPut("TestRedircet")]
+    [DeviceStateFilter]
+    public async Task<ActionResult<string>> TestRedircet([FromBody] UpdateReportedProps updateReportedProps)
+    {
+        return Ok("TestRedircet vvv");
+    }
+
     private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
     {
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
