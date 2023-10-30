@@ -1,0 +1,28 @@
+"changeSpec": {
+  "id": "1.14.61047.38115.20230418180124",
+  "patch": {
+    "transitPackage": [
+      {
+        "action": "ExecuteOnce",
+        "description": "Extracted firmware artifact",
+        "shell": "powershell",
+        "command": "Expand-Archive -LiteralPath '.\\CartoPatch-1.14.61047.zip' -DestinationPath '.\\CartoPatch\\'"
+      },
+      {
+        "action": "SingularUpload",
+        "description": "deny",
+        "filename": "c:/demo/test.txt"
+      },
+      {
+        "action": "SingularUpload",
+        "description": "allow",
+        "filename": "c:/demo/files/test.txt"
+      },
+      {
+        "action": "SingularUpload",
+        "description": "allow",
+        "filename": "${LogUploadAllow}demo.log"
+      }
+    ]
+  }
+}
