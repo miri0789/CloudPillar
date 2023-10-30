@@ -41,14 +41,15 @@ stages:
       displayName: 'Run Unit Tests'
       inputs:
         command: 'test'
+        arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+        publishTestResults: true
         projects: '**/*Tests/*.csproj'
-        arguments: '--configuration $(buildConfiguration)'
-
-    - task: PublishTestResults@2
-      displayName: 'Publish Test Results'
+      
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish code coverage report'
       inputs:
-        testResultsFormat: 'VSTest'
-        testResultsFiles: '**/TestResults/*.trx'
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
   - job: Agent_CI_Job
     pool:
