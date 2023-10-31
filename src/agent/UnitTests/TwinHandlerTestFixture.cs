@@ -19,6 +19,9 @@ public class TwinHandlerTestFixture
     private Mock<IFileUploaderHandler> _fileUploaderHandlerMock;
     private Mock<ITwinActionsHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerHandlerMock;
+    private Mock<IStrictModeHandler> _strictModeHandlerMock;
+    private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
+    private Mock<IOptions<AppSettings>> _appSettingsMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private Mock<IOptions<AppSettings>> _appSettings;
@@ -34,6 +37,9 @@ public class TwinHandlerTestFixture
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
         _twinActionsHandler = new Mock<ITwinActionsHandler>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
+        _strictModeHandlerMock = new Mock<IStrictModeHandler>();
+        _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
+        _appSettingsMock = new Mock<IOptions<AppSettings>>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
         _appSettings = new Mock<IOptions<AppSettings>>();
@@ -53,6 +59,7 @@ public class TwinHandlerTestFixture
           _twinActionsHandler.Object,
           _loggerHandlerMock.Object,
           _runtimeInformationWrapper.Object,
+          _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
           _appSettings.Object);
     }
@@ -159,7 +166,7 @@ public class TwinHandlerTestFixture
             Patch = new TwinPatch()
             {
                 InstallSteps = new List<TwinAction>()
-                    {   new TwinAction() { ActionId = "123", Action = TwinActionType.SingularDownload},
+                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath="abc"},
                     }.ToArray()
             }
         };
@@ -249,7 +256,7 @@ public class TwinHandlerTestFixture
     {
         var supportedShellsKey = nameof(TwinReported.SupportedShells);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Windows)).Returns(true);
-        _fileStreamerWrapper.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
+        _fileStreamerWrapperMock.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
 
         CreateTarget();
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey, It.IsAny<object>()))
@@ -258,7 +265,7 @@ public class TwinHandlerTestFixture
         await _target.InitReportDeviceParamsAsync();
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey,
-        new List<ShellType>() { ShellType.Cmd, ShellType.Powershell, ShellType.Bash }), Times.Once);
+        new List<ShellType>() { ShellType.Cmd, ShellType.Powershell }), Times.Once);
     }
 
     [Test]
@@ -267,7 +274,7 @@ public class TwinHandlerTestFixture
         var supportedShellsKey = nameof(TwinReported.SupportedShells);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Linux)).Returns(true);
         _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Windows)).Returns(false);
-        _fileStreamerWrapper.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
+        _fileStreamerWrapperMock.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
 
         CreateTarget();
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey, It.IsAny<object>()))
@@ -276,7 +283,7 @@ public class TwinHandlerTestFixture
         await _target.InitReportDeviceParamsAsync();
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey,
-        new List<ShellType>() { ShellType.Bash, ShellType.Powershell }), Times.Once);
+        new List<ShellType>() { ShellType.Bash }), Times.Once);
     }
 
     [Test]

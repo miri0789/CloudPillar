@@ -46,7 +46,7 @@ builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
-builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
+builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
@@ -103,8 +103,8 @@ app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
-var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
-strictModeHandler.CheckAuthentucationMethodValue();
+
+app.ValidateAuthenticationSettings();
 
 using (var scope = app.Services.CreateScope())
 {
