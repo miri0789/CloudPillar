@@ -3,6 +3,7 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
+using Microsoft.Extensions.Options;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
@@ -13,17 +14,17 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
     private IDeviceClientWrapper _deviceClientWrapper;
     private ISymmetricKeyWrapper _symmetricKeyWrapper;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly AuthonticationSettings _authonticationSettings;
 
     public SymmetricKeyProvisioningHandler(ILoggerHandler loggerHandler,
      IDeviceClientWrapper deviceClientWrapper,
      ISymmetricKeyWrapper symmetricKeyWrapper,
-     IEnvironmentsWrapper environmentsWrapper)
+     IOptions<AuthonticationSettings> options)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _symmetricKeyWrapper = symmetricKeyWrapper ?? throw new ArgumentNullException(nameof(symmetricKeyWrapper));
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _authonticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     public async Task<bool> AuthorizationDeviceAsync(CancellationToken cancellationToken)
@@ -33,12 +34,12 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
     public async Task ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.dpsScopeId);
-        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.globalDeviceEndpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.groupEnrollmentPrimaryKey);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authonticationSettings.DpsScopeId);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authonticationSettings.GlobalDeviceEndpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authonticationSettings.GroupEnrollmentKey);
 
         var deviceName = deviceId;
-        var primaryKey = _environmentsWrapper.groupEnrollmentPrimaryKey;
+        var primaryKey = _authonticationSettings.GroupEnrollmentKey;
         var drivedDevice = ComputeDerivedSymmetricKey(primaryKey, deviceName);
 
 
@@ -49,7 +50,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
             using (ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler())
             {
-                var provisioningClient = ProvisioningDeviceClient.Create(_environmentsWrapper.globalDeviceEndpoint, _environmentsWrapper.dpsScopeId, security, transport);
+                var provisioningClient = ProvisioningDeviceClient.Create(_authonticationSettings.GlobalDeviceEndpoint, _authonticationSettings.DpsScopeId, security, transport);
 
                 _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
 

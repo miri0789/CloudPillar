@@ -63,6 +63,8 @@ builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandle
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
+var authonticationSettings = builder.Configuration.GetSection("Authontication");
+builder.Services.Configure<AuthonticationSettings>(authonticationSettings);
 
 builder.Services.AddSwaggerGen(c =>
 {
