@@ -105,7 +105,7 @@ public class RegistrationService : IRegistrationService
         ArgumentNullException.ThrowIfNull(certificate);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
         _loggerHandler.Debug($"CreateEnrollmentAsync for deviceId {deviceId}");
-        var enrollmentName = CertificateConstants.CLOUD_PILLAR_SUBJECT + deviceId;
+        var enrollmentName = CertificateConstants.CLOUD_PILLAR_SUBJECT + deviceId + "_localhost";
         var provisioningServiceClient = _provisioningServiceClientWrapper.Create(_environmentsWrapper.dpsConnectionString);
 
 

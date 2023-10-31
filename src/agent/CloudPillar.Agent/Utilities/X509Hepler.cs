@@ -5,7 +5,7 @@ public static class X509Helper
 {
     public static X509Certificate2? GetCertificate()
     {
-        var store = new X509Store(StoreLocation.CurrentUser);
+        var store = new X509Store(StoreName.Root,StoreLocation.CurrentUser);
         store.Open(OpenFlags.ReadOnly);
 
         using (store)
