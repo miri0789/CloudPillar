@@ -4,6 +4,7 @@ using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Service;
+using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using Shared.Entities.Authentication;
@@ -18,10 +19,10 @@ public class ReprovisioningHandlerTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
     private Mock<IX509CertificateWrapper> _x509CertificateWrapperMock;
     private Mock<IDPSProvisioningDeviceClientHandler> _dPSProvisioningDeviceClientHandlerMock;
-    private Mock<IEnvironmentsWrapper> _environmentsWrapperMock;
     private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
     private Mock<ISHA256Wrapper> _sHA256WrapperMock;
     private Mock<IProvisioningServiceClientWrapper> _provisioningServiceClientWrapperMock;
+    private Mock<IOptions<AuthonticationSettings>> _authonticationSettingsMock;
     private IReprovisioningHandler _target;
     private const string DEVICE_ID = "UnitTest";
     private const string SECRET_KEY = "secert";
@@ -38,7 +39,8 @@ public class ReprovisioningHandlerTestFixture
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
         _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
         _dPSProvisioningDeviceClientHandlerMock = new Mock<IDPSProvisioningDeviceClientHandler>();
-        _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
+        _authonticationSettingsMock = new Mock<IOptions<AuthonticationSettings>>();
+        _authonticationSettingsMock.Setup(x => x.Value).Returns(new AuthonticationSettings());
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
         _sHA256WrapperMock = new Mock<ISHA256Wrapper>();
         _provisioningServiceClientWrapperMock = new Mock<IProvisioningServiceClientWrapper>();
@@ -70,10 +72,10 @@ public class ReprovisioningHandlerTestFixture
         _target = new ReprovisioningHandler(_deviceClientWrapperMock.Object,
         _x509CertificateWrapperMock.Object,
         _dPSProvisioningDeviceClientHandlerMock.Object,
-        _environmentsWrapperMock.Object,
         _d2CMessengerHandlerMock.Object,
         _sHA256WrapperMock.Object,
         _provisioningServiceClientWrapperMock.Object,
+        _authonticationSettingsMock.Object,
         _loggerMock.Object);
     }
 
