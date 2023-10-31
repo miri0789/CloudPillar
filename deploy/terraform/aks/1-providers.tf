@@ -1,6 +1,6 @@
 terraform {
   backend "azurerm" {
-    subscription_id      = ""
+    subscription_id      = "a147112f-bc59-4e9e-ac2f-5b4585e6542e"
     resource_group_name  = "cp-tf-rg"
     storage_account_name = "tfcp"
     container_name       = "tfstate"
@@ -18,5 +18,5 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = ""
+  subscription_id = "a147112f-bc59-4e9e-ac2f-5b4585e6542e"
 }

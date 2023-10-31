@@ -41,8 +41,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
         load_balancer_profile {
            managed_outbound_ip_count = 1
     }
-    service_cidr       = "11.0.0.0/16"
-    dns_service_ip     = "11.0.0.10"
+    service_cidr       = "10.23.1.0/24"
+    dns_service_ip     = "10.23.1.10"
     outbound_type      = "loadBalancer"
   }
 
