@@ -12,8 +12,8 @@ public class GitIgnoreMatcher
         {
             matcher.AddInclude(pattern);
         }
-        matcher.AddInclude("**"); // Exclude everything by default
-        matcher.AddExclude(""); // Include nothing by default
+        // matcher.AddInclude("**"); // Exclude everything by default
+        // matcher.AddExclude(""); // Include nothing by default
         var result = matcher.Execute(new DirectoryInfoWrapper(new DirectoryInfo(rootPath)));
     }
 

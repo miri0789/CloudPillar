@@ -13,17 +13,15 @@ using Shared.Logger;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
-var sslPort = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
-var sslUrl = $"https://localhost:{sslPort}";
 
-builder.WebHost.UseUrls(url, sslUrl);
+builder.WebHost.UseUrls(url);
 
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(url, sslUrl)
+                b.WithOrigins(url)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
             });
@@ -84,7 +82,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
-app.UseMiddleware<AuthorizationCheckMiddleware>();
+// app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
