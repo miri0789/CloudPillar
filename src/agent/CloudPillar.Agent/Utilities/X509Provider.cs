@@ -8,6 +8,7 @@ public static class X509Provider
 {
     private const int KEY_SIZE_IN_BITS = 4096;
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
+    private const string LOCALHOST_DNS_NAME = "localhost";
     public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays)
     {
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
@@ -22,6 +23,10 @@ public static class X509Provider
                 oneMDKeyValue, false
                );
 
+            var sanBuilder = new SubjectAlternativeNameBuilder();
+            sanBuilder.AddDnsName(LOCALHOST_DNS_NAME);
+
+            request.CertificateExtensions.Add(sanBuilder.Build());
 
             request.CertificateExtensions.Add(OneMDKeyExtension);
 
