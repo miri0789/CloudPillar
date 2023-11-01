@@ -1,5 +1,6 @@
 
 using CloudPillar.Agent.Handlers;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Sevices;
 public class StateMachineListenerService
@@ -18,7 +19,39 @@ public class StateMachineListenerService
 
     private void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
     {
-
+        switch (e.NewState)
+        {
+            case DeviceStateType.Provisioning:
+                await SetProvisioningAsync();
+                break;
+            case DeviceStateType.Ready:
+                await SetReadyAsync();
+                break;
+            case DeviceStateType.Busy:
+                SetBusy();
+                break;
+            default:
+                break;
+        }
         // throw new NotImplementedException();
+    }
+    private async Task SetProvisioningAsync()
+    {
+        _cts.Start();
+        await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, true);
+    }
+
+    private async Task SetReadyAsync()
+    {
+        _cts.CancelToken();
+        var _cts = _stateMachineTokenHandler.StartToken();
+        await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
+        await _twinHandler.HandleTwinActionsAsync(_cts.Token);
+    }
+
+    private void SetBusy()
+    {
+         _cts.CancelToken();
+        //_stateMachineTokenHandler.CancelToken();
     }
 }
