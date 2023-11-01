@@ -10,7 +10,6 @@ chmod +x startagent.sh
 For <ARCHITECTURE_DIR>, you can choose from the following options:
 
     linux-x64: Use this option for 64-bit Linux architecture.
-    macos-x64: Use this option for macOS architecture.
 
 ## Windows
 ````
