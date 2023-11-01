@@ -59,8 +59,11 @@ builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceC
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
-var appSettingsSection = builder.Configuration.GetSection("AppSettings");
-builder.Services.Configure<AppSettings>(appSettingsSection);
+var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
+builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
+
+var authonticationSettings = builder.Configuration.GetSection("Authontication");
+builder.Services.Configure<AuthonticationSettings>(authonticationSettings);
 
 builder.Services.AddSwaggerGen(c =>
 {

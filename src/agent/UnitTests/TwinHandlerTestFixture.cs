@@ -21,10 +21,10 @@ public class TwinHandlerTestFixture
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IStrictModeHandler> _strictModeHandlerMock;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
-    private Mock<IOptions<AppSettings>> _appSettingsMock;
+    private Mock<IOptions<StrictModeSettings>> _strictModeSettingsMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
-    private Mock<IOptions<AppSettings>> _appSettings;
+    private Mock<IOptions<StrictModeSettings>> _strictModeSettings;
     private ITwinHandler _target;
     private CancellationToken cancellationToken = CancellationToken.None;
 
@@ -39,14 +39,14 @@ public class TwinHandlerTestFixture
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
-        _appSettingsMock = new Mock<IOptions<AppSettings>>();
+        _strictModeSettingsMock = new Mock<IOptions<StrictModeSettings>>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
-        _appSettings = new Mock<IOptions<AppSettings>>();
-        var appSettings = new AppSettings
+        _strictModeSettings = new Mock<IOptions<StrictModeSettings>>();
+        var strictModeSettings = new StrictModeSettings
         {
         };
-        _appSettings.Setup(x => x.Value).Returns(appSettings);
+        _strictModeSettings.Setup(x => x.Value).Returns(strictModeSettings);
         CreateTarget();
     }
 
@@ -61,7 +61,7 @@ public class TwinHandlerTestFixture
           _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
-          _appSettings.Object);
+          _strictModeSettings.Object);
     }
 
     [Test]
