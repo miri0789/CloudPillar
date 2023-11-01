@@ -148,6 +148,7 @@ public class TwinHandler : ITwinHandler
         catch (Exception ex)
         {
             await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
+            return string.Empty;
         }
         return fileName;
     }

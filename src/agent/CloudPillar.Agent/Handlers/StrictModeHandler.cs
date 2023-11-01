@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using Shared.Logger;
@@ -8,11 +9,13 @@ namespace CloudPillar.Agent.Handlers;
 public class StrictModeHandler : IStrictModeHandler
 {
     private readonly StrictModeSettings _strictModeSettings;
+    private readonly IFileGlobMatcherWrapper _fileGlobMatcherWrapper;
     private readonly ILoggerHandler _logger;
 
-    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, ILoggerHandler logger)
+    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, IFileGlobMatcherWrapper fileGlobMatcherWrapper, ILoggerHandler logger)
     {
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
+        _fileGlobMatcherWrapper = fileGlobMatcherWrapper ?? throw new ArgumentNullException(nameof(fileGlobMatcherWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -23,7 +26,7 @@ public class StrictModeHandler : IStrictModeHandler
         string replacedString = Regex.Replace(fileName, pattern, match =>
         {
             string key = match.Groups[1].Value;
-            ArgumentNullException.ThrowIfNullOrEmpty(key);
+            ArgumentException.ThrowIfNullOrEmpty(key);
 
             return GetRootById(key, actionType);
         });
@@ -33,7 +36,7 @@ public class StrictModeHandler : IStrictModeHandler
     public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
         FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
-        if (zoneRestrictions.Type == StrictModeAction.Upload.ToString() || zoneRestrictions.MaxSize == 0)
+        if (zoneRestrictions.Type == StrictModeAction.Upload.ToString() || !zoneRestrictions.MaxSize.HasValue || zoneRestrictions.MaxSize == 0)
         {
             return;
         }
@@ -66,43 +69,14 @@ public class StrictModeHandler : IStrictModeHandler
             _logger.Info("No allow patterns were found");
             return;
         }
-
-        foreach (var pattern in allowPatterns)
+        FileGlobMatcher matcher = _fileGlobMatcherWrapper.CreateFileGlobMatcher(allowPatterns.ToArray());
+        bool isMatch = _fileGlobMatcherWrapper.IsMatch(matcher, zoneRestrictions.Root, verbatimFileName);
+        if (!isMatch)
         {
-            var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
-            var isMatch = IsMatch(verbatimFileName, regexPattern);
-            if (isMatch)
-            {
-                _logger.Info($"{fileName} is match to pattern: {pattern}");
-                return;
-            }
-
+            _logger.Error("Denied by the lack of local allowance");
+            throw new FormatException(ResultCode.StrictModePattern.ToString());
         }
-        _logger.Error("Denied by the lack of local allowance");
-        throw new FormatException(ResultCode.StrictModePattern.ToString());
-    }
-
-    private bool IsMatch(string filePath, Regex pattern)
-    {
-        return pattern.IsMatch(filePath);
-    }
-
-    private Regex ConvertToRegexPattern(string pattern)
-    {
-        if (pattern.EndsWith("/"))
-        {
-            pattern += "*";
-        }
-        string regexPattern = Regex.Escape(pattern)
-                                          .Replace("\\*", ".*")
-                                          .Replace("\\?", ".")
-                                          .Replace(@"\[\!", "[^")
-                                          .Replace(@"\[", "[")
-                                          .Replace(@"\]", "]")
-                                          .Replace(@"\!", "!")
-                                          .Replace("/", "\\/") + "$";
-
-        return new Regex(regexPattern, RegexOptions.IgnoreCase);
+        _logger.Info($"{verbatimFileName} is match to strict mode allow patterns");
     }
 
     private List<FileRestrictionDetails> GetRestrictionsByActionType(TwinActionType actionType)
@@ -111,7 +85,7 @@ public class StrictModeHandler : IStrictModeHandler
 
         if (actionType == TwinActionType.SingularDownload)
         {
-            return _strictModeSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Dwonload.ToString()).ToList();
+            return _strictModeSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Download.ToString()).ToList();
         }
         else
         {
@@ -156,4 +130,5 @@ public class StrictModeHandler : IStrictModeHandler
 
         return restriction.Root;
     }
+
 }
