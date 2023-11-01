@@ -6,6 +6,7 @@ public class StateMachineListenerService
 {
     private readonly IStateMachineHandler _stateMachineHandler;
     private readonly IC2DEventHandler _c2DEventHandler;
+    private static CancellationTokenSource _cts;
 
     public StateMachineListenerService(IStateMachineHandler stateMachineHandler,
     IC2DEventHandler c2DEventHandler)
@@ -17,7 +18,7 @@ public class StateMachineListenerService
 
     private void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
     {
-        
-       // throw new NotImplementedException();
+
+        // throw new NotImplementedException();
     }
 }
