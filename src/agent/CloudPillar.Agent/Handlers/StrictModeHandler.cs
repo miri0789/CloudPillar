@@ -66,52 +66,14 @@ public class StrictModeHandler : IStrictModeHandler
             _logger.Info("No allow patterns were found");
             return;
         }
-        var res = UseGitignore(allowPatterns, verbatimFileName, zoneRestrictions.Root);
-
-        foreach (var pattern in allowPatterns)
+        FileGlobMatcher matcher = new FileGlobMatcher(allowPatterns.ToArray());
+        bool isMatch = matcher.IsMatch(zoneRestrictions.Root, verbatimFileName);
+        if (!isMatch)
         {
-            var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
-            var isMatch = IsMatch(verbatimFileName, regexPattern);
-            if (isMatch)
-            {
-                _logger.Info($"{fileName} is match to pattern: {pattern}");
-                return;
-            }
-
+            _logger.Error("Denied by the lack of local allowance");
+            throw new FormatException(ResultCode.StrictModePattern.ToString());
         }
-        _logger.Error("Denied by the lack of local allowance");
-        throw new FormatException(ResultCode.StrictModePattern.ToString());
-    }
-
-    private bool IsMatch(string filePath, Regex pattern)
-    {
-        return pattern.IsMatch(filePath);
-    }
-
-    private Regex ConvertToRegexPattern(string pattern)
-    {
-        if (pattern.EndsWith("/"))
-        {
-            pattern += "*";
-        }
-        if (pattern.StartsWith("*/"))
-        {
-            pattern = ".+/".TrimEnd('/') + pattern.TrimStart('*');
-        }
-        if (pattern.StartsWith("**/"))
-        {
-            pattern = pattern.Replace("**/", ".+/.*?/");// ".+/.*?/" + pattern.TrimStart('*');
-        }
-        string regexPattern = Regex.Escape(pattern)
-                                          .Replace("\\*", ".*")
-                                          .Replace("\\?", ".")
-                                          .Replace(@"\[\!", "[^")
-                                          .Replace(@"\[", "[")
-                                          .Replace(@"\]", "]")
-                                          .Replace(@"\!", "!") + "$";
-        //.Replace("/", "\\/") 
-
-        return new Regex(regexPattern, RegexOptions.IgnoreCase);
+        _logger.Info($"{verbatimFileName} is match to strict mode allow patterns");
     }
 
     private List<FileRestrictionDetails> GetRestrictionsByActionType(TwinActionType actionType)
@@ -166,10 +128,4 @@ public class StrictModeHandler : IStrictModeHandler
         return restriction.Root;
     }
 
-    private bool UseGitignore(List<string> patterns, string fileName, string rootPath)
-    {
-        GitIgnoreMatcher matcher = new GitIgnoreMatcher(rootPath, patterns.ToArray());
-        bool isMatch = matcher.IsMatch(fileName);
-        return isMatch;
-    }
 }
