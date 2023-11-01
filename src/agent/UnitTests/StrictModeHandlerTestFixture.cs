@@ -2,6 +2,7 @@ using Moq;
 using Shared.Logger;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
+using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Handlers.Tests
 {
@@ -11,6 +12,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
         private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
         private Mock<ILoggerHandler> mockLogger;
+        private Mock<IFileGlobMatcherWrapper> fileGlobMatcherMock;
         private StrictModeHandler _target;
         private const TwinActionType UPLAOD_ACTION = TwinActionType.SingularUpload;
         private const TwinActionType DOWNLOAD_ACTION = TwinActionType.SingularDownload;
@@ -24,8 +26,9 @@ namespace CloudPillar.Agent.Handlers.Tests
             mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
             mockLogger = new Mock<ILoggerHandler>();
+            fileGlobMatcherMock = new Mock<IFileGlobMatcherWrapper>();
 
-            _target = new StrictModeHandler(mockStrictModeSettings.Object, mockLogger.Object);
+            _target = new StrictModeHandler(mockStrictModeSettings.Object, fileGlobMatcherMock.Object, mockLogger.Object);
         }
         [Test]
         public void ReplaceRootById_ValidData_ReturnReplacedString()
@@ -141,6 +144,9 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void CheckFileAccessPermissions_MatchPatternToFileName_NoThrowing()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
+
+            fileGlobMatcherMock.Setup(x => x.IsMatch(It.IsAny<FileGlobMatcher>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true); 
+
             void SendRequest() => _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
             Assert.DoesNotThrow(SendRequest);

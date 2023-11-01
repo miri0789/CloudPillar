@@ -56,6 +56,7 @@ builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
 builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
+builder.Services.AddScoped<IFileGlobMatcherWrapper, FileGlobMatcherWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 

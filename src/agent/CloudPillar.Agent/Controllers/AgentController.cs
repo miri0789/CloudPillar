@@ -101,6 +101,7 @@ public class AgentController : ControllerBase
     [HttpPost("SetReady")]
     public async Task<ActionResult<string>> SetReadyAsync()
     {
+        _twinHandler.OnDesiredPropertiesUpdate(CancellationToken.None);
         _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
     }

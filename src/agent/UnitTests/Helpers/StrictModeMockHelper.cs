@@ -6,8 +6,8 @@ using Shared.Entities.Twin;
 
 public static class StrictModeMockHelper
 {
-    public static string ROOT_UPLOAD = "c:/demoUpload/";
-    public static string ROOT_DOWNLOAD = "c:/demoDownload/";
+    public static string ROOT_UPLOAD = "c:/demoUpload";
+    public static string ROOT_DOWNLOAD = "c:/demoDownload";
     public static string DOWNLOAD = "Download";
     public static string UPLOAD = "Upload";
     public static string UPLOAD_KEY = "LogUploadAllow";
@@ -22,7 +22,7 @@ public static class StrictModeMockHelper
             Root = ROOT_UPLOAD,
             AllowPatterns = new List<string>
                 {
-                    "*.txt"
+                    "/*.txt"
                 },
             DenyPatterns = new List<string>() // Add any deny patterns here if needed
         };

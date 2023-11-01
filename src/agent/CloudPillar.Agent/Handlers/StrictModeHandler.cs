@@ -9,11 +9,13 @@ namespace CloudPillar.Agent.Handlers;
 public class StrictModeHandler : IStrictModeHandler
 {
     private readonly StrictModeSettings _strictModeSettings;
+    private readonly IFileGlobMatcherWrapper _fileGlobMatcherWrapper;
     private readonly ILoggerHandler _logger;
 
-    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, ILoggerHandler logger)
+    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, IFileGlobMatcherWrapper fileGlobMatcherWrapper, ILoggerHandler logger)
     {
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
+        _fileGlobMatcherWrapper = fileGlobMatcherWrapper ?? throw new ArgumentNullException(nameof(fileGlobMatcherWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -67,8 +69,8 @@ public class StrictModeHandler : IStrictModeHandler
             _logger.Info("No allow patterns were found");
             return;
         }
-        FileGlobMatcher matcher = new FileGlobMatcher(allowPatterns.ToArray());
-        bool isMatch = matcher.IsMatch(zoneRestrictions.Root, verbatimFileName);
+        FileGlobMatcher matcher = _fileGlobMatcherWrapper.CreateFileGlobMatcher(allowPatterns.ToArray());
+        bool isMatch = _fileGlobMatcherWrapper.IsMatch(matcher, zoneRestrictions.Root, verbatimFileName);
         if (!isMatch)
         {
             _logger.Error("Denied by the lack of local allowance");
