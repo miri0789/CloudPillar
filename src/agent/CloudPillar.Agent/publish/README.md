@@ -19,11 +19,10 @@ startagent.bat win-x64
 ````
 
 ## appsettings.json Configuration
-````
-To configure the application settings, please refer to the appsettings.json file and customize the following parameters as needed.
 
+To configure the application settings, please refer to the appsettings.json file and customize the following parameters as needed.
 | Setting Name   | Description                    | Default Value   |
-| --------------- | ------------------------------ | --------------- |
+| ---------------| ------------------------------ | --------------- |
 | `GlobalDeviceEndpoint`       | the global device endpoint  |  `global.azure-devices-provisioning.net` |
 | `CertificateExpiredDays`       | Certificate expired days  |  `365` |
 | `DpsScopeId`       | DPS scope id  |  `true` |
@@ -38,7 +37,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `MaxSize`    |  maximum size limit for file downloads | `1` |
 | `AllowPatterns`    |  array that contains patterns specifying the types of files that are allowed for the defined action | `[]`       |
 | `DenyPatterns`    |  array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
-````
+
 ## Call GetDeviceState in C# Example
 ```csharp
 using System;
