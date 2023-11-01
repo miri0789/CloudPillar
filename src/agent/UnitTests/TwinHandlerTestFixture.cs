@@ -21,20 +21,21 @@ public class TwinHandlerTestFixture
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IStrictModeHandler> _strictModeHandlerMock;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
-    private Mock<IOptions<AppSettings>> _appSettingsMock;
+    private Mock<IOptions<StrictModeSettings>> _strictModeSettingsMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private ITwinHandler _target;
-    private AppSettings mockAppSettingsValue = new AppSettings();
-    private Mock<IOptions<AppSettings>> mockAppSettings;
+    private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
+    private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
     private CancellationToken cancellationToken = CancellationToken.None;
+
 
     [SetUp]
     public void Setup()
     {
-        mockAppSettingsValue = StrictModeMockHelper.SetAppSettingsValueMock();
-        mockAppSettings = new Mock<IOptions<AppSettings>>();
-        mockAppSettings.Setup(x => x.Value).Returns(mockAppSettingsValue);
+        mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
+        mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
+        mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
 
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
@@ -44,7 +45,7 @@ public class TwinHandlerTestFixture
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
-        _appSettingsMock = new Mock<IOptions<AppSettings>>();
+        _strictModeSettingsMock = new Mock<IOptions<StrictModeSettings>>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
         CreateTarget();
@@ -61,7 +62,7 @@ public class TwinHandlerTestFixture
           _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
-          mockAppSettings.Object);
+          mockStrictModeSettings.Object);
     }
 
     [Test]
@@ -239,7 +240,7 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task OnDesiredPropertiesUpdate_StrictModeTrue_BashAndPowerShellActionsNotAllowed()
     {
-        mockAppSettingsValue.StrictMode = true;
+        mockStrictModeSettingsValue.StrictMode = true;
 
         _target.OnDesiredPropertiesUpdate(CancellationToken.None);
         _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);

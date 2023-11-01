@@ -2,11 +2,13 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Provisioning.Service;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
@@ -20,33 +22,33 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private readonly IX509CertificateWrapper _x509CertificateWrapper;
 
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
+    private readonly ISHA256Wrapper _sHA256Wrapper;
+    private readonly IProvisioningServiceClientWrapper _provisioningServiceClientWrapper;
+    private readonly AuthonticationSettings _authonticationSettings;
     private readonly ILoggerHandler _logger;
 
-    private const int KEY_SIZE_IN_BITS = 4096;
-
-    private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
-    private const string TEMPORARY_CERTIFICATE_NAME = "CPTemporaryCertificate";
-
-    public ReprovisioningHandler(IX509CertificateWrapper X509CertificateWrapper,
+    public ReprovisioningHandler(IDeviceClientWrapper deviceClientWrapper,
+        IX509CertificateWrapper X509CertificateWrapper,
         IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
-        IEnvironmentsWrapper environmentsWrapper,
         ID2CMessengerHandler d2CMessengerHandler,
-        ILoggerHandler logger
-        )
+        ISHA256Wrapper sHA256Wrapper,
+        IProvisioningServiceClientWrapper provisioningServiceClientWrapper,
+        IOptions<AuthonticationSettings> options,
+        ILoggerHandler logger)
     {
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
+        _sHA256Wrapper = sHA256Wrapper ?? throw new ArgumentNullException(nameof(sHA256Wrapper));
+        _provisioningServiceClientWrapper = provisioningServiceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningServiceClientWrapper));
+        _authonticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
     public async Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(message);
-        ArgumentNullException.ThrowIfNull(message.Data);
+        ValidateReprovisioningMessage(message);
 
         var certificate = GetTempCertificate();
         ArgumentNullException.ThrowIfNull(certificate);
@@ -54,52 +56,10 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var deviceId = certificate.Subject.Replace($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}", string.Empty);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
 
-        var iotHubHostName = string.Empty;
-        using (ProvisioningServiceClient provisioningServiceClient =
-                           ProvisioningServiceClient.CreateFromConnectionString(message.DPSConnectionString))
-        {
-            var enrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(Encoding.Unicode.GetString(message.Data), cancellationToken);
-            iotHubHostName = enrollment.IotHubHostName;
-        }
-
+        string iotHubHostName = await GetIotHubHostNameAsync(message.DPSConnectionString, message.Data, cancellationToken);
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
 
-        await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
-        using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
-        {
-            store.Open(OpenFlags.ReadWrite);
-
-            X509Certificate2Collection certificates = store.Certificates;
-            if (certificates == null)
-            {
-                throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
-            }
-
-            var filteredCertificates = certificates.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}")
-               && cert.Thumbprint != certificate.Thumbprint)
-               .ToArray();
-            if (filteredCertificates?.Length > 0)
-            {
-                var certificateCollection = new X509Certificate2Collection(filteredCertificates);
-                store.RemoveRange(certificateCollection);
-            }
-
-            X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
-            if (collection.Count == 0)
-            {
-                throw new ArgumentNullException("certificates", "Certificates collection must contains temporary cert.");
-            }
-
-            X509Certificate2 cert = collection[0];
-
-            cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
-
-            store.Close();
-
-        }
-
-
+        await ProvisionDeviceAndCleanupCertificatesAsync(message, certificate, deviceId, iotHubHostName, cancellationToken);
     }
 
     public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
@@ -107,87 +67,92 @@ public class ReprovisioningHandler : IReprovisioningHandler
         ArgumentNullException.ThrowIfNull(message);
         var data = JsonConvert.DeserializeObject<AuthonticationKeys>(Encoding.Unicode.GetString(message.Data));
         ArgumentNullException.ThrowIfNull(data);
-        var certificate = GenerateCertificate(message, data);
+        var certificate = X509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _authonticationSettings.CertificateExpiredDays);
         InstallTemporaryCertificate(certificate, data.SecretKey);
         await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate);
     }
 
 
-
-    private X509Certificate2 GenerateCertificate(RequestDeviceCertificateMessage message, AuthonticationKeys data)
+    private void ValidateReprovisioningMessage(ReprovisioningMessage message)
     {
-        using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
+        if (message == null || message.Data == null)
         {
-            var request = new CertificateRequest(
-                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{data.DeviceId}", rsa
-                , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            throw new ArgumentNullException("Invalid message.");
+        }
+    }
 
-            byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(data.SecretKey);
-            var OneMDKeyExtension = new X509Extension(
-                new Oid(ProvisioningConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
-                oneMDKeyValue, false
-               );
+    private async Task<string> GetIotHubHostNameAsync(string dpsConnectionString, byte[] data, CancellationToken cancellationToken)
+    {
+        var enrollment = await _provisioningServiceClientWrapper.GetIndividualEnrollmentAsync(dpsConnectionString, Encoding.Unicode.GetString(data), cancellationToken);
+        return enrollment.IotHubHostName;
+    }
 
 
-            request.CertificateExtensions.Add(OneMDKeyExtension);
+    private async Task ProvisionDeviceAndCleanupCertificatesAsync(ReprovisioningMessage message, X509Certificate2 certificate, string deviceId, string iotHubHostName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
+            using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite))
+            {
 
-            var certificate = request.CreateSelfSigned(
-                DateTimeOffset.Now.AddDays(-1),
-                DateTimeOffset.Now.AddDays(_environmentsWrapper.certificateExpiredDays));
+                X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
+                if (certificates == null)
+                {
+                    throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
+                }
 
-            return certificate;
+                RemoveCertificatesFromStore(store, certificate.Thumbprint);
+
+                X509Certificate2Collection collection = _x509CertificateWrapper.Find(store, X509FindType.FindByThumbprint, certificate.Thumbprint, false);
+                if (collection.Count == 0)
+                {
+                    throw new ArgumentNullException("certificates", "Certificates collection must contains temporary cert.");
+                }
+
+                X509Certificate2 cert = collection[0];
+                cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
+            }
+
 
         }
+        catch (Exception ex)
+        {
+            _logger.Error($"Provisioning failed", ex);
+            throw;
+        }
+
     }
 
     private void InstallTemporaryCertificate(X509Certificate2 certificate, string secretKey)
     {
-        using (SHA256 sha256 = SHA256.Create())
+
+        byte[] passwordBytes = _sHA256Wrapper.ComputeHash(Encoding.UTF8.GetBytes(secretKey));
+
+        string passwordString = BitConverter.ToString(passwordBytes).Replace("-", "").ToLower();
+
+        var pfxBytes = certificate.Export(X509ContentType.Pkcs12, passwordString);
+
+        var privateCertificate = _x509CertificateWrapper.CreateFromBytes(pfxBytes, passwordString, X509KeyStorageFlags.PersistKeySet);
+
+        privateCertificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
+
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite))
         {
-            byte[] passwordBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(secretKey));
-
-            string passwordString = BitConverter.ToString(passwordBytes).Replace("-", "").ToLower();
-
-            var pfxBytes = certificate.Export(X509ContentType.Pkcs12, passwordString);
-
-            var privateCertificate = new X509Certificate2(pfxBytes, passwordString);
-
-            privateCertificate.FriendlyName = TEMPORARY_CERTIFICATE_NAME;
-
-
-            using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
-            {
-                store.Open(OpenFlags.ReadWrite);
-
-                X509Certificate2Collection certificates = store.Certificates;
-                if (certificates != null)
-                {
-
-                    var filteredCertificates = certificates.Cast<X509Certificate2>()
-                       .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
-                       .ToArray();
-                    if (filteredCertificates?.Length > 0)
-                    {
-                        var certificateCollection = new X509Certificate2Collection(filteredCertificates);
-                        store.RemoveRange(certificateCollection);
-                    }
-                }
-
-                store.Add(privateCertificate);
-            }
+            RemoveCertificatesFromStore(store, string.Empty);
+            _x509CertificateWrapper.Add(store, privateCertificate);
         }
 
     }
 
     private X509Certificate2 GetTempCertificate()
     {
-
-        using (X509Store store = _x509CertificateWrapper.GetStore(StoreLocation.CurrentUser))
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {
-            store.Open(OpenFlags.ReadOnly);
-            X509Certificate2Collection certificates = store.Certificates;
+            X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
+
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.FriendlyName == TEMPORARY_CERTIFICATE_NAME)
+               .Where(cert => cert.FriendlyName == CertificateConstants.TEMPORARY_CERTIFICATE_NAME)
                .FirstOrDefault();
 
             if (filteredCertificate == null)
@@ -196,6 +161,22 @@ public class ReprovisioningHandler : IReprovisioningHandler
             }
             return filteredCertificate;
         }
+    }
 
+    private void RemoveCertificatesFromStore(X509Store store, string thumbprint)
+    {
+        var certificates = _x509CertificateWrapper.GetCertificates(store);
+
+        var filteredCertificates = certificates?.Cast<X509Certificate2>()
+           .Where(cert => string.IsNullOrEmpty(thumbprint) ? cert.FriendlyName == CertificateConstants.TEMPORARY_CERTIFICATE_NAME :
+            (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
+           && cert.Thumbprint != thumbprint))
+           .ToArray();
+
+        if (filteredCertificates?.Length > 0)
+        {
+            var certificateCollection = _x509CertificateWrapper.CreateCertificateCollecation(filteredCertificates);
+            _x509CertificateWrapper.RemoveRange(store, certificateCollection);
+        }
     }
 }

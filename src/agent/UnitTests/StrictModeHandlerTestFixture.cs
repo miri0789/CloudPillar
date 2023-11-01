@@ -8,8 +8,8 @@ namespace CloudPillar.Agent.Handlers.Tests
     [TestFixture]
     public class StrictModeHandlerTests
     {
-        private AppSettings mockAppSettingsValue = new AppSettings();
-        private Mock<IOptions<AppSettings>> mockAppSettings;
+        private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
+        private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
         private Mock<ILoggerHandler> mockLogger;
         private StrictModeHandler _target;
         private const TwinActionType UPLAOD_ACTION = TwinActionType.SingularUpload;
@@ -18,14 +18,14 @@ namespace CloudPillar.Agent.Handlers.Tests
         [SetUp]
         public void Setup()
         {
-            mockAppSettingsValue = StrictModeMockHelper.SetAppSettingsValueMock();
+            mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
 
-            mockAppSettings = new Mock<IOptions<AppSettings>>();
-            mockAppSettings.Setup(x => x.Value).Returns(mockAppSettingsValue);
+            mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
+            mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
             mockLogger = new Mock<ILoggerHandler>();
 
-            _target = new StrictModeHandler(mockAppSettings.Object, mockLogger.Object);
+            _target = new StrictModeHandler(mockStrictModeSettings.Object, mockLogger.Object);
         }
         [Test]
         public void ReplaceRootById_ValidData_ReturnReplacedString()
@@ -43,7 +43,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         {
 
             var fileName = $"${{{StrictModeMockHelper.UPLOAD_KEY}}}test.txt";
-            mockAppSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).Root = "";
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).Root = "";
 
             Assert.Throws<KeyNotFoundException>(() =>
               {
@@ -68,7 +68,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         {
             var fileName = $"{StrictModeMockHelper.ROOT_DOWNLOAD}/test.txt";
 
-            mockAppSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).MaxSize = 0;
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).MaxSize = 0;
             void SendRequest() => _target.CheckSizeStrictMode(DOWNLOAD_ACTION, 9, fileName);
 
             Assert.DoesNotThrow(SendRequest);
@@ -78,7 +78,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void CheckSizeStrictMode_NanSize_Return()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_DOWNLOAD}/test.txt";
-            mockAppSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).MaxSize = null;
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).MaxSize = null;
             void SendRequest() => _target.CheckSizeStrictMode(DOWNLOAD_ACTION, 9, fileName);
 
             Assert.DoesNotThrow(SendRequest);
@@ -88,7 +88,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void CheckSizeStrictMode_SizeExceedsLimit_ThrowException()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_DOWNLOAD}/test.txt";
-            mockAppSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).MaxSize = 2;
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).MaxSize = 2;
 
             Assert.Throws<ArgumentException>(() =>
                {
@@ -100,7 +100,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         [Test]
         public void CheckFileAccessPermissions_StrictModeFalse_ExitingTheFunction()
         {
-            mockAppSettingsValue.StrictMode = false;
+            mockStrictModeSettingsValue.StrictMode = false;
             void SendRequest() => _target.CheckFileAccessPermissions(UPLAOD_ACTION, "");
 
             Assert.DoesNotThrow(SendRequest);
@@ -119,7 +119,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void CheckFileAccessPermissions_NotAllowPatterns_ExitingTheFunction()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
-            mockAppSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>();
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>();
 
             void SendRequest() => _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
@@ -130,7 +130,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void CheckFileAccessPermissions_EmptyPatternString_ThrowException()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
-            mockAppSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>() { "" };
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>() { "" };
 
             void SendRequest() => _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 

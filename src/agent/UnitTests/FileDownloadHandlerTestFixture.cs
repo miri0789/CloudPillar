@@ -17,8 +17,8 @@ namespace CloudPillar.Agent.Tests
         private Mock<IStrictModeHandler> _strictModeHandlerMock;
         private Mock<ILoggerHandler> _loggerMock;
         private IFileDownloadHandler _target;
-        private AppSettings mockAppSettingsValue = new AppSettings();
-        private Mock<IOptions<AppSettings>> mockAppSettings;
+        private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
+        private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
 
         private DownloadAction _downloadAction = new DownloadAction()
         {
@@ -35,9 +35,9 @@ namespace CloudPillar.Agent.Tests
         [SetUp]
         public void Setup()
         {
-            mockAppSettingsValue = StrictModeMockHelper.SetAppSettingsValueMock();
-            mockAppSettings = new Mock<IOptions<AppSettings>>();
-            mockAppSettings.Setup(x => x.Value).Returns(mockAppSettingsValue);
+            mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
+            mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
+            mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
             _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
@@ -184,7 +184,7 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task HandleDownloadMessageAsync_NoRootForId_ThrowException()
         {
-            mockAppSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).Root = "";
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).Root = "";
 
             var message = new DownloadBlobChunkMessage
             {

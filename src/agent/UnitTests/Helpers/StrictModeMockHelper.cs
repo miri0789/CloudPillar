@@ -13,7 +13,7 @@ public static class StrictModeMockHelper
     public static string UPLOAD_KEY = "LogUploadAllow";
     public static string DOWNLOAD_KEY = "LogDownloadAllow";
 
-    public static AppSettings SetAppSettingsValueMock()
+    public static StrictModeSettings SetStrictModeSettingsValueMock()
     {
         var uploadRestrictionDetails = new FileRestrictionDetails()
         {
@@ -41,7 +41,7 @@ public static class StrictModeMockHelper
             DenyPatterns = new List<string>() // Add any deny patterns here if needed
         };
 
-        return new AppSettings()
+        return new StrictModeSettings()
         {
             StrictMode = true,
             FilesRestrictions = new List<FileRestrictionDetails> { uploadRestrictionDetails, downloadRestrictionDetails }

@@ -24,6 +24,7 @@ public class AgentController : ControllerBase
     public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
+    private readonly IStrictModeHandler _strictModeHandler;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -32,6 +33,7 @@ public class AgentController : ControllerBase
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
+     IStrictModeHandler strictModeHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
@@ -40,6 +42,7 @@ public class AgentController : ControllerBase
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
+        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -62,7 +65,7 @@ public class AgentController : ControllerBase
         if (!isX509Authorized)
         {
             _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");
-            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationAsync(cancellationToken);
+            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
             if (!isSymetricKeyAuthorized)
             {
                 _logger.Info("GetDeviceStateAsync, the device is symmetric key unAuthorized, start provisinig proccess");
@@ -100,6 +103,13 @@ public class AgentController : ControllerBase
     {
         _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
+    }
+
+    [HttpPost("TestStrictMode")]
+    public async Task<ActionResult<string>> TestStrictMode(string path)
+    {
+        _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularUpload, path);
+        return Ok("dd");
     }
 
     [HttpPut("UpdateReportedProps")]

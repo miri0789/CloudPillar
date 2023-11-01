@@ -23,7 +23,7 @@ public class TwinHandler : ITwinHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
     private readonly IStrictModeHandler _strictModeHandler;
-    private readonly AppSettings _appSettings;
+    private readonly StrictModeSettings _strictModeSettings;
     private readonly ILoggerHandler _logger;
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -34,7 +34,7 @@ public class TwinHandler : ITwinHandler
                        IRuntimeInformationWrapper runtimeInformationWrapper,
                        IStrictModeHandler strictModeHandler,
                        IFileStreamerWrapper fileStreamerWrapper,
-                       IOptions<AppSettings> appSettings)
+                       IOptions<StrictModeSettings> strictModeSettings)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
@@ -44,7 +44,7 @@ public class TwinHandler : ITwinHandler
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _supportedShells = GetSupportedShells();
-        _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
+        _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
@@ -114,7 +114,7 @@ public class TwinHandler : ITwinHandler
                         await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, uploadFileName, cancellationToken);
                         break;
                     case TwinActionType.ExecuteOnce:
-                        if (_appSettings.StrictMode)
+                        if (_strictModeSettings.StrictMode)
                         {
                             _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
                             await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);

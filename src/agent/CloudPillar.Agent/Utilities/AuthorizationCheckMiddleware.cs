@@ -60,29 +60,26 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await NextWithRedirectAsync(context);
+            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler);
         }
         else
         {
-            await NextWithRedirectAsync(context);
+            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler);
         }
     }
-    private async Task NextWithRedirectAsync(HttpContext context)
+    private async Task NextWithRedirectAsync(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
     {
-        if (context.Request.IsHttps)
-        {
-            await _requestDelegate(context);
-            return;
-        }
+        await _requestDelegate(context);
+        return;      
 
-        var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
-        var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
-        {
-            Scheme = Uri.UriSchemeHttps,
-            Port = sslPort
-        };
+        // var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+        // var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
+        // {
+        //     Scheme = Uri.UriSchemeHttps,
+        //     Port = sslPort
+        // };
 
-        context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
+        // context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
     }
 
     private async Task UnauthorizedResponseAsync(HttpContext context, string error)
