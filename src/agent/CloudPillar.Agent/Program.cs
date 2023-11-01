@@ -85,7 +85,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
-// app.UseMiddleware<AuthorizationCheckMiddleware>();
+app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
