@@ -39,7 +39,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `AllowPatterns`    |  array that contains patterns specifying the types of files that are allowed for the defined action | `[]`       |
 | `DenyPatterns`    |  array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
 ````
-
+## Call GetDeviceState in C# Example
 ```csharp
 using System;
 using System.Net.Http;
