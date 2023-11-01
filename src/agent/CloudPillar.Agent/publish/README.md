@@ -7,6 +7,10 @@ Here is the publish directory, where the publish.ps1 script creates self-contain
 chmod +x startagent.sh
 ./startagent.sh <ARCHITECTURE_DIR>
 ````
+For <ARCHITECTURE_DIR>, you can choose from the following options:
+
+    linux-x64: Use this option for 64-bit Linux architecture.
+    macos-x64: Use this option for macOS architecture.
 
 ## Windows
 ````
@@ -47,7 +51,7 @@ using System.Threading.Tasks;
 
 public class DeviceStateClient
 {
-    private static readonly string baseUrl = "http://localhost:8099";
+    private static readonly string baseUrl = "http://localhost:8099"; // Use HTTP
     private static readonly string deviceId = "your-device-id";
     private static readonly string secretKey = "your-secret-key";
 
@@ -61,18 +65,37 @@ public class DeviceStateClient
             client.DefaultRequestHeaders.Add("X-device-id", deviceId);
             client.DefaultRequestHeaders.Add("X-secret-key", secretKey);
 
-            // Make the GET request to GetDeviceState
-            HttpResponseMessage response = await client.GetAsync("Agent/GetDeviceState");
+            HttpResponseMessage response = null;
+
+            // Loop to handle redirection
+            for (int i = 0; i < 3; i++)
+            {
+                response = await client.GetAsync("Agent/GetDeviceState");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    break; // Success, exit the loop
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Redirect ||
+                         response.StatusCode == System.Net.HttpStatusCode.RedirectKeepVerb)
+                {
+                    // Handle redirection
+                    string redirectUrl = response.Headers.Location.AbsoluteUri;
+                    client.BaseAddress = new Uri(redirectUrl);
+                }
+                else
+                {
+                    Console.WriteLine("Failed to retrieve device state. Status code: " + response.StatusCode);
+                    break; // Error, exit the loop
+                }
+            }
 
             if (response.IsSuccessStatusCode)
             {
                 string result = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Device State: " + result);
             }
-            else
-            {
-                Console.WriteLine("Failed to retrieve device state. Status code: " + response.StatusCode);
-            }
         }
     }
 }
+```
