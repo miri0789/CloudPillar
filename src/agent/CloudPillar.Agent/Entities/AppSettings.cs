@@ -1,4 +1,4 @@
-public class AppSettings
+public class StrictModeSettings
 {
     public bool StrictMode { get; set; }
     public string ProvisionalAuthentucationMethods { get; set; }
