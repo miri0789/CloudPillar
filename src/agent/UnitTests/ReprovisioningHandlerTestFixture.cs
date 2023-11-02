@@ -22,7 +22,7 @@ public class ReprovisioningHandlerTestFixture
     private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
     private Mock<ISHA256Wrapper> _sHA256WrapperMock;
     private Mock<IProvisioningServiceClientWrapper> _provisioningServiceClientWrapperMock;
-    private Mock<IOptions<AuthonticationSettings>> _authonticationSettingsMock;
+    private Mock<IOptions<AuthenticationSettings>> _authenticationSettingsMock;
     private IReprovisioningHandler _target;
     private const string DEVICE_ID = "UnitTest";
     private const string SECRET_KEY = "secert";
@@ -39,8 +39,8 @@ public class ReprovisioningHandlerTestFixture
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
         _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
         _dPSProvisioningDeviceClientHandlerMock = new Mock<IDPSProvisioningDeviceClientHandler>();
-        _authonticationSettingsMock = new Mock<IOptions<AuthonticationSettings>>();
-        _authonticationSettingsMock.Setup(x => x.Value).Returns(new AuthonticationSettings());
+        _authenticationSettingsMock = new Mock<IOptions<AuthenticationSettings>>();
+        _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings());
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
         _sHA256WrapperMock = new Mock<ISHA256Wrapper>();
         _provisioningServiceClientWrapperMock = new Mock<IProvisioningServiceClientWrapper>();
@@ -53,7 +53,7 @@ public class ReprovisioningHandlerTestFixture
 
         _validReprovisioningMessage = new ReprovisioningMessage()
         {
-            Data = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(new AuthonticationKeys()
+            Data = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(new AuthenticationKeys()
             {
                 DeviceId = DEVICE_ID,
                 SecretKey = SECRET_KEY
@@ -75,7 +75,7 @@ public class ReprovisioningHandlerTestFixture
         _d2CMessengerHandlerMock.Object,
         _sHA256WrapperMock.Object,
         _provisioningServiceClientWrapperMock.Object,
-        _authonticationSettingsMock.Object,
+        _authenticationSettingsMock.Object,
         _loggerMock.Object);
     }
 
@@ -131,7 +131,7 @@ public class ReprovisioningHandlerTestFixture
     {
         var message = new RequestDeviceCertificateMessage
         {
-            Data = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(new AuthonticationKeys { DeviceId = DEVICE_ID, SecretKey = SECRET_KEY })),
+            Data = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(new AuthenticationKeys { DeviceId = DEVICE_ID, SecretKey = SECRET_KEY })),
         };
 
         await _target.HandleRequestDeviceCertificateAsync(message, CancellationToken.None);

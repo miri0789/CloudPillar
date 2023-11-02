@@ -12,13 +12,13 @@ public static class WebApplicationExtensions
             return;
         }
 
-        if (!strictModeSettings.PermanentAuthentucationMethods.Equals(AuthenticationMethod.X509.ToString()))
+        if (!strictModeSettings.PermanentAuthenticationMethods.Equals(AuthenticationMethod.X509.ToString()))
         {
-            throw new ArgumentException($"PermanentAuthentucationMethods value must be X509. The value {strictModeSettings.PermanentAuthentucationMethods} is not valid");
+            throw new ArgumentException($"PermanentAuthenticationMethods value must be X509. The value {strictModeSettings.PermanentAuthenticationMethods} is not valid");
         }
-        if (!strictModeSettings.ProvisionalAuthentucationMethods.Equals(AuthenticationMethod.SAS.ToString()))
+        if (!strictModeSettings.ProvisionalAuthenticationMethods.Equals(AuthenticationMethod.SAS.ToString()))
         {
-            throw new ArgumentException($"ProvisionalAuthentucationMethods value must be SAS. The value {strictModeSettings.ProvisionalAuthentucationMethods} is not valid");
+            throw new ArgumentException($"ProvisionalAuthenticationMethods value must be SAS. The value {strictModeSettings.ProvisionalAuthenticationMethods} is not valid");
         }
     }
 }
