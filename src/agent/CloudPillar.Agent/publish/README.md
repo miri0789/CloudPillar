@@ -30,8 +30,8 @@ To configure the application settings, please refer to the appsettings.json file
 | `CertificateExpiredDays`       | Certificate expired days  |  `365` |
 | `DpsScopeId`       | DPS scope id  |  `true` |
 | `GroupEnrollmentKey`       | DPS enrollment group key  |   |
-| `ProvisionalAuthentucationMethods`  | Method for provisional authentucation  | `SAS`     |
-| `PermanentAuthentucationMethods`    | Method for permanent authentucation | `X509`         |
+| `ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
+| `PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
 | `GlobalPatterns`    | general file access permissions or restrictions across the application | `[]` |
 | `FilesRestrictions`    | collection of restrictions or rules that apply specifically to file operations within the application | `{}` |
 | `Id`    |  unique identifier for the specific restriction set | `LogUpload` |
