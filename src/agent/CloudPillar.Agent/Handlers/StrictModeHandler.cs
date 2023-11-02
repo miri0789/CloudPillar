@@ -111,7 +111,7 @@ public class StrictModeHandler : IStrictModeHandler
 
         if (actionType == TwinActionType.SingularDownload)
         {
-            return _strictModeSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Dwonload.ToString()).ToList();
+            return _strictModeSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Download.ToString()).ToList();
         }
         else
         {
@@ -125,7 +125,7 @@ public class StrictModeHandler : IStrictModeHandler
 
         actionRestrictions = actionRestrictions.Where(x => fileName.Contains(x.Root)).ToList();
         var bestMatch = actionRestrictions
-                   .OrderByDescending(f => fileName.StartsWith(f.Root) ? f.Root.Length : 0)
+                   .OrderByDescending(f => fileName.ToLower().StartsWith(f.Root.ToLower()) ? f.Root.Length : 0)
                    .FirstOrDefault();
         return bestMatch;
     }
