@@ -56,7 +56,9 @@ public class DeviceStateClient
 
     public async Task GetDeviceStateAsync()
     {
-        using (var client = new HttpClient())
+        HttpClientHandler handler = new HttpClientHandler();
+        handler.AllowAutoRedirect = true;
+        using (var client = new HttpClient(handler))
         {
             client.BaseAddress = new Uri(baseUrl);
 
@@ -64,35 +66,15 @@ public class DeviceStateClient
             client.DefaultRequestHeaders.Add("X-device-id", deviceId);
             client.DefaultRequestHeaders.Add("X-secret-key", secretKey);
 
-            HttpResponseMessage response = null;
-
-            // Loop to handle redirection
-            for (int i = 0; i < 3; i++)
-            {
-                response = await client.GetAsync("Agent/GetDeviceState");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    break; // Success, exit the loop
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.Redirect ||
-                         response.StatusCode == System.Net.HttpStatusCode.RedirectKeepVerb)
-                {
-                    // Handle redirection
-                    string redirectUrl = response.Headers.Location.AbsoluteUri;
-                    client.BaseAddress = new Uri(redirectUrl);
-                }
-                else
-                {
-                    Console.WriteLine("Failed to retrieve device state. Status code: " + response.StatusCode);
-                    break; // Error, exit the loop
-                }
-            }
-
+            HttpResponseMessage response = await client.GetAsync("Agent/GetDeviceState");
             if (response.IsSuccessStatusCode)
             {
                 string result = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Device State: " + result);
+            }
+            else
+            {
+                Console.WriteLine("Failed to retrieve device state. Status code: " + response.StatusCode);
             }
         }
     }
