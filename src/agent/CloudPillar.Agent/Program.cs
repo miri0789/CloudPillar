@@ -13,17 +13,15 @@ using Shared.Logger;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
-var sslPort = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
-var sslUrl = $"https://localhost:{sslPort}";
 
-builder.WebHost.UseUrls(url, sslUrl);
+builder.WebHost.UseUrls(url);
 
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(url, sslUrl)
+                b.WithOrigins(url)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
             });
@@ -33,7 +31,7 @@ builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
-builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
+builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
@@ -61,8 +59,11 @@ builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceC
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
-var appSettingsSection = builder.Configuration.GetSection("AppSettings");
-builder.Services.Configure<AppSettings>(appSettingsSection);
+var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
+builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
+
+var authonticationSettings = builder.Configuration.GetSection("Authontication");
+builder.Services.Configure<AuthonticationSettings>(authonticationSettings);
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -88,8 +89,8 @@ app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
-var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
-strictModeHandler.CheckAuthentucationMethodValue();
+
+app.ValidateAuthenticationSettings();
 
 using (var scope = app.Services.CreateScope())
 {

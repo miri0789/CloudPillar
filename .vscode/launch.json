@@ -114,9 +114,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "buildBlobStreamer",
-            "program": "${workspaceFolder}/src/backend/Backend.BlobStreamer/bin/Debug/net7.0/Backend.BlobStreamer.dll",
+            "program": "${workspaceFolder}/src/backend/BlobStreamer/bin/Debug/net7.0/BlobStreamer.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/backend/Backend.BlobStreamer",
+            "cwd": "${workspaceFolder}/src/backend/BlobStreamer",
             "console": "internalConsole",
             "env": {
                 "IothubConnectionString": "HostName=iot-bracha-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=zGVjhXUsPu6yjg8bHgOA4WKXa5eHylbLMAIoTPD2AKY=",
@@ -200,10 +200,7 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                "DpsScopeId": "0ne00B07A2A",
-                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
-                "CertificateExpiredDays": "365",
-                "GroupEnrollmentPrimaryKey":"zeuIXU7CbwMS6YfF5+i5Nn71ZGNj/boUA1UuLuYXuZLiqQqWs09ftT63iZQ6iOEmpJEs1F58WFV6EelxY+KvDA=="
+                
             },
             "stopAtEntry": false
         }
