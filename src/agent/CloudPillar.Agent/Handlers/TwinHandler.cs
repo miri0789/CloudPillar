@@ -22,8 +22,7 @@ public class TwinHandler : ITwinHandler
     private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IEnumerable<ShellType> _supportedShells;
-    private readonly IStrictModeHandler _strictModeHandler;
-    private readonly StrictModeSettings _strictModeSettings;
+    private readonly AppSettings _appSettings;
     private readonly ILoggerHandler _logger;
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -32,9 +31,8 @@ public class TwinHandler : ITwinHandler
                        ITwinActionsHandler twinActionsHandler,
                        ILoggerHandler loggerHandler,
                        IRuntimeInformationWrapper runtimeInformationWrapper,
-                       IStrictModeHandler strictModeHandler,
                        IFileStreamerWrapper fileStreamerWrapper,
-                       IOptions<StrictModeSettings> strictModeSettings)
+                       IOptions<AppSettings> appSettings)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
@@ -42,16 +40,15 @@ public class TwinHandler : ITwinHandler
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _runtimeInformationWrapper = runtimeInformationWrapper ?? throw new ArgumentNullException(nameof(runtimeInformationWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
-        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _supportedShells = GetSupportedShells();
-        _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
+        _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
     public async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
     {
         try
-        {
+        {            
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
@@ -104,29 +101,37 @@ public class TwinHandler : ITwinHandler
                 switch (action.TwinAction.Action)
                 {
                     case TwinActionType.SingularDownload:
-                        var fileName = await HandleStrictMode(action, cancellationToken);
-                        if (string.IsNullOrEmpty(fileName)) { continue; }
                         await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
-
                     case TwinActionType.SingularUpload:
-                        var uploadFileName = await HandleStrictMode(action, cancellationToken);
-                        if (string.IsNullOrEmpty(uploadFileName)) { continue; }
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, uploadFileName, cancellationToken);
+                        _logger.Info("Start SingularUpload");
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
+
+                        break;
+                    case TwinActionType.PeriodicUpload:
+                        //TO DO 
+                        //implement the while loop with interval like poc
+                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, cancellationToken);
                         break;
                     case TwinActionType.ExecuteOnce:
-                        if (_strictModeSettings.StrictMode)
+                        if (_appSettings.StrictMode)
                         {
                             _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
-                            await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
-                            continue;
+                            action.TwinReport.Status = StatusType.Failed;
+                            action.TwinReport.ResultCode = ResultCode.StrictMode.ToString();
+                            await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
+                            return;
                         }
                         break;
                     default:
-                        await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.NotFound.ToString(), cancellationToken);
+                        action.TwinReport.Status = StatusType.Failed;
+                        action.TwinReport.ResultCode = ResultCode.NotFound.ToString();
+                        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
+                //TODO : queue - FIFO
+                // https://dev.azure.com/BiosenseWebsterIs/CloudPillar/_backlogs/backlog/CloudPillar%20Team/Epics/?workitem=9782
             }
         }
         catch (Exception ex)
@@ -134,49 +139,6 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed", ex);
         }
     }
-
-    private async Task<string> HandleStrictMode(ActionToReport action, CancellationToken cancellationToken)
-    {
-        var fileName = string.Empty;
-        try
-        {
-            var actionFileName = GetFileNameByAction(action);
-
-            fileName = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName) ?? actionFileName;
-            _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
-
-        }
-        catch (Exception ex)
-        {
-            await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
-        }
-        return fileName;
-    }
-    private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
-    {
-        action.TwinReport.Status = statusType;
-        action.TwinReport.ResultCode = resultCode;
-        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
-    }
-
-    private string GetFileNameByAction(ActionToReport action)
-    {
-        string fileName = string.Empty;
-        switch (action.TwinAction.Action)
-        {
-            case TwinActionType.SingularDownload:
-                var destination = ((DownloadAction)action.TwinAction).DestinationPath;
-                var source = ((DownloadAction)action.TwinAction).Source;
-
-                fileName = destination + source;
-                break;
-            case TwinActionType.SingularUpload:
-                fileName = ((UploadAction)action.TwinAction).FileName;
-                break;
-        }
-        return fileName;
-    }
-
     private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
     {
         try
@@ -257,7 +219,7 @@ public class TwinHandler : ITwinHandler
     public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
     {
         try
-        {
+        {                        
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
             return reprted.DeviceState;
