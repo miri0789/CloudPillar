@@ -1,10 +1,3 @@
-
-data "azurerm_key_vault" "infr" {
-  name                = var.keyVaultName
-  resource_group_name = var.keyVaultRG
-}
-
-
 resource "azurerm_private_dns_zone" "aks" {
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = azurerm_resource_group.aks.name
@@ -21,7 +14,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "aks" {
 
 locals {
   key-vault = {
-        infr = data.azurerm_key_vault.infr.id
+        infr = azurerm_key_vault.infr.id
   }
 }
 
@@ -48,10 +41,10 @@ resource "azurerm_private_endpoint" "aks" {
 
 resource "azurerm_role_assignment" "kv" {
   depends_on = [
-    data.azurerm_key_vault.infr
+    azurerm_key_vault.infr
   ]
   principal_id                     =  azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
   role_definition_name             = "Key Vault Secrets User"
-  scope                            = data.azurerm_key_vault.infr.id
+  scope                            = azurerm_key_vault.infr.id
   skip_service_principal_aad_check = true
 }

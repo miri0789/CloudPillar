@@ -8,11 +8,6 @@ variable "env" {
   description = "The environment to assign the resources"
   default = "dev"
 }
-variable "keyVaultName" {
+variable "akspat" {
   type = string
-  default = ""
-}
-variable "keyVaultRG" {
-  type = string
-  default = ""
 }

@@ -1,8 +1,3 @@
-data "azurerm_key_vault_secret" "devops_token" {
-  name         = "AksPAT"
-  key_vault_id = data.azurerm_key_vault.infr.id
-}
-
 locals {
   devopsURL = "https://dev.azure.com/BiosenseWebsterIs"
   agentPool = "CloudPillar-Pool"
@@ -33,10 +28,10 @@ mv ./kubectl /usr/local/bin/kubectl
 export PATH=$PATH:/usr/local/bin/kubectl
 su azureuser -c 'cd ~; mkdir myagent && cd myagent && curl -LsS https://vstsagentpackage.azureedge.net/agent/3.220.0/vsts-agent-linux-x64-3.220.0.tar.gz -o vstsagent.tar.gz && tar -zxvf vstsagent.tar.gz'
 
-su azureuser -c 'cd ~/myagent && ./config.sh --unattended --url "${local.devopsURL}" --auth pat --token "${data.azurerm_key_vault_secret.devops_token.value}" --pool "${local.agentPool}" --agent "cpaks-${var.env}-vm-agent" --work _work --runAsService'
+su azureuser -c 'cd ~/myagent && ./config.sh --unattended --url "${local.devopsURL}" --auth pat --token "${azurerm_key_vault_secret.kv_pat.value}" --pool "${local.agentPool}" --agent "cpaks-${var.env}-vm-agent" --work _work --runAsService'
 cd /home/azureuser/myagent && ./svc.sh install azureuser
 cd /home/azureuser/myagent && ./svc.sh start
-su azureuser -c 'cd ~/ && git clone https://${data.azurerm_key_vault_secret.devops_token.value}@dev.azure.com/BiosenseWebsterIs/CloudPillar/_git/CloudPillar'
+su azureuser -c 'cd ~/ && git clone https://${azurerm_key_vault_secret.kv_pat.value}@dev.azure.com/BiosenseWebsterIs/CloudPillar/_git/CloudPillar'
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 chmod 700 get_helm.sh
 echo "Token written to file" >> /var/log/script.log
@@ -51,7 +46,7 @@ resource "tls_private_key" "aks_vm_ssh_key" {
 resource "azurerm_key_vault_secret" "aks_vm_private_ssh_key" {
   name         = "AksVmSshPrivate"
   value        = tls_private_key.aks_vm_ssh_key.private_key_pem
-  key_vault_id = data.azurerm_key_vault.infr.id
+  key_vault_id = azurerm_key_vault.infr.id
   tags         = { Terraform = true }
 }
 

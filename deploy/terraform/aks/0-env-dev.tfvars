@@ -1,5 +1,4 @@
 location            = "westeurope"
 env                 = "dev"
-keyVaultName        = "cp-dev-ms-infor-kv"
-keyVaultRG          = "cp-dev-rg"
+akspat="v6hppwjhsfijw5ibhlulehhjckeb2bn7ko4n4ncykttdpuoabrua"
 
