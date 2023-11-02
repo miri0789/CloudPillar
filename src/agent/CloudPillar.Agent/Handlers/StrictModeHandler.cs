@@ -54,9 +54,9 @@ public class StrictModeHandler : IStrictModeHandler
             return;
         }
 
-        string verbatimFileName = @$"{fileName.Replace("\\", "/")}";
+        string verbatimFileName = @$"{fileName.Replace("\\\\", "/")}";
 
-        FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
+        FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, actionType);
 
         if (zoneRestrictions == null)
         {
