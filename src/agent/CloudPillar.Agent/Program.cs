@@ -77,11 +77,10 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 

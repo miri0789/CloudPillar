@@ -60,7 +60,7 @@ if (-not (Test-Path $sourceDir)) {
 # Copy appSettings.json and log4net files
 Copy-Item -Path $appSettingsPath -Destination $appSettingsDestinationPath -Force
 Copy-Item -Path $log4netPath -Destination $log4netDestinationPath -Force
-
+pro
 # Create a new zip file and add all files and subdirectories, excluding the script file
 Add-Type -A 'System.IO.Compression.FileSystem'
 [System.IO.Compression.ZipFile]::CreateFromDirectory($sourceDir, $zipPath, 'Optimal', $false)
