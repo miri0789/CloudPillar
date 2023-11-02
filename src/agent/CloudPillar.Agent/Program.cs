@@ -1,6 +1,7 @@
 using System.Net;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Sevices;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
@@ -29,11 +30,11 @@ builder.Services.AddCors(options =>
             });
         });
 
+builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
-builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
 builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
@@ -59,7 +60,8 @@ builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
-builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
+builder.Services.AddScoped<IStateMachineTokenHandler, StateMachineTokenHandler>();
+builder.Services.AddHostedService<StateMachineListenerService>();
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);

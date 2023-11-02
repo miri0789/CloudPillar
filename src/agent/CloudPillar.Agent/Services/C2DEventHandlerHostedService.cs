@@ -1,14 +1,19 @@
 
+
 namespace CloudPillar.Agent.Sevices;
-public class C2DEventHandlerBackgroundService : IHostedService
+public class C2DEventService : IC2DEventService
 {
+    public C2DEventHandlerHostedService(Parameters)
+    {
+        
+    }
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+       
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        
     }
 }
