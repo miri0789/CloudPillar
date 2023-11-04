@@ -8,18 +8,23 @@ namespace CloudPillar.Agent.Handlers
     public class StateMachineHandler : IStateMachineHandler
     {
         private readonly ITwinHandler _twinHandler;
+        private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
         private readonly ILoggerHandler _logger;
         // private readonly IC2DEventHandler _c2DEventHandler;
         // private readonly IStateMachineTokenHandler _stateMachineTokenHandler;
 
-        public event StateMachineEventHandler StateChanged;
+        // public event StateMachineEventHandler StateChanged;
 
-        public StateMachineHandler(ITwinHandler twinHandler,
-         ILoggerHandler logger,
-         //IC2DEventHandler c2DEventHandler,
-         IStateMachineTokenHandler stateMachineTokenHandler)
+        public StateMachineHandler(
+            ITwinHandler twinHandler,
+           IStateMachineChangedEvent stateMachineChangedEvent,
+         ILoggerHandler logger//,
+                              //IC2DEventHandler c2DEventHandler,
+                              //IStateMachineTokenHandler stateMachineTokenHandler
+         )
         {
             _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
+            _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
             //_c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             //_stateMachineTokenHandler = stateMachineTokenHandler ?? throw new ArgumentNullException(nameof(stateMachineTokenHandler));
@@ -48,7 +53,7 @@ namespace CloudPillar.Agent.Handlers
         private void HandleStateAction(DeviceStateType state)
         {
             _logger.Info($"Handle state action, state: {state}");
-            StateChanged?.Invoke(this, new StateMachineEventArgs(state));
+            _stateMachineChangedEvent.SetStaeteChanged(new StateMachineEventArgs(state));
 
             // switch (state)
             // {

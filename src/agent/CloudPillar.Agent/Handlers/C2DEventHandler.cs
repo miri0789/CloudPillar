@@ -5,7 +5,7 @@ namespace CloudPillar.Agent.Handlers;
 
 public class C2DEventHandler : IC2DEventHandler
 {
-    private readonly IDeviceClientWrapper _deviceClient;
+    //private readonly IDeviceClientWrapper _deviceClient;
     private readonly IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
 
     private readonly ILoggerHandler _logger;
@@ -15,7 +15,7 @@ public class C2DEventHandler : IC2DEventHandler
      IC2DEventSubscriptionSession c2DEventSubscriptionSession,
      ILoggerHandler logger)
     {
-        _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        //_deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _c2DEventSubscriptionSession = c2DEventSubscriptionSession ?? throw new ArgumentNullException(nameof(c2DEventSubscriptionSession));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }

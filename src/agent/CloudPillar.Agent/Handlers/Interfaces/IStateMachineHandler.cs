@@ -11,7 +11,7 @@ namespace CloudPillar.Agent.Handlers
 
         Task<DeviceStateType> GetStateAsync();
 
-        event StateMachineEventHandler StateChanged;
+        //event StateMachineEventHandler StateChanged;
     }
 
 }
