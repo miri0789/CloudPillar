@@ -1,24 +1,24 @@
 public static class WebApplicationExtensions
 {
-    private const string APP_SETTINGS_SECTION = "AppSettings";
+    public const string STRICT_MODE_SETTINGS_SECTION = "StrictModeSettings";
 
     public static void ValidateAuthenticationSettings(this WebApplication webApp)
     {
-        var appSettings = new AppSettings();
-        webApp.Configuration.GetSection(APP_SETTINGS_SECTION).Bind(appSettings); 
-        
-        if (!appSettings.StrictMode)
+        var strictModeSettings = new StrictModeSettings();
+        webApp.Configuration.GetSection(STRICT_MODE_SETTINGS_SECTION).Bind(strictModeSettings);
+
+        if (!strictModeSettings.StrictMode)
         {
             return;
         }
 
-        if (!appSettings.PermanentAuthentucationMethods.Equals(AuthenticationMethod.X509.ToString()))
+        if (strictModeSettings.PermanentAuthenticationMethods?.Equals(AuthenticationMethod.X509.ToString()) == false)
         {
-            throw new ArgumentException($"PermanentAuthentucationMethods value must be X509. The value {appSettings.PermanentAuthentucationMethods} is not valid");
+            throw new ArgumentException($"PermanentAuthenticationMethods value must be X509. The value {strictModeSettings.PermanentAuthenticationMethods} is not valid");
         }
-        if (!appSettings.ProvisionalAuthentucationMethods.Equals(AuthenticationMethod.SAS.ToString()))
+        if (strictModeSettings.ProvisionalAuthenticationMethods?.Equals(AuthenticationMethod.SAS.ToString()) == false)
         {
-            throw new ArgumentException($"ProvisionalAuthentucationMethods value must be SAS. The value {appSettings.ProvisionalAuthentucationMethods} is not valid");
+            throw new ArgumentException($"ProvisionalAuthenticationMethods value must be SAS. The value {strictModeSettings.ProvisionalAuthenticationMethods} is not valid");
         }
     }
 }

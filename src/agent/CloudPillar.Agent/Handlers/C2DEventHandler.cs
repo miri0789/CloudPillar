@@ -25,7 +25,7 @@ public class C2DEventHandler : IC2DEventHandler
 
     public async Task CreateSubscribeAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
-        _logger.Info("Subscribing to Provisioning C2D messages...");
+        _logger.Info("Subscribing to C2D messages...");
 
         await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(cancellationToken, isProvisioning);
     }

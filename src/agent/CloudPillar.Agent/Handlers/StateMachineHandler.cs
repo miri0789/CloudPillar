@@ -78,8 +78,9 @@ namespace CloudPillar.Agent.Handlers
         {
             _stateMachineTokenHandler.CancelToken();
             var _cts = _stateMachineTokenHandler.StartToken();
-            await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
-            await _twinHandler.HandleTwinActionsAsync(_cts.Token);
+            var subscribeTask = _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
+            var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
+            await Task.WhenAll(subscribeTask, handleTwinTask);
         }
 
         private void SetBusy()

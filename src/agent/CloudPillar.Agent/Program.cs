@@ -14,29 +14,27 @@ using Microsoft.AspNetCore.Authentication.Certificate;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
-var sslPort = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
-var sslUrl = $"https://localhost:{sslPort}";
 
-builder.WebHost.UseUrls(url, sslUrl);
+builder.WebHost.UseUrls(url);
 
-X509Certificate2 x509Certificate = X509Helper.GetCertificate();
-if (x509Certificate != null)
-{
-    builder.WebHost.UseKestrel(options =>
-    {
-        options.Listen(IPAddress.Any,port);
-        options.Listen(IPAddress.Any, sslPort, listenOptions =>
-        {
-            listenOptions.UseHttps(x509Certificate);
-        });
-    });
-}
+// X509Certificate2 x509Certificate = X509Helper.GetCertificate();
+// if (x509Certificate != null)
+// {
+//     builder.WebHost.UseKestrel(options =>
+//     {
+//         options.Listen(IPAddress.Any,port);
+//         options.Listen(IPAddress.Any, sslPort, listenOptions =>
+//         {
+//             listenOptions.UseHttps(x509Certificate);
+//         });
+//     });
+// }
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(url, sslUrl)
+                b.WithOrigins(url)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
             });
@@ -74,8 +72,11 @@ builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceC
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
-var appSettingsSection = builder.Configuration.GetSection("AppSettings");
-builder.Services.Configure<AppSettings>(appSettingsSection);
+var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
+builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
+
+var authenticationSettings = builder.Configuration.GetSection("Authentication");
+builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -90,12 +91,9 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseSwagger();
+app.UseSwaggerUI();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
