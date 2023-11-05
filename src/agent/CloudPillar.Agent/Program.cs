@@ -14,9 +14,12 @@ using Microsoft.AspNetCore.Authentication.Certificate;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
+var httpsPort = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
+var httpsUrl = $"https://localhost:{httpsPort}";
 
 builder.WebHost.UseUrls(url);
+// builder.WebHost.UseUrls(url, httpsUrl);
 
 // X509Certificate2 x509Certificate = X509Helper.GetCertificate();
 // if (x509Certificate != null)
