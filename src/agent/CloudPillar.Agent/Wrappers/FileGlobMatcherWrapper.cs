@@ -8,12 +8,12 @@ public class FileGlobMatcherWrapper : IFileGlobMatcherWrapper
     {
         return new FileGlobMatcher(patterns);
     }
-    public bool IsMatch(FileGlobMatcher matcher, string root, string fileName)
+    public bool IsMatch(FileGlobMatcher matcher, string root, string fileName,string[] patterns)
     {
         if (matcher == null)
         {
             throw new ArgumentNullException("matcher is null");
         }
-        return matcher.IsMatch(root, fileName);
+        return matcher.IsMatch(root, fileName,patterns);
     }
 }

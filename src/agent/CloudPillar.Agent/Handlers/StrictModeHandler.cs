@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using Shared.Logger;
@@ -69,8 +71,11 @@ public class StrictModeHandler : IStrictModeHandler
             _logger.Info("No allow patterns were found");
             return;
         }
-        FileGlobMatcher matcher = _fileGlobMatcherWrapper.CreateFileGlobMatcher(allowPatterns.ToArray());
-        bool isMatch = _fileGlobMatcherWrapper.IsMatch(matcher, zoneRestrictions.Root, verbatimFileName);
+        TestNewMatcher();
+        // FileGlobMatcher matcher = _fileGlobMatcherWrapper.CreateFileGlobMatcher(allowPatterns.ToArray());
+        // bool isMatch =  .IsMatch(matcher, zoneRestrictions.Root, verbatimFileName);
+        var fileGlobMatcher = new FileGlobMatcher();
+        bool isMatch = fileGlobMatcher.IsMatch(zoneRestrictions.Root, verbatimFileName, allowPatterns.ToArray());
         if (!isMatch)
         {
             _logger.Error("Denied by the lack of local allowance");
@@ -130,5 +135,30 @@ public class StrictModeHandler : IStrictModeHandler
 
         return restriction.Root;
     }
+    private void TestNewMatcher()
+    {
+        var root = "c:/";
+        Matcher matcher = new Matcher();
 
+        matcher.AddIncludePatterns(new[] {  "c:/test.txt"});
+
+        var inMemoryFileNames = new List<string>
+        {
+            "c:/demo1/test.txt",
+            "c:/demo1/file2.log",
+            "c:/test.txt",
+            "D:/dd/dir1/file3.log",
+            "c:/demo/dir2/file4.md",
+            "c:/demo/dir2/subdir/file5.cs"
+        };
+
+        var result = matcher.Execute(new InMemoryDirectoryInfo(inMemoryFileNames, root));
+
+        Console.WriteLine("Matched Files:");
+        foreach (var file in result.Files)
+        {
+            Console.WriteLine(file.Path);
+        }
+        return;
+    }
 }

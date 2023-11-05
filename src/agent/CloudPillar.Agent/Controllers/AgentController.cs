@@ -24,6 +24,7 @@ public class AgentController : ControllerBase
     public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
+    private readonly IStrictModeHandler _strictModeHandler;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -32,6 +33,7 @@ public class AgentController : ControllerBase
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
+     IStrictModeHandler strictModeHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
@@ -40,6 +42,7 @@ public class AgentController : ControllerBase
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
+        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -98,8 +101,23 @@ public class AgentController : ControllerBase
     [HttpPost("SetReady")]
     public async Task<ActionResult<string>> SetReadyAsync()
     {
+        _twinHandler.OnDesiredPropertiesUpdate(CancellationToken.None);
+
         _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
+    }
+    [HttpPost("TestStrictMode")]
+    public async Task<ActionResult<string>> TestStrictMode(string path)
+    {
+        try
+        {
+            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularUpload, path);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpPut("UpdateReportedProps")]
