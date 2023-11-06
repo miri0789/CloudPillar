@@ -5,5 +5,8 @@ public enum ResultCode
     Done,
     FinishedTransit,
     NotFound,
-    StrictMode
+    StrictModeSize,
+    StrictModePattern,
+    StrictModeBashPowerShell,
+    StrictModeRootNotFound
 }

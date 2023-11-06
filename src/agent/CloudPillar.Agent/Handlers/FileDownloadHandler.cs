@@ -5,6 +5,7 @@ using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 using Shared.Logger;
+using System.Net.Sockets;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -12,15 +13,18 @@ public class FileDownloadHandler : IFileDownloadHandler
 {
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
+    private readonly IStrictModeHandler _strictModeHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
     private readonly ILoggerHandler _logger;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
+                               IStrictModeHandler strictModeHandler,
                                ILoggerHandler loggerHandler)
     {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
+        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _filesDownloads = new ConcurrentBag<FileDownload>();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -45,12 +49,27 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
         }
-        var filePath = Path.Combine(file.DownloadAction.DestinationPath, file.DownloadAction.Source);
+        var filePath = file.DownloadAction.DestinationPath + file.DownloadAction.Source;
+
         if (!file.Stopwatch.IsRunning)
         {
             file.Stopwatch.Start();
             file.TotalBytes = message.FileSize;
         }
+
+        try
+        {
+            //strict mode
+            filePath = _strictModeHandler.ReplaceRootById(file.DownloadAction.Action.Value, filePath);
+            _strictModeHandler.CheckSizeStrictMode(file.DownloadAction.Action.Value, file.TotalBytes, filePath);
+        }
+        catch (Exception ex)
+        {
+            file.Report.TwinReport.Status = StatusType.Failed;
+            file.Report.TwinReport.ResultCode = ex.Message;
+            return file.Report;
+        }
+
         await _fileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
         file.Report.TwinReport.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
 

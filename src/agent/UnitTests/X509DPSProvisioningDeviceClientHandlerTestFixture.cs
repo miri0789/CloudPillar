@@ -37,6 +37,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _provisioningDeviceClientWrapperMock = new Mock<IProvisioningDeviceClientWrapper>();
 
         _unitTestCertificate = X509Provider.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60);
+        _unitTestCertificate.FriendlyName = $"{DEVICE_ID}@{IOT_HUB_HOST_NAME}";
         _x509CertificateWrapperMock.Setup(x => x.GetSecurityProvider(_unitTestCertificate)).Returns(new SecurityProviderX509Certificate(_unitTestCertificate));
         _deviceClientWrapperMock.Setup(x => x.GetProvisioningTransportHandler()).Returns(Mock.Of<ProvisioningTransportHandler>());
 

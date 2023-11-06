@@ -19,9 +19,10 @@ public class FileUploaderHandlerTestFixture
     private MemoryStream READ_STREAM = new MemoryStream(new byte[] { 1, 2, 3 });
     private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
     FileUploadSasUriResponse sasUriResponse = new FileUploadSasUriResponse();
+    private const string FILE_NAME = "testFileName";
     private UploadAction uploadAction = new UploadAction
     {
-        FileName = "testFileName"
+        FileName = FILE_NAME
     };
 
     private ActionToReport actionToReport = new ActionToReport
@@ -62,7 +63,7 @@ public class FileUploaderHandlerTestFixture
     {
         _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[1] { $"test.txt" });
 
-        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
+        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CancellationToken.None);
 
         _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -74,7 +75,7 @@ public class FileUploaderHandlerTestFixture
         _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[] { });
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
+        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Failed);
     }
@@ -85,7 +86,7 @@ public class FileUploaderHandlerTestFixture
         _fileStreamerWrapperMock.Setup(x => x.GetFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>())).Returns(new string[] { });
         _fileStreamerWrapperMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(true);
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, CancellationToken.None);
+        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Failed);
     }

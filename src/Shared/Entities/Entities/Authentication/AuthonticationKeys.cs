@@ -1,5 +1,5 @@
 namespace Shared.Entities.Authentication;
-public class AuthonticationKeys
+public class AuthenticationKeys
 {
     public string SecretKey { get; set; }
 

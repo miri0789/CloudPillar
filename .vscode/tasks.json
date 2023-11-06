@@ -83,7 +83,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/backend/Backend.BlobStreamer/Backend.BlobStreamer.csproj",
+                "${workspaceFolder}/src/backend/BlobStreamer/BlobStreamer.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
