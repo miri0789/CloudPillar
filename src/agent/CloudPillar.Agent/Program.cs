@@ -30,6 +30,8 @@ builder.Services.AddCors(options =>
             });
         });
 
+builder.Services.AddHostedService<StateMachineListenerService>();
+builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
@@ -61,8 +63,7 @@ builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServic
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 //builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
-builder.Services.AddHostedService<StateMachineListenerService>();
-builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
+
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
@@ -94,14 +95,14 @@ app.MapControllers();
 var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
 strictModeHandler.CheckAuthentucationMethodValue();
 
-using (var scope = app.Services.CreateScope())
-{
-    var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
-    await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
+// using (var scope = app.Services.CreateScope())
+// {
+//     var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
+//     await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
 
-    var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
-    StateMachineHandlerService.InitStateMachineHandlerAsync();
-}
+//     var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
+//     StateMachineHandlerService.InitStateMachineHandlerAsync();
+// }
 
 app.Run();
 
