@@ -7,7 +7,7 @@ public class StateMachineListenerService : BackgroundService
 {
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IServiceProvider _serviceProvider;
-    private readonly IC2DEventHandler _c2DEventHandler;
+   // private readonly IC2DEventHandler _c2DEventHandler;
 
     //private readonly IStateMachineHandler _stateMachineHandler;
     private IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
@@ -70,16 +70,25 @@ public class StateMachineListenerService : BackgroundService
     private async Task SetProvisioningAsync()
     {
         _cts = new CancellationTokenSource();
-        await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, true);
+        await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, true);
     }
 
     private async Task SetReadyAsync()
     {
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
-        await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
+        await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
         //await _twinHandler.HandleTwinActionsAsync(_cts.Token);
     }
+
+            // private async Task SetReadyAsync()
+        // {
+        //     _stateMachineTokenHandler.CancelToken();
+        //     var _cts = _stateMachineTokenHandler.StartToken();
+        //     var subscribeTask = _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
+        //     var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
+        //     await Task.WhenAll(subscribeTask, handleTwinTask);
+        // }
 
     private void SetBusy()
     {
