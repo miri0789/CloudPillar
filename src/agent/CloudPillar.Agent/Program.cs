@@ -63,8 +63,8 @@ builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandle
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
-var authonticationSettings = builder.Configuration.GetSection("Authontication");
-builder.Services.Configure<AuthonticationSettings>(authonticationSettings);
+var authenticationSettings = builder.Configuration.GetSection("Authentication");
+builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -78,11 +78,10 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 

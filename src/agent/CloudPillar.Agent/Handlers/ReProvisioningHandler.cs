@@ -25,7 +25,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ISHA256Wrapper _sHA256Wrapper;
     private readonly IProvisioningServiceClientWrapper _provisioningServiceClientWrapper;
-    private readonly AuthonticationSettings _authonticationSettings;
+    private readonly AuthenticationSettings _authenticationSettings;
     private readonly ILoggerHandler _logger;
 
     public ReprovisioningHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -34,7 +34,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         ID2CMessengerHandler d2CMessengerHandler,
         ISHA256Wrapper sHA256Wrapper,
         IProvisioningServiceClientWrapper provisioningServiceClientWrapper,
-        IOptions<AuthonticationSettings> options,
+        IOptions<AuthenticationSettings> options,
         ILoggerHandler logger)
     {
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
@@ -42,7 +42,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _sHA256Wrapper = sHA256Wrapper ?? throw new ArgumentNullException(nameof(sHA256Wrapper));
         _provisioningServiceClientWrapper = provisioningServiceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningServiceClientWrapper));
-        _authonticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
@@ -65,9 +65,9 @@ public class ReprovisioningHandler : IReprovisioningHandler
     public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
-        var data = JsonConvert.DeserializeObject<AuthonticationKeys>(Encoding.Unicode.GetString(message.Data));
+        var data = JsonConvert.DeserializeObject<AuthenticationKeys>(Encoding.Unicode.GetString(message.Data));
         ArgumentNullException.ThrowIfNull(data);
-        var certificate = X509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _authonticationSettings.CertificateExpiredDays);
+        var certificate = X509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _authenticationSettings.CertificateExpiredDays);
         InstallTemporaryCertificate(certificate, data.SecretKey);
         await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate);
     }

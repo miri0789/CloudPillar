@@ -14,17 +14,17 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
     private IDeviceClientWrapper _deviceClientWrapper;
     private ISymmetricKeyWrapper _symmetricKeyWrapper;
-    private readonly AuthonticationSettings _authonticationSettings;
+    private readonly AuthenticationSettings _authenticationSettings;
 
     public SymmetricKeyProvisioningHandler(ILoggerHandler loggerHandler,
      IDeviceClientWrapper deviceClientWrapper,
      ISymmetricKeyWrapper symmetricKeyWrapper,
-     IOptions<AuthonticationSettings> options)
+     IOptions<AuthenticationSettings> options)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _symmetricKeyWrapper = symmetricKeyWrapper ?? throw new ArgumentNullException(nameof(symmetricKeyWrapper));
-        _authonticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     public async Task<bool> AuthorizationDeviceAsync(CancellationToken cancellationToken)
@@ -34,12 +34,12 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
     public async Task ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(_authonticationSettings.DpsScopeId);
-        ArgumentNullException.ThrowIfNullOrEmpty(_authonticationSettings.GlobalDeviceEndpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(_authonticationSettings.GroupEnrollmentKey);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.DpsScopeId);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.GlobalDeviceEndpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.GroupEnrollmentKey);
 
         var deviceName = deviceId;
-        var primaryKey = _authonticationSettings.GroupEnrollmentKey;
+        var primaryKey = _authenticationSettings.GroupEnrollmentKey;
         var drivedDevice = ComputeDerivedSymmetricKey(primaryKey, deviceName);
 
 
@@ -50,7 +50,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
             using (ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler())
             {
-                var provisioningClient = ProvisioningDeviceClient.Create(_authonticationSettings.GlobalDeviceEndpoint, _authonticationSettings.DpsScopeId, security, transport);
+                var provisioningClient = ProvisioningDeviceClient.Create(_authenticationSettings.GlobalDeviceEndpoint, _authenticationSettings.DpsScopeId, security, transport);
 
                 _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
 

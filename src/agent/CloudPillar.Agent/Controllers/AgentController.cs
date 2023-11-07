@@ -57,6 +57,12 @@ public class AgentController : ControllerBase
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
+        var currentState = _stateMachineHandler.GetCurrentDeviceState();
+        if (currentState == DeviceStateType.Busy)
+        {
+            return await _twinHandler.GetLatestTwinAsync();
+        }
+
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
@@ -93,8 +99,8 @@ public class AgentController : ControllerBase
     [HttpPost("SetBusy")]
     public async Task<ActionResult<string>> SetBusyAsync()
     {
-        _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
-        return await _twinHandler.GetTwinJsonAsync();
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
+        return await _twinHandler.GetLatestTwinAsync(CancellationToken.None);
     }
 
     [HttpPost("SetReady")]

@@ -1,4 +1,4 @@
-public class AuthonticationSettings
+public class AuthenticationSettings
 {
     private const int DEFUALT_EXPIRED_DAYS = 365;
     private const string GLOBAL_DEVICE_ENDPOINT = "global.azure-devices-provisioning.net";
