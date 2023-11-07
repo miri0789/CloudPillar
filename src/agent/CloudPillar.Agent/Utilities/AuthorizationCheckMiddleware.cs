@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
 using Shared.Logger;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
@@ -20,8 +21,14 @@ public class AuthorizationCheckMiddleware
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
-    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
+    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler)
     {
+        if (stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy)
+        {
+            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            await context.Response.WriteAsync(StateMachineConstants.BUSY_MESSAGE);
+            return;
+        }
         ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
         Endpoint endpoint = context.GetEndpoint();

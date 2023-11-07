@@ -59,6 +59,13 @@ public class AgentController : ControllerBase
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
+
+        var currentState = _stateMachineHandler.GetCurrentDeviceState();
+        if (currentState == DeviceStateType.Busy)
+        {
+            return await _twinHandler.GetLatestTwinAsync();
+        }
+
         if (!isX509Authorized)
         {
             _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");
@@ -91,8 +98,8 @@ public class AgentController : ControllerBase
     [HttpPost("SetBusy")]
     public async Task<ActionResult<string>> SetBusyAsync()
     {
-        _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
-        return await _twinHandler.GetTwinJsonAsync();
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
+        return await _twinHandler.GetLatestTwinAsync(CancellationToken.None);
     }
 
     [HttpPost("SetReady")]

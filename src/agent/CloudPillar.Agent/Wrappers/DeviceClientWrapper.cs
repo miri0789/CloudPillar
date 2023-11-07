@@ -53,7 +53,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             await GetTwinAsync(cancellationToken);
             return true;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized.");
             return false;
@@ -124,6 +124,11 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     public async Task CompleteAsync(Message message)
     {
         await _deviceClient.CompleteAsync(message);
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _deviceClient.DisposeAsync();
     }
 
     public async Task<Twin> GetTwinAsync(CancellationToken cancellationToken)
