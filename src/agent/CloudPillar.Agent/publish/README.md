@@ -122,7 +122,7 @@ public class DeviceStateClient
 
 - `changeSpec`: The main object representing updates.
   - `id`: A unique identifier for the updates.
-  - `changeSign`: The twin desired sign.
+  - `changeSign`: The twin desired signature.
   - `patch`: The "patch" section of the JSON structure contains details specific to the process. It includes the following five lists of actions to be executed in a specific order:
     1. `preTransitConfig`: Configuration settings to be applied before the patch transit. These actions are performed prior to downloading or installing the firmware patch.
 
@@ -140,7 +140,7 @@ public class DeviceStateClient
 
     - `action`: Describes the type of operation to be performed (e.g., SingularDownload, SingularUpload, PeriodicUpload, ExecuteOnce).
     - `description`: Provides a brief explanation of the action's purpose or objective.
-    - Additional properties specific to each action may be present, depending on the array.
+    - Additional properties specific to each action may be presesented, depending on the array.
 
     
     Details of each action:
