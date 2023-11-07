@@ -51,7 +51,6 @@ public class StrictModeHandler : IStrictModeHandler
 
     public void CheckFileAccessPermissions(TwinActionType actionType, string fileName)
     {
-        // TestNewMatcher();
         if (!_strictModeSettings.StrictMode)
         {
             return;
