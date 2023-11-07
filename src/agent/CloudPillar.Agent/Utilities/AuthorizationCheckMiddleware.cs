@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
 using Shared.Logger;
 using Shared.Entities.Twin;
+using System.Reflection;
+using CloudPillar.Agent.Controllers;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
@@ -23,15 +25,22 @@ public class AuthorizationCheckMiddleware
 
     public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler)
     {
-        if (stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy)
+
+        Endpoint endpoint = context.GetEndpoint();
+
+        var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
+        if (deviceIsBusy)
         {
-            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            await context.Response.WriteAsync(StateMachineConstants.BUSY_MESSAGE);
-            return;
+            DeviceStateFilterAttribute isActionBlockByBusy = endpoint.Metadata.GetMetadata<DeviceStateFilterAttribute>();
+            if (isActionBlockByBusy != null)
+            {
+                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                await context.Response.WriteAsync(StateMachineConstants.BUSY_MESSAGE);
+                return;
+            }
         }
         ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
-        Endpoint endpoint = context.GetEndpoint();
         if (IsActionMethod(endpoint))
         {
             // check the headers for all the actions also for the AllowAnonymous.
@@ -50,7 +59,7 @@ public class AuthorizationCheckMiddleware
             {
                 return;
             }
-            
+
             if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
             {
                 // The action has [AllowAnonymous], so allow the request to proceed
@@ -77,7 +86,7 @@ public class AuthorizationCheckMiddleware
     private async Task NextWithRedirectAsync(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
     {
         await _requestDelegate(context);
-        return;      
+        return;
 
         // var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
         // var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())

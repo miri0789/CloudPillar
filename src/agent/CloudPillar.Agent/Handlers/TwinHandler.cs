@@ -25,7 +25,7 @@ public class TwinHandler : ITwinHandler
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ILoggerHandler _logger;
-    public static Twin _latestTwin { get; set; }
+    private static Twin _latestTwin { get; set; }
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
