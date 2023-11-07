@@ -138,9 +138,9 @@ public class DeviceStateClient
 
     The firmware update process involves various actions that are organized into different arrays. Each action corresponds to a specific task or operation within the update process. Below, we describe the common properties associated with these actions and their roles in the update workflow. Please refer to the individual sections for detailed descriptions of each action:
 
-        - `action`: Describes the type of operation to be performed (e.g., SingularDownload, SingularUpload, PeriodicUpload, ExecuteOnce).
-        - `description`: Provides a brief explanation of the action's purpose or objective.
-        - Additional properties specific to each action may be present, depending on the array.
+    - `action`: Describes the type of operation to be performed (e.g., SingularDownload, SingularUpload, PeriodicUpload, ExecuteOnce).
+    - `description`: Provides a brief explanation of the action's purpose or objective.
+    - Additional properties specific to each action may be present, depending on the array.
 
     
     Details of each action:
