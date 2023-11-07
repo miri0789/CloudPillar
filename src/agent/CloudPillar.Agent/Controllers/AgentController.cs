@@ -106,36 +106,7 @@ public class AgentController : ControllerBase
 
         _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
-    }
-    [HttpPost("TestStrictMode")]
-    public async Task<ActionResult<string>> TestStrictMode(string root,string pattern)
-    {
-        try
-        {
-            Matcher matcher = new Matcher();
-
-            matcher.AddIncludePatterns(new[] { pattern});
-
-            var inMemoryFileNames = new List<string>
-        {
-            "c:/demo1/test.txt",
-            "c:/demo1/file2.log",
-            "c:/demo1/file2.log",
-            "c:/test.txt",
-            "D:/dd/dir1/file3.log",
-            "c:/demo/dir2/file4.md",
-            "c:/demo/dir2/subdir/file5.cs"
-        };
-
-            var result = matcher.Match(root, inMemoryFileNames);
-
-            return Ok(result);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
+    }    
 
     [HttpPut("UpdateReportedProps")]
     [DeviceStateFilter]

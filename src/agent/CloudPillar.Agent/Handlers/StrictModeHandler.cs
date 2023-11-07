@@ -134,26 +134,4 @@ public class StrictModeHandler : IStrictModeHandler
 
         return restriction.Root;
     }
-    private void TestNewMatcher()
-    {
-        var root = "c:/";
-        Matcher matcher = new Matcher();
-
-        matcher.AddIncludePatterns(new[] { "c:/test.txt" });
-
-        var inMemoryFileNames = new List<string>
-        {
-           "c:/demo1/test.txt"
-
-        };
-
-        var result = matcher.Match(root, inMemoryFileNames);
-
-        Console.WriteLine("Matched Files:");
-        foreach (var file in result.Files)
-        {
-            Console.WriteLine(file.Path);
-        }
-        return;
-    }
 }

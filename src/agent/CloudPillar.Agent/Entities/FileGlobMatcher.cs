@@ -1,6 +1,4 @@
-using CloudPillar.Agent.Handlers;
 using Microsoft.Extensions.FileSystemGlobbing;
-using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 
 public class FileGlobMatcher
 {
@@ -25,7 +23,7 @@ public class FileGlobMatcher
         matcher.AddIncludePatterns(patterns);
         var result = matcher.Match(rootPath, filePath);
 
-        var fileMatch = result.Files.Where(file => filePath.Replace("\\","/") == Path.Combine(rootPath,file.Path).Replace("\\","/")).Count() > 0;
+        var fileMatch = result.Files.Where(file => filePath.Replace("\\", "/") == Path.Combine(rootPath, file.Path).Replace("\\", "/")).Count() > 0;
         return fileMatch;
     }
 }
