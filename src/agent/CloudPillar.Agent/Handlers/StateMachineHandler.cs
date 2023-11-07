@@ -38,6 +38,7 @@ namespace CloudPillar.Agent.Handlers
 
         public async Task SetStateAsync(DeviceStateType state)
         {
+
             var currentState = await GetStateAsync();
             if (currentState != state)
             {
@@ -82,16 +83,16 @@ namespace CloudPillar.Agent.Handlers
         private async Task SetProvisioningAsync()
         {
             var _cts = _stateMachineTokenHandler.StartToken();
-            await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, true);
+            // await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, true);
         }
 
         private async Task SetReadyAsync()
         {
             _stateMachineTokenHandler.CancelToken();
             var _cts = _stateMachineTokenHandler.StartToken();
-            var subscribeTask = _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
+            // var subscribeTask = _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
             var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
-            await Task.WhenAll(subscribeTask, handleTwinTask);
+            // await Task.WhenAll(subscribeTask, handleTwinTask);
         }
 
         private async Task SetBusyAsync()
@@ -99,6 +100,8 @@ namespace CloudPillar.Agent.Handlers
             await _twinHandler.SaveLastTwinAsync();
             await _deviceClientWrapper.DisposeAsync();
             _stateMachineTokenHandler.CancelToken();
+            await _twinHandler.UpdateDeviceStateAsync(DeviceStateType.Uninitialized);
+
         }
     }
 }
