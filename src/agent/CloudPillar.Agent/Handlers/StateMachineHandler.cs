@@ -100,8 +100,6 @@ namespace CloudPillar.Agent.Handlers
             await _twinHandler.SaveLastTwinAsync();
             await _deviceClientWrapper.DisposeAsync();
             _stateMachineTokenHandler.CancelToken();
-            await _twinHandler.UpdateDeviceStateAsync(DeviceStateType.Uninitialized);
-
         }
     }
 }
