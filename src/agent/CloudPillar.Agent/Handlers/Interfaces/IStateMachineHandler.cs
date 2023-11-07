@@ -10,6 +10,8 @@ namespace CloudPillar.Agent.Handlers
         Task InitStateMachineHandlerAsync();
 
         Task<DeviceStateType> GetStateAsync();
+        
+        DeviceStateType GetCurrentDeviceState();
     }
 
 }

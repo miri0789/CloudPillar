@@ -53,7 +53,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             await GetTwinAsync(cancellationToken);
             return true;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized.");
             return false;
@@ -126,6 +126,11 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         await _deviceClient.CompleteAsync(message);
     }
 
+    public async Task DisposeAsync()
+    {
+        await _deviceClient.DisposeAsync();
+    }
+
     public async Task<Twin> GetTwinAsync(CancellationToken cancellationToken)
     {
         var twin = await _deviceClient.GetTwinAsync(cancellationToken);
@@ -169,7 +174,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         return sasUri.GetBlobUri();
     }
 
-    public async Task SetDesiredPropertyUpdateCallbackAsync(DesiredPropertyUpdateCallback callback, CancellationToken cancellationToken = default) 
+    public async Task SetDesiredPropertyUpdateCallbackAsync(DesiredPropertyUpdateCallback callback, CancellationToken cancellationToken = default)
     {
         await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, null, cancellationToken);
     }
