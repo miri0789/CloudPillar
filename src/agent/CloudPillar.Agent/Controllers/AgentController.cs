@@ -55,17 +55,16 @@ public class AgentController : ControllerBase
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
-        //don't need to explicitly check if the header exists; it's already verified in the middleware.
-        var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
-        var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
-        bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
-
         var currentState = _stateMachineHandler.GetCurrentDeviceState();
         if (currentState == DeviceStateType.Busy)
         {
             return await _twinHandler.GetLatestTwinAsync();
         }
 
+        //don't need to explicitly check if the header exists; it's already verified in the middleware.
+        var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
+        var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
+        bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
         if (!isX509Authorized)
         {
             _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");

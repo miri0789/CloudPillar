@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
 using Shared.Logger;
 using Shared.Entities.Twin;
+using System.Reflection;
+using CloudPillar.Agent.Controllers;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
@@ -23,7 +25,12 @@ public class AuthorizationCheckMiddleware
 
     public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler)
     {
-        if (stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy)
+
+        Endpoint endpoint = context.GetEndpoint();
+        DeviceStateFilterAttribute hasAttribute = endpoint.Metadata.GetMetadata<DeviceStateFilterAttribute>();
+
+        var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
+        if (hasAttribute != null && deviceIsBusy)
         {
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             await context.Response.WriteAsync(StateMachineConstants.BUSY_MESSAGE);
@@ -31,7 +38,6 @@ public class AuthorizationCheckMiddleware
         }
         ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
-        Endpoint endpoint = context.GetEndpoint();
         if (IsActionMethod(endpoint))
         {
             // check the headers for all the actions also for the AllowAnonymous.
