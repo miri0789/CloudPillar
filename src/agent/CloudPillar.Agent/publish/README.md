@@ -80,3 +80,34 @@ public class DeviceStateClient
     }
 }
 ```
+
+## Twin json example
+- `changeSpec`: The main object representing a firmware update change specification.
+  - `id`: A unique identifier for the firmware update.
+  
+  - `patch`: Details related to the firmware patch update process.
+    - `preTransitConfig`: Configuration settings to be applied before the patch transit.
+    - `transitPackage`: Information about the firmware package transit.
+      - `action`: The action to be performed, such as 'singularDownload.'
+      - `description`: A description of the action being performed.
+      - `source`: The source of the firmware package (e.g., file name).
+      - `protocol`: Supported protocols for communication.
+      - `destinationPath`: The destination path for storing the downloaded firmware.
+    - `preInstallConfig`: Configuration settings to be applied before installing the firmware.
+      - `description`: A description of the pre-install action.
+      - `shell`: The shell or scripting language to execute the command.
+      - `command`: The command to be executed.
+    - `installSteps`: Steps for installing the firmware.
+      - `description`: A description of the installation step.
+      - `shell`: The shell or scripting language to execute the command.
+      - `command`: The command to be executed.
+    - `postInstallConfig`: Configuration settings to be applied after installing the firmware.
+      - `description`: A description of the post-install action.
+      - `shell`: The shell or scripting language to execute the command.
+      - `command`: The command to be executed.
+
+  - `base`: Details related to the base firmware configuration, similar to the 'patch' section.
+    - `transitPackage`: Information about the firmware package transit for the base configuration.
+    - `preInstallConfig`: Configuration settings to be applied before installing the base firmware.
+    - `installSteps`: Steps for installing the base firmware.
+
