@@ -117,6 +117,7 @@ public class DeviceStateClient
     }
   }
 }
+```
 
 - `changeSpec`: The main object representing updates.
   - `id`: A unique identifier for the updates.
