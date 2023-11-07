@@ -88,7 +88,14 @@ public class DeviceStateClient
   - `patch`: Details related to the firmware patch update process.
     - `preTransitConfig`: Configuration settings to be applied before the patch transit.
     - `transitPackage`: Information about the firmware package transit.
-      - `action`: The action to be performed, such as 'singularDownload.'
+      - `action`: The action to be performed, representing different operations in the firmware update process. Available options include:
+        - `singularDownload`: This action is used to download a single firmware artifact.
+
+        - `someOtherAction`: (Describe what this action does and provide any relevant details.)
+
+        - `anotherAction`: (Describe what this action does and provide any relevant details.)
+
+  - `andSoOn`: (Continue listing and describing all available actions as needed.)
       - `description`: A description of the action being performed.
       - `source`: The source of the firmware package (e.g., file name).
       - `protocol`: Supported protocols for communication.
