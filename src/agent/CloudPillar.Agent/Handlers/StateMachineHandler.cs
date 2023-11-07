@@ -1,5 +1,6 @@
 
 using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -12,15 +13,19 @@ namespace CloudPillar.Agent.Handlers
 
         private readonly IC2DEventHandler _c2DEventHandler;
         private readonly IStateMachineTokenHandler _stateMachineTokenHandler;
+        private readonly IDeviceClientWrapper _deviceClientWrapper;
+        private static DeviceStateType currentDeviceState = DeviceStateType.Uninitialized;
         public StateMachineHandler(ITwinHandler twinHandler,
          ILoggerHandler logger,
          IC2DEventHandler c2DEventHandler,
-         IStateMachineTokenHandler stateMachineTokenHandler)
+         IStateMachineTokenHandler stateMachineTokenHandler,
+         IDeviceClientWrapper deviceClientWrapper)
         {
             _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
             _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _stateMachineTokenHandler = stateMachineTokenHandler ?? throw new ArgumentNullException(nameof(stateMachineTokenHandler));
+            _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         }
 
 
@@ -33,9 +38,11 @@ namespace CloudPillar.Agent.Handlers
 
         public async Task SetStateAsync(DeviceStateType state)
         {
+
             var currentState = await GetStateAsync();
             if (currentState != state)
             {
+                currentDeviceState = state;
                 await _twinHandler.UpdateDeviceStateAsync(state);
                 await HandleStateAction(state);
                 _logger.Info($"Set device state: {state}");
@@ -55,7 +62,7 @@ namespace CloudPillar.Agent.Handlers
                     await SetReadyAsync();
                     break;
                 case DeviceStateType.Busy:
-                    SetBusy();
+                    await SetBusyAsync();
                     break;
                 default:
                     break;
@@ -64,8 +71,13 @@ namespace CloudPillar.Agent.Handlers
 
         public async Task<DeviceStateType> GetStateAsync()
         {
-            var state = await _twinHandler.GetDeviceStateAsync() ?? DeviceStateType.Uninitialized;
+            var state = await _twinHandler.GetDeviceStateAsync() ?? GetCurrentDeviceState();
             return state;
+        }
+
+        public DeviceStateType GetCurrentDeviceState()
+        {
+            return currentDeviceState;
         }
 
         private async Task SetProvisioningAsync()
@@ -83,8 +95,10 @@ namespace CloudPillar.Agent.Handlers
             await Task.WhenAll(subscribeTask, handleTwinTask);
         }
 
-        private void SetBusy()
+        private async Task SetBusyAsync()
         {
+            await _twinHandler.SaveLastTwinAsync();
+            await _deviceClientWrapper.DisposeAsync();
             _stateMachineTokenHandler.CancelToken();
         }
     }
