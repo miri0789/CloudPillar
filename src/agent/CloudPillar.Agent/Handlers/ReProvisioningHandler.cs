@@ -5,6 +5,7 @@ using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Amqp.Framing;
+using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Provisioning.Service;
@@ -46,7 +47,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
-    public async Task HandleReprovisioningMessageAsync(ReprovisioningMessage message, CancellationToken cancellationToken)
+    public async Task HandleReprovisioningMessageAsync(Message recivedMessage,ReprovisioningMessage message, CancellationToken cancellationToken)
     {
         ValidateReprovisioningMessage(message);
 
@@ -59,7 +60,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         string iotHubHostName = await GetIotHubHostNameAsync(message.DPSConnectionString, message.Data, cancellationToken);
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
 
-        await ProvisionDeviceAndCleanupCertificatesAsync(message, certificate, deviceId, iotHubHostName, cancellationToken);
+        await ProvisionDeviceAndCleanupCertificatesAsync(recivedMessage, message, certificate, deviceId, iotHubHostName, cancellationToken);
     }
 
     public async Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken)
@@ -88,11 +89,11 @@ public class ReprovisioningHandler : IReprovisioningHandler
     }
 
 
-    private async Task ProvisionDeviceAndCleanupCertificatesAsync(ReprovisioningMessage message, X509Certificate2 certificate, string deviceId, string iotHubHostName, CancellationToken cancellationToken)
+    private async Task ProvisionDeviceAndCleanupCertificatesAsync(Message recivedMessage, ReprovisioningMessage message, X509Certificate2 certificate, string deviceId, string iotHubHostName, CancellationToken cancellationToken)
     {
         try
         {
-            await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, cancellationToken);
+            await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint,recivedMessage, cancellationToken);
             using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite))
             {
 

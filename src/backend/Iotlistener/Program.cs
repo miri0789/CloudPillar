@@ -46,7 +46,7 @@ EventProcessorHost eventProcessorHost = new EventProcessorHost(
         PartitionReceiver.DefaultConsumerGroupName,
         _envirementVariable.iothubEventHubCompatibleEndpoint,
         _envirementVariable.storageConnectionString,
-        _envirementVariable.blobContainerName);
+        _envirementVariable.blobContainerName, "bracha");
 
 var eventProcessorOptions = new EventProcessorOptions
 {

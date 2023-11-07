@@ -7,14 +7,14 @@ public class StateMachineListenerService : BackgroundService
 {
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IServiceProvider _serviceProvider;
-   // private readonly IC2DEventHandler _c2DEventHandler;
+    // private readonly IC2DEventHandler _c2DEventHandler;
 
     //private readonly IStateMachineHandler _stateMachineHandler;
     private IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
     private static CancellationTokenSource _cts;
 
     public StateMachineListenerService(IStateMachineChangedEvent stateMachineChangedEvent,
-    // IC2DEventSubscriptionSession c2DEventSubscriptionSession
+    //IC2DEventSubscriptionSession c2DEventSubscriptionSession,
     //IC2DEventHandler c2DEventHandler
     IServiceProvider serviceProvider
 
@@ -38,19 +38,26 @@ public class StateMachineListenerService : BackgroundService
         _stateMachineChangedEvent.StateChanged += HandleStateChangedEvent;
         using (var scope = _serviceProvider.CreateScope())
         {
-            _c2DEventSubscriptionSession = scope.ServiceProvider.GetService<IC2DEventSubscriptionSession>() ?? throw new ArgumentNullException(nameof(_c2DEventSubscriptionSession));
             var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
+            ArgumentNullException.ThrowIfNull(dpsProvisioningDeviceClientHandler);
             await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
 
             var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
-            StateMachineHandlerService.InitStateMachineHandlerAsync();
+            ArgumentNullException.ThrowIfNull(StateMachineHandlerService);
+            await StateMachineHandlerService.InitStateMachineHandlerAsync();
         }
-       // return Task.CompletedTask;
+        // return Task.CompletedTask;
     }
 
     private async void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
     {
-        
+        if (_c2DEventSubscriptionSession == null)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                _c2DEventSubscriptionSession = scope.ServiceProvider.GetService<IC2DEventSubscriptionSession>();
+            }
+        }
 
         switch (e.NewState)
         {
@@ -81,14 +88,14 @@ public class StateMachineListenerService : BackgroundService
         //await _twinHandler.HandleTwinActionsAsync(_cts.Token);
     }
 
-            // private async Task SetReadyAsync()
-        // {
-        //     _stateMachineTokenHandler.CancelToken();
-        //     var _cts = _stateMachineTokenHandler.StartToken();
-        //     var subscribeTask = _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
-        //     var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
-        //     await Task.WhenAll(subscribeTask, handleTwinTask);
-        // }
+    // private async Task SetReadyAsync()
+    // {
+    //     _stateMachineTokenHandler.CancelToken();
+    //     var _cts = _stateMachineTokenHandler.StartToken();
+    //     var subscribeTask = _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
+    //     var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
+    //     await Task.WhenAll(subscribeTask, handleTwinTask);
+    // }
 
     private void SetBusy()
     {

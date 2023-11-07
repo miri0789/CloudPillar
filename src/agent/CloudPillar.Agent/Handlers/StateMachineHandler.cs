@@ -9,6 +9,7 @@ namespace CloudPillar.Agent.Handlers
     {
         private readonly ITwinHandler _twinHandler;
         private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
+
         private readonly ILoggerHandler _logger;
         // private readonly IC2DEventHandler _c2DEventHandler;
         // private readonly IStateMachineTokenHandler _stateMachineTokenHandler;
@@ -25,6 +26,7 @@ namespace CloudPillar.Agent.Handlers
         {
             _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
             _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
+         
             //_c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             //_stateMachineTokenHandler = stateMachineTokenHandler ?? throw new ArgumentNullException(nameof(stateMachineTokenHandler));

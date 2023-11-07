@@ -30,8 +30,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
-builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
-builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();

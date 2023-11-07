@@ -4,7 +4,7 @@ namespace CloudPillar.Agent.Handlers;
 
 public class StateMachineEventArgs : EventArgs
 {
-    public DeviceStateType NewState {get;}
+    public DeviceStateType NewState { get; }
 
     public StateMachineEventArgs(DeviceStateType state)
     {
