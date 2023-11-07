@@ -2,6 +2,7 @@ using Moq;
 using CloudPillar.Agent.Handlers;
 using Shared.Logger;
 using Shared.Entities.Twin;
+using CloudPillar.Agent.Wrappers;
 
 [TestFixture]
 public class StateMachineHandlerTestFixture
@@ -11,6 +12,7 @@ public class StateMachineHandlerTestFixture
     private Mock<ILoggerHandler> _logger;
     private Mock<IC2DEventHandler> _c2DEventHandler;
     private Mock<IStateMachineTokenHandler> _stateMachineTokenHandler;
+    private Mock<IDeviceClientWrapper> _deviceClientWrapper;
 
     [SetUp]
     public void Setup()
@@ -19,12 +21,14 @@ public class StateMachineHandlerTestFixture
         _logger = new Mock<ILoggerHandler>();
         _c2DEventHandler = new Mock<IC2DEventHandler>();
         _stateMachineTokenHandler = new Mock<IStateMachineTokenHandler>();
+        _deviceClientWrapper = new Mock<IDeviceClientWrapper>();
 
         _target = new StateMachineHandler(
             _twinHandler.Object,
             _logger.Object,
             _c2DEventHandler.Object,
-            _stateMachineTokenHandler.Object
+            _stateMachineTokenHandler.Object,
+            _deviceClientWrapper.Object
         );
 
         _stateMachineTokenHandler.Setup(h => h.StartToken()).Returns(new CancellationTokenSource());
@@ -123,6 +127,42 @@ public class StateMachineHandlerTestFixture
         await _target.SetStateAsync(DeviceStateType.Busy);
 
         _stateMachineTokenHandler.Verify(h => h.CancelToken(), Times.Once);
+    }
+
+    [Test]
+    public async Task SetStateAsync_BusyState_DisposeTwin()
+    {
+        _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+        _stateMachineTokenHandler.Setup(h => h.CancelToken());
+
+        await _target.SetStateAsync(DeviceStateType.Busy);
+
+        _deviceClientWrapper.Verify(x => x.DisposeAsync(), Times.Once);
+    }
+
+    [Test]
+    public async Task SetStateAsync_AnyState_SaveStaticState()
+    {
+        var newState = DeviceStateType.Busy;
+
+        _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+        _stateMachineTokenHandler.Setup(h => h.CancelToken());
+
+        await _target.SetStateAsync(DeviceStateType.Busy);
+
+        var updatedState = _target.GetCurrentDeviceState();
+        Assert.AreEqual(newState, updatedState, "The current device state should be updated to the new state.");
+    }
+
+    [Test]
+    public async Task SetStateAsync_BusyState_SaveLatestTwin()
+    {
+        _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+        _stateMachineTokenHandler.Setup(h => h.CancelToken());
+
+        await _target.SetStateAsync(DeviceStateType.Busy);
+
+        _twinHandler.Verify(x => x.SaveLastTwinAsync(CancellationToken.None), Times.Once);
     }
 
     [Test]
