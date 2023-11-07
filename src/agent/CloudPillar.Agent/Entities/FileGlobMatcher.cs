@@ -16,24 +16,16 @@ public class FileGlobMatcher
         {
             matcher.AddInclude(pattern);
         }
-
     }
 
     public bool IsMatch(string rootPath, string filePath, string[] patterns)
     {
-        var matcher = new Matcher();
-        foreach (var pattern in patterns)
-        {
-            matcher.AddInclude(pattern);
-        }
+        Matcher matcher = new Matcher();
 
-        var fileInfo = new FileInfo(filePath);
-        var directoryInfo = new DirectoryInfo(rootPath);
-        var directoryInfoWrapper = new DirectoryInfoWrapper(directoryInfo);
-        var result = matcher.Execute(new InMemoryDirectoryInfo(new List<string>() { filePath }, rootPath));
+        matcher.AddIncludePatterns(patterns);
+        var result = matcher.Match(rootPath, filePath);
 
-        // var result = matcher.Execute(directoryInfoWrapper);
-        var fileMatch = result.Files.Where(file => fileInfo.FullName == Path.Combine(directoryInfo.FullName, file.Path).Replace("/", "\\")).Count() > 0;
+        var fileMatch = result.Files.Where(file => filePath.Replace("\\","/") == Path.Combine(rootPath,file.Path).Replace("\\","/")).Count() > 0;
         return fileMatch;
     }
 }

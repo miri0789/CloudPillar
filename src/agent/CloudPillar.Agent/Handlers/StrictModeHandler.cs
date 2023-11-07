@@ -51,6 +51,7 @@ public class StrictModeHandler : IStrictModeHandler
 
     public void CheckFileAccessPermissions(TwinActionType actionType, string fileName)
     {
+        // TestNewMatcher();
         if (!_strictModeSettings.StrictMode)
         {
             return;
@@ -71,9 +72,7 @@ public class StrictModeHandler : IStrictModeHandler
             _logger.Info("No allow patterns were found");
             return;
         }
-        TestNewMatcher();
-        // FileGlobMatcher matcher = _fileGlobMatcherWrapper.CreateFileGlobMatcher(allowPatterns.ToArray());
-        // bool isMatch =  .IsMatch(matcher, zoneRestrictions.Root, verbatimFileName);
+
         var fileGlobMatcher = new FileGlobMatcher();
         bool isMatch = fileGlobMatcher.IsMatch(zoneRestrictions.Root, verbatimFileName, allowPatterns.ToArray());
         if (!isMatch)
@@ -140,19 +139,15 @@ public class StrictModeHandler : IStrictModeHandler
         var root = "c:/";
         Matcher matcher = new Matcher();
 
-        matcher.AddIncludePatterns(new[] {  "c:/test.txt"});
+        matcher.AddIncludePatterns(new[] { "c:/test.txt" });
 
         var inMemoryFileNames = new List<string>
         {
-            "c:/demo1/test.txt",
-            "c:/demo1/file2.log",
-            "c:/test.txt",
-            "D:/dd/dir1/file3.log",
-            "c:/demo/dir2/file4.md",
-            "c:/demo/dir2/subdir/file5.cs"
+           "c:/demo1/test.txt"
+
         };
 
-        var result = matcher.Execute(new InMemoryDirectoryInfo(inMemoryFileNames, root));
+        var result = matcher.Match(root, inMemoryFileNames);
 
         Console.WriteLine("Matched Files:");
         foreach (var file in result.Files)
