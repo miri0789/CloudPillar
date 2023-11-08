@@ -33,7 +33,6 @@ public class AgentController : ControllerBase
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
-     IStrictModeHandler strictModeHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
