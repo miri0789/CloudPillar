@@ -129,20 +129,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
-        //before initialize the device client, we need to complete the message
-        //and set state to ready
-        try
-        {
-            if (message != null)
-            {
-                await _deviceClientWrapper.CompleteAsync(message);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error("ProvisioningAsync, Complete message failed", ex);
-        }
-
+        await OnProvisioningCompleted(message);
 
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
 
@@ -160,6 +147,22 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             _logger.Error($"Exception during IoT Hub connection: ", ex);
             return false;
+        }
+    }
+
+    private async Task OnProvisioningCompleted(DeviceMessage.Message message)
+    {
+        //before initialize the device client, we need to complete the message
+        try
+        {
+            if (message != null)
+            {
+                await _deviceClientWrapper.CompleteAsync(message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("ProvisioningAsync, Complete message failed", ex);
         }
     }
 }

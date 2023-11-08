@@ -35,6 +35,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 
     public async Task ReceiveC2DMessagesAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
+         _logger.Info("Subscribing to C2D messages...");
         const string MESSAGE_TYPE_PROP = "MessageType";
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -77,7 +78,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             finally
             {
-                if (parseMessage && messageType != C2DMessageType.Reprovisioning)
+                if (messageType != C2DMessageType.Reprovisioning)
                 {
                     await _deviceClient.CompleteAsync(receivedMessage);
                     _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");

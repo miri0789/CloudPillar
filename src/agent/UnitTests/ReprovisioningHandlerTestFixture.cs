@@ -3,6 +3,7 @@ using System.Text;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Service;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -84,12 +85,12 @@ public class ReprovisioningHandlerTestFixture
     {
         _certificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
         SetupX509CertificateWrapperMock();
-        _dPSProvisioningDeviceClientHandlerMock.Setup(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _dPSProvisioningDeviceClientHandlerMock.Setup(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<Message>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        await _target.HandleReprovisioningMessageAsync(_validReprovisioningMessage, CancellationToken.None);
+        await _target.HandleReprovisioningMessageAsync( It.IsAny<Message>(),_validReprovisioningMessage, CancellationToken.None);
 
-        _dPSProvisioningDeviceClientHandlerMock.Verify(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _dPSProvisioningDeviceClientHandlerMock.Verify(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<Message>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -101,7 +102,7 @@ public class ReprovisioningHandlerTestFixture
 
 
 
-        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleReprovisioningMessageAsync(message, CancellationToken.None));
+        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleReprovisioningMessageAsync(It.IsAny<Message>(), message, CancellationToken.None));
 
     }
     [Test]
@@ -111,7 +112,7 @@ public class ReprovisioningHandlerTestFixture
         _certificate.FriendlyName = "invalidCertificate";
         SetupX509CertificateWrapperMock();
 
-        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleReprovisioningMessageAsync(_validReprovisioningMessage, CancellationToken.None));
+        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleReprovisioningMessageAsync(It.IsAny<Message>(),_validReprovisioningMessage, CancellationToken.None));
 
     }
 
@@ -120,7 +121,7 @@ public class ReprovisioningHandlerTestFixture
     {
         _certificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
         SetupX509CertificateWrapperMock();
-        await _target.HandleReprovisioningMessageAsync(_validReprovisioningMessage, CancellationToken.None);
+        await _target.HandleReprovisioningMessageAsync(It.IsAny<Message>(),_validReprovisioningMessage, CancellationToken.None);
 
         Assert.AreEqual(_certificate.FriendlyName, $"{DEVICE_ID}@{IOTHUB_HOST_NAME}");
 

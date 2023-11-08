@@ -7,31 +7,17 @@ public class StateMachineListenerService : BackgroundService
 {
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IServiceProvider _serviceProvider;
-    // private readonly IC2DEventHandler _c2DEventHandler;
-
-    //private readonly IStateMachineHandler _stateMachineHandler;
-    private IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
-    private static CancellationTokenSource _cts;
+    private CancellationTokenSource _cts;
     private ITwinHandler _twinHandler;
+    private IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
 
     public StateMachineListenerService(IStateMachineChangedEvent stateMachineChangedEvent,
-    //IC2DEventSubscriptionSession c2DEventSubscriptionSession,
-    //IC2DEventHandler c2DEventHandler
     IServiceProvider serviceProvider
-
     )
     {
         _cts = new CancellationTokenSource();
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        //this.c2DEventHandler = c2DEventHandler;
-        //_stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(stateMachineHandler));
-        //_c2DEventSubscriptionSession = c2DEventSubscriptionSession ?? throw new ArgumentNullException(nameof(c2DEventSubscriptionSession));
-        // _c2DEventHandler = c2DEventHandler ?? throw new ArgumentException(nameof(c2DEventHandler));
-
-        // _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
-        // _c2DEventHandlerService = c2DEventHandlerService ?? throw new ArgumentNullException(nameof(c2DEventHandler));
-
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -47,10 +33,9 @@ public class StateMachineListenerService : BackgroundService
             ArgumentNullException.ThrowIfNull(StateMachineHandlerService);
             await StateMachineHandlerService.InitStateMachineHandlerAsync();
         }
-        // return Task.CompletedTask;
     }
 
-    private async void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
+    internal async void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
     {
         if (_c2DEventSubscriptionSession == null)
         {
@@ -78,6 +63,7 @@ public class StateMachineListenerService : BackgroundService
                 break;
         }
     }
+
     private async Task SetProvisioningAsync()
     {
         _cts = new CancellationTokenSource();
@@ -92,15 +78,6 @@ public class StateMachineListenerService : BackgroundService
         var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
         await Task.WhenAll(subscribeTask, handleTwinTask);
     }
-
-    // private async Task SetReadyAsync()
-    // {
-    //     _stateMachineTokenHandler.CancelToken();
-    //     var _cts = _stateMachineTokenHandler.StartToken();
-    //     var subscribeTask = _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
-    //     var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
-    //     await Task.WhenAll(subscribeTask, handleTwinTask);
-    // }
 
     private void SetBusy()
     {

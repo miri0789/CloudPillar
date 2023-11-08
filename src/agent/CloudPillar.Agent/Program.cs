@@ -36,7 +36,6 @@ builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvision
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
-builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
 builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
@@ -60,7 +59,6 @@ builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
-//builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
 
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
@@ -94,15 +92,6 @@ app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 app.MapControllers();
 
 app.ValidateAuthenticationSettings();
-
-// using (var scope = app.Services.CreateScope())
-// {
-//     var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
-//     await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
-
-//     var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
-//     StateMachineHandlerService.InitStateMachineHandlerAsync();
-// }
 
 app.Run();
 
