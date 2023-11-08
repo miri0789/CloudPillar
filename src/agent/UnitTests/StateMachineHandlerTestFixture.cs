@@ -151,7 +151,7 @@ public class StateMachineHandlerTestFixture
         await _target.SetStateAsync(DeviceStateType.Busy);
 
         var updatedState = _target.GetCurrentDeviceState();
-        Assert.AreEqual(newState, updatedState, "The current device state should be updated to the new state.");
+        Assert.AreEqual(newState, updatedState);
     }
 
     [Test]
