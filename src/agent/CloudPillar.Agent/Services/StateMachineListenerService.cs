@@ -1,5 +1,6 @@
 
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Sevices;
@@ -7,17 +8,21 @@ public class StateMachineListenerService : BackgroundService
 {
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IDeviceClientWrapper _deviceClientWrapper;
     private CancellationTokenSource _cts;
     private ITwinHandler _twinHandler;
     private IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
 
-    public StateMachineListenerService(IStateMachineChangedEvent stateMachineChangedEvent,
-    IServiceProvider serviceProvider
+    public StateMachineListenerService(
+        IStateMachineChangedEvent stateMachineChangedEvent,
+    IServiceProvider serviceProvider,
+    IDeviceClientWrapper deviceClientWrapper
     )
     {
         _cts = new CancellationTokenSource();
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -57,7 +62,7 @@ public class StateMachineListenerService : BackgroundService
                 await SetReadyAsync();
                 break;
             case DeviceStateType.Busy:
-                SetBusy();
+                await SetBusyAsync();
                 break;
             default:
                 break;
@@ -79,9 +84,12 @@ public class StateMachineListenerService : BackgroundService
         await Task.WhenAll(subscribeTask, handleTwinTask);
     }
 
-    private void SetBusy()
+
+    private async Task SetBusyAsync()
     {
         _cts?.Cancel();
+        await _twinHandler.SaveLastTwinAsync();
+        await _deviceClientWrapper.DisposeAsync();
     }
 
 

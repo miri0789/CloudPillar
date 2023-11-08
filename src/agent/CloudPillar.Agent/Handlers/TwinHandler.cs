@@ -16,6 +16,7 @@ namespace CloudPillar.Agent.Handlers;
 public class TwinHandler : ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClient;
+    private readonly IDeviceClientWrapper _deviceClient2;
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
@@ -49,7 +50,7 @@ public class TwinHandler : ITwinHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
+    public async Task OnDesiredPropertiesUpdateAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -81,11 +82,11 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            await OnDesiredPropertiesUpdate(cancellationToken);
+            await OnDesiredPropertiesUpdateAsync(cancellationToken);
             DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
                             {
                                 _logger.Info($"Desired properties were updated.");
-                                await OnDesiredPropertiesUpdate(cancellationToken);
+                                await OnDesiredPropertiesUpdateAsync(cancellationToken);
                             };
             await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
         }
@@ -258,8 +259,8 @@ public class TwinHandler : ITwinHandler
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
-            return reprted.DeviceState;
+            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reported.DeviceState;
         }
         catch (Exception ex)
         {
