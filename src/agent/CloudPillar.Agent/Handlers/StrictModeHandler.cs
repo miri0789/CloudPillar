@@ -1,7 +1,5 @@
 using System.Text.RegularExpressions;
-using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.FileSystemGlobbing;
-using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using Shared.Logger;
@@ -10,14 +8,14 @@ namespace CloudPillar.Agent.Handlers;
 
 public class StrictModeHandler : IStrictModeHandler
 {
+    private const string SEPARATOR = "/";
+    private const string DOUBLE_SEPARATOR = "\\";
     private readonly StrictModeSettings _strictModeSettings;
-    private readonly IFileGlobMatcherWrapper _fileGlobMatcherWrapper;
     private readonly ILoggerHandler _logger;
 
-    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, IFileGlobMatcherWrapper fileGlobMatcherWrapper, ILoggerHandler logger)
+    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, ILoggerHandler logger)
     {
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
-        _fileGlobMatcherWrapper = fileGlobMatcherWrapper ?? throw new ArgumentNullException(nameof(fileGlobMatcherWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -72,8 +70,7 @@ public class StrictModeHandler : IStrictModeHandler
             return;
         }
 
-        var fileGlobMatcher = new FileGlobMatcher();
-        bool isMatch = fileGlobMatcher.IsMatch(zoneRestrictions.Root, verbatimFileName, allowPatterns.ToArray());
+        bool isMatch = IsMatch(zoneRestrictions.Root, verbatimFileName, allowPatterns.ToArray());
         if (!isMatch)
         {
             _logger.Error("Denied by the lack of local allowance");
@@ -132,5 +129,16 @@ public class StrictModeHandler : IStrictModeHandler
         }
 
         return restriction.Root;
+    }
+
+    public bool IsMatch(string rootPath, string filePath, string[] patterns)
+    {
+        Matcher matcher = new Matcher();
+
+        matcher.AddIncludePatterns(patterns);
+        var result = matcher.Match(rootPath, filePath);
+
+        var fileMatch = result.Files.Where(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR) == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR)).Count() > 0;
+        return fileMatch;
     }
 }
