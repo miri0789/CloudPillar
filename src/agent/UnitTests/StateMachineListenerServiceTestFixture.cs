@@ -1,5 +1,6 @@
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Sevices;
+using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Shared.Entities.Twin;
@@ -15,6 +16,8 @@ public class StateMachineListenerServiceTestFixture
     private Mock<ITwinHandler> _twinHandlerMock;
     private Mock<IC2DEventSubscriptionSession> _c2DEventSubscriptionSessionMock;
 
+    private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
+
     [SetUp]
     public void Setup()
     {
@@ -22,6 +25,7 @@ public class StateMachineListenerServiceTestFixture
         _serviceProviderMock = new Mock<IServiceProvider>();
         _twinHandlerMock = new Mock<ITwinHandler>();
         _c2DEventSubscriptionSessionMock = new Mock<IC2DEventSubscriptionSession>();
+        _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
 
         var serviceScopeFactory = new Mock<IServiceScopeFactory>();
         var serviceScope = new Mock<IServiceScope>();
@@ -31,13 +35,13 @@ public class StateMachineListenerServiceTestFixture
         serviceScope.Setup(s => s.ServiceProvider.GetService(typeof(IC2DEventSubscriptionSession))).Returns(_c2DEventSubscriptionSessionMock.Object);
         serviceScope.Setup(s => s.ServiceProvider.GetService(typeof(ITwinHandler))).Returns(_twinHandlerMock.Object);
 
-        _target = new StateMachineListenerService(_stateMachineChangedEventMock.Object, _serviceProviderMock.Object);
+        _target = new StateMachineListenerService(_stateMachineChangedEventMock.Object, _serviceProviderMock.Object, _deviceClientWrapperMock.Object);
     }
 
     [Test]
     public void Constructor_NullParameters_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new StateMachineListenerService(_stateMachineChangedEventMock.Object, null));
+        Assert.Throws<ArgumentNullException>(() => new StateMachineListenerService(_stateMachineChangedEventMock.Object, null, _deviceClientWrapperMock.Object));
     }
 
     [Test]
@@ -62,6 +66,6 @@ public class StateMachineListenerServiceTestFixture
         _c2DEventSubscriptionSessionMock.Verify(h => h.ReceiveC2DMessagesAsync(It.IsAny<CancellationToken>(), true), Times.Once);
     }
 
-    
+
 
 }
