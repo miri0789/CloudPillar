@@ -81,6 +81,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
+            await OnDesiredPropertiesUpdate(cancellationToken);
             DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
                             {
                                 _logger.Info($"Desired properties were updated.");
