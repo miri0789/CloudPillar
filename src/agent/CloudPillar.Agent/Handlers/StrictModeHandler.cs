@@ -131,7 +131,7 @@ public class StrictModeHandler : IStrictModeHandler
         return restriction.Root;
     }
 
-    public bool IsMatch(string rootPath, string filePath, string[] patterns)
+    private bool IsMatch(string rootPath, string filePath, string[] patterns)
     {
         Matcher matcher = new Matcher();
 
