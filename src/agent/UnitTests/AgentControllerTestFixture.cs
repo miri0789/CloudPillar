@@ -2,7 +2,6 @@ using CloudPillar.Agent.Controllers;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using FluentValidation;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Moq;
 using Shared.Entities.Twin;
 using Shared.Logger;
@@ -19,7 +18,6 @@ namespace CloudPillar.Agent.Tests
         private Mock<IValidator<TwinDesired>> _twinDesiredPropsValidator;
         private Mock<IStateMachineHandler> _stateMachineHandler;
         private Mock<ILoggerHandler> _loggerMock;
-        private ActionExecutingContext context;
         private AgentController _target;
         public AgentControllerTestFixture()
         {
