@@ -6,16 +6,21 @@ using Shared.Entities.Twin;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class DeviceStateFilterAttribute : ActionFilterAttribute
 {
-    public override async void OnActionExecuting(ActionExecutingContext context)
+    public override void OnActionExecuting(ActionExecutingContext context)
     {
         var controller = context.Controller as AgentController;
         if (controller != null)
         {
-            var deviceState = await controller._stateMachineHandler.GetStateAsync();
+            var deviceState = controller._stateMachineHandler.GetCurrentDeviceState();
 
+            if (deviceState == DeviceStateType.Busy)
+            {
+                context.Result = new ObjectResult(StateMachineConstants.BUSY_MESSAGE) { StatusCode = 503 };
+                return;
+            }
             if (deviceState != DeviceStateType.Ready)
             {
-                context.Result = new BadRequestObjectResult("Device is not ready");
+                context.Result = new BadRequestObjectResult(StateMachineConstants.NOT_READY_MESSAGE);
                 return;
             }
         }

@@ -25,6 +25,7 @@ public class TwinHandler : ITwinHandler
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ILoggerHandler _logger;
+    private static Twin _latestTwin { get; set; }
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
@@ -94,7 +95,6 @@ public class TwinHandler : ITwinHandler
         }
 
     }
-
     private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
     {
         try
@@ -134,7 +134,6 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed", ex);
         }
     }
-
     private async Task<string> HandleStrictMode(ActionToReport action, CancellationToken cancellationToken)
     {
         var fileName = string.Empty;
@@ -159,7 +158,6 @@ public class TwinHandler : ITwinHandler
         action.TwinReport.ResultCode = resultCode;
         await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
     }
-
     private string GetFileNameByAction(ActionToReport action)
     {
         string fileName = string.Empty;
@@ -314,6 +312,29 @@ public class TwinHandler : ITwinHandler
         catch (Exception ex)
         {
             _logger.Error($"GetTwinJsonAsync failed: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task SaveLastTwinAsync(CancellationToken cancellationToken = default)
+    {
+        var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+        _latestTwin = twin;
+    }
+
+    public async Task<string> GetLatestTwinAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (_latestTwin != null)
+            {
+                return _latestTwin.ToJson();
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetLatestTwinAsync failed: {ex.Message}");
             throw;
         }
     }

@@ -2,6 +2,7 @@ using Moq;
 using CloudPillar.Agent.Handlers;
 using Shared.Logger;
 using Shared.Entities.Twin;
+using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
