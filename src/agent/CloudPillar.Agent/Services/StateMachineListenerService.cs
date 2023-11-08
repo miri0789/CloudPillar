@@ -12,6 +12,7 @@ public class StateMachineListenerService : BackgroundService
     //private readonly IStateMachineHandler _stateMachineHandler;
     private IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
     private static CancellationTokenSource _cts;
+    private ITwinHandler _twinHandler;
 
     public StateMachineListenerService(IStateMachineChangedEvent stateMachineChangedEvent,
     //IC2DEventSubscriptionSession c2DEventSubscriptionSession,
@@ -56,6 +57,9 @@ public class StateMachineListenerService : BackgroundService
             using (var scope = _serviceProvider.CreateScope())
             {
                 _c2DEventSubscriptionSession = scope.ServiceProvider.GetService<IC2DEventSubscriptionSession>();
+                ArgumentNullException.ThrowIfNull(_c2DEventSubscriptionSession);
+                _twinHandler = scope.ServiceProvider.GetService<ITwinHandler>();
+                ArgumentNullException.ThrowIfNull(_twinHandler);
             }
         }
 
@@ -84,8 +88,9 @@ public class StateMachineListenerService : BackgroundService
     {
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
-        await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
-        //await _twinHandler.HandleTwinActionsAsync(_cts.Token);
+        var subscribeTask = _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
+        var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
+        await Task.WhenAll(subscribeTask, handleTwinTask);
     }
 
     // private async Task SetReadyAsync()

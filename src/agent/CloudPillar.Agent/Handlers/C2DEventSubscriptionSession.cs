@@ -49,10 +49,10 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 _logger.Error("Exception hit when receiving the message, ignoring it", ex);
                 continue;
             }
-
+            var parseMessage = Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType);
             try
             {
-                if (Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType))
+                if (parseMessage)
                 {
                     _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]}");
                     if (isProvisioning)
@@ -77,8 +77,11 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             finally
             {
-                await _deviceClient.CompleteAsync(receivedMessage);
-                _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
+                if (parseMessage && messageType != C2DMessageType.Reprovisioning)
+                {
+                    await _deviceClient.CompleteAsync(receivedMessage);
+                    _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
+                }
             }
         }
     }
