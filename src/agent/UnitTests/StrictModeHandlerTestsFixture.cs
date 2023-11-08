@@ -145,7 +145,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         {
             var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
 
-            fileGlobMatcherMock.Setup(x => x.IsMatch(It.IsAny<FileGlobMatcher>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true); 
+            fileGlobMatcherMock.Setup(x => x.IsMatch(It.IsAny<FileGlobMatcher>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string[]>())).Returns(true); 
 
             void SendRequest() => _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
