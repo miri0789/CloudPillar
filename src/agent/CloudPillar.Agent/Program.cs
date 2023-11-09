@@ -1,6 +1,7 @@
 using System.Net;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Sevices;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
@@ -13,29 +14,28 @@ using Shared.Logger;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
-var sslPort = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
-var sslUrl = $"https://localhost:{sslPort}";
 
-builder.WebHost.UseUrls(url, sslUrl);
+builder.WebHost.UseUrls(url);
 
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(url, sslUrl)
+                b.WithOrigins(url)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
             });
         });
 
-builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
-builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddHostedService<StateMachineListenerService>();
+builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
+builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
-builder.Services.AddSingleton<IStrictModeHandler, StrictModeHandler>();
+builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
-builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
 builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
@@ -59,10 +59,13 @@ builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
-builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
 
-var appSettingsSection = builder.Configuration.GetSection("AppSettings");
-builder.Services.Configure<AppSettings>(appSettingsSection);
+
+var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
+builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
+
+var authenticationSettings = builder.Configuration.GetSection("Authentication");
+builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -76,11 +79,10 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
@@ -88,17 +90,8 @@ app.UseMiddleware<AuthorizationCheckMiddleware>();
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
-var strictModeHandler = app.Services.GetService<IStrictModeHandler>();
-strictModeHandler.CheckAuthentucationMethodValue();
 
-using (var scope = app.Services.CreateScope())
-{
-    var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
-    await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
-
-    var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
-    StateMachineHandlerService.InitStateMachineHandlerAsync();
-}
+app.ValidateAuthenticationSettings();
 
 app.Run();
 

@@ -2,9 +2,11 @@
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Shared.Entities.Authentication;
+using DeviceMessage = Microsoft.Azure.Devices.Client;
 using Shared.Logger;
 namespace CloudPillar.Agent.Handlers;
 
@@ -32,9 +34,9 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     {
         using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {
-            var certificates = _X509CertificateWrapper.GetCertificates(store);           
+            var certificates = _X509CertificateWrapper.GetCertificates(store);
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT) && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR))
                .FirstOrDefault();
 
             return filteredCertificate;
@@ -94,7 +96,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
     }
 
-    public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, CancellationToken cancellationToken)
+    public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(dpsScopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
@@ -127,9 +129,11 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
+        await OnProvisioningCompleted(message);
+
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
 
-    }    
+    }
 
     private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
     {
@@ -143,6 +147,22 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             _logger.Error($"Exception during IoT Hub connection: ", ex);
             return false;
+        }
+    }
+
+    private async Task OnProvisioningCompleted(DeviceMessage.Message message)
+    {
+        //before initialize the device client, we need to complete the message
+        try
+        {
+            if (message != null)
+            {
+                await _deviceClientWrapper.CompleteAsync(message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("ProvisioningAsync, Complete message failed", ex);
         }
     }
 }
