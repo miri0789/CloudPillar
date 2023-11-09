@@ -130,6 +130,42 @@ public class StateMachineHandlerTestFixture
     }
 
     [Test]
+    public async Task SetStateAsync_BusyState_DisposeTwin()
+    {
+        _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+        _stateMachineTokenHandler.Setup(h => h.CancelToken());
+
+        await _target.SetStateAsync(DeviceStateType.Busy);
+
+        _deviceClientWrapper.Verify(x => x.DisposeAsync(), Times.Once);
+    }
+
+    [Test]
+    public async Task SetStateAsync_AnyState_SaveStaticState()
+    {
+        var newState = DeviceStateType.Busy;
+
+        _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+        _stateMachineTokenHandler.Setup(h => h.CancelToken());
+
+        await _target.SetStateAsync(DeviceStateType.Busy);
+
+        var updatedState = _target.GetCurrentDeviceState();
+        Assert.AreEqual(newState, updatedState);
+    }
+
+    [Test]
+    public async Task SetStateAsync_BusyState_SaveLatestTwin()
+    {
+        _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+        _stateMachineTokenHandler.Setup(h => h.CancelToken());
+
+        await _target.SetStateAsync(DeviceStateType.Busy);
+
+        _twinHandler.Verify(x => x.SaveLastTwinAsync(CancellationToken.None), Times.Once);
+    }
+
+    [Test]
     public async Task SetStateAsync_ProvisioningState_StartToken()
     {
         _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Busy);
