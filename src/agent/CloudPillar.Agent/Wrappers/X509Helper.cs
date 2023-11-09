@@ -12,7 +12,7 @@ public static class X509Helper
         {
             var certificates = store.Certificates;
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.FriendlyName.StartsWith("CPTemporaryCertificate"))
+              .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
                .FirstOrDefault();
  
             return filteredCertificate;

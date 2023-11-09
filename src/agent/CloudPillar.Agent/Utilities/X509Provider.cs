@@ -18,6 +18,7 @@ public static class X509Provider
 
             //  
             SubjectAlternativeNameBuilder subjectAlternativeNameBuilder = new SubjectAlternativeNameBuilder();
+            subjectAlternativeNameBuilder.AddDnsName($"{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}");
             subjectAlternativeNameBuilder.AddDnsName("localhost");
             request.CertificateExtensions.Add(subjectAlternativeNameBuilder.Build());
 

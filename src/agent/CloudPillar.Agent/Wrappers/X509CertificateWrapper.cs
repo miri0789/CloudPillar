@@ -11,13 +11,13 @@ public class X509CertificateWrapper : IX509CertificateWrapper
 {
     public X509Store Open(OpenFlags flags)
     {
-        var store = new X509Store(StoreLocation.CurrentUser);
+        var store = new X509Store(StoreLocation.LocalMachine);
         store.Open(flags);
         return store;
     }
     public X509Store Open2(OpenFlags flags)
     {
-        var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
+        var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
         store.Open(flags);
         return store;
     }

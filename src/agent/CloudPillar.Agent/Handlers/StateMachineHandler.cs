@@ -30,6 +30,7 @@ namespace CloudPillar.Agent.Handlers
         {
             var state = await GetStateAsync();
             _logger.Info($"InitStateMachineHandlerAsync: init device state: {state}");
+            currentDeviceState = state;
             HandleStateAction(state);
         }
 
@@ -63,6 +64,6 @@ namespace CloudPillar.Agent.Handlers
         {
             return currentDeviceState;
         }
-       
+
     }
 }
