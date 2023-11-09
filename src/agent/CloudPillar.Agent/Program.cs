@@ -1,6 +1,7 @@
 using System.Net;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Sevices;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
@@ -27,13 +28,14 @@ builder.Services.AddCors(options =>
             });
         });
 
-builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
-builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddHostedService<StateMachineListenerService>();
+builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
+builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
-builder.Services.AddScoped<IC2DEventHandler, C2DEventHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
 builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
 builder.Services.AddScoped<ISignatureHandler, SignatureHandler>();
@@ -57,7 +59,7 @@ builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
-builder.Services.AddSingleton<IStateMachineTokenHandler, StateMachineTokenHandler>();
+
 
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
@@ -90,15 +92,6 @@ app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 app.MapControllers();
 
 app.ValidateAuthenticationSettings();
-
-using (var scope = app.Services.CreateScope())
-{
-    var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
-    await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
-
-    var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
-    StateMachineHandlerService.InitStateMachineHandlerAsync();
-}
 
 app.Run();
 
