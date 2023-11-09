@@ -138,7 +138,7 @@ public class StrictModeHandler : IStrictModeHandler
         matcher.AddIncludePatterns(patterns);
         var result = matcher.Match(rootPath, filePath);
 
-        var fileMatch = result.Files.Where(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR) == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR)).Count() > 0;
+        var fileMatch = result.Files.Any(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR) == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR));
         return fileMatch;
     }
 }
