@@ -20,13 +20,13 @@ public class StateMachineHandlerTestFixture
         _twinHandler = new Mock<ITwinHandler>();
         _logger = new Mock<ILoggerHandler>();
         _stateMachineChangedEventMock = new Mock<IStateMachineChangedEvent>();
-        
+
 
         _target = new StateMachineHandler(
             _twinHandler.Object,
             _stateMachineChangedEventMock.Object,
-            _logger.Object           
-        );    
+            _logger.Object
+        );
     }
 
     [Test]
@@ -94,5 +94,16 @@ public class StateMachineHandlerTestFixture
         _twinHandler.Verify(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready), Times.Never);
     }
 
+    [Test]
+    public async Task SetStateAsync_AnyState_SaveStaticState()
+    {
+        var newState = DeviceStateType.Busy;
 
+        _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+
+        await _target.SetStateAsync(DeviceStateType.Busy);
+
+        var updatedState = _target.GetCurrentDeviceState();
+        Assert.AreEqual(newState, updatedState);
+    }
 }
