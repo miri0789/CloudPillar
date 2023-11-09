@@ -16,6 +16,11 @@ public static class X509Provider
                 $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
+            //  
+            SubjectAlternativeNameBuilder subjectAlternativeNameBuilder = new SubjectAlternativeNameBuilder();
+            subjectAlternativeNameBuilder.AddDnsName("localhost");
+            request.CertificateExtensions.Add(subjectAlternativeNameBuilder.Build());
+
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(secretKey);
             var OneMDKeyExtension = new X509Extension(
                 new Oid(ProvisioningConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
@@ -24,6 +29,8 @@ public static class X509Provider
 
 
             request.CertificateExtensions.Add(OneMDKeyExtension);
+
+
 
             var certificate = request.CreateSelfSigned(
                 DateTimeOffset.Now.AddDays(-1),

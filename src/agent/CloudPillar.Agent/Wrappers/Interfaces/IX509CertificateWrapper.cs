@@ -7,6 +7,7 @@ namespace CloudPillar.Agent.Wrappers;
 public interface IX509CertificateWrapper
 {
     X509Store Open(OpenFlags flags);
+    X509Store Open2(OpenFlags flags);
 
     X509Certificate2Collection GetCertificates(X509Store store);
 

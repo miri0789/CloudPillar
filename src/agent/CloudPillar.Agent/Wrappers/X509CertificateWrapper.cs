@@ -15,6 +15,12 @@ public class X509CertificateWrapper : IX509CertificateWrapper
         store.Open(flags);
         return store;
     }
+    public X509Store Open2(OpenFlags flags)
+    {
+        var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
+        store.Open(flags);
+        return store;
+    }
 
     public X509Certificate2Collection GetCertificates(X509Store store)
     {

@@ -88,11 +88,11 @@ public class AuthorizationCheckMiddleware
         await _requestDelegate(context);
         return;
 
-        // var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+        //var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
         // var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
         // {
         //     Scheme = Uri.UriSchemeHttps,
-        //     Port = sslPort
+        //     Port = 8199
         // };
 
         // context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Sevices;
@@ -15,14 +16,27 @@ const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
 var url = $"http://localhost:{port}";
+var url2 = $"https://localhost:8199";
 
-builder.WebHost.UseUrls(url);
+builder.WebHost.UseUrls(url, url2);
+X509Certificate2 x509Certificate = X509Helper.GetCertificate();
+if (x509Certificate != null)
+{
+    builder.WebHost.UseKestrel(options =>
+    {
+        options.Listen(IPAddress.Any,port);
+        options.Listen(IPAddress.Any, 8199, listenOptions =>
+        {
+            listenOptions.UseHttps(x509Certificate);
+        });
+    });
+}
 
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(url)
+                b.WithOrigins(url, url2)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
             });

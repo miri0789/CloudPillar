@@ -143,6 +143,11 @@ public class ReprovisioningHandler : IReprovisioningHandler
             RemoveCertificatesFromStore(store, string.Empty);
             _x509CertificateWrapper.Add(store, privateCertificate);
         }
+        using (var store = _x509CertificateWrapper.Open2(OpenFlags.ReadWrite))
+        {
+            //RemoveCertificatesFromStore(store, string.Empty);
+            _x509CertificateWrapper.Add(store, privateCertificate);
+        }
 
     }
 
