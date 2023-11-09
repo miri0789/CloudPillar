@@ -16,7 +16,6 @@ namespace CloudPillar.Agent.Handlers;
 public class TwinHandler : ITwinHandler
 {
     private readonly IDeviceClientWrapper _deviceClient;
-    private readonly IDeviceClientWrapper _deviceClient2;
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
