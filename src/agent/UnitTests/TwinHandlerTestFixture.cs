@@ -21,7 +21,6 @@ public class TwinHandlerTestFixture
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IStrictModeHandler> _strictModeHandlerMock;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
-    private Mock<IOptions<StrictModeSettings>> _strictModeSettingsMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private Mock<IOptions<StrictModeSettings>> _strictModeSettings;
@@ -39,14 +38,10 @@ public class TwinHandlerTestFixture
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
-        _strictModeSettingsMock = new Mock<IOptions<StrictModeSettings>>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
         _strictModeSettings = new Mock<IOptions<StrictModeSettings>>();
-        var strictModeSettings = new StrictModeSettings
-        {
-        };
-        _strictModeSettings.Setup(x => x.Value).Returns(strictModeSettings);
+        _strictModeSettings.Setup(x => x.Value).Returns(new StrictModeSettings());
         CreateTarget();
     }
 
