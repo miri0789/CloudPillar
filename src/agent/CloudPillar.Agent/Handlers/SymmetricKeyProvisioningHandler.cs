@@ -11,7 +11,6 @@ namespace CloudPillar.Agent.Handlers;
 public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 {
     private readonly ILoggerHandler _logger;
-
     private IDeviceClientWrapper _deviceClientWrapper;
     private ISymmetricKeyWrapper _symmetricKeyWrapper;
     private readonly IProvisioningDeviceClientWrapper _provisioningDeviceClientWrapper;
@@ -60,20 +59,14 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
                 if (result == null)
                 {
-                    _logger.Error("RegisterAsync failed");
-                    throw new Exception("RegisterAsync failed");
-
-                    // HandleError("RegisterAsync failed");
+                    HandleError("RegisterAsync failed");
                 }
 
                 _logger.Debug($"Registration status: {result.Status}.");
 
                 if (result.Status != ProvisioningRegistrationStatusType.Assigned)
                 {
-                    _logger.Error("Registration status did not assign a hub");
-                    throw new Exception("Registration status did not assign a hub");
-
-                    // HandleError("Registration status did not assign a hub");
+                    HandleError("Registration status did not assign a hub");
                 }
                 await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
             }
