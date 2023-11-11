@@ -59,6 +59,7 @@ builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
+builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 
 
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);

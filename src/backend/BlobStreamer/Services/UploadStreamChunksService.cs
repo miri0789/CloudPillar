@@ -2,6 +2,7 @@ using Microsoft.Azure.Storage.Blob;
 using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
 using Shared.Entities.Services;
+using Shared.Entities.Twin;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -10,15 +11,17 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
+    private readonly ITwinDiseredService _twinDiseredHandler;
 
-    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper)
+    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
+        _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
     }
 
-    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum)
+    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId)
     {
         try
         {
@@ -32,7 +35,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex} to {storageUri.AbsolutePath}");
 
             CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
-           
+
             using (Stream inputStream = new MemoryStream(readStream))
             {
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
@@ -57,7 +60,11 @@ public class UploadStreamChunksService : IUploadStreamChunksService
 
                     if (!string.IsNullOrEmpty(checkSum))
                     {
-                        await VerifyStreamChecksum(checkSum, blob);
+                        var uploadSuccess = await VerifyStreamChecksum(checkSum, blob);
+                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
+                        if (uploadSuccess)
+                        {
+                        }
                     }
                 }
             }
@@ -69,7 +76,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     }
 
 
-    private async Task VerifyStreamChecksum(string originalCheckSum, CloudBlockBlob blob)
+    private async Task<bool> VerifyStreamChecksum(string originalCheckSum, CloudBlockBlob blob)
     {
         Stream azureStream = new MemoryStream();
         await blob.DownloadToStreamAsync(azureStream);
@@ -88,7 +95,24 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             //TO DO
             //add recipe to desired
         }
-
+        return uploadSuccess;
 
     }
+
+    private async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri)
+    {
+
+        DownloadAction downloadAction = new DownloadAction()
+        {
+            Action = TwinActionType.SingularDownload,
+            ActionId = Guid.NewGuid().ToString(),
+            Description = "download file by run diagnostic",
+            Source = storageUri.AbsolutePath,
+            DestinationPath = "C:\\git.dev\\CloudPillar\\CloudPillar\\src\\agent\\CloudPillar.Agent\\bin\\Debug\\net7.0",
+        
+        };
+        await _twinDiseredHandler.AddDesiredToTwin(deviceId,downloadAction);
+
+    }
+
 }

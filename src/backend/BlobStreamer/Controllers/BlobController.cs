@@ -31,9 +31,10 @@ public class BlobController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("uploadStream")]
-    public async Task UploadStream([FromBody] StreamingUploadChunkEvent data)
+      [HttpPost("uploadStream")]
+    public async Task UploadStream([FromBody] StreamingUploadChunkEvent data, string deviceId)
     {
-        await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum);
+        await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum, deviceId);
     }
+
 }

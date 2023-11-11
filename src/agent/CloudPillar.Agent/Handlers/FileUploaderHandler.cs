@@ -60,7 +60,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    private async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
+    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
