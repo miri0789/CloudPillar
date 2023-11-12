@@ -1,7 +1,6 @@
 
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
-using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

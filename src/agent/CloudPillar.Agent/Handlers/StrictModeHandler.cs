@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using Shared.Logger;
@@ -7,6 +8,8 @@ namespace CloudPillar.Agent.Handlers;
 
 public class StrictModeHandler : IStrictModeHandler
 {
+    private const string SEPARATOR = "/";
+    private const string DOUBLE_SEPARATOR = "\\";
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ILoggerHandler _logger;
 
@@ -23,7 +26,7 @@ public class StrictModeHandler : IStrictModeHandler
         string replacedString = Regex.Replace(fileName, pattern, match =>
         {
             string key = match.Groups[1].Value;
-            ArgumentNullException.ThrowIfNullOrEmpty(key);
+            ArgumentException.ThrowIfNullOrEmpty(key);
 
             return GetRootById(key, actionType);
         });
@@ -33,7 +36,7 @@ public class StrictModeHandler : IStrictModeHandler
     public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
         FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
-        if (zoneRestrictions.Type == StrictModeAction.Upload.ToString() || zoneRestrictions.MaxSize == 0)
+        if (zoneRestrictions.Type == StrictModeAction.Upload.ToString() || !zoneRestrictions.MaxSize.HasValue || zoneRestrictions.MaxSize == 0)
         {
             return;
         }
@@ -51,9 +54,9 @@ public class StrictModeHandler : IStrictModeHandler
             return;
         }
 
-        string verbatimFileName = @$"{fileName.Replace("\\", "/")}";
+        string verbatimFileName = @$"{fileName.Replace("\\\\", "/")}";
 
-        FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
+        FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, actionType);
 
         if (zoneRestrictions == null)
         {
@@ -67,42 +70,13 @@ public class StrictModeHandler : IStrictModeHandler
             return;
         }
 
-        foreach (var pattern in allowPatterns)
+        bool isMatch = IsMatch(zoneRestrictions.Root, verbatimFileName, allowPatterns.ToArray());
+        if (!isMatch)
         {
-            var regexPattern = ConvertToRegexPattern(pattern.Replace("\\", "/").Trim());
-            var isMatch = IsMatch(verbatimFileName, regexPattern);
-            if (isMatch)
-            {
-                _logger.Info($"{fileName} is match to pattern: {pattern}");
-                return;
-            }
-
+            _logger.Error("Denied by the lack of local allowance");
+            throw new FormatException(ResultCode.StrictModePattern.ToString());
         }
-        _logger.Error("Denied by the lack of local allowance");
-        throw new FormatException(ResultCode.StrictModePattern.ToString());
-    }
-
-    private bool IsMatch(string filePath, Regex pattern)
-    {
-        return pattern.IsMatch(filePath);
-    }
-
-    private Regex ConvertToRegexPattern(string pattern)
-    {
-        if (pattern.EndsWith("/"))
-        {
-            pattern += "*";
-        }
-        string regexPattern = Regex.Escape(pattern)
-                                          .Replace("\\*", ".*")
-                                          .Replace("\\?", ".")
-                                          .Replace(@"\[\!", "[^")
-                                          .Replace(@"\[", "[")
-                                          .Replace(@"\]", "]")
-                                          .Replace(@"\!", "!")
-                                          .Replace("/", "\\/") + "$";
-
-        return new Regex(regexPattern, RegexOptions.IgnoreCase);
+        _logger.Info($"{verbatimFileName} is match to strict mode allow patterns");
     }
 
     private List<FileRestrictionDetails> GetRestrictionsByActionType(TwinActionType actionType)
@@ -155,5 +129,16 @@ public class StrictModeHandler : IStrictModeHandler
         }
 
         return restriction.Root;
+    }
+
+    private bool IsMatch(string rootPath, string filePath, string[] patterns)
+    {
+        Matcher matcher = new Matcher();
+
+        matcher.AddIncludePatterns(patterns);
+        var result = matcher.Match(rootPath, filePath);
+
+        var fileMatch = result.Files.Any(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR) == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR));
+        return fileMatch;
     }
 }
