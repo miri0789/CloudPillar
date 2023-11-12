@@ -25,10 +25,19 @@ builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
+
+var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
+builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
+
 var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
+
+// var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
+// builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
+
+
 
 if (app.Environment.IsDevelopment())
 {

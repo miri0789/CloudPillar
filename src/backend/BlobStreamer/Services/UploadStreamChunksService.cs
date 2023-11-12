@@ -3,6 +3,9 @@ using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
+using Microsoft.Extensions.Options;
+
+
 
 namespace Backend.BlobStreamer.Services;
 
@@ -11,17 +14,20 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
+    private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
     private readonly ITwinDiseredService _twinDiseredHandler;
 
-    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler)
+
+    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
+        _runDiagnosticsSettings = runDiagnosticsSettings.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
     }
 
-    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId)
+    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool fromRunDiagnostic)
     {
         try
         {
@@ -96,7 +102,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             //add recipe to desired
         }
         return uploadSuccess;
-
     }
 
     private async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri)
@@ -109,9 +114,9 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             Description = "download file by run diagnostic",
             Source = storageUri.AbsolutePath,
             DestinationPath = "C:\\git.dev\\CloudPillar\\CloudPillar\\src\\agent\\CloudPillar.Agent\\bin\\Debug\\net7.0",
-        
+
         };
-        await _twinDiseredHandler.AddDesiredToTwin(deviceId,downloadAction);
+        await _twinDiseredHandler.AddDesiredToTwin(deviceId, downloadAction);
 
     }
 

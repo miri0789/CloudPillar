@@ -60,7 +60,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
+    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken, bool fromRunDiagnostic = false)
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
@@ -85,7 +85,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
             using (Stream readStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true))
             {
-                await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, cancellationToken);
+                await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, fromRunDiagnostic, cancellationToken);
             }
         }
     }
@@ -151,7 +151,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         return readStream;
     }
 
-    private async Task UploadFileAsync(UploadAction uploadAction, ActionToReport actionToReport, string blobname, Stream readStream, CancellationToken cancellationToken)
+    private async Task UploadFileAsync(UploadAction uploadAction, ActionToReport actionToReport, string blobname, Stream readStream, bool fromRunDiagnostic, CancellationToken cancellationToken)
     {
         _logger.Info($"UploadFileAsync");
 

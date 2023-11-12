@@ -2,6 +2,7 @@
 
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Twin;
+using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler
@@ -14,20 +15,34 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private string destPath;
 
     private readonly IFileUploaderHandler _fileUploaderHandler;
+    private readonly ILoggerHandler _logger;
 
-    public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler)
+    public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
-
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         destPath = Path.Combine(basePath, FILE_NAME + FILE_EXSTENSION);
     }
 
     public async Task CreateFileAsync()
     {
-        var buffer = new byte[FILE_SIZE_BYTES];
-        new Random().NextBytes(buffer);
-        var text = System.Text.Encoding.Default.GetString(buffer);
-        await File.WriteAllTextAsync(destPath, text);
+        try
+        {
+            //create random content
+            var bytes = new Byte[FILE_SIZE_BYTES];
+            new Random().NextBytes(bytes);
+
+            using (FileStream fileStream = new FileStream(destPath, FileMode.Create))
+            {
+                fileStream.SetLength(FILE_SIZE_BYTES);
+                await fileStream.WriteAsync(bytes);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"error during creating a file {ex.Message}");
+            throw ex;
+        }
     }
 
     public async Task UploadFileAsync(CancellationToken cancellationToken)
@@ -42,7 +57,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         };
 
         var actionToReport = new ActionToReport();
-        await _fileUploaderHandler.UploadFilesToBlobStorageAsync(destPath, uploadAction, actionToReport, cancellationToken);
+        await _fileUploaderHandler.UploadFilesToBlobStorageAsync(destPath, uploadAction, actionToReport, cancellationToken, true);
     }
 
 

@@ -200,7 +200,6 @@
             "cwd": "${workspaceFolder}/src/agent/CloudPillar.Agent",
             "console": "internalConsole",
             "env": {
-                
             },
             "stopAtEntry": false
         }
