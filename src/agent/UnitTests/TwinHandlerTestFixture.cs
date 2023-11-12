@@ -23,14 +23,20 @@ public class TwinHandlerTestFixture
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
-    private Mock<IOptions<StrictModeSettings>> _strictModeSettings;
     private ITwinHandler _target;
+    private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
+    private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
     private CancellationToken cancellationToken = CancellationToken.None;
 
 
     [SetUp]
     public void Setup()
     {
+        mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
+        mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
+        mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+
+
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _fileDownloadHandlerMock = new Mock<IFileDownloadHandler>();
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
@@ -40,8 +46,6 @@ public class TwinHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
-        _strictModeSettings = new Mock<IOptions<StrictModeSettings>>();
-        _strictModeSettings.Setup(x => x.Value).Returns(new StrictModeSettings());
         CreateTarget();
     }
 
@@ -56,7 +60,7 @@ public class TwinHandlerTestFixture
           _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
-          _strictModeSettings.Object);
+          mockStrictModeSettings.Object);
     }
 
     [Test]
@@ -208,6 +212,37 @@ public class TwinHandlerTestFixture
         _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()), Times.Once);
     }
 
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_StrictModeWrongDestination_NotExecuteDownload()
+    {
+        var desired = new TwinChangeSpec()
+        {
+            Id = "123",
+            Patch = new TwinPatch()
+            {
+                InstallSteps = new List<TwinAction>()
+                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath=""},
+                    }.ToArray()
+            }
+        };
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported);
+        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Never);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_StrictModeTrue_BashAndPowerShellActionsNotAllowed()
+    {
+        mockStrictModeSettingsValue.StrictMode = true;
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
+    }
 
     [Test]
     public async Task UpdateDeviceStateAsync_ValidState_Success()
