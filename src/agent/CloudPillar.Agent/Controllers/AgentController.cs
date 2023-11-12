@@ -103,7 +103,7 @@ public class AgentController : ControllerBase
     [HttpPost("SetReady")]
     public async Task<ActionResult<string>> SetReadyAsync()
     {
-        _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
     }    
 
@@ -121,7 +121,7 @@ public class AgentController : ControllerBase
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
-        _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning);
         await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey);
     }
 }
