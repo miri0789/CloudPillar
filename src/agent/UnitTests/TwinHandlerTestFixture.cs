@@ -233,7 +233,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
 
-        _target.OnDesiredPropertiesUpdate(CancellationToken.None);
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Never);
     }
 
@@ -242,7 +242,7 @@ public class TwinHandlerTestFixture
     {
         mockStrictModeSettingsValue.StrictMode = true;
 
-        _target.OnDesiredPropertiesUpdate(CancellationToken.None);
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
     }
 
