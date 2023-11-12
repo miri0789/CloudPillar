@@ -9,15 +9,9 @@ using Shared.Entities.Authentication;
 namespace CloudPillar.Agent.Wrappers;
 public class X509CertificateWrapper : IX509CertificateWrapper
 {
-    public X509Store Open(OpenFlags flags)
+    public X509Store Open(OpenFlags flags, StoreName storeName = StoreName.My)
     {
-        var store = new X509Store(StoreLocation.LocalMachine);
-        store.Open(flags);
-        return store;
-    }
-    public X509Store Open2(OpenFlags flags)
-    {
-        var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+        var store = new X509Store(storeName, StoreLocation.LocalMachine);
         store.Open(flags);
         return store;
     }

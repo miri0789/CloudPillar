@@ -47,7 +47,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
-    public async Task HandleReprovisioningMessageAsync(Message recivedMessage,ReprovisioningMessage message, CancellationToken cancellationToken)
+    public async Task HandleReprovisioningMessageAsync(Message recivedMessage, ReprovisioningMessage message, CancellationToken cancellationToken)
     {
         ValidateReprovisioningMessage(message);
 
@@ -93,28 +93,12 @@ public class ReprovisioningHandler : IReprovisioningHandler
     {
         try
         {
-            await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint,recivedMessage, cancellationToken);
+            await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, recivedMessage, cancellationToken);
             using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite))
             {
-
-                X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
-                if (certificates == null)
-                {
-                    throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
-                }
-
-                RemoveCertificatesFromStore(store, certificate.Thumbprint);
-
-                X509Certificate2Collection collection = _x509CertificateWrapper.Find(store, X509FindType.FindByThumbprint, certificate.Thumbprint, false);
-                if (collection.Count == 0)
-                {
-                    throw new ArgumentNullException("certificates", "Certificates collection must contains temporary cert.");
-                }
-
-                X509Certificate2 cert = collection[0];
-                cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
+                CleanCertificates(store, certificate, deviceId, iotHubHostName);
             }
-
+            InstallCertificateInTrustArea(certificate, deviceId, iotHubHostName);
 
         }
         catch (Exception ex)
@@ -123,6 +107,42 @@ public class ReprovisioningHandler : IReprovisioningHandler
             throw;
         }
 
+    }
+
+    private void InstallCertificateInTrustArea(X509Certificate2 certificate, string deviceId, string iotHubHostName)
+    {
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, StoreName.Root))
+        {
+            X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
+            if (certificates == null)
+            {
+                throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
+            }
+
+            RemoveCertificatesFromStore(store, certificate.Thumbprint);
+            certificate.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
+            store.Add(certificate);
+        }
+    }
+
+    private void CleanCertificates(X509Store store, X509Certificate2 certificate, string deviceId, string iotHubHostName)
+    {
+        X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
+        if (certificates == null)
+        {
+            throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
+        }
+
+        RemoveCertificatesFromStore(store, certificate.Thumbprint);
+
+        X509Certificate2Collection collection = _x509CertificateWrapper.Find(store, X509FindType.FindByThumbprint, certificate.Thumbprint, false);
+        if (collection.Count == 0)
+        {
+            throw new ArgumentNullException("certificates", "Certificates collection must contains temporary cert.");
+        }
+
+        X509Certificate2 cert = collection[0];
+        cert.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
     }
 
     private void InstallTemporaryCertificate(X509Certificate2 certificate, string secretKey)
@@ -143,12 +163,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
             RemoveCertificatesFromStore(store, string.Empty);
             _x509CertificateWrapper.Add(store, privateCertificate);
         }
-        using (var store = _x509CertificateWrapper.Open2(OpenFlags.ReadWrite))
-        {
-            //RemoveCertificatesFromStore(store, string.Empty);
-            _x509CertificateWrapper.Add(store, privateCertificate);
-        }
-
     }
 
     private X509Certificate2 GetTempCertificate()
