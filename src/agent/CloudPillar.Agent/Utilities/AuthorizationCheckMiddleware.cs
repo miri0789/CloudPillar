@@ -16,18 +16,19 @@ public class AuthorizationCheckMiddleware
 
     private ILoggerHandler _logger;
     private readonly IConfiguration _configuration;
+
     public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfiguration configuration)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
     }
 
     public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler)
     {
-
         Endpoint endpoint = context.GetEndpoint();
-
+        //context
         var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
         if (deviceIsBusy)
         {
@@ -95,8 +96,27 @@ public class AuthorizationCheckMiddleware
         var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
         {
             Scheme = Uri.UriSchemeHttps,
-            Port = sslPort
+            Port = sslPort,
         };
+
+        // var cert = X509Helper.GetCertificate();
+        // if (cert != null)
+        // {
+        //     context.Request.Host = new HostString(url); // Update the request host
+        //     context.Request.Scheme = "https"; // Set the scheme to HTTPS
+
+        //     // Configure Kestrel for HTTPS
+        //     var serverOptions = context.RequestServices.GetRequiredService<IOptions<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>>().Value;
+        //     serverOptions.Listen(IPAddress.Any, httpsPort, listenOptions =>
+        //     {
+        //         listenOptions.UseHttps(x509Certificate);
+        //     });
+        // }
+
+        context.Connection.ClientCertificate = X509Helper.GetCertificate();
+        context.Request.Scheme =  Uri.UriSchemeHttps;
+        context.Request.Host = new HostString(sslPort.ToString());
+
 
         context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
     }
