@@ -121,7 +121,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     }
 
     [Test]
-    public async Task ProvisioningAsync_WithValidParameters_RegistersDevice()
+    public async Task ProvisioningAsync_ValidParameters_RegistersDevice()
     {
 
         _provisioningDeviceClientWrapperMock.Setup(x => x.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SecurityProvider>(), It.IsAny<ProvisioningTransportHandler>())).ReturnsAsync(() =>

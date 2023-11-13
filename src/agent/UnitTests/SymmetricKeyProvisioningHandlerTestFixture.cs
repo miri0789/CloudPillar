@@ -57,7 +57,7 @@ public class SymmetricKeyProvisioningHandlerTestFixture
     }
 
     [Test]
-    public async Task ProvisioningAsync_WithValidParameters_RegistersDevice()
+    public async Task ProvisioningAsync_ValidParameters_RegistersDevice()
     {
         _authenticationSettingsMock.Setup(x => x.Value).Returns(authenticationSettings);
 
