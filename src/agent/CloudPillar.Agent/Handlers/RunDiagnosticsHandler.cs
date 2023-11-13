@@ -1,4 +1,5 @@
 using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using Shared.Logger;
@@ -9,19 +10,21 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private const int BYTE_SIZE = 1024;
     private const string FILE_NAME = "diagnosticFile";
     private const string FILE_EXSTENSION = ".txt";
-    private string basePath = AppDomain.CurrentDomain.BaseDirectory;
-    private string destPath;
+    private string _basePath = AppDomain.CurrentDomain.BaseDirectory;
+    private string _destPath;
 
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
     private readonly ILoggerHandler _logger;
+    private readonly IFileStreamerWrapper _fileStreamerWrapper;
 
-    public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, ILoggerHandler logger)
+    public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
+        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        destPath = Path.Combine(basePath, FILE_NAME + FILE_EXSTENSION);
+        _destPath = Path.Combine(_basePath, FILE_NAME + FILE_EXSTENSION);
     }
 
     public async Task CreateFileAsync()
@@ -33,7 +36,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             var bytes = new Byte[fileSize];
             new Random().NextBytes(bytes);
 
-            using (FileStream fileStream = new FileStream(destPath, FileMode.Create))
+            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(_destPath, FileMode.Create))
             {
                 fileStream.SetLength(fileSize);
                 await fileStream.WriteAsync(bytes);
@@ -54,11 +57,11 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             Description = "upload file by run diagnostic",
             ActionId = Guid.NewGuid().ToString(),
             Method = FileUploadMethod.Stream,
-            FileName = destPath
+            FileName = _destPath
         };
 
         var actionToReport = new ActionToReport();
-        await _fileUploaderHandler.UploadFilesToBlobStorageAsync(destPath, uploadAction, actionToReport, cancellationToken);
+        await _fileUploaderHandler.UploadFilesToBlobStorageAsync(_destPath, uploadAction, actionToReport, cancellationToken);
     }
 
 
