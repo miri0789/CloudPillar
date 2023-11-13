@@ -7,6 +7,8 @@ using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
 using FluentValidation;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.Extensions.Azure;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
@@ -20,19 +22,19 @@ var url = $"http://localhost:{port}";
 var url2 = $"https://localhost:{httpsPort}";
 
 builder.WebHost.UseUrls(url);
-// X509Certificate2 x509Certificate = X509Helper.GetCertificate();
-// if (x509Certificate != null)
-// {
-//     builder.WebHost.UseUrls(url, url2);
-//     builder.WebHost.UseKestrel(options =>
-//     {
-//         options.Listen(IPAddress.Any, port);
-//         options.Listen(IPAddress.Any, httpsPort, listenOptions =>
-//         {
-//             listenOptions.UseHttps(x509Certificate);
-//         });
-//     });
-// }
+X509Certificate2 x509Certificate = X509Provider.GetCertificate();
+if (x509Certificate != null)
+{
+    builder.WebHost.UseUrls(url, url2);
+    builder.WebHost.UseKestrel(options =>
+    {
+        options.Listen(IPAddress.Any, port);
+        options.Listen(IPAddress.Any, httpsPort, listenOptions =>
+        {
+            listenOptions.UseHttps(x509Certificate);
+        });
+    });
+}
 
 builder.Services.AddCors(options =>
         {
@@ -98,28 +100,6 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-// if (x509Certificate != null)
-// {
-//     //app.UseHttpsRedirection();
-//     builder.WebHost.UseUrls(url, url2);
-// }
-// app.Use(async (c, next) =>
-// {
-//     var x509Certificate = X509Helper.GetCertificate();
-//     if (x509Certificate != null)
-//     {
-//         builder.WebHost.UseUrls(url, url2);
-//         builder.WebHost.UseKestrel(options =>
-//     {
-//         options.Listen(IPAddress.Any, port);
-//         options.Listen(IPAddress.Any, httpsPort, listenOptions =>
-//         {
-//             listenOptions.UseHttps(x509Certificate);
-//         });
-//     });
-//     }
-//     await next();
-// });
 
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 

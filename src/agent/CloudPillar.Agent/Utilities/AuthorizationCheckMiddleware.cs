@@ -99,24 +99,7 @@ public class AuthorizationCheckMiddleware
             Port = sslPort,
         };
 
-        // var cert = X509Helper.GetCertificate();
-        // if (cert != null)
-        // {
-        //     context.Request.Host = new HostString(url); // Update the request host
-        //     context.Request.Scheme = "https"; // Set the scheme to HTTPS
-
-        //     // Configure Kestrel for HTTPS
-        //     var serverOptions = context.RequestServices.GetRequiredService<IOptions<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>>().Value;
-        //     serverOptions.Listen(IPAddress.Any, httpsPort, listenOptions =>
-        //     {
-        //         listenOptions.UseHttps(x509Certificate);
-        //     });
-        // }
-
-        context.Connection.ClientCertificate = X509Helper.GetCertificate();
-        context.Request.Scheme =  Uri.UriSchemeHttps;
-        context.Request.Host = new HostString(sslPort.ToString());
-
+        // context.Connection.ClientCertificate = X509Helper.GetCertificate();
 
         context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
     }
