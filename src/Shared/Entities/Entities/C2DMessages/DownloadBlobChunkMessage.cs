@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
 
 namespace Shared.Entities.Messages;
 
@@ -10,6 +12,9 @@ public class DownloadBlobChunkMessage : C2DMessages
     public string FileName { get; set; }
     public long? RangeSize { get; set; }
     public long FileSize { get; set; }
+
+    [DefaultValue(TwinPatchChangeSpec.ChangeSpec)]
+    public TwinPatchChangeSpec ChangeSpecKey { get; set; }
 
     public override string GetMessageId()
     {

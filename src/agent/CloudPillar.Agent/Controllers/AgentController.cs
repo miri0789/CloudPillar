@@ -126,7 +126,7 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
 
-    private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
+private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
     {
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();

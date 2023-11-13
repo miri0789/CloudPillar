@@ -100,13 +100,14 @@ public class TwinHandler : ITwinHandler
 
         if (actions.Count() > 0)
         {
-            await HandleTwinActionsAsync(actions, cancellationToken);
+            await HandleTwinActionsAsync(actions, changeSpecKey, cancellationToken);
         }
     }
-    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
+    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
     {
         try
         {
+
             foreach (var action in actions)
             {
                 switch (action.TwinAction.Action)
@@ -114,7 +115,7 @@ public class TwinHandler : ITwinHandler
                     case TwinActionType.SingularDownload:
                         var fileName = await HandleStrictMode(action, cancellationToken);
                         if (string.IsNullOrEmpty(fileName)) { continue; }
-                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
+                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action, changeSpecKey);
                         break;
 
                     case TwinActionType.SingularUpload:

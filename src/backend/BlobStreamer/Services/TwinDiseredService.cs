@@ -20,7 +20,7 @@ public class TwinDiseredService : ITwinDiseredService
 
     }
 
-    public async Task AddDesiredRecipeAsync(string deviceId,TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
+    public async Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
     {
         try
         {
@@ -38,6 +38,7 @@ public class TwinDiseredService : ITwinDiseredService
             twin.Properties.Desired = new TwinCollection(twinDesiredJson);
 
             await _registryManagerWrapper.UpdateTwinAsync(deviceId, twin, twin.ETag);
+            _logger.Info($"A new recipe has been successfully added to {deviceId} ");
         }
         catch (Exception ex)
         {

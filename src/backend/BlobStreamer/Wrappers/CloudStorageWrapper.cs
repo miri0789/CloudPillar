@@ -17,6 +17,7 @@ public class CloudStorageWrapper : ICloudStorageWrapper
 
     public async Task<CloudBlockBlob> GetBlockBlobReference(CloudBlobContainer storageContainer, string fileName)
     {
+        
         CloudBlockBlob blockBlob = storageContainer.GetBlockBlobReference(fileName);
         await blockBlob.FetchAttributesAsync();
         return blockBlob;

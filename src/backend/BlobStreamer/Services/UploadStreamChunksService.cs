@@ -62,15 +62,15 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     existingData.Seek(0, SeekOrigin.Begin);
 
                     // Upload the combined data to the blob
-                    await _cloudBlockBlobWrapper.UploadFromStreamAsync(blob, inputStream);
+                    await _cloudBlockBlobWrapper.UploadFromStreamAsync(blob, existingData);
+                }
 
-                    if (!string.IsNullOrEmpty(checkSum))
+                if (!string.IsNullOrEmpty(checkSum))
+                {
+                    var uploadSuccess = await VerifyStreamChecksum(checkSum, blob);
+                    if (uploadSuccess)
                     {
-                        var uploadSuccess = await VerifyStreamChecksum(checkSum, blob);
-                        if (uploadSuccess)
-                        {
-                            await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
-                        }
+                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
                     }
                 }
             }
@@ -106,13 +106,12 @@ public class UploadStreamChunksService : IUploadStreamChunksService
 
     private async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri)
     {
-
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
             Description = "download file by run diagnostic",
-            Source = storageUri.AbsolutePath,
-            DestinationPath = "C:\\git.dev\\CloudPillar\\CloudPillar\\src\\agent\\CloudPillar.Agent\\bin\\Debug\\net7.0",
+            Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
+            DestinationPath = _runDiagnosticsSettings.DestinationPathForDownload,
         };
         await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.changeSpecDiagnostics, downloadAction);
     }

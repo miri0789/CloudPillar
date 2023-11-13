@@ -1,5 +1,5 @@
 public class RunDiagnosticsSettings
 {
-    public int DeleteBlobAfterHours { get; set; }
-
+    public int DeleteBlobAfterHours { get; set; } = 1;
+    public string DestinationPathForDownload { get; set; }
 }

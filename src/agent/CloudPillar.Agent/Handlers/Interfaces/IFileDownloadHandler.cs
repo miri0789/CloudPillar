@@ -6,6 +6,6 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface IFileDownloadHandler
 {
-    Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport);
+    Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport, TwinPatchChangeSpec changeSpecKey);
     Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message);
 }

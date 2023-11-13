@@ -29,7 +29,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
+    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport, TwinPatchChangeSpec changeSpecKey)
     {
         _filesDownloads.Add(new FileDownload
         {
@@ -37,7 +37,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             Report = actionToReport,
             Stopwatch = new Stopwatch()
         });
-        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionId);
+        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionId, changeSpecKey);
     }
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
@@ -49,7 +49,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
         }
-        var filePath = file.DownloadAction.DestinationPath + file.DownloadAction.Source;
+        var filePath = file.DownloadAction.DestinationPath;
 
         if (!file.Stopwatch.IsRunning)
         {
@@ -101,14 +101,14 @@ public class FileDownloadHandler : IFileDownloadHandler
         return (float)progressPercent;
     }
 
-    private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath)
+    private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, TwinPatchChangeSpec changeSpecKey, string filePath)
     {
         long endPosition = blobChunk.Offset + blobChunk.Data.Length;
         long startPosition = endPosition - (long)blobChunk.RangeSize;
         var isEmptyRangeBytes = await _fileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, startPosition, endPosition);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, changeSpecKey, startPosition, endPosition);
         }
     }
 }

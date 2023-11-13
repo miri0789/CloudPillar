@@ -38,7 +38,7 @@ public class BlobService : IBlobService
         return blockBlob.Properties;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, long fileSize)
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, long fileSize,TwinPatchChangeSpec changeSpecKey)
     {
         CloudBlockBlob blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         chunkSize = GetMaxChunkSize(chunkSize);
@@ -58,7 +58,8 @@ public class BlobService : IBlobService
                 FileName = fileName,
                 ActionId = ActionId,
                 FileSize = fileSize,
-                Data = data
+                Data = data,
+                ChangeSpecKey = changeSpecKey
             };
 
             if (offset + chunkSize >= rangeSize + startPosition)
@@ -95,5 +96,5 @@ public class BlobService : IBlobService
         {
             _logger.Error($"Blobstreamer SendMessage failed. Message: {ex.Message}");
         }
-    }    
+    }
 }

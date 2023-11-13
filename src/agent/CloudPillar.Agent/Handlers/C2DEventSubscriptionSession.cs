@@ -35,7 +35,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 
     public async Task ReceiveC2DMessagesAsync(CancellationToken cancellationToken, bool isProvisioning)
     {
-         _logger.Info("Subscribing to C2D messages...");
+        _logger.Info("Subscribing to C2D messages...");
         const string MESSAGE_TYPE_PROP = "MessageType";
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -114,7 +114,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             case C2DMessageType.DownloadChunk:
                 var message = _messageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                 var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
-                await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+                await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken, message.ChangeSpecKey);
                 break;
             default:
                 _logger.Warn($"Receive  message was not processed type: {messageType?.ToString()}");

@@ -9,7 +9,6 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private const int BYTE_SIZE = 1024;
     private const string FILE_NAME = "diagnosticFile";
     private const string FILE_EXSTENSION = ".txt";
-    private string basePath = AppDomain.CurrentDomain.BaseDirectory;
     private string destPath;
 
     private readonly IFileUploaderHandler _fileUploaderHandler;
@@ -21,7 +20,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        destPath = Path.Combine(basePath, FILE_NAME + FILE_EXSTENSION);
+        destPath = Path.Combine(_runDiagnosticsSettings.FilePath, FILE_NAME + FILE_EXSTENSION);
     }
 
     public async Task CreateFileAsync()
@@ -32,7 +31,13 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             //create random content
             var bytes = new Byte[fileSize];
             new Random().NextBytes(bytes);
+            string directoryPath = Path.GetDirectoryName(destPath);
 
+            if (!Directory.Exists(directoryPath))
+            {
+                // Create the directory if it doesn't exist
+                Directory.CreateDirectory(directoryPath);
+            }
             using (FileStream fileStream = new FileStream(destPath, FileMode.Create))
             {
                 fileStream.SetLength(fileSize);
