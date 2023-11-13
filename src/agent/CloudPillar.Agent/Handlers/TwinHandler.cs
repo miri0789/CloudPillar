@@ -65,12 +65,8 @@ public class TwinHandler : ITwinHandler
                     });
 
 
-            var actions = await GetActionsToExecAsync(twinDesired, twinReported);
-            _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
-            if (actions.Count() > 0)
-            {
-                await HandleTwinActionsAsync(actions, cancellationToken);
-            }
+            await HandleTwinUpdatesAsync(twinDesired.ChangeSpec, twinReported.ChangeSpec, TwinPatchChangeSpec.ChangeSpec, cancellationToken);
+            await HandleTwinUpdatesAsync(twinDesired.ChangeSpecDiagnostics, twinReported.ChangeSpecDiagnostics, TwinPatchChangeSpec.changeSpecDiagnostics, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -94,6 +90,18 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActionsAsync failed", ex);
         }
 
+    }
+
+    private async Task HandleTwinUpdatesAsync(TwinChangeSpec twinDesiredChangeSpec,
+    TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
+    {
+        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey);
+        _logger.Info($"HandleTwinUpdatesAsync: {actions.Count()} actions to execute for {changeSpecKey.ToString()}");
+
+        if (actions.Count() > 0)
+        {
+            await HandleTwinActionsAsync(actions, cancellationToken);
+        }
     }
     private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
     {
@@ -176,17 +184,17 @@ public class TwinHandler : ITwinHandler
         return fileName;
     }
 
-    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
+    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey)
     {
         try
         {
             var isReportedChanged = false;
             var actions = new List<ActionToReport>();
-            twinReported.ChangeSpec ??= new TwinReportedChangeSpec();
-            if (twinReported.ChangeSpec.Patch == null || twinReported.ChangeSpec.Id != twinDesired.ChangeSpec.Id)
+            twinReportedChangeSpec ??= new TwinReportedChangeSpec();
+            if (twinReportedChangeSpec.Patch == null || twinReportedChangeSpec.Id != twinDesiredChangeSpec.Id)
             {
-                twinReported.ChangeSpec.Patch = new TwinReportedPatch();
-                twinReported.ChangeSpec.Id = twinDesired.ChangeSpec.Id;
+                twinReportedChangeSpec.Patch = new TwinReportedPatch();
+                twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id;
                 isReportedChanged = true;
             }
 
@@ -195,11 +203,11 @@ public class TwinHandler : ITwinHandler
             {
                 try
                 {
-                    var desiredValue = (TwinAction[])property.GetValue(twinDesired.ChangeSpec.Patch);
+                    var desiredValue = (TwinAction[])property.GetValue(twinDesiredChangeSpec.Patch);
                     if (desiredValue?.Length > 0)
                     {
                         var reportedProp = typeof(TwinReportedPatch).GetProperty(property.Name);
-                        var reportedValue = ((TwinActionReported[])(reportedProp.GetValue(twinReported.ChangeSpec.Patch) ?? new TwinActionReported[0])).ToList();
+                        var reportedValue = ((TwinActionReported[])(reportedProp.GetValue(twinReportedChangeSpec.Patch) ?? new TwinActionReported[0])).ToList();
 
                         while (reportedValue.Count < desiredValue.Length)
                         {
@@ -208,7 +216,7 @@ public class TwinHandler : ITwinHandler
                             isReportedChanged = true;
                         }
 
-                        reportedProp.SetValue(twinReported.ChangeSpec.Patch, reportedValue.ToArray());
+                        reportedProp.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
                         actions.AddRange(desiredValue
                            .Select((item, index) => new ActionToReport
                            {
@@ -229,7 +237,7 @@ public class TwinHandler : ITwinHandler
             }
             if (isReportedChanged)
             {
-                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
+                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey);
             }
             return actions;
         }

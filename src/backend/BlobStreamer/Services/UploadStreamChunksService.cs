@@ -67,9 +67,9 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     if (!string.IsNullOrEmpty(checkSum))
                     {
                         var uploadSuccess = await VerifyStreamChecksum(checkSum, blob);
-                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
                         if (uploadSuccess)
                         {
+                            await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
                         }
                     }
                 }
@@ -110,14 +110,11 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
-            ActionId = Guid.NewGuid().ToString(),
             Description = "download file by run diagnostic",
             Source = storageUri.AbsolutePath,
             DestinationPath = "C:\\git.dev\\CloudPillar\\CloudPillar\\src\\agent\\CloudPillar.Agent\\bin\\Debug\\net7.0",
-
         };
-        await _twinDiseredHandler.AddDesiredToTwin(deviceId, downloadAction);
-
+        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.changeSpecDiagnostics, downloadAction);
     }
 
 }

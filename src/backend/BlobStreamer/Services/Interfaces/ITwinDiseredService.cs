@@ -4,5 +4,5 @@ namespace Backend.BlobStreamer.Interfaces;
 
 public interface ITwinDiseredService
 {
-        Task AddDesiredToTwin(string deviceId, DownloadAction downloadAction);
+    Task AddDesiredRecipeAsync(string deviceId,TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction);
 }

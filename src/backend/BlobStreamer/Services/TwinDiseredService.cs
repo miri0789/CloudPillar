@@ -1,15 +1,10 @@
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Devices;
-using Polly;
-using Shared.Entities.Messages;
-using Shared.Entities.Factories;
 using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
 using Backend.Infra.Common;
 using Microsoft.Azure.Devices.Shared;
 using Shared.Entities.Twin;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Shared.Entities.Utilities;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -25,33 +20,31 @@ public class TwinDiseredService : ITwinDiseredService
 
     }
 
-    public async Task AddDesiredToTwin(string deviceId, DownloadAction downloadAction)
+    public async Task AddDesiredRecipeAsync(string deviceId,TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
     {
-        var twin = await _registryManagerWrapper.GetTwinAsync(deviceId);
-
-        var twinJson = JObject.FromObject(twin.Properties.Desired);
-
-        string desiredJson = twin.Properties.Desired.ToJson();
-        var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(desiredJson,
-        new JsonSerializerSettings
+        try
         {
-            Converters = new List<JsonConverter> {
-                            new TwinDesiredConverter(), new TwinActionConverter() }
-        });
+            var twin = await _registryManagerWrapper.GetTwinAsync(deviceId);
+            TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+            var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
+            TwinAction[] changeSpecData = twinDesiredChangeSpec.Patch.TransitPackage as TwinAction[] ?? new TwinAction[0];
 
-        if (twinDesired.ChangeSpecDiagnostics?.Patch?.TransitPackage == null)
-        {
-            twinDesired.ChangeSpecDiagnostics.Patch.TransitPackage = new TwinAction[] { };
+            var updatedArray = new List<TwinAction>(changeSpecData);
+            updatedArray.Add(downloadAction);
+
+            twinDesiredChangeSpec.Patch.TransitPackage = updatedArray.ToArray();
+            var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
+            twin.Properties.Desired = new TwinCollection(twinDesiredJson);
+
+            await _registryManagerWrapper.UpdateTwinAsync(deviceId, twin, twin.ETag);
         }
-        twinDesired.ChangeSpecDiagnostics.Patch.TransitPackage.ToList().Add(downloadAction);
-
-        // Convert the modified twinDesired back to JSON and update the twin properties.
-        twin.Properties.Desired = new TwinCollection(twinDesired.ToString());
-
-        // twin.Properties.Desired[""] = JsonConvert.SeriaslizeObject(twinReported).
-        await _registryManagerWrapper.UpdateTwinAsync(deviceId, twin, twin.ETag);
-
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while attempting to update ChangeSpecDiagnostics: {ex.Message}");
+        }
 
     }
+
+
 }

@@ -209,9 +209,9 @@ public class TwinHandlerTestFixture
         };
 
         CreateTwinMock(desired, reported);
-        _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()));
+        _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(),It.IsAny<TwinPatchChangeSpec>()));
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()), Times.Once);
+        _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(),It.IsAny<TwinPatchChangeSpec>()), Times.Once);
     }
 
     [Test]
