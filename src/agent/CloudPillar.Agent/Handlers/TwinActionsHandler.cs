@@ -43,8 +43,11 @@ public class TwinActionsHandler : ITwinActionsHandler
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
 
-            TwinPatchChangeSpec changeSpecKey = actionsToReported.FirstOrDefault(x => !string.IsNullOrEmpty(x.ReportPartName)).ChangeSpecKey;
+            var actionForDetails = actionsToReported.FirstOrDefault(x => !string.IsNullOrEmpty(x.ReportPartName));
+            if (actionForDetails == null) return;
+            TwinPatchChangeSpec changeSpecKey = actionForDetails.ChangeSpecKey;
             TwinReportedChangeSpec twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+
 
             actionsToReported.ToList().ForEach(actionToReport =>
             {

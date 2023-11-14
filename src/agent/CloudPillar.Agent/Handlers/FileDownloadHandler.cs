@@ -29,7 +29,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport/*, TwinPatchChangeSpec changeSpecKey*/)
+    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
     {
         _filesDownloads.Add(new FileDownload
         {
@@ -37,7 +37,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             Report = actionToReport,
             Stopwatch = new Stopwatch()
         });
-        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionId/*, changeSpecKey*/);
+        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionId);
     }
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
@@ -101,14 +101,14 @@ public class FileDownloadHandler : IFileDownloadHandler
         return (float)progressPercent;
     }
 
-    private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk/*, TwinPatchChangeSpec changeSpecKey*/, string filePath)
+    private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath)
     {
         long endPosition = blobChunk.Offset + blobChunk.Data.Length;
         long startPosition = endPosition - (long)blobChunk.RangeSize;
         var isEmptyRangeBytes = await _fileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
         if (!isEmptyRangeBytes)
         {
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId/*, changeSpecKey*/, startPosition, endPosition);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, startPosition, endPosition);
         }
     }
 }

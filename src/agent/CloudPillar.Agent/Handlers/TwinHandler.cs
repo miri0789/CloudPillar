@@ -9,6 +9,7 @@ using Newtonsoft.Json.Converters;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
+using Shared.Entities.Utilities;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -65,8 +66,8 @@ public class TwinHandler : ITwinHandler
                     });
 
 
-            await HandleTwinUpdatesAsync(twinDesired.ChangeSpec, twinReported.ChangeSpec, TwinPatchChangeSpec.ChangeSpec, cancellationToken);
-            await HandleTwinUpdatesAsync(twinDesired.ChangeSpecDiagnostics, twinReported.ChangeSpecDiagnostics, TwinPatchChangeSpec.changeSpecDiagnostics, cancellationToken);
+            await HandleTwinUpdatesAsync(twinDesired, twinReported, TwinPatchChangeSpec.ChangeSpec, cancellationToken);
+            await HandleTwinUpdatesAsync(twinDesired, twinReported, TwinPatchChangeSpec.changeSpecDiagnostics, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -92,18 +93,21 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    private async Task HandleTwinUpdatesAsync(TwinChangeSpec twinDesiredChangeSpec,
-    TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
+    private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
+    TwinReported twinReported, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
     {
+        var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
+        var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+
         var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey);
         _logger.Info($"HandleTwinUpdatesAsync: {actions.Count()} actions to execute for {changeSpecKey.ToString()}");
 
         if (actions.Count() > 0)
         {
-            await HandleTwinActionsAsync(actions/*, changeSpecKey*/, cancellationToken);
+            await HandleTwinActionsAsync(actions, cancellationToken);
         }
     }
-    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions/*, TwinPatchChangeSpec changeSpecKey*/, CancellationToken cancellationToken)
+    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
     {
         try
         {
@@ -115,7 +119,7 @@ public class TwinHandler : ITwinHandler
                     case TwinActionType.SingularDownload:
                         var fileName = await HandleStrictMode(action, cancellationToken);
                         if (string.IsNullOrEmpty(fileName)) { continue; }
-                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action/*, changeSpecKey*/);
+                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
                         break;
 
                     case TwinActionType.SingularUpload:
