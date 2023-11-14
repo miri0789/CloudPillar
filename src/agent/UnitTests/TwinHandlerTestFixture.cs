@@ -327,6 +327,75 @@ public class TwinHandlerTestFixture
         _loggerHandlerMock.Verify(logger => logger.Error($"InitReportedDeviceParams failed: {expectedErrorMessage}"), Times.Once);
     }
 
+    [Test]
+    public async Task UpdateDeviceCustomPropsAsync_CustomPropsNull_UpdateNotExecute()
+    {
+
+        //var deviceCustom = DeviceStateType.Busy;
+        var existingCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
+            new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
+        };
+        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), existingCustomProps);
+        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()))
+                       .Returns(Task.CompletedTask);
+
+        _target.UpdateDeviceCustomPropsAsync(null, cancellationToken);
+
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), existingCustomProps), Times.Never);
+    }
+
+        [Test]
+    public async Task UpdateDeviceCustomPropsAsync_NewProps_AddProps()
+    {
+
+        //var deviceCustom = DeviceStateType.Busy;
+        var existingCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
+            new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
+        };
+        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), existingCustomProps);
+        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()))
+                       .Returns(Task.CompletedTask);
+        var newCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property4", Value = "Value4" },
+            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
+        };
+
+        _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
+
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom),  It.Is<List<TwinReportedCustomProp>>(
+            props => props.Count == 4)), Times.Once);
+    }
+
+    [Test]
+    public async Task UpdateDeviceCustomPropsAsync_ExistingProps_OverrideProps()
+    {
+
+        //var deviceCustom = DeviceStateType.Busy;
+        var existingCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
+            new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
+        };
+        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), existingCustomProps);
+        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()))
+                       .Returns(Task.CompletedTask);
+        var newCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property2", Value = "NewValue2" },
+            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
+        };
+
+        _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
+
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom),  It.Is<List<TwinReportedCustomProp>>(
+            props => props.Count == 3)), Times.Once);
+    }
+
     private List<ActionToReport> CreateReportForUpdating()
     {
         var actionsToReported = new List<ActionToReport> { new ActionToReport
@@ -347,9 +416,9 @@ public class TwinHandlerTestFixture
         return actionsToReported;
     }
 
-    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec)
+    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null)
     {
-        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec);
+        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
 
     }

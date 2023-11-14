@@ -207,21 +207,24 @@ public class TwinHandler : ITwinHandler
             {
                 twinReportedCustom = new List<TwinReportedCustomProp>();
             }
-            foreach (var item in customProps)
-            {               
-                var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);
+            if (customProps != null)
+            {
+                foreach (var item in customProps)
+                {
+                    var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);
 
-                if (existingItem != null)
-                {
-                    existingItem.Value = item.Value;
+                    if (existingItem != null)
+                    {
+                        existingItem.Value = item.Value;
+                    }
+                    else
+                    {
+                        twinReportedCustom.Add(item);
+                    }
                 }
-                else
-                {
-                    twinReportedCustom.Add(item);
-                }
+                var deviceCustomProps = nameof(TwinReported.Custom);
+                await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, twinReportedCustom);
             }
-            var deviceCustomProps = nameof(TwinReported.Custom);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, twinReportedCustom);
             _logger.Info($"UpdateDeviceSecretKeyAsync success");
         }
         catch (Exception ex)

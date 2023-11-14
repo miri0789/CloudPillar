@@ -19,17 +19,18 @@ public static class MockHelper
             '$version': 1,
         }";
 
-    public static Twin CreateTwinMock(TwinChangeSpec desired, TwinReportedChangeSpec reported)
+    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, List<TwinReportedCustomProp>? twinReportedCustomProps = null)
     {
         var desiredJson = JObject.Parse(_baseDesierd);
         desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinDesired()
         {
-            ChangeSpec = desired
+            ChangeSpec = changeSpecDesired,
         })));
         var reportedJson = JObject.Parse(_baseReported);
         reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinReported()
         {
-            ChangeSpec = reported
+            ChangeSpec = changeSpecReported,
+            Custom = twinReportedCustomProps
         })));
         var settings = new JsonSerializerSettings
         {
