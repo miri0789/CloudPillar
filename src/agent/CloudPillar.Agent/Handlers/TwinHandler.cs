@@ -203,11 +203,23 @@ public class TwinHandler : ITwinHandler
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             var twinReportedCustom = twinReported.Custom;
-            if(twinReportedCustom == null)
+            if (twinReportedCustom == null)
             {
                 twinReportedCustom = new List<TwinReportedCustomProp>();
             }
-            twinReportedCustom.AddRange(customProps);
+            foreach (var item in customProps)
+            {               
+                var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);
+
+                if (existingItem != null)
+                {
+                    existingItem.Value = item.Value;
+                }
+                else
+                {
+                    twinReportedCustom.Add(item);
+                }
+            }
             var deviceCustomProps = nameof(TwinReported.Custom);
             await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, twinReportedCustom);
             _logger.Info($"UpdateDeviceSecretKeyAsync success");

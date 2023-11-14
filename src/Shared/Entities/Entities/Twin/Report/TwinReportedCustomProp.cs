@@ -7,5 +7,5 @@ public class TwinReportedCustomProp
     public string Name { get; set; }
 
     [JsonProperty("value")]
-    public JToken Value { get; set; }
+    public object Value { get; set; }
 }

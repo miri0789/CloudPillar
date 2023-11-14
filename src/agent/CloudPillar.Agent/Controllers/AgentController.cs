@@ -75,7 +75,7 @@ public class AgentController : ControllerBase
             }
         }
         return await _twinHandler.GetTwinJsonAsync();
-    }
+}
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
