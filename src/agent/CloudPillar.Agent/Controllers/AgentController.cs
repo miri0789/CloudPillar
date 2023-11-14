@@ -109,10 +109,11 @@ public class AgentController : ControllerBase
 
     [HttpPut("UpdateReportedProps")]
     [DeviceStateFilter]
-    public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps, CancellationToken cancellationToken)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        return await _twinHandler.GetTwinJsonAsync();
+        await _twinHandler.UpdateDeviceCustomPropsAsync(updateReportedProps.Properties, cancellationToken);
+        return await _twinHandler.GetTwinJsonAsync(cancellationToken);
     }
 
     private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
