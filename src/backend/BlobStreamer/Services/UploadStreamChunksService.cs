@@ -68,7 +68,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                 if (!string.IsNullOrEmpty(checkSum))
                 {
                     var uploadSuccess = await VerifyStreamChecksum(checkSum, blob);
-                    if (uploadSuccess)
+                    if (uploadSuccess && fromRunDiagnostic)
                     {
                         await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
                     }
