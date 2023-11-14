@@ -14,11 +14,13 @@ public class TwinActionsHandler : ITwinActionsHandler
     private readonly IDeviceClientWrapper _deviceClient;
 
     private readonly ILoggerHandler _logger;
+
     public TwinActionsHandler(IDeviceClientWrapper deviceClientWrapper, ILoggerHandler loggerHandler)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
+
     public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey)
     {
         var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
@@ -31,17 +33,19 @@ public class TwinActionsHandler : ITwinActionsHandler
               NullValueHandling = NullValueHandling.Ignore
           }));
         await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey.ToString(), changeSpecJson);
-
     }
 
-    public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported, CancellationToken cancellationToken, TwinPatchChangeSpec changeSpecKey =TwinPatchChangeSpec.ChangeSpec)
+    public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported, CancellationToken cancellationToken)
     {
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-            var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+
+            TwinPatchChangeSpec changeSpecKey = actionsToReported.FirstOrDefault(x => !string.IsNullOrEmpty(x.ReportPartName)).ChangeSpecKey;
+            TwinReportedChangeSpec twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+
             actionsToReported.ToList().ForEach(actionToReport =>
             {
                 if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;

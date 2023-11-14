@@ -18,8 +18,8 @@ public class TwinDesiredConverter : JsonConverter
         var changeSpec = new TwinDesired()
         {
             ChangeSign = (jsonObject["changeSign"] ?? jsonObject["ChangeSign"])?.Value<string>(),
-            ChangeSpec = CretaeTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec.ToString()),
-            ChangeSpecDiagnostics = CretaeTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.changeSpecDiagnostics.ToString())
+            ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
+            ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.changeSpecDiagnostics)
         };
         return changeSpec;
     }
@@ -29,8 +29,9 @@ public class TwinDesiredConverter : JsonConverter
         throw new NotImplementedException();
     }
 
-    private TwinChangeSpec CretaeTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, string propName)
+    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, TwinPatchChangeSpec changeSpecKey)
     {
+        var propName = changeSpecKey.ToString();
         var changeSpec = new TwinChangeSpec()
         {
             Id = (jsonObject.SelectToken($"{FirstLetterToLowerCase(propName)}.id") ?? jsonObject.SelectToken($"{FirstLetterToUpperCase(propName)}.Id"))?.Value<string>(),

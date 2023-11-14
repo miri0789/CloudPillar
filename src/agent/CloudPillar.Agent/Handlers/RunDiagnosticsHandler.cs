@@ -7,7 +7,7 @@ namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 {
     private const int BYTE_SIZE = 1024;
-    private const string FILE_NAME = "diagnosticFile";
+    private const string FILE_NAME = "diagnosticFileTry1";
     private const string FILE_EXSTENSION = ".txt";
     private string destPath;
 
@@ -62,7 +62,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             FileName = destPath
         };
 
-        var actionToReport = new ActionToReport();
+        var actionToReport = new ActionToReport(TwinPatchChangeSpec.changeSpecDiagnostics);
         await _fileUploaderHandler.UploadFilesToBlobStorageAsync(destPath, uploadAction, actionToReport, cancellationToken, true);
     }
 

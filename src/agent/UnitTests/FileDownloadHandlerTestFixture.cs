@@ -54,11 +54,11 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task InitFileDownloadAsync_Add_SendFirmwareUpdateEvent()
         {
-            _d2CMessengerHandlerMock.Setup(dc => dc.SendFirmwareUpdateEventAsync(_downloadAction.Source, _downloadAction.ActionId, null, null));
+            _d2CMessengerHandlerMock.Setup(dc => dc.SendFirmwareUpdateEventAsync(_downloadAction.Source, _downloadAction.ActionId, TwinPatchChangeSpec.ChangeSpec, null, null));
 
             await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(_downloadAction.Source, _downloadAction.ActionId, null, null), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(_downloadAction.Source, _downloadAction.ActionId, TwinPatchChangeSpec.ChangeSpec, null, null), Times.Once);
 
         }
 
@@ -66,7 +66,7 @@ namespace CloudPillar.Agent.Tests
         public async Task InitFileDownloadAsync_Failure_ThrowException()
         {
             _d2CMessengerHandlerMock.Setup(dc =>
-                    dc.SendFirmwareUpdateEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()))
+                    dc.SendFirmwareUpdateEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<long?>(), It.IsAny<long?>()))
                     .ThrowsAsync(new Exception());
 
             Assert.ThrowsAsync<Exception>(async () =>

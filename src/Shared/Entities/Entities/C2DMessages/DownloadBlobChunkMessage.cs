@@ -13,9 +13,6 @@ public class DownloadBlobChunkMessage : C2DMessages
     public long? RangeSize { get; set; }
     public long FileSize { get; set; }
 
-    [DefaultValue(TwinPatchChangeSpec.ChangeSpec)]
-    public TwinPatchChangeSpec ChangeSpecKey { get; set; }
-
     public override string GetMessageId()
     {
         return $"{this.FileName}_{this.RangeIndex}_{this.ChunkIndex}";

@@ -6,5 +6,5 @@ namespace CloudPillar.Agent.Handlers;
 public interface ITwinActionsHandler
 {
     Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey);
-    Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReport, CancellationToken cancellationToken, TwinPatchChangeSpec changeSpecKey = TwinPatchChangeSpec.ChangeSpec);
+    Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReport, CancellationToken cancellationToken);
 }

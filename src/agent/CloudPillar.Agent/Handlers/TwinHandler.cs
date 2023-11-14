@@ -100,10 +100,10 @@ public class TwinHandler : ITwinHandler
 
         if (actions.Count() > 0)
         {
-            await HandleTwinActionsAsync(actions, changeSpecKey, cancellationToken);
+            await HandleTwinActionsAsync(actions/*, changeSpecKey*/, cancellationToken);
         }
     }
-    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
+    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions/*, TwinPatchChangeSpec changeSpecKey*/, CancellationToken cancellationToken)
     {
         try
         {
@@ -115,7 +115,7 @@ public class TwinHandler : ITwinHandler
                     case TwinActionType.SingularDownload:
                         var fileName = await HandleStrictMode(action, cancellationToken);
                         if (string.IsNullOrEmpty(fileName)) { continue; }
-                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action, changeSpecKey);
+                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action/*, changeSpecKey*/);
                         break;
 
                     case TwinActionType.SingularUpload:
@@ -219,7 +219,7 @@ public class TwinHandler : ITwinHandler
 
                         reportedProp.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
                         actions.AddRange(desiredValue
-                           .Select((item, index) => new ActionToReport
+                           .Select((item, index) => new ActionToReport(changeSpecKey)
                            {
                                ReportPartName = property.Name,
                                ReportIndex = index,

@@ -43,7 +43,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 {
                     for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
                     {
-                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
+                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}&changeSpecKey={data.ChangeSpecKey.GetHashCode()}";
                         requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
                     }
                 }

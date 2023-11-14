@@ -38,7 +38,7 @@ public class BlobService : IBlobService
         return blockBlob.Properties;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, long fileSize,TwinPatchChangeSpec changeSpecKey)
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, long fileSize)
     {
         CloudBlockBlob blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         chunkSize = GetMaxChunkSize(chunkSize);
@@ -58,8 +58,7 @@ public class BlobService : IBlobService
                 FileName = fileName,
                 ActionId = ActionId,
                 FileSize = fileSize,
-                Data = data,
-                ChangeSpecKey = changeSpecKey
+                Data = data
             };
 
             if (offset + chunkSize >= rangeSize + startPosition)
