@@ -330,8 +330,6 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task UpdateDeviceCustomPropsAsync_CustomPropsNull_UpdateNotExecute()
     {
-
-        //var deviceCustom = DeviceStateType.Busy;
         var existingCustomProps = new List<TwinReportedCustomProp>
         {
             new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },

@@ -79,9 +79,9 @@ public class StateMachineListenerService : BackgroundService
     {
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
-        // var subscribeTask = _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
-        // var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
-        // await Task.WhenAll(subscribeTask, handleTwinTask);
+        var subscribeTask = _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
+        var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
+        await Task.WhenAll(subscribeTask, handleTwinTask);
     }
 
 
