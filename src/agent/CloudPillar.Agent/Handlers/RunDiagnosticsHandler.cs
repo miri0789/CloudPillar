@@ -12,7 +12,6 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ILoggerHandler _logger;
-    private readonly IFileStreamerWrapper _fileStreamerWrapper;
 
     public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger)
     {
