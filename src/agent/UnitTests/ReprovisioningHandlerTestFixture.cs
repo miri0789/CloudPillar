@@ -162,7 +162,7 @@ public class ReprovisioningHandlerTestFixture
 
     private void SetupX509CertificateWrapperMock()
     {
-        _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite));
+        _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadWrite, StoreName.My));
         _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>())).Returns(new X509Certificate2Collection() { _certificate });
         _x509CertificateWrapperMock.Setup(x => x.Find(It.IsAny<X509Store>(), It.IsAny<X509FindType>(), It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(new X509Certificate2Collection(_certificate));
