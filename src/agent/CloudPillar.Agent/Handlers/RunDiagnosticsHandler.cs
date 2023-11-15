@@ -7,7 +7,6 @@ using Shared.Logger;
 namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 {
-    private const int BYTE_SIZE = 1024;
     private const string FILE_NAME = "diagnosticFile";
     private const string FILE_EXSTENSION = ".txt";
     private string _basePath = AppDomain.CurrentDomain.BaseDirectory;
@@ -29,16 +28,15 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
     public async Task CreateFileAsync()
     {
-        var fileSize = _runDiagnosticsSettings.FleSizeKB * BYTE_SIZE;
         try
         {
             //create random content
-            var bytes = new Byte[fileSize];
+            var bytes = new Byte[_runDiagnosticsSettings.FleSizBytes];
             new Random().NextBytes(bytes);
 
             using (FileStream fileStream = _fileStreamerWrapper.CreateStream(_destPath, FileMode.Create))
             {
-                fileStream.SetLength(fileSize);
+                fileStream.SetLength(_runDiagnosticsSettings.FleSizBytes);
                 await fileStream.WriteAsync(bytes);
             }
         }

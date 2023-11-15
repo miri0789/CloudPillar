@@ -1,4 +1,4 @@
 public class RunDiagnosticsSettings
 {
-    public int FleSizeKB { get; set; } = Constants.DIAGNOSTICS_FILE_SIZE_KB;
+    public int FleSizBytes { get; set; } = 131072;
 }
