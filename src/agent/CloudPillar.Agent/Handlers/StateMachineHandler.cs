@@ -11,7 +11,7 @@ namespace CloudPillar.Agent.Handlers
         private readonly ITwinHandler _twinHandler;
         private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
         private readonly ILoggerHandler _logger;
-        private static DeviceStateType currentDeviceState = DeviceStateType.Uninitialized;
+        private static DeviceStateType _currentDeviceState = DeviceStateType.Uninitialized;
 
 
         public StateMachineHandler(
@@ -30,6 +30,7 @@ namespace CloudPillar.Agent.Handlers
         {
             var state = await GetStateAsync();
             _logger.Info($"InitStateMachineHandlerAsync: init device state: {state}");
+             _currentDeviceState = state;
             HandleStateAction(state);
         }
 
@@ -39,7 +40,7 @@ namespace CloudPillar.Agent.Handlers
             var currentState = await GetStateAsync();
             if (currentState != state)
             {
-                currentDeviceState = state;
+                _currentDeviceState = state;
                 await _twinHandler.UpdateDeviceStateAsync(state);
                 HandleStateAction(state);
                 _logger.Info($"Set device state: {state}");
@@ -61,7 +62,7 @@ namespace CloudPillar.Agent.Handlers
 
         public DeviceStateType GetCurrentDeviceState()
         {
-            return currentDeviceState;
+            return _currentDeviceState;
         }
        
     }
