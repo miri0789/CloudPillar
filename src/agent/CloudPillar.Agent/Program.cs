@@ -78,7 +78,8 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddControllers(options =>
     {
         options.Filters.Add<LogActionFilter>();
-    });
+    })
+    .AddNewtonsoftJson();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();

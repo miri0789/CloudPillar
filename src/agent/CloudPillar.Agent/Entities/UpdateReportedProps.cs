@@ -4,5 +4,5 @@ namespace CloudPillar.Agent.Entities;
 
 public class UpdateReportedProps
 {
-    public List<UpdateReportedProp> Properties { get; set; }
+    public List<TwinReportedCustomProp> Properties { get; set; }
 }
