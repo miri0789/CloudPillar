@@ -83,7 +83,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             string blobname = BuildBlobName(fullFilePath);
 
-            using (Stream readStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true))
+            using (Stream readStream = CreateStream(fullFilePath))
             {
                 await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, fromRunDiagnostic, cancellationToken);
             }
