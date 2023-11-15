@@ -8,6 +8,10 @@ public interface IFileStreamerWrapper
 
     DirectoryInfo CreateDirectory(string directoryPath);
 
+    FileStream CreateStream(string fullFilePath, FileMode fileMode);
+
+    DirectoryInfo CreateDirectory(string directoryPath);
+
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 
     void DeleteFile(string filePath);
