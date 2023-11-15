@@ -46,7 +46,8 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             CheckSum = checkSum,
             StartPosition = currentPosition,
             ActionId = actionId ?? Guid.NewGuid().ToString(),
-            Data = buffer
+            Data = buffer,
+            FromRunDiagnostics = fromRunDiagnostic
         };
 
         await SendMessageAsync(streamingUploadChunkEvent);

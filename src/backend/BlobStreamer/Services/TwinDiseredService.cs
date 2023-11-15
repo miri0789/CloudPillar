@@ -22,6 +22,8 @@ public class TwinDiseredService : ITwinDiseredService
 
     public async Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
     {
+        ArgumentNullException.ThrowIfNull(deviceId);
+        
         try
         {
             var twin = await _registryManagerWrapper.GetTwinAsync(deviceId);

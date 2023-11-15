@@ -1,4 +1,5 @@
 using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using Shared.Logger;
@@ -7,20 +8,17 @@ namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 {
     private const int BYTE_SIZE = 1024;
-    private const string FILE_NAME = "diagnosticFileTry1";
-    private const string FILE_EXSTENSION = ".txt";
-    private string destPath;
-
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
+    private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ILoggerHandler _logger;
 
-    public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, ILoggerHandler logger)
+    public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
+        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        destPath = Path.Combine(_runDiagnosticsSettings.FilePath, FILE_NAME + FILE_EXSTENSION);
     }
 
     public async Task CreateFileAsync()
@@ -28,46 +26,54 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var fileSize = _runDiagnosticsSettings.FleSizeKB * BYTE_SIZE;
         try
         {
+            if (_fileStreamerWrapper.FileExists(_runDiagnosticsSettings.FilePath))
+            {
+                _logger.Info($"File {_runDiagnosticsSettings.FilePath} exists, continue to uploading this file");
+                return;
+            }
             //create random content
             var bytes = new Byte[fileSize];
             new Random().NextBytes(bytes);
-            string directoryPath = Path.GetDirectoryName(destPath);
 
-            if (!Directory.Exists(directoryPath))
+            string directoryPath = Path.GetDirectoryName(_runDiagnosticsSettings.FilePath);
+            if (!_fileStreamerWrapper.DirectoryExists(directoryPath))
             {
-                // Create the directory if it doesn't exist
-                Directory.CreateDirectory(directoryPath);
+                _fileStreamerWrapper.CreateDirectory(directoryPath);
+                _logger.Info($"{directoryPath} was created");
             }
-            using (FileStream fileStream = new FileStream(destPath, FileMode.Create))
+            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(_runDiagnosticsSettings.FilePath, FileMode.Create))
             {
                 fileStream.SetLength(fileSize);
                 await fileStream.WriteAsync(bytes);
             }
+            _logger.Info($"File for diagnostics was crested");
         }
         catch (Exception ex)
         {
-            _logger.Error($"error during creating a file {ex.Message}");
+            _logger.Error($"CreateFileAsync error: {ex.Message}");
             throw ex;
         }
     }
 
     public async Task UploadFileAsync(CancellationToken cancellationToken)
     {
-        var uploadAction = new UploadAction()
+        try
         {
-            Action = TwinActionType.SingularUpload,
-            Description = "upload file by run diagnostic",
-            ActionId = Guid.NewGuid().ToString(),
-            Method = FileUploadMethod.Stream,
-            FileName = destPath
-        };
+            var uploadAction = new UploadAction()
+            {
+                Action = TwinActionType.SingularUpload,
+                Description = "upload file by run diagnostic",
+                Method = FileUploadMethod.Stream,
+                FileName = _runDiagnosticsSettings.FilePath
+            };
 
-        var actionToReport = new ActionToReport(TwinPatchChangeSpec.changeSpecDiagnostics);
-        await _fileUploaderHandler.UploadFilesToBlobStorageAsync(destPath, uploadAction, actionToReport, cancellationToken, true);
-    }
-
-
-    public async Task DownloadFile(CancellationToken cancellationToken)
-    {
+            var actionToReport = new ActionToReport(TwinPatchChangeSpec.changeSpecDiagnostics);
+            await _fileUploaderHandler.UploadFilesToBlobStorageAsync(_runDiagnosticsSettings.FilePath, uploadAction, actionToReport, cancellationToken, true);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UploadFileAsync error: {ex.Message}");
+            throw ex;
+        }
     }
 }
