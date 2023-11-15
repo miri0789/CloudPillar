@@ -26,6 +26,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IStateMachineHandler> _stateMachineHandler;
         private Mock<ILoggerHandler> _loggerMock;
         private Mock<ActionExecutingContext> actionExecutingContextMock;
+        private Mock<IRunDiagnosticsHandler> runDiagnosticsHandler;
         private ActionExecutingContext _context;
         private AgentController agentController;
         private DeviceStateFilterAttribute _target;
@@ -40,12 +41,13 @@ namespace CloudPillar.Agent.Tests
             _twinDesiredPropsValidator = new Mock<IValidator<TwinDesired>>();
             _stateMachineHandler = new Mock<IStateMachineHandler>();
             _loggerMock = new Mock<ILoggerHandler>();
+            runDiagnosticsHandler = new Mock<IRunDiagnosticsHandler>();
             actionExecutingContextMock = new Mock<ActionExecutingContext>();
 
             _target = new DeviceStateFilterAttribute();
 
             agentController = new AgentController(_twinHandler.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
-            _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _loggerMock.Object);
+            _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, runDiagnosticsHandler.Object, _loggerMock.Object);
 
 
             var actionContext = new ActionContext
