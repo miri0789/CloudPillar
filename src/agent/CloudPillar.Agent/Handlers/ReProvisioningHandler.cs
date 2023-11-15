@@ -121,7 +121,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
             RemoveCertificatesFromStore(store, certificate.Thumbprint);
             certificate.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
-            store.Add(certificate);
+            _x509CertificateWrapper.Add(store, certificate);
         }
     }
 

@@ -99,7 +99,7 @@ public class AuthorizationCheckMiddleware
             Port = sslPort,
         };
 
-        // context.Connection.ClientCertificate = X509Helper.GetCertificate();
+        context.Connection.ClientCertificate = X509Provider.GetCertificate();
 
         context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
     }
