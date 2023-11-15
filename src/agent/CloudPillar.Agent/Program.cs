@@ -59,13 +59,16 @@ builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
-
+builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
 builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
+
+var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
+builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
 
 builder.Services.AddSwaggerGen(c =>
 {

@@ -23,6 +23,7 @@ public class AgentController : ControllerBase
     public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
+    private readonly IRunDiagnosticsHandler _runDiagnosticsHandler;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -31,6 +32,7 @@ public class AgentController : ControllerBase
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
+     IRunDiagnosticsHandler runDiagnosticsHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
@@ -39,6 +41,7 @@ public class AgentController : ControllerBase
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
+        _runDiagnosticsHandler = runDiagnosticsHandler ?? throw new ArgumentNullException(nameof(runDiagnosticsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -105,13 +108,21 @@ public class AgentController : ControllerBase
     {
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
-    }    
+    }
 
     [HttpPut("UpdateReportedProps")]
     [DeviceStateFilter]
     public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
+        return await _twinHandler.GetTwinJsonAsync();
+    }
+
+    [HttpGet("RunDiagnostics")]
+    public async Task<ActionResult<string>> RunDiagnostics()
+    {
+        await _runDiagnosticsHandler.CreateFileAsync();
+        await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
