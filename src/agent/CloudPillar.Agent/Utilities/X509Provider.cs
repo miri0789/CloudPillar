@@ -60,11 +60,9 @@ public static class X509Provider
 
     public static X509Certificate2 GetHttpsCertificate()
     {
-        var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-        store.Open(OpenFlags.ReadOnly);
-
-        using (store)
+        using (var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine))
         {
+            store.Open(OpenFlags.ReadOnly);
             var certificates = store.Certificates;
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
@@ -75,23 +73,23 @@ public static class X509Provider
                 var temporaryAnonymousCertificate = certificates?.Cast<X509Certificate2>()
                             .Where(cert => cert.Subject == ProvisioningConstants.CERTIFICATE_SUBJECT + "CP-Temporary-anonymous")
                             .FirstOrDefault();
-                if (temporaryAnonymousCertificate == null)
+                if (temporaryAnonymousCertificate != null)
                 {
-                    return GenerateTemporaryAnonymousCertificate(store);
+                    return temporaryAnonymousCertificate;
                 }
-                return temporaryAnonymousCertificate;
             }
-            return filteredCertificate;
+            else return filteredCertificate;
         }
+        return GenerateTemporaryAnonymousCertificate();
     }
 
-    private static X509Certificate2 GenerateTemporaryAnonymousCertificate(X509Store store)
+    private static X509Certificate2 GenerateTemporaryAnonymousCertificate()
     {
         X509Certificate2 certificate;
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}CP-Temporary-anonymous", rsa
+                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}CP-Temporary-anonymous", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             SubjectAlternativeNameBuilder subjectAlternativeNameBuilder = new SubjectAlternativeNameBuilder();
@@ -101,13 +99,13 @@ public static class X509Provider
                DateTimeOffset.Now.AddDays(-1),
                DateTimeOffset.Now.AddDays(365));
         }
-        var password  = new Guid().ToString();
+        var password = new Guid().ToString();
         var pfxBytes = certificate.Export(X509ContentType.Pkcs12, password);
-
-        var privateCertificate = new X509Certificate2(pfxBytes, password);
-
-        store.Add(privateCertificate);
-
-        return certificate;
+        var privateCertificate = new X509Certificate2(pfxBytes, password, X509KeyStorageFlags.PersistKeySet);
+        using (var store = new X509Store())
+        {
+            store.Certificates.Add(privateCertificate);
+        }
+        return privateCertificate;
     }
 }

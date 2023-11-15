@@ -21,20 +21,15 @@ var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Cons
 var url = $"http://localhost:{port}";
 var url2 = $"https://localhost:{httpsPort}";
 
-builder.WebHost.UseUrls(url);
-X509Certificate2 x509Certificate = X509Provider.GetCertificate();
-if (x509Certificate != null)
+builder.WebHost.UseUrls(url, url2);
+builder.WebHost.UseKestrel(options =>
 {
-    builder.WebHost.UseUrls(url, url2);
-    builder.WebHost.UseKestrel(options =>
+    options.Listen(IPAddress.Any, port);
+    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
     {
-        options.Listen(IPAddress.Any, port);
-        options.Listen(IPAddress.Any, httpsPort, listenOptions =>
-        {
-            listenOptions.UseHttps(x509Certificate);
-        });
+        listenOptions.UseHttps(X509Provider.GetHttpsCertificate());
     });
-}
+});
 
 builder.Services.AddCors(options =>
         {
@@ -95,6 +90,8 @@ builder.Services.AddControllers(options =>
         options.Filters.Add<LogActionFilter>();
     });
 builder.Services.AddSwaggerGen();
+
+
 
 var app = builder.Build();
 
