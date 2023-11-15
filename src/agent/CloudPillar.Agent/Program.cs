@@ -18,10 +18,10 @@ const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
 var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
-var httpsUrl = $"http://localhost:{port}";
+var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
-builder.WebHost.UseUrls(httpsUrl, httpsUrl);
+builder.WebHost.UseUrls(httpUrl, httpsUrl);
 builder.WebHost.UseKestrel(options =>
 {
     options.Listen(IPAddress.Any, port);
@@ -35,7 +35,7 @@ builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(httpsUrl, httpsUrl)
+                b.WithOrigins(httpUrl, httpsUrl)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
             });
