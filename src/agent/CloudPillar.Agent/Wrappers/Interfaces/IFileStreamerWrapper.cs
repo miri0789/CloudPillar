@@ -3,6 +3,7 @@
 public interface IFileStreamerWrapper
 {
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
+    FileStream CreateStream(string fullFilePath, FileMode fileMode);
 
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
 
