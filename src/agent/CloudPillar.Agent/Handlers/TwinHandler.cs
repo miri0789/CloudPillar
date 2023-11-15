@@ -199,16 +199,12 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            string reportedJson = twin.Properties.Reported.ToJson();
-            var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-            var twinReportedCustom = twinReported.Custom;
-            if (twinReportedCustom == null)
-            {
-                twinReportedCustom = new List<TwinReportedCustomProp>();
-            }
             if (customProps != null)
             {
+                var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+                string reportedJson = twin.Properties.Reported.ToJson();
+                var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
+                var twinReportedCustom = twinReported.Custom ?? new List<TwinReportedCustomProp>();               
                 foreach (var item in customProps)
                 {
                     var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);

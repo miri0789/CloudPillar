@@ -330,25 +330,18 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task UpdateDeviceCustomPropsAsync_CustomPropsNull_UpdateNotExecute()
     {
-        var existingCustomProps = new List<TwinReportedCustomProp>
-        {
-            new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
-            new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
-        };
-        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), existingCustomProps);
+        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec());
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()))
                        .Returns(Task.CompletedTask);
 
         _target.UpdateDeviceCustomPropsAsync(null, cancellationToken);
 
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), existingCustomProps), Times.Never);
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.IsAny<List<TwinReportedCustomProp>>()), Times.Never);
     }
 
         [Test]
     public async Task UpdateDeviceCustomPropsAsync_NewProps_AddProps()
     {
-
-        //var deviceCustom = DeviceStateType.Busy;
         var existingCustomProps = new List<TwinReportedCustomProp>
         {
             new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
@@ -372,8 +365,6 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task UpdateDeviceCustomPropsAsync_ExistingProps_OverrideProps()
     {
-
-        //var deviceCustom = DeviceStateType.Busy;
         var existingCustomProps = new List<TwinReportedCustomProp>
         {
             new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
