@@ -68,6 +68,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                 if (!string.IsNullOrEmpty(checkSum))
                 {
                     var uploadSuccess = await VerifyStreamChecksum(checkSum, blob);
+                    _logger.Info($"fromRunDiagnostic: {fromRunDiagnostic}");
                     if (uploadSuccess && fromRunDiagnostic)
                     {
                         await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
@@ -104,12 +105,14 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         return uploadSuccess;
     }
 
-    private async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri)
+    public async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri)
     {
+        _logger.Info($"preparing download action to add device twin");
+
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
-            Description = "download file by run diagnostic",
+            Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
             Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
             DestinationPath = _runDiagnosticsSettings.DestinationPathForDownload,
         };
