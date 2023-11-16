@@ -32,6 +32,10 @@ public class StrictModeHandler : IStrictModeHandler
 
     public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
+        if (!_strictModeSettings.StrictMode)
+        {
+            return;
+        }
         FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
         if (zoneRestrictions.Type == StrictModeAction.Upload.ToString() || zoneRestrictions.MaxSize == 0)
         {
