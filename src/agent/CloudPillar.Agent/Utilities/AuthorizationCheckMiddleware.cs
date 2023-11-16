@@ -25,7 +25,7 @@ public class AuthorizationCheckMiddleware
 
     }
 
-    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler)
+    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler, IX509Provider x509Provider)
     {
         Endpoint endpoint = context.GetEndpoint();
         //context
@@ -77,15 +77,16 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler);
+            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler, x509Provider);
         }
         else
         {
-            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler);
+            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler, x509Provider);
         }
     }
-    private async Task NextWithRedirectAsync(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
+    private async Task NextWithRedirectAsync(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IX509Provider x509Provider)
     {
+        context.Connection.ClientCertificate = x509Provider.GetHttpsCertificate();
         if (context.Request.IsHttps)
         {
             await _requestDelegate(context);
@@ -98,8 +99,6 @@ public class AuthorizationCheckMiddleware
             Scheme = Uri.UriSchemeHttps,
             Port = sslPort,
         };
-
-        context.Connection.ClientCertificate = X509Provider.GetCertificate();
 
         context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
     }
