@@ -41,6 +41,7 @@ RUN cat /Dockerfile.tmp >> /Dockerfile && rm /Dockerfile.tmp
 RUN apk add --no-cache icu-libs
 COPY --from=publish /app/publish .
 ARG DLL
+ARG PORT
 ENV DLL_NAME=${DLL}.dll
 RUN echo "Building for $DLL_NAME"
 RUN echo "Building for PORT $PORT"
