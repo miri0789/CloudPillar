@@ -22,14 +22,8 @@ var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
 builder.WebHost.UseUrls(httpUrl, httpsUrl);
-builder.WebHost.UseKestrel(options =>
-{
-    options.Listen(IPAddress.Any, port);
-    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
-    {
-        listenOptions.UseHttps(X509Provider.GetHttpsCertificate());
-    });
-});
+
+
 
 builder.Services.AddCors(options =>
         {
@@ -73,6 +67,7 @@ builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServic
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
+builder.Services.AddScoped<IX509Provider, X509Provider>();
 
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
@@ -82,6 +77,17 @@ builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
 builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
+
+var servcieProvider = builder.Services.BuildServiceProvider();
+var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
+builder.WebHost.UseKestrel(options =>
+{
+    options.Listen(IPAddress.Any, port);
+    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
+    {
+        listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
+    });
+});
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -96,6 +102,8 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+
 
 app.UseSwagger();
 app.UseSwaggerUI();
