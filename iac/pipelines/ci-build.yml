@@ -89,9 +89,9 @@ stages:
       steps: 
       - script: |
           case "${{ item }}" in
-            "BlobStreamer") export PORT=8081 ;;
-            "Keyholder") export PORT=8082 ;;
-            *) export PORT=8080 ;;
+            "BlobStreamer") echo "##vso[task.setvariable variable=PORT]8081" ;;
+            "Keyholder") echo "##vso[task.setvariable variable=PORT]8082" ;;
+            *) echo "##vso[task.setvariable variable=PORT]8080" ;;
           esac
           echo "Port for ${{ item }}: $PORT"
         displayName: 'Set service port'
