@@ -112,7 +112,7 @@ stages:
           Dockerfile: './src/backend/Infra/build/Dockerfile'
           buildContext: src
           tags: '$(imagetag)'
-          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT1=$PORT'        
+          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT1=${{ PORT }}'        
             
       - script: |
           SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
