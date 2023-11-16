@@ -98,7 +98,8 @@ stages:
 
       - task: NuGetAuthenticate@1
         displayName: 'Authenticate to NuGet'
-      - script: echo "PORT: $(PORT)"
+      - script: |
+          echo "Port for ${{ item }}: $PORT"
       - task: Docker@2
         displayName: '${{ item }} Dockerize'
         inputs:
