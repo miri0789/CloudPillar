@@ -52,11 +52,7 @@ public static class X509Provider
         using (store)
         {
             var certificates = store.Certificates;
-            var filteredCertificate = certificates?.Cast<X509Certificate2>()
-              .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
-               .FirstOrDefault();
-
-            return filteredCertificate;
+            return GetCPCertificate(certificates);
         }
     }
 
@@ -66,9 +62,7 @@ public static class X509Provider
         {
             store.Open(OpenFlags.ReadOnly);
             var certificates = store.Certificates;
-            var filteredCertificate = certificates?.Cast<X509Certificate2>()
-              .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT))
-               .FirstOrDefault();
+            var filteredCertificate = GetCPCertificate(certificates);
 
             if (filteredCertificate == null)
             {
@@ -83,6 +77,12 @@ public static class X509Provider
             else return filteredCertificate;
         }
         return GenerateTemporaryAnonymousCertificate();
+    }
+
+    private static X509Certificate2? GetCPCertificate(X509Certificate2Collection certificates)
+    {
+        return certificates?.Cast<X509Certificate2>()
+                      .FirstOrDefault(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT));
     }
 
     private static X509Certificate2 GenerateTemporaryAnonymousCertificate()
