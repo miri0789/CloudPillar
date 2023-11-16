@@ -68,6 +68,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
             var actionToReport = new ActionToReport(TwinPatchChangeSpec.changeSpecDiagnostics);
             await _fileUploaderHandler.UploadFilesToBlobStorageAsync(_runDiagnosticsSettings.FilePath, uploadAction, actionToReport, cancellationToken, true);
+            // await _fileUploaderHandler.FileUploadAsync(uploadAction, actionToReport, _runDiagnosticsSettings.FilePath, cancellationToken);
         }
         catch (Exception ex)
         {
