@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Sevices;
@@ -6,6 +7,8 @@ using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
 using FluentValidation;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.Extensions.Azure;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
@@ -14,15 +17,19 @@ using Shared.Logger;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
-var url = $"http://localhost:{port}";
+var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+var httpUrl = $"http://localhost:{port}";
+var httpsUrl = $"https://localhost:{httpsPort}";
 
-builder.WebHost.UseUrls(url);
+builder.WebHost.UseUrls(httpUrl, httpsUrl);
+
+
 
 builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(url)
+                b.WithOrigins(httpUrl, httpsUrl)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
             });
@@ -59,13 +66,28 @@ builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
-
+builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
+builder.Services.AddScoped<IX509Provider, X509Provider>();
 
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
 builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
+
+var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
+builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
+
+var servcieProvider = builder.Services.BuildServiceProvider();
+var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
+builder.WebHost.UseKestrel(options =>
+{
+    options.Listen(IPAddress.Any, port);
+    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
+    {
+        listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
+    });
+});
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -75,15 +97,17 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddControllers(options =>
     {
         options.Filters.Add<LogActionFilter>();
-    });
+    })
+    .AddNewtonsoftJson();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
 
 app.UseMiddleware<AuthorizationCheckMiddleware>();
