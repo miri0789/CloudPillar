@@ -18,5 +18,5 @@ src/agent/dotnet/VelysPatch*
 src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/FileContentIndex
 src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/DesignTimeBuild
 **/tfplan
-**/*terraform*
+**/*.terraform*
 terraform.tfstate*

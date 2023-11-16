@@ -4,20 +4,20 @@ resource "azurerm_virtual_network" "aks" {
   resource_group_name  = azurerm_resource_group.aks.name
   location             = azurerm_resource_group.aks.location
   tags                 = { "Terraform" : "true" }
-  address_space        = ["10.22.0.0/15"]
+  address_space        = ["10.12.0.0/15"]
 }
 
 resource "azurerm_subnet" "aks" {
   name                 = "aks-subnet"
   virtual_network_name = azurerm_virtual_network.aks.name
   resource_group_name  = azurerm_resource_group.aks.name
-  address_prefixes     = ["10.22.0.0/16"]
+  address_prefixes     = ["10.12.0.0/16"]
 }
 
 resource "azurerm_subnet" "cp-keyvault-private-subnet" {
   name                 = "cp-keyvault-private-subnet"
   virtual_network_name = azurerm_virtual_network.aks.name
   resource_group_name  = azurerm_resource_group.aks.name
-  address_prefixes     = ["11.2.10.0/24"]
+  address_prefixes     = ["10.13.0.0/24"]
   service_endpoints = [ "Microsoft.KeyVault" ,"Microsoft.Web" ,"Microsoft.ContainerRegistry"]
 }
