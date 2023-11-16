@@ -64,6 +64,6 @@ namespace CloudPillar.Agent.Handlers
         {
             return _currentDeviceState;
         }
-       
+
     }
 }
