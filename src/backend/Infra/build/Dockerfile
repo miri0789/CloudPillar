@@ -25,13 +25,13 @@ RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
 WORKDIR /app
 # Use the ARG PORT value to set environment variables if PORT is not an empty string
-ARG PORT
-RUN echo "Building for $PORT"
+ARG PORT1
+RUN echo "Building for $PORT1"
 
-RUN if [ -n "$PORT" ]; then \
-    echo "Setting port to $PORT"; \
-    echo "EXPOSE $PORT" >> /Dockerfile.tmp; \
-    echo "ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:\$PORT" >> /Dockerfile.tmp; \
+RUN if [ -n "$PORT1" ]; then \
+    echo "Setting port to $PORT1"; \
+    echo "EXPOSE $PORT1" >> /Dockerfile.tmp; \
+    echo "ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:\$PORT1" >> /Dockerfile.tmp; \
 fi
 
 # Append the temporary Dockerfile to the main Dockerfile
@@ -41,9 +41,9 @@ RUN cat /Dockerfile.tmp >> /Dockerfile && rm /Dockerfile.tmp
 RUN apk add --no-cache icu-libs
 COPY --from=publish /app/publish .
 ARG DLL
-ARG PORT
+ARG PORT1
 ENV DLL_NAME=${DLL}.dll
 RUN echo "Building for $DLL_NAME"
-RUN echo "Building for PORT $PORT"
+RUN echo "Building for PORT $PORT1"
 ENTRYPOINT dotnet $DLL_NAME
 
