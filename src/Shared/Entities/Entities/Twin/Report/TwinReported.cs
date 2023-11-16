@@ -8,4 +8,5 @@ public class TwinReported
    public ShellType[] SupportedShells { get; set; }
    public TwinReportedChangeSpec? ChangeSpec { get; set; }
    public string SecretKey { get; set; }
+   public List<TwinReportedCustomProp> Custom { get; set; }
 }

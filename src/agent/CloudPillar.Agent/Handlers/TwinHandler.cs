@@ -25,6 +25,7 @@ public class TwinHandler : ITwinHandler
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ILoggerHandler _logger;
+    private static Twin _latestTwin { get; set; }
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
@@ -48,7 +49,7 @@ public class TwinHandler : ITwinHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task OnDesiredPropertiesUpdate(CancellationToken cancellationToken)
+    public async Task OnDesiredPropertiesUpdateAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -80,10 +81,11 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
+            await OnDesiredPropertiesUpdateAsync(cancellationToken);
             DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
                             {
                                 _logger.Info($"Desired properties were updated.");
-                                await OnDesiredPropertiesUpdate(cancellationToken);
+                                await OnDesiredPropertiesUpdateAsync(cancellationToken);
                             };
             await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
         }
@@ -92,6 +94,139 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActionsAsync failed", ex);
         }
 
+    }
+
+    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState)
+    {
+        try
+        {
+            var deviceStateKey = nameof(TwinReported.DeviceState);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString());
+            _logger.Info($"UpdateDeviceStateAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
+        }
+    }
+    public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reported.DeviceState;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetDeviceStateAsync failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task UpdateDeviceSecretKeyAsync(string secretKey)
+    {
+        try
+        {
+            var deviceSecretKey = nameof(TwinReported.SecretKey);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey);
+            _logger.Info($"UpdateDeviceSecretKeyAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceSecretKeyAsync failed", ex);
+        }
+    }
+
+    public async Task InitReportDeviceParamsAsync()
+    {
+        try
+        {
+            var supportedShellsKey = nameof(TwinReported.SupportedShells);
+            await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells);
+            var agentPlatformKey = nameof(TwinReported.AgentPlatform);
+            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, _runtimeInformationWrapper.GetOSDescription());
+            _logger.Info("InitReportedDeviceParams success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"InitReportedDeviceParams failed: {ex.Message}");
+        }
+    }
+
+    public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            if (twin != null)
+            {
+                return twin.ToJson();
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetTwinJsonAsync failed: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task SaveLastTwinAsync(CancellationToken cancellationToken = default)
+    {
+        var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+        _latestTwin = twin;
+    }
+
+    public async Task<string> GetLatestTwinAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (_latestTwin != null)
+            {
+                return _latestTwin.ToJson();
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetLatestTwinAsync failed: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task UpdateDeviceCustomPropsAsync(List<TwinReportedCustomProp> customProps, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (customProps != null)
+            {
+                var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+                string reportedJson = twin.Properties.Reported.ToJson();
+                var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
+                var twinReportedCustom = twinReported.Custom ?? new List<TwinReportedCustomProp>();               
+                foreach (var item in customProps)
+                {
+                    var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);
+
+                    if (existingItem != null)
+                    {
+                        existingItem.Value = item.Value;
+                    }
+                    else
+                    {
+                        twinReportedCustom.Add(item);
+                    }
+                }
+                var deviceCustomProps = nameof(TwinReported.Custom);
+                await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, twinReportedCustom);
+            }
+            _logger.Info($"UpdateDeviceSecretKeyAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceCustomPropsAsync failed", ex);
+        }
     }
 
     private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
@@ -133,7 +268,6 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed", ex);
         }
     }
-
     private async Task<string> HandleStrictMode(ActionToReport action, CancellationToken cancellationToken)
     {
         var fileName = string.Empty;
@@ -148,6 +282,7 @@ public class TwinHandler : ITwinHandler
         catch (Exception ex)
         {
             await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
+            return string.Empty;
         }
         return fileName;
     }
@@ -157,7 +292,6 @@ public class TwinHandler : ITwinHandler
         action.TwinReport.ResultCode = resultCode;
         await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
     }
-
     private string GetFileNameByAction(ActionToReport action)
     {
         string fileName = string.Empty;
@@ -240,82 +374,6 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState)
-    {
-        try
-        {
-            var deviceStateKey = nameof(TwinReported.DeviceState);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString());
-            _logger.Info($"UpdateDeviceStateAsync success");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
-        }
-    }
-    public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            var reprted = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
-            return reprted.DeviceState;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"GetDeviceStateAsync failed: {ex.Message}");
-            return null;
-        }
-    }
-
-    public async Task UpdateDeviceSecretKeyAsync(string secretKey)
-    {
-        try
-        {
-            var deviceSecretKey = nameof(TwinReported.SecretKey);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey);
-            _logger.Info($"UpdateDeviceSecretKeyAsync success");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UpdateDeviceSecretKeyAsync failed", ex);
-        }
-    }
-
-    public async Task InitReportDeviceParamsAsync()
-    {
-        try
-        {
-            var supportedShellsKey = nameof(TwinReported.SupportedShells);
-            await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells);
-            var agentPlatformKey = nameof(TwinReported.AgentPlatform);
-            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, _runtimeInformationWrapper.GetOSDescription());
-            _logger.Info("InitReportedDeviceParams success");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"InitReportedDeviceParams failed: {ex.Message}");
-        }
-    }
-
-    public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            if (twin != null)
-            {
-                return twin.ToJson();
-            }
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"GetTwinJsonAsync failed: {ex.Message}");
-            throw;
-        }
-    }
-
     private IEnumerable<ShellType> GetSupportedShells()
     {
         const string windowsBashPath = @"C:\Windows\System32\wsl.exe";
@@ -345,6 +403,4 @@ public class TwinHandler : ITwinHandler
         }
         return supportedShells;
     }
-
-
 }

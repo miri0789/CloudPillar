@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
 using Shared.Logger;
+using Shared.Entities.Twin;
+using System.Reflection;
+using CloudPillar.Agent.Controllers;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
@@ -13,18 +16,32 @@ public class AuthorizationCheckMiddleware
 
     private ILoggerHandler _logger;
     private readonly IConfiguration _configuration;
+
     public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfiguration configuration)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
     }
 
-    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
+    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler, IX509Provider x509Provider)
     {
+        Endpoint endpoint = context.GetEndpoint();
+        //context
+        var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
+        if (deviceIsBusy)
+        {
+            DeviceStateFilterAttribute isActionBlockByBusy = endpoint.Metadata.GetMetadata<DeviceStateFilterAttribute>();
+            if (isActionBlockByBusy != null)
+            {
+                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                await context.Response.WriteAsync(StateMachineConstants.BUSY_MESSAGE);
+                return;
+            }
+        }
         ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
-        Endpoint endpoint = context.GetEndpoint();
         if (IsActionMethod(endpoint))
         {
             // check the headers for all the actions also for the AllowAnonymous.
@@ -43,7 +60,7 @@ public class AuthorizationCheckMiddleware
             {
                 return;
             }
-            
+
             if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
             {
                 // The action has [AllowAnonymous], so allow the request to proceed
@@ -60,26 +77,30 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler);
+            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler, x509Provider);
         }
         else
         {
-            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler);
+            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler, x509Provider);
         }
     }
-    private async Task NextWithRedirectAsync(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler)
+    private async Task NextWithRedirectAsync(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IX509Provider x509Provider)
     {
-        await _requestDelegate(context);
-        return;      
+        context.Connection.ClientCertificate = x509Provider.GetHttpsCertificate();
+        if (context.Request.IsHttps)
+        {
+            await _requestDelegate(context);
+            return;
+        }
 
-        // var sslPort = _configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
-        // var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
-        // {
-        //     Scheme = Uri.UriSchemeHttps,
-        //     Port = sslPort
-        // };
+        var sslPort = _configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+        var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
+        {
+            Scheme = Uri.UriSchemeHttps,
+            Port = sslPort,
+        };
 
-        // context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
+        context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
     }
 
     private async Task UnauthorizedResponseAsync(HttpContext context, string error)

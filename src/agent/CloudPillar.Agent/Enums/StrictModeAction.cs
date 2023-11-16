@@ -1,3 +1,3 @@
 public enum StrictModeAction{
-    Upload, Dwonload
+    Upload, Download
 }

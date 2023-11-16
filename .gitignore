@@ -9,6 +9,8 @@ src/agent/CloudPillar.Agent/publish/linux*
 src/agent/CloudPillar.Agent/publish/win*
 src/agent/CloudPillar.Agent/publish/osx*
 src/agent/CloudPillar.Agent/publish/*.zip
+src/agent/CloudPillar.Agent/publish/appsettings.json
+src/agent/CloudPillar.Agent/publish/log4net.config
 .venv
 .conda
 **/.DS_Store
