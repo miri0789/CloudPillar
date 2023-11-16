@@ -26,6 +26,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine3.18-amd64 AS base
 WORKDIR /app
 # Use the ARG PORT value to set environment variables if PORT is not an empty string
 ARG PORT
+RUN echo "Building for $PORT"
+
 RUN if [ -n "$PORT" ]; then \
     echo "Setting port to $PORT"; \
     echo "EXPOSE $PORT" >> /Dockerfile.tmp; \
