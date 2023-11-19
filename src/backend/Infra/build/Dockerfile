@@ -27,15 +27,16 @@ WORKDIR /app
 # Use the ARG PORT value to set environment variables if PORT is not an empty string
 ARG PORT
 RUN echo "Building for $PORT"
+EXPOSE $PORT
+ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:\$PORT
+# RUN if [ -n "$PORT" ]; then \
+#     echo "Setting port to $PORT"; \
+#     echo "EXPOSE $PORT" >> /Dockerfile.tmp; \
+#     echo "ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:\$PORT" >> /Dockerfile.tmp; \
+# fi
 
-RUN if [ -n "$PORT" ]; then \
-    echo "Setting port to $PORT"; \
-    echo "EXPOSE $PORT" >> /Dockerfile.tmp; \
-    echo "ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:\$PORT" >> /Dockerfile.tmp; \
-fi
-
-# Append the temporary Dockerfile to the main Dockerfile
-RUN cat /Dockerfile.tmp >> /Dockerfile && rm /Dockerfile.tmp
+# # Append the temporary Dockerfile to the main Dockerfile
+# RUN cat /Dockerfile.tmp >> /Dockerfile && rm /Dockerfile.tmp
  
 
 RUN apk add --no-cache icu-libs
