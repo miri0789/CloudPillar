@@ -108,7 +108,6 @@ stages:
           Dockerfile: './src/backend/Infra/build/Dockerfile'
           buildContext: src
           tags: '$(imagetag)'
-          options: '-p $(PORT):$(PORT)'
           arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT=$(PORT)'        
             
       - script: |
