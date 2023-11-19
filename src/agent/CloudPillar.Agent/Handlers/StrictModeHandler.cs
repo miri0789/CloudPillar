@@ -35,7 +35,7 @@ public class StrictModeHandler : IStrictModeHandler
 
     public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
-        if (_strictModeSettings.StrictMode == false)
+        if (!_strictModeSettings.StrictMode)
         {
             return;
         }
