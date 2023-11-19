@@ -82,11 +82,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         foreach (string fullFilePath in _fileStreamerWrapper.Concat(files, directories))
         {
             string blobname = BuildBlobName(fullFilePath);
-            if (fromRunDiagnostic)
-            {
-                blobname = $"Diagnostics/{blobname}";
-            }
-
+          
             using (Stream readStream = CreateStream(fullFilePath))
             {
                 await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, fromRunDiagnostic, cancellationToken);

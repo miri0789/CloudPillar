@@ -4,6 +4,7 @@ using Shared.Logger;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Microsoft.Extensions.Options;
+using Microsoft.Azure.Storage;
 
 
 
@@ -16,15 +17,18 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
     private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
     private readonly ITwinDiseredService _twinDiseredHandler;
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private const string DIAGNOSTICS_BLOB = "Diagnostics";
 
-
-    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings)
+    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler,
+     IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IEnvironmentsWrapper environmentsWrapper)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
     }
 
     public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool fromRunDiagnostic)
@@ -44,6 +48,14 @@ public class UploadStreamChunksService : IUploadStreamChunksService
 
             using (Stream inputStream = new MemoryStream(readStream))
             {
+                if (fromRunDiagnostic)
+                {
+                    CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_environmentsWrapper.storageConnectionString);
+                    CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+                    CloudBlobContainer container = blobClient.GetContainerReference(_environmentsWrapper.diagnosticsBlobContainerName);
+                    blob = container.GetBlockBlobReference(DIAGNOSTICS_BLOB + Uri.UnescapeDataString(storageUri.Segments.Last()));
+                }
+
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
                 //first chunk
                 if (!blobExists)

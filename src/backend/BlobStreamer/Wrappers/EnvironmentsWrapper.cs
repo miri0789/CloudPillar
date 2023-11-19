@@ -1,10 +1,11 @@
 ﻿using Backend.BlobStreamer.Interfaces;
 
 namespace Backend.BlobStreamer.Wrappers;
-public class EnvironmentsWrapper: IEnvironmentsWrapper
+public class EnvironmentsWrapper : IEnvironmentsWrapper
 {
     private const string _storageConnectionString = "StorageConnectionString";
     private const string _blobContainerName = "BlobContainerName";
+    private const string _diagnosticsBlobContainerName = "DiagnosticsBlobContainerName";
     private const string _iothubConnectionString = "IothubConnectionString";
     private const string _messageExpiredMinutes = "MessageExpiredMinutes";
     private const string _retryPolicyBaseDelay = "RetryPolicyBaseDelay";
@@ -17,6 +18,11 @@ public class EnvironmentsWrapper: IEnvironmentsWrapper
     public string blobContainerName
     {
         get { return GetVariable(_blobContainerName); }
+    }
+
+    public string diagnosticsBlobContainerName
+    {
+        get { return GetVariable(_diagnosticsBlobContainerName); }
     }
     public string iothubConnectionString
     {
