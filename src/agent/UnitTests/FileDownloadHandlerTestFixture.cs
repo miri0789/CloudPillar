@@ -51,7 +51,7 @@ namespace CloudPillar.Agent.Tests
         }
 
 
-        [Test]
+        [Test, Order(1)]
         public async Task InitFileDownloadAsync_Add_SendFirmwareUpdateEvent()
         {
             _d2CMessengerHandlerMock.Setup(dc => dc.SendFirmwareUpdateEventAsync(_downloadAction.Source, _downloadAction.ActionId, null, null));
@@ -62,7 +62,7 @@ namespace CloudPillar.Agent.Tests
 
         }
 
-        [Test]
+         [Test, Order(2)]
         public async Task InitFileDownloadAsync_Failure_ThrowException()
         {
             _d2CMessengerHandlerMock.Setup(dc =>
@@ -76,7 +76,7 @@ namespace CloudPillar.Agent.Tests
 
         }
 
-        [Test]
+        [Test, Order(3)]
         public async Task HandleDownloadMessageAsync_PartiallyData_ReturnInprogressReport()
         {
             await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
@@ -95,7 +95,7 @@ namespace CloudPillar.Agent.Tests
             Assert.AreEqual((report.TwinReport.Status, report.TwinReport.Progress), (StatusType.InProgress, 50));
         }
 
-        [Test]
+         [Test, Order(4)]
         public async Task HandleDownloadMessageAsync_AllFileBytes_ReturnSuccessReport()
         {
             await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
@@ -114,7 +114,7 @@ namespace CloudPillar.Agent.Tests
             Assert.AreEqual(report.TwinReport.Status, StatusType.Success);
         }
 
-        [Test]
+        [Test, Order(5)]
         public async Task HandleDownloadMessageAsync_NotExistFile_ThrowException()
         {
             var message = new DownloadBlobChunkMessage
@@ -132,7 +132,7 @@ namespace CloudPillar.Agent.Tests
                    });
         }
 
-        [Test]
+         [Test, Order(6)]
         public async Task HandleDownloadMessageAsync_PassStrictMode_Success()
         {
             var _downloadActionForSM = new DownloadAction()
@@ -156,7 +156,7 @@ namespace CloudPillar.Agent.Tests
             Assert.AreNotEqual(report.TwinReport.Status, StatusType.Failed);
         }
 
-        [Test]
+        [Test, Order(7)]
         public async Task HandleDownloadMessageAsync_MaxSizeStrictMode_ThrowException()
         {
             var _downloadActionForSM = new DownloadAction()
@@ -181,7 +181,7 @@ namespace CloudPillar.Agent.Tests
             Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
         }
 
-        [Test]
+        [Test, Order(8)]
         public async Task HandleDownloadMessageAsync_NoRootForId_ThrowException()
         {
             mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).Root = "";
@@ -199,6 +199,91 @@ namespace CloudPillar.Agent.Tests
                            {
                                await _target.HandleDownloadMessageAsync(message);
                            });
+        }
+
+       
+         [Test, Order(9)]
+        public async Task HandleDownloadMessageAsync_UnzipNotZipFile_ReturnInProgressReport()
+        {
+            _downloadAction.Unzip = true;
+
+            await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadAction.ActionId,
+                FileName = _downloadAction.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".txt");
+            var report = await _target.HandleDownloadMessageAsync(message);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.InProgress);
+
+        }
+         [Test, Order(10)]
+        public async Task HandleDownloadMessageAsync_NoDestinationPath_ReturnFailedReport()
+        {
+            _downloadAction.DestinationPath = null;
+
+            await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadAction.ActionId,
+                FileName = _downloadAction.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+
+            var report = await _target.HandleDownloadMessageAsync(message);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
+
+        }
+
+        [Test, Order(11)]
+        public async Task HandleDownloadMessageAsync_UnzipToFile_ReturnFailedReport()
+        {
+            _downloadAction.Unzip = true;
+            _downloadAction.DestinationPath = "C:\\Downloads\\test.zip";
+
+            await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadAction.ActionId,
+                FileName = _downloadAction.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".zip");
+            var report = await _target.HandleDownloadMessageAsync(message);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
+
+        }
+        [Test, Order(12)]
+        public async Task HandleDownloadMessageAsync_DestinationPathDirectoryNotExists_ReturnFailedReport()
+        {
+            _downloadAction.Unzip = true;
+
+            await _target.InitFileDownloadAsync(_downloadAction, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadAction.ActionId,
+                FileName = _downloadAction.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".zip");            
+            _fileStreamerWrapperMock.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(false);
+            var report = await _target.HandleDownloadMessageAsync(message);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
+
         }
     }
 }

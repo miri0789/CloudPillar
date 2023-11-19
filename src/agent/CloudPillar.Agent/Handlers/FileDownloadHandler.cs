@@ -71,7 +71,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                         return file.Report;
                     }
                     string directoryName = _fileStreamerWrapper.GetDirectoryName(file.DownloadAction.DestinationPath);
-                    if (!Directory.Exists(directoryName))
+                    if (!_fileStreamerWrapper.DirectoryExists(directoryName))
                     {
                         file.Report.TwinReport.Status = StatusType.Failed;
                         file.Report.TwinReport.ResultCode = $"Destination path {directoryName} does not exist.";

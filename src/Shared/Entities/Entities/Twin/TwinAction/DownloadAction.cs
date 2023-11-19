@@ -13,7 +13,8 @@ public class DownloadAction : TwinAction
     
     public DownloadAction()
     {
-        this.Action = TwinActionType.SingularDownload;
+        Action = TwinActionType.SingularDownload;
+        ActionId = Guid.NewGuid().ToString();
     }
 }
 
