@@ -9,6 +9,8 @@ controllers:
     env:
     - name: BlobContainerName
       value: "iotcontainer"
+    - name: DiagnosticsBlobContainerName
+      value: "diagnostics-container"
     - name: IothubConnectionString
       value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
     - name: StorageConnectionString
