@@ -31,6 +31,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
     {
+        downloadAction.ActionId = Guid.NewGuid().ToString();
         _filesDownloads.Add(new FileDownload
         {
             DownloadAction = downloadAction,
@@ -49,14 +50,45 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
         }
-        var filePath = file.DownloadAction.DestinationPath + file.DownloadAction.Source;
 
         if (!file.Stopwatch.IsRunning)
         {
+            if (string.IsNullOrEmpty(file.DownloadAction.DestinationPath))
+            {
+                file.Report.TwinReport.Status = StatusType.Failed;
+                file.Report.TwinReport.ResultCode = "Destination path does not exist.";
+                return file.Report;
+            }
+            if (file.DownloadAction.Unzip)
+            {
+                if (_fileStreamerWrapper.GetExtension(file.DownloadAction.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    var extention = _fileStreamerWrapper.GetExtension(file.DownloadAction.DestinationPath);
+                    if (!string.IsNullOrEmpty(extention))
+                    {
+                        file.Report.TwinReport.Status = StatusType.Failed;
+                        file.Report.TwinReport.ResultCode = $"Destination path {file.DownloadAction.DestinationPath} is not directory path.";
+                        return file.Report;
+                    }
+                    string directoryName = _fileStreamerWrapper.GetDirectoryName(file.DownloadAction.DestinationPath);
+                    if (!Directory.Exists(directoryName))
+                    {
+                        file.Report.TwinReport.Status = StatusType.Failed;
+                        file.Report.TwinReport.ResultCode = $"Destination path {directoryName} does not exist.";
+                        return file.Report;
+                    }
+                    file.TempPath = _fileStreamerWrapper.Combine(directoryName, Guid.NewGuid().ToString() + ".zip");
+                }
+                else
+                {
+                    _logger.Info($"Since no zip file is sent, the unzip command is ignored - {file.DownloadAction.Source}");
+                }
+            }
             file.Stopwatch.Start();
             file.TotalBytes = message.FileSize;
         }
 
+        var filePath = file.TempPath ?? file.DownloadAction.DestinationPath;
         try
         {
             //strict mode
@@ -76,6 +108,21 @@ public class FileDownloadHandler : IFileDownloadHandler
         if (file.TotalBytesDownloaded == file.TotalBytes)
         {
             file.Stopwatch.Stop();
+            if (!string.IsNullOrEmpty(file.TempPath))
+            {
+                try
+                {
+                    await _fileStreamerWrapper.UnzipFileAsync(filePath, file.DownloadAction.DestinationPath);
+                    _fileStreamerWrapper.DeleteFile(file.TempPath);
+                }
+                catch (Exception ex)
+                {
+                    file.Report.TwinReport.Status = StatusType.Failed;
+                    file.Report.TwinReport.ResultCode = ex.Message;
+                    return file.Report;
+                }
+
+            }
             file.Report.TwinReport.Status = StatusType.Success;
         }
         else

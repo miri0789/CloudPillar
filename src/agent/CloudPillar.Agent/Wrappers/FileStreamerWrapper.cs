@@ -1,4 +1,6 @@
 ﻿
+using System.IO.Compression;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace CloudPillar.Agent.Wrappers;
@@ -91,4 +93,42 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return files.Concat(directoories).ToArray();
     }
+
+    public async Task UnzipFileAsync(string filePath, string destinationPath)
+    {
+        if (File.Exists(filePath))
+        {
+            if (!Directory.Exists(destinationPath))
+            {
+                Directory.CreateDirectory(destinationPath);
+            }
+            using (ZipArchive archive = ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8))
+            {
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    string entryFilePath = Path.Combine(destinationPath, entry.FullName);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(entryFilePath));
+
+                    using (Stream entryStream = entry.Open())
+                    using (FileStream fileStream = File.Create(entryFilePath))
+                    {
+                        byte[] buffer = new byte[4096];
+
+                        int bytesRead;
+                        while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        {
+                            await fileStream.WriteAsync(buffer, 0, bytesRead);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public string? GetExtension(string path)
+    {
+        return Path.GetExtension(path);
+    }
+
 }
