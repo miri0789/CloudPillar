@@ -27,8 +27,10 @@ WORKDIR /app
 # Use the ARG PORT value to set environment variables if PORT is not an empty string
 ARG PORT
 RUN echo "image port: $PORT"
-EXPOSE ${PORT}
-ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:{$PORT}
+EXPOSE 8081
+ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:8081
+# EXPOSE ${PORT}
+# ENV DOTNET_RUNNING_IN_CONTAINER=true ASPNETCORE_URLS=http://+:{$PORT}
  
 
 RUN apk add --no-cache icu-libs
