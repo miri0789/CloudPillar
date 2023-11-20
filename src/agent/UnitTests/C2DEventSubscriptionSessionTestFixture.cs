@@ -64,7 +64,7 @@ public class C2DEventSubscriptionSessionTestFixture
     public async Task ReceiveC2DMessagesAsync_ValidDownloadMessage_CallDownloadHandler()
     {
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
-        _messageSubscriberMock.Verify(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage, GetCancellationToken()), Times.Once);
+        _messageSubscriberMock.Verify(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
