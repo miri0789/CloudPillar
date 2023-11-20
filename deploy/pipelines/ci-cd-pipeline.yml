@@ -1,8 +1,6 @@
 variables:
-- name: timelabel
-  value: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
 - name: imagetag
-  value: 1.0.$(Build.BuildNumber).$(timelabel)
+  value: 1.0.$(Build.BuildNumber)
 parameters:
 - name: env
   displayName: Select Environment to deploy
@@ -12,7 +10,7 @@ parameters:
   - tst
   - dev
   - stg
-  - prd   
+  - prd 
 - name: services
   displayName: Select services to deploy
   type: object
@@ -26,8 +24,8 @@ trigger:
     include:
     - main
     - $(Build.SourceBranchName)
-    exclude:
-    - '*'
+
+
 stages:
   
 - stage: CI_Stage
