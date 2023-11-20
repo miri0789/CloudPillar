@@ -1,6 +1,7 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.Options;
+using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -11,13 +12,15 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
+    private readonly ICheckSumService _checkSumService;
     private readonly ILoggerHandler _logger;
 
-    public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger)
+    public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper, ICheckSumService checkSumService, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
+        _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -75,5 +78,29 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             _logger.Error($"UploadFileAsync error: {ex.Message}");
             throw ex;
         }
+    }
+
+    public async Task<bool> CompareUploadAndDownloadFiles(string downloadFilePath)
+    {
+        var uploadFilePath = _runDiagnosticsSettings.FilePath;
+        string uploadChecksum;
+        using (FileStream uploadFileStream = File.OpenRead(uploadFilePath))
+        {
+            uploadChecksum = await _checkSumService.CalculateCheckSumAsync(uploadFileStream);
+        }
+
+        // Calculate checksum for the download file
+        string downloadChecksum;
+        using (FileStream downloadFileStream = File.OpenRead(downloadFilePath))
+        {
+            downloadChecksum = await _checkSumService.CalculateCheckSumAsync(downloadFileStream);
+        }
+
+        // Compare checksums
+        var isEqual = uploadChecksum.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase);
+        if(!isEqual){
+            throw new Exception("Run Diagnostics error: The Download file is not equal for upload file");
+        }
+        return isEqual;
     }
 }

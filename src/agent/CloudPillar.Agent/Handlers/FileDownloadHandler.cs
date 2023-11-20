@@ -14,17 +14,20 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IStrictModeHandler _strictModeHandler;
+    private readonly IRunDiagnosticsHandler _runDiagnosticsHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
     private readonly ILoggerHandler _logger;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
                                IStrictModeHandler strictModeHandler,
+                               IRunDiagnosticsHandler runDiagnosticsHandler,
                                ILoggerHandler loggerHandler)
     {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
+        _runDiagnosticsHandler = runDiagnosticsHandler ?? throw new ArgumentNullException(nameof(runDiagnosticsHandler));
         _filesDownloads = new ConcurrentBag<FileDownload>();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -77,6 +80,10 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             file.Stopwatch.Stop();
             file.Report.TwinReport.Status = StatusType.Success;
+            if (message.FromRunDiagnostics)
+            {
+                await _runDiagnosticsHandler.CompareUploadAndDownloadFiles(filePath);
+            }
         }
         else
         {

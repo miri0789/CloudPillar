@@ -12,6 +12,7 @@ public class DownloadBlobChunkMessage : C2DMessages
     public string FileName { get; set; }
     public long? RangeSize { get; set; }
     public long FileSize { get; set; }
+    public bool FromRunDiagnostics { get; set; } = false;
 
     public override string GetMessageId()
     {
