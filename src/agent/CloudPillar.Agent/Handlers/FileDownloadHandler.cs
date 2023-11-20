@@ -14,17 +14,20 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IStrictModeHandler _strictModeHandler;
+    private readonly ITwinActionsHandler _twinActionsHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
     private readonly ILoggerHandler _logger;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
                                IStrictModeHandler strictModeHandler,
+                               ITwinActionsHandler twinActionsHandler,
                                ILoggerHandler loggerHandler)
     {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
+        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _filesDownloads = new ConcurrentBag<FileDownload>();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -41,7 +44,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionId);
     }
 
-    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
+    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
     {
 
         var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionId == message.ActionId &&
@@ -112,6 +115,8 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 try
                 {
+                    file.Report.TwinReport.Status = StatusType.Unzip;
+                    await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.Report, 1), cancellationToken);
                     await _fileStreamerWrapper.UnzipFileAsync(filePath, file.DownloadAction.DestinationPath);
                     _fileStreamerWrapper.DeleteFile(file.TempPath);
                 }

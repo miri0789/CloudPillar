@@ -102,7 +102,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
             {
                 Directory.CreateDirectory(destinationPath);
             }
-            using (ZipArchive archive = ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8))
+            using (ZipArchive archive = ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.Unicode))
             {
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
