@@ -31,11 +31,9 @@ stages:
 - stage: CI_Stage
   
   jobs:
-  - job: CD_Job
+  - job: CD_Job        
     pool:
-      name: CloudPillar-Pool
-      demands:
-      - agent.name -equals cpaks-${{ parameters.env }}-vm-agent
+      vmImage: ubuntu-latest
     steps:
     - task: HelmDeploy@0
       inputs:
