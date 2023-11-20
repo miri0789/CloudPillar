@@ -34,7 +34,6 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
     {
-        downloadAction.ActionId = Guid.NewGuid().ToString();
         _filesDownloads.Add(new FileDownload
         {
             DownloadAction = downloadAction,
