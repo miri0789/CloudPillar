@@ -5,6 +5,7 @@ using Microsoft.Azure.Devices.Client.Transport;
 using System.IO.Compression;
 using Shared.Entities.Twin;
 using Shared.Logger;
+using Newtonsoft.Json;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -18,6 +19,7 @@ public class FileUploaderHandler : IFileUploaderHandler
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
     private readonly IStreamingFileUploaderHandler _streamingFileUploaderHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
+    private const string DIAGNOSTICS_BLOB = "Diagnostics";
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
@@ -81,8 +83,8 @@ public class FileUploaderHandler : IFileUploaderHandler
         // Upload each file
         foreach (string fullFilePath in _fileStreamerWrapper.Concat(files, directories))
         {
-            string blobname = BuildBlobName(fullFilePath);
-          
+            string blobname = BuildBlobName(fullFilePath, fromRunDiagnostic);
+
             using (Stream readStream = CreateStream(fullFilePath))
             {
                 await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, fromRunDiagnostic, cancellationToken);
@@ -90,7 +92,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    private string BuildBlobName(string fullFilePath)
+    private string BuildBlobName(string fullFilePath, bool fromRunDiagnostic)
     {
         _logger.Info($"BuildBlobName");
 
@@ -99,6 +101,10 @@ public class FileUploaderHandler : IFileUploaderHandler
         if (_fileStreamerWrapper.DirectoryExists(fullFilePath))
         {
             blobname += ".zip";
+        }
+        if (fromRunDiagnostic)
+        {
+            blobname = $"{DIAGNOSTICS_BLOB}/{blobname}";
         }
         return blobname;
     }
@@ -178,7 +184,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, true);
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, fromRunDiagnostic);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");

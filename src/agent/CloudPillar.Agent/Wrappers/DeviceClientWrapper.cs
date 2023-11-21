@@ -151,8 +151,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
     public async Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default)
     {
-        FileUploadSasUriResponse response = await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
-        return response;
+        return await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
     }
 
     public async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default)

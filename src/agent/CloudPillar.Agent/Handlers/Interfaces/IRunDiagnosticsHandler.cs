@@ -1,8 +1,9 @@
+using Shared.Entities.Twin;
+
 namespace CloudPillar.Agent.Handlers;
 public interface IRunDiagnosticsHandler
 {
     Task CreateFileAsync();
-    Task UploadFileAsync(CancellationToken cancellationToken);
-    Task<bool> CompareUploadAndDownloadFiles(string downloadFilePath);
-
+    Task<string> UploadFileAsync(CancellationToken cancellationToken);
+    Task WaitForResponse(string actionId);
 }

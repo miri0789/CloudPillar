@@ -45,7 +45,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             StorageUri = storageUri,
             CheckSum = checkSum,
             StartPosition = currentPosition,
-            ActionId = actionId ?? Guid.NewGuid().ToString(),
+            ActionId = actionId,
             Data = buffer,
             FromRunDiagnostics = fromRunDiagnostic
         };

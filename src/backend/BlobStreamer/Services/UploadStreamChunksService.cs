@@ -5,6 +5,9 @@ using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Microsoft.Extensions.Options;
 using Microsoft.Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Core;
+using Microsoft.Azure.Storage.Auth;
 
 
 
@@ -31,7 +34,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
     }
 
-    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool fromRunDiagnostic)
+    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool fromRunDiagnostic, string uploadActionId)
     {
         try
         {
@@ -50,12 +53,23 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             {
                 if (fromRunDiagnostic)
                 {
-                    CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_environmentsWrapper.storageConnectionString);
-                    CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-                    CloudBlobContainer container = blobClient.GetContainerReference(_environmentsWrapper.diagnosticsBlobContainerName);
-                    blob = container.GetBlockBlobReference(DIAGNOSTICS_BLOB + Uri.UnescapeDataString(storageUri.Segments.Last()));
-                }
+                    // CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_environmentsWrapper.storageConnectionString);
+                    // CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+                    // CloudBlobContainer container = blobClient.GetContainerReference(_environmentsWrapper.diagnosticsBlobContainerName);
+                    // blob = container.GetBlockBlobReference(DIAGNOSTICS_BLOB + Uri.UnescapeDataString(storageUri.Segments.Last()));
+                    blob.Metadata.Add("diagnostics", "true");
+                   
+                   
+                    var tags = new Dictionary<string, string>
+                    {
+                        { "diagnostics-test", "true" }
+                    };
 
+
+                    BlobClient blobClient = new BlobClient(storageUri);
+                    await blobClient.SetTagsAsync(tags);
+                }
+                
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
                 //first chunk
                 if (!blobExists)
@@ -83,7 +97,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     _logger.Info($"fromRunDiagnostic: {fromRunDiagnostic}");
                     if (uploadSuccess && fromRunDiagnostic)
                     {
-                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
+                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri,uploadActionId);
                     }
                 }
             }
@@ -117,13 +131,14 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         return uploadSuccess;
     }
 
-    public async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri)
+    public async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri, string uploadActionId)
     {
         _logger.Info($"preparing download action to add device twin");
 
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
+            ActionId = uploadActionId,
             Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
             Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
             DestinationPath = _runDiagnosticsSettings.DestinationPathForDownload,

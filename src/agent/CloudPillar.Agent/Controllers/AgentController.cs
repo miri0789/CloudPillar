@@ -78,7 +78,7 @@ public class AgentController : ControllerBase
             }
         }
         return await _twinHandler.GetTwinJsonAsync();
-}
+    }
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
@@ -120,14 +120,14 @@ public class AgentController : ControllerBase
     }
 
     [HttpGet("RunDiagnostics")]
-    public async Task<ActionResult<string>> RunDiagnostics()
+    public async Task RunDiagnostics()
     {
         await _runDiagnosticsHandler.CreateFileAsync();
-        await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-        return await _twinHandler.GetTwinJsonAsync();
+        var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
+        await _runDiagnosticsHandler.WaitForResponse(actionId);
     }
 
-private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
+    private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
     {
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();

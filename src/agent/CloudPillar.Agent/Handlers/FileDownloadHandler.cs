@@ -79,11 +79,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         if (file.TotalBytesDownloaded == file.TotalBytes)
         {
             file.Stopwatch.Stop();
-            file.Report.TwinReport.Status = StatusType.Success;
-            if (message.FromRunDiagnostics)
-            {
-                await _runDiagnosticsHandler.CompareUploadAndDownloadFiles(filePath);
-            }
+            file.Report.TwinReport.Status = StatusType.Success;       
         }
         else
         {
