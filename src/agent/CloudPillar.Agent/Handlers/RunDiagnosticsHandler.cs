@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
+using Shared.Entities.Utilities;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
@@ -77,7 +78,6 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
             var actionToReport = new ActionToReport(TwinPatchChangeSpec.changeSpecDiagnostics);
             await _fileUploaderHandler.UploadFilesToBlobStorageAsync(_runDiagnosticsSettings.FilePath, uploadAction, actionToReport, cancellationToken, true);
-            // await _fileUploaderHandler.FileUploadAsync(uploadAction, actionToReport, _runDiagnosticsSettings.FilePath, cancellationToken);
             return actionId;
         }
         catch (Exception ex)
@@ -87,18 +87,18 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task WaitForResponse(string actionId)
+    public async Task<StatusType> WaitForResponse(string actionId)
     {
-
+        var taskCompletion = new TaskCompletionSource<StatusType>();
         try
         {
             var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
-
             while (await timer.WaitForNextTickAsync())
             {
                 var statusType = await CheckResponse(actionId);
-                if (statusType == StatusType.Success || statusType == StatusType.Failed)
+                if (statusType == StatusType.Success)
                 {
+                    taskCompletion.SetResult(statusType);
                     timer.Dispose();
                 }
             }
@@ -106,15 +106,17 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         catch (Exception ex)
         {
             _logger.Error($"WaitForResponse error: {ex.Message}");
+            taskCompletion.SetException(ex);
             throw ex;
         }
+        return await taskCompletion.Task;
     }
 
     private async Task<StatusType> CheckResponse(string actionId)
     {
         var twin = await _deviceClientWrapper.GetTwinAsync(CancellationToken.None);
 
-        var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(twin.Properties.Desired.ToJson());
+        var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
         var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
 
         var desiredList = twinDesired.ChangeSpecDiagnostics.Patch.TransitPackage.ToList();
@@ -152,10 +154,10 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
         // Compare checksums
         var isEqual = uploadChecksum.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase);
-        if (!isEqual)
+        // if (!isEqual)
         {
-            return StatusType.Failed;
+            throw new Exception("The Upload file is not equal to dDownload file");
         }
-        return StatusType.Success;
+        // return StatusType.Success;
     }
 }
