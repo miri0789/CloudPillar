@@ -53,23 +53,27 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             {
                 if (fromRunDiagnostic)
                 {
+                    //** another container from enviroments ** working
                     // CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_environmentsWrapper.storageConnectionString);
                     // CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
                     // CloudBlobContainer container = blobClient.GetContainerReference(_environmentsWrapper.diagnosticsBlobContainerName);
-                    // blob = container.GetBlockBlobReference(DIAGNOSTICS_BLOB + Uri.UnescapeDataString(storageUri.Segments.Last()));
-                    blob.Metadata.Add("diagnostics", "true");
-                   
-                   
-                    var tags = new Dictionary<string, string>
-                    {
-                        { "diagnostics-test", "true" }
-                    };
+                    // blob = containe r.GetBlockBlobReference(DIAGNOSTICS_BLOB + Uri.UnescapeDataString(storageUri.Segments.Last()));
 
+                    //** change blob uri ** error: "Server failed to authenticate the request. Make sure the value of Authorization header is formed correctly including the signature."
+                    // UriBuilder uriBuilder = new UriBuilder(storageUri);
+                    // string newPath = $"diagnostcs/{Uri.UnescapeDataString(storageUri.Segments.Last())}";
+                    // uriBuilder.Path = newPath;
+                    // Uri newUri = uriBuilder.Uri;
+                    // blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(newUri);
 
-                    BlobClient blobClient = new BlobClient(storageUri);
-                    await blobClient.SetTagsAsync(tags);
+                    // ** blob client - add tags** error This request is not authorized to perform this operation
+                    // var blobServiceClient = new BlobServiceClient(storageUri);
+                    // var blobContainerClient = blobServiceClient.GetBlobContainerClient("iotcontainer");
+                    // var blobClient = blobContainerClient.GetBlobClient("n-34/Diagnostics/c_driveroot_/testDiagnostics/diagnosticsFile.txt");
+                    // var tags = new Dictionary<string, string> { { "diagnostics-test", "true" } };
+                    // var response = await blobClient.SetTagsAsync(tags);
                 }
-                
+
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
                 //first chunk
                 if (!blobExists)
@@ -97,7 +101,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     _logger.Info($"fromRunDiagnostic: {fromRunDiagnostic}");
                     if (uploadSuccess && fromRunDiagnostic)
                     {
-                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri,uploadActionId);
+                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri, uploadActionId);
                     }
                 }
             }

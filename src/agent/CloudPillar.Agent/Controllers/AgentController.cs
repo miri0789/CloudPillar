@@ -124,7 +124,7 @@ public class AgentController : ControllerBase
     {
         await _runDiagnosticsHandler.CreateFileAsync();
         var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-        await _runDiagnosticsHandler.WaitForResponse(actionId);
+        // await _runDiagnosticsHandler.WaitForResponse(actionId);
     }
 
     private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
