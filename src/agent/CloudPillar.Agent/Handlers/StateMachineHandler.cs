@@ -51,7 +51,7 @@ namespace CloudPillar.Agent.Handlers
         private void HandleStateAction(DeviceStateType state)
         {
             _logger.Info($"Handle state action, state: {state}");
-            _stateMachineChangedEvent.SetStaeteChanged(new StateMachineEventArgs(state));
+            _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(state));
         }
 
         public async Task<DeviceStateType> GetStateAsync()

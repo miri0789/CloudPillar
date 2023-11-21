@@ -69,7 +69,7 @@ public class StateMachineHandlerTestFixture
 
         await _target.InitStateMachineHandlerAsync();
 
-        _stateMachineChangedEventMock.Verify(h => h.SetStaeteChanged(It.IsAny<StateMachineEventArgs>()), Times.Once);
+        _stateMachineChangedEventMock.Verify(h => h.SetStateChanged(It.IsAny<StateMachineEventArgs>()), Times.Once);
     }
 
     [Test]

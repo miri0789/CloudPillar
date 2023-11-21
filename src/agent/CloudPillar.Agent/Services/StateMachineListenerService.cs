@@ -87,9 +87,9 @@ public class StateMachineListenerService : BackgroundService
 
     private async Task SetBusyAsync()
     {
-        _cts?.Cancel();
         await _twinHandler.SaveLastTwinAsync();
         await _deviceClientWrapper.DisposeAsync();
+        _cts?.Cancel();
     }
 
 

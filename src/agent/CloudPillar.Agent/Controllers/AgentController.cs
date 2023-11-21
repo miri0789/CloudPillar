@@ -100,6 +100,7 @@ public class AgentController : ControllerBase
     public async Task<ActionResult<string>> SetBusyAsync()
     {
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
+        await Task.Delay(1000);
         return await _twinHandler.GetLatestTwinAsync(CancellationToken.None);
     }
 
