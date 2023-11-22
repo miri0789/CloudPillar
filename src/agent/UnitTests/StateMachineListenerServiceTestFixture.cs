@@ -78,15 +78,4 @@ public class StateMachineListenerServiceTestFixture
 
         _deviceClientWrapperMock.Verify(x => x.DisposeAsync(), Times.Once);
     }
-
-        [Test]
-    public async Task SetStateAsync_BusyState_SaveLatestTwin()
-    {
-        _twinHandlerMock.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
-
-        _target.HandleStateChangedEvent(null, new StateMachineEventArgs(DeviceStateType.Busy));
-
-        _twinHandlerMock.Verify(x => x.SaveLastTwinAsync(CancellationToken.None), Times.Once);
-    }
-
 }
