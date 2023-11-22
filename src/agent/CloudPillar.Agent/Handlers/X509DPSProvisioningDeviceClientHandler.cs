@@ -91,6 +91,11 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
+        if(IsInitializedLoad)
+        {
+            _logger.Info($"Try load with the following deviceId: {deviceId}");
+        }
+
         iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
 
         return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad, cancellationToken);
