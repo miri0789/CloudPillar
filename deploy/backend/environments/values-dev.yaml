@@ -4,7 +4,7 @@
 
 controllers:
   - title: "blobstreamer"
-    replicaCount: 4
+    replicaCount: 3
     path: /blobstreamer-service
     port: 8081
     env:
