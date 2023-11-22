@@ -93,7 +93,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
 
-        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, cancellationToken);
+        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad, cancellationToken);
     }
 
     public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
@@ -131,16 +131,19 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         await OnProvisioningCompleted(message);
 
-        await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, cancellationToken);
+        await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
 
     }
 
-    private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, CancellationToken cancellationToken)
+    private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, bool initialize, CancellationToken cancellationToken)
     {
         try
         {
-            using var auth = _X509CertificateWrapper.GetDeviceAuthentication(deviceId, userCertificate);
-            await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+            if (initialize)
+            {
+                using var auth = _X509CertificateWrapper.GetDeviceAuthentication(deviceId, userCertificate);
+                await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+            }
             return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
         }
         catch (Exception ex)
