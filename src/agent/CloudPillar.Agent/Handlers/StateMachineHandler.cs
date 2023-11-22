@@ -38,7 +38,7 @@ namespace CloudPillar.Agent.Handlers
         {
 
             var currentState = await GetStateAsync();
-            if (currentState != state)
+            if (currentState != state || state == DeviceStateType.Provisioning)
             {
                 _currentDeviceState = state;
                 await _twinHandler.UpdateDeviceStateAsync(state);

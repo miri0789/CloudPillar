@@ -68,6 +68,8 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                 {
                     HandleError("Registration status did not assign a hub");
                 }
+
+                _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
                 await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
             }
         }
