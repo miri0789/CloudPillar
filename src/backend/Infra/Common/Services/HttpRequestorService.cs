@@ -32,6 +32,7 @@ public class HttpRequestorService : IHttpRequestorService
     public async Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default)
     {
         HttpClient client = _httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromHours(1);
 
         HttpRequestMessage request = new HttpRequestMessage(method, url);
         string schemaPath = $"{request.RequestUri.Host}/{method.Method}{request.RequestUri.AbsolutePath.Replace("/", "_")}";
