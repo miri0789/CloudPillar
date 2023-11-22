@@ -4,10 +4,6 @@ using Shared.Logger;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Microsoft.Extensions.Options;
-using Microsoft.Azure.Storage;
-using Azure.Storage.Blobs;
-using Azure.Core;
-using Microsoft.Azure.Storage.Auth;
 
 
 

@@ -154,10 +154,10 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
         // Compare checksums
         var isEqual = uploadChecksum.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase);
-        // if (!isEqual)
+        if (!isEqual)
         {
             throw new Exception("The Upload file is not equal to dDownload file");
         }
-        // return StatusType.Success;
+        return StatusType.Success;
     }
 }
