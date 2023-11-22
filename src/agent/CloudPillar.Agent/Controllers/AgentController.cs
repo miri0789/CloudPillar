@@ -120,16 +120,16 @@ public class AgentController : ControllerBase
     }
 
     [HttpGet("RunDiagnostics")]
-    public async Task<ActionResult<StatusType>> RunDiagnostics()
+    public async Task<ActionResult<string>> RunDiagnostics()
     {
         await _runDiagnosticsHandler.CreateFileAsync();
         var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-        var statusType = await _runDiagnosticsHandler.WaitForResponse(actionId);
+        var statusType = await _runDiagnosticsHandler.WaitingForResponse(actionId);
         if (statusType == StatusType.Failed)
         {
             return BadRequest();
         }
-        return Ok();
+        return Ok("The diagnostic process has been completed successfully");
     }
 
     private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)

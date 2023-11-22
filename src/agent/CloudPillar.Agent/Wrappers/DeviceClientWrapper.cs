@@ -34,7 +34,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         {
             // iotClient never return null also if device not exist, so to check if device is exist, or the certificate is valid we try to get the device twin.
             var twin = await iotClient.GetTwinAsync(cancellationToken);
-            if (twin != null && _deviceClient == null)
+            if (twin != null)
             {
                 _deviceClient = iotClient;
             }

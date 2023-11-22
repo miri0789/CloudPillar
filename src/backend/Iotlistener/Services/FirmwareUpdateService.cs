@@ -36,14 +36,14 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 if (data.EndPosition != null)
                 {
                     rangeSize = (long)data.EndPosition - data.StartPosition;
-                    string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionId={data.ActionId}&fileSize={blobSize}&changeSpecKey={data.ChangeSpecKey}";
+                    string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionId={data.ActionId}&fileSize={blobSize}";
                     requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
                 }
                 else
                 {
                     for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
                     {
-                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}&changeSpecKey={data.ChangeSpecKey.GetHashCode()}";
+                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
                         requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
                     }
                 }

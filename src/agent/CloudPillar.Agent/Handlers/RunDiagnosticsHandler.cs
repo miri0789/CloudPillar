@@ -1,5 +1,6 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Services;
@@ -87,7 +88,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task<StatusType> WaitForResponse(string actionId)
+    public async Task<StatusType> WaitingForResponse(string actionId)
     {
         var taskCompletion = new TaskCompletionSource<StatusType>();
         try
@@ -143,6 +144,8 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         using (FileStream uploadFileStream = File.OpenRead(uploadFilePath))
         {
             uploadChecksum = await _checkSumService.CalculateCheckSumAsync(uploadFileStream);
+            _logger.Info($"Upload file check sum: {uploadChecksum}");
+
         }
 
         // Calculate checksum for the download file
@@ -150,6 +153,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         using (FileStream downloadFileStream = File.OpenRead(downloadFilePath))
         {
             downloadChecksum = await _checkSumService.CalculateCheckSumAsync(downloadFileStream);
+            _logger.Info($"download file check sum: {downloadChecksum}");
         }
 
         // Compare checksums
@@ -158,6 +162,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         {
             throw new Exception("The Upload file is not equal to dDownload file");
         }
+        _logger.Info("RunDiagnostics success: Upload file is equal to dDownload file");
         return StatusType.Success;
     }
 }
