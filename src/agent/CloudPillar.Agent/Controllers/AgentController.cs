@@ -1,4 +1,5 @@
 
+using System.Diagnostics;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using FluentValidation;
@@ -122,14 +123,23 @@ public class AgentController : ControllerBase
     [HttpGet("RunDiagnostics")]
     public async Task<ActionResult<string>> RunDiagnostics()
     {
-        await _runDiagnosticsHandler.CreateFileAsync();
-        var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-        var statusType = await _runDiagnosticsHandler.WaitingForResponse(actionId);
-        if (statusType == StatusType.Failed)
+        try
         {
-            return BadRequest();
+
+            Stopwatch timeTaken = new Stopwatch();
+            timeTaken.Start();
+
+            await _runDiagnosticsHandler.CreateFileAsync();
+            var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
+            var statusType = await _runDiagnosticsHandler.WaitingForResponse(actionId);
+
+            timeTaken.Stop();
+            return Ok($"The diagnostic process has been completed successfully, request-duration: {timeTaken.Elapsed.ToString(@"mm\:ss")}");
         }
-        return Ok("The diagnostic process has been completed successfully");
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)

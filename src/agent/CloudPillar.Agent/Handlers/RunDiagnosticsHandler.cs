@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Common.Exceptions;
@@ -91,9 +92,11 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     public async Task<StatusType> WaitingForResponse(string actionId)
     {
         var taskCompletion = new TaskCompletionSource<StatusType>();
+        var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        var timeOutTimer = new PeriodicTimer(TimeSpan.FromMinutes(2));
         try
         {
-            var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+
             while (await timer.WaitForNextTickAsync())
             {
                 var statusType = await CheckResponse(actionId);
@@ -102,11 +105,19 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                     taskCompletion.SetResult(statusType);
                     timer.Dispose();
                 }
+
+                // Check if the timeout timer has elapsed
+                if (await timeOutTimer.WaitForNextTickAsync())
+                {
+                    // Dispose of the timer explicitly after 2 minutes
+                    throw new Exception($"Timeout");
+                }
             }
         }
         catch (Exception ex)
         {
             _logger.Error($"WaitForResponse error: {ex.Message}");
+            timer.Dispose();
             taskCompletion.SetException(ex);
             throw ex;
         }
@@ -160,9 +171,9 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var isEqual = uploadChecksum.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase);
         if (!isEqual)
         {
-            throw new Exception("The Upload file is not equal to dDownload file");
+            throw new Exception("The Upload file is not equal to Download file");
         }
-        _logger.Info("RunDiagnostics success: Upload file is equal to dDownload file");
+        _logger.Info("RunDiagnostics success: Upload file is equal to Download file");
         return StatusType.Success;
     }
 }

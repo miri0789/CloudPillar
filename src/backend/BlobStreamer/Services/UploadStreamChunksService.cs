@@ -4,6 +4,7 @@ using Shared.Logger;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Microsoft.Extensions.Options;
+using Azure.Storage.Blobs;
 
 
 
@@ -64,8 +65,8 @@ public class UploadStreamChunksService : IUploadStreamChunksService
 
                     // ** blob client - add tags** error This request is not authorized to perform this operation
                     // var blobServiceClient = new BlobServiceClient(storageUri);
-                    // var blobContainerClient = blobServiceClient.GetBlobContainerClient("iotcontainer");
-                    // var blobClient = blobContainerClient.GetBlobClient("n-34/Diagnostics/c_driveroot_/testDiagnostics/diagnosticsFile.txt");
+                    // var blobContainerClient = blobServiceClient.GetBlobContainerClient(storageUri.Segments[1]);
+                    // var blobClient = blobContainerClient.GetBlobClient(Uri.UnescapeDataString(storageUri.Segments.Last()));
                     // var tags = new Dictionary<string, string> { { "diagnostics-test", "true" } };
                     // var response = await blobClient.SetTagsAsync(tags);
                 }

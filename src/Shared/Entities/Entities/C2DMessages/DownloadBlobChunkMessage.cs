@@ -1,7 +1,3 @@
-using System.ComponentModel;
-using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Shared;
-
 namespace Shared.Entities.Messages;
 
 public class DownloadBlobChunkMessage : C2DMessages

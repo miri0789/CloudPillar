@@ -12,9 +12,6 @@ public class FirmwareUpdateEvent : D2CMessage
     public long StartPosition { get; set; }
 
     public long? EndPosition { get; set; }
-    public TwinPatchChangeSpec ChangeSpecKey { get; set; }
-
-
 
     [JsonConstructor]
     public FirmwareUpdateEvent()
