@@ -4,6 +4,6 @@ namespace CloudPillar.Agent.Handlers
     {
         event StateMachineEventHandler StateChanged;
 
-         void SetStaeteChanged(StateMachineEventArgs args);
+         void SetStateChanged(StateMachineEventArgs args);
     }
 }

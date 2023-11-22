@@ -30,28 +30,32 @@ namespace CloudPillar.Agent.Handlers
         {
             var state = await GetStateAsync();
             _logger.Info($"InitStateMachineHandlerAsync: init device state: {state}");
-             _currentDeviceState = state;
-            HandleStateAction(state);
+            _currentDeviceState = state;
+            await HandleStateActionAsync(state);
         }
 
         public async Task SetStateAsync(DeviceStateType state)
         {
 
             var currentState = await GetStateAsync();
-            if (currentState != state)
+            if (currentState != state || state == DeviceStateType.Provisioning)
             {
                 _currentDeviceState = state;
                 await _twinHandler.UpdateDeviceStateAsync(state);
-                HandleStateAction(state);
+                await HandleStateActionAsync(state);
                 _logger.Info($"Set device state: {state}");
             }
 
         }
 
-        private void HandleStateAction(DeviceStateType state)
+        private async Task HandleStateActionAsync(DeviceStateType state)
         {
+            if (state == DeviceStateType.Busy)
+            {
+                await _twinHandler.SaveLastTwinAsync();
+            }
             _logger.Info($"Handle state action, state: {state}");
-            _stateMachineChangedEvent.SetStaeteChanged(new StateMachineEventArgs(state));
+            _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(state));
         }
 
         public async Task<DeviceStateType> GetStateAsync()

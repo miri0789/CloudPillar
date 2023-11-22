@@ -69,7 +69,7 @@ public class StateMachineHandlerTestFixture
 
         await _target.InitStateMachineHandlerAsync();
 
-        _stateMachineChangedEventMock.Verify(h => h.SetStaeteChanged(It.IsAny<StateMachineEventArgs>()), Times.Once);
+        _stateMachineChangedEventMock.Verify(h => h.SetStateChanged(It.IsAny<StateMachineEventArgs>()), Times.Once);
     }
 
     [Test]
@@ -106,4 +106,16 @@ public class StateMachineHandlerTestFixture
         var updatedState = _target.GetCurrentDeviceState();
         Assert.AreEqual(newState, updatedState);
     }
+
+
+    [Test]
+    public async Task SetStateAsync_BusyState_SaveLatestTwin()
+    {
+        _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+
+        await _target.SetStateAsync(DeviceStateType.Busy);
+
+        _twinHandler.Verify(x => x.SaveLastTwinAsync(CancellationToken.None), Times.Once);
+    }
+
 }

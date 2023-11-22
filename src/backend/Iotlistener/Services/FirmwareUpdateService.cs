@@ -31,23 +31,28 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             {
                 long rangeSize = GetRangeSize((long)blobSize, data.ChunkSize);
 
-                var requests = new List<Task>();
 
                 if (data.EndPosition != null)
                 {
                     rangeSize = (long)data.EndPosition - data.StartPosition;
                     string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionId={data.ActionId}&fileSize={blobSize}";
-                    requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                    await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
                 }
                 else
                 {
-                    for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
+                    long offset = data.StartPosition, rangeIndex = 0;
+                    while (offset < blobSize)
                     {
-                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
-                        requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                        _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
+                        var requests = new List<Task>();
+                        for (var i = 0; i < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
+                        {
+                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
+                            requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                        }
+                        await Task.WhenAll(requests);
                     }
                 }
-                await Task.WhenAll(requests);
             }
             catch (Exception ex)
             {
