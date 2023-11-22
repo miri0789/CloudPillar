@@ -14,7 +14,6 @@ public class DownloadAction : TwinAction
     public DownloadAction()
     {
         Action = TwinActionType.SingularDownload;
-        ActionId = Guid.NewGuid().ToString();
     }
 }
 

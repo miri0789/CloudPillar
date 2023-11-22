@@ -72,14 +72,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                         file.Report.TwinReport.ResultCode = $"Destination path {file.DownloadAction.DestinationPath} is not directory path.";
                         return file.Report;
                     }
-                    string directoryName = _fileStreamerWrapper.GetDirectoryName(file.DownloadAction.DestinationPath);
-                    if (!_fileStreamerWrapper.DirectoryExists(directoryName))
-                    {
-                        file.Report.TwinReport.Status = StatusType.Failed;
-                        file.Report.TwinReport.ResultCode = $"Destination path {directoryName} does not exist.";
-                        return file.Report;
-                    }
-                    file.TempPath = _fileStreamerWrapper.Combine(directoryName, Guid.NewGuid().ToString() + ".zip");
+                    file.TempPath = _fileStreamerWrapper.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".zip");
                 }
                 else
                 {

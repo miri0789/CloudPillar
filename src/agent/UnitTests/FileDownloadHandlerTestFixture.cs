@@ -285,7 +285,7 @@ namespace CloudPillar.Agent.Tests
 
         }
         [Test]
-        public async Task HandleDownloadMessageAsync_DestinationPathDirectoryNotExists_ReturnFailedReport()
+        public async Task HandleDownloadMessageAsync_DestinationPathDirectoryNotExists_ReturnInProgressReport()
         {
            var _downloadAction2 = new DownloadAction()
             {
@@ -310,7 +310,7 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(f => f.DirectoryExists(_downloadAction2.Source)).Returns(true);
             _fileStreamerWrapperMock.Setup(f => f.DirectoryExists(_downloadAction2.DestinationPath)).Returns(false);
             var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.InProgress);
 
         }
     }
