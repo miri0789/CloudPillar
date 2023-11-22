@@ -40,8 +40,10 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 }
                 else
                 {
-                    for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize;)
+                    long offset = data.StartPosition, rangeIndex = 0;
+                    while (offset < blobSize)
                     {
+                        _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
                         var requests = new List<Task>();
                         for (var i = 0; i < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                         {
