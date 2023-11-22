@@ -27,51 +27,37 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         long? blobSize = await GetBlobSize(data.FileName);
         if (blobSize != null)
         {
-            var semaphore = new SemaphoreSlim(4);
             try
             {
                 long rangeSize = GetRangeSize((long)blobSize, data.ChunkSize);
 
-                var requests = new List<Task>();
-
-                async Task SendRequestAsync(long offset, long rangeIndex)
-                {
-                    string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
-
-                    // Use the semaphore to limit the number of parallel requests
-                    await semaphore.WaitAsync();
-                    try
-                    {
-                        requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
-                    }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
-                }
 
                 if (data.EndPosition != null)
                 {
                     rangeSize = (long)data.EndPosition - data.StartPosition;
-                    await SendRequestAsync(data.StartPosition, 0);
+                    string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionId={data.ActionId}&fileSize={blobSize}";
+                    await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
                 }
                 else
                 {
-                    for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
+                    long offset = data.StartPosition, rangeIndex = 0;
+                    while (offset < blobSize)
                     {
-                        await SendRequestAsync(offset, rangeIndex);
+                        _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
+                        var requests = new List<Task>();
+                        for (var i = 0; i < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
+                        {
+                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
+                            requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                        }
+                        await Task.WhenAll(requests);
                     }
                 }
-
-                await Task.WhenAll(requests);
             }
             catch (Exception ex)
             {
                 _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
-            }
-            finally
-            {
-                semaphore.Release();
+
             }
         }
     }
