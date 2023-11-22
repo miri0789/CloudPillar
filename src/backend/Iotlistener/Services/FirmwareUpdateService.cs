@@ -30,8 +30,12 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             try
             {
                 long rangeSize = GetRangeSize((long)blobSize, data.ChunkSize);
-
                 var requests = new List<Task>();
+
+                ParallelOptions parallelOptions = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = 4
+                };
 
                 if (data.EndPosition != null)
                 {
@@ -41,14 +45,17 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 }
                 else
                 {
-                    for (long offset = data.StartPosition, rangeIndex = 0; offset < blobSize; offset += rangeSize, rangeIndex++)
-                    {
-                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
-                        requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
-                    }
+                    Parallel.For(0, (int)((blobSize - data.StartPosition) / rangeSize) + 1, parallelOptions, rangeIndex =>
+                        {
+                            long offset = data.StartPosition + rangeIndex * rangeSize;
+                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
+                            requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                        });
                 }
+
                 await Task.WhenAll(requests);
             }
+
             catch (Exception ex)
             {
                 _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
