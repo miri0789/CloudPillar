@@ -48,10 +48,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
 
             using (Stream inputStream = new MemoryStream(readStream))
             {
-                if (fromRunDiagnostic)
-                {                   
-                }
-
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
                 //first chunk
                 if (!blobExists)

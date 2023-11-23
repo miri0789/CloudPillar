@@ -64,8 +64,16 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
         await SendMessageAsync(ProvisionDeviceCertificateEvent);
     }
+    
+    public async Task SendDeleteDiagnosticsBlobAsync(Uri storageUri)
+    {
+        var deleteDiagnosticsBlobEvent = new DeleteDiagnosticsBlobEvent()
+        {
+            StorageUri = storageUri,
+        };
 
-
+        await SendMessageAsync(deleteDiagnosticsBlobEvent);
+    }
 
     private async Task SendMessageAsync(D2CMessage d2CMessage)
     {

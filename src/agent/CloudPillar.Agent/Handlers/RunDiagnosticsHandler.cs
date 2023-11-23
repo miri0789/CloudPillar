@@ -18,16 +18,18 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ICheckSumService _checkSumService;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ILoggerHandler _logger;
 
     public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper,
-    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
+    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper,ID2CMessengerHandler d2CMessengerHandler, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -147,7 +149,11 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         if (report.Status == StatusType.Success)
         {
             _logger.Info($"File download completed successfully");
-            return await CompareUploadAndDownloadFiles(((DownloadAction)desiredList[indexDesired]).DestinationPath);
+            var filesEquals = await CompareUploadAndDownloadFiles(((DownloadAction)desiredList[indexDesired]).DestinationPath);
+            if(filesEquals == StatusType.Success){
+                _d2CMessengerHandler.SendDeleteDiagnosticsBlobAsync();
+            };
+
         }
         return StatusType.Pending;
     }
