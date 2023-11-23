@@ -56,7 +56,7 @@ public class C2DEventSubscriptionSessionTestFixture
             .Setup(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage))
             .ReturnsAsync(actionToReport);
 
-        _twinActionsHandler.Setup(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>(), It.IsAny<TwinPatchChangeSpec>())).Returns(Task.CompletedTask);
+        _twinActionsHandler.Setup(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
     }
 
@@ -72,7 +72,7 @@ public class C2DEventSubscriptionSessionTestFixture
     {
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
 
-        _twinActionsHandler.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>(), It.IsAny<TwinPatchChangeSpec>()), Times.Once);
+        _twinActionsHandler.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -116,7 +116,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
 
-        _twinActionsHandler.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>(), It.IsAny<TwinPatchChangeSpec>()), Times.Never);
+        _twinActionsHandler.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
