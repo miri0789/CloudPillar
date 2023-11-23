@@ -5,6 +5,7 @@ using Shared.Entities.Twin;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Services;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -61,16 +62,28 @@ public class RunDiagnosticsHandlerTestFixture
         var fileStreamMock = new Mock<FileStream>(MockBehavior.Strict, new object[] { "filePath", FileMode.Create });
 
         _fileStreamerWrapperMock.Setup(h => h.FileExists(It.IsAny<string>())).Returns(false);
-        _fileStreamerWrapperMock.Setup(h => h.CreateStream(It.IsAny<string>(), It.IsAny<FileMode>())).Returns(fileStreamMock.Object);
-        _fileStreamerWrapperMock.Setup(h => h.SetLength(It.IsAny<FileStream>(), 128 * 1024));
 
         await _target.CreateFileAsync();
         _fileStreamerWrapperMock.Verify(x => x.WriteAsync(It.IsAny<FileStream>(), It.IsAny<ReadOnlyMemory<Byte>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Test]
+    public async Task UploadFileAsync_FullProcess_NotException()
+    {
+        async Task SendRequest() => await _target.UploadFileAsync(CancellationToken.None);
+        Assert.DoesNotThrowAsync(SendRequest);
+    }
 
+    [Test]
+    public async Task UploadFileAsync_FullProcess_TrhowException()
+    {
+        _fileUploaderHandlerMock.Setup(x => x.UploadFilesToBlobStorageAsync(It.IsAny<string>(), It.IsAny<UploadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>(), It.IsAny<bool>()))
+        .ThrowsAsync(new Exception());
 
+        Assert.ThrowsAsync<Exception>(async () =>
+        {
+            await _target.UploadFileAsync(CancellationToken.None);
+        });
 
-
-
+    }
 }
