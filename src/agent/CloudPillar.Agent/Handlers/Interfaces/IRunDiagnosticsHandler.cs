@@ -5,5 +5,5 @@ public interface IRunDiagnosticsHandler
 {
     Task CreateFileAsync();
     Task<string> UploadFileAsync(CancellationToken cancellationToken);
-    Task<StatusType> WaitingForResponse(string actionId);
+    Task<StatusType> WaitingForResponseAsync(string actionId);
 }

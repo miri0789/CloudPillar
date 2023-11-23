@@ -89,43 +89,45 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task<StatusType> WaitingForResponse(string actionId)
+    public async Task<StatusType> WaitingForResponseAsync(string actionId)
     {
+        StatusType statusType = StatusType.Pending;
         var taskCompletion = new TaskCompletionSource<StatusType>();
-        var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
-        var timeOutTimer = new PeriodicTimer(TimeSpan.FromMinutes(2));
+        var timer = new PeriodicTimer(TimeSpan.FromSeconds(_runDiagnosticsSettings.PeriodicResponseWaitSeconds));
+
+        Timer timeTaken = new Timer((Object state) =>
+        {
+            if ((StatusType)state != StatusType.Success && (StatusType)state != StatusType.Failed)
+            {
+                taskCompletion.SetException(new Exception($"Something is wrong, no response was received within {_runDiagnosticsSettings.ResponseTimeoutMinutes} minutes"));
+            }
+        }, statusType, _runDiagnosticsSettings.ResponseTimeoutMinutes * 60 * 1000, Timeout.Infinite);
+
         try
         {
-
-            while (await timer.WaitForNextTickAsync())
+            while (await timer.WaitForNextTickAsync() && !taskCompletion.Task.IsCompleted)
             {
-                var statusType = await CheckResponse(actionId);
+                statusType = await CheckResponse(actionId);
+                _logger.Info($"CheckResponse response is {statusType}");
                 if (statusType == StatusType.Success)
                 {
-                    taskCompletion.SetResult(statusType);
                     timer.Dispose();
-                }
-
-                // Check if the timeout timer has elapsed
-                if (await timeOutTimer.WaitForNextTickAsync())
-                {
-                    // Dispose of the timer explicitly after 2 minutes
-                    throw new Exception($"Timeout");
+                    timeTaken.Dispose();
+                    taskCompletion.SetResult(statusType);
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.Error($"WaitForResponse error: {ex.Message}");
             timer.Dispose();
             taskCompletion.SetException(ex);
-            throw ex;
         }
         return await taskCompletion.Task;
     }
 
     private async Task<StatusType> CheckResponse(string actionId)
     {
+
         var twin = await _deviceClientWrapper.GetTwinAsync(CancellationToken.None);
 
         var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
@@ -137,12 +139,14 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var indexDesired = desiredList.FindIndex(x => x.ActionId == actionId);
         if (indexDesired == -1 || desiredList.Count() > reportedList.Count())
         {
+            _logger.Info($"No report with actionId {actionId}");
             return StatusType.Pending;
         }
 
         var report = reportedList[indexDesired];
         if (report.Status == StatusType.Success)
         {
+            _logger.Info($"File download completed successfully");
             return await CompareUploadAndDownloadFiles(((DownloadAction)desiredList[indexDesired]).DestinationPath);
         }
         return StatusType.Pending;
@@ -150,30 +154,28 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
     private async Task<StatusType> CompareUploadAndDownloadFiles(string downloadFilePath)
     {
-        var uploadFilePath = _runDiagnosticsSettings.FilePath;
-        string uploadChecksum;
-        using (FileStream uploadFileStream = File.OpenRead(uploadFilePath))
-        {
-            uploadChecksum = await _checkSumService.CalculateCheckSumAsync(uploadFileStream);
-            _logger.Info($"Upload file check sum: {uploadChecksum}");
+        _logger.Info("Start compare upload and download files");
 
-        }
+        string uploadChecksum = await GetFileCheckSumAsync(_runDiagnosticsSettings.FilePath);
+        string downloadChecksum = await GetFileCheckSumAsync(downloadFilePath);
 
-        // Calculate checksum for the download file
-        string downloadChecksum;
-        using (FileStream downloadFileStream = File.OpenRead(downloadFilePath))
-        {
-            downloadChecksum = await _checkSumService.CalculateCheckSumAsync(downloadFileStream);
-            _logger.Info($"download file check sum: {downloadChecksum}");
-        }
-
-        // Compare checksums
         var isEqual = uploadChecksum.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase);
         if (!isEqual)
         {
             throw new Exception("The Upload file is not equal to Download file");
         }
-        _logger.Info("RunDiagnostics success: Upload file is equal to Download file");
+        _logger.Info("Upload file is equal to Download file");
         return StatusType.Success;
+    }
+
+    private async Task<string> GetFileCheckSumAsync(string filePath)
+    {
+        string checkSum;
+        using (FileStream fileStream = File.OpenRead(filePath))
+        {
+            checkSum = await _checkSumService.CalculateCheckSumAsync(fileStream);
+            _logger.Info($"file check sum: {checkSum}");
+        }
+        return checkSum;
     }
 }

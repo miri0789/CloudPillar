@@ -125,20 +125,23 @@ public class AgentController : ControllerBase
     {
         try
         {
-
             Stopwatch timeTaken = new Stopwatch();
             timeTaken.Start();
 
             await _runDiagnosticsHandler.CreateFileAsync();
             var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-            var statusType = await _runDiagnosticsHandler.WaitingForResponse(actionId);
+            var statusType = await _runDiagnosticsHandler.WaitingForResponseAsync(actionId);
 
             timeTaken.Stop();
-            return Ok($"The diagnostic process has been completed successfully, request-duration: {timeTaken.Elapsed.ToString(@"mm\:ss")}");
+            var timeTakenString = timeTaken.Elapsed.ToString(@"mm\:ss");
+
+            _logger.Info($"RunDiagnostics Success in {timeTakenString}");
+            return Ok($"The diagnostic process has been completed successfully, request-duration: {timeTakenString}");
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            _logger.Error("RunDiagnostics failed", ex);
+            return BadRequest($"An error occurred while processing run diagnostics: {ex.Message}");
         }
     }
 
