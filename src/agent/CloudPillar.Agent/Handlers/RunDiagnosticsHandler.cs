@@ -44,7 +44,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             var bytes = new Byte[_runDiagnosticsSettings.FleSizBytes];
             new Random().NextBytes(bytes);
 
-            string directoryPath = Path.GetDirectoryName(_runDiagnosticsSettings.FilePath);
+            string directoryPath = _fileStreamerWrapper.GetDirectoryName(_runDiagnosticsSettings.FilePath);
             if (!_fileStreamerWrapper.DirectoryExists(directoryPath))
             {
                 _fileStreamerWrapper.CreateDirectory(directoryPath);
@@ -52,8 +52,8 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             }
             using (FileStream fileStream = _fileStreamerWrapper.CreateStream(_runDiagnosticsSettings.FilePath, FileMode.Create))
             {
-                fileStream.SetLength(_runDiagnosticsSettings.FleSizBytes);
-                await fileStream.WriteAsync(bytes);
+                _fileStreamerWrapper.SetLength(fileStream, _runDiagnosticsSettings.FleSizBytes);
+                await _fileStreamerWrapper.WriteAsync(fileStream, bytes);
             }
             _logger.Info($"File for diagnostics was crested");
         }

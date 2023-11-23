@@ -8,10 +8,21 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return new FileStream(fullFilePath, fileMode, fileAccess, fileShare, BufferSize, useAsync);
     }
-    
+
     public FileStream CreateStream(string fullFilePath, FileMode fileMode)
     {
         return new FileStream(fullFilePath, fileMode);
+    }
+
+    public void SetLength(FileStream fileStream, long value)
+    {
+        fileStream.SetLength(value);
+    }
+
+
+    public async Task WriteAsync(FileStream fileStream, ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        await fileStream.WriteAsync(buffer, cancellationToken);
     }
 
     public DirectoryInfo CreateDirectory(string directoryPath)
@@ -19,7 +30,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return Directory.CreateDirectory(directoryPath);
     }
 
-    
+
     public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {
         using (FileStream fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))

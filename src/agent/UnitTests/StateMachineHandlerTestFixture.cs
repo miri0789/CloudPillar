@@ -8,7 +8,7 @@ namespace CloudPillar.Agent.Tests;
 [TestFixture]
 public class StateMachineHandlerTestFixture
 {
-    private StateMachineHandler _target;
+    private IStateMachineHandler _target;
     private Mock<ITwinHandler> _twinHandler;
     private Mock<ILoggerHandler> _logger;
     private Mock<IStateMachineChangedEvent> _stateMachineChangedEventMock;
