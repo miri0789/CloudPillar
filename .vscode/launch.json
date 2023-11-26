@@ -211,6 +211,7 @@
             "configurations": [
                 "Cloud Pillar Agent",
                 "Key Holder Service",
+                "Blob Streamer Service",
                 "Iot Listener Service"
             ]
         },

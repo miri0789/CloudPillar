@@ -68,6 +68,14 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         _logger.Debug($"All bytes sent successfuly");
     }
 
+    private int CalculateCurrentPosition(Stream uploadStream, float progressPercent )
+    {
+        var totalSize = uploadStream.Length;
+        int currentPosition = (int)Math.Round(progressPercent * totalSize / 100.0);
+
+        Console.WriteLine($"Current Position: {currentPosition} bytes");
+        return currentPosition;
+    }
     private async Task ProcessChunkAsync(ActionToReport actionToReport, Stream readStream, Uri storageUri, string actionId, int chunkSize, long currentPosition, string checkSum, CancellationToken cancellationToken)
     {
         long remainingBytes = readStream.Length - currentPosition;
