@@ -6,6 +6,8 @@ using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Services;
 using CloudPillar.Agent.Entities;
+using Microsoft.Azure.Devices.Shared;
+using Shared.Enums;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -18,6 +20,7 @@ public class RunDiagnosticsHandlerTestFixture
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private Mock<ICheckSumService> _checkSumServiceMock;
     private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
+    private Mock<FileStream> _fileStreamMock;
     private Mock<ILoggerHandler> _logger;
 
 
@@ -32,10 +35,9 @@ public class RunDiagnosticsHandlerTestFixture
 
         _runDiagnosticsSettingsMock = new Mock<IOptions<RunDiagnosticsSettings>>();
         _runDiagnosticsSettingsMock.Setup(x => x.Value).Returns(new RunDiagnosticsSettings());
+        _fileStreamMock = new Mock<FileStream>(MockBehavior.Default, new object[] { "filePath", FileMode.Create });
 
-
-        _target = new RunDiagnosticsHandler(_fileUploaderHandlerMock.Object, _runDiagnosticsSettingsMock.Object, _fileStreamerWrapperMock.Object,
-         _checkSumServiceMock.Object, _deviceClientWrapperMock.Object, _logger.Object);
+        CreateTarget();
     }
 
     [Test]
@@ -57,9 +59,8 @@ public class RunDiagnosticsHandlerTestFixture
     }
 
     [Test]
-    public async Task CreateFileAsync_FullProcess_FileCreateWithContent()
+    public async Task CreateFileAsync_FullProcess_CreateFileWithContent()
     {
-        var fileStreamMock = new Mock<FileStream>(MockBehavior.Strict, new object[] { "filePath", FileMode.Create });
 
         _fileStreamerWrapperMock.Setup(h => h.FileExists(It.IsAny<string>())).Returns(false);
 
@@ -86,4 +87,65 @@ public class RunDiagnosticsHandlerTestFixture
         });
 
     }
+
+    [Test]
+    public async Task WaitingForResponseAsync_GetResponse_Success()
+    {
+        var actionId = Guid.NewGuid().ToString();
+        var checkSum = "testCheckSum";
+
+        _runDiagnosticsSettingsMock.Setup(x=>x.Value).Returns(new RunDiagnosticsSettings(){ PeriodicResponseWaitSeconds = 1});
+        CreateTarget();
+
+        _fileStreamerWrapperMock.Setup(x => x.OpenRead(It.IsAny<string>())).Returns(_fileStreamMock.Object);
+        _fileStreamerWrapperMock.Setup(x => x.OpenRead(It.IsAny<string>())).Returns(_fileStreamMock.Object);
+        _checkSumServiceMock.Setup(x => x.CalculateCheckSumAsync(It.IsAny<FileStream>(), It.IsAny<CheckSumType>())).ReturnsAsync(checkSum);
+
+        CreateTwinMock(actionId, StatusType.Success);
+
+        var result = await _target.WaitingForResponseAsync(actionId);
+
+        Assert.AreEqual(StatusType.Success, result);
+    }
+
+    [Test]
+    public async Task WaitingForResponseAsync_Timeout_TrhowException()
+    {
+        var actionId = Guid.NewGuid().ToString();
+        _runDiagnosticsSettingsMock.Setup(x=>x.Value).Returns(new RunDiagnosticsSettings(){ PeriodicResponseWaitSeconds = 1, ResponseTimeoutMinutes = 0});
+        CreateTarget();
+        CreateTwinMock(actionId, StatusType.Pending);
+
+        Assert.ThrowsAsync<TimeoutException>(async () =>
+           {
+               await _target.WaitingForResponseAsync(actionId);
+           });
+    }
+
+    private void CreateTwinMock(string actionId, StatusType statusType)
+    {
+        var twinChangeSpec = new TwinChangeSpec()
+        {
+            Patch = new TwinPatch()
+            {
+                TransitPackage = new List<TwinAction>() { new TwinAction() { ActionId = actionId, Action = TwinActionType.SingularDownload } }.ToArray()
+            }
+        };
+        var twinReportedChangeSpec = new TwinReportedChangeSpec()
+        {
+            Patch = new TwinReportedPatch()
+            {
+                TransitPackage = new List<TwinActionReported>() { new TwinActionReported() { Status = statusType } }.ToArray()
+            }
+        };
+        var twin = MockHelper.CreateTwinMock(null, null, twinChangeSpec, twinReportedChangeSpec, new List<TwinReportedCustomProp>());
+        _deviceClientWrapperMock.Setup(dc => dc.GetTwinAsync(CancellationToken.None)).ReturnsAsync(twin);
+    }
+
+    private void CreateTarget()
+    {
+        _target = new RunDiagnosticsHandler(_fileUploaderHandlerMock.Object, _runDiagnosticsSettingsMock.Object, _fileStreamerWrapperMock.Object,
+         _checkSumServiceMock.Object, _deviceClientWrapperMock.Object, _logger.Object);
+    }
+
 }

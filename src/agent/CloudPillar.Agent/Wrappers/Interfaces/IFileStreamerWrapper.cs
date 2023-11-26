@@ -5,8 +5,13 @@ public interface IFileStreamerWrapper
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
 
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
+    
     void SetLength(FileStream fileStream, long value);
+   
     Task WriteAsync(FileStream fileStream, ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
+
+    FileStream OpenRead(string filePath);
+    
     DirectoryInfo CreateDirectory(string directoryPath);
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);

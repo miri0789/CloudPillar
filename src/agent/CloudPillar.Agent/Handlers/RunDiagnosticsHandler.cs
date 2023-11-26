@@ -99,7 +99,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         {
             if ((StatusType)state != StatusType.Success && (StatusType)state != StatusType.Failed)
             {
-                taskCompletion.SetException(new Exception($"Something is wrong, no response was received within {_runDiagnosticsSettings.ResponseTimeoutMinutes} minutes"));
+                taskCompletion.SetException(new TimeoutException($"Something is wrong, no response was received within {_runDiagnosticsSettings.ResponseTimeoutMinutes} minutes"));
             }
         }, statusType, _runDiagnosticsSettings.ResponseTimeoutMinutes * 60 * 1000, Timeout.Infinite);
 
@@ -171,7 +171,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private async Task<string> GetFileCheckSumAsync(string filePath)
     {
         string checkSum;
-        using (FileStream fileStream = File.OpenRead(filePath))
+        using (FileStream fileStream = _fileStreamerWrapper.OpenRead(filePath))
         {
             checkSum = await _checkSumService.CalculateCheckSumAsync(fileStream);
             _logger.Info($"file check sum: {checkSum}");

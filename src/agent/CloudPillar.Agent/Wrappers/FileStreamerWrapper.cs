@@ -19,6 +19,10 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         fileStream.SetLength(value);
     }
 
+    public FileStream OpenRead(string filePath)
+    {
+        return File.OpenRead(filePath);
+    }
 
     public async Task WriteAsync(FileStream fileStream, ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
     {

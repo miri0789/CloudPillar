@@ -407,7 +407,7 @@ public class TwinHandlerTestFixture
 
     private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null)
     {
-        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps);
+        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec,null,null, twinReportedCustomProps);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
 
     }
