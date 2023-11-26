@@ -3,6 +3,7 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
+using Microsoft.Extensions.Options;
 using Shared.Logger;
 
 namespace CloudPillar.Agent.Handlers;
@@ -10,20 +11,22 @@ namespace CloudPillar.Agent.Handlers;
 public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 {
     private readonly ILoggerHandler _logger;
-
     private IDeviceClientWrapper _deviceClientWrapper;
     private ISymmetricKeyWrapper _symmetricKeyWrapper;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly IProvisioningDeviceClientWrapper _provisioningDeviceClientWrapper;
+    private readonly AuthenticationSettings _authenticationSettings;
 
     public SymmetricKeyProvisioningHandler(ILoggerHandler loggerHandler,
      IDeviceClientWrapper deviceClientWrapper,
      ISymmetricKeyWrapper symmetricKeyWrapper,
-     IEnvironmentsWrapper environmentsWrapper)
+     IProvisioningDeviceClientWrapper provisioningDeviceClientWrapper,
+     IOptions<AuthenticationSettings> authenticationSettings)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _symmetricKeyWrapper = symmetricKeyWrapper ?? throw new ArgumentNullException(nameof(symmetricKeyWrapper));
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _provisioningDeviceClientWrapper = provisioningDeviceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningDeviceClientWrapper));
+        _authenticationSettings = authenticationSettings?.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));
     }
 
     public async Task<bool> AuthorizationDeviceAsync(CancellationToken cancellationToken)
@@ -33,12 +36,12 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
     public async Task ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.dpsScopeId);
-        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.globalDeviceEndpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.groupEnrollmentPrimaryKey);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.DpsScopeId);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.GlobalDeviceEndpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.GroupEnrollmentKey);
 
         var deviceName = deviceId;
-        var primaryKey = _environmentsWrapper.groupEnrollmentPrimaryKey;
+        var primaryKey = _authenticationSettings.GroupEnrollmentKey;
         var drivedDevice = ComputeDerivedSymmetricKey(primaryKey, deviceName);
 
 
@@ -49,21 +52,25 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
             using (ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler())
             {
-                var provisioningClient = ProvisioningDeviceClient.Create(_environmentsWrapper.globalDeviceEndpoint, _environmentsWrapper.dpsScopeId, security, transport);
+                DeviceRegistrationResult result = await _provisioningDeviceClientWrapper.RegisterAsync(_authenticationSettings.GlobalDeviceEndpoint,
+                    _authenticationSettings.DpsScopeId,
+                    security,
+                    transport);
 
-                _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
-
-                var result = await provisioningClient.RegisterAsync();
+                if (result == null)
+                {
+                    HandleError("RegisterAsync failed");
+                }
 
                 _logger.Debug($"Registration status: {result.Status}.");
 
                 if (result.Status != ProvisioningRegistrationStatusType.Assigned)
                 {
-                    _logger.Error("Registration status did not assign a hub.");
-                    return;
+                    HandleError("Registration status did not assign a hub");
                 }
+
+                _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
                 await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
-                
             }
         }
     }
@@ -89,7 +96,13 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
             return primaryKey;
         }
 
-         var hmac = new HMACSHA256(Convert.FromBase64String(primaryKey));
+        var hmac = _symmetricKeyWrapper.CreateHMAC(primaryKey);
         return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registrationId)));
+    }
+
+    private void HandleError(string errorMsg)
+    {
+        _logger.Error(errorMsg);
+        throw new Exception(errorMsg);
     }
 }

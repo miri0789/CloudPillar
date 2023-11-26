@@ -61,7 +61,7 @@ public class RegistrationService : IRegistrationService
             _loggerHandler.Debug($"Register for deviceId {deviceId}.");
             ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
             ArgumentNullException.ThrowIfNullOrEmpty(secretKey);
-            var authonticationKeys = JsonConvert.SerializeObject(new AuthonticationKeys()
+            var authenticationKeys = JsonConvert.SerializeObject(new AuthenticationKeys()
             {
                 DeviceId = deviceId,
                 SecretKey = secretKey
@@ -69,7 +69,7 @@ public class RegistrationService : IRegistrationService
 
             var message = new RequestDeviceCertificateMessage()
             {
-                Data = Encoding.Unicode.GetBytes(authonticationKeys)
+                Data = Encoding.Unicode.GetBytes(authenticationKeys)
             };
 
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
@@ -128,6 +128,7 @@ public class RegistrationService : IRegistrationService
         individualEnrollment.ProvisioningStatus = ProvisioningStatus.Enabled;
         individualEnrollment.DeviceId = deviceId;
         individualEnrollment.IotHubHostName = _iotHubHostName;
+        individualEnrollment.ReprovisionPolicy = new ReprovisionPolicy() { MigrateDeviceData = true, UpdateHubAssignment = true };
 
         return await _provisioningServiceClientWrapper.CreateOrUpdateIndividualEnrollmentAsync(provisioningServiceClient, individualEnrollment);
 

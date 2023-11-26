@@ -36,11 +36,12 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
         _provisioningDeviceClientWrapperMock = new Mock<IProvisioningDeviceClientWrapper>();
 
-        _unitTestCertificate = X509Provider.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60);
+        _unitTestCertificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60);
+        _unitTestCertificate.FriendlyName = $"{DEVICE_ID}@{IOT_HUB_HOST_NAME}";
         _x509CertificateWrapperMock.Setup(x => x.GetSecurityProvider(_unitTestCertificate)).Returns(new SecurityProviderX509Certificate(_unitTestCertificate));
         _deviceClientWrapperMock.Setup(x => x.GetProvisioningTransportHandler()).Returns(Mock.Of<ProvisioningTransportHandler>());
 
-        _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadOnly));
+        _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadOnly, StoreName.My));
         _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>())).Returns(Mock.Of<X509Certificate2Collection>());
         _deviceClientWrapperMock.Setup(x => x.DeviceInitializationAsync(It.IsAny<string>(), It.IsAny<DeviceAuthenticationWithX509Certificate>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -120,7 +121,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     }
 
     [Test]
-    public async Task ProvisioningAsync_WithValidParameters_RegistersDevice()
+    public async Task ProvisioningAsync_ValidParameters_RegistersDevice()
     {
 
         _provisioningDeviceClientWrapperMock.Setup(x => x.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SecurityProvider>(), It.IsAny<ProvisioningTransportHandler>())).ReturnsAsync(() =>
@@ -128,7 +129,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         return new DeviceRegistrationResult(DEVICE_ID, null, IOT_HUB_HOST_NAME, DEVICE_ID, ProvisioningRegistrationStatusType.Assigned, "generationId", null, 0, string.Empty, string.Empty);
     });
 
-        await _target.ProvisioningAsync(DPS_SCOPE_ID, _unitTestCertificate, GLOBAL_DEVICE_ENDPOINT, CancellationToken.None);
+        await _target.ProvisioningAsync(DPS_SCOPE_ID, _unitTestCertificate, GLOBAL_DEVICE_ENDPOINT, It.IsAny<Message>(), CancellationToken.None);
 
         _deviceClientWrapperMock.Verify(x => x.DeviceInitializationAsync(It.IsAny<string>(), It.IsAny<DeviceAuthenticationWithX509Certificate>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -141,7 +142,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         return new DeviceRegistrationResult(DEVICE_ID, null, IOT_HUB_HOST_NAME, DEVICE_ID, ProvisioningRegistrationStatusType.Failed, "generationId", null, 0, string.Empty, string.Empty);
     });
 
-        await _target.ProvisioningAsync(DPS_SCOPE_ID, _unitTestCertificate, GLOBAL_DEVICE_ENDPOINT, CancellationToken.None);
+        await _target.ProvisioningAsync(DPS_SCOPE_ID, _unitTestCertificate, GLOBAL_DEVICE_ENDPOINT, It.IsAny<Message>(), CancellationToken.None);
 
         _deviceClientWrapperMock.Verify(x => x.DeviceInitializationAsync(It.IsAny<string>(), It.IsAny<DeviceAuthenticationWithX509Certificate>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -153,7 +154,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         {
             return new DeviceRegistrationResult(DEVICE_ID, null, IOT_HUB_HOST_NAME, DEVICE_ID, ProvisioningRegistrationStatusType.Failed, "generationId", null, 0, string.Empty, string.Empty);
         });
-        Assert.ThrowsAsync<ArgumentException>(async () => await _target.ProvisioningAsync(string.Empty, _unitTestCertificate, string.Empty, CancellationToken.None));
+        Assert.ThrowsAsync<ArgumentException>(async () => await _target.ProvisioningAsync(string.Empty, _unitTestCertificate, string.Empty, It.IsAny<Message>(), CancellationToken.None));
 
     }
 }

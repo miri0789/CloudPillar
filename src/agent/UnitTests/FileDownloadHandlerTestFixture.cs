@@ -5,6 +5,7 @@ using Shared.Entities.Twin;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Logger;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -13,8 +14,11 @@ namespace CloudPillar.Agent.Tests
     {
         private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
         private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
+        private Mock<IStrictModeHandler> _strictModeHandlerMock;
         private Mock<ILoggerHandler> _loggerMock;
         private IFileDownloadHandler _target;
+        private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
+        private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
 
         private DownloadAction _downloadAction = new DownloadAction()
         {
@@ -31,11 +35,19 @@ namespace CloudPillar.Agent.Tests
         [SetUp]
         public void Setup()
         {
+            mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
+            mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
+            mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+
             _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
+            _strictModeHandlerMock = new Mock<IStrictModeHandler>();
             _loggerMock = new Mock<ILoggerHandler>();
 
-            _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object, _d2CMessengerHandlerMock.Object, _loggerMock.Object);
+            _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object,
+             _d2CMessengerHandlerMock.Object,
+             _strictModeHandlerMock.Object,
+              _loggerMock.Object);
         }
 
 
@@ -63,7 +75,6 @@ namespace CloudPillar.Agent.Tests
             });
 
         }
-
 
         [Test]
         public async Task HandleDownloadMessageAsync_PartiallyData_ReturnInprogressReport()
@@ -121,5 +132,73 @@ namespace CloudPillar.Agent.Tests
                    });
         }
 
+        [Test]
+        public async Task HandleDownloadMessageAsync_PassStrictMode_Success()
+        {
+            var _downloadActionForSM = new DownloadAction()
+            {
+                ActionId = "action123",
+                Source = "test.txt",
+                DestinationPath = $"${{{StrictModeMockHelper.DOWNLOAD_KEY}}}"
+            };
+            await _target.InitFileDownloadAsync(_downloadActionForSM, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadActionForSM.ActionId,
+                FileName = _downloadActionForSM.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+
+            var report = await _target.HandleDownloadMessageAsync(message);
+            Assert.AreNotEqual(report.TwinReport.Status, StatusType.Failed);
+        }
+
+        [Test]
+        public async Task HandleDownloadMessageAsync_MaxSizeStrictMode_ThrowException()
+        {
+            var _downloadActionForSM = new DownloadAction()
+            {
+                ActionId = "action123",
+                Source = "test.txt",
+                DestinationPath = $"${{{StrictModeMockHelper.DOWNLOAD_KEY}}}",
+            };
+            await _target.InitFileDownloadAsync(_downloadActionForSM, _actionToReport);
+            _strictModeHandlerMock.Setup(th => th.CheckSizeStrictMode(It.IsAny<TwinActionType>(), It.IsAny<long>(), It.IsAny<string>())).Throws<ArgumentException>();
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadActionForSM.ActionId,
+                FileName = _downloadActionForSM.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+
+            var report = await _target.HandleDownloadMessageAsync(message);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
+        }
+
+        [Test]
+        public async Task HandleDownloadMessageAsync_NoRootForId_ThrowException()
+        {
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.DOWNLOAD).Root = "";
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = "abc",
+                FileName = $"${{{StrictModeMockHelper.DOWNLOAD_KEY}}}test.txt",
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+
+            Assert.ThrowsAsync<ArgumentException>(async () =>
+                           {
+                               await _target.HandleDownloadMessageAsync(message);
+                           });
+        }
     }
 }

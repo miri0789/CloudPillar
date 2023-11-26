@@ -1598,8 +1598,8 @@ The security architecture of the system encompasses various aspects, from encryp
 - Upon 'StrictMode'=true, the Agent will apply series of restrictions on file operations. 
 - In this mode, no Bash/PowerShell actions are allowed.
 - When 'StrictMode'=false or omitted, Bash/PowerShell actions are allowed and the below restrictions will not have any effect.
-- ProvisionalAuthentucationMethods='SAS|X509'
-- PermanentAuthentucationMethods='SAS|X509'
+- ProvisionalAuthenticationMethods='SAS|X509'
+- PermanentAuthenticationMethods='SAS|X509'
 ##### 5.1.5.1.1. Download / upload restricted zones
 Each zone:
 - Allows specification of id / name

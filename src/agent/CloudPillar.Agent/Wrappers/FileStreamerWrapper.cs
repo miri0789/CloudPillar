@@ -8,7 +8,10 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return new FileStream(fullFilePath, fileMode, fileAccess, fileShare, BufferSize, useAsync);
     }
-
+    public FileStream CreateStream(string fullFilePath, FileMode fileMode)
+    {
+        return new FileStream(fullFilePath, fileMode);
+    }
     public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {
         using (FileStream fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))

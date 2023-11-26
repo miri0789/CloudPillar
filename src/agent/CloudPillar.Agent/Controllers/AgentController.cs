@@ -1,7 +1,6 @@
 
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
-using CloudPillar.Agent.Wrappers;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +23,7 @@ public class AgentController : ControllerBase
     public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
+    private readonly IRunDiagnosticsHandler _runDiagnosticsHandler;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -32,6 +32,7 @@ public class AgentController : ControllerBase
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
+     IRunDiagnosticsHandler runDiagnosticsHandler,
      ILoggerHandler logger)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
@@ -40,6 +41,7 @@ public class AgentController : ControllerBase
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
+        _runDiagnosticsHandler = runDiagnosticsHandler ?? throw new ArgumentNullException(nameof(runDiagnosticsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -55,6 +57,12 @@ public class AgentController : ControllerBase
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
+        var currentState = _stateMachineHandler.GetCurrentDeviceState();
+        if (currentState == DeviceStateType.Busy)
+        {
+            return await _twinHandler.GetLatestTwinAsync();
+        }
+
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
@@ -70,7 +78,7 @@ public class AgentController : ControllerBase
             }
         }
         return await _twinHandler.GetTwinJsonAsync();
-    }
+}
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
@@ -84,29 +92,38 @@ public class AgentController : ControllerBase
         catch (Exception ex)
         {
             _logger.Error("InitiateProvisioning failed ", ex);
-            return BadRequest("An error occurred while processing the request.");
+            return BadRequest($"An error occurred while processing the request: {ex.Message}");
         }
     }
 
     [HttpPost("SetBusy")]
     public async Task<ActionResult<string>> SetBusyAsync()
     {
-        _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
-        return await _twinHandler.GetTwinJsonAsync();
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
+        return await _twinHandler.GetLatestTwinAsync(CancellationToken.None);
     }
 
     [HttpPost("SetReady")]
     public async Task<ActionResult<string>> SetReadyAsync()
     {
-        _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
     [HttpPut("UpdateReportedProps")]
     [DeviceStateFilter]
-    public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps)
+    public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps, CancellationToken cancellationToken)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
+        await _twinHandler.UpdateDeviceCustomPropsAsync(updateReportedProps.Properties, cancellationToken);
+        return await _twinHandler.GetTwinJsonAsync(cancellationToken);
+    }
+
+    [HttpGet("RunDiagnostics")]
+    public async Task<ActionResult<string>> RunDiagnostics()
+    {
+        await _runDiagnosticsHandler.CreateFileAsync();
+        await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
@@ -116,7 +133,7 @@ public class AgentController : ControllerBase
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
-        _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning);
         await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey);
     }
 }

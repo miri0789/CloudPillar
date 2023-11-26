@@ -21,6 +21,12 @@ $sourceDir = Join-Path -Path $scriptDir -ChildPath "publish"
 $zipName = "cloudpillar.zip"
 $zipPath = Join-Path -Path $scriptDir -ChildPath "$zipName"
 $targetZipPath = Join-Path -Path $sourceDir -ChildPath "$zipName"
+$appSettingsFileName = "appsettings.json"
+$appSettingsPath = Join-Path -Path $scriptDir -ChildPath $appSettingsFileName
+$appSettingsDestinationPath = Join-Path -Path $sourceDir -ChildPath $appSettingsFileName
+$log4netFileName = "log4net.config"
+$log4netPath = Join-Path -Path $scriptDir -ChildPath $log4netFileName
+$log4netDestinationPath = Join-Path -Path $sourceDir -ChildPath $log4netFileName
 
 # Remove the existing zip file if it exists
 if (Test-Path $zipPath) {
@@ -50,6 +56,10 @@ Write-Host "Publishing completed. Zipping to $zipPath"
 if (-not (Test-Path $sourceDir)) {
     New-Item -ItemType Directory -Path $sourceDir | Out-Null
 }
+
+# Copy appSettings.json and log4net files
+Copy-Item -Path $appSettingsPath -Destination $appSettingsDestinationPath -Force
+Copy-Item -Path $log4netPath -Destination $log4netDestinationPath -Force
 
 # Create a new zip file and add all files and subdirectories, excluding the script file
 Add-Type -A 'System.IO.Compression.FileSystem'

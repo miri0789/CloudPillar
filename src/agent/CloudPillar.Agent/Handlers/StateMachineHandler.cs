@@ -1,5 +1,6 @@
 
 using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Twin;
 using Shared.Logger;
 
@@ -8,19 +9,20 @@ namespace CloudPillar.Agent.Handlers
     public class StateMachineHandler : IStateMachineHandler
     {
         private readonly ITwinHandler _twinHandler;
+        private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
         private readonly ILoggerHandler _logger;
+        private static DeviceStateType _currentDeviceState = DeviceStateType.Uninitialized;
 
-        private readonly IC2DEventHandler _c2DEventHandler;
-        private readonly IStateMachineTokenHandler _stateMachineTokenHandler;
-        public StateMachineHandler(ITwinHandler twinHandler,
-         ILoggerHandler logger,
-         IC2DEventHandler c2DEventHandler,
-         IStateMachineTokenHandler stateMachineTokenHandler)
+
+        public StateMachineHandler(
+            ITwinHandler twinHandler,
+           IStateMachineChangedEvent stateMachineChangedEvent,
+         ILoggerHandler logger
+         )
         {
             _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
-            _c2DEventHandler = c2DEventHandler ?? throw new ArgumentNullException(nameof(c2DEventHandler));
+            _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _stateMachineTokenHandler = stateMachineTokenHandler ?? throw new ArgumentNullException(nameof(stateMachineTokenHandler));
         }
 
 
@@ -28,63 +30,44 @@ namespace CloudPillar.Agent.Handlers
         {
             var state = await GetStateAsync();
             _logger.Info($"InitStateMachineHandlerAsync: init device state: {state}");
-            await HandleStateAction(state);
+            _currentDeviceState = state;
+            await HandleStateActionAsync(state);
         }
 
         public async Task SetStateAsync(DeviceStateType state)
         {
+
             var currentState = await GetStateAsync();
-            if (currentState != state)
+            if (currentState != state || state == DeviceStateType.Provisioning)
             {
+                _currentDeviceState = state;
                 await _twinHandler.UpdateDeviceStateAsync(state);
-                await HandleStateAction(state);
+                await HandleStateActionAsync(state);
                 _logger.Info($"Set device state: {state}");
             }
 
         }
 
-        private async Task HandleStateAction(DeviceStateType state)
+        private async Task HandleStateActionAsync(DeviceStateType state)
         {
-            _logger.Info($"Handle state action, state: {state}");
-            switch (state)
+            if (state == DeviceStateType.Busy)
             {
-                case DeviceStateType.Provisioning:
-                    await SetProvisioningAsync();
-                    break;
-                case DeviceStateType.Ready:
-                    await SetReadyAsync();
-                    break;
-                case DeviceStateType.Busy:
-                    SetBusy();
-                    break;
-                default:
-                    break;
+                await _twinHandler.SaveLastTwinAsync();
             }
+            _logger.Info($"Handle state action, state: {state}");
+            _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(state));
         }
 
         public async Task<DeviceStateType> GetStateAsync()
         {
-            var state = await _twinHandler.GetDeviceStateAsync() ?? DeviceStateType.Uninitialized;
+            var state = await _twinHandler.GetDeviceStateAsync() ?? GetCurrentDeviceState();
             return state;
         }
 
-        private async Task SetProvisioningAsync()
+        public DeviceStateType GetCurrentDeviceState()
         {
-            var _cts = _stateMachineTokenHandler.StartToken();
-            await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, true);
+            return _currentDeviceState;
         }
 
-        private async Task SetReadyAsync()
-        {
-            _stateMachineTokenHandler.CancelToken();
-            var _cts = _stateMachineTokenHandler.StartToken();
-            await _c2DEventHandler.CreateSubscribeAsync(_cts.Token, false);
-            await _twinHandler.HandleTwinActionsAsync(_cts.Token);
-        }
-
-        private void SetBusy()
-        {
-            _stateMachineTokenHandler.CancelToken();
-        }
     }
 }
