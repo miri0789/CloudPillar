@@ -17,7 +17,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
                 try
                 {
                     await localServiceClient.SendAsync(deviceId, c2dMessage);
-                    break; // Succeeded
+                    break;
                 }
                 catch (Exception ex)
                 {
