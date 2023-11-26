@@ -56,7 +56,9 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         long streamLength = readStream.Length;
         string checkSum = await CalcAndUpdateCheckSumAsync(actionToReport, readStream, cancellationToken);
 
-        for (int currentPosition = 0, chunkIndex = 1; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
+        int calculatedPosition = CalculateCurrentPosition(readStream, actionToReport.TwinReport.Progress ?? 0);
+        var calculatedChunkIndex = (calculatedPosition / chunkSize) + 1;
+        for (int currentPosition = calculatedPosition, chunkIndex = calculatedChunkIndex; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
         {
             _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
@@ -93,6 +95,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         return checkSum;
     }
+
     private async Task CalcAndUpdatePercentsAsync(ActionToReport actionToReport, Stream uploadStream, long currentPosition, long bytesToUpload, CancellationToken cancellationToken)
     {
         var percents = CalculateByteUploadedPercent(uploadStream, currentPosition, bytesToUpload);
@@ -105,11 +108,20 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     {
         var totalSize = uploadStream.Length;
         bytesToUpload += currentPosition;
-        float progressPercent = (float)Math.Round(bytesToUpload / (double)totalSize * 100, 2);
-
+        float progressPercent = (float)Math.Floor((bytesToUpload / (double)totalSize) * 100 * 100) / 100;
         Console.WriteLine($"Upload Progress: {progressPercent:F2}%");
         return progressPercent;
     }
+
+    private int CalculateCurrentPosition(Stream uploadStream, float progressPercent)
+    {
+        var totalSize = uploadStream.Length;
+        int currentPosition = (int)Math.Floor(progressPercent * (double)totalSize / 100);
+
+        Console.WriteLine($"Current Position: {currentPosition} bytes");
+        return currentPosition;
+    }
+
     private bool IsLastMessage(long currentPosition, int chunkSize, long streamLength)
     {
         return currentPosition + chunkSize >= streamLength;

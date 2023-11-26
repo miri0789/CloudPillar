@@ -213,6 +213,14 @@
                 "Key Holder Service",
                 "Iot Listener Service"
             ]
+        },
+        {
+            "name": "Server/Client - Blob",
+            "configurations": [
+                "Cloud Pillar Agent",
+                "Blob Streamer Service",
+                "Iot Listener Service"
+            ]
         }
     ]
 }

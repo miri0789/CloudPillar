@@ -349,7 +349,7 @@ public class TwinHandler : ITwinHandler
                                ReportPartName = property.Name,
                                ReportIndex = index,
                                TwinAction = item,
-                               TwinReport = new TwinActionReported() { Status = StatusType.Pending }
+                               TwinReport = reportedValue[index]
                            })
                            .Where((item, index) => reportedValue[index].Status == StatusType.Pending));
 
