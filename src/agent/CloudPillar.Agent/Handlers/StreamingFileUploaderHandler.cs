@@ -55,8 +55,8 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     {
         long streamLength = readStream.Length;
         string checkSum = await CalcAndUpdateCheckSumAsync(actionToReport, readStream, cancellationToken);
-
-        for (int currentPosition = 0, chunkIndex = 1; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
+        int calculatedPosition = CalculateCurrentPosition(readStream, actionToReport.TwinReport.Progress ?? 0);
+        for (int currentPosition = calculatedPosition, chunkIndex = 1; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
         {
             _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
@@ -66,6 +66,14 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         _logger.Debug($"All bytes sent successfuly");
     }
 
+    private int CalculateCurrentPosition(Stream uploadStream, float progressPercent )
+    {
+        var totalSize = uploadStream.Length;
+        int currentPosition = (int)Math.Round(progressPercent * totalSize / 100.0);
+
+        Console.WriteLine($"Current Position: {currentPosition} bytes");
+        return currentPosition;
+    }
     private async Task ProcessChunkAsync(ActionToReport actionToReport, Stream readStream, Uri storageUri, string actionId, int chunkSize, long currentPosition, string checkSum, CancellationToken cancellationToken)
     {
         long remainingBytes = readStream.Length - currentPosition;
