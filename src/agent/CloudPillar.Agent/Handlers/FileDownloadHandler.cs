@@ -14,17 +14,20 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IStrictModeHandler _strictModeHandler;
+    private readonly ITwinActionsHandler _twinActionsHandler;
     private readonly ConcurrentBag<FileDownload> _filesDownloads;
     private readonly ILoggerHandler _logger;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
                                IStrictModeHandler strictModeHandler,
+                               ITwinActionsHandler twinActionsHandler,
                                ILoggerHandler loggerHandler)
     {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
+        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _filesDownloads = new ConcurrentBag<FileDownload>();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
@@ -40,7 +43,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionId);
     }
 
-    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
+    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
     {
 
         var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionId == message.ActionId &&
@@ -49,14 +52,38 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
         }
-        var filePath = file.DownloadAction.DestinationPath + file.DownloadAction.Source;
 
         if (!file.Stopwatch.IsRunning)
         {
+            if (string.IsNullOrEmpty(file.DownloadAction.DestinationPath))
+            {
+                file.Report.TwinReport.Status = StatusType.Failed;
+                file.Report.TwinReport.ResultCode = "Destination path does not exist.";
+                return file.Report;
+            }
+            if (file.DownloadAction.Unzip)
+            {
+                if (_fileStreamerWrapper.GetExtension(file.DownloadAction.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    var extention = _fileStreamerWrapper.GetExtension(file.DownloadAction.DestinationPath);
+                    if (!string.IsNullOrEmpty(extention))
+                    {
+                        file.Report.TwinReport.Status = StatusType.Failed;
+                        file.Report.TwinReport.ResultCode = $"Destination path {file.DownloadAction.DestinationPath} is not directory path.";
+                        return file.Report;
+                    }
+                    file.TempPath = _fileStreamerWrapper.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".zip");
+                }
+                else
+                {
+                    _logger.Info($"Since no zip file is sent, the unzip command is ignored - {file.DownloadAction.Source}");
+                }
+            }
             file.Stopwatch.Start();
             file.TotalBytes = message.FileSize;
         }
 
+        var filePath = file.TempPath ?? file.DownloadAction.DestinationPath;
         try
         {
             //strict mode
@@ -76,6 +103,23 @@ public class FileDownloadHandler : IFileDownloadHandler
         if (file.TotalBytesDownloaded == file.TotalBytes)
         {
             file.Stopwatch.Stop();
+            if (!string.IsNullOrEmpty(file.TempPath))
+            {
+                try
+                {
+                    file.Report.TwinReport.Status = StatusType.Unzip;
+                    await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.Report, 1), cancellationToken);
+                    await _fileStreamerWrapper.UnzipFileAsync(filePath, file.DownloadAction.DestinationPath);
+                    _fileStreamerWrapper.DeleteFile(file.TempPath);
+                }
+                catch (Exception ex)
+                {
+                    file.Report.TwinReport.Status = StatusType.Failed;
+                    file.Report.TwinReport.ResultCode = ex.Message;
+                    return file.Report;
+                }
+
+            }
             file.Report.TwinReport.Status = StatusType.Success;
         }
         else

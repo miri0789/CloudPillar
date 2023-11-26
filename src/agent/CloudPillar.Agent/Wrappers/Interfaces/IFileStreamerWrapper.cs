@@ -13,6 +13,8 @@ public interface IFileStreamerWrapper
 
     Task<string> ReadAllTextAsync(string filePath);
 
+    Task UnzipFileAsync(string filePath, string destinationPath);
+
     bool FileExists(string filePath);
 
     bool DirectoryExists(string fullFilePath);
@@ -30,5 +32,7 @@ public interface IFileStreamerWrapper
     string[] GetDirectories(string directoryPath, string searchPattern);
 
     string[] Concat(string[] files, string[] directoories);
+
+    string? GetExtension(string path);
 
 }
