@@ -8,15 +8,14 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         var serviceClient = ServiceClient.CreateFromConnectionString(connString);
         return serviceClient;
     }
-    
-    public async Task SendAsync(ServiceClient _serviceClient, string deviceId, Message c2dMessage)
+    public async Task SendAsync(ServiceClient serviceClient, string deviceId, Message c2dMessage)
     {
         while (true)
         {
             try
             {
-                await _serviceClient.SendAsync(deviceId, c2dMessage);
-                break; // Succeeded
+                await serviceClient.SendAsync(deviceId, c2dMessage);
+                break;
             }
             catch (Exception ex)
             {

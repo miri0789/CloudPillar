@@ -109,7 +109,7 @@ public  class X509Provider : IX509Provider
                DateTimeOffset.Now.AddDays(-1),
                DateTimeOffset.Now.AddDays(_authenticationSettings.CertificateExpiredDays));
         }
-        var password = new Guid().ToString();
+        var password = Guid.NewGuid().ToString();
         var pfxBytes = certificate.Export(X509ContentType.Pkcs12, password);
         var privateCertificate = new X509Certificate2(pfxBytes, password)
         {

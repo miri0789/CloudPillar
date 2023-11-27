@@ -24,7 +24,7 @@ namespace Shared.Logger
             IConfigurationRefresher? refresher = null;
             string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
             var lo4NetPath = "log4net.config";
-            if (!Path.Exists(lo4NetPath))
+            if (!File.Exists(lo4NetPath))
             {
                 throw new Exception("no log4net config file");
             }

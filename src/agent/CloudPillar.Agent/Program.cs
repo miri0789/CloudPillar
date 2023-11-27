@@ -109,8 +109,17 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors(MY_ALLOW_SPECIFICORIGINS);
+var isCommunicationLess = builder.Configuration.GetValue<bool?>("CommunicationLess");
+if (isCommunicationLess == true)
+{
+    app.UseMiddleware<CommunicationLessMiddleware>();
+}
+else
+{
+    app.UseMiddleware<AuthorizationCheckMiddleware>();
+}
 
-app.UseMiddleware<AuthorizationCheckMiddleware>();
+
 app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();

@@ -5,5 +5,6 @@ public enum StatusType
     Pending,
     InProgress,
     Failed,
+    Unzip,
     Success
 }
