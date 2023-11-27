@@ -22,24 +22,40 @@ public class CommunicationLessMiddleware
                 ""patch"": {
                     ""transitPackage"": [
                         {
-                            ""actionId"": ""111111"",
-                            ""action"": ""SingularUpload"",
-                            ""description"": ""Periodically (once in 10min) upload installation logging"",
-                            ""filename"": ""I:\\ExportedData_2023.05.*""
-                        },
-                        {
-                            ""actionId"": ""111111"",
-                            ""action"": ""SingularUpload"",
-                            ""description"": ""Periodically (once in 10min) upload installation logging"",
-                            ""filename"": ""I:\\ExportedData_2023.05.*""
-                        },
-                        {
-                            ""actionId"": ""222222"",
+                            ""actionId"": ""1234"",
                             ""action"": ""SingularDownload"",
-                            ""description"": ""Carto 7.2 SPU Patch"",
+                            ""description"": ""Carto 7.2 SPU Patch 1"",
                             ""source"": ""1111.txt"",
                             ""protocol"": ""https|iotamqp|iotmqtt"",
                             ""destinationPath"": ""C:\\Users\\mmarzbac\\Downloads\\S31772750\\""
+                        },
+                        {
+                            ""actionId"": ""5678"",
+                            ""action"": ""SingularDownload"",
+                            ""description"": ""Carto 7.2 SPU Patch 3"",
+                            ""source"": ""2222.txt"",
+                            ""protocol"": ""https|iotamqp|iotmqtt"",
+                            ""destinationPath"": ""C:\\Users\\mmarzbac\\Downloads\\S317727502\\""
+                        },
+                        {
+                            ""actionId"": ""97899"",
+                            ""action"": ""SingularDownload"",
+                            ""description"": ""Carto 7.2 SPU Patch 3"",
+                            ""source"": ""3333.txt"",
+                            ""protocol"": ""https|iotamqp|iotmqtt"",
+                            ""destinationPath"": ""C:\\Users\\mmarzbac\\Downloads\\S317727503\\""
+                        },
+                        {
+                            ""actionId"": ""111111"",
+                            ""action"": ""SingularUpload"",
+                            ""description"": ""Periodically (once in 10min) upload installation logging"",
+                            ""filename"": ""I:\\ExportedData_2023.05.*""
+                        },
+                        {
+                            ""actionId"": ""111111"",
+                            ""action"": ""SingularUpload"",
+                            ""description"": ""Periodically (once in 10min) upload installation logging"",
+                            ""filename"": ""I:\\ExportedData_2023.05.*""
                         }
                     ]
                 }
@@ -62,7 +78,14 @@ public class CommunicationLessMiddleware
                         {
                             ""status"": ""InProgress"",
                             ""progress"": 2.03
-                        }
+                        },
+                        {
+                            ""status"": ""Success""
+                        },
+                        {
+                            ""status"": ""Failed"",
+                            ""ResultText"": ""Failed reason""
+                        },
                     ]
                 },
                 ""id"": ""1.17.66419.44823.20230425145510""
