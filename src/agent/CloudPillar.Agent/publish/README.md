@@ -146,21 +146,31 @@ public class DeviceStateClient
     Details of each action:
     1. **Periodic Upload Action**:
         - `action`: PeriodicUpload
+        - `actionId`: Action id
         - `description`: Periodically (once in 10 minutes) upload installation logging.
         - `filename`: The file or pattern to be uploaded (e.g., "I:\\ExportedData_2023.05.*").
         - `interval`: The time interval between uploads in minutes (e.g., 120 minutes).
         - `enabled`: Whether this action is enabled (true/false).
 
-    2. **Singular Download Action**:
+    2. **Singular Upload Action**:
+        - `action`: SingularUpload
+        - `actionId`: Action id
+        - `description`: upload data.
+        - `filename`: The file or pattern to be uploaded (e.g., "I:\\ExportedData_2023.05.*").
+        - `method`: Method for upload, Blob or Stream.
+
+    3. **Singular Download Action**:
         - `action`: SingularDownload
+        - `actionId`: Action id
         - `description`: Download Carto 7.2 SPU Patch.
         - `source`: The source of the firmware package (e.g., "SPU.zip").
         - `protocol`: Supported protocols for communication (e.g., "https|iotamqp|iotmqtt").
         - `sign`: Signature of file content.
         - `destinationPath`: The destination path for storing the downloaded firmware (e.g., "./SPU.zip").
     
-    3. **Execute Once Action**:
+    4. **Execute Once Action**:
         - `action`: ExecuteOnce
+        - `actionId`: Action id
         - `description`: Extraction of security update McAfee.
         - `shell`: The shell or scripting language used to execute the command (e.g., "powershell").
         - `command`: The command to extract an archive (e.g., "Expand-Archive -LiteralPath '.\\mcaffeeV3_5150dat.zip' -DestinationPath 'I:\\' -Force").
