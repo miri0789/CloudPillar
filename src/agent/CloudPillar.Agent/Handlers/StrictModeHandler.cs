@@ -89,11 +89,11 @@ public class StrictModeHandler : IStrictModeHandler
 
         if (actionType == TwinActionType.SingularDownload)
         {
-            return _strictModeSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Download.ToString()).ToList();
+            return _strictModeSettings.FilesRestrictions.Where(x => x.Type?.ToLower() == StrictModeAction.Download.ToString().ToLower()).ToList();
         }
         else
         {
-            return _strictModeSettings.FilesRestrictions.Where(x => x.Type == StrictModeAction.Upload.ToString()).ToList();
+            return _strictModeSettings.FilesRestrictions.Where(x => x.Type?.ToLower() == StrictModeAction.Upload.ToString().ToLower()).ToList();
         }
     }
 
@@ -101,7 +101,7 @@ public class StrictModeHandler : IStrictModeHandler
     {
         List<FileRestrictionDetails> actionRestrictions = GetRestrictionsByActionType(actionType);
 
-        actionRestrictions = actionRestrictions.Where(x => fileName.Contains(x.Root)).ToList();
+        actionRestrictions = actionRestrictions.Where(x => fileName.ToLower().Contains(x.Root.ToLower())).ToList();
         var bestMatch = actionRestrictions
                    .OrderByDescending(f => fileName.ToLower().StartsWith(f.Root.ToLower()) ? f.Root.Length : 0)
                    .FirstOrDefault();
@@ -123,8 +123,10 @@ public class StrictModeHandler : IStrictModeHandler
 
     private string GetRootById(string id, TwinActionType actionType)
     {
+        ArgumentNullException.ThrowIfNull(id);
+
         List<FileRestrictionDetails> fileRestrictionDetails = GetRestrictionsByActionType(actionType);
-        FileRestrictionDetails restriction = fileRestrictionDetails.FirstOrDefault(x => x.Id.Equals(id));
+        FileRestrictionDetails restriction = fileRestrictionDetails.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Id) && x.Id.ToLower().Equals(id.ToLower()));
 
         if (string.IsNullOrWhiteSpace(restriction?.Root))
         {
@@ -142,7 +144,7 @@ public class StrictModeHandler : IStrictModeHandler
         matcher.AddIncludePatterns(patterns);
         var result = matcher.Match(rootPath, filePath);
 
-        var fileMatch = result.Files.Any(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR) == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR));
+        var fileMatch = result.Files.Any(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR)?.ToLower() == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR)?.ToLower());
         return fileMatch;
     }
 }
