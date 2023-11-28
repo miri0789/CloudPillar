@@ -6,20 +6,23 @@ var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuil
 bool runAsService = args != null && args.Length > 0 && args[0] == "--winsrv";
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
-    builder.Services.AddWindowsService(options =>
-{
-    options.ServiceName = "CP_Agent_Service11_new";
-});
-
-    builder.Services.AddHostedService<AgentService>();
-    InstallWindowsService();
+    
+    InstallWindowsService(); 
 }
 // else
 // {
 
 // }
 
+builder.Services.AddWindowsService(options =>
+{
+    options.ServiceName = "CP_Agent_Service11_new";
+});
+
+builder.Services.AddHostedService<AgentService>();
+
 var app = builder.Build();
+
 
 app.Run();
 
