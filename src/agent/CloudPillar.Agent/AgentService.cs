@@ -2,32 +2,33 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Shared.Logger;
 
 namespace CloudPillar.Agent
 {
     public class AgentService :BackgroundService
     {
-        private readonly ILogger<AgentService> _logger;
+        private readonly ILoggerHandler _logger;
 
-        public AgentService(ILogger<AgentService> logger)
+        public AgentService(ILoggerHandler logger)
         {
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-        _logger.LogInformation("Worker is starting.");
+        _logger.Info("Worker is starting.");
 
-        stoppingToken.Register(() => _logger.LogInformation("Worker is stopping."));
+        stoppingToken.Register(() => _logger.Info("Worker is stopping."));
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Worker is doing background work.");
+            _logger.Info("Worker is doing background work.");
 
             await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
         }
 
-        _logger.LogInformation("Worker has stopped.");
+        _logger.Info("Worker has stopped.");
 
         }
 
@@ -35,7 +36,7 @@ namespace CloudPillar.Agent
         {
             try
             {
-                 _logger.LogInformation("Worker is starting at: {time}", DateTimeOffset.Now);
+                 _logger.Info("Worker is starting at: {time}", DateTimeOffset.Now);
 
             // Your setup logic here
 
@@ -51,7 +52,7 @@ namespace CloudPillar.Agent
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Worker is stopping.");
+            _logger.Info("Worker is stopping.");
 
             // Your graceful shutdown logic here
 
@@ -60,7 +61,7 @@ namespace CloudPillar.Agent
 
         // public override async Task PauseAsync(CancellationToken cancellationToken)
         // {
-        //     _logger.LogInformation("Worker is pausing.");
+        //     _logger.Info("Worker is pausing.");
 
         //     // Your graceful pause logic here
 
@@ -69,7 +70,7 @@ namespace CloudPillar.Agent
 
         // public override async Task ResumeAsync(CancellationToken cancellationToken)
         // {
-        //     _logger.LogInformation("Worker is resuming.");
+        //     _logger.Info("Worker is resuming.");
 
         //     // Your graceful resume logic here
 
