@@ -162,7 +162,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         if (actionToReport.TwinReport.Progress > 0)
         {
             notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
-            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+            // await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
         }
 
         try

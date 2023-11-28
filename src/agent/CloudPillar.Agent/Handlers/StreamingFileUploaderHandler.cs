@@ -73,10 +73,11 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         await readStream.ReadAsync(buffer, 0, (int)bytesToUpload);
         _logger.Info($"readStream: {buffer[0]}-{buffer[1]}-{buffer[2]}");
 
+        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition, checkSum);
+        
         var percents = CalculateByteUploadedPercent(readStream, currentPosition, bytesToUpload);
         await UpdateReportedDetailsAsync(actionToReport, percents, notification.CorrelationId, cancellationToken);
 
-        await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition, checkSum);
     }
 
     private int CalculateTotalChunks(long streamLength, int chunkSize)
