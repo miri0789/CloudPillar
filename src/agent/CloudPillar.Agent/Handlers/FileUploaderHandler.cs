@@ -159,6 +159,12 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             IsSuccess = true
         };
+        if (actionToReport.TwinReport.Progress > 0)
+        {
+            notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
+            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+        }
+
         try
         {
             var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
@@ -178,7 +184,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken);
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, uploadAction.ActionId, cancellationToken);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");
@@ -186,9 +192,15 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
         catch (Exception ex)
         {
+
             notification.IsSuccess = false;
+            if (string.IsNullOrEmpty(notification.CorrelationId))
+            {
+                notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
+            }
             await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-            throw ex;
+
+            throw new Exception(ex.Message);
         }
     }
 
