@@ -25,6 +25,11 @@ public class AuthorizationCheckMiddleware
 
     public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler, IX509Provider x509Provider)
     {
+        if (!context.Request.IsHttps)
+        {
+            await NextWithRedirectAsync(context, x509Provider);
+            return;
+        }
         Endpoint endpoint = context.GetEndpoint();
         //context
         var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
@@ -67,7 +72,8 @@ public class AuthorizationCheckMiddleware
             }
 
 
-            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken);
+            var checkAuthorization = deviceIsBusy && (context.Request.Path.Value.Contains("SetReady") || context.Request.Path.Value.Contains("SetBusy"));
+            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
             if (!isAuthorized)
             {
                 var error = "User is not authorized.";
@@ -75,21 +81,16 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler, x509Provider);
+            await _requestDelegate(context);
         }
         else
         {
-            await NextWithRedirectAsync(context, dPSProvisioningDeviceClientHandler, x509Provider);
+            await _requestDelegate(context);
         }
     }
-    private async Task NextWithRedirectAsync(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IX509Provider x509Provider)
+    private async Task NextWithRedirectAsync(HttpContext context, IX509Provider x509Provider)
     {
         context.Connection.ClientCertificate = x509Provider.GetHttpsCertificate();
-        if (context.Request.IsHttps)
-        {
-            await _requestDelegate(context);
-            return;
-        }
 
         var sslPort = _configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
         var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
