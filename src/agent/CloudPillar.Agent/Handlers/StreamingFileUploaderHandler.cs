@@ -4,6 +4,7 @@ using Microsoft.Azure.Devices.Client.Transport;
 using Shared.Logger;
 using Shared.Entities.Services;
 using CloudPillar.Agent.Entities;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -97,6 +98,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     {
         var percents = CalculateByteUploadedPercent(uploadStream, currentPosition, bytesToUpload);
 
+        actionToReport.TwinReport.Status = StatusType.InProgress;
         actionToReport.TwinReport.Progress = percents;
         await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
     }
