@@ -54,10 +54,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     }
 
     private async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool IsInitializedLoad = false, bool checkAuthorization = false)
-    {
-        if(checkAuthorization){
-            IsInitializedLoad = true;
-        }
+    {        
         X509Certificate2? userCertificate = GetCertificate();
 
         if (userCertificate == null)
@@ -101,7 +98,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
 
-        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad, cancellationToken);
+        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad || checkAuthorization, cancellationToken);
     }
 
     public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
