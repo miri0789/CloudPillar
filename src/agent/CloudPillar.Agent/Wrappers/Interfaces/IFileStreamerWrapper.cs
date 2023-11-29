@@ -9,8 +9,6 @@ public interface IFileStreamerWrapper
 
     void DeleteFile(string filePath);
 
-    Task<bool> HasBytesAsync(string filePath, long startPosition, long endPosition);
-
     Task<string> ReadAllTextAsync(string filePath);
 
     Task UnzipFileAsync(string filePath, string destinationPath);

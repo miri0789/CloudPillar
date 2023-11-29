@@ -6,6 +6,7 @@ using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Factories;
 using Backend.Infra.Common;
+using Backend.Infra.Wrappers;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -19,6 +20,8 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IIndividualEnrollmentWrapper, IndividualEnrollmentWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
+builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 

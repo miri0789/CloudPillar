@@ -16,6 +16,16 @@ public class CheckSumService : ICheckSumService
                 throw new ArgumentNullException("CheckSum Type not provided");
         }
     }
+    public async Task<string> CalculateCheckSumAsync(byte[] data, CheckSumType checkSumType = CheckSumType.MD5)
+    {
+        switch (checkSumType)
+        {
+            case CheckSumType.MD5:
+                return await CalculateMdsCheckSumAsync(data);
+            default:
+                throw new ArgumentNullException("CheckSum Type not provided");
+        }
+    }
 
     private async Task<string> CalculateMdsCheckSumAsync(Stream stream)
     {
@@ -26,6 +36,16 @@ public class CheckSumService : ICheckSumService
             stream.Seek(0, SeekOrigin.Begin);
             string checkSum = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
             return checkSum;
+        }
+    }
+
+    private async Task<string> CalculateMdsCheckSumAsync(byte[] data)
+    {
+        using (var md5 = MD5.Create())
+        {
+            byte[] hashBytes = await md5.ComputeHashAsync(new MemoryStream(data));
+            string checksum = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+            return checksum;
         }
     }
 }

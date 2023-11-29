@@ -18,12 +18,8 @@ public class RegistrationService : IRegistrationService
 
     private readonly IMessageFactory _messageFactory;
 
-    private readonly IDeviceClientWrapper _deviceClientWrapper;
-
-    private readonly ServiceClient _serviceClient;
-
+    private readonly IDeviceConnectService _deviceConnectService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-
     private readonly IIndividualEnrollmentWrapper _individualEnrollmentWrapper;
     private readonly IX509CertificateWrapper _x509CertificateWrapper;
     private readonly IProvisioningServiceClientWrapper _provisioningServiceClientWrapper;
@@ -31,7 +27,7 @@ public class RegistrationService : IRegistrationService
 
     public RegistrationService(
         IMessageFactory messageFactory,
-        IDeviceClientWrapper deviceClientWrapper,
+        IDeviceConnectService deviceConnectService,
         IEnvironmentsWrapper environmentsWrapper,
         IIndividualEnrollmentWrapper individualEnrollmentWrapper,
         IX509CertificateWrapper x509CertificateWrapper,
@@ -39,7 +35,7 @@ public class RegistrationService : IRegistrationService
         ILoggerHandler loggerHandler)
     {
         _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
-        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _deviceConnectService = deviceConnectService ?? throw new ArgumentNullException(nameof(deviceConnectService));
         _loggerHandler = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _individualEnrollmentWrapper = individualEnrollmentWrapper ?? throw new ArgumentNullException(nameof(individualEnrollmentWrapper));
@@ -48,7 +44,6 @@ public class RegistrationService : IRegistrationService
         ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.iothubConnectionString);
         ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.dpsConnectionString);
 
-        _serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
         _iotHubHostName = GetIOTHubHostName();
     }
 
@@ -73,7 +68,10 @@ public class RegistrationService : IRegistrationService
             };
 
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
-            await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
+            using (var serviceClient = _deviceConnectService.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
+            {
+                await _deviceConnectService.SendMessage(serviceClient, c2dMessage, deviceId);
+            }
         }
         catch (Exception ex)
         {
@@ -149,7 +147,10 @@ public class RegistrationService : IRegistrationService
             DPSConnectionString = _environmentsWrapper.dpsConnectionString
         };
         var c2dMessage = _messageFactory.PrepareC2DMessage(message);
-        await _deviceClientWrapper.SendAsync(_serviceClient, deviceId, c2dMessage);
+        using (var serviceClient = _deviceConnectService.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
+        {
+            await _deviceConnectService.SendMessage(serviceClient, c2dMessage, deviceId);
+        }
 
     }
 
