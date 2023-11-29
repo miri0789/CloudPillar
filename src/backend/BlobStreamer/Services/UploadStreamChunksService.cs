@@ -37,13 +37,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             using (Stream inputStream = new MemoryStream(readStream))
             {
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
-                //first chunk
-                //TO DO - add permission for this action
-                // if (blobExists && startPosition == 0)
-                // {
-                //     await blob.DeleteAsync();
-                //     await _cloudBlockBlobWrapper.UploadFromStreamAsync(blob, inputStream);
-                // }
                 if (!blobExists)
                 {
                     await _cloudBlockBlobWrapper.UploadFromStreamAsync(blob, inputStream);
@@ -51,29 +44,10 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                 //continue upload the next stream chunks
                 else
                 {
-
                     MemoryStream existingData = await _cloudBlockBlobWrapper.DownloadToStreamAsync(blob);
-                    // if (existingData.Length > startPosition && startPosition > 0)
-                    // {
-                    //     _logger.Info($"existingData.Length: {existingData.Length}, startPosition:{startPosition}");
-                    //     var difference = existingData.Length - startPosition;
-
-                    //     // inputStream.Seek(difference, SeekOrigin.Begin);
-                    //     byte[] remainingBytes = new byte[inputStream.Length - difference];
-
-                    //     startPosition = existingData.Length;
-                    //     using (MemoryStream remainingData = new MemoryStream(remainingBytes))
-                    //     {
-                    //         existingData.Seek(startPosition, SeekOrigin.Begin);
-                    //         await remainingData.CopyToAsync(existingData, );
-                    //     }
-                    // }
-                    // else
-                    // {
+                 
                     existingData.Seek(startPosition, SeekOrigin.Begin);
                     await inputStream.CopyToAsync(existingData);
-                    // Reset the position of existingData to the beginning
-                    // }
 
                     existingData.Seek(0, SeekOrigin.Begin);
                     // Upload the combined data to the blob
