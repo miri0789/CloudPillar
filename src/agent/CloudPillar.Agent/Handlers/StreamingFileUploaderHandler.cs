@@ -4,6 +4,7 @@ using Microsoft.Azure.Devices.Client.Transport;
 using Shared.Logger;
 using Shared.Entities.Services;
 using CloudPillar.Agent.Entities;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 
