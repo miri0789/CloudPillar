@@ -26,7 +26,7 @@ namespace CloudPillar.Agent.Handlers.Tests
 
             mockLogger = new Mock<ILoggerHandler>();
 
-            _target = new StrictModeHandler(mockStrictModeSettings.Object,  mockLogger.Object);
+            _target = new StrictModeHandler(mockStrictModeSettings.Object, mockLogger.Object);
         }
         [Test]
         public void ReplaceRootById_ValidData_ReturnReplacedString()
@@ -156,6 +156,20 @@ namespace CloudPillar.Agent.Handlers.Tests
             {
                 _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
             }, ResultCode.StrictModePattern.ToString());
+        }
+
+        [Test]
+        public void CheckFileAccessPermissions_UpperAndLowerLetterNotMatching_NoThrowing()
+        {
+            var upperLetterRoot = string.Join(".", StrictModeMockHelper.ROOT_UPLOAD.Split('.').Select(s => char.ToUpper(s.FirstOrDefault()) + s.Substring(1)));
+            var lowerLetterRoot = string.Join(".", StrictModeMockHelper.ROOT_UPLOAD.Split('.').Select(s => char.ToLower(s.FirstOrDefault()) + s.Substring(1)));
+
+            var fileName = $"{upperLetterRoot}/test.txt";
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).Root = lowerLetterRoot;
+
+            void SendRequest() => _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
+            Assert.DoesNotThrow(SendRequest);
         }
     }
 }

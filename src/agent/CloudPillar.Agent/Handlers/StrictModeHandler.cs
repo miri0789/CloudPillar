@@ -142,7 +142,7 @@ public class StrictModeHandler : IStrictModeHandler
         Matcher matcher = new Matcher();
 
         matcher.AddIncludePatterns(patterns);
-        var result = matcher.Match(rootPath, filePath);
+        var result = matcher.Match(rootPath.ToLower(), filePath.ToLower());
 
         var fileMatch = result.Files.Any(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR)?.ToLower() == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR)?.ToLower());
         return fileMatch;
