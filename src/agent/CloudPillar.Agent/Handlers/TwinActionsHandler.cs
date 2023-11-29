@@ -36,24 +36,27 @@ public class TwinActionsHandler : ITwinActionsHandler
 
     public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported, CancellationToken cancellationToken)
     {
-        try
+        if (!cancellationToken.IsCancellationRequested)
         {
-            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            string reportedJson = twin.Properties.Reported.ToJson();
-            var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-            actionsToReported.ToList().ForEach(actionToReport =>
+            try
             {
-                if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;
-                var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
-                var reportedValue = (TwinActionReported[])reportedProp.GetValue(twinReported.ChangeSpec.Patch);
-                reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
-                reportedProp.SetValue(twinReported.ChangeSpec.Patch, reportedValue);
-            });
-            await UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UpdateReportedAction failed: {ex.Message}");
+                var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+                string reportedJson = twin.Properties.Reported.ToJson();
+                var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
+                actionsToReported.ToList().ForEach(actionToReport =>
+                {
+                    if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;
+                    var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
+                    var reportedValue = (TwinActionReported[])reportedProp.GetValue(twinReported.ChangeSpec.Patch);
+                    reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
+                    reportedProp.SetValue(twinReported.ChangeSpec.Patch, reportedValue);
+                });
+                await UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"UpdateReportedAction failed: {ex.Message}");
+            }
         }
 
     }

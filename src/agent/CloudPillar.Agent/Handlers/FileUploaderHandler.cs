@@ -159,14 +159,14 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             IsSuccess = true
         };
-        if (actionToReport.TwinReport.Progress > 0)
-        {
-            notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
-            // await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-        }
 
         try
         {
+            if (actionToReport.TwinReport.Progress > 0)
+            {
+                notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
+                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+            }
             var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
             {
                 BlobName = blobname
@@ -193,12 +193,13 @@ public class FileUploaderHandler : IFileUploaderHandler
         catch (Exception ex)
         {
 
-            notification.IsSuccess = false;
-            if (string.IsNullOrEmpty(notification.CorrelationId))
+            notification.IsSuccess = false;        
+            notification.CorrelationId ??= actionToReport.TwinReport.CorrelationId;
+            
+            if (!string.IsNullOrEmpty(notification.CorrelationId))
             {
-                notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
+                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
-            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
 
             throw new Exception(ex.Message);
         }
