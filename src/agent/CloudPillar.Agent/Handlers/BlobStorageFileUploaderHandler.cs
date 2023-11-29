@@ -1,5 +1,6 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Storage.Core.Util;
 using Shared.Entities.Twin;
