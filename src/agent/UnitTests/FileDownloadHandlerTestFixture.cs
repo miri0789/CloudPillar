@@ -17,6 +17,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IStrictModeHandler> _strictModeHandlerMock;
         private Mock<IRunDiagnosticsHandler> _runDiagnosticsHandlerMock;
         private Mock<ILoggerHandler> _loggerMock;
+        private Mock<ITwinActionsHandler> _twinActionsHandlerMock;
         private IFileDownloadHandler _target;
         private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
         private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
@@ -44,12 +45,14 @@ namespace CloudPillar.Agent.Tests
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
             _strictModeHandlerMock = new Mock<IStrictModeHandler>();
             _runDiagnosticsHandlerMock = new Mock<IRunDiagnosticsHandler>();
+            _twinActionsHandlerMock = new Mock<ITwinActionsHandler>();
             _loggerMock = new Mock<ILoggerHandler>();
 
             _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object,
              _d2CMessengerHandlerMock.Object,
              _strictModeHandlerMock.Object,
              _runDiagnosticsHandlerMock.Object,
+             _twinActionsHandlerMock.Object,
               _loggerMock.Object);
         }
 
@@ -94,7 +97,7 @@ namespace CloudPillar.Agent.Tests
             };
             _fileStreamerWrapperMock.Setup(f => f.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>()));
 
-            var report = await _target.HandleDownloadMessageAsync(message);
+            var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
             Assert.AreEqual((report.TwinReport.Status, report.TwinReport.Progress), (StatusType.InProgress, 50));
         }
 
@@ -113,7 +116,7 @@ namespace CloudPillar.Agent.Tests
             };
             _fileStreamerWrapperMock.Setup(f => f.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>()));
 
-            var report = await _target.HandleDownloadMessageAsync(message);
+            var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
             Assert.AreEqual(report.TwinReport.Status, StatusType.Success);
         }
 
@@ -131,7 +134,7 @@ namespace CloudPillar.Agent.Tests
 
             Assert.ThrowsAsync<ArgumentException>(async () =>
                    {
-                       await _target.HandleDownloadMessageAsync(message);
+                       await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
                    });
         }
 
@@ -155,7 +158,7 @@ namespace CloudPillar.Agent.Tests
                 FileSize = 2048
             };
 
-            var report = await _target.HandleDownloadMessageAsync(message);
+            var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
             Assert.AreNotEqual(report.TwinReport.Status, StatusType.Failed);
         }
 
@@ -180,7 +183,7 @@ namespace CloudPillar.Agent.Tests
                 FileSize = 2048
             };
 
-            var report = await _target.HandleDownloadMessageAsync(message);
+            var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
             Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
         }
 
@@ -200,8 +203,118 @@ namespace CloudPillar.Agent.Tests
 
             Assert.ThrowsAsync<ArgumentException>(async () =>
                            {
-                               await _target.HandleDownloadMessageAsync(message);
+                               await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
                            });
+        }
+
+
+        [Test]
+        public async Task HandleDownloadMessageAsync_UnzipNotZipFile_ReturnInProgressReport()
+        {
+            var _downloadAction2 = new DownloadAction()
+            {
+                ActionId = "action123",
+                Source = "file.txt",
+                DestinationPath = "C:\\Downloads",
+                Unzip = true
+            };
+
+            await _target.InitFileDownloadAsync(_downloadAction2, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadAction2.ActionId,
+                FileName = _downloadAction2.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".txt");
+            var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.InProgress);
+
+        }
+        [Test]
+        public async Task HandleDownloadMessageAsync_NoDestinationPath_ReturnFailedReport()
+        {           
+            var _downloadAction2 = new DownloadAction()
+            {
+                ActionId = "action123",
+                Source = "file.txt",
+                DestinationPath = null,
+                Unzip = true
+            };
+
+            await _target.InitFileDownloadAsync(_downloadAction2, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadAction2.ActionId,
+                FileName = _downloadAction2.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+
+            var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
+
+        }
+
+        [Test]
+        public async Task HandleDownloadMessageAsync_UnzipToFile_ReturnFailedReport()
+        {
+            var _downloadAction2 = new DownloadAction()
+            {
+                ActionId = "action123",
+                Source = "file.txt",
+                DestinationPath = "C:\\Downloads\\test.zip",
+                Unzip = true
+            };
+
+            await _target.InitFileDownloadAsync(_downloadAction2, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadAction2.ActionId,
+                FileName = _downloadAction2.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".zip");
+            var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.Failed);
+
+        }
+        [Test]
+        public async Task HandleDownloadMessageAsync_DestinationPathDirectoryNotExists_ReturnInProgressReport()
+        {
+           var _downloadAction2 = new DownloadAction()
+            {
+                ActionId = "action123",
+                Source = "file.zip",
+                DestinationPath = "C:\\Downloads",
+                Unzip = true
+            };
+
+            await _target.InitFileDownloadAsync(_downloadAction2, _actionToReport);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionId = _downloadAction2.ActionId,
+                FileName = _downloadAction2.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 2048
+            };
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(_downloadAction2.Source)).Returns(".zip");
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(_downloadAction2.DestinationPath)).Returns(string.Empty);
+            _fileStreamerWrapperMock.Setup(f => f.DirectoryExists(_downloadAction2.Source)).Returns(true);
+            _fileStreamerWrapperMock.Setup(f => f.DirectoryExists(_downloadAction2.DestinationPath)).Returns(false);
+            var report = await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+            Assert.AreEqual(report.TwinReport.Status, StatusType.InProgress);
+
         }
     }
 }

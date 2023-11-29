@@ -113,7 +113,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
         {
             case C2DMessageType.DownloadChunk:
                 var message = _messageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
-                var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message);
+                var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message, cancellationToken);
                 await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
                 break;
             default:

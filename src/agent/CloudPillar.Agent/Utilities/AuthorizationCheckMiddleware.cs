@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
 using Shared.Logger;
 using Shared.Entities.Twin;
-using System.Reflection;
-using CloudPillar.Agent.Controllers;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware

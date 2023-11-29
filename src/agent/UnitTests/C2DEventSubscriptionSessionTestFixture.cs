@@ -53,7 +53,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
         var actionToReport = new ActionToReport();
         _messageSubscriberMock
-            .Setup(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage))
+            .Setup(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage, GetCancellationToken()))
             .ReturnsAsync(actionToReport);
 
         _twinActionsHandler.Setup(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
@@ -64,7 +64,7 @@ public class C2DEventSubscriptionSessionTestFixture
     public async Task ReceiveC2DMessagesAsync_ValidDownloadMessage_CallDownloadHandler()
     {
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
-        _messageSubscriberMock.Verify(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage), Times.Once);
+        _messageSubscriberMock.Verify(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -149,7 +149,7 @@ public class C2DEventSubscriptionSessionTestFixture
             .Returns(_downloadBlobChunkMessage);
 
         _messageSubscriberMock
-            .Setup(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage))
+            .Setup(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage, GetCancellationToken()))
             .ThrowsAsync(new Exception());
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);

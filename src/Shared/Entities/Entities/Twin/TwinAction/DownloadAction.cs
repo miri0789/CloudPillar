@@ -10,7 +10,7 @@ public class DownloadAction : TwinAction
     public TransportType[]? Protocols { get; set; }
     public DownloadAction()
     {
-        this.Action = TwinActionType.SingularDownload;
+        Action = TwinActionType.SingularDownload;
     }
 }
 
