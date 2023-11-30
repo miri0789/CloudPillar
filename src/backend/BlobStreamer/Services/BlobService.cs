@@ -5,6 +5,7 @@ using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
 using Shared.Entities.Services;
 using Backend.Infra.Common;
+using Microsoft.Azure.Devices;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -47,36 +48,34 @@ public class BlobService : IBlobService
         chunkSize = GetMaxChunkSize(chunkSize);
         var rangeBytes = new List<byte>();
         var rangeEndPosition = Math.Min(rangeSize + startPosition, fileSize);
-        using (var serviceClient = _deviceConnectService.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
+        List<Message> messages = new List<Message>();
+        for (long offset = startPosition, chunkIndex = 0; offset < rangeEndPosition; offset += chunkSize, chunkIndex++)
         {
-            for (long offset = startPosition, chunkIndex = 0; offset < rangeEndPosition; offset += chunkSize, chunkIndex++)
+            var length = Math.Min(chunkSize, rangeEndPosition - offset);
+            var data = new byte[length];
+            await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
+            rangeBytes.AddRange(data);
+            var blobMessage = new DownloadBlobChunkMessage
             {
-                var length = Math.Min(chunkSize, rangeEndPosition - offset);
-                var data = new byte[length];
-                await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
-                rangeBytes.AddRange(data);
-                var blobMessage = new DownloadBlobChunkMessage
-                {
-                    RangeIndex = rangeIndex,
-                    ChunkIndex = (int)chunkIndex,
-                    Offset = offset,
-                    FileName = fileName,
-                    ActionId = ActionId,
-                    FileSize = fileSize,
-                    Data = data,
+                RangeIndex = rangeIndex,
+                ChunkIndex = (int)chunkIndex,
+                Offset = offset,
+                FileName = fileName,
+                ActionId = ActionId,
+                FileSize = fileSize,
+                Data = data,
 
-                };
-                if (offset + chunkSize >= rangeEndPosition)
-                {
-                    blobMessage.RangeStartPosition = startPosition;
-                    blobMessage.RangeEndPosition = rangeEndPosition;
-                    blobMessage.RangeCheckSum = await _checkSumService.CalculateCheckSumAsync(rangeBytes.ToArray());
-                }
-
-                var c2dMessage = _messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
-                await _deviceConnectService.SendMessage(serviceClient, c2dMessage, deviceId);
+            };
+            if (offset + chunkSize >= rangeEndPosition)
+            {
+                blobMessage.RangeStartPosition = startPosition;
+                blobMessage.RangeEndPosition = rangeEndPosition;
+                blobMessage.RangeCheckSum = await _checkSumService.CalculateCheckSumAsync(rangeBytes.ToArray());
             }
+
+            messages.Add(_messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes));
         }
+        await _deviceConnectService.SendDeviceMessages(messages.ToArray(), deviceId);
     }
 
     private int GetMaxChunkSize(int chunkSize)

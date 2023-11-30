@@ -16,15 +16,27 @@ public class DeviceConnectService : IDeviceConnectService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.iothubConnectionString);
     }
 
-    public ServiceClient CreateFromConnectionString(string connString)
+    public async Task SendDeviceMessage(Message c2dMessage, string deviceId)
     {
-        return _deviceClientWrapper.CreateFromConnectionString(connString);
+        await SendDeviceMessages(new Message[] { c2dMessage }, deviceId);    
+    }
+
+    public async Task SendDeviceMessages(Message[] c2dMessages, string deviceId)
+    {
+        using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
+        {
+            foreach (var msg in c2dMessages)
+            {
+                await SendMessage(serviceClient, msg, deviceId);
+            }
+        }
     }
 
 
-    public async Task SendMessage(ServiceClient serviceClient, Message c2dMessage, string deviceId)
+    private async Task SendMessage(ServiceClient serviceClient, Message c2dMessage, string deviceId)
     {
         try
         {

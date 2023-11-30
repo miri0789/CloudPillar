@@ -1,6 +1,7 @@
 ﻿namespace Backend.Infra.Wrappers;
 public class CommonEnvironmentsWrapper: ICommonEnvironmentsWrapper
 {
+    private const string _iothubConnectionString = "IothubConnectionString";
     private const string _retryPolicyBaseDelay = "RetryPolicyBaseDelay";
     private const string _retryPolicyExponent = "RetryPolicyExponent";
 
@@ -22,6 +23,10 @@ public class CommonEnvironmentsWrapper: ICommonEnvironmentsWrapper
     private string GetVariable(string name)
     {
         return Environment.GetEnvironmentVariable(name);
+    }
+    public string iothubConnectionString
+    {
+        get { return GetVariable(_iothubConnectionString); }
     }
 
 }

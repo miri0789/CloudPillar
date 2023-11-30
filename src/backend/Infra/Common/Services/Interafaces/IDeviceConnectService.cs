@@ -4,6 +4,7 @@ namespace Backend.Infra.Common;
 
 public interface IDeviceConnectService
 {
-    ServiceClient CreateFromConnectionString(string connString);
-    Task SendMessage(ServiceClient serviceClient, Message c2dMessage, string deviceId);
+    Task SendDeviceMessage(Message c2dMessage, string deviceId);
+
+    Task SendDeviceMessages(Message[] c2dMessages, string deviceId);
 }

@@ -68,10 +68,8 @@ public class RegistrationService : IRegistrationService
             };
 
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
-            using (var serviceClient = _deviceConnectService.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
-            {
-                await _deviceConnectService.SendMessage(serviceClient, c2dMessage, deviceId);
-            }
+
+            await _deviceConnectService.SendDeviceMessage(c2dMessage, deviceId);
         }
         catch (Exception ex)
         {
@@ -147,10 +145,9 @@ public class RegistrationService : IRegistrationService
             DPSConnectionString = _environmentsWrapper.dpsConnectionString
         };
         var c2dMessage = _messageFactory.PrepareC2DMessage(message);
-        using (var serviceClient = _deviceConnectService.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
-        {
-            await _deviceConnectService.SendMessage(serviceClient, c2dMessage, deviceId);
-        }
+
+
+        await _deviceConnectService.SendDeviceMessage(c2dMessage, deviceId);
 
     }
 
