@@ -56,7 +56,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             long streamLength = readStream.Length;
             string checkSum = await CalcAndUpdateCheckSumAsync(actionToReport, readStream, cancellationToken);
 
-            int calculatedPosition = CalculateCurrentPosition(readStream.Length, actionToReport.TwinReport.Progress ?? 0, chunkSize);
+            int calculatedPosition = CalculateCurrentPosition(readStream.Length, actionToReport.TwinReport.Progress ?? 0);
             var calculatedChunkIndex = (int)Math.Round(calculatedPosition / (double)chunkSize) + 1;
             for (int currentPosition = calculatedPosition, chunkIndex = calculatedChunkIndex; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
             {
@@ -83,11 +83,10 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             readStream.Seek(currentPosition, SeekOrigin.Begin);
             _logger.Info($"Seek readStream to position: {currentPosition}");
             await readStream.ReadAsync(buffer, 0, (int)bytesToUpload);
-            _logger.Info($"readStream: {buffer[0]}-{buffer[1]}-{buffer[2]}");
 
             await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition, checkSum, cancellationToken);
 
-            var percents = CalculateByteUploadedPercent(readStream, currentPosition, bytesToUpload);
+            var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, bytesToUpload);
             await UpdateReportedDetailsAsync(actionToReport, percents, notification.CorrelationId, cancellationToken);
         }
     }
@@ -116,37 +115,36 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     {
         if (!cancellationToken.IsCancellationRequested)
         {
+            actionToReport.TwinReport.Status = StatusType.InProgress;
             actionToReport.TwinReport.Progress = percents;
             actionToReport.TwinReport.CorrelationId = correlationId;
             await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         }
     }
 
-    private float CalculateByteUploadedPercent(Stream uploadStream, long currentPosition, long bytesToUpload)
+    private bool IsLastMessage(long currentPosition, int chunkSize, long streamLength)
     {
-        var totalSize = uploadStream.Length;
+        return currentPosition + chunkSize >= streamLength;
+    }
+
+    private float CalculateByteUploadedPercent(long streamLength, long currentPosition, long bytesToUpload)
+    {
         bytesToUpload += currentPosition;
-        float progressPercent = (float)Math.Floor((bytesToUpload / (double)totalSize) * 100 * 100) / 100;
-        // float progressPercent = bytesToUpload / (float)totalSize * 100;
+        float progressPercent = (float)Math.Floor((bytesToUpload / (double)streamLength) * 100 * 100) / 100;
         Console.WriteLine($"Upload Progress: {progressPercent:F2}%");
         return progressPercent;
     }
 
-    private int CalculateCurrentPosition(float streamLength, float progressPercent, int chunkSize)
+    private int CalculateCurrentPosition(float streamLength, float progressPercent)
     {
         if (progressPercent == 0)
         {
             return 0;
         }
         int currentPosition = (int)Math.Floor(progressPercent * (float)streamLength / 100);
-        // int currentPosition = (int)(progressPercent * streamLength / 100);
 
         Console.WriteLine($"Current Position: {currentPosition} bytes");
         return currentPosition;
     }
 
-    private bool IsLastMessage(long currentPosition, int chunkSize, long streamLength)
-    {
-        return currentPosition + chunkSize >= streamLength;
-    }
 }

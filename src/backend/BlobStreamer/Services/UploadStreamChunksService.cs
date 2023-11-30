@@ -30,7 +30,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             long chunkIndex = (startPosition / readStream.Length) + 1;
 
             _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex}, startPosition: {startPosition}, to {storageUri.AbsolutePath}");
-            _logger.Info($"readStream: {readStream[0]}-{readStream[1]}-{readStream[2]}");
 
             CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
 
