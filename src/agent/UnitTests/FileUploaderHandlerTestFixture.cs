@@ -22,7 +22,8 @@ public class FileUploaderHandlerTestFixture
     private const string FILE_NAME = "testFileName";
     private UploadAction uploadAction = new UploadAction
     {
-        FileName = FILE_NAME
+        FileName = FILE_NAME,
+        Method = FileUploadMethod.Blob
     };
 
     private ActionToReport actionToReport = new ActionToReport
@@ -53,8 +54,6 @@ public class FileUploaderHandlerTestFixture
 
         _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _fileStreamerWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object,
         _twinActionsHandler.Object, _loggerMock.Object);
-
-
     }
 
 
