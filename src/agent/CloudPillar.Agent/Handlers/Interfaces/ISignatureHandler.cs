@@ -7,5 +7,6 @@ namespace CloudPillar.Agent.Handlers;
 public interface ISignatureHandler
 {
     Task InitPublicKeyAsync();
-    bool VerifySignature(string message, string signatureString);
+    Task<bool> VerifySignatureAsync(string message, string signatureString);
+    Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey);
 }

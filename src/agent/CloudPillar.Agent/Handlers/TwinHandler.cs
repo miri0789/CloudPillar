@@ -9,6 +9,7 @@ using Newtonsoft.Json.Converters;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -24,7 +25,10 @@ public class TwinHandler : ITwinHandler
     private readonly IEnumerable<ShellType> _supportedShells;
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly StrictModeSettings _strictModeSettings;
+    private readonly ISignatureHandler _signatureHandler;
     private readonly ILoggerHandler _logger;
+    private readonly string changeSignKey = "changeSign";
+    private readonly string changeSpecKey = "changeSpec";
     private static Twin _latestTwin { get; set; }
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -35,7 +39,8 @@ public class TwinHandler : ITwinHandler
                        IRuntimeInformationWrapper runtimeInformationWrapper,
                        IStrictModeHandler strictModeHandler,
                        IFileStreamerWrapper fileStreamerWrapper,
-                       IOptions<StrictModeSettings> strictModeSettings)
+                       IOptions<StrictModeSettings> strictModeSettings,
+                       ISignatureHandler signatureHandler)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
@@ -46,6 +51,7 @@ public class TwinHandler : ITwinHandler
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _supportedShells = GetSupportedShells();
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
+        _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
@@ -63,13 +69,23 @@ public class TwinHandler : ITwinHandler
                         Converters = new List<JsonConverter> {
                             new TwinDesiredConverter(), new TwinActionConverter() }
                     });
+            var desiredJObject = JObject.Parse(desiredJson);
+            var changeSpecJObject = (JObject)desiredJObject.SelectToken(changeSpecKey)!;
+            
 
-
-            var actions = await GetActionsToExecAsync(twinDesired, twinReported);
-            _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
-            if (actions.Count() > 0)
+            if(twinDesired?.ChangeSign == null || await _signatureHandler.VerifySignatureAsync(changeSpecJObject.ToString(), twinDesired.ChangeSign) == false)
+            {   
+                //var x = (JObject)JObject.Load(twinDesired.ChangeSpec.);
+                await _signatureHandler.SendSignTwinKeyEventAsync(changeSpecJObject!.Path, changeSignKey);
+            }
+            else
             {
-                await HandleTwinActionsAsync(actions, cancellationToken);
+                var actions = await GetActionsToExecAsync(twinDesired, twinReported);
+                _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
+                if (actions.Count() > 0)
+                {
+                    await HandleTwinActionsAsync(actions, cancellationToken);
+                }
             }
         }
         catch (Exception ex)

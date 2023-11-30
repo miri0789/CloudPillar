@@ -26,6 +26,7 @@ public class TwinHandlerTestFixture
     private ITwinHandler _target;
     private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
     private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
+    private Mock<ISignatureHandler> _signatureHandlerMock;
     private CancellationToken cancellationToken = CancellationToken.None;
 
 
@@ -46,6 +47,7 @@ public class TwinHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
+        _signatureHandlerMock = new Mock<ISignatureHandler>();
         CreateTarget();
     }
 
@@ -60,7 +62,8 @@ public class TwinHandlerTestFixture
           _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
-          mockStrictModeSettings.Object);
+          mockStrictModeSettings.Object,
+          _signatureHandlerMock.Object);
     }
 
     [Test]
