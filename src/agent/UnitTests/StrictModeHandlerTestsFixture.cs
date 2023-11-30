@@ -2,7 +2,6 @@ using Moq;
 using Shared.Logger;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
-using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Handlers.Tests
 {
