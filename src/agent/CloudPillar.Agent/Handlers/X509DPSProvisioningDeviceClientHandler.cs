@@ -77,7 +77,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         var iotHubHostName = parts[1];
         var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENTION_KEY).RawData);
 
-        if (!IsInitializedLoad && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
+        if ((!IsInitializedLoad || checkAuthorization) && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
         {
             var error = "The deviceId or the SecretKey are incorrect.";
             _logger.Error(error);
