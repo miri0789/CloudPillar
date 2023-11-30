@@ -14,6 +14,7 @@ public static class MockHelper
     private const int KEY_SIZE_IN_BITS = 4096;
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
     public static string _baseDesierd { get; } = @"{
+            'changeSign': '',
             '$metadata': {
                 '$lastUpdated': '2023-08-29T12:30:36.4167057Z'
             },
