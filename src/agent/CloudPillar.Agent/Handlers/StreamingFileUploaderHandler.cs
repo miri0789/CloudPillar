@@ -60,10 +60,13 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             var calculatedChunkIndex = (int)Math.Round(calculatedPosition / (double)chunkSize) + 1;
             for (int currentPosition = calculatedPosition, chunkIndex = calculatedChunkIndex; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
             {
-                _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
-                var isLastMessage = IsLastMessage(currentPosition, chunkSize, streamLength);
-                await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, actionId, chunkSize, currentPosition, isLastMessage ? checkSum : string.Empty, cancellationToken);
+                    var isLastMessage = IsLastMessage(currentPosition, chunkSize, streamLength);
+                    await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, actionId, chunkSize, currentPosition, isLastMessage ? checkSum : string.Empty, cancellationToken);
+                }
             }
             _logger.Debug($"All bytes sent successfuly");
         }
