@@ -140,13 +140,10 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
         else
         {
-            var fileStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true);
-            if (fileStream == null)
-            {
-                throw new ArgumentNullException("invalid file stream");
-            }
-            fileStream.Position = 0;
-            readStream = fileStream;
+            readStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true);
+            ArgumentNullException.ThrowIfNull(readStream);
+
+            readStream.Position = 0;
         }
         return readStream;
     }
@@ -193,7 +190,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         catch (Exception ex)
         {
 
-            notification.IsSuccess = false;        
+            notification.IsSuccess = false;
             notification.CorrelationId ??= actionToReport.TwinReport.CorrelationId;
 
             if (!string.IsNullOrEmpty(notification.CorrelationId))
