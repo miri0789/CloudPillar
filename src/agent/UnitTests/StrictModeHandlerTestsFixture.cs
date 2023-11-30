@@ -159,10 +159,10 @@ namespace CloudPillar.Agent.Handlers.Tests
         }
 
         [Test]
-        public void CheckFileAccessPermissions_UpperAndLowerLetterNotMatching_NoThrowing()
+        public void CheckFileAccessPermissions_CamelCase_NoExceptionThrown()
         {
-            var upperLetterRoot = string.Join(".", StrictModeMockHelper.ROOT_UPLOAD.Split('.').Select(s => char.ToUpper(s.FirstOrDefault()) + s.Substring(1)));
-            var lowerLetterRoot = string.Join(".", StrictModeMockHelper.ROOT_UPLOAD.Split('.').Select(s => char.ToLower(s.FirstOrDefault()) + s.Substring(1)));
+            var upperLetterRoot = StrictModeMockHelper.ROOT_UPLOAD.ToUpper();
+            var lowerLetterRoot = StrictModeMockHelper.ROOT_UPLOAD.ToLower();
 
             var fileName = $"{upperLetterRoot}/test.txt";
             mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).Root = lowerLetterRoot;
