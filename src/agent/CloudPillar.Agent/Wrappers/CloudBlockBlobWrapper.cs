@@ -7,19 +7,14 @@ public class CloudBlockBlobWrapper : ICloudBlockBlobWrapper
 {
     public CloudBlockBlob CreateCloudBlockBlob(Uri storageUri)
     {
-        if (storageUri == null)
-        {
-            throw new ArgumentNullException("No URI was provided for creation a CloudBlockBlob");
-        }
+        ArgumentNullException.ThrowIfNull(storageUri);
         return new CloudBlockBlob(storageUri);
     }
 
-      public async Task UploadFromStreamAsync(CloudBlockBlob cloudBlockBlob, Stream source, IProgress<StorageProgress> progressHandler, CancellationToken cancellationToken)
+    public async Task UploadFromStreamAsync(CloudBlockBlob cloudBlockBlob, Stream source, IProgress<StorageProgress> progressHandler, CancellationToken cancellationToken)
     {
-        if (cloudBlockBlob == null)
-        {
-            throw new ArgumentNullException("No cloudBlockBlob was provided for upload");
-        }
+        ArgumentNullException.ThrowIfNull(cloudBlockBlob);
+
         await cloudBlockBlob.UploadFromStreamAsync(
                   source,
                   default(AccessCondition),

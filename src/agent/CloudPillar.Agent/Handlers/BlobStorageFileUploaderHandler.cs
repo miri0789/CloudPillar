@@ -28,14 +28,12 @@ namespace CloudPillar.Agent.Handlers
                 throw new ArgumentNullException("No URI was provided for upload the stream");
             }
             CloudBlockBlob cloudBlockBlob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
-            using (Stream controllableStream = new StreamWrapper(readStream, cancellationToken))
-            {
-                IProgress<StorageProgress> progressHandler = new Progress<StorageProgress>(
-                    async progress =>
-                                await SetReportProggress(progress.BytesTransferred, controllableStream.Length, actionToReport, cancellationToken)
-                   );
-                await _cloudBlockBlobWrapper.UploadFromStreamAsync(cloudBlockBlob, controllableStream, progressHandler, cancellationToken);
-            }
+
+            IProgress<StorageProgress> progressHandler = new Progress<StorageProgress>(
+                async progress =>
+                            await SetReportProggress(progress.BytesTransferred, readStream.Length, actionToReport, cancellationToken)
+               );
+            await _cloudBlockBlobWrapper.UploadFromStreamAsync(cloudBlockBlob, readStream, progressHandler, cancellationToken);
         }
 
         private async Task SetReportProggress(long bytesTransferred, long totalSize, ActionToReport actionToReport, CancellationToken cancellationToken)
