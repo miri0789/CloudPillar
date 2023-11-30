@@ -97,7 +97,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
         await _fileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
         file.Report.TwinReport.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
-        if (message?.RangeSize != null)
+        if (message?.RangeCheckSum != null)
             {
                 // TODO find true way to calculate it
                 //  await CheckFullRangeBytesAsync(message, filePath);
