@@ -172,7 +172,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                 case FileUploadMethod.Blob:
                     _logger.Info($"Upload file: {uploadAction.FileName} by http");
 
-                    await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
+                    await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, actionToReport, cancellationToken);
                     await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                     _logger.Info($"The file: {uploadAction.FileName} uploaded successfully");
 
