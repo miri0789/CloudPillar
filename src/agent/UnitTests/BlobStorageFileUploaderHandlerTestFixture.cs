@@ -3,18 +3,25 @@ using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Storage.Blob;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Azure.Storage.Core.Util;
+using Shared.Logger;
 
 [TestFixture]
 public class BlobStorageFileUploaderHandlerTestFixture
 {
     private Mock<ICloudBlockBlobWrapper> _cloudBlockBlobWrapperMock;
+    private Mock<ITwinActionsHandler> _twinActionsHandlerMock;
+    private Mock<ILoggerHandler> _loggerMock;
     private IBlobStorageFileUploaderHandler _target;
+
 
     [SetUp]
     public void Setup()
     {
         _cloudBlockBlobWrapperMock = new Mock<ICloudBlockBlobWrapper>();
-        _target = new BlobStorageFileUploaderHandler(_cloudBlockBlobWrapperMock.Object);
+        _twinActionsHandlerMock = new Mock<ITwinActionsHandler>();
+        _loggerMock = new Mock<ILoggerHandler>();
+        _target = new BlobStorageFileUploaderHandler(_cloudBlockBlobWrapperMock.Object, _twinActionsHandlerMock.Object, _loggerMock.Object);
     }
 
     [Test]
@@ -30,14 +37,14 @@ public class BlobStorageFileUploaderHandlerTestFixture
         .Returns(_mockBlockBlob.Object);
 
         _cloudBlockBlobWrapperMock
-            .Setup(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>(), cancellationToken))
+            .Setup(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>(), It.IsAny<IProgress<StorageProgress>>(), cancellationToken))
             .Returns(Task.CompletedTask);
-
-        await _target.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
+        var actionToReport = new ActionToReport();
+        await _target.UploadFromStreamAsync(storageUri, readStream, actionToReport, cancellationToken);
 
         // Verify that UploadFromStreamAsync was called with the provided stream and cancellation token
         _cloudBlockBlobWrapperMock.Verify(
-        b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>(), CancellationToken.None),
+        b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>(), It.IsAny<IProgress<StorageProgress>>(), CancellationToken.None),
         Times.Once);
 
 
@@ -54,7 +61,7 @@ public class BlobStorageFileUploaderHandlerTestFixture
         Assert.ThrowsAsync<ArgumentNullException>(async () =>
             {
                 // Call the method that should throw the exception
-                await _target.UploadFromStreamAsync(invalidStorageUri, readStream, cancellationToken);
+                await _target.UploadFromStreamAsync(invalidStorageUri, readStream, new ActionToReport(), cancellationToken);
             });
     }
 }

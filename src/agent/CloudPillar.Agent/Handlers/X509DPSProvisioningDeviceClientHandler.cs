@@ -48,13 +48,13 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return await AuthorizationAsync(string.Empty, string.Empty, default, true);
     }
 
-    public async Task<bool> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken)
+    public async Task<bool> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool checkAuthorization = false)
     {
-        return await AuthorizationAsync(XdeviceId, XSecretKey, cancellationToken);
+        return await AuthorizationAsync(XdeviceId, XSecretKey, cancellationToken, false, checkAuthorization);
     }
 
-    private async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool IsInitializedLoad = false)
-    {
+    private async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool IsInitializedLoad = false, bool checkAuthorization = false)
+    {        
         X509Certificate2? userCertificate = GetCertificate();
 
         if (userCertificate == null)
@@ -91,14 +91,14 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
-        if(IsInitializedLoad)
+        if (IsInitializedLoad)
         {
             _logger.Info($"Try load with the following deviceId: {deviceId}");
         }
 
         iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
 
-        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad, cancellationToken);
+        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad || checkAuthorization, cancellationToken);
     }
 
     public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
