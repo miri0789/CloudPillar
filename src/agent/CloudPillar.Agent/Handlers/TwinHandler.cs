@@ -10,6 +10,7 @@ using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -27,8 +28,6 @@ public class TwinHandler : ITwinHandler
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ISignatureHandler _signatureHandler;
     private readonly ILoggerHandler _logger;
-    private readonly string changeSignKey = "changeSign";
-    private readonly string changeSpecKey = "changeSpec";
     private static Twin _latestTwin { get; set; }
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
@@ -69,14 +68,10 @@ public class TwinHandler : ITwinHandler
                         Converters = new List<JsonConverter> {
                             new TwinDesiredConverter(), new TwinActionConverter() }
                     });
-            var desiredJObject = JObject.Parse(desiredJson);
-            var changeSpecJObject = (JObject)desiredJObject.SelectToken(changeSpecKey)!;
-            
 
-            if(twinDesired?.ChangeSign == null || await _signatureHandler.VerifySignatureAsync(changeSpecJObject.ToString(), twinDesired.ChangeSign) == false)
+            if(twinDesired?.ChangeSign == null || await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign) == false)
             {   
-                //var x = (JObject)JObject.Load(twinDesired.ChangeSpec.);
-                await _signatureHandler.SendSignTwinKeyEventAsync(changeSpecJObject!.Path, changeSignKey);
+                await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign));
             }
             else
             {
