@@ -75,7 +75,7 @@ public class BlobService : IBlobService
 
             messages.Add(_messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes));
         }
-        await _deviceConnectService.SendDeviceMessages(messages.ToArray(), deviceId);
+        await _deviceConnectService.SendDeviceMessagesAsync(messages.ToArray(), deviceId);
     }
 
     private int GetMaxChunkSize(int chunkSize)

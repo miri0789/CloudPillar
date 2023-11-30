@@ -19,12 +19,12 @@ public class DeviceConnectService : IDeviceConnectService
         ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.iothubConnectionString);
     }
 
-    public async Task SendDeviceMessage(Message c2dMessage, string deviceId)
+    public async Task SendDeviceMessageAsync(Message c2dMessage, string deviceId)
     {
-        await SendDeviceMessages(new Message[] { c2dMessage }, deviceId);    
+        await SendDeviceMessagesAsync(new Message[] { c2dMessage }, deviceId);    
     }
 
-    public async Task SendDeviceMessages(Message[] c2dMessages, string deviceId)
+    public async Task SendDeviceMessagesAsync(Message[] c2dMessages, string deviceId)
     {
         using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
         {

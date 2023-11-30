@@ -69,7 +69,7 @@ public class RegistrationService : IRegistrationService
 
             var c2dMessage = _messageFactory.PrepareC2DMessage(message);
 
-            await _deviceConnectService.SendDeviceMessage(c2dMessage, deviceId);
+            await _deviceConnectService.SendDeviceMessageAsync(c2dMessage, deviceId);
         }
         catch (Exception ex)
         {
@@ -147,7 +147,7 @@ public class RegistrationService : IRegistrationService
         var c2dMessage = _messageFactory.PrepareC2DMessage(message);
 
 
-        await _deviceConnectService.SendDeviceMessage(c2dMessage, deviceId);
+        await _deviceConnectService.SendDeviceMessageAsync(c2dMessage, deviceId);
 
     }
 
