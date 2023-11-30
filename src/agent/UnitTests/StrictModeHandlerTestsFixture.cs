@@ -2,7 +2,6 @@ using Moq;
 using Shared.Logger;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
-using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Handlers.Tests
 {
@@ -26,7 +25,7 @@ namespace CloudPillar.Agent.Handlers.Tests
 
             mockLogger = new Mock<ILoggerHandler>();
 
-            _target = new StrictModeHandler(mockStrictModeSettings.Object,  mockLogger.Object);
+            _target = new StrictModeHandler(mockStrictModeSettings.Object, mockLogger.Object);
         }
         [Test]
         public void ReplaceRootById_ValidData_ReturnReplacedString()
@@ -156,6 +155,20 @@ namespace CloudPillar.Agent.Handlers.Tests
             {
                 _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
             }, ResultCode.StrictModePattern.ToString());
+        }
+
+        [Test]
+        public void CheckFileAccessPermissions_CamelCase_NoExceptionThrown()
+        {
+            var upperLetterRoot = StrictModeMockHelper.ROOT_UPLOAD.ToUpper();
+            var lowerLetterRoot = StrictModeMockHelper.ROOT_UPLOAD.ToLower();
+
+            var fileName = $"{upperLetterRoot}/test.txt";
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).Root = lowerLetterRoot;
+
+            void SendRequest() => _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
+            Assert.DoesNotThrow(SendRequest);
         }
     }
 }

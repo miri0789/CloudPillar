@@ -6,6 +6,7 @@ using Shared.Entities.Twin;
 
 public static class StrictModeMockHelper
 {
+    public static string ROOT_UPLOAD_UPPERCASE = "C:/demoUpload";
     public static string ROOT_UPLOAD = "c:/demoUpload";
     public static string ROOT_DOWNLOAD = "c:/demoDownload";
     public static string DOWNLOAD = "Download";
