@@ -1,6 +1,6 @@
 using Shared.Entities.Twin;
 
-namespace Backend.BlobStreamer.Interfaces;
+namespace Backend.Infra.Common.Services.Interfaces;
 
 public interface ITwinDiseredService
 {

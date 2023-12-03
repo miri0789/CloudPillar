@@ -1,12 +1,12 @@
-using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
-using Backend.Infra.Common;
 using Microsoft.Azure.Devices.Shared;
 using Shared.Entities.Twin;
 using Newtonsoft.Json;
 using Shared.Entities.Utilities;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
 
-namespace Backend.BlobStreamer.Services;
+namespace Backend.Infra.Common.Services;
 
 public class TwinDiseredService : ITwinDiseredService
 {

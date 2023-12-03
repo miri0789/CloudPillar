@@ -6,7 +6,7 @@ using Shared.Entities.Twin;
 
 namespace Shared.Entities.Utilities;
 
-public static class JsonConvertExtensions
+public static class TwinJsonConvertExtensions
 {
     public static TwinDesired ConvertToTwinDesired(this string json)
     {
@@ -39,7 +39,7 @@ public static class JsonConvertExtensions
         switch (changeSpecKey)
         {
 
-            case TwinPatchChangeSpec.changeSpecDiagnostics:
+            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
                 return twinReported.ChangeSpecDiagnostics;
             case TwinPatchChangeSpec.ChangeSpec:
             default:
@@ -50,7 +50,7 @@ public static class JsonConvertExtensions
     {
         switch (changeSpecKey)
         {
-            case TwinPatchChangeSpec.changeSpecDiagnostics:
+            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
                 return twinDesired.ChangeSpecDiagnostics;
             case TwinPatchChangeSpec.ChangeSpec:
             default:

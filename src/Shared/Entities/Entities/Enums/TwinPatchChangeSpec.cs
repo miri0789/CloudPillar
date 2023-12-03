@@ -1,4 +1,4 @@
 public enum TwinPatchChangeSpec
 {
-    ChangeSpec, changeSpecDiagnostics
+    ChangeSpec, ChangeSpecDiagnostics
 }

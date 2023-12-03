@@ -1,5 +1,6 @@
+using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Azure.Devices;
-namespace Backend.Infra.Common;
+namespace Backend.Infra.Common.Wrappers;
 
 public class DeviceClientWrapper : IDeviceClientWrapper
 {

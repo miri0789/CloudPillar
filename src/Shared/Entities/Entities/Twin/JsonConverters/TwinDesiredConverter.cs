@@ -19,7 +19,7 @@ public class TwinDesiredConverter : JsonConverter
         {
             ChangeSign = (jsonObject["changeSign"] ?? jsonObject["ChangeSign"])?.Value<string>(),
             ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
-            ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.changeSpecDiagnostics)
+            ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpecDiagnostics)
         };
         return changeSpec;
     }
@@ -48,13 +48,8 @@ public class TwinDesiredConverter : JsonConverter
     }
     private string FirstLetterToLowerCase(string input)
     {
-        if (string.IsNullOrEmpty(input))
-        {
-            return input;
-        }
-        char[] inputArray = input.ToCharArray();
-        inputArray[0] = char.ToLower(inputArray[0]);
-        return new string(inputArray);
+        ArgumentNullException.ThrowIfNullOrEmpty(input);
+        return string.Join(".", input.Split('.').Select(s => char.ToLower(s.FirstOrDefault()) + s.Substring(1)));
     }
 
     private string FirstLetterToUpperCase(string input)

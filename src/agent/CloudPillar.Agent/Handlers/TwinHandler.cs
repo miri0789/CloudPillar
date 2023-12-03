@@ -67,7 +67,7 @@ public class TwinHandler : ITwinHandler
 
 
             await HandleTwinUpdatesAsync(twinDesired, twinReported, TwinPatchChangeSpec.ChangeSpec, cancellationToken);
-            await HandleTwinUpdatesAsync(twinDesired, twinReported, TwinPatchChangeSpec.changeSpecDiagnostics, cancellationToken);
+            await HandleTwinUpdatesAsync(twinDesired, twinReported, TwinPatchChangeSpec.ChangeSpecDiagnostics, cancellationToken);
         }
         catch (Exception ex)
         {

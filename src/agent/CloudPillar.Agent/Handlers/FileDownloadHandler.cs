@@ -52,10 +52,6 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
         }
-<<<<<<< HEAD
-        var filePath = file.DownloadAction.DestinationPath;
-=======
->>>>>>> 97ad282b9ea44e3d89e7c70a599666fdc0f72c85
 
         if (!file.Stopwatch.IsRunning)
         {

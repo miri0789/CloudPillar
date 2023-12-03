@@ -5,6 +5,7 @@ using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Microsoft.Extensions.Options;
 using Azure.Storage.Blobs;
+using Backend.Infra.Common.Services.Interfaces;
 
 
 
@@ -17,18 +18,16 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
     private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
     private readonly ITwinDiseredService _twinDiseredHandler;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
     private const string DIAGNOSTICS_BLOB = "Diagnostics";
 
     public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler,
-     IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IEnvironmentsWrapper environmentsWrapper)
+     IOptions<RunDiagnosticsSettings> runDiagnosticsSettings)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
     }
 
     public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool isRunDiagnostics, string uploadActionId)
@@ -118,7 +117,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
             DestinationPath = _runDiagnosticsSettings.DestinationPathForDownload,
         };
-        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.changeSpecDiagnostics, downloadAction);
+        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.ChangeSpecDiagnostics, downloadAction);
     }
 
 }

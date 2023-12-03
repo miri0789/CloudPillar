@@ -12,7 +12,6 @@ using Shared.Logger;
 namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 {
-    private const int BYTE_SIZE = 1024;
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
@@ -78,7 +77,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                 ActionId = actionId
             };
 
-            var actionToReport = new ActionToReport(TwinPatchChangeSpec.changeSpecDiagnostics);
+            var actionToReport = new ActionToReport(TwinPatchChangeSpec.ChangeSpecDiagnostics);
             await _fileUploaderHandler.UploadFilesToBlobStorageAsync(_runDiagnosticsSettings.FilePath, uploadAction, actionToReport, cancellationToken, true);
             return actionId;
         }
@@ -89,7 +88,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task<StatusType> WaitingForResponseAsync(string actionId)
+    public async Task<StatusType> CheckDownloadStatus(string actionId)
     {
         StatusType statusType = StatusType.Pending;
         var taskCompletion = new TaskCompletionSource<StatusType>();
@@ -99,22 +98,22 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         {
             if ((StatusType)state != StatusType.Success && (StatusType)state != StatusType.Failed)
             {
-                taskCompletion.SetException(new Exception($"Something is wrong, no response was received within {_runDiagnosticsSettings.ResponseTimeoutMinutes} minutes"));
+                taskCompletion.SetException(new TimeoutException($"Something is wrong, no response was received within {_runDiagnosticsSettings.ResponseTimeoutMinutes} minutes"));
             }
         }, statusType, _runDiagnosticsSettings.ResponseTimeoutMinutes * 60 * 1000, Timeout.Infinite);
 
         try
         {
-            while (await timer.WaitForNextTickAsync() && !taskCompletion.Task.IsCompleted)
+            while (!taskCompletion.Task.IsCompleted && await timer.WaitForNextTickAsync())
             {
-                statusType = await CheckResponse(actionId);
+                statusType = await GetDownloadStatus(actionId);
                 _logger.Info($"CheckResponse response is {statusType}");
                 if (statusType == StatusType.Success)
                 {
                     timer.Dispose();
                     timeTaken.Dispose();
-                    taskCompletion.SetResult(statusType);
                 }
+                taskCompletion.SetResult(statusType);
             }
         }
         catch (Exception ex)
@@ -125,7 +124,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
-    private async Task<StatusType> CheckResponse(string actionId)
+    private async Task<StatusType> GetDownloadStatus(string actionId)
     {
 
         var twin = await _deviceClientWrapper.GetTwinAsync(CancellationToken.None);
@@ -149,7 +148,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             _logger.Info($"File download completed successfully");
             return await CompareUploadAndDownloadFiles(((DownloadAction)desiredList[indexDesired]).DestinationPath);
         }
-        return StatusType.Pending;
+        return report.Status ?? StatusType.Pending;
     }
 
     private async Task<StatusType> CompareUploadAndDownloadFiles(string downloadFilePath)
@@ -170,7 +169,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
     private async Task<string> GetFileCheckSumAsync(string filePath)
     {
-        string checkSum;
+        string checkSum = string.Empty;
         using (FileStream fileStream = File.OpenRead(filePath))
         {
             checkSum = await _checkSumService.CalculateCheckSumAsync(fileStream);

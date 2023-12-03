@@ -6,6 +6,10 @@ using Shared.Logger;
 using Shared.Entities.Factories;
 using Backend.Infra.Common;
 using Shared.Entities.Services;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Wrappers;
+using Backend.Infra.Common.Services.Interfaces;
+using Backend.Infra.Common.Services;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -33,11 +37,6 @@ var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
-
-// var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
-// builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
-
-
 
 if (app.Environment.IsDevelopment())
 {

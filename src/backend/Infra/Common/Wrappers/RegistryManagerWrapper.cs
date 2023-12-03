@@ -1,7 +1,8 @@
-using Backend.BlobStreamer.Interfaces;
+using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Shared;
-namespace Backend.Infra.Common;
+
+namespace Backend.Infra.Common.Wrappers;
 
 public class RegistryManagerWrapper : IRegistryManagerWrapper
 {

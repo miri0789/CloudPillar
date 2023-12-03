@@ -130,7 +130,7 @@ public class AgentController : ControllerBase
 
             await _runDiagnosticsHandler.CreateFileAsync();
             var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-            var statusType = await _runDiagnosticsHandler.WaitingForResponseAsync(actionId);
+            var statusType = await _runDiagnosticsHandler.CheckDownloadStatus(actionId);
 
             timeTaken.Stop();
             var timeTakenString = timeTaken.Elapsed.ToString(@"mm\:ss");

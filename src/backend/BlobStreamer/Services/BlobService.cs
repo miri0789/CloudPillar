@@ -3,9 +3,8 @@ using Microsoft.Azure.Devices;
 using Polly;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
-using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
-using Backend.Infra.Common;
+using Backend.BlobStreamer.Interfaces;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -14,12 +13,12 @@ public class BlobService : IBlobService
     private readonly CloudBlobContainer _container;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ICloudStorageWrapper _cloudStorageWrapper;
-    private readonly IDeviceClientWrapper _deviceClient;
+    private readonly Backend.Infra.Common.Wrappers.Interfaces.IDeviceClientWrapper _deviceClient;
     private readonly IMessageFactory _messageFactory;
     private readonly ILoggerHandler _logger;
 
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
-     IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory messageFactory)
+     Backend.Infra.Common.Wrappers.Interfaces.IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory messageFactory)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));

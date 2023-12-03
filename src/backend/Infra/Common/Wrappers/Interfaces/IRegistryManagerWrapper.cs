@@ -1,7 +1,6 @@
-using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Shared;
 
-namespace Backend.Infra.Common;
+namespace Backend.Infra.Common.Wrappers.Interfaces;
 public interface IRegistryManagerWrapper
 {
     Task<Twin> GetTwinAsync(string deviceId);

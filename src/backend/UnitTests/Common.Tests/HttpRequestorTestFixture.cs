@@ -3,7 +3,8 @@ using Moq;
 using System.Net;
 using System.Text;
 using Shared.Logger;
-using Backend.Infra.Common;
+using Backend.Infra.Common.Services.Interfaces;
+using Backend.Infra.Common.Services;
 
 namespace Backend.Infra.Common.tests;
 public class HttpRequestorTestFixture
