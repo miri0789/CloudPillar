@@ -10,6 +10,10 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return new FileStream(fullFilePath, fileMode, fileAccess, fileShare, BufferSize, useAsync);
     }
+    public Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess)
+    {
+        return new FileStream(fullFilePath, fileMode, fileAccess);
+    }
     public FileStream CreateStream(string fullFilePath, FileMode fileMode)
     {
         return new FileStream(fullFilePath, fileMode);
