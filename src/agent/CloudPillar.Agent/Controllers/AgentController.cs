@@ -130,13 +130,19 @@ public class AgentController : ControllerBase
 
             await _runDiagnosticsHandler.CreateFileAsync();
             var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-            var statusType = await _runDiagnosticsHandler.CheckDownloadStatus(actionId);
+            var reported = await _runDiagnosticsHandler.CheckDownloadStatus(actionId);
 
             timeTaken.Stop();
-            var timeTakenString = timeTaken.Elapsed.ToString(@"mm\:ss");
-
-            _logger.Info($"RunDiagnostics Success in {timeTakenString}");
-            return Ok($"The diagnostic process has been completed successfully, request-duration: {timeTakenString}");
+            if (reported.Status == StatusType.Success)
+            {
+                var timeTakenString = timeTaken.Elapsed.ToString(@"mm\:ss");
+                _logger.Info($"RunDiagnostics Success in {timeTakenString}");
+                return Ok($"The diagnostic process has been completed successfully, request-duration: {timeTakenString}");
+            }
+            else
+            {
+                return BadRequest($"An error occurred while processing run diagnostics: {reported.ResultText}");
+            }
         }
         catch (Exception ex)
         {

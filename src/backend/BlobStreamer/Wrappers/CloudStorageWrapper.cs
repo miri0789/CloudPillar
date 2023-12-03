@@ -1,6 +1,6 @@
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
-using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Wrappers.Interfaces;
 
 namespace Backend.BlobStreamer.Wrappers;
 

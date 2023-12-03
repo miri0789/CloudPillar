@@ -4,7 +4,8 @@ using Polly;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
 using Shared.Logger;
-using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Services.Interfaces;
+using Backend.BlobStreamer.Wrappers.Interfaces;
 
 namespace Backend.BlobStreamer.Services;
 

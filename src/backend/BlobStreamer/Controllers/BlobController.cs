@@ -1,4 +1,4 @@
-using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Messages;
 

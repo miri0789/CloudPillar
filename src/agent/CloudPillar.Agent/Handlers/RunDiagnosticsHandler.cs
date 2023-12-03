@@ -54,7 +54,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                 fileStream.SetLength(_runDiagnosticsSettings.FleSizBytes);
                 await fileStream.WriteAsync(bytes);
             }
-            _logger.Info($"File for diagnostics was crested");
+            _logger.Info($"File for diagnostics was created");
         }
         catch (Exception ex)
         {
@@ -88,43 +88,57 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task<StatusType> CheckDownloadStatus(string actionId)
+    public async Task<TwinActionReported> CheckDownloadStatus(string actionId)
     {
-        StatusType statusType = StatusType.Pending;
-        var taskCompletion = new TaskCompletionSource<StatusType>();
+        TwinActionReported reported = new TwinActionReported();
+        var taskCompletion = new TaskCompletionSource<TwinActionReported>();
         var timer = new PeriodicTimer(TimeSpan.FromSeconds(_runDiagnosticsSettings.PeriodicResponseWaitSeconds));
 
-        Timer timeTaken = new Timer((Object state) =>
+        Timer timeTaken = new Timer((Object reported) =>
         {
-            if ((StatusType)state != StatusType.Success && (StatusType)state != StatusType.Failed)
+            var state = ((TwinActionReported)reported).Status;
+            if (state != StatusType.Success && state != StatusType.Failed)
             {
                 taskCompletion.SetException(new TimeoutException($"Something is wrong, no response was received within {_runDiagnosticsSettings.ResponseTimeoutMinutes} minutes"));
             }
-        }, statusType, _runDiagnosticsSettings.ResponseTimeoutMinutes * 60 * 1000, Timeout.Infinite);
+        }, reported, _runDiagnosticsSettings.ResponseTimeoutMinutes * 60 * 1000, Timeout.Infinite);
 
         try
         {
             while (!taskCompletion.Task.IsCompleted && await timer.WaitForNextTickAsync())
             {
-                statusType = await GetDownloadStatus(actionId);
-                _logger.Info($"CheckResponse response is {statusType}");
-                if (statusType == StatusType.Success)
+                reported = await GetDownloadStatus(actionId);
+                _logger.Info($"CheckResponse response is {reported.Status}");
+
+                if (reported.Status == StatusType.Success)
                 {
-                    timer.Dispose();
-                    timeTaken.Dispose();
+                    var res = await CompareUploadAndDownloadFiles(reported.ResultText);
+                    if (!res)
+                    {
+                        reported.Status = StatusType.Failed;
+                        reported.ResultText = "Upload file is not equal to Download file";
+                    }
+                    taskCompletion.SetResult(reported);
                 }
-                taskCompletion.SetResult(statusType);
+                if (reported.Status == StatusType.Failed)
+                {
+                    taskCompletion.SetResult(reported);
+                }
             }
         }
         catch (Exception ex)
         {
-            timer.Dispose();
             taskCompletion.SetException(ex);
+        }
+        finally
+        {
+            timer.Dispose();
+            timeTaken.Dispose();
         }
         return await taskCompletion.Task;
     }
 
-    private async Task<StatusType> GetDownloadStatus(string actionId)
+    private async Task<TwinActionReported> GetDownloadStatus(string actionId)
     {
 
         var twin = await _deviceClientWrapper.GetTwinAsync(CancellationToken.None);
@@ -132,26 +146,30 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
         var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
 
-        var desiredList = twinDesired.ChangeSpecDiagnostics.Patch.TransitPackage.ToList();
-        var reportedList = twinReported.ChangeSpecDiagnostics.Patch.TransitPackage.ToList();
+        var desiredList = twinDesired?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
+        var reportedList = twinReported?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
 
-        var indexDesired = desiredList.FindIndex(x => x.ActionId == actionId);
-        if (indexDesired == -1 || desiredList.Count() > reportedList.Count())
+        var indexDesired = desiredList?.FindIndex(x => x.ActionId == actionId) ?? -1;
+        if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())
         {
             _logger.Info($"No report with actionId {actionId}");
-            return StatusType.Pending;
+            return new TwinActionReported() { Status = StatusType.Pending };
         }
 
         var report = reportedList[indexDesired];
+        // if (report.Status == StatusType.Success)
+        // {
+        //     _logger.Info($"File download completed successfully");
+        //     return await CompareUploadAndDownloadFiles(((DownloadAction)desiredList[indexDesired]).DestinationPath);
+        // }
         if (report.Status == StatusType.Success)
         {
-            _logger.Info($"File download completed successfully");
-            return await CompareUploadAndDownloadFiles(((DownloadAction)desiredList[indexDesired]).DestinationPath);
+            report.ResultText = ((DownloadAction)desiredList[indexDesired]).DestinationPath;
         }
-        return report.Status ?? StatusType.Pending;
+        return reportedList[indexDesired];
     }
 
-    private async Task<StatusType> CompareUploadAndDownloadFiles(string downloadFilePath)
+    private async Task<bool> CompareUploadAndDownloadFiles(string downloadFilePath)
     {
         _logger.Info("Start compare upload and download files");
 
@@ -159,12 +177,11 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         string downloadChecksum = await GetFileCheckSumAsync(downloadFilePath);
 
         var isEqual = uploadChecksum.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase);
-        if (!isEqual)
+        if (isEqual == true)
         {
-            throw new Exception("The Upload file is not equal to Download file");
+            _logger.Info("Upload file is equal to Download file");
         }
-        _logger.Info("Upload file is equal to Download file");
-        return StatusType.Success;
+        return isEqual;
     }
 
     private async Task<string> GetFileCheckSumAsync(string filePath)

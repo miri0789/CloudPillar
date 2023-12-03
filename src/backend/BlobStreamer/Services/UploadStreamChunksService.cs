@@ -1,11 +1,11 @@
 using Microsoft.Azure.Storage.Blob;
-using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Services.Interfaces;
 using Shared.Logger;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Microsoft.Extensions.Options;
-using Azure.Storage.Blobs;
 using Backend.Infra.Common.Services.Interfaces;
+using Backend.BlobStreamer.Wrappers.Interfaces;
 
 
 

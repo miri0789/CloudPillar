@@ -1,4 +1,4 @@
-﻿namespace Backend.BlobStreamer.Interfaces;
+﻿namespace Backend.BlobStreamer.Wrappers.Interfaces;
 public interface IEnvironmentsWrapper
 {
     string storageConnectionString { get; }

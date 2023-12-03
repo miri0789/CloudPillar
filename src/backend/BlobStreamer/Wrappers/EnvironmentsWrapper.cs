@@ -1,4 +1,4 @@
-﻿using Backend.BlobStreamer.Interfaces;
+﻿using Backend.BlobStreamer.Wrappers.Interfaces;
 
 namespace Backend.BlobStreamer.Wrappers;
 public class EnvironmentsWrapper : IEnvironmentsWrapper

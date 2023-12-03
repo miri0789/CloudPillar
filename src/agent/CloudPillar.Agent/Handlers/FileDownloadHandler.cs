@@ -45,7 +45,6 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
     {
-
         var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionId == message.ActionId &&
                                     item.DownloadAction.Source == message.FileName);
         if (file == null)
@@ -145,7 +144,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         return (float)progressPercent;
     }
 
-    private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath,CancellationToken cancellationToken)
+    private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath, CancellationToken cancellationToken)
     {
         long endPosition = blobChunk.Offset + blobChunk.Data.Length;
         long startPosition = endPosition - (long)blobChunk.RangeSize;

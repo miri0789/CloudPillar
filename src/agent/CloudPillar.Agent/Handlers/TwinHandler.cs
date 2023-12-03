@@ -65,9 +65,10 @@ public class TwinHandler : ITwinHandler
                             new TwinDesiredConverter(), new TwinActionConverter() }
                     });
 
-
-            await HandleTwinUpdatesAsync(twinDesired, twinReported, TwinPatchChangeSpec.ChangeSpec, cancellationToken);
-            await HandleTwinUpdatesAsync(twinDesired, twinReported, TwinPatchChangeSpec.ChangeSpecDiagnostics, cancellationToken);
+            foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
+            {
+                await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, cancellationToken);
+            }
         }
         catch (Exception ex)
         {
