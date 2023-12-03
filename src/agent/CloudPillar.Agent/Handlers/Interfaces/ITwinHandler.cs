@@ -15,4 +15,5 @@ public interface ITwinHandler
     Task OnDesiredPropertiesUpdateAsync(CancellationToken cancellationToken);
     Task SaveLastTwinAsync(CancellationToken cancellationToken = default);
     Task<string> GetLatestTwinAsync(CancellationToken cancellationToken = default);
+    Task UpdateReportedTwinChangeSignAsync(string message);
 }

@@ -9,4 +9,5 @@ public class TwinReported
    public TwinReportedChangeSpec? ChangeSpec { get; set; }
    public string SecretKey { get; set; }
    public List<TwinReportedCustomProp> Custom { get; set; }
+   public string ChangeSign { get; set; }
 }

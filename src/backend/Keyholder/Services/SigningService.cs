@@ -122,7 +122,9 @@ public class SigningService : ISigningService
     public async Task CreateTwinKeySignature(string deviceId, string keyPath, string signatureKey)
     {
         if(_signingPrivateKey == null)
+        {
             await Init();
+        }
 
         // Get the current device twin
         var twin = await _registryManager.GetTwinAsync(deviceId);

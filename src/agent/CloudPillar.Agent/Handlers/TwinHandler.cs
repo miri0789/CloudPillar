@@ -69,12 +69,19 @@ public class TwinHandler : ITwinHandler
                             new TwinDesiredConverter(), new TwinActionConverter() }
                     });
 
-            if(twinDesired?.ChangeSign == null || await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign) == false)
+            if(twinDesired?.ChangeSign == null)
             {   
-                await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign));
+                _logger.Info($"There is no twin change sign, send sign event..");
+                await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign), cancellationToken);
+            }
+            else if (await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign) == false)
+            {
+                _logger.Error($"Twin Change Sign is invalid");
+                await UpdateReportedTwinChangeSignAsync("Recipe signature verification failed");
             }
             else
             {
+                await UpdateReportedTwinChangeSignAsync(null);
                 var actions = await GetActionsToExecAsync(twinDesired, twinReported);
                 _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
                 if (actions.Count() > 0)
@@ -164,6 +171,21 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"InitReportedDeviceParams failed: {ex.Message}");
         }
     }
+
+    public async Task UpdateReportedTwinChangeSignAsync(string message)
+    {
+        try
+        {
+            var twinChangeSign = nameof(TwinReported.ChangeSign);
+            await _deviceClient.UpdateReportedPropertiesAsync(twinChangeSign, message);
+            _logger.Info($"UpdateReportedTwinChangeSignAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateReportedTwinChangeSignAsync failed", ex);
+        }
+    }
+
 
     public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
     {

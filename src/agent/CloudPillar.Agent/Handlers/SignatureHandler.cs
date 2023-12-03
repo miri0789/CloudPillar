@@ -59,8 +59,8 @@ public class SignatureHandler : ISignatureHandler
         return _signingPublicKey.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA512);
     }
 
-    public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey)
+    public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)
     {
-        await _d2CMessengerHandler.SendSignTwinKeyEventAsync(keyPath, signatureKey);
+        await _d2CMessengerHandler.SendSignTwinKeyEventAsync(keyPath, signatureKey, cancellationToken);
     }
 }
