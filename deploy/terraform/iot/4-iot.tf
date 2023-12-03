@@ -17,12 +17,6 @@ resource "azurerm_iothub" "iot" {
       lock_duration      = "PT30S"
     }
   }
-
-  tags = {
-    purpose = "testing"
-  }
-
-  
 }
 
 resource "azurerm_iothub_route" "device_twin_changes" {
@@ -55,6 +49,9 @@ resource "azurerm_iothub_route" "device_lifecycle" {
   enabled       = true
 }
 resource "azurerm_iothub_file_upload" "iot" {  
+  depends_on = [
+    azurerm_iothub.iot, azurerm_storage_account.iot,azurerm_storage_container.iot
+  ]
   iothub_id         = azurerm_iothub.iot.id
   connection_string = azurerm_storage_account.iot.primary_blob_connection_string
   container_name    = azurerm_storage_container.iot.name

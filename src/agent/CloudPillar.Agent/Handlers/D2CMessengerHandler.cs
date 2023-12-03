@@ -21,7 +21,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task SendFirmwareUpdateEventAsync(string fileName, string actionId, long? startPosition = null, long? endPosition = null)
+    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string fileName, string actionId, long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
@@ -35,25 +35,28 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             ActionId = actionId
         };
 
-        await SendMessageAsync(firmwareUpdateEvent);
+        await SendMessageAsync(firmwareUpdateEvent, cancellationToken);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum)
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum, CancellationToken cancellationToken)
     {
-        var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
+        if (!cancellationToken.IsCancellationRequested)
         {
-            StorageUri = storageUri,
-            CheckSum = checkSum,
-            StartPosition = currentPosition,
-            ActionId = actionId ?? Guid.NewGuid().ToString(),
-            Data = buffer
-        };
+            var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
+            {
+                StorageUri = storageUri,
+                CheckSum = checkSum,
+                StartPosition = currentPosition,
+                ActionId = actionId ?? Guid.NewGuid().ToString(),
+                Data = buffer
+            };
 
-        await SendMessageAsync(streamingUploadChunkEvent);
+            await SendMessageAsync(streamingUploadChunkEvent, cancellationToken);
+        }
     }
 
 
-    public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate)
+    public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
     {
         var ProvisionDeviceCertificateEvent = new ProvisionDeviceCertificateEvent()
         {
@@ -61,7 +64,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             ActionId = Guid.NewGuid().ToString()
         };
 
-        await SendMessageAsync(ProvisionDeviceCertificateEvent);
+        await SendMessageAsync(ProvisionDeviceCertificateEvent, cancellationToken);
     }
 
     public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey)
@@ -75,10 +78,13 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(signTwinKeyEventEvent);
     }
 
-    private async Task SendMessageAsync(D2CMessage d2CMessage)
+    private async Task SendMessageAsync(D2CMessage d2CMessage, CancellationToken cancellationToken)
     {
-        Message message = PrepareD2CMessage(d2CMessage);
-        await _deviceClientWrapper.SendEventAsync(message);
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            Message message = PrepareD2CMessage(d2CMessage);
+            await _deviceClientWrapper.SendEventAsync(message);
+        }
     }
 
     private Message PrepareD2CMessage(D2CMessage d2CMessage)

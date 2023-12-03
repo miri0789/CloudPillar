@@ -47,7 +47,7 @@ namespace CloudPillar.Agent.Tests
         {
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(expectedChunkSize);
 
-            await _target.SendFirmwareUpdateEventAsync(FILE_NAME, ACTION_ID, START_POSITION, END_POSITION);
+            await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, ACTION_ID, START_POSITION, END_POSITION);
             _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, FILE_NAME, ACTION_ID, START_POSITION, END_POSITION) == true)), Times.Once);
         }
 
@@ -60,7 +60,7 @@ namespace CloudPillar.Agent.Tests
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _target.SendFirmwareUpdateEventAsync(FILE_NAME, ACTION_ID);
+                await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, ACTION_ID);
             });
         }
 
@@ -71,7 +71,7 @@ namespace CloudPillar.Agent.Tests
 
             _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).Returns(Task.CompletedTask);
 
-            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION, checkSum);
+            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION, checkSum, CancellationToken.None);
             _deviceClientMock.Verify(dc => dc.SendEventAsync(It.IsAny<Message>()), Times.Once);
         }
 
@@ -84,7 +84,7 @@ namespace CloudPillar.Agent.Tests
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION, checkSum);
+                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION, checkSum, CancellationToken.None);
             });
 
         }

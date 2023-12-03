@@ -22,7 +22,8 @@ public class FileUploaderHandlerTestFixture
     private const string FILE_NAME = "testFileName";
     private UploadAction uploadAction = new UploadAction
     {
-        FileName = FILE_NAME
+        FileName = FILE_NAME,
+        Method = FileUploadMethod.Blob
     };
 
     private ActionToReport actionToReport = new ActionToReport
@@ -53,8 +54,6 @@ public class FileUploaderHandlerTestFixture
 
         _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _fileStreamerWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object,
         _twinActionsHandler.Object, _loggerMock.Object);
-
-
     }
 
 
@@ -65,7 +64,7 @@ public class FileUploaderHandlerTestFixture
 
         await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CancellationToken.None);
 
-        _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Once);
+        _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
