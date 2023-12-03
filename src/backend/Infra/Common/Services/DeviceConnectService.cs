@@ -21,17 +21,24 @@ public class DeviceConnectService : IDeviceConnectService
 
     public async Task SendDeviceMessageAsync(Message c2dMessage, string deviceId)
     {
-        await SendDeviceMessagesAsync(new Message[] { c2dMessage }, deviceId);    
+        await SendDeviceMessagesAsync(new Message[] { c2dMessage }, deviceId);
     }
 
     public async Task SendDeviceMessagesAsync(Message[] c2dMessages, string deviceId)
     {
-        using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
+        try
         {
-            foreach (var msg in c2dMessages)
+            using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
             {
-                await SendMessage(serviceClient, msg, deviceId);
+                foreach (var msg in c2dMessages)
+                {
+                    await SendMessage(serviceClient, msg, deviceId);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"DeviceConnectService SendDeviceMessagesAsync failed. Message: {ex.Message}");
         }
     }
 
@@ -48,7 +55,8 @@ public class DeviceConnectService : IDeviceConnectService
         }
         catch (Exception ex)
         {
-            _logger.Error($"Blobstreamer SendMessage failed. Message: {ex.Message}");
+            _logger.Error($"DeviceConnectService SendMessage failed. Message: {ex.Message}");
+            throw ex;
         }
     }
 

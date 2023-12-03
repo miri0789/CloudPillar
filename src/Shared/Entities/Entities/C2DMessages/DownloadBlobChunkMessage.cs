@@ -8,7 +8,6 @@ public class DownloadBlobChunkMessage : C2DMessages
     public int ChunkIndex { get; set; }
     public long Offset { get; set; }
     public string FileName { get; set; }
-    public long FileSize { get; set; }
     public string FileCheckSum { get; set; }
     public long? RangeStartPosition { get; set; }
     public long? RangeEndPosition { get; set; }

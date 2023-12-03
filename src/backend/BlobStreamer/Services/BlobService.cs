@@ -38,13 +38,23 @@ public class BlobService : IBlobService
 
     public async Task<BlobProperties> GetBlobMetadataAsync(string fileName)
     {
-        CloudBlockBlob blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
+        var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         return blockBlob.Properties;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, long fileSize)
+    public async Task<string> GetFileCheckSum(string fileName)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
+        var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
+        var data = new byte[fileSize];
+        await blockBlob.DownloadRangeToByteArrayAsync(data, 0, 0, fileSize);
+        return await _checkSumService.CalculateCheckSumAsync(data);
+    }
+
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, string fileCheckSum)
+    {
+        var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
+        var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
         chunkSize = GetMaxChunkSize(chunkSize);
         var rangeBytes = new List<byte>();
         var rangeEndPosition = Math.Min(rangeSize + startPosition, fileSize);
@@ -62,9 +72,8 @@ public class BlobService : IBlobService
                 Offset = offset,
                 FileName = fileName,
                 ActionId = ActionId,
-                FileSize = fileSize,
-                Data = data,
-
+                FileCheckSum = fileCheckSum,
+                Data = data
             };
             if (offset + chunkSize >= rangeEndPosition)
             {

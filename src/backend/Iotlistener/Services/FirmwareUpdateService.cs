@@ -24,41 +24,47 @@ public class FirmwareUpdateService : IFirmwareUpdateService
     public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)
     {
 
-        long? blobSize = await GetBlobSize(data.FileName);
-        if (blobSize != null)
+        var blobSize = await GetBlobSize(data.FileName);
+        ArgumentNullException.ThrowIfNull(blobSize);
+        var fileCheckSum = await GetFileCheckSum(data.FileName);
+        ArgumentNullException.ThrowIfNullOrEmpty(fileCheckSum);
+
+        try
         {
-            try
+            long rangeSize = GetRangeSize((long)blobSize, data.ChunkSize);
+
+            if (data.EndPosition != null)
             {
-                long rangeSize = GetRangeSize((long)blobSize, data.ChunkSize);
-
-
-                if (data.EndPosition != null)
+                rangeSize = (long)data.EndPosition - data.StartPosition;
+                string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionId={data.ActionId}&checkSum={fileCheckSum}";
+                await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
+            }
+            else
+            {
+                long offset = data.StartPosition;
+                int rangeIndex = data.RangeIndex;
+                if (rangeIndex > 0)
                 {
-                    rangeSize = (long)data.EndPosition - data.StartPosition;
-                    string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex=0&startPosition={data.StartPosition}&actionId={data.ActionId}&fileSize={blobSize}";
-                    await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
+                    offset = rangeIndex * rangeSize;
                 }
-                else
+
+                while (offset < blobSize)
                 {
-                    long offset = data.StartPosition, rangeIndex = 0;
-                    while (offset < blobSize)
+                    _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
+                    var requests = new List<Task>();
+                    for (var i = 0; i < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                     {
-                        _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
-                        var requests = new List<Task>();
-                        for (var i = 0; i < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
-                        {
-                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&fileSize={blobSize}";
-                            requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
-                        }
-                        await Task.WhenAll(requests);
+                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionId={data.ActionId}&checkSum={fileCheckSum}";
+                        requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
                     }
+                    await Task.WhenAll(requests);
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
 
-            }
         }
     }
 
@@ -74,6 +80,20 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         {
             _logger.Error($"FirmwareUpdateService GetBlobSize failed. Message: {ex.Message}");
             return null;
+        }
+    }
+    private async Task<string> GetFileCheckSum(string fileName)
+    {
+        try
+        {
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/GetFileCheckSum?fileName={fileName}";
+            var checkSum = await _httpRequestorService.SendRequest<string>(requestUrl, HttpMethod.Get);
+            return checkSum;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"FirmwareUpdateService GetFileCheckSum failed. Message: {ex.Message}");
+            return "";
         }
     }
 
