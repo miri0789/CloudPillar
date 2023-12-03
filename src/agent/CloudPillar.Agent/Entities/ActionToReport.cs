@@ -1,5 +1,4 @@
 ﻿
-using System.Net.Http.Headers;
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Entities;

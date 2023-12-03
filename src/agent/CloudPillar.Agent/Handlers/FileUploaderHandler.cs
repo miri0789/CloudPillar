@@ -62,7 +62,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken, bool fromRunDiagnostic = false)
+    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken, bool isRunDiagnostics = false)
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
@@ -83,16 +83,16 @@ public class FileUploaderHandler : IFileUploaderHandler
         // Upload each file
         foreach (string fullFilePath in _fileStreamerWrapper.Concat(files, directories))
         {
-            string blobname = BuildBlobName(fullFilePath, fromRunDiagnostic);
+            string blobname = BuildBlobName(fullFilePath, isRunDiagnostics);
 
             using (Stream readStream = CreateStream(fullFilePath))
             {
-                await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, fromRunDiagnostic, cancellationToken);
+                await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, isRunDiagnostics, cancellationToken);
             }
         }
     }
 
-    private string BuildBlobName(string fullFilePath, bool fromRunDiagnostic)
+    private string BuildBlobName(string fullFilePath, bool isRunDiagnostics)
     {
         _logger.Info($"BuildBlobName");
 
@@ -102,7 +102,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             blobname += ".zip";
         }
-        if (fromRunDiagnostic)
+        if (isRunDiagnostics)
         {
             blobname = $"{DIAGNOSTICS_BLOB}/{blobname}";
         }
@@ -154,7 +154,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         return readStream;
     }
 
-    private async Task UploadFileAsync(UploadAction uploadAction, ActionToReport actionToReport, string blobname, Stream readStream, bool fromRunDiagnostic, CancellationToken cancellationToken)
+    private async Task UploadFileAsync(UploadAction uploadAction, ActionToReport actionToReport, string blobname, Stream readStream, bool isRunDiagnostics, CancellationToken cancellationToken)
     {
         _logger.Info($"UploadFileAsync");
 
@@ -187,11 +187,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-<<<<<<< HEAD
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, fromRunDiagnostic);
-=======
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, uploadAction.ActionId, cancellationToken);
->>>>>>> 8f6c9f0ca2fa7377de042533140b46cfee7b3c2d
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification,actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");

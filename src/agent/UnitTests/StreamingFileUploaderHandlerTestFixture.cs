@@ -36,7 +36,7 @@ namespace CloudPillar.Agent.Tests
             _loggerMock = new Mock<ILoggerHandler>();
 
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(CHUNK_SIZE);
-            _d2CMessengerHandlerMock.Setup(d => d.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<bool>())).Returns(Task.CompletedTask);
+            _d2CMessengerHandlerMock.Setup(d => d.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<bool>())).Returns(Task.CompletedTask);
 
             _target = new StreamingFileUploaderHandler(_d2CMessengerHandlerMock.Object, _deviceClientMock.Object, _checkSumServiceMock.Object, _twinActionsHandler.Object, _loggerMock.Object);
         }
@@ -45,7 +45,7 @@ namespace CloudPillar.Agent.Tests
         {
             var stream = CreateLargeStream(CHUNK_SIZE * 1);
 
-            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, ACTION_ID, CancellationToken.None);
+            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, CORRELATION_ID, ACTION_ID, CancellationToken.None);
 
             _deviceClientMock.Verify(w => w.CompleteFileUploadAsync(It.IsAny<FileUploadCompletionNotification>(), CancellationToken.None), Times.Once);
         }
@@ -56,7 +56,7 @@ namespace CloudPillar.Agent.Tests
 
 
             var largeStream = CreateLargeStream(CHUNK_SIZE * NUM_OF_CHUNKS);
-            await _target.UploadFromStreamAsync(notification, actionToReport, largeStream, STORAGE_URI, ACTION_ID, CancellationToken.None);
+            await _target.UploadFromStreamAsync(notification, actionToReport, largeStream, STORAGE_URI, ACTION_ID, CORRELATION_ID, CancellationToken.None);
 
             _d2CMessengerHandlerMock.Verify(w => w.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Exactly(NUM_OF_CHUNKS));
         }

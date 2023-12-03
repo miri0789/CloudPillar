@@ -38,7 +38,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(firmwareUpdateEvent, cancellationToken);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum, CancellationToken cancellationToken, bool fromRunDiagnostic = false)
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum, CancellationToken cancellationToken, bool isRunDiagnostic = false)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -49,7 +49,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
                 StartPosition = currentPosition,
                 ActionId = actionId ?? Guid.NewGuid().ToString(),
                 Data = buffer,
-                FromRunDiagnostics = fromRunDiagnostic
+                IsRunDiagnostics = isRunDiagnostic
             };
 
             await SendMessageAsync(streamingUploadChunkEvent, cancellationToken);

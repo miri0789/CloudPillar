@@ -6,5 +6,5 @@ namespace CloudPillar.Agent.Handlers;
 public interface IFileUploaderHandler
 {
     Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string fileName, CancellationToken cancellationToken);
-    Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken, bool fromRunDiagnostic = false);
+    Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken, bool isRunDiagnostics = false);
 }

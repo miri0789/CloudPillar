@@ -31,7 +31,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
     }
 
-    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool fromRunDiagnostic, string uploadActionId)
+    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool isRunDiagnostics, string uploadActionId)
     {
         try
         {
@@ -47,11 +47,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
 
             using (Stream inputStream = new MemoryStream(readStream))
-            {
-                if (fromRunDiagnostic)
-                {                   
-                }
-
+            {               
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
                 if (!blobExists)
                 {
@@ -73,8 +69,8 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                 if (!string.IsNullOrEmpty(checkSum))
                 {
                     var uploadSuccess = await VerifyStreamChecksum(checkSum, blob);
-                    _logger.Info($"fromRunDiagnostic: {fromRunDiagnostic}");
-                    if (uploadSuccess && fromRunDiagnostic)
+                    _logger.Info($"isRunDiagnostics: {isRunDiagnostics}");
+                    if (uploadSuccess && isRunDiagnostics)
                     {
                         await HandleDownloadForDiagnosticsAsync(deviceId, storageUri, uploadActionId);
                     }
