@@ -5,6 +5,7 @@ using Microsoft.Azure.Storage.Blob;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Storage.Core.Util;
 using Shared.Logger;
+using Microsoft.Azure.Devices.Client.Transport;
 
 [TestFixture]
 public class BlobStorageFileUploaderHandlerTestFixture
@@ -13,6 +14,7 @@ public class BlobStorageFileUploaderHandlerTestFixture
     private Mock<ITwinActionsHandler> _twinActionsHandlerMock;
     private Mock<ILoggerHandler> _loggerMock;
     private IBlobStorageFileUploaderHandler _target;
+    private FileUploadCompletionNotification notification = new FileUploadCompletionNotification();
 
 
     [SetUp]
@@ -40,7 +42,7 @@ public class BlobStorageFileUploaderHandlerTestFixture
             .Setup(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>(), It.IsAny<IProgress<StorageProgress>>(), cancellationToken))
             .Returns(Task.CompletedTask);
         var actionToReport = new ActionToReport();
-        await _target.UploadFromStreamAsync(storageUri, readStream, actionToReport, cancellationToken);
+        await _target.UploadFromStreamAsync(notification, storageUri, readStream, actionToReport, cancellationToken);
 
         // Verify that UploadFromStreamAsync was called with the provided stream and cancellation token
         _cloudBlockBlobWrapperMock.Verify(
@@ -61,7 +63,7 @@ public class BlobStorageFileUploaderHandlerTestFixture
         Assert.ThrowsAsync<ArgumentNullException>(async () =>
             {
                 // Call the method that should throw the exception
-                await _target.UploadFromStreamAsync(invalidStorageUri, readStream, new ActionToReport(), cancellationToken);
+                await _target.UploadFromStreamAsync(notification, invalidStorageUri, readStream, new ActionToReport(), cancellationToken);
             });
     }
 }

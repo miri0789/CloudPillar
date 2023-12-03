@@ -9,4 +9,5 @@ public class TwinActionReported
     public string ResultText { get; set; }
     public string CheckSum { get; set; }
     public string CompleteRanges { get; set; }
+    public string CorrelationId { get; set; }
 }

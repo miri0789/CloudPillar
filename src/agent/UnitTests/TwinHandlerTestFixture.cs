@@ -150,10 +150,10 @@ public class TwinHandlerTestFixture
         };
 
         CreateTwinMock(desired, reported);
-        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
+        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Never);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -173,10 +173,10 @@ public class TwinHandlerTestFixture
         var reported = new TwinReportedChangeSpec();
 
         CreateTwinMock(desired, reported);
-        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
+        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Once);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -229,10 +229,10 @@ public class TwinHandlerTestFixture
         var reported = new TwinReportedChangeSpec();
 
         CreateTwinMock(desired, reported);
-        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()));
+        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>()), Times.Never);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
