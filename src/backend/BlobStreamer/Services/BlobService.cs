@@ -73,6 +73,7 @@ public class BlobService : IBlobService
                 FileName = fileName,
                 ActionId = ActionId,
                 FileCheckSum = fileCheckSum,
+                FileSize = fileSize,
                 Data = data
             };
             if (offset + chunkSize >= rangeEndPosition)
