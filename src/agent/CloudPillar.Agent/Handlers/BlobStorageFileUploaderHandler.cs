@@ -34,6 +34,15 @@ namespace CloudPillar.Agent.Handlers
             await _cloudBlockBlobWrapper.UploadFromStreamAsync(cloudBlockBlob, readStream, progressHandler, cancellationToken);
         }
 
+        public async Task DeleteStreamAsync(Uri storageUri, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(storageUri);
+
+            CloudBlockBlob cloudBlockBlob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
+
+            await _cloudBlockBlobWrapper.DeleteIfExistsAsync(cloudBlockBlob);
+        }
+
         private async Task SetReportProggress(long bytesTransferred, long totalSize, ActionToReport actionToReport, FileUploadCompletionNotification notification, CancellationToken cancellationToken)
         {
             float progressPercent = (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100;

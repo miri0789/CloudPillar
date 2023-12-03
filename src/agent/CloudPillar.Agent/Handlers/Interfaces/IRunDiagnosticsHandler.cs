@@ -6,4 +6,5 @@ public interface IRunDiagnosticsHandler
     Task CreateFileAsync();
     Task<string> UploadFileAsync(CancellationToken cancellationToken);
     Task<TwinActionReported> CheckDownloadStatus(string actionId);
+    Task DeleteFileAsync(CancellationToken cancellationToken);
 }

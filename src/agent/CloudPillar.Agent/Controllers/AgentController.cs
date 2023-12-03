@@ -131,6 +131,7 @@ public class AgentController : ControllerBase
             await _runDiagnosticsHandler.CreateFileAsync();
             var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
             var reported = await _runDiagnosticsHandler.CheckDownloadStatus(actionId);
+            await _runDiagnosticsHandler.DeleteFileAsync(CancellationToken.None);
 
             timeTaken.Stop();
             if (reported.Status == StatusType.Success)

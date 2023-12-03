@@ -138,6 +138,18 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
+    public async Task DeleteFileAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _fileUploaderHandler.DeleteFileUploadAsync(_runDiagnosticsSettings.FilePath, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"DeleteFileAsync error: {ex.Message}");
+            throw ex;
+        }
+    }
     private async Task<TwinActionReported> GetDownloadStatus(string actionId)
     {
 

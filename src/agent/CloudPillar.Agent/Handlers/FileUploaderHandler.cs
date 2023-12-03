@@ -37,14 +37,31 @@ public class FileUploaderHandler : IFileUploaderHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    public async Task DeleteFileUploadAsync(string fileName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(fileName);
+            string blobname = BuildBlobName(fileName, true);
+            var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
+            {
+                BlobName = blobname
+            });
+            var storageUri = await _deviceClientWrapper.GetBlobUriAsync(sasUriResponse);
+            await _blobStorageFileUploaderHandler.DeleteStreamAsync(storageUri, cancellationToken);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error delete uploading file '{fileName}': {ex.Message}");
+        }
+    }
+
     public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string fileName, CancellationToken cancellationToken)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                throw new ArgumentException("No file to upload");
-            }
+            ArgumentNullException.ThrowIfNull(fileName);
             if (uploadAction.Enabled)
             {
                 await UploadFilesToBlobStorageAsync(fileName, uploadAction, actionToReport, cancellationToken);
@@ -92,7 +109,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    private string BuildBlobName(string fullFilePath, bool isRunDiagnostics)
+    private string BuildBlobName(string fullFilePath, bool isRunDiagnostics = false)
     {
         _logger.Info($"BuildBlobName");
 
@@ -187,7 +204,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification,actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");
