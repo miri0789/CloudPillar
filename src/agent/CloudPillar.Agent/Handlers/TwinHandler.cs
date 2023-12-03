@@ -346,8 +346,9 @@ public class TwinHandler : ITwinHandler
                                TwinAction = item,
                                TwinReport = reportedValue[index]
                            })
-                           .Where((item, index) => (isInitial == false && reportedValue[index].Status == StatusType.Pending)
-                           || (isInitial == true && reportedValue[index].Status != StatusType.Success && reportedValue[index].Status != StatusType.Failed)));
+                        .Where((item, index) => reportedValue[index].Status == StatusType.Pending
+                            || (isInitial && reportedValue[index].Status != StatusType.Success && reportedValue[index].Status != StatusType.Failed)));
+
 
                     }
                 }
