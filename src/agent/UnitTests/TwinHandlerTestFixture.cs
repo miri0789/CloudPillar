@@ -125,6 +125,83 @@ public class TwinHandlerTestFixture
     }
 
     [Test]
+    public async Task OnDesiredPropertiesUpdate_FirstTimeGetActions_ExecInprogressActions()
+    {
+        var desired = new TwinChangeSpec()
+        {
+            Id = "123",
+            Patch = new TwinPatch()
+            {
+                InstallSteps = new List<TwinAction>()
+                    {   new DownloadAction() { ActionId = "123", DestinationPath = "123", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { ActionId = "456", DestinationPath = "456", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { ActionId = "789", DestinationPath = "789", Action = TwinActionType.SingularDownload},
+                    }.ToArray()
+            }
+        };
+
+        var reported = new TwinReportedChangeSpec()
+        {
+            Id = "123",
+            Patch = new TwinReportedPatch()
+            {
+                InstallSteps = new List<TwinActionReported>()
+                    {
+                        new TwinActionReported() {Status = StatusType.Success},
+                        new TwinActionReported() {Status = StatusType.Pending},
+                        new TwinActionReported() {Status = StatusType.InProgress}
+                    }.ToArray()
+            }
+        };
+
+        CreateTwinMock(desired, reported);
+        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
+        var actionsCount = reported.Patch.InstallSteps.Count(x => x.Status != StatusType.Success && x.Status != StatusType.Failed);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(actionsCount));
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_NotInitial_ExecPendingActions()
+    {
+        var desired = new TwinChangeSpec()
+        {
+            Id = "123",
+            Patch = new TwinPatch()
+            {
+                InstallSteps = new List<TwinAction>()
+                    {   new DownloadAction() { ActionId = "123", DestinationPath = "123", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { ActionId = "456", DestinationPath = "456", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { ActionId = "789", DestinationPath = "789", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { ActionId = "1", DestinationPath = "1", Action = TwinActionType.SingularDownload},
+                    }.ToArray()
+            }
+        };
+
+        var reported = new TwinReportedChangeSpec()
+        {
+            Id = "123",
+            Patch = new TwinReportedPatch()
+            {
+                InstallSteps = new List<TwinActionReported>()
+                    {
+                        new TwinActionReported() {Status = StatusType.Success},
+                        new TwinActionReported() {Status = StatusType.Pending},
+                        new TwinActionReported() {Status = StatusType.Pending},
+                        new TwinActionReported() {Status = StatusType.InProgress}
+                    }.ToArray()
+            }
+        };
+
+        CreateTwinMock(desired, reported);
+        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
+        var actionsCount = reported.Patch.InstallSteps.Count(x => x.Status == StatusType.Pending);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(actionsCount));
+    }
+    [Test]
     public async Task OnDesiredPropertiesUpdate_SuccessDownloadAction_NotExecuteDownload()
     {
         var desired = new TwinChangeSpec()
