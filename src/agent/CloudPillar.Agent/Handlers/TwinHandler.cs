@@ -215,7 +215,7 @@ public class TwinHandler : ITwinHandler
                 var twin = await _deviceClient.GetTwinAsync(cancellationToken);
                 string reportedJson = twin.Properties.Reported.ToJson();
                 var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-                var twinReportedCustom = twinReported.Custom ?? new List<TwinReportedCustomProp>();               
+                var twinReportedCustom = twinReported.Custom ?? new List<TwinReportedCustomProp>();
                 foreach (var item in customProps)
                 {
                     var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);
@@ -252,7 +252,7 @@ public class TwinHandler : ITwinHandler
                     case TwinActionType.SingularDownload:
                         var fileName = await HandleStrictMode(action, cancellationToken);
                         if (string.IsNullOrEmpty(fileName)) { continue; }
-                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action);
+                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action, cancellationToken);
                         break;
 
                     case TwinActionType.SingularUpload:
@@ -361,9 +361,9 @@ public class TwinHandler : ITwinHandler
                                ReportPartName = property.Name,
                                ReportIndex = index,
                                TwinAction = item,
-                               TwinReport = new TwinActionReported() { Status = StatusType.Pending }
+                               TwinReport = reportedValue[index]
                            })
-                           .Where((item, index) => reportedValue[index].Status == StatusType.Pending));
+                           .Where((item, index) => reportedValue[index].Status == StatusType.Pending || reportedValue[index].Status == StatusType.InProgress));
 
                     }
                 }

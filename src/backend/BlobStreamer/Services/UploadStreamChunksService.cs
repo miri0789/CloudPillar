@@ -42,7 +42,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
 
             long chunkIndex = (startPosition / readStream.Length) + 1;
 
-            _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex} to {storageUri.AbsolutePath}");
+            _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex}, startPosition: {startPosition}, to {storageUri.AbsolutePath}");
 
             CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
 
@@ -53,7 +53,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                 }
 
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
-                //first chunk
                 if (!blobExists)
                 {
                     await _cloudBlockBlobWrapper.UploadFromStreamAsync(blob, inputStream);
@@ -62,13 +61,11 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                 else
                 {
                     MemoryStream existingData = await _cloudBlockBlobWrapper.DownloadToStreamAsync(blob);
+                 
                     existingData.Seek(startPosition, SeekOrigin.Begin);
-
                     await inputStream.CopyToAsync(existingData);
 
-                    // Reset the position of existingData to the beginning
                     existingData.Seek(0, SeekOrigin.Begin);
-
                     // Upload the combined data to the blob
                     await _cloudBlockBlobWrapper.UploadFromStreamAsync(blob, existingData);
                 }

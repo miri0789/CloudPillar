@@ -146,13 +146,10 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
         else
         {
-            var fileStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true);
-            if (fileStream == null)
-            {
-                throw new ArgumentNullException("invalid file stream");
-            }
-            fileStream.Position = 0;
-            readStream = fileStream;
+            readStream = _fileStreamerWrapper.CreateStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BUFFER_SIZE, true);
+            ArgumentNullException.ThrowIfNull(readStream);
+
+            readStream.Position = 0;
         }
         return readStream;
     }
@@ -165,8 +162,14 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             IsSuccess = true
         };
+
         try
         {
+            if (actionToReport.TwinReport.Progress > 0)
+            {
+                notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
+                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+            }
             var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
             {
                 BlobName = blobname
@@ -178,13 +181,17 @@ public class FileUploaderHandler : IFileUploaderHandler
                 case FileUploadMethod.Blob:
                     _logger.Info($"Upload file: {uploadAction.FileName} by http");
 
-                    await _blobStorageFileUploaderHandler.UploadFromStreamAsync(storageUri, readStream, cancellationToken);
+                    await _blobStorageFileUploaderHandler.UploadFromStreamAsync(notification, storageUri, readStream, actionToReport, cancellationToken);
                     await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                     _logger.Info($"The file: {uploadAction.FileName} uploaded successfully");
 
                     break;
                 case FileUploadMethod.Stream:
+<<<<<<< HEAD
                     await _streamingFileUploaderHandler.UploadFromStreamAsync(actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, fromRunDiagnostic);
+=======
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, uploadAction.ActionId, cancellationToken);
+>>>>>>> 8f6c9f0ca2fa7377de042533140b46cfee7b3c2d
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");
@@ -192,9 +199,16 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
         catch (Exception ex)
         {
+
             notification.IsSuccess = false;
-            await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
-            throw ex;
+            notification.CorrelationId ??= actionToReport.TwinReport.CorrelationId;
+
+            if (!string.IsNullOrEmpty(notification.CorrelationId))
+            {
+                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+            }
+
+            throw new Exception(ex.Message);
         }
     }
 

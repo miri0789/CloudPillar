@@ -37,32 +37,35 @@ public class TwinActionsHandler : ITwinActionsHandler
 
     public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported, CancellationToken cancellationToken)
     {
-        try
+        if (!cancellationToken.IsCancellationRequested)
         {
-            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            string reportedJson = twin.Properties.Reported.ToJson();
-            var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-
-            var actionForDetails = actionsToReported.FirstOrDefault(x => !string.IsNullOrEmpty(x.ReportPartName));
-            if (actionForDetails == null) return;
-            TwinPatchChangeSpec changeSpecKey = actionForDetails.ChangeSpecKey;
-            TwinReportedChangeSpec twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
-
-
-            actionsToReported.ToList().ForEach(actionToReport =>
+            try
             {
-                if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;
-                var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
-                var reportedValue = (TwinActionReported[])reportedProp.GetValue(twinReportedChangeSpec.Patch);
-                reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
-                reportedProp.SetValue(twinReportedChangeSpec.Patch, reportedValue);
-            });
-            await UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UpdateReportedAction failed: {ex.Message}");
-        }
+                var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+                string reportedJson = twin.Properties.Reported.ToJson();
+                var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
 
+                var actionForDetails = actionsToReported.FirstOrDefault(x => !string.IsNullOrEmpty(x.ReportPartName));
+                if (actionForDetails == null) return;
+                TwinPatchChangeSpec changeSpecKey = actionForDetails.ChangeSpecKey;
+                TwinReportedChangeSpec twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+
+
+                actionsToReported.ToList().ForEach(actionToReport =>
+                {
+                    if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;
+                    var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
+                    var reportedValue = (TwinActionReported[])reportedProp.GetValue(twinReportedChangeSpec.Patch);
+                    reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
+                    reportedProp.SetValue(twinReportedChangeSpec.Patch, reportedValue);
+                });
+                await UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"UpdateReportedAction failed: {ex.Message}");
+            }
+
+        }
     }
 }
