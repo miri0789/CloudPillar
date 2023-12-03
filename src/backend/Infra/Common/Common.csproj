@@ -16,6 +16,7 @@
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
     <PackageReference Include="SharedLogger" Version="1.0.10" />
     <PackageReference Include="Microsoft.Azure.Devices" Version="1.39.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="7.0.5" />
   </ItemGroup>
 
 </Project>

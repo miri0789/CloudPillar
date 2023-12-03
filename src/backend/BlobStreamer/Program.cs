@@ -6,6 +6,7 @@ using Shared.Logger;
 using Shared.Entities.Factories;
 using Backend.Infra.Common;
 using Shared.Entities.Services;
+using Backend.Infra.Wrappers;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -14,13 +15,15 @@ var informationalVersion = Assembly.GetEntryAssembly()?
 var builder = LoggerHostCreator.Configure("blobstreamer", WebApplication.CreateBuilder(args));
 
 builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
-builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IBlobService, BlobService>();
 builder.Services.AddScoped<IUploadStreamChunksService, UploadStreamChunksService>();
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
+builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
+builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 var app = builder.Build();

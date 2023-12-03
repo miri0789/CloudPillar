@@ -6,4 +6,6 @@ public interface ICloudStorageWrapper
 {
     CloudBlobContainer GetBlobContainer(string storageConnectionString, string blobContainerName);
     Task<CloudBlockBlob> GetBlockBlobReference(CloudBlobContainer storageContainer, string fileName);
+
+    long GetBlobLength(CloudBlockBlob cloudBlockBlob);
 }
