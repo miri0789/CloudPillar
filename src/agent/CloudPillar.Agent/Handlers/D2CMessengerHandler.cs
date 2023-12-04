@@ -69,13 +69,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
 
     public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)
     {
-        var signTwinKeyEventEvent = new SignEvent()
-        {
-            KeyPath = keyPath,
-            SignatureKey = signatureKey
-        };
-
-        await SendMessageAsync(signTwinKeyEventEvent, cancellationToken);
+        await SendMessageAsync(new SignEvent(), cancellationToken);
     }
 
     private async Task SendMessageAsync(D2CMessage d2CMessage, CancellationToken cancellationToken)

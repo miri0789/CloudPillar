@@ -74,21 +74,25 @@ public class TwinHandler : ITwinHandler
                 _logger.Info($"There is no twin change sign, send sign event..");
                 await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign), cancellationToken);
             }
-            else if (await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign) == false)
-            {
-                _logger.Error($"Twin Change Sign is invalid");
-                await UpdateReportedTwinChangeSignAsync("Recipe signature verification failed");
-            }
             else
             {
-                await UpdateReportedTwinChangeSignAsync(null);
-                var actions = await GetActionsToExecAsync(twinDesired, twinReported);
-                _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
-                if (actions.Count() > 0)
+                var isSignValid = await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign);
+                if (isSignValid == false)
                 {
-                    await HandleTwinActionsAsync(actions, cancellationToken);
+                    _logger.Error($"Twin Change signature is invalid");
+                    await UpdateReportedTwinChangeSignAsync("Twin Change signature is invalid");
                 }
-            }
+                else
+                {
+                    await UpdateReportedTwinChangeSignAsync(null);
+                    var actions = await GetActionsToExecAsync(twinDesired, twinReported);
+                    _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
+                    if (actions.Count() > 0)
+                    {
+                        await HandleTwinActionsAsync(actions, cancellationToken);
+                    }
+                }
+            }  
         }
         catch (Exception ex)
         {

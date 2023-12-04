@@ -14,10 +14,10 @@ public class SigningController : ControllerBase
         _signingService = signingService;
     }
 
-    [HttpGet("create")]
-    public async Task<IActionResult> GetMeatadata(string deviceId, string keyPath, string signatureKey)
+    [HttpGet("createTwinKeySignature")]
+    public async Task<IActionResult> CreateTwinKeySignature(string deviceId)
     {
-        await _signingService.CreateTwinKeySignature(deviceId, keyPath, signatureKey);
+        await _signingService.CreateTwinKeySignature(deviceId);
         return Ok();
     }
 }

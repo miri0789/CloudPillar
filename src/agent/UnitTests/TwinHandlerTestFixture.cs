@@ -250,16 +250,7 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task OnDesiredPropertiesUpdate_ValidateChangeSignFalse_UpdateReportedPropertiesCall()
     {
-        var desired = new TwinChangeSpec()
-        {
-            Id = "123",
-            Patch = new TwinPatch()
-            {
-                InstallSteps = new List<TwinAction>()
-                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath="abc"},
-                    }.ToArray()
-            }
-        };
+        var desired = new TwinChangeSpec();
 
         var reported = new TwinReportedChangeSpec();
 
@@ -273,16 +264,7 @@ public class TwinHandlerTestFixture
 [Test]
     public async Task OnDesiredPropertiesUpdate_ValidateChangeSignTrue_SignTwinKeyEventNotSend()
     {
-        var desired = new TwinChangeSpec()
-        {
-            Id = "123",
-            Patch = new TwinPatch()
-            {
-                InstallSteps = new List<TwinAction>()
-                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath="abc"},
-                    }.ToArray()
-            }
-        };
+        var desired = new TwinChangeSpec();
 
         var reported = new TwinReportedChangeSpec();
 
@@ -295,16 +277,7 @@ public class TwinHandlerTestFixture
         [Test]
     public async Task OnDesiredPropertiesUpdate_ChangeSignNull_SignTwinKeyEventSend()
     {
-        var desired = new TwinChangeSpec()
-        {
-            Id = "123",
-            Patch = new TwinPatch()
-            {
-                InstallSteps = new List<TwinAction>()
-                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath="abc"},
-                    }.ToArray()
-            }
-        };
+        var desired = new TwinChangeSpec();
 
         var reported = new TwinReportedChangeSpec();
 

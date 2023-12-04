@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using Shared.Entities.Twin;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Converters;
+using Shared.Entities.Utilities;
+
 
 namespace Backend.Keyholder.Services;
 
@@ -119,7 +121,7 @@ public class SigningService : ISigningService
     }
 
 
-    public async Task CreateTwinKeySignature(string deviceId, string keyPath, string signatureKey)
+    public async Task CreateTwinKeySignature(string deviceId)
     {
         if(_signingPrivateKey == null)
         {
@@ -130,36 +132,19 @@ public class SigningService : ISigningService
         var twin = await _registryManager.GetTwinAsync(deviceId);
 
         // Parse the JSON twin
-        var twinDesired = twin.Properties.Desired;
-            var twinDesiredObject = JsonConvert.DeserializeObject<TwinDesired>(twinDesired.ToJson(),
-                    new JsonSerializerSettings
-                    {
-                        Converters = new List<JsonConverter> {
-                            new TwinDesiredConverter(), new TwinActionConverter() }
-                    });
+        var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
         // Sign the value using the ES512 algorithm
-        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesiredObject.ChangeSpec));
+        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
         var signature = _signingPrivateKey!.SignData(dataToSign, HashAlgorithmName.SHA512);
 
         // Convert the signature to a Base64 string
         var signatureString = Convert.ToBase64String(signature);
 
-        twinDesiredObject.ChangeSign = signatureString;
-
-        var twinDesiredJson = JObject.Parse(JsonConvert.SerializeObject(twinDesiredObject,
-          Formatting.None,
-          new JsonSerializerSettings
-          {
-              ContractResolver = new CamelCasePropertyNamesContractResolver(),
-              Converters = { new StringEnumConverter() },
-              Formatting = Formatting.Indented,
-              NullValueHandling = NullValueHandling.Ignore
-          }));
+        twinDesired.ChangeSign = signatureString;
         
         // Update the device twin
-        twin.Properties.Desired = new TwinCollection(twinDesiredJson.ToString());
+        twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
         await _registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
     }
-
 }
