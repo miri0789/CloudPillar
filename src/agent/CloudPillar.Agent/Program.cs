@@ -15,7 +15,6 @@ using Microsoft.Extensions.Azure;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
-using Shared.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
@@ -38,7 +37,6 @@ builder.Services.AddCors(options =>
             });
         });
 
-var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 bool runAsService = args != null && args.Length > 0 && args[0] == "--winsrv";
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
@@ -57,7 +55,6 @@ builder.Services.AddWindowsService(options =>
 
 builder.Services.AddHostedService<AgentService>();
 
-var app = builder.Build();
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
@@ -125,7 +122,6 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
 
 
 app.UseSwagger();
