@@ -1,15 +1,15 @@
-using Backend.BlobStreamer.Services;
-using Backend.BlobStreamer.Wrappers;
 using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
-using Backend.BlobStreamer.Wrappers.Interfaces;
-using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common;
 using Backend.Infra.Common.Wrappers;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.BlobStreamer.Wrappers;
+using Backend.BlobStreamer.Wrappers.Interfaces;
+using Backend.BlobStreamer.Services;
 using Backend.BlobStreamer.Services.Interfaces;
 using Backend.Infra.Wrappers;
-using Backend.Infra.Common;
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                .InformationalVersion;
@@ -18,8 +18,7 @@ var builder = LoggerHostCreator.Configure("blobstreamer", WebApplication.CreateB
 
 builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
-builder.Services.AddScoped<Backend.BlobStreamer.Wrappers.Interfaces.IEnvironmentsWrapper, Backend.BlobStreamer.Wrappers.EnvironmentsWrapper>();
-builder.Services.AddScoped<Backend.Infra.Common.Wrappers.Interfaces.IEnvironmentsWrapper, Backend.Infra.Common.Wrappers.EnvironmentsWrapper>();
+builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IBlobService, BlobService>();

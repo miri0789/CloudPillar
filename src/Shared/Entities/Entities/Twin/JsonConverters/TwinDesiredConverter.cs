@@ -1,6 +1,4 @@
-﻿
-using System.Reflection.Metadata.Ecma335;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Shared.Entities.Twin;
@@ -11,13 +9,16 @@ public class TwinDesiredConverter : JsonConverter
     {
         return objectType == typeof(TwinDesired);
     }
+    string GetCasedPropertyName(string propName) =>
+        $"{FirstLetterToLowerCase(propName)}" ?? $"{FirstLetterToUpperCase(propName)}";
 
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
+
         JObject jsonObject = JObject.Load(reader);
         var changeSpec = new TwinDesired()
         {
-            ChangeSign = (jsonObject["changeSign"] ?? jsonObject["ChangeSign"])?.Value<string>(),
+            ChangeSign = jsonObject[GetCasedPropertyName("changeSign")]?.Value<string>(),
             ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
             ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpecDiagnostics)
         };
@@ -31,17 +32,16 @@ public class TwinDesiredConverter : JsonConverter
 
     private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, TwinPatchChangeSpec changeSpecKey)
     {
-        var propName = changeSpecKey.ToString();
         var changeSpec = new TwinChangeSpec()
         {
-            Id = (jsonObject.SelectToken($"{FirstLetterToLowerCase(propName)}.id") ?? jsonObject.SelectToken($"{FirstLetterToUpperCase(propName)}.Id"))?.Value<string>(),
-            Patch = new TwinPatch()
+            Id = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.id")}")?.Value<string>(),
+            Patch = new TwinPatch
             {
-                PreTransitConfig = (jsonObject.SelectToken($"{FirstLetterToLowerCase(propName)}.patch.preTransitConfig") ?? jsonObject.SelectToken($"{FirstLetterToUpperCase(propName)}.Patch.PreTransitConfig"))?.ToObject<TwinAction[]>(serializer),
-                TransitPackage = (jsonObject.SelectToken($"{FirstLetterToLowerCase(propName)}.patch.transitPackage") ?? jsonObject.SelectToken($"{FirstLetterToUpperCase(propName)}.Patch.TransitPackage"))?.ToObject<TwinAction[]>(serializer),
-                PreInstallConfig = (jsonObject.SelectToken($"{FirstLetterToLowerCase(propName)}.patch.preInstallConfig") ?? jsonObject.SelectToken($"{FirstLetterToUpperCase(propName)}.Patch.PreInstallConfig"))?.ToObject<TwinAction[]>(serializer),
-                InstallSteps = (jsonObject.SelectToken($"{FirstLetterToLowerCase(propName)}.patch.installSteps") ?? jsonObject.SelectToken($"{FirstLetterToUpperCase(propName)}.Patch.InstallSteps"))?.ToObject<TwinAction[]>(serializer),
-                PostInstallConfig = (jsonObject.SelectToken($"{FirstLetterToLowerCase(propName)}.patch.postInstallConfig") ?? jsonObject.SelectToken($"{FirstLetterToUpperCase(propName)}.Patch.PostInstallConfig"))?.ToObject<TwinAction[]>(serializer),
+                PreTransitConfig = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.preTransitConfig")}")?.ToObject<TwinAction[]>(serializer),
+                TransitPackage = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.transitPackage")}")?.ToObject<TwinAction[]>(serializer),
+                PreInstallConfig = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.preInstallConfig")}")?.ToObject<TwinAction[]>(serializer),
+                InstallSteps = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.installSteps")}")?.ToObject<TwinAction[]>(serializer),
+                PostInstallConfig = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.postInstallConfig")}")?.ToObject<TwinAction[]>(serializer),
             }
         };
         return changeSpec;
@@ -54,14 +54,8 @@ public class TwinDesiredConverter : JsonConverter
 
     private string FirstLetterToUpperCase(string input)
     {
-        if (string.IsNullOrEmpty(input))
-        {
-            return input;
-        }
-        char[] inputArray = input.ToCharArray();
-        inputArray[0] = char.ToUpper(inputArray[0]);
-        return new string(inputArray);
+        ArgumentNullException.ThrowIfNullOrEmpty(input);
+        return string.Join(".", input.Split('.').Select(s => char.ToUpper(s.FirstOrDefault()) + s.Substring(1)));
     }
-
 
 }

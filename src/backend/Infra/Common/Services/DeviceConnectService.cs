@@ -1,7 +1,7 @@
 ﻿using Shared.Logger;
 using Microsoft.Azure.Devices;
-using Backend.Infra.Wrappers;
 using Polly;
+using Backend.Infra.Common.Wrappers.Interfaces;
 
 namespace Backend.Infra.Common;
 
