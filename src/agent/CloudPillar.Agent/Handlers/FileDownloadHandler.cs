@@ -5,7 +5,6 @@ using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 using Shared.Logger;
-using System.Net.Sockets;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -15,7 +14,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
-    private readonly ConcurrentBag<FileDownload> _filesDownloads;
+    private static readonly ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
     private readonly ILoggerHandler _logger;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
@@ -28,11 +27,10 @@ public class FileDownloadHandler : IFileDownloadHandler
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
-        _filesDownloads = new ConcurrentBag<FileDownload>();
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport)
+    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
     {
         _filesDownloads.Add(new FileDownload
         {
@@ -40,7 +38,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             Report = actionToReport,
             Stopwatch = new Stopwatch()
         });
-        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(downloadAction.Source, downloadAction.ActionId);
+        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, downloadAction.Source, downloadAction.ActionId);
     }
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
@@ -99,7 +97,11 @@ public class FileDownloadHandler : IFileDownloadHandler
 
         await _fileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
         file.Report.TwinReport.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
-
+        if (message?.RangeCheckSum != null)
+            {
+                // TODO find true way to calculate it
+                //  await CheckFullRangeBytesAsync(message, filePath);
+            }
         if (file.TotalBytesDownloaded == file.TotalBytes)
         {
             file.Stopwatch.Stop();
@@ -124,11 +126,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         else
         {
-            if (message?.RangeSize != null)
-            {
-                // TODO find true way to calculate it
-                //  await CheckFullRangeBytesAsync(message, filePath);
-            }
+            
             file.Report.TwinReport.Status = StatusType.InProgress;
         }
         return file.Report;
@@ -145,14 +143,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         return (float)progressPercent;
     }
 
-    private async Task CheckFullRangeBytesAsync(DownloadBlobChunkMessage blobChunk, string filePath)
-    {
-        long endPosition = blobChunk.Offset + blobChunk.Data.Length;
-        long startPosition = endPosition - (long)blobChunk.RangeSize;
-        var isEmptyRangeBytes = await _fileStreamerWrapper.HasBytesAsync(filePath, startPosition, endPosition);
-        if (!isEmptyRangeBytes)
-        {
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(blobChunk.FileName, blobChunk.ActionId, startPosition, endPosition);
-        }
+    private async Task VerifyRangeCheckSum() {
+
     }
 }

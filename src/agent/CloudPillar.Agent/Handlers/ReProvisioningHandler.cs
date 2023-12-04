@@ -73,7 +73,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         ArgumentNullException.ThrowIfNull(data);
         var certificate = _x509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _authenticationSettings.CertificateExpiredDays);
         InstallTemporaryCertificate(certificate, data.SecretKey);
-        await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate);
+        await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate,cancellationToken);
     }
 
 

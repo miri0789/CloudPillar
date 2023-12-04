@@ -3,13 +3,12 @@
 public interface IFileStreamerWrapper
 {
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
+    Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess);
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 
     void DeleteFile(string filePath);
-
-    Task<bool> HasBytesAsync(string filePath, long startPosition, long endPosition);
 
     Task<string> ReadAllTextAsync(string filePath);
 

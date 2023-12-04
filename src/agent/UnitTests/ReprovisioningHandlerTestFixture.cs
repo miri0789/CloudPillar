@@ -68,7 +68,7 @@ public class ReprovisioningHandlerTestFixture
         _certificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60);
         _x509CertificateWrapperMock.Setup(x => x.CreateFromBytes(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<X509KeyStorageFlags>())).Returns(_certificate);
         _sHA256WrapperMock.Setup(x => x.ComputeHash(It.IsAny<byte[]>())).Returns(Encoding.UTF8.GetBytes("hash"));
-        _d2CMessengerHandlerMock.Setup(x => x.ProvisionDeviceCertificateEventAsync(_certificate)).Returns(Task.CompletedTask);
+        _d2CMessengerHandlerMock.Setup(x => x.ProvisionDeviceCertificateEventAsync(_certificate, CancellationToken.None)).Returns(Task.CompletedTask);
 
 
 
@@ -142,7 +142,7 @@ public class ReprovisioningHandlerTestFixture
 
         await _target.HandleRequestDeviceCertificateAsync(message, CancellationToken.None);
 
-        _d2CMessengerHandlerMock.Verify(d => d.ProvisionDeviceCertificateEventAsync(It.IsAny<X509Certificate2>()), Times.Once);
+        _d2CMessengerHandlerMock.Verify(d => d.ProvisionDeviceCertificateEventAsync(It.IsAny<X509Certificate2>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
