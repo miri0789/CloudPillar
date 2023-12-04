@@ -128,12 +128,10 @@ public class AgentController : ControllerBase
             Stopwatch timeTaken = new Stopwatch();
             timeTaken.Start();
 
-            var filePath = await _runDiagnosticsHandler.CreateFileAsync();
-            var actionId = await _runDiagnosticsHandler.UploadFileAsync(filePath, CancellationToken.None);
-            var reported = await _runDiagnosticsHandler.CheckDownloadStatus(actionId, filePath);
-            await _runDiagnosticsHandler.DeleteFileAsync(filePath, CancellationToken.None);
+            var reported = await _runDiagnosticsHandler.HandleRunDiagnosticsProcess(CancellationToken.None);
 
             timeTaken.Stop();
+
             if (reported.Status == StatusType.Success)
             {
                 var timeTakenString = timeTaken.Elapsed.ToString(@"mm\:ss");
@@ -142,7 +140,7 @@ public class AgentController : ControllerBase
             }
             else
             {
-                return BadRequest($"An error occurred while processing run diagnostics: {reported.ResultText}");
+                throw new Exception(reported.ResultText);
             }
         }
         catch (Exception ex)

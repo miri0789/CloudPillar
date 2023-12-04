@@ -32,7 +32,16 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<string> CreateFileAsync()
+    public async Task<TwinActionReported> HandleRunDiagnosticsProcess(CancellationToken cancellationToken)
+    {
+        var diagnosticsFilePath = await CreateFileAsync();
+        var actionId = await UploadFileAsync(diagnosticsFilePath, cancellationToken);
+        var reported = await CheckDownloadStatus(actionId, diagnosticsFilePath);
+        await DeleteFileAsync(diagnosticsFilePath, cancellationToken);
+        return reported;
+    }
+
+    private async Task<string> CreateFileAsync()
     {
         try
         {
@@ -57,7 +66,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task<string> UploadFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
+    private async Task<string> UploadFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
     {
         try
         {
@@ -82,7 +91,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task<TwinActionReported> CheckDownloadStatus(string actionId, string diagnosticsFilePath)
+    private async Task<TwinActionReported> CheckDownloadStatus(string actionId, string diagnosticsFilePath)
     {
         TwinActionReported reported = new TwinActionReported();
         var taskCompletion = new TaskCompletionSource<TwinActionReported>();
@@ -132,7 +141,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
-    public async Task DeleteFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
+    private async Task DeleteFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
     {
         try
         {

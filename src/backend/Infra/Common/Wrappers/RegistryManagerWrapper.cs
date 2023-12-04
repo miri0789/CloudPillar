@@ -7,9 +7,9 @@ namespace Backend.Infra.Common.Wrappers;
 public class RegistryManagerWrapper : IRegistryManagerWrapper
 {
     private readonly RegistryManager _registryManager;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly ICommonEnvironmentsWrapper _environmentsWrapper;
 
-    public RegistryManagerWrapper(IEnvironmentsWrapper environmentsWrapper)
+    public RegistryManagerWrapper(ICommonEnvironmentsWrapper environmentsWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _registryManager = RegistryManager.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);

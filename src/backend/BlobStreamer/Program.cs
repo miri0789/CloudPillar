@@ -10,6 +10,8 @@ using Backend.BlobStreamer.Wrappers.Interfaces;
 using Backend.BlobStreamer.Services;
 using Backend.BlobStreamer.Services.Interfaces;
 using Backend.Infra.Wrappers;
+using Backend.Infra.Common.Services.Interfaces;
+using Backend.Infra.Common.Services;
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                .InformationalVersion;
@@ -22,10 +24,13 @@ builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IBlobService, BlobService>();
+builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
 builder.Services.AddScoped<IUploadStreamChunksService, UploadStreamChunksService>();
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
+builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
 builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
+
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 

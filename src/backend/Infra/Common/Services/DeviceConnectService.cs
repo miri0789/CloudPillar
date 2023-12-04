@@ -2,8 +2,9 @@
 using Microsoft.Azure.Devices;
 using Polly;
 using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
 
-namespace Backend.Infra.Common;
+namespace Backend.Infra.Common.Services;
 
 public class DeviceConnectService : IDeviceConnectService
 {

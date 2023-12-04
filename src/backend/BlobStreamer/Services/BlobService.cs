@@ -6,6 +6,8 @@ using Backend.BlobStreamer.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
 using Shared.Entities.Services;
 using Microsoft.Azure.Devices;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -14,13 +16,13 @@ public class BlobService : IBlobService
     private readonly CloudBlobContainer _container;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ICloudStorageWrapper _cloudStorageWrapper;
-    private readonly Backend.Infra.Common.Wrappers.Interfaces.IDeviceClientWrapper _deviceClient;
+    private readonly IDeviceConnectService _deviceConnectService;
     private readonly IMessageFactory _messageFactory;
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
 
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
-     Backend.Infra.Common.Wrappers.Interfaces.IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger, IMessageFactory messageFactory)
+     IDeviceConnectService deviceConnectService,ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));

@@ -144,6 +144,8 @@ public class AgentEventProcessor : IEventProcessor
                         break;
                     case D2CMessageType.DeleteBlob:
                         var deleteBlobEvent = JsonSerializer.Deserialize<DeleteBlobEvent>(data)!;
+                        await _provisionDeviceCertificateService.ProvisionDeviceCertificateAsync(deviceId, new ProvisionDeviceCertificateEvent());
+
                         await _streamingUploadChunkService.DeleteBlob(deleteBlobEvent);
                         break;
                 }

@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
 using Shared.Logger;
+using Backend.Infra.Common.Services.Interfaces;
 
-namespace Backend.Infra.Common.Services.Interfaces;
+
+namespace Backend.Infra.Common.Services;
 
 public class HttpRequestorService : IHttpRequestorService
 {
