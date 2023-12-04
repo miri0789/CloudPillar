@@ -3,15 +3,16 @@
 public interface IFileStreamerWrapper
 {
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
+    Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess);
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 
     void DeleteFile(string filePath);
 
-    Task<bool> HasBytesAsync(string filePath, long startPosition, long endPosition);
-
     Task<string> ReadAllTextAsync(string filePath);
+
+    Task UnzipFileAsync(string filePath, string destinationPath);
 
     bool FileExists(string filePath);
 
@@ -30,5 +31,7 @@ public interface IFileStreamerWrapper
     string[] GetDirectories(string directoryPath, string searchPattern);
 
     string[] Concat(string[] files, string[] directoories);
+
+    string? GetExtension(string path);
 
 }

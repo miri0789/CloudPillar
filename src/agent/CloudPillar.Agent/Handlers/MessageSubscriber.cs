@@ -14,9 +14,9 @@ public class MessageSubscriber : IMessageSubscriber
         _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
     }
 
-    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message)
+    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message , CancellationToken cancellationToken)
     {
-        return await _fileDownloadHandler.HandleDownloadMessageAsync(message);
+        return await _fileDownloadHandler.HandleDownloadMessageAsync(message, cancellationToken);
     }
 
     public async Task HandleReprovisioningMessageAsync(Message recivedMessage, ReprovisioningMessage message, CancellationToken cancellationToken)
