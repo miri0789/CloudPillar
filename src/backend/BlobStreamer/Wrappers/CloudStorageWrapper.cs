@@ -22,5 +22,9 @@ public class CloudStorageWrapper : ICloudStorageWrapper
         await blockBlob.FetchAttributesAsync();
         return blockBlob;
     }
+    public long GetBlobLength(CloudBlockBlob cloudBlockBlob)
+    {
+        return cloudBlockBlob.Properties.Length;
+    }
 
 }

@@ -8,9 +8,8 @@ using Backend.BlobStreamer.Wrappers.Interfaces;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Common.Wrappers;
 using Backend.BlobStreamer.Services.Interfaces;
-using Backend.Infra.Common.Services.Interfaces;
-using Backend.Infra.Common.Services;
-
+using Backend.Infra.Wrappers;
+using Backend.Infra.Common;
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                .InformationalVersion;
@@ -18,7 +17,6 @@ var informationalVersion = Assembly.GetEntryAssembly()?
 var builder = LoggerHostCreator.Configure("blobstreamer", WebApplication.CreateBuilder(args));
 
 builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
-builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<Backend.BlobStreamer.Wrappers.Interfaces.IEnvironmentsWrapper, Backend.BlobStreamer.Wrappers.EnvironmentsWrapper>();
 builder.Services.AddScoped<Backend.Infra.Common.Wrappers.Interfaces.IEnvironmentsWrapper, Backend.Infra.Common.Wrappers.EnvironmentsWrapper>();
@@ -27,7 +25,8 @@ builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IBlobService, BlobService>();
 builder.Services.AddScoped<IUploadStreamChunksService, UploadStreamChunksService>();
 builder.Services.AddScoped<ICheckSumService, CheckSumService>();
-builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
+builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
+builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
