@@ -20,7 +20,6 @@ public class FileUploaderHandler : IFileUploaderHandler
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
     private readonly IStreamingFileUploaderHandler _streamingFileUploaderHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
-    private const string DIAGNOSTICS_BLOB = "Diagnostics";
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
@@ -43,7 +42,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         try
         {
             ArgumentNullException.ThrowIfNull(fileName);
-            string blobname = BuildBlobName(fileName, true);
+            string blobname = BuildBlobName(fileName);
             var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
             {
                 BlobName = blobname
@@ -101,7 +100,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         // Upload each file
         foreach (string fullFilePath in _fileStreamerWrapper.Concat(files, directories))
         {
-            string blobname = BuildBlobName(fullFilePath, isRunDiagnostics);
+            string blobname = BuildBlobName(fullFilePath);
 
             using (Stream readStream = CreateStream(fullFilePath))
             {
@@ -110,7 +109,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    private string BuildBlobName(string fullFilePath, bool isRunDiagnostics = false)
+    private string BuildBlobName(string fullFilePath)
     {
         _logger.Info($"BuildBlobName");
 
@@ -119,10 +118,6 @@ public class FileUploaderHandler : IFileUploaderHandler
         if (_fileStreamerWrapper.DirectoryExists(fullFilePath))
         {
             blobname += ".zip";
-        }
-        if (isRunDiagnostics)
-        {
-            blobname = $"{DIAGNOSTICS_BLOB}/{blobname}";
         }
         return blobname;
     }
