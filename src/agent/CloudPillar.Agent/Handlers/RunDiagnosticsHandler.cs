@@ -17,44 +17,38 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ICheckSumService _checkSumService;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ILoggerHandler _logger;
 
     public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper,
-    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
+    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, ID2CMessengerHandler d2CMessengerHandler, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task CreateFileAsync()
+    public async Task<string> CreateFileAsync()
     {
         try
         {
-            if (_fileStreamerWrapper.FileExists(_runDiagnosticsSettings.FilePath))
-            {
-                _logger.Info($"File {_runDiagnosticsSettings.FilePath} exists, continue to uploading this file");
-                return;
-            }
+            var diagnosticsFilePath = _fileStreamerWrapper.GetTempFileName();
+
             //create random content
             var bytes = new Byte[_runDiagnosticsSettings.FleSizBytes];
             new Random().NextBytes(bytes);
 
-            string directoryPath = Path.GetDirectoryName(_runDiagnosticsSettings.FilePath);
-            if (!_fileStreamerWrapper.DirectoryExists(directoryPath))
-            {
-                _fileStreamerWrapper.CreateDirectory(directoryPath);
-                _logger.Info($"{directoryPath} was created");
-            }
-            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(_runDiagnosticsSettings.FilePath, FileMode.Create))
+            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.Create))
             {
                 fileStream.SetLength(_runDiagnosticsSettings.FleSizBytes);
                 await fileStream.WriteAsync(bytes);
             }
             _logger.Info($"File for diagnostics was created");
+            return diagnosticsFilePath;
         }
         catch (Exception ex)
         {
@@ -63,7 +57,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task<string> UploadFileAsync(CancellationToken cancellationToken)
+    public async Task<string> UploadFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
     {
         try
         {
@@ -73,12 +67,12 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                 Action = TwinActionType.SingularUpload,
                 Description = "upload file by run diagnostic",
                 Method = FileUploadMethod.Stream,
-                FileName = _runDiagnosticsSettings.FilePath,
+                FileName = diagnosticsFilePath,
                 ActionId = actionId
             };
 
             var actionToReport = new ActionToReport(TwinPatchChangeSpec.ChangeSpecDiagnostics);
-            await _fileUploaderHandler.UploadFilesToBlobStorageAsync(_runDiagnosticsSettings.FilePath, uploadAction, actionToReport, cancellationToken, true);
+            await _fileUploaderHandler.UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, actionToReport, cancellationToken, true);
             return actionId;
         }
         catch (Exception ex)
@@ -88,7 +82,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    public async Task<TwinActionReported> CheckDownloadStatus(string actionId)
+    public async Task<TwinActionReported> CheckDownloadStatus(string actionId, string diagnosticsFilePath)
     {
         TwinActionReported reported = new TwinActionReported();
         var taskCompletion = new TaskCompletionSource<TwinActionReported>();
@@ -112,7 +106,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
                 if (reported.Status == StatusType.Success)
                 {
-                    var res = await CompareUploadAndDownloadFiles(reported.ResultText);
+                    var res = await CompareUploadAndDownloadFiles(diagnosticsFilePath, reported.ResultText);
                     if (!res)
                     {
                         reported.Status = StatusType.Failed;
@@ -138,11 +132,13 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
-    public async Task DeleteFileAsync(CancellationToken cancellationToken)
+    public async Task DeleteFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
     {
         try
         {
-            await _fileUploaderHandler.DeleteFileUploadAsync(_runDiagnosticsSettings.FilePath, cancellationToken);
+            ArgumentNullException.ThrowIfNull(diagnosticsFilePath);
+            await DeleteBlobAsync(diagnosticsFilePath, cancellationToken);
+            DeleteTempFile(diagnosticsFilePath);
         }
         catch (Exception ex)
         {
@@ -169,11 +165,6 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
 
         var report = reportedList[indexDesired];
-        // if (report.Status == StatusType.Success)
-        // {
-        //     _logger.Info($"File download completed successfully");
-        //     return await CompareUploadAndDownloadFiles(((DownloadAction)desiredList[indexDesired]).DestinationPath);
-        // }
         if (report.Status == StatusType.Success)
         {
             report.ResultText = ((DownloadAction)desiredList[indexDesired]).DestinationPath;
@@ -181,11 +172,11 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return reportedList[indexDesired];
     }
 
-    private async Task<bool> CompareUploadAndDownloadFiles(string downloadFilePath)
+    private async Task<bool> CompareUploadAndDownloadFiles(string uploadFilePath, string downloadFilePath)
     {
         _logger.Info("Start compare upload and download files");
 
-        string uploadChecksum = await GetFileCheckSumAsync(_runDiagnosticsSettings.FilePath);
+        string uploadChecksum = await GetFileCheckSumAsync(uploadFilePath);
         string downloadChecksum = await GetFileCheckSumAsync(downloadFilePath);
 
         var isEqual = uploadChecksum.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase);
@@ -205,5 +196,19 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             _logger.Info($"file check sum: {checkSum}");
         }
         return checkSum;
+    }
+    private async Task DeleteBlobAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
+    {
+        var storageUri = await _fileUploaderHandler.GetStorageUriAsync(diagnosticsFilePath);
+        await _d2CMessengerHandler.SendDeleteBlobEventAsync(storageUri, cancellationToken);
+
+    }
+    private void DeleteTempFile(string filePath)
+    {
+        if (_fileStreamerWrapper.FileExists(filePath))
+        {
+            _fileStreamerWrapper.DeleteFile(filePath);
+            _logger.Info($"File {filePath} was deleted");
+        }
     }
 }

@@ -56,7 +56,6 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         }
     }
 
-
     public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
     {
         var ProvisionDeviceCertificateEvent = new ProvisionDeviceCertificateEvent()
@@ -69,6 +68,15 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     }
 
 
+    public async Task SendDeleteBlobEventAsync(Uri storageUri, CancellationToken cancellationToken)
+    {
+        var deleteBlobEvent = new DeleteBlobEvent()
+        {
+            StorageUri = storageUri
+        };
+
+        await SendMessageAsync(deleteBlobEvent, cancellationToken);
+    }
 
     private async Task SendMessageAsync(D2CMessage d2CMessage, CancellationToken cancellationToken)
     {

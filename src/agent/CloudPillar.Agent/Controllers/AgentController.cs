@@ -128,14 +128,14 @@ public class AgentController : ControllerBase
             Stopwatch timeTaken = new Stopwatch();
             timeTaken.Start();
 
-            await _runDiagnosticsHandler.CreateFileAsync();
-            var actionId = await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-            var reported = await _runDiagnosticsHandler.CheckDownloadStatus(actionId);
-            await _runDiagnosticsHandler.DeleteFileAsync(CancellationToken.None);
+            var filePath = await _runDiagnosticsHandler.CreateFileAsync();
+            var actionId = await _runDiagnosticsHandler.UploadFileAsync(filePath, CancellationToken.None);
+            var reported = await _runDiagnosticsHandler.CheckDownloadStatus(actionId, filePath);
 
             timeTaken.Stop();
             if (reported.Status == StatusType.Success)
             {
+                await _runDiagnosticsHandler.DeleteFileAsync(filePath, CancellationToken.None);
                 var timeTakenString = timeTaken.Elapsed.ToString(@"mm\:ss");
                 _logger.Info($"RunDiagnostics Success in {timeTakenString}");
                 return Ok($"The diagnostic process has been completed successfully, request-duration: {timeTakenString}");

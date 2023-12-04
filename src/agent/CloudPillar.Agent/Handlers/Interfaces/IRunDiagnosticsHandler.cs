@@ -3,8 +3,8 @@ using Shared.Entities.Twin;
 namespace CloudPillar.Agent.Handlers;
 public interface IRunDiagnosticsHandler
 {
-    Task CreateFileAsync();
-    Task<string> UploadFileAsync(CancellationToken cancellationToken);
-    Task<TwinActionReported> CheckDownloadStatus(string actionId);
-    Task DeleteFileAsync(CancellationToken cancellationToken);
+    Task<string> CreateFileAsync();
+    Task<string> UploadFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken);
+    Task<TwinActionReported> CheckDownloadStatus(string diagnosticsFilePath, string actionId);
+    Task DeleteFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken);
 }

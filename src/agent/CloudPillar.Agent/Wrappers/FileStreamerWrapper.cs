@@ -10,7 +10,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return new FileStream(fullFilePath, fileMode, fileAccess, fileShare, BufferSize, useAsync);
     }
-    
+
     public FileStream CreateStream(string fullFilePath, FileMode fileMode)
     {
         return new FileStream(fullFilePath, fileMode);
@@ -21,7 +21,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return Directory.CreateDirectory(directoryPath);
     }
 
-    
+
     public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {
         using (FileStream fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
@@ -84,6 +84,11 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetFileName(filePathPattern);
     }
+    public string GetTempFileName()
+    {
+        return Path.GetTempFileName();
+    }
+    
     public string[] GetFiles(string directoryPath, string searchPattern)
     {
         return Directory.GetFiles(directoryPath, searchPattern);

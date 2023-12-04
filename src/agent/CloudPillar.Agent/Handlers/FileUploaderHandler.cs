@@ -6,6 +6,7 @@ using System.IO.Compression;
 using Shared.Entities.Twin;
 using Shared.Logger;
 using Newtonsoft.Json;
+using Microsoft.Azure.Storage.Blob;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -37,7 +38,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task DeleteFileUploadAsync(string fileName, CancellationToken cancellationToken)
+    public async Task<Uri> GetStorageUriAsync(string fileName)
     {
         try
         {
@@ -48,12 +49,12 @@ public class FileUploaderHandler : IFileUploaderHandler
                 BlobName = blobname
             });
             var storageUri = await _deviceClientWrapper.GetBlobUriAsync(sasUriResponse);
-            await _blobStorageFileUploaderHandler.DeleteStreamAsync(storageUri, cancellationToken);
-
+            return storageUri;
         }
         catch (Exception ex)
         {
             _logger.Error($"Error delete uploading file '{fileName}': {ex.Message}");
+            throw new Exception(ex.Message);
         }
     }
 

@@ -3,9 +3,11 @@ using Backend.BlobStreamer.Services.Interfaces;
 using Shared.Logger;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
-using Microsoft.Extensions.Options;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
+using Azure.Storage.Sas;
+using Azure.Storage.Blobs;
+using Azure.Storage;
 
 
 
@@ -16,28 +18,21 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
-    private readonly RunDiagnosticsSettings _runDiagnosticsSettings;
     private readonly ITwinDiseredService _twinDiseredHandler;
-    private const string DIAGNOSTICS_BLOB = "Diagnostics";
 
-    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler,
-     IOptions<RunDiagnosticsSettings> runDiagnosticsSettings)
+    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
-        _runDiagnosticsSettings = runDiagnosticsSettings.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
     }
 
     public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool isRunDiagnostics, string uploadActionId)
     {
         try
         {
-            if (storageUri == null)
-            {
-                throw new ArgumentNullException("No URI was provided for creation a CloudBlockBlob");
-            }
+            ArgumentNullException.ThrowIfNull(storageUri);
 
             long chunkIndex = (startPosition / readStream.Length) + 1;
 
@@ -46,7 +41,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
 
             using (Stream inputStream = new MemoryStream(readStream))
-            {               
+            {
                 var blobExists = await _cloudBlockBlobWrapper.BlobExists(blob);
                 if (!blobExists)
                 {
@@ -56,7 +51,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                 else
                 {
                     MemoryStream existingData = await _cloudBlockBlobWrapper.DownloadToStreamAsync(blob);
-                 
+
                     existingData.Seek(startPosition, SeekOrigin.Begin);
                     await inputStream.CopyToAsync(existingData);
 
@@ -79,6 +74,35 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         catch (Exception ex)
         {
             _logger.Error($"Blobstreamer UploadFromStreamAsync failed. Message: {ex.Message}");
+        }
+    }
+
+    public async Task DeleteBlobAsync(Uri storageUri)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(storageUri);
+
+            CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
+            BlobServiceClient blobServiceClient = new BlobServiceClient(storageUri);
+            BlobSasBuilder blobSasBuilder = new BlobSasBuilder()
+            {
+                BlobContainerName = blob.Container.Name,
+                BlobName = blob.Name,
+                ExpiresOn = DateTime.UtcNow.AddMinutes(5)
+            };
+            blobSasBuilder.SetPermissions(BlobSasPermissions.Delete);
+
+            var sasToken = blobSasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(blobServiceClient.AccountName, "PXNJl8/a4a0DiyGUD7JWbXiKg+Zc8pKMQeQGXcAjeccDEPDmt8q39wf4d6KMOxaheOkE1JPC3aAx+AStVUGGuQ=="));
+            var sasUrl = blob.Uri.AbsoluteUri + "?" + sasToken;
+            var uri = new Uri(sasUrl);
+
+            BlobClient blobClient = new BlobClient(new Uri(sasUrl));
+            blobClient.DeleteIfExists();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Blobstreamer DeleteBlobAsync failed. Message: {ex.Message}");
         }
     }
 
@@ -115,7 +139,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             ActionId = uploadActionId,
             Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
             Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
-            DestinationPath = _runDiagnosticsSettings.DestinationPathForDownload,
+            DestinationPath = Path.GetTempFileName(),
         };
         await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.ChangeSpecDiagnostics, downloadAction);
     }
