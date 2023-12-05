@@ -30,10 +30,10 @@ public class SigningTestFixture
     [Test]
     public async Task CreateTwinKeySignature_ValidParameters_SendsRequest()
     {
+        
         SignEvent signEvent = new SignEvent();
 
-        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}signing/createTwinKeySignature?deviceId={deviceId}";
-
+        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}";
         await _target.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
@@ -47,7 +47,7 @@ public class SigningTestFixture
     {
         SignEvent signEvent = new SignEvent();
 
-        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}signing/createTwinKeySignature?deviceId={deviceId}";
+        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}";
 
         _httpRequestorServiceMock
             .Setup(service => service.SendRequest(requestUrl, HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))

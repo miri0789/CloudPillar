@@ -3,6 +3,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Entities.Authentication;
@@ -14,7 +15,6 @@ public static class MockHelper
     private const int KEY_SIZE_IN_BITS = 4096;
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
     public static string _baseDesierd { get; } = @"{
-            'changeSign': '',
             '$metadata': {
                 '$lastUpdated': '2023-08-29T12:30:36.4167057Z'
             },
@@ -30,10 +30,10 @@ public static class MockHelper
     public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "")
     {
         var desiredJson = JObject.Parse(_baseDesierd);
-        desiredJson["changeSign"] = changeSign;
         desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinDesired()
         {
             ChangeSpec = changeSpecDesired,
+            ChangeSign = changeSign
         })));
         var reportedJson = JObject.Parse(_baseReported);
         reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinReported()

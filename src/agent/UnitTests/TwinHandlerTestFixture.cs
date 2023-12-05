@@ -124,7 +124,7 @@ public class TwinHandlerTestFixture
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()));
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
+        _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()), Times.Never);
     }
 
     [Test]
