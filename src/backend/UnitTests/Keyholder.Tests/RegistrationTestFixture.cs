@@ -23,7 +23,7 @@ namespace Backend.Keyholder.Tests;
 public class RegistrationTestFixture
 {
     private Mock<IMessageFactory> _messageFactoryMock;
-    private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
+    private Mock<IDeviceConnectService> _deviceConnectServiceMock;
     private Mock<IIndividualEnrollmentWrapper> _individualEnrollmentWrapperMock;
     private Mock<IX509CertificateWrapper> _x509CertificateWrapperMock;
     private Mock<ILoggerHandler> _loggerMock;
@@ -39,7 +39,7 @@ public class RegistrationTestFixture
     public void Setup()
     {
         _messageFactoryMock = new Mock<IMessageFactory>();
-        _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
+        _deviceConnectServiceMock = new Mock<IDeviceConnectService>();
         _individualEnrollmentWrapperMock = new Mock<IIndividualEnrollmentWrapper>();
         _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
         _loggerMock = new Mock<ILoggerHandler>();
@@ -55,7 +55,7 @@ public class RegistrationTestFixture
 
 
         _target = new RegistrationService(_messageFactoryMock.Object,
-         _deviceClientWrapperMock.Object,
+         _deviceConnectServiceMock.Object,
           _environmentsWrapperMock.Object,
            _individualEnrollmentWrapperMock.Object,
             _x509CertificateWrapperMock.Object,
@@ -68,7 +68,7 @@ public class RegistrationTestFixture
     {
         await _target.RegisterAsync(DEVICE_ID, SECRET_KEY);
 
-        _deviceClientWrapperMock.Verify(x => x.SendAsync(It.IsAny<ServiceClient>(), It.IsAny<string>(), It.IsAny<Message>()), Times.Once);
+        _deviceConnectServiceMock.Verify(x => x.SendDeviceMessageAsync(It.IsAny<Message>(), It.IsAny<string>()), Times.Once);
 
     }
 
@@ -90,19 +90,19 @@ public class RegistrationTestFixture
 
     [Test]
     public async Task ProvisionDeviceCertificateAsync_ValidParameter_MessageSendToAgent()
-    {       
+    {
         await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, new byte[100]);
 
-        _deviceClientWrapperMock.Verify(x => x.SendAsync(It.IsAny<ServiceClient>(), It.IsAny<string>(), It.IsAny<Message>()), Times.Once);
+        _deviceConnectServiceMock.Verify(x => x.SendDeviceMessageAsync(It.IsAny<Message>(), It.IsAny<string>()), Times.Once);
     }
 
     [Test]
     public async Task ProvisionDeviceCertificateAsync_InvalidCertificateParameter_ThrowException()
-    {       
+    {
         Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, null));
 
     }
-        [Test]
+    [Test]
     public async Task ProvisionDeviceCertificateAsync_InvalidDeviceIdParameter_ThrowException()
     {
         Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.ProvisionDeviceCertificateAsync(null, new byte[100]));
