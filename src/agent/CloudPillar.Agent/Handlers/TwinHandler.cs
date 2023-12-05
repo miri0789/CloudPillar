@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
 using Shared.Logger;
-using Newtonsoft.Json.Converters;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
@@ -49,7 +48,7 @@ public class TwinHandler : ITwinHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public async Task OnDesiredPropertiesUpdateAsync(CancellationToken cancellationToken)
+    public async Task OnDesiredPropertiesUpdateAsync(CancellationToken cancellationToken, bool isInitial = false)
     {
         try
         {
@@ -65,7 +64,7 @@ public class TwinHandler : ITwinHandler
                     });
 
 
-            var actions = await GetActionsToExecAsync(twinDesired, twinReported);
+            var actions = await GetActionsToExecAsync(twinDesired, twinReported, isInitial);
             _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
             if (actions.Count() > 0)
             {
@@ -81,7 +80,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            await OnDesiredPropertiesUpdateAsync(cancellationToken);
+            await OnDesiredPropertiesUpdateAsync(cancellationToken, true);
             DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
                             {
                                 _logger.Info($"Desired properties were updated.");
@@ -298,10 +297,7 @@ public class TwinHandler : ITwinHandler
         switch (action.TwinAction.Action)
         {
             case TwinActionType.SingularDownload:
-                var destination = ((DownloadAction)action.TwinAction).DestinationPath;
-                var source = ((DownloadAction)action.TwinAction).Source;
-
-                fileName = destination + source;
+                fileName = ((DownloadAction)action.TwinAction).DestinationPath;
                 break;
             case TwinActionType.SingularUpload:
                 fileName = ((UploadAction)action.TwinAction).FileName;
@@ -309,8 +305,7 @@ public class TwinHandler : ITwinHandler
         }
         return fileName;
     }
-
-    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
+    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported, bool isInitial)
     {
         try
         {
@@ -351,7 +346,9 @@ public class TwinHandler : ITwinHandler
                                TwinAction = item,
                                TwinReport = reportedValue[index]
                            })
-                           .Where((item, index) => reportedValue[index].Status == StatusType.Pending || reportedValue[index].Status == StatusType.InProgress));
+                        .Where((item, index) => reportedValue[index].Status == StatusType.Pending
+                            || (isInitial && reportedValue[index].Status != StatusType.Success && reportedValue[index].Status != StatusType.Failed)));
+
 
                     }
                 }
