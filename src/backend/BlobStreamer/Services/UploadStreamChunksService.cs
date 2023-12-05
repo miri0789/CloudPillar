@@ -8,6 +8,7 @@ using Backend.BlobStreamer.Wrappers.Interfaces;
 using Azure.Storage.Sas;
 using Azure.Storage.Blobs;
 using Azure.Storage;
+using Newtonsoft.Json;
 
 
 
@@ -66,6 +67,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     _logger.Info($"isRunDiagnostics: {isRunDiagnostics}");
                     if (uploadSuccess && isRunDiagnostics)
                     {
+                        await DeleteBlobAsync(storageUri);
                         await HandleDownloadForDiagnosticsAsync(deviceId, storageUri, uploadActionId);
                     }
                 }
@@ -98,7 +100,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             var uri = new Uri(sasUrl);
 
             BlobClient blobClient = new BlobClient(new Uri(sasUrl));
-            blobClient.DeleteIfExists();
+            await blobClient.DeleteIfExistsAsync(); 
         }
         catch (Exception ex)
         {

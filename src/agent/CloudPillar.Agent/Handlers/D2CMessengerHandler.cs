@@ -68,10 +68,11 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     }
 
 
-    public async Task SendDeleteBlobEventAsync(Uri storageUri, CancellationToken cancellationToken)
+    public async Task SendDeleteBlobEventAsync(Uri storageUri, string actionId, CancellationToken cancellationToken)
     {
         var deleteBlobEvent = new DeleteBlobEvent()
         {
+            ActionId = actionId,
             StorageUri = storageUri
         };
 

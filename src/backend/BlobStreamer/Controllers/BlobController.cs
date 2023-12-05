@@ -36,10 +36,11 @@ public class BlobController : ControllerBase
     {
         await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum, deviceId, data.IsRunDiagnostics, data.ActionId);
     }
-    
+
     [HttpPost("deleteBlob")]
     public async Task DeleteBlob([FromBody] DeleteBlobEvent data)
     {
         await _uploadStreamChunksService.DeleteBlobAsync(data.StorageUri);
     }
+
 }

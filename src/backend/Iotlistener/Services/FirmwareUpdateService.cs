@@ -85,9 +85,9 @@ public class FirmwareUpdateService : IFirmwareUpdateService
     {
         try
         {
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/GetFileCheckSum?fileName={fileName}";
-            var checkSum = await _httpRequestorService.SendRequest<string>(requestUrl, HttpMethod.Get);
-            return checkSum;
+            // string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/GetFileCheckSum?fileName={fileName}";
+            // var checkSum = await _httpRequestorService.SendRequest<string>(requestUrl, HttpMethod.Get);
+            return "checkSum";
         }
         catch (Exception ex)
         {

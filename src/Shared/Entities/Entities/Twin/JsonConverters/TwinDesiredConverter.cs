@@ -34,14 +34,14 @@ public class TwinDesiredConverter : JsonConverter
     {
         var changeSpec = new TwinChangeSpec()
         {
-            Id = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.id")}")?.Value<string>(),
+            Id = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.id")}")?.Value<string>(),
             Patch = new TwinPatch
             {
-                PreTransitConfig = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.preTransitConfig")}")?.ToObject<TwinAction[]>(serializer),
-                TransitPackage = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.transitPackage")}")?.ToObject<TwinAction[]>(serializer),
-                PreInstallConfig = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.preInstallConfig")}")?.ToObject<TwinAction[]>(serializer),
-                InstallSteps = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.installSteps")}")?.ToObject<TwinAction[]>(serializer),
-                PostInstallConfig = jsonObject.SelectToken($"{GetCasedPropertyName("changeSpec.patch.postInstallConfig")}")?.ToObject<TwinAction[]>(serializer),
+                PreTransitConfig = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.preTransitConfig")}")?.ToObject<TwinAction[]>(serializer),
+                TransitPackage = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.transitPackage")}")?.ToObject<TwinAction[]>(serializer),
+                PreInstallConfig = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.preInstallConfig")}")?.ToObject<TwinAction[]>(serializer),
+                InstallSteps = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.installSteps")}")?.ToObject<TwinAction[]>(serializer),
+                PostInstallConfig = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.postInstallConfig")}")?.ToObject<TwinAction[]>(serializer),
             }
         };
         return changeSpec;

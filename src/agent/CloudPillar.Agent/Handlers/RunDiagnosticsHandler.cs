@@ -1,13 +1,15 @@
-using System.Diagnostics;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices.Common.Exceptions;
+using Microsoft.Azure.Storage.Blob;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
 using Shared.Logger;
+using Azure.Storage.Sas;
+using Azure.Storage.Blobs;
+using Azure.Storage;
 
 namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler
@@ -37,7 +39,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var diagnosticsFilePath = await CreateFileAsync();
         var actionId = await UploadFileAsync(diagnosticsFilePath, cancellationToken);
         var reported = await CheckDownloadStatus(actionId, diagnosticsFilePath);
-        await DeleteFileAsync(diagnosticsFilePath, cancellationToken);
+        await DeleteFileAsync(diagnosticsFilePath, actionId, cancellationToken);
         return reported;
     }
 
@@ -141,12 +143,13 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
-    private async Task DeleteFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
+    private async Task DeleteFileAsync(string diagnosticsFilePath, string actionId, CancellationToken cancellationToken)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(diagnosticsFilePath);
-            await DeleteBlobAsync(diagnosticsFilePath, cancellationToken);
+            await DeleteBlobAsync(diagnosticsFilePath);
+            // await DeleteBlobAsync(diagnosticsFilePath, actionId, cancellationToken);
             DeleteTempFile(diagnosticsFilePath);
         }
         catch (Exception ex)
@@ -206,12 +209,42 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
         return checkSum;
     }
-    private async Task DeleteBlobAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
+    private async Task DeleteBlobAsync(string diagnosticsFilePath, string actionId, CancellationToken cancellationToken)
     {
         var storageUri = await _fileUploaderHandler.GetStorageUriAsync(diagnosticsFilePath);
-        await _d2CMessengerHandler.SendDeleteBlobEventAsync(storageUri, cancellationToken);
+        await _d2CMessengerHandler.SendDeleteBlobEventAsync(storageUri, actionId, cancellationToken);
 
     }
+    private async Task DeleteBlobAsync(string diagnosticsFilePath)
+    {
+        try
+        {
+            var storageUri = await _fileUploaderHandler.GetStorageUriAsync(diagnosticsFilePath);
+            ArgumentNullException.ThrowIfNull(storageUri);
+
+            CloudBlockBlob blob = new CloudBlockBlob(storageUri);
+            BlobServiceClient blobServiceClient = new BlobServiceClient(storageUri);
+            BlobSasBuilder blobSasBuilder = new BlobSasBuilder()
+            {
+                BlobContainerName = blob.Container.Name,
+                BlobName = blob.Name,
+                ExpiresOn = DateTime.UtcNow.AddMinutes(5)
+            };
+            blobSasBuilder.SetPermissions(BlobSasPermissions.Delete);
+
+            var sasToken = blobSasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(blobServiceClient.AccountName, "PXNJl8/a4a0DiyGUD7JWbXiKg+Zc8pKMQeQGXcAjeccDEPDmt8q39wf4d6KMOxaheOkE1JPC3aAx+AStVUGGuQ=="));
+            var sasUrl = blob.Uri.AbsoluteUri + "?" + sasToken;
+            var uri = new Uri(sasUrl);
+
+            BlobClient blobClient = new BlobClient(new Uri(sasUrl));
+            await blobClient.DeleteIfExistsAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Blobstreamer DeleteBlobAsync failed. Message: {ex.Message}");
+        }
+    }
+
     private void DeleteTempFile(string filePath)
     {
         if (_fileStreamerWrapper.FileExists(filePath))
