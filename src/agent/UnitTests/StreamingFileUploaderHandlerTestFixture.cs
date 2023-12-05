@@ -23,6 +23,7 @@ namespace CloudPillar.Agent.Tests
         private const int CHUNK_SIZE = 1024;
         private const int NUM_OF_CHUNKS = 5;
         private const int PROGRESS_PERCENTAGE = 10;
+        private const string CORRELATION_ID = "correlation123";
         private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
         private ActionToReport actionToReport = new ActionToReport();
         private FileUploadCompletionNotification notification = new FileUploadCompletionNotification();
@@ -71,13 +72,13 @@ namespace CloudPillar.Agent.Tests
             actionToReport.TwinReport.Status = StatusType.InProgress;
             actionToReport.TwinReport.Progress = PROGRESS_PERCENTAGE;
 
-            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, ACTION_ID, CancellationToken.None);
+            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, ACTION_ID, CORRELATION_ID, CancellationToken.None);
 
             var uplodedChuncks = CalculateCurrentPosition(stream.Length, PROGRESS_PERCENTAGE) / CHUNK_SIZE;
             var leftCHhuncks = NUM_OF_CHUNKS - uplodedChuncks;
 
             _d2CMessengerHandlerMock.Verify(w => w.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<string>(),
-             It.IsAny<long>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(leftCHhuncks));
+             It.IsAny<long>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Exactly(leftCHhuncks));
         }
 
         private int CalculateCurrentPosition(float streamLength, float progressPercent)

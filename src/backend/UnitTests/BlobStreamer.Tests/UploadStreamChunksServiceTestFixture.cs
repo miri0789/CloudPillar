@@ -1,10 +1,12 @@
-﻿using Backend.BlobStreamer.Interfaces;
-using Backend.BlobStreamer.Services;
+﻿using Backend.BlobStreamer.Services;
 using Microsoft.Azure.Storage.Blob;
 using Moq;
 using Shared.Logger;
 using Shared.Entities.Services;
 using Microsoft.Extensions.Options;
+using Backend.BlobStreamer.Services.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
+using Backend.BlobStreamer.Wrappers.Interfaces;
 
 namespace Backend.BlobStreamer.Tests
 {
@@ -16,7 +18,6 @@ namespace Backend.BlobStreamer.Tests
         private Mock<ICloudBlockBlobWrapper> _mockCloudBlockBlobWrapper;
         private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
         private Mock<ITwinDiseredService> _mockTwinDiseredService;
-        private Mock<IOptions<RunDiagnosticsSettings>> mockRunDiagnosticsSettings;
         private Mock<ILoggerHandler> _mockLogger;
         private IUploadStreamChunksService _target;
         private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
@@ -32,13 +33,11 @@ namespace Backend.BlobStreamer.Tests
             _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
             _mockLogger = new Mock<ILoggerHandler>();
             _mockTwinDiseredService = new Mock<ITwinDiseredService>();
-            mockRunDiagnosticsSettings = new Mock<IOptions<RunDiagnosticsSettings>>();
-            mockRunDiagnosticsSettings.Setup(x => x.Value).Returns(new RunDiagnosticsSettings());
 
             createMockBlob(STORAGE_URI);
             _mockCloudBlockBlobWrapper.Setup(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>())).Returns(Task.CompletedTask);
 
-            _target = new UploadStreamChunksService(_mockLogger.Object, _mockCheckSumService.Object, _mockCloudBlockBlobWrapper.Object, _mockTwinDiseredService.Object, mockRunDiagnosticsSettings.Object, _mockEnvironmentsWrapper.Object);
+            _target = new UploadStreamChunksService(_mockLogger.Object, _mockCheckSumService.Object, _mockCloudBlockBlobWrapper.Object, _mockTwinDiseredService.Object,  _mockEnvironmentsWrapper.Object);
         }
 
         private void createMockBlob(Uri storageUri)
