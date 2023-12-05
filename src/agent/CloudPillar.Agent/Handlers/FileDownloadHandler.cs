@@ -5,6 +5,7 @@ using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 using Shared.Logger;
+using Shared.Entities.Services;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -16,121 +17,138 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly ITwinActionsHandler _twinActionsHandler;
     private static readonly ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
     private readonly ILoggerHandler _logger;
+    private readonly ICheckSumService _checkSumService;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
                                IStrictModeHandler strictModeHandler,
                                ITwinActionsHandler twinActionsHandler,
-                               ILoggerHandler loggerHandler)
+                               ILoggerHandler loggerHandler,
+                               ICheckSumService checkSumService)
     {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
+        _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
     }
 
-    public async Task InitFileDownloadAsync(DownloadAction downloadAction, ActionToReport actionToReport, CancellationToken cancellationToken)
+    public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
-        _filesDownloads.Add(new FileDownload
+        var fileDownload = new FileDownload
         {
-            DownloadAction = downloadAction,
-            Report = actionToReport,
+            ActionReported = actionToReport,
             Stopwatch = new Stopwatch()
-        });
-        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, downloadAction.Source, downloadAction.ActionId);
+        };
+        _filesDownloads.Add(fileDownload);
+        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.Action.ActionId, rangeIndex);
+    }
+    private void HandleFirstMessageAsync(FileDownload file, DownloadBlobChunkMessage message)
+    {
+        file.TotalBytes = message.FileSize;
+        _strictModeHandler.CheckSizeStrictMode(TwinActionType.SingularDownload, file.TotalBytes, file.Action.DestinationPath);
+
+        if (string.IsNullOrWhiteSpace(file.Action.DestinationPath))
+        {
+            throw new ArgumentException("Destination path does not exist.");
+        }
+        if (file.Action.Unzip)
+        {
+            if (_fileStreamerWrapper.GetExtension(file.Action.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
+                if (!string.IsNullOrEmpty(extention))
+                {
+                    throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not directory path.");
+                }
+                file.TempPath = _fileStreamerWrapper.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".zip");
+            }
+            else
+            {
+                throw new ArgumentException("No zip file is sent");
+            }
+        }
+        file.Stopwatch.Start();
     }
 
-    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
+    private async Task HandleCompletedDownload(FileDownload file, DownloadBlobChunkMessage message, CancellationToken cancellationToken)
     {
-
-        var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionId == message.ActionId &&
-                                    item.DownloadAction.Source == message.FileName);
-        if (file == null)
+        file.Stopwatch.Stop();
+        if (!string.IsNullOrWhiteSpace(file.TempPath))
         {
-            throw new ArgumentException($"There is no active download for message {message.GetMessageId()}");
+            file.Report.Status = StatusType.Unzip;
+            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
+            await _fileStreamerWrapper.UnzipFileAsync(file.TempPath, file.Action.DestinationPath);
+            _fileStreamerWrapper.DeleteFile(file.TempPath);
         }
+        file.Report.Status = StatusType.Success;
+        file.Report.Progress = 100;
+        RemoveFileFromList(message.ActionId, message.FileName);
+    }
 
-        if (!file.Stopwatch.IsRunning)
+    private async Task HandleEndRangeDownload(string filePath, DownloadBlobChunkMessage message, FileDownload file, CancellationToken cancellationToken)
+    {
+        var isRangeValid = await VerifyRangeCheckSum(filePath, (long)message.RangeStartPosition, (long)message.RangeEndPosition, message.RangeCheckSum);
+        if (!isRangeValid)
         {
-            if (string.IsNullOrEmpty(file.DownloadAction.DestinationPath))
-            {
-                file.Report.TwinReport.Status = StatusType.Failed;
-                file.Report.TwinReport.ResultCode = "Destination path does not exist.";
-                return file.Report;
-            }
-            if (file.DownloadAction.Unzip)
-            {
-                if (_fileStreamerWrapper.GetExtension(file.DownloadAction.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
-                {
-                    var extention = _fileStreamerWrapper.GetExtension(file.DownloadAction.DestinationPath);
-                    if (!string.IsNullOrEmpty(extention))
-                    {
-                        file.Report.TwinReport.Status = StatusType.Failed;
-                        file.Report.TwinReport.ResultCode = $"Destination path {file.DownloadAction.DestinationPath} is not directory path.";
-                        return file.Report;
-                    }
-                    file.TempPath = _fileStreamerWrapper.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".zip");
-                }
-                else
-                {
-                    _logger.Info($"Since no zip file is sent, the unzip command is ignored - {file.DownloadAction.Source}");
-                }
-            }
-            file.Stopwatch.Start();
-            file.TotalBytes = message.FileSize;
-        }
-
-        var filePath = file.TempPath ?? file.DownloadAction.DestinationPath;
-        try
-        {
-            //strict mode
-            filePath = _strictModeHandler.ReplaceRootById(file.DownloadAction.Action.Value, filePath);
-            _strictModeHandler.CheckSizeStrictMode(file.DownloadAction.Action.Value, file.TotalBytes, filePath);
-        }
-        catch (Exception ex)
-        {
-            file.Report.TwinReport.Status = StatusType.Failed;
-            file.Report.TwinReport.ResultCode = ex.Message;
-            return file.Report;
-        }
-
-        await _fileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
-        file.Report.TwinReport.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
-        if (message?.RangeCheckSum != null)
-            {
-                // TODO find true way to calculate it
-                //  await CheckFullRangeBytesAsync(message, filePath);
-            }
-        if (file.TotalBytesDownloaded == file.TotalBytes)
-        {
-            file.Stopwatch.Stop();
-            if (!string.IsNullOrEmpty(file.TempPath))
-            {
-                try
-                {
-                    file.Report.TwinReport.Status = StatusType.Unzip;
-                    await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.Report, 1), cancellationToken);
-                    await _fileStreamerWrapper.UnzipFileAsync(filePath, file.DownloadAction.DestinationPath);
-                    _fileStreamerWrapper.DeleteFile(file.TempPath);
-                }
-                catch (Exception ex)
-                {
-                    file.Report.TwinReport.Status = StatusType.Failed;
-                    file.Report.TwinReport.ResultCode = ex.Message;
-                    return file.Report;
-                }
-
-            }
-            file.Report.TwinReport.Status = StatusType.Success;
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, message.FileName, message.ActionId, 0, message.RangeStartPosition, message.RangeEndPosition);
+            file.TotalBytesDownloaded -= (long)(message.RangeEndPosition - message.RangeStartPosition);
+            if (file.TotalBytesDownloaded < 0) { file.TotalBytesDownloaded = 0; }
         }
         else
         {
-            
-            file.Report.TwinReport.Status = StatusType.InProgress;
+            file.Report.CompleteRanges = AddRange(file.Report.CompleteRanges, message.RangeIndex);
         }
-        return file.Report;
+    }
 
+
+    public async Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
+    {
+
+        var file = _filesDownloads.FirstOrDefault(item => item.Action.ActionId == message.ActionId &&
+                                    item.Action.Source == message.FileName);
+        if (file == null)
+        {
+            _logger.Error($"There is no active download for message {message.GetMessageId()}");
+            return;
+        }
+        try
+        {
+            if (!file.Stopwatch.IsRunning)
+            {
+                HandleFirstMessageAsync(file, message);
+            }
+
+            var filePath = file.TempPath ?? file.Action.DestinationPath;
+
+            await _fileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
+
+            if (message.RangeCheckSum != null)
+            {
+                await HandleEndRangeDownload(filePath, message, file, cancellationToken);
+            }
+            if (file.Report.CompleteRanges == $"[0-{message.RangesCount - 1}]")
+            {
+                await HandleCompletedDownload(file, message, cancellationToken);
+            }
+            else
+            {
+                file.Report.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
+                file.Report.Status = StatusType.InProgress;
+            }
+        }
+        catch (Exception ex)
+        {
+            file.Report.Status = StatusType.Failed;
+            file.Report.ResultText = ex.Message;
+            file.Report.ResultCode = ex.GetType().Name;
+            RemoveFileFromList(message.ActionId, message.FileName);
+        }
+        finally
+        {
+            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
+        }
     }
 
     private float CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
@@ -139,11 +157,82 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.TotalBytesDownloaded += bytesLength;
         double progressPercent = Math.Round(file.TotalBytesDownloaded / (double)file.TotalBytes * 100, 2);
         double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
-        _logger.Debug($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
+        _logger.Info($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
         return (float)progressPercent;
     }
 
-    private async Task VerifyRangeCheckSum() {
+    private async Task<bool> VerifyRangeCheckSum(string filePath, long startPosition, long endPosition, string checkSum)
+    {
+        long lengthToRead = endPosition - startPosition + 1;
+        byte[] data = new byte[lengthToRead];
+        using (Stream stream = _fileStreamerWrapper.CreateStream(filePath, FileMode.Open, FileAccess.Read))
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            stream.Read(data, 0, (int)lengthToRead);
+        }
 
+        var streamCheckSum = await _checkSumService.CalculateCheckSumAsync(data);
+        return checkSum == streamCheckSum;
+
+    }
+
+    /// <summary>
+    /// Modifies a string of numerical ranges by adding a specified integer to the existing ranges.
+    /// </summary>
+    /// <param name="rangesString">String of comma-separated numerical ranges.</param>
+    /// <param name="rangeIndex">Integer to be added to the ranges.</param>
+    /// <returns>Modified and sorted string of numerical ranges.</returns>
+    /// 
+    /// <example>
+    /// Example usage:
+    /// <code>
+    /// string modifiedRanges = AddRange("1-5,7,10-12", 9);//"1-5,7,9-12";
+    /// </code>
+    /// </example>
+
+    private string AddRange(string rangesString, int rangeIndex)
+    {
+        var ranges = GetExistRangesList(rangesString);
+
+        ranges.Add(rangeIndex);
+        ranges.Sort();
+
+        var newRangeString = string.Join(",",
+            ranges.Distinct()
+                  .Select((value, index) => (value, index))
+                  .GroupBy(pair => pair.value - pair.index)
+                  .Select(group => group.Select((pair, i) => pair.value))
+                  .Select(range => range.Count() == 1 ? $"{range.First()}" :
+                                    range.Count() == 2 ? $"{range.First()},{range.Last()}" :
+                                    $"{range.First()}-{range.Last()}")
+                  .ToList());
+        return newRangeString;
+    }
+
+    private List<int> GetExistRangesList(string rangesString)
+    {
+        var ranges = new List<int>();
+        if (!string.IsNullOrWhiteSpace(rangesString))
+        {
+            ranges = rangesString.Split(',')
+                .SelectMany(part => part.Contains('-')
+                    ? Enumerable.Range(
+                        int.Parse(part.Split('-')[0]),
+                        int.Parse(part.Split('-')[1]) - int.Parse(part.Split('-')[0]) + 1)
+                    : new[] { int.Parse(part) })
+                .ToList();
+        }
+        return ranges;
+    }
+
+    private void RemoveFileFromList(string actionId, string fileName)
+    {
+        while (_filesDownloads.TryTake(out var removedItem))
+        {
+            if (removedItem.Action.Source != fileName || removedItem.Action.ActionId != actionId)
+            {
+                _filesDownloads.Add(removedItem);
+            }
+        }
     }
 }

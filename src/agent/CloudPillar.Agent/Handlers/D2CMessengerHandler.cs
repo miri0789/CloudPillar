@@ -21,7 +21,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string fileName, string actionId, long? startPosition = null, long? endPosition = null)
+    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string fileName, string actionId, int? rangeIndex, long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
@@ -30,6 +30,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         {
             FileName = fileName,
             ChunkSize = chunkSize,
+            RangeIndex = rangeIndex ?? 0,
             StartPosition = startPosition ?? 0,
             EndPosition = endPosition,
             ActionId = actionId

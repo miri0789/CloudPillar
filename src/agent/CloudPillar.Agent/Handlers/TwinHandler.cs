@@ -235,32 +235,38 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
-                switch (action.TwinAction.Action)
+                var filePath = string.Empty;
+                if (action.TwinAction is DownloadAction || action.TwinAction is UploadAction)
                 {
-                    case TwinActionType.SingularDownload:
-                        var fileName = await HandleStrictMode(action, cancellationToken);
-                        if (string.IsNullOrEmpty(fileName)) { continue; }
-                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action, cancellationToken);
+                    filePath = await GetReplacedFilePath(action, cancellationToken);
+                    if (string.IsNullOrWhiteSpace(filePath))
+                    {
+                        continue;
+                    }
+                }
+
+                switch (action.TwinAction)
+                {
+                    case DownloadAction downloadAction:
+                        downloadAction.DestinationPath = filePath;
+                        await _fileDownloadHandler.InitFileDownloadAsync(action, cancellationToken);
                         break;
 
-                    case TwinActionType.SingularUpload:
-                        var uploadFileName = await HandleStrictMode(action, cancellationToken);
-                        if (string.IsNullOrEmpty(uploadFileName)) { continue; }
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, uploadFileName, cancellationToken);
+                    case UploadAction uploadAction:
+                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, cancellationToken);
                         break;
-                    case TwinActionType.ExecuteOnce:
-                        if (_strictModeSettings.StrictMode)
-                        {
-                            _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
-                            await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
-                            continue;
-                        }
+
+                    case ExecuteAction execOnce when _strictModeSettings.StrictMode:
+                        _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
+                        await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
                         break;
+
                     default:
                         await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.NotFound.ToString(), cancellationToken);
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
+
             }
         }
         catch (Exception ex)
@@ -268,23 +274,25 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed", ex);
         }
     }
-    private async Task<string> HandleStrictMode(ActionToReport action, CancellationToken cancellationToken)
+    private async Task<string> GetReplacedFilePath(ActionToReport action, CancellationToken cancellationToken)
     {
-        var fileName = string.Empty;
         try
         {
-            var actionFileName = GetFileNameByAction(action);
-
-            fileName = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName) ?? actionFileName;
-            _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
-
+            var actionFileName = action.TwinAction switch
+            {
+                DownloadAction downloadAction => downloadAction.DestinationPath,
+                UploadAction uploadAction => uploadAction.FileName,
+                _ => string.Empty
+            };
+            var filePath = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName) ?? actionFileName;
+            _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, filePath);
+            return filePath;
         }
         catch (Exception ex)
         {
             await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
             return string.Empty;
         }
-        return fileName;
     }
     private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
     {
@@ -292,23 +300,7 @@ public class TwinHandler : ITwinHandler
         action.TwinReport.ResultCode = resultCode;
         await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
     }
-    private string GetFileNameByAction(ActionToReport action)
-    {
-        string fileName = string.Empty;
-        switch (action.TwinAction.Action)
-        {
-            case TwinActionType.SingularDownload:
-                var destination = ((DownloadAction)action.TwinAction).DestinationPath;
-                var source = ((DownloadAction)action.TwinAction).Source;
 
-                fileName = destination + source;
-                break;
-            case TwinActionType.SingularUpload:
-                fileName = ((UploadAction)action.TwinAction).FileName;
-                break;
-        }
-        return fileName;
-    }
 
     private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
     {
@@ -348,7 +340,7 @@ public class TwinHandler : ITwinHandler
                            {
                                ReportPartName = property.Name,
                                ReportIndex = index,
-                               TwinAction = item,
+                               //    TwinAction = item,
                                TwinReport = reportedValue[index]
                            })
                            .Where((item, index) => reportedValue[index].Status == StatusType.Pending || reportedValue[index].Status == StatusType.InProgress));
