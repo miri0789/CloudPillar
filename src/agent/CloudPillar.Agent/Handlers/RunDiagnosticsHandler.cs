@@ -39,7 +39,9 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var diagnosticsFilePath = await CreateFileAsync();
         var actionId = await UploadFileAsync(diagnosticsFilePath, cancellationToken);
         var reported = await CheckDownloadStatus(actionId, diagnosticsFilePath);
-        await DeleteFileAsync(diagnosticsFilePath, actionId, cancellationToken);
+        
+        var downloafFile = reported.Status == StatusType.Success ? reported.ResultText : string.Empty;
+        await DeleteFileAsync(diagnosticsFilePath, downloafFile, actionId, cancellationToken);
         return reported;
     }
 
@@ -143,14 +145,13 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
-    private async Task DeleteFileAsync(string diagnosticsFilePath, string actionId, CancellationToken cancellationToken)
+    private async Task DeleteFileAsync(string uploadFilePath, string downloadFilePath, string actionId, CancellationToken cancellationToken)
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(diagnosticsFilePath);
-            await DeleteBlobAsync(diagnosticsFilePath);
-            // await DeleteBlobAsync(diagnosticsFilePath, actionId, cancellationToken);
-            DeleteTempFile(diagnosticsFilePath);
+            ArgumentNullException.ThrowIfNull(uploadFilePath);
+            DeleteTempFile(uploadFilePath);
+            DeleteTempFile(downloadFilePath);
         }
         catch (Exception ex)
         {
@@ -209,44 +210,12 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
         return checkSum;
     }
-    private async Task DeleteBlobAsync(string diagnosticsFilePath, string actionId, CancellationToken cancellationToken)
-    {
-        var storageUri = await _fileUploaderHandler.GetStorageUriAsync(diagnosticsFilePath);
-        await _d2CMessengerHandler.SendDeleteBlobEventAsync(storageUri, actionId, cancellationToken);
-
-    }
-    private async Task DeleteBlobAsync(string diagnosticsFilePath)
-    {
-        try
-        {
-            var storageUri = await _fileUploaderHandler.GetStorageUriAsync(diagnosticsFilePath);
-            ArgumentNullException.ThrowIfNull(storageUri);
-
-            CloudBlockBlob blob = new CloudBlockBlob(storageUri);
-            BlobServiceClient blobServiceClient = new BlobServiceClient(storageUri);
-            BlobSasBuilder blobSasBuilder = new BlobSasBuilder()
-            {
-                BlobContainerName = blob.Container.Name,
-                BlobName = blob.Name,
-                ExpiresOn = DateTime.UtcNow.AddMinutes(5)
-            };
-            blobSasBuilder.SetPermissions(BlobSasPermissions.Delete);
-
-            var sasToken = blobSasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(blobServiceClient.AccountName, "PXNJl8/a4a0DiyGUD7JWbXiKg+Zc8pKMQeQGXcAjeccDEPDmt8q39wf4d6KMOxaheOkE1JPC3aAx+AStVUGGuQ=="));
-            var sasUrl = blob.Uri.AbsoluteUri + "?" + sasToken;
-            var uri = new Uri(sasUrl);
-
-            BlobClient blobClient = new BlobClient(new Uri(sasUrl));
-            await blobClient.DeleteIfExistsAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Blobstreamer DeleteBlobAsync failed. Message: {ex.Message}");
-        }
-    }
-
     private void DeleteTempFile(string filePath)
     {
+        if (string.IsNullOrEmpty(filePath))
+        {
+            return;
+        }
         if (_fileStreamerWrapper.FileExists(filePath))
         {
             _fileStreamerWrapper.DeleteFile(filePath);

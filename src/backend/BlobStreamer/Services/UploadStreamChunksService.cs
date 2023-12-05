@@ -67,7 +67,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     _logger.Info($"isRunDiagnostics: {isRunDiagnostics}");
                     if (uploadSuccess && isRunDiagnostics)
                     {
-                        await DeleteBlobAsync(storageUri);
                         await HandleDownloadForDiagnosticsAsync(deviceId, storageUri, uploadActionId);
                     }
                 }
@@ -78,36 +77,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             _logger.Error($"Blobstreamer UploadFromStreamAsync failed. Message: {ex.Message}");
         }
     }
-
-    public async Task DeleteBlobAsync(Uri storageUri)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(storageUri);
-
-            CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
-            BlobServiceClient blobServiceClient = new BlobServiceClient(storageUri);
-            BlobSasBuilder blobSasBuilder = new BlobSasBuilder()
-            {
-                BlobContainerName = blob.Container.Name,
-                BlobName = blob.Name,
-                ExpiresOn = DateTime.UtcNow.AddMinutes(5)
-            };
-            blobSasBuilder.SetPermissions(BlobSasPermissions.Delete);
-
-            var sasToken = blobSasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(blobServiceClient.AccountName, "PXNJl8/a4a0DiyGUD7JWbXiKg+Zc8pKMQeQGXcAjeccDEPDmt8q39wf4d6KMOxaheOkE1JPC3aAx+AStVUGGuQ=="));
-            var sasUrl = blob.Uri.AbsoluteUri + "?" + sasToken;
-            var uri = new Uri(sasUrl);
-
-            BlobClient blobClient = new BlobClient(new Uri(sasUrl));
-            await blobClient.DeleteIfExistsAsync(); 
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Blobstreamer DeleteBlobAsync failed. Message: {ex.Message}");
-        }
-    }
-
 
     private async Task<bool> VerifyStreamChecksum(string originalCheckSum, CloudBlockBlob blob)
     {
