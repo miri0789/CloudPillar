@@ -5,5 +5,4 @@ namespace Backend.Iotlistener.Interfaces;
 public interface IStreamingUploadChunkService
 {
     Task UploadStreamToBlob(StreamingUploadChunkEvent data, string deviceId);
-    Task DeleteBlob(DeleteBlobEvent data);
 }

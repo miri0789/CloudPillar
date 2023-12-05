@@ -1,15 +1,11 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Storage.Blob;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
 using Shared.Logger;
-using Azure.Storage.Sas;
-using Azure.Storage.Blobs;
-using Azure.Storage;
 
 namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler

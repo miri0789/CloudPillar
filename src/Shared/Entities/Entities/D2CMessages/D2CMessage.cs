@@ -5,8 +5,7 @@ public enum D2CMessageType
     FirmwareUpdateReady,
     SignTwinKey,
     StreamingUploadChunk,
-    ProvisionDeviceCertificate,
-    DeleteBlob
+    ProvisionDeviceCertificate
 }
 
 public class D2CMessage

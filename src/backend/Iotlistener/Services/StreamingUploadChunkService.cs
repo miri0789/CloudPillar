@@ -28,19 +28,5 @@ public class StreamingUploadChunkService : IStreamingUploadChunkService
 
         string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/uploadStream?deviceId={deviceId}";
         await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);
-    }
-
-    public async Task DeleteBlob(DeleteBlobEvent data)
-    {
-        try
-        {
-            _logger.Info($"IotListener: Delete blob {data.StorageUri} from BlobStreamer");
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/deleteBlob";
-            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, null);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"IotListener: Delete blob {data.StorageUri} from BlobStreamer failed with exception {ex.Message}");
-        }
-    }
+    }  
 }

@@ -5,10 +5,6 @@ using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
-using Azure.Storage.Sas;
-using Azure.Storage.Blobs;
-using Azure.Storage;
-using Newtonsoft.Json;
 
 
 

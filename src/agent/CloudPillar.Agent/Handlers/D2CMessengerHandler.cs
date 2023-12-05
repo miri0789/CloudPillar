@@ -4,7 +4,6 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using Shared.Entities.Factories;
 using Shared.Entities.Messages;
 using Shared.Logger;
 
@@ -65,18 +64,6 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         };
 
         await SendMessageAsync(ProvisionDeviceCertificateEvent, cancellationToken);
-    }
-
-
-    public async Task SendDeleteBlobEventAsync(Uri storageUri, string actionId, CancellationToken cancellationToken)
-    {
-        var deleteBlobEvent = new DeleteBlobEvent()
-        {
-            ActionId = actionId,
-            StorageUri = storageUri
-        };
-
-        await SendMessageAsync(deleteBlobEvent, cancellationToken);
     }
 
     private async Task SendMessageAsync(D2CMessage d2CMessage, CancellationToken cancellationToken)
