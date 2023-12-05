@@ -11,6 +11,7 @@ using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using Shared.Entities.Utilities;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -61,14 +62,8 @@ public class TwinHandler : ITwinHandler
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-            string desiredJson = twin.Properties.Desired.ToJson();
-            var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(desiredJson,
-                    new JsonSerializerSettings
-                    {
-                        Converters = new List<JsonConverter> {
-                            new TwinDesiredConverter(), new TwinActionConverter() }
-                    });
-
+            var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+            
             if(twinDesired?.ChangeSign == null)
             {   
                 _logger.Info($"There is no twin change sign, send sign event..");
