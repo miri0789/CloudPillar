@@ -17,7 +17,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
     private readonly ITwinDiseredService _twinDiseredHandler;
 
-    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler, IEnvironmentsWrapper @object)
+    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
