@@ -24,6 +24,7 @@ namespace CloudPillar.Agent.Tests
         private const int CHUNK_SIZE = 1024;
         private const int NUM_OF_CHUNKS = 5;
         private const int PROGRESS_PERCENTAGE = 10;
+        private const string CORRELATION_ID = "correlation123";
         private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
         private ActionToReport actionToReport = new ActionToReport();
         private FileUploadCompletionNotification notification = new FileUploadCompletionNotification();

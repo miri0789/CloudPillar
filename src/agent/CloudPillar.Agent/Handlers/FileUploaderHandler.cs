@@ -36,27 +36,6 @@ public class FileUploaderHandler : IFileUploaderHandler
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-
-    public async Task<Uri> GetStorageUriAsync(string fileName)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(fileName);
-            string blobname = BuildBlobName(fileName);
-            var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
-            {
-                BlobName = blobname
-            });
-            var storageUri = await _deviceClientWrapper.GetBlobUriAsync(sasUriResponse);
-            return storageUri;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Error delete uploading file '{fileName}': {ex.Message}");
-            throw new Exception(ex.Message);
-        }
-    }
-
     public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string fileName, CancellationToken cancellationToken)
     {
         try
