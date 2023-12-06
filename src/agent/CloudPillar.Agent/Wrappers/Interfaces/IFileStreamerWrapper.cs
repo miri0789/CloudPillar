@@ -3,8 +3,9 @@
 public interface IFileStreamerWrapper
 {
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
-    Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess);
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
+
+    DirectoryInfo CreateDirectory(string directoryPath);
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 
@@ -23,6 +24,8 @@ public interface IFileStreamerWrapper
     string GetDirectoryName(string filePathPattern);
 
     string GetFileName(string filePathPattern);
+    
+    string GetTempFileName();
 
     string[] GetFiles(string directoryPath, string searchPattern);
 

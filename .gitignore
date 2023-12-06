@@ -22,3 +22,4 @@ src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/DesignTimeBuild
 **/tfplan
 **/*.terraform*
 terraform.tfstate*
+.vscode/launch.json

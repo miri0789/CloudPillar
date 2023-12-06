@@ -1,5 +1,4 @@
 ﻿
-using System.Net.Http.Headers;
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Entities;
@@ -10,9 +9,12 @@ public class ActionToReport
     public TwinAction TwinAction { get; set; }
     public int ReportIndex { get; set; }
     public string ReportPartName { get; set; }
-    
-    public ActionToReport(){
+    public TwinPatchChangeSpec ChangeSpecKey { get; }
+
+    public ActionToReport(TwinPatchChangeSpec changeSpecKey = TwinPatchChangeSpec.ChangeSpec)
+    {
         this.TwinReport = new TwinActionReported();
         this.TwinAction = new TwinAction();
+        ChangeSpecKey = changeSpecKey;
     }
 }

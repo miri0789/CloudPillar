@@ -15,6 +15,7 @@ using Shared.Entities.Messages;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Devices.Provisioning.Service;
 using Backend.Infra.Common;
+using Backend.Infra.Common.Services.Interfaces;
 
 
 namespace Backend.Keyholder.Tests;

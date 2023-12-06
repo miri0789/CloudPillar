@@ -1,6 +1,6 @@
 using Microsoft.Azure.Storage.Blob;
 
-namespace Backend.BlobStreamer.Interfaces;
+namespace Backend.BlobStreamer.Services.Interfaces;
 
 public interface IBlobService
 {

@@ -4,7 +4,6 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using Shared.Entities.Factories;
 using Shared.Entities.Messages;
 using Shared.Logger;
 
@@ -38,7 +37,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(firmwareUpdateEvent, cancellationToken);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum, CancellationToken cancellationToken)
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum, CancellationToken cancellationToken, bool isRunDiagnostic = false)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -48,13 +47,13 @@ public class D2CMessengerHandler : ID2CMessengerHandler
                 CheckSum = checkSum,
                 StartPosition = currentPosition,
                 ActionId = actionId ?? Guid.NewGuid().ToString(),
-                Data = buffer
+                Data = buffer,
+                IsRunDiagnostics = isRunDiagnostic
             };
 
             await SendMessageAsync(streamingUploadChunkEvent, cancellationToken);
         }
     }
-
 
     public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
     {

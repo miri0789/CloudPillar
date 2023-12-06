@@ -43,7 +43,6 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
     {
-
         var file = _filesDownloads.FirstOrDefault(item => item.DownloadAction.ActionId == message.ActionId &&
                                     item.DownloadAction.Source == message.FileName);
         if (file == null)

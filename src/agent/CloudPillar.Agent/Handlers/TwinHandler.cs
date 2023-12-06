@@ -62,12 +62,11 @@ public class TwinHandler : ITwinHandler
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-            
-            if(twinDesired?.ChangeSign == null)
-            {   
+
+            if (twinDesired?.ChangeSign == null)
+            {
                 _logger.Info($"There is no twin change sign, send sign event..");
                 await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign), cancellationToken);
-
             }
             else
             {
@@ -80,14 +79,12 @@ public class TwinHandler : ITwinHandler
                 else
                 {
                     await UpdateReportedTwinChangeSignAsync(null);
-                    var actions = await GetActionsToExecAsync(twinDesired, twinReported, isInitial);
-                    _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
-                    if (actions.Count() > 0)
+                    foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
                     {
-                        await HandleTwinActionsAsync(actions, cancellationToken);
+                        await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, isInitial, cancellationToken);
                     }
                 }
-            }  
+            }
         }
         catch (Exception ex)
         {
@@ -113,6 +110,20 @@ public class TwinHandler : ITwinHandler
 
     }
 
+    private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
+    TwinReported twinReported, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    {
+        var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
+        var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+
+        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial);
+        _logger.Info($"HandleTwinUpdatesAsync: {actions.Count()} actions to execute for {changeSpecKey.ToString()}");
+
+        if (actions.Count() > 0)
+        {
+            await HandleTwinActionsAsync(actions, cancellationToken);
+        }
+    }
     public async Task UpdateDeviceStateAsync(DeviceStateType deviceState)
     {
         try
@@ -265,6 +276,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
+
             foreach (var action in actions)
             {
                 switch (action.TwinAction.Action)
@@ -338,17 +350,18 @@ public class TwinHandler : ITwinHandler
         }
         return fileName;
     }
-    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported, bool isInitial)
+
+    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial)
     {
         try
         {
             var isReportedChanged = false;
             var actions = new List<ActionToReport>();
-            twinReported.ChangeSpec ??= new TwinReportedChangeSpec();
-            if (twinReported.ChangeSpec.Patch == null || twinReported.ChangeSpec.Id != twinDesired.ChangeSpec.Id)
+            twinReportedChangeSpec ??= new TwinReportedChangeSpec();
+            if (twinReportedChangeSpec.Patch == null || twinReportedChangeSpec.Id != twinDesiredChangeSpec.Id)
             {
-                twinReported.ChangeSpec.Patch = new TwinReportedPatch();
-                twinReported.ChangeSpec.Id = twinDesired.ChangeSpec.Id;
+                twinReportedChangeSpec.Patch = new TwinReportedPatch();
+                twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id;
                 isReportedChanged = true;
             }
 
@@ -357,11 +370,11 @@ public class TwinHandler : ITwinHandler
             {
                 try
                 {
-                    var desiredValue = (TwinAction[])property.GetValue(twinDesired.ChangeSpec.Patch);
+                    var desiredValue = (TwinAction[])property.GetValue(twinDesiredChangeSpec.Patch);
                     if (desiredValue?.Length > 0)
                     {
                         var reportedProp = typeof(TwinReportedPatch).GetProperty(property.Name);
-                        var reportedValue = ((TwinActionReported[])(reportedProp.GetValue(twinReported.ChangeSpec.Patch) ?? new TwinActionReported[0])).ToList();
+                        var reportedValue = ((TwinActionReported[])(reportedProp.GetValue(twinReportedChangeSpec.Patch) ?? new TwinActionReported[0])).ToList();
 
                         while (reportedValue.Count < desiredValue.Length)
                         {
@@ -370,9 +383,9 @@ public class TwinHandler : ITwinHandler
                             isReportedChanged = true;
                         }
 
-                        reportedProp.SetValue(twinReported.ChangeSpec.Patch, reportedValue.ToArray());
+                        reportedProp.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
                         actions.AddRange(desiredValue
-                           .Select((item, index) => new ActionToReport
+                           .Select((item, index) => new ActionToReport(changeSpecKey)
                            {
                                ReportPartName = property.Name,
                                ReportIndex = index,
@@ -393,7 +406,7 @@ public class TwinHandler : ITwinHandler
             }
             if (isReportedChanged)
             {
-                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
+                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey);
             }
             return actions;
         }

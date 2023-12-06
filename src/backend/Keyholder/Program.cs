@@ -5,8 +5,10 @@ using System.Reflection;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Factories;
-using Backend.Infra.Common;
 using Backend.Infra.Wrappers;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
+using Backend.Infra.Common.Services;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?

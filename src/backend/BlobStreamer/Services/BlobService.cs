@@ -1,11 +1,13 @@
 using Microsoft.Azure.Storage.Blob;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
-using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
+using Backend.BlobStreamer.Services.Interfaces;
+using Backend.BlobStreamer.Wrappers.Interfaces;
 using Shared.Entities.Services;
-using Backend.Infra.Common;
 using Microsoft.Azure.Devices;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -19,12 +21,8 @@ public class BlobService : IBlobService
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
 
-    public BlobService(IEnvironmentsWrapper environmentsWrapper,
-                       ICloudStorageWrapper cloudStorageWrapper,
-                       IDeviceConnectService deviceConnectService,
-                       ILoggerHandler logger,
-                       IMessageFactory messageFactory,
-                       ICheckSumService checkSumService)
+    public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
+     IDeviceConnectService deviceConnectService,ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));
@@ -97,6 +95,5 @@ public class BlobService : IBlobService
         chunkSize = Math.Min(chunkSize, maxChunkSizeBeforeEncoding);
         return chunkSize;
     }
-
 
 }

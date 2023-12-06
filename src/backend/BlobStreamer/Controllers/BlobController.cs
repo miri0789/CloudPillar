@@ -1,4 +1,4 @@
-using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Messages;
 
@@ -32,8 +32,8 @@ public class BlobController : ControllerBase
     }
 
     [HttpPost("uploadStream")]
-    public async Task UploadStream([FromBody] StreamingUploadChunkEvent data)
+    public async Task UploadStream([FromBody] StreamingUploadChunkEvent data, string deviceId)
     {
-        await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum);
+        await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum, deviceId, data.IsRunDiagnostics, data.ActionId);
     }
 }

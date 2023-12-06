@@ -1,3 +1,4 @@
+using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Azure.Devices;
 using Shared.Logger;
 

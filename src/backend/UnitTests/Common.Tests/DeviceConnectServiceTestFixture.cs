@@ -1,9 +1,8 @@
-using NUnit.Framework;
 using Moq;
 using Shared.Logger;
-using Backend.Infra.Common;
-using Backend.Infra.Wrappers;
 using Microsoft.Azure.Devices;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Services;
 
 [TestFixture]
 public class DeviceConnectServiceTestFixture

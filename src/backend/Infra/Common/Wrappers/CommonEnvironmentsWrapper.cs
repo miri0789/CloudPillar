@@ -1,4 +1,5 @@
-﻿namespace Backend.Infra.Wrappers;
+﻿using Backend.Infra.Common.Wrappers.Interfaces;
+namespace Backend.Infra.Wrappers;
 public class CommonEnvironmentsWrapper: ICommonEnvironmentsWrapper
 {
     private const string _iothubConnectionString = "IothubConnectionString";

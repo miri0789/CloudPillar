@@ -33,4 +33,30 @@ public static class TwinJsonConvertExtensions
         return twinDesiredJson;
 
     }
+
+    public static TwinReportedChangeSpec GetReportedChangeSpecByKey(this TwinReported twinReported, TwinPatchChangeSpec changeSpecKey)
+    {
+        switch (changeSpecKey)
+        {
+
+            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
+                return twinReported.ChangeSpecDiagnostics;
+            case TwinPatchChangeSpec.ChangeSpec:
+            default:
+                return twinReported.ChangeSpec;
+        }
+    }
+    public static TwinChangeSpec GetDesiredChangeSpecByKey(this TwinDesired twinDesired, TwinPatchChangeSpec changeSpecKey)
+    {
+        switch (changeSpecKey)
+        {
+            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
+                return twinDesired.ChangeSpecDiagnostics;
+            case TwinPatchChangeSpec.ChangeSpec:
+            default:
+                return twinDesired.ChangeSpec;
+        }
+    }
+
+
 }
