@@ -99,7 +99,6 @@ public class FirmwareUpdateTestFixture
     [Test]
     public async Task SendFirmwareUpdateAsync_GetBlobSizeFails_ThrowsException()
     {
-
         _httpRequestorServiceMock
              .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
              .ThrowsAsync(new Exception("Failed to retrieve blob size."));

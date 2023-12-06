@@ -9,16 +9,13 @@ public class TwinDesiredConverter : JsonConverter
     {
         return objectType == typeof(TwinDesired);
     }
-    string GetCasedPropertyName(string propName) =>
-        $"{FirstLetterToLowerCase(propName)}" ?? $"{FirstLetterToUpperCase(propName)}";
 
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
-
         JObject jsonObject = JObject.Load(reader);
         var changeSpec = new TwinDesired()
         {
-            ChangeSign = jsonObject[GetCasedPropertyName("changeSign")]?.Value<string>(),
+            ChangeSign = (jsonObject["changeSign"] ?? jsonObject["ChangeSign"])?.Value<string>(),
             ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
             ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpecDiagnostics)
         };
@@ -32,16 +29,18 @@ public class TwinDesiredConverter : JsonConverter
 
     private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, TwinPatchChangeSpec changeSpecKey)
     {
+        var lowerPropName = FirstLetterToLowerCase($"{changeSpecKey}");
+        var upperPropName = FirstLetterToUpperCase($"{changeSpecKey}");
         var changeSpec = new TwinChangeSpec()
         {
-            Id = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.id")}")?.Value<string>(),
+            Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>(),
             Patch = new TwinPatch
             {
-                PreTransitConfig = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.preTransitConfig")}")?.ToObject<TwinAction[]>(serializer),
-                TransitPackage = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.transitPackage")}")?.ToObject<TwinAction[]>(serializer),
-                PreInstallConfig = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.preInstallConfig")}")?.ToObject<TwinAction[]>(serializer),
-                InstallSteps = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.installSteps")}")?.ToObject<TwinAction[]>(serializer),
-                PostInstallConfig = jsonObject.SelectToken($"{GetCasedPropertyName($"{changeSpecKey}.patch.postInstallConfig")}")?.ToObject<TwinAction[]>(serializer),
+                PreTransitConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.preTransitConfig") ?? jsonObject.SelectToken($"{upperPropName}.PreTransitConfig"))?.ToObject<TwinAction[]>(serializer),
+                TransitPackage = (jsonObject.SelectToken($"{lowerPropName}.patch.transitPackage") ?? jsonObject.SelectToken($"{upperPropName}.TransitPackage"))?.ToObject<TwinAction[]>(serializer),
+                PreInstallConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.preInstallConfig") ?? jsonObject.SelectToken($"{upperPropName}.PreInstallConfig"))?.ToObject<TwinAction[]>(serializer),
+                InstallSteps = (jsonObject.SelectToken($"{lowerPropName}.patch.installSteps") ?? jsonObject.SelectToken($"{upperPropName}.InstallSteps"))?.ToObject<TwinAction[]>(serializer),
+                PostInstallConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.postInstallConfig") ?? jsonObject.SelectToken($"{upperPropName}.PostInstallConfig"))?.ToObject<TwinAction[]>(serializer),
             }
         };
         return changeSpec;
