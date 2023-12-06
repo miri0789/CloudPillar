@@ -36,11 +36,11 @@ public class TwinDesiredConverter : JsonConverter
             Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>(),
             Patch = new TwinPatch
             {
-                PreTransitConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.preTransitConfig") ?? jsonObject.SelectToken($"{upperPropName}.PreTransitConfig"))?.ToObject<TwinAction[]>(serializer),
-                TransitPackage = (jsonObject.SelectToken($"{lowerPropName}.patch.transitPackage") ?? jsonObject.SelectToken($"{upperPropName}.TransitPackage"))?.ToObject<TwinAction[]>(serializer),
-                PreInstallConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.preInstallConfig") ?? jsonObject.SelectToken($"{upperPropName}.PreInstallConfig"))?.ToObject<TwinAction[]>(serializer),
-                InstallSteps = (jsonObject.SelectToken($"{lowerPropName}.patch.installSteps") ?? jsonObject.SelectToken($"{upperPropName}.InstallSteps"))?.ToObject<TwinAction[]>(serializer),
-                PostInstallConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.postInstallConfig") ?? jsonObject.SelectToken($"{upperPropName}.PostInstallConfig"))?.ToObject<TwinAction[]>(serializer),
+                PreTransitConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.preTransitConfig") ?? jsonObject.SelectToken($"{upperPropName}.Patch.PreTransitConfig"))?.ToObject<TwinAction[]>(serializer),
+                TransitPackage = (jsonObject.SelectToken($"{lowerPropName}.patch.transitPackage") ?? jsonObject.SelectToken($"{upperPropName}.Patch.TransitPackage"))?.ToObject<TwinAction[]>(serializer),
+                PreInstallConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.preInstallConfig") ?? jsonObject.SelectToken($"{upperPropName}.Patch.PreInstallConfig"))?.ToObject<TwinAction[]>(serializer),
+                InstallSteps = (jsonObject.SelectToken($"{lowerPropName}.patch.installSteps") ?? jsonObject.SelectToken($"{upperPropName}.Patch.InstallSteps"))?.ToObject<TwinAction[]>(serializer),
+                PostInstallConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.postInstallConfig") ?? jsonObject.SelectToken($"{upperPropName}.Patch.PostInstallConfig"))?.ToObject<TwinAction[]>(serializer),
             }
         };
         return changeSpec;
