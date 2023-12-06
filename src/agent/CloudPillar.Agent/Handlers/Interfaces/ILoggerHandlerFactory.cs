@@ -7,6 +7,7 @@ namespace CloudPillar.Agent.Handlers.Logger;
 
 public interface ILoggerHandlerFactory
 {
+    ILoggerRepository CreateLogRepository(string? log4netConfigFile);
     ILog CreateLogger(string filename);
 
     IAppender[] GetAppenders();

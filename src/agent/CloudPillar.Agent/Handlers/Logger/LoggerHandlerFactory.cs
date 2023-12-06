@@ -2,7 +2,6 @@
 using log4net.Config;
 using log4net.Core;
 using log4net.Repository;
-using log4net.Repository.Hierarchy;
 using log4net.Appender;
 using System.Reflection;
 

@@ -27,6 +27,8 @@ public class LoggerHandler : ILoggerHandler
     public LoggerHandler(ILoggerHandlerFactory loggerFactory, IConfiguration configuration, IHttpContextAccessor? httpContextAccessor, ILog logger, string? log4netConfigFile = null, string applicationName = "", bool hasHttpContext = true)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _loggerHandlerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        _loggerHandlerFactory.CreateLogRepository(log4netConfigFile);
         ArgumentNullException.ThrowIfNull(loggerFactory);
         _loggerHandlerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         ArgumentNullException.ThrowIfNull(configuration);
