@@ -36,45 +36,77 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
-        var fileDownload = new FileDownload
-        {
-            ActionReported = actionToReport,
-            Stopwatch = new Stopwatch()
-        };
+        var fileDownload = GetDownloadFile(actionToReport.TwinAction.ActionId, ((DownloadAction)actionToReport.TwinAction).Source) ??
+         new FileDownload { ActionReported = actionToReport, Stopwatch = new Stopwatch() };
         _filesDownloads.Add(fileDownload);
-        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.Action.ActionId, rangeIndex);
+        try
+        {
+            ArgumentNullException.ThrowIfNullOrEmpty(fileDownload.Action.DestinationPath);
+            var isFileExist = _fileStreamerWrapper.FileExists(fileDownload.TempPath ?? fileDownload.Action.DestinationPath);
+            if (!isFileExist && fileDownload.Action.Unzip) // create unzip temp file
+            {
+                InitUnzipPath(fileDownload);
+            }
+            if (actionToReport.TwinReport.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
+            {
+                fileDownload.TotalBytesDownloaded = 0;
+                fileDownload.Report.Progress = 0;
+                fileDownload.Report.Status = StatusType.Pending;
+            }
+            if (actionToReport.TwinReport.Status == StatusType.Unzip) // file download complete , only need to unzio it
+            {
+                await HandleCompletedDownload(fileDownload, cancellationToken);
+            }
+            else
+            {
+                var existRanges = GetExistRangesList(fileDownload.Report.CompleteRanges); // get next range for downloading
+                var currentRangeIndex = !existRanges.Contains(0) ? 0 : existRanges.FirstOrDefault(n => !existRanges.Contains(n + 1) && n != 0) + 1;
+                if (currentRangeIndex > 0 && isFileExist && fileDownload.TotalBytesDownloaded == 0)
+                {
+                    fileDownload.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(fileDownload.TempPath ?? fileDownload.Action.DestinationPath);
+                }
+                await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.Action.ActionId, currentRangeIndex);
+            }
+        }
+        catch (Exception ex)
+        {
+            fileDownload.Report.Status = StatusType.Failed;
+            fileDownload.Report.ResultText = ex.Message;
+            fileDownload.Report.ResultCode = ex.GetType().Name;
+        }
+        finally
+        {            
+            await SaveReportAsync(fileDownload, cancellationToken);
+        }
     }
+
+    private void InitUnzipPath(FileDownload file)
+    {
+        if (_fileStreamerWrapper.GetExtension(file.Action.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
+            if (!string.IsNullOrEmpty(extention))
+            {
+                throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not directory path.");
+            }
+            file.TempPath = _fileStreamerWrapper.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".zip");
+        }
+        else
+        {
+            throw new ArgumentException("No zip file is sent");
+        }
+    }
+
     private void HandleFirstMessageAsync(FileDownload file, DownloadBlobChunkMessage message)
     {
         file.TotalBytes = message.FileSize;
         _strictModeHandler.CheckSizeStrictMode(TwinActionType.SingularDownload, file.TotalBytes, file.Action.DestinationPath);
-
-        if (string.IsNullOrWhiteSpace(file.Action.DestinationPath))
-        {
-            throw new ArgumentException("Destination path does not exist.");
-        }
-        if (file.Action.Unzip)
-        {
-            if (_fileStreamerWrapper.GetExtension(file.Action.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
-            {
-                var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
-                if (!string.IsNullOrEmpty(extention))
-                {
-                    throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not directory path.");
-                }
-                file.TempPath = _fileStreamerWrapper.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".zip");
-            }
-            else
-            {
-                throw new ArgumentException("No zip file is sent");
-            }
-        }
         file.Stopwatch.Start();
     }
 
-    private async Task HandleCompletedDownload(FileDownload file, DownloadBlobChunkMessage message, CancellationToken cancellationToken)
+    private async Task HandleCompletedDownload(FileDownload file, CancellationToken cancellationToken)
     {
-        file.Stopwatch.Stop();
+        file.Stopwatch?.Stop();
         if (!string.IsNullOrWhiteSpace(file.TempPath))
         {
             file.Report.Status = StatusType.Unzip;
@@ -84,7 +116,6 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         file.Report.Status = StatusType.Success;
         file.Report.Progress = 100;
-        RemoveFileFromList(message.ActionId, message.FileName);
     }
 
     private async Task HandleEndRangeDownload(string filePath, DownloadBlobChunkMessage message, FileDownload file, CancellationToken cancellationToken)
@@ -101,13 +132,16 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Report.CompleteRanges = AddRange(file.Report.CompleteRanges, message.RangeIndex);
         }
     }
-
+    private FileDownload GetDownloadFile(string actionId, string fileName)
+    {
+        var file = _filesDownloads.FirstOrDefault(item => item.Action.ActionId == actionId &&
+                                    item.Action.Source == fileName);
+        return file;
+    }
 
     public async Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
     {
-
-        var file = _filesDownloads.FirstOrDefault(item => item.Action.ActionId == message.ActionId &&
-                                    item.Action.Source == message.FileName);
+        var file = GetDownloadFile(message.ActionId, message.FileName);
         if (file == null)
         {
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
@@ -128,9 +162,9 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 await HandleEndRangeDownload(filePath, message, file, cancellationToken);
             }
-            if (file.Report.CompleteRanges == $"[0-{message.RangesCount - 1}]")
+            if (file.Report.CompleteRanges == (message.RangesCount == 1 ? "0" : $"0-{message.RangesCount - 1}"))
             {
-                await HandleCompletedDownload(file, message, cancellationToken);
+                await HandleCompletedDownload(file, cancellationToken);
             }
             else
             {
@@ -143,11 +177,19 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Report.Status = StatusType.Failed;
             file.Report.ResultText = ex.Message;
             file.Report.ResultCode = ex.GetType().Name;
-            RemoveFileFromList(message.ActionId, message.FileName);
         }
         finally
         {
-            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
+            await SaveReportAsync(file, cancellationToken);
+        }
+    }
+
+    private async Task SaveReportAsync(FileDownload file, CancellationToken cancellationToken)
+    {
+        await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
+        if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
+        {
+            RemoveFileFromList(file.Action.ActionId, file.Action.Source);
         }
     }
 
@@ -163,7 +205,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private async Task<bool> VerifyRangeCheckSum(string filePath, long startPosition, long endPosition, string checkSum)
     {
-        long lengthToRead = endPosition - startPosition + 1;
+        long lengthToRead = endPosition - startPosition;
         byte[] data = new byte[lengthToRead];
         using (Stream stream = _fileStreamerWrapper.CreateStream(filePath, FileMode.Open, FileAccess.Read))
         {

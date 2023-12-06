@@ -18,7 +18,7 @@ public class TwinActionsHandler : ITwinActionsHandler
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
-    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec)
+    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, CancellationToken cancellationToken)
     {
         var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
           Formatting.None,
@@ -30,7 +30,7 @@ public class TwinActionsHandler : ITwinActionsHandler
               NullValueHandling = NullValueHandling.Ignore
           }));
         var changeSpecKey = nameof(TwinReported.ChangeSpec);
-        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey, changeSpecJson);
+        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey, changeSpecJson, cancellationToken);
 
     }
 

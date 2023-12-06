@@ -118,5 +118,10 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetExtension(path);
     }
+    public long GetFileLength(string path)
+    {
+        FileInfo fileInfo = new FileInfo(path);
+        return fileInfo.Length;
+    }
 
 }

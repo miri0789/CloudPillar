@@ -65,7 +65,7 @@ public class TwinHandler : ITwinHandler
                     });
 
 
-            var actions = await GetActionsToExecAsync(twinDesired, twinReported);
+            var actions = await GetActionsToExecAsync(twinDesired, twinReported, cancellationToken);
             _logger.Info($"HandleTwinActions {actions.Count()} actions to exec");
             if (actions.Count() > 0)
             {
@@ -96,12 +96,12 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState)
+    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState, CancellationToken cancellationToken)
     {
         try
         {
             var deviceStateKey = nameof(TwinReported.DeviceState);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString());
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString(), cancellationToken);
             _logger.Info($"UpdateDeviceStateAsync success");
         }
         catch (Exception ex)
@@ -124,12 +124,12 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateDeviceSecretKeyAsync(string secretKey)
+    public async Task UpdateDeviceSecretKeyAsync(string secretKey, CancellationToken cancellationToken)
     {
         try
         {
             var deviceSecretKey = nameof(TwinReported.SecretKey);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey, cancellationToken);
             _logger.Info($"UpdateDeviceSecretKeyAsync success");
         }
         catch (Exception ex)
@@ -138,14 +138,14 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task InitReportDeviceParamsAsync()
+    public async Task InitReportDeviceParamsAsync(CancellationToken cancellationToken)
     {
         try
         {
             var supportedShellsKey = nameof(TwinReported.SupportedShells);
-            await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells);
+            await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells, cancellationToken);
             var agentPlatformKey = nameof(TwinReported.AgentPlatform);
-            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, _runtimeInformationWrapper.GetOSDescription());
+            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, _runtimeInformationWrapper.GetOSDescription(), cancellationToken);
             _logger.Info("InitReportedDeviceParams success");
         }
         catch (Exception ex)
@@ -302,7 +302,7 @@ public class TwinHandler : ITwinHandler
     }
 
 
-    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported)
+    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinDesired twinDesired, TwinReported twinReported, CancellationToken cancellationToken)
     {
         try
         {
@@ -355,7 +355,7 @@ public class TwinHandler : ITwinHandler
             }
             if (isReportedChanged)
             {
-                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReported.ChangeSpec);
+                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReported.ChangeSpec, cancellationToken);
             }
             return actions;
         }
