@@ -26,6 +26,7 @@ public class TwinHandlerTestFixture
     private ITwinHandler _target;
     private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
     private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
+    private Mock<ISignatureHandler> _signatureHandlerMock;
     private CancellationToken cancellationToken = CancellationToken.None;
 
 
@@ -46,6 +47,7 @@ public class TwinHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
+        _signatureHandlerMock = new Mock<ISignatureHandler>();
         CreateTarget();
     }
 
@@ -60,7 +62,8 @@ public class TwinHandlerTestFixture
           _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
-          mockStrictModeSettings.Object);
+          mockStrictModeSettings.Object,
+          _signatureHandlerMock.Object);
     }
 
     [Test]
@@ -121,7 +124,7 @@ public class TwinHandlerTestFixture
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()));
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
+        _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()), Times.Never);
     }
 
     [Test]
@@ -295,6 +298,46 @@ public class TwinHandlerTestFixture
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_ValidateChangeSignFalse_UpdateReportedPropertiesCall()
+    {
+        var desired = new TwinChangeSpec();
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported);
+        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+    }
+
+[Test]
+    public async Task OnDesiredPropertiesUpdate_ValidateChangeSignTrue_SignTwinKeyEventNotSend()
+    {
+        var desired = new TwinChangeSpec();
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+        [Test]
+    public async Task OnDesiredPropertiesUpdate_ChangeSignNull_SignTwinKeyEventSend()
+    {
+        var desired = new TwinChangeSpec();
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported, changeSign: null);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -479,10 +522,11 @@ public class TwinHandlerTestFixture
         return actionsToReported;
     }
 
-    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null)
+    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "")
     {
-        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps);
+        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps, changeSign);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
+        _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<string>(),It.IsAny<string>())).ReturnsAsync(true);
 
     }
 }
