@@ -4,7 +4,7 @@ using CloudPillar.Agent.Handlers;
 using FluentValidation;
 using Moq;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests
 {

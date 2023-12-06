@@ -1,7 +1,7 @@
 
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client.Transport;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Services;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Twin;

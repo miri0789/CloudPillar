@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 
 namespace CloudPillar.Agent.Handlers;

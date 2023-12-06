@@ -7,7 +7,7 @@ using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Shared.Entities.Authentication;
 using DeviceMessage = Microsoft.Azure.Devices.Client;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
