@@ -146,6 +146,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         try
         {
             ArgumentNullException.ThrowIfNull(uploadFilePath);
+            ArgumentNullException.ThrowIfNull(downloadFilePath);
             DeleteTempFile(uploadFilePath);
             DeleteTempFile(downloadFilePath);
         }
