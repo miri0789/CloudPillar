@@ -8,7 +8,7 @@ using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]

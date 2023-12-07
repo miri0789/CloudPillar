@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Utilities;

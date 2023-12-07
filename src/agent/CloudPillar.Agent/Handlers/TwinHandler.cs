@@ -4,7 +4,7 @@ using CloudPillar.Agent.Wrappers;
 using Newtonsoft.Json;
 using System.Reflection;
 using CloudPillar.Agent.Entities;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;

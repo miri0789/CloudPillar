@@ -1,7 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Utilities;
 public class LogActionFilter : IActionFilter

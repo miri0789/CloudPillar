@@ -10,7 +10,7 @@ using Moq;
 using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]

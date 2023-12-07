@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler

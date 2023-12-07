@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 public class ReprovisioningHandler : IReprovisioningHandler

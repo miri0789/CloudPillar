@@ -1,6 +1,6 @@
 using Moq;
 using CloudPillar.Agent.Handlers;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Wrappers;
 

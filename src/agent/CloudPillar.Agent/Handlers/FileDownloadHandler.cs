@@ -4,7 +4,7 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 

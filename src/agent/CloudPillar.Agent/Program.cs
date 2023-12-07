@@ -10,7 +10,7 @@ using FluentValidation;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));

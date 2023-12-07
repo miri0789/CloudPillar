@@ -4,7 +4,7 @@ using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client.Transport;
 using System.IO.Compression;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Newtonsoft.Json;
 using Microsoft.Azure.Storage.Blob;
 
