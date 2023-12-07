@@ -1,6 +1,5 @@
 using Moq;
 using CloudPillar.Agent.Handlers;
-using Shared.Logger;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.Options;
@@ -8,6 +7,7 @@ using Shared.Entities.Services;
 using CloudPillar.Agent.Entities;
 using Shared.Enums;
 using CloudPillar.Agent.Wrappers.interfaces;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
