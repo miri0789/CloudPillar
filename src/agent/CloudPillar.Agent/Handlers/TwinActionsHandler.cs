@@ -5,7 +5,7 @@ using CloudPillar.Agent.Entities;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Utilities;
 
 namespace CloudPillar.Agent.Handlers;

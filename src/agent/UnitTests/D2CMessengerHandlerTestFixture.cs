@@ -4,7 +4,7 @@ using Moq;
 using Microsoft.Azure.Devices.Client;
 using System.Text;
 using Newtonsoft.Json;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Messages;
 using System.Security.Cryptography;
 

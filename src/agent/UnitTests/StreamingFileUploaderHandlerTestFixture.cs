@@ -5,7 +5,7 @@ using Microsoft.Azure.Devices.Client.Transport;
 using Moq;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests
 {
