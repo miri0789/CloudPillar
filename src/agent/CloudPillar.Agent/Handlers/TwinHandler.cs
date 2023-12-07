@@ -63,7 +63,7 @@ public class TwinHandler : ITwinHandler
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
-            if (twinDesired?.ChangeSign == null)
+            if (string.IsNullOrWhiteSpace(twinDesired?.ChangeSign))
             {
                 _logger.Info($"There is no twin change sign, send sign event..");
                 await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign), cancellationToken);

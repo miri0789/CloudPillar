@@ -70,14 +70,21 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         catch (Exception ex)
         {
-            fileDownload.Report.Status = StatusType.Failed;
-            fileDownload.Report.ResultText = ex.Message;
-            fileDownload.Report.ResultCode = ex.GetType().Name;
+            HandleDownloadException(ex, fileDownload);
         }
         finally
         {
             await SaveReportAsync(fileDownload, cancellationToken);
         }
+    }
+
+    private void HandleDownloadException(Exception ex, FileDownload file)
+    {
+        var filePath = file.TempPath ?? file.Action.DestinationPath;
+        file.Report.Status = StatusType.Failed;
+        file.Report.ResultText = ex.Message;
+        file.Report.ResultCode = ex.GetType().Name;
+        _fileStreamerWrapper.DeleteFile(filePath);
     }
 
     private void InitUnzipPath(FileDownload file)
@@ -172,11 +179,8 @@ public class FileDownloadHandler : IFileDownloadHandler
             }
         }
         catch (Exception ex)
-        {
-            file.Report.Status = StatusType.Failed;
-            file.Report.ResultText = ex.Message;
-            file.Report.ResultCode = ex.GetType().Name;
-            _fileStreamerWrapper.DeleteFile(filePath);
+        {            
+            HandleDownloadException(ex, file);
         }
         finally
         {
@@ -200,7 +204,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         double progressPercent = Math.Round(file.TotalBytesDownloaded / (double)file.TotalBytes * 100, 2);
         double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
         _logger.Info($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
-        return (float)progressPercent;
+        return Math.Max((float)progressPercent, 100);
     }
 
     private async Task<bool> VerifyRangeCheckSum(string filePath, long startPosition, long endPosition, string checkSum)
