@@ -55,7 +55,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             }
             if (actionToReport.TwinReport.Status == StatusType.Unzip) // file download complete , only need to unzio it
             {
-                await HandleCompletedDownload(fileDownload, cancellationToken);
+                await HandleCompletedDownloadAsync(fileDownload, cancellationToken);
             }
             else
             {
@@ -111,7 +111,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.Stopwatch.Start();
     }
 
-    private async Task HandleCompletedDownload(FileDownload file, CancellationToken cancellationToken)
+    private async Task HandleCompletedDownloadAsync(FileDownload file, CancellationToken cancellationToken)
     {
         file.Stopwatch?.Stop();
         if (!string.IsNullOrWhiteSpace(file.TempPath))
@@ -125,9 +125,9 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.Report.Progress = 100;
     }
 
-    private async Task HandleEndRangeDownload(string filePath, DownloadBlobChunkMessage message, FileDownload file, CancellationToken cancellationToken)
+    private async Task HandleEndRangeDownloadAsync(string filePath, DownloadBlobChunkMessage message, FileDownload file, CancellationToken cancellationToken)
     {
-        var isRangeValid = await VerifyRangeCheckSum(filePath, (long)message.RangeStartPosition, (long)message.RangeEndPosition, message.RangeCheckSum);
+        var isRangeValid = await VerifyRangeCheckSumAsync(filePath, (long)message.RangeStartPosition, (long)message.RangeEndPosition, message.RangeCheckSum);
         if (!isRangeValid)
         {
             await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, message.FileName, message.ActionId, 0, message.RangeStartPosition, message.RangeEndPosition);
@@ -166,11 +166,11 @@ public class FileDownloadHandler : IFileDownloadHandler
 
             if (message.RangeCheckSum != null)
             {
-                await HandleEndRangeDownload(filePath, message, file, cancellationToken);
+                await HandleEndRangeDownloadAsync(filePath, message, file, cancellationToken);
             }
             if (file.Report.CompleteRanges == (message.RangesCount == 1 ? "0" : $"0-{message.RangesCount - 1}"))
             {
-                await HandleCompletedDownload(file, cancellationToken);
+                await HandleCompletedDownloadAsync(file, cancellationToken);
             }
             else
             {
@@ -207,7 +207,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         return Math.Max((float)progressPercent, 100);
     }
 
-    private async Task<bool> VerifyRangeCheckSum(string filePath, long startPosition, long endPosition, string checkSum)
+    private async Task<bool> VerifyRangeCheckSumAsync(string filePath, long startPosition, long endPosition, string checkSum)
     {
         long lengthToRead = endPosition - startPosition;
         byte[] data = new byte[lengthToRead];
