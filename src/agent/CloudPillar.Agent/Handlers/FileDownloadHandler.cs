@@ -4,12 +4,8 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
-<<<<<<< HEAD
-using Shared.Logger;
-using Shared.Entities.Services;
-=======
 using CloudPillar.Agent.Handlers.Logger;
->>>>>>> 2d7607631fa72aab33887e17d25e190c805022bc
+using Shared.Entities.Services;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -79,7 +75,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             fileDownload.Report.ResultCode = ex.GetType().Name;
         }
         finally
-        {            
+        {
             await SaveReportAsync(fileDownload, cancellationToken);
         }
     }
@@ -151,14 +147,13 @@ public class FileDownloadHandler : IFileDownloadHandler
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
             return;
         }
+        var filePath = file.TempPath ?? file.Action.DestinationPath;
         try
         {
             if (!file.Stopwatch.IsRunning)
             {
                 HandleFirstMessageAsync(file, message);
             }
-
-            var filePath = file.TempPath ?? file.Action.DestinationPath;
 
             await _fileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
 
@@ -181,6 +176,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Report.Status = StatusType.Failed;
             file.Report.ResultText = ex.Message;
             file.Report.ResultCode = ex.GetType().Name;
+            _fileStreamerWrapper.DeleteFile(filePath);
         }
         finally
         {

@@ -123,7 +123,10 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// <returns>a task representing the asynchronous operation.</returns>
     public async Task CompleteAsync(Message message, CancellationToken cancellationToken)
     {
-        await _deviceClient.CompleteAsync(message, cancellationToken);
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            await _deviceClient.CompleteAsync(message, cancellationToken);
+        }
     }
 
     public async Task DisposeAsync()

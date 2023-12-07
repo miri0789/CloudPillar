@@ -77,7 +77,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         if (!cancellationToken.IsCancellationRequested)
         {
             Message message = PrepareD2CMessage(d2CMessage);
-            await _deviceClientWrapper.SendEventAsync(message);
+            await _deviceClientWrapper.SendEventAsync(message, cancellationToken);
         }
     }
 

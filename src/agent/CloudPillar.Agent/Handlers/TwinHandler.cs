@@ -74,11 +74,11 @@ public class TwinHandler : ITwinHandler
                 if (isSignValid == false)
                 {
                     _logger.Error($"Twin Change signature is invalid");
-                    await UpdateReportedTwinChangeSignAsync("Twin Change signature is invalid");
+                    await UpdateReportedTwinChangeSignAsync("Twin Change signature is invalid", cancellationToken);
                 }
                 else
                 {
-                    await UpdateReportedTwinChangeSignAsync(null);
+                    await UpdateReportedTwinChangeSignAsync(null, cancellationToken);
                     foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
                     {
                         await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, isInitial, cancellationToken);
@@ -116,7 +116,7 @@ public class TwinHandler : ITwinHandler
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
 
-        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial);
+        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
         _logger.Info($"HandleTwinUpdatesAsync: {actions.Count()} actions to execute for {changeSpecKey.ToString()}");
 
         if (actions.Count() > 0)
@@ -124,7 +124,7 @@ public class TwinHandler : ITwinHandler
             await HandleTwinActionsAsync(actions, cancellationToken);
         }
     }
-    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState)
+    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState, CancellationToken cancellationToken)
     {
         try
         {
@@ -182,12 +182,12 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateReportedTwinChangeSignAsync(string message)
+    public async Task UpdateReportedTwinChangeSignAsync(string message, CancellationToken cancellationToken)
     {
         try
         {
             var twinChangeSign = nameof(TwinReported.ChangeSign);
-            await _deviceClient.UpdateReportedPropertiesAsync(twinChangeSign, message);
+            await _deviceClient.UpdateReportedPropertiesAsync(twinChangeSign, message, cancellationToken);
             _logger.Info($"UpdateReportedTwinChangeSignAsync success");
         }
         catch (Exception ex)
@@ -359,7 +359,7 @@ public class TwinHandler : ITwinHandler
         return fileName;
     }
 
-    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial)
+    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         try
         {
