@@ -20,6 +20,15 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return Directory.CreateDirectory(directoryPath);
     }
 
+    public async Task WriteAsync(Stream stream, byte[] bytes)
+    {
+        await stream.WriteAsync(bytes);
+    }
+
+    public void SetLength(Stream stream, long length)
+    {
+        stream.SetLength(length);
+    }
 
     public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {
@@ -71,7 +80,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetTempFileName();
     }
-    
+
     public string[] GetFiles(string directoryPath, string searchPattern)
     {
         return Directory.GetFiles(directoryPath, searchPattern);

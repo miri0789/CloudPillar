@@ -168,6 +168,7 @@ public class FileUploaderHandler : IFileUploaderHandler
             });
             var storageUri = await _deviceClientWrapper.GetBlobUriAsync(sasUriResponse);
             notification.CorrelationId = sasUriResponse.CorrelationId;
+            _logger.Info($"CorrelationId: {notification.CorrelationId}");
             switch (uploadAction.Method)
             {
                 case FileUploadMethod.Blob:

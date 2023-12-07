@@ -39,6 +39,8 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
 
                 await HandleUploadChunkAsync(notification, actionToReport, readStream, storageUri, actionId, chunkSize, isRunDiagnostics, cancellationToken);
 
+                _logger.Info($"CompleteFileUploadAsync correlationId: {correlationId}");
+                _logger.Info($"CompleteFileUploadAsync notification correlationId: {notification.CorrelationId}");
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
             catch (Exception ex)

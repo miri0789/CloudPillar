@@ -9,6 +9,10 @@ public interface IFileStreamerWrapper
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 
+    Task WriteAsync(Stream stream, byte[] bytes);
+
+    void SetLength(Stream stream, long length);
+
     void DeleteFile(string filePath);
 
     Task<string> ReadAllTextAsync(string filePath);
@@ -24,7 +28,7 @@ public interface IFileStreamerWrapper
     string GetDirectoryName(string filePathPattern);
 
     string GetFileName(string filePathPattern);
-    
+
     string GetTempFileName();
 
     string[] GetFiles(string directoryPath, string searchPattern);
