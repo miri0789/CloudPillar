@@ -70,7 +70,7 @@ public class TwinHandler : ITwinHandler
             }
             else
             {
-                var isSignValid = true;//// await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign);
+                var isSignValid = await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign);
                 if (isSignValid == false)
                 {
                     _logger.Error($"Twin Change signature is invalid");
