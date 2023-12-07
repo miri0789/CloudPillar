@@ -536,7 +536,7 @@ public class TwinHandlerTestFixture
 
     private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "")
     {
-        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps, changeSign);
+        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, null, null, twinReportedCustomProps, changeSign);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
         _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
 

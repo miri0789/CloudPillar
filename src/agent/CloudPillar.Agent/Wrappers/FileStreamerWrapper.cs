@@ -99,6 +99,11 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return files.Concat(directoories).ToArray();
     }
 
+    public FileStream OpenRead(string filePath)
+    {
+       return File.OpenRead(filePath);
+    }
+
     public async Task UnzipFileAsync(string filePath, string destinationPath)
     {
         if (File.Exists(filePath))

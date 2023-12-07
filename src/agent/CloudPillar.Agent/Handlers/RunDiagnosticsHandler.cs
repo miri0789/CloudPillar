@@ -1,5 +1,6 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
+using CloudPillar.Agent.Wrappers.interfaces;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Services;
@@ -15,16 +16,18 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ICheckSumService _checkSumService;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IGuidWrapper _guidWrapper;
     private readonly ILoggerHandler _logger;
 
     public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper,
-    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
+    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, IGuidWrapper guidWrapper, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _guidWrapper = guidWrapper ?? throw new ArgumentNullException(nameof(guidWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -49,7 +52,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             var bytes = new Byte[_runDiagnosticsSettings.FleSizBytes];
             new Random().NextBytes(bytes);
 
-            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.Create))
+            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.Open))
             {
                 _fileStreamerWrapper.SetLength(fileStream, _runDiagnosticsSettings.FleSizBytes);
                 await _fileStreamerWrapper.WriteAsync(fileStream, bytes);
@@ -68,7 +71,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     {
         try
         {
-            var actionId = Guid.NewGuid().ToString();
+            var actionId = _guidWrapper.CreateNewGUid();
             var uploadAction = new UploadAction()
             {
                 Action = TwinActionType.SingularUpload,
@@ -121,9 +124,12 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                     }
                     taskCompletion.SetResult(reported);
                 }
-                if (reported.Status == StatusType.Failed)
+                else
                 {
-                    taskCompletion.SetResult(reported);
+                    if (reported.Status == StatusType.Failed)
+                    {
+                        taskCompletion.SetResult(reported);
+                    }
                 }
             }
         }
@@ -154,7 +160,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             throw ex;
         }
     }
-  
+
     private async Task<TwinActionReported> GetDownloadStatus(string actionId)
     {
 
@@ -188,25 +194,25 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         string uploadChecksum = await GetFileCheckSumAsync(uploadFilePath);
         string downloadChecksum = await GetFileCheckSumAsync(downloadFilePath);
 
-        var isEqual = uploadChecksum.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase);
+        var isEqual = uploadChecksum?.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase) ?? false;
         if (isEqual == true)
         {
             _logger.Info("Upload file is equal to Download file");
         }
         return isEqual;
     }
-  
+
     private async Task<string> GetFileCheckSumAsync(string filePath)
     {
         string checkSum = string.Empty;
-        using (FileStream fileStream = File.OpenRead(filePath))
+        using (FileStream fileStream = _fileStreamerWrapper.OpenRead(filePath))
         {
             checkSum = await _checkSumService.CalculateCheckSumAsync(fileStream);
             _logger.Info($"file check sum: {checkSum}");
         }
         return checkSum;
     }
-  
+
     private void DeleteTempFile(string filePath)
     {
         if (string.IsNullOrEmpty(filePath))

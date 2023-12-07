@@ -37,6 +37,8 @@ public interface IFileStreamerWrapper
 
     string[] GetDirectories(string directoryPath, string searchPattern);
 
+    FileStream OpenRead(string filePath);
+
     string[] Concat(string[] files, string[] directoories);
 
     string? GetExtension(string path);
