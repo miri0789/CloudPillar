@@ -3,6 +3,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Entities.Authentication;
@@ -26,12 +27,13 @@ public static class MockHelper
             '$version': 1,
         }";
 
-    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, List<TwinReportedCustomProp>? twinReportedCustomProps = null)
+    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "")
     {
         var desiredJson = JObject.Parse(_baseDesierd);
         desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinDesired()
         {
             ChangeSpec = changeSpecDesired,
+            ChangeSign = changeSign
         })));
         var reportedJson = JObject.Parse(_baseReported);
         reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinReported()

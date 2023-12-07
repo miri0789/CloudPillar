@@ -4,7 +4,7 @@ using CloudPillar.Agent.Handlers;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Tests

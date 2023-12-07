@@ -1,6 +1,6 @@
 using Microsoft.Azure.Storage.Blob;
 
-namespace Backend.BlobStreamer.Interfaces;
+namespace Backend.BlobStreamer.Wrappers.Interfaces;
 
 public interface ICloudBlockBlobWrapper
 {

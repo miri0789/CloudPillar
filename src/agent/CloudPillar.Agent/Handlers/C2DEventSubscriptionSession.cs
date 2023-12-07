@@ -3,7 +3,7 @@ using Microsoft.Azure.Devices.Client;
 using Shared.Entities.Messages;
 using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Factories;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Twin;
 

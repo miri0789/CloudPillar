@@ -4,8 +4,12 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
+<<<<<<< HEAD
 using Shared.Logger;
 using Shared.Entities.Services;
+=======
+using CloudPillar.Agent.Handlers.Logger;
+>>>>>>> 2d7607631fa72aab33887e17d25e190c805022bc
 
 namespace CloudPillar.Agent.Handlers;
 

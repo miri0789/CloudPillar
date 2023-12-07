@@ -4,7 +4,7 @@ using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Storage.Blob;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Storage.Core.Util;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Azure.Devices.Client.Transport;
 
 [TestFixture]

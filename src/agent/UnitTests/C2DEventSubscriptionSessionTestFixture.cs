@@ -5,8 +5,8 @@ using Moq;
 using Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
-using Shared.Logger;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -106,7 +106,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), true);
 
-        _messageSubscriberMock.Verify(ms => ms.HandleReprovisioningMessageAsync(receivedMessage,It.IsAny<ReprovisioningMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+        _messageSubscriberMock.Verify(ms => ms.HandleReprovisioningMessageAsync(receivedMessage, It.IsAny<ReprovisioningMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

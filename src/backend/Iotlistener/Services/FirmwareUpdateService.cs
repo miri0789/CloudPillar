@@ -1,10 +1,9 @@
-﻿using Microsoft.Azure.Storage.Blob;
-using Backend.Infra.Common;
-using Backend.Iotlistener.Interfaces;
+﻿using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Models.Enums;
 using Shared.Logger;
 using Backend.Iotlistener.Models;
 using Shared.Entities.Messages;
+using Backend.Infra.Common.Services.Interfaces;
 
 namespace Backend.Iotlistener.Services;
 

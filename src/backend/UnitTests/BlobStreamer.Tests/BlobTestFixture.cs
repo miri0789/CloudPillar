@@ -1,5 +1,4 @@
-﻿using Backend.BlobStreamer.Interfaces;
-using Backend.BlobStreamer.Services;
+﻿using Backend.BlobStreamer.Services;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
@@ -7,11 +6,11 @@ using Moq;
 using Shared.Entities.Factories;
 using Shared.Entities.Messages;
 using Shared.Logger;
-using Backend.Infra.Common;
-using System.Linq.Expressions;
 using Shared.Entities.Services;
-using System.Reflection;
 using Shared.Enums;
+using Backend.BlobStreamer.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
+using Backend.BlobStreamer.Services.Interfaces;
 
 namespace Backend.BlobStreamer.Tests
 {
@@ -54,7 +53,7 @@ namespace Backend.BlobStreamer.Tests
             _mockCloudStorageWrapper.Setup(c => c.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName)).ReturnsAsync(_mockBlockBlob.Object);
             _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
             _target = new BlobService(_mockEnvironmentsWrapper.Object,
-                _mockCloudStorageWrapper.Object, _mockDeviceConnectService.Object, _mockLogger.Object, _mockMessageFactory.Object, _mockCheckSumService.Object);
+                _mockCloudStorageWrapper.Object, _mockDeviceConnectService.Object, _mockCheckSumService.Object, _mockLogger.Object, _mockMessageFactory.Object);
 
         }
 

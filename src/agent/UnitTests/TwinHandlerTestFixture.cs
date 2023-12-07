@@ -8,7 +8,7 @@ using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -26,6 +26,7 @@ public class TwinHandlerTestFixture
     private ITwinHandler _target;
     private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
     private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
+    private Mock<ISignatureHandler> _signatureHandlerMock;
     private CancellationToken cancellationToken = CancellationToken.None;
 
 
@@ -46,6 +47,7 @@ public class TwinHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
+        _signatureHandlerMock = new Mock<ISignatureHandler>();
         CreateTarget();
     }
 
@@ -60,7 +62,8 @@ public class TwinHandlerTestFixture
           _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
-          mockStrictModeSettings.Object);
+          mockStrictModeSettings.Object,
+          _signatureHandlerMock.Object);
     }
 
     [Test]
@@ -93,37 +96,102 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task OnDesiredPropertiesUpdate_NoNewActions_NotUpdateReport()
     {
-        var desired = new TwinChangeSpec()
+        var desired = new TwinDesired()
         {
-            Id = "123",
-            Patch = new TwinPatch()
+            ChangeSpec = new TwinChangeSpec()
             {
-                InstallSteps = new List<TwinAction>()
+                Id = "123",
+                Patch = new TwinPatch()
+                {
+                    InstallSteps = new List<TwinAction>()
                     {   new TwinAction() { ActionId = "123"},
                         new TwinAction() { ActionId = "456"}
                     }.ToArray()
+                }
             }
         };
 
-        var reported = new TwinReportedChangeSpec()
+        var reported = new TwinReported()
         {
-            Id = "123",
-            Patch = new TwinReportedPatch()
+            ChangeSpec = new TwinReportedChangeSpec()
             {
-                InstallSteps = new List<TwinActionReported>()
+                Id = "123",
+                Patch = new TwinReportedPatch()
+                {
+                    InstallSteps = new List<TwinActionReported>()
                     {   new TwinActionReported() {Status = StatusType.Failed },
                         new TwinActionReported() {Status = StatusType.Success}
                     }.ToArray()
+                }
             }
         };
 
-        CreateTwinMock(desired, reported);
+        CreateTwinMock(desired.ChangeSpec, reported.ChangeSpec);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()));
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
+        _strictModeHandlerMock.Verify(dc => dc.CheckFileAccessPermissions(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Never);
     }
 
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_FirstTimeGetActions_ExecInprogressActions()
+    {
+        InitDataForTestInprogressActions();
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
+
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_NotInitial_ExecPendingActions()
+    {
+        InitDataForTestInprogressActions();
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
+
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    private void InitDataForTestInprogressActions()
+    {
+        var desired = new TwinDesired()
+        {
+            ChangeSpec = new TwinChangeSpec()
+            {
+                Id = "123",
+                Patch = new TwinPatch()
+                {
+                    InstallSteps = new List<TwinAction>()
+                    {   new DownloadAction() { ActionId = "123", DestinationPath = "123", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { ActionId = "456", DestinationPath = "456", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { ActionId = "789", DestinationPath = "789", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { ActionId = "1", DestinationPath = "1", Action = TwinActionType.SingularDownload},
+                    }.ToArray()
+                }
+            }
+        };
+
+        var reported = new TwinReported()
+        {
+            ChangeSpec = new TwinReportedChangeSpec()
+            {
+                Id = "123",
+                Patch = new TwinReportedPatch()
+                {
+                    InstallSteps = new List<TwinActionReported>()
+                    {
+                        new TwinActionReported() {Status = StatusType.Success},
+                        new TwinActionReported() {Status = StatusType.Pending},
+                        new TwinActionReported() {Status = StatusType.Pending},
+                        new TwinActionReported() {Status = StatusType.InProgress}
+                    }.ToArray()
+                }
+            }
+        };
+
+        CreateTwinMock(desired.ChangeSpec, reported.ChangeSpec);
+        _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<DownloadAction>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
+
+    }
     [Test]
     public async Task OnDesiredPropertiesUpdate_SuccessDownloadAction_NotExecuteDownload()
     {
@@ -207,9 +275,9 @@ public class TwinHandlerTestFixture
         };
 
         CreateTwinMock(desired, reported);
-        _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()));
+        _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>()));
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _twinActionsHandler.Verify(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>()), Times.Once);
+        _strictModeHandlerMock.Verify(x => x.CheckFileAccessPermissions(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch.InstallSteps.Count()));
     }
 
     [Test]
@@ -242,6 +310,46 @@ public class TwinHandlerTestFixture
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_ValidateChangeSignFalse_UpdateReportedPropertiesCall()
+    {
+        var desired = new TwinChangeSpec();
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported);
+        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_ValidateChangeSignTrue_SignTwinKeyEventNotSend()
+    {
+        var desired = new TwinChangeSpec();
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_ChangeSignNull_SignTwinKeyEventSend()
+    {
+        var desired = new TwinChangeSpec();
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported, changeSign: null);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -426,10 +534,11 @@ public class TwinHandlerTestFixture
         return actionsToReported;
     }
 
-    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null)
+    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "")
     {
-        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps);
+        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps, changeSign);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
+        _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
 
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
@@ -151,8 +151,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
     public async Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default)
     {
-        FileUploadSasUriResponse response = await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
-        return response;
+        return await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
     }
 
     public async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default)
