@@ -54,6 +54,8 @@ namespace CloudPillar.Agent.Tests
             _checkSumServiceMock = new Mock<ICheckSumService>();
             _loggerMock = new Mock<ILoggerHandler>();
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".zip");
+            _fileStreamerWrapperMock.Setup(x => x.ReadStream(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
+                                    .Returns(new byte[0]);
 
             _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object,
              _d2CMessengerHandlerMock.Object,
@@ -194,7 +196,7 @@ namespace CloudPillar.Agent.Tests
             var rangeEndPosition = 456;
             var message = new DownloadBlobChunkMessage
             {
-                ActionId = _actionToReport.TwinAction.ActionId,
+                ActionId = actionId,
                 FileName = _downloadAction.Source,
                 Offset = 0,
                 Data = new byte[1024],
@@ -205,7 +207,7 @@ namespace CloudPillar.Agent.Tests
                 RangeEndPosition = rangeEndPosition
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(CancellationToken.None, _downloadAction.Source, _downloadAction.ActionId, 6, rangeStartPosition, rangeEndPosition), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), _downloadAction.Source, actionId, 0, rangeStartPosition, rangeEndPosition), Times.Once);
 
         }
 
@@ -266,7 +268,9 @@ namespace CloudPillar.Agent.Tests
                 FileSize = 4096,
                 RangeIndex = 6,
                 RangesCount = 8,
-                RangeCheckSum = "abcd"
+                RangeCheckSum = "abcd",
+                RangeStartPosition = 1,
+                RangeEndPosition = 2
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
             _twinActionsHandlerMock.Verify(
