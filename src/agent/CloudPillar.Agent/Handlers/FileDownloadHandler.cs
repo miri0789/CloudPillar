@@ -36,9 +36,12 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
-        var fileDownload = GetDownloadFile(actionToReport.TwinAction.ActionId, ((DownloadAction)actionToReport.TwinAction).Source) ??
-         new FileDownload { ActionReported = actionToReport, Stopwatch = new Stopwatch() };
-        _filesDownloads.Add(fileDownload);
+        var fileDownload = GetDownloadFile(actionToReport.TwinAction.ActionId, ((DownloadAction)actionToReport.TwinAction).Source);
+        if (fileDownload == null)
+        {
+            fileDownload = new FileDownload { ActionReported = actionToReport, Stopwatch = new Stopwatch() };
+            _filesDownloads.Add(fileDownload);
+        }
         try
         {
             ArgumentNullException.ThrowIfNullOrEmpty(fileDownload.Action.DestinationPath);
@@ -74,7 +77,10 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         finally
         {
-            await SaveReportAsync(fileDownload, cancellationToken);
+            if (fileDownload.Report.Status != null)
+            {
+                await SaveReportAsync(fileDownload, cancellationToken);
+            }
         }
     }
 
@@ -179,7 +185,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             }
         }
         catch (Exception ex)
-        {            
+        {
             HandleDownloadException(ex, file);
         }
         finally

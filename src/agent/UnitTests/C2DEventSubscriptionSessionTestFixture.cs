@@ -130,7 +130,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
 
-        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage, default), Times.Once);
+        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private CancellationToken GetCancellationToken()
