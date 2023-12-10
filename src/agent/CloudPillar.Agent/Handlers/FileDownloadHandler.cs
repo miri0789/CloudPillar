@@ -204,7 +204,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         double progressPercent = Math.Round(file.TotalBytesDownloaded / (double)file.TotalBytes * 100, 2);
         double throughput = file.TotalBytesDownloaded / file.Stopwatch.Elapsed.TotalSeconds / KB;
         _logger.Info($"%{progressPercent:00} @pos: {offset:00000000000} Throughput: {throughput:0.00} KiB/s");
-        return Math.Max((float)progressPercent, 100);
+        return Math.Min((float)progressPercent, 100);
     }
 
     private async Task<bool> VerifyRangeCheckSumAsync(string filePath, long startPosition, long endPosition, string checkSum)
