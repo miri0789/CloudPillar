@@ -13,9 +13,15 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return new FileStream(fullFilePath, fileMode);
     }
-    public FileStream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess)
+    public byte[] ReadStream(string fullFilePath, long startPosition, long lengthToRead)
     {
-        return new FileStream(fullFilePath, fileMode, fileAccess);
+        byte[] data = new byte[lengthToRead];
+        using (Stream stream = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read))
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            stream.Read(data, 0, (int)lengthToRead);
+        }
+        return data;
     }
 
     public DirectoryInfo CreateDirectory(string directoryPath)
@@ -74,7 +80,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetTempFileName();
     }
-    
+
     public string[] GetFiles(string directoryPath, string searchPattern)
     {
         return Directory.GetFiles(directoryPath, searchPattern);

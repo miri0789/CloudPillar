@@ -80,7 +80,7 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task InitFileDownloadAsync_ActiveDownload_SendFirmwareUpdateEventWithRange()
         {
-            _actionToReport.TwinReport.CompleteRanges = "0-5,8,10";
+            _actionToReport.TwinReport.CompletedRanges = "0-5,8,10";
             await _target.InitFileDownloadAsync(_actionToReport, CancellationToken.None);
 
             _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(CancellationToken.None, _downloadAction.Source, _downloadAction.ActionId, 6, null, null), Times.Once);
@@ -190,7 +190,7 @@ namespace CloudPillar.Agent.Tests
                 DestinationPath = _downloadAction.DestinationPath,
             };
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
-            _actionToReport.TwinReport.CompleteRanges = "0-5,7";
+            _actionToReport.TwinReport.CompletedRanges = "0-5,7";
             await _target.InitFileDownloadAsync(_actionToReport, CancellationToken.None);
             var rangeStartPosition = 123;
             var rangeEndPosition = 456;
@@ -212,7 +212,7 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleDownloadMessageAsync_CompleteRangeCheckCheckSumValid_UpdateCompleteRanges()
+        public async Task HandleDownloadMessageAsync_CompleteRangeCheckCheckSumValid_UpdateCompletedRanges()
         {
             var actionId = Guid.NewGuid().ToString();
             _actionToReport.TwinAction = new DownloadAction()
@@ -222,7 +222,7 @@ namespace CloudPillar.Agent.Tests
                 DestinationPath = _downloadAction.DestinationPath,
             };
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
-            _actionToReport.TwinReport.CompleteRanges = "0-4,7";
+            _actionToReport.TwinReport.CompletedRanges = "0-4,7";
             await _target.InitFileDownloadAsync(_actionToReport, CancellationToken.None);
             var rangeStartPosition = 123;
             var rangeEndPosition = 456;
@@ -242,7 +242,7 @@ namespace CloudPillar.Agent.Tests
 
             _twinActionsHandlerMock.Verify(
                     x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
-                    item.Any(rep => rep.TwinReport.CompleteRanges == "0-4,6,7"))
+                    item.Any(rep => rep.TwinReport.CompletedRanges == "0-4,6,7"))
                 , It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -257,7 +257,7 @@ namespace CloudPillar.Agent.Tests
                 DestinationPath = _downloadAction.DestinationPath,
             };
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
-            _actionToReport.TwinReport.CompleteRanges = "0-5,7";
+            _actionToReport.TwinReport.CompletedRanges = "0-5,7";
             await _target.InitFileDownloadAsync(_actionToReport, CancellationToken.None);
             var message = new DownloadBlobChunkMessage
             {

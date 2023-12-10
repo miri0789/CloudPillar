@@ -62,7 +62,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             }
             else
             {
-                var existRanges = GetExistRangesList(fileDownload.Report.CompleteRanges); // get next range for downloading
+                var existRanges = GetExistRangesList(fileDownload.Report.CompletedRanges); // get next range for downloading
                 var currentRangeIndex = !existRanges.Contains(0) ? 0 : existRanges.FirstOrDefault(n => !existRanges.Contains(n + 1) && n != 0) + 1;
                 if (currentRangeIndex > 0 && isFileExist && fileDownload.TotalBytesDownloaded == 0)
                 {
@@ -142,7 +142,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         else
         {
-            file.Report.CompleteRanges = AddRange(file.Report.CompleteRanges, message.RangeIndex);
+            file.Report.CompletedRanges = AddRange(file.Report.CompletedRanges, message.RangeIndex);
         }
     }
     private FileDownload GetDownloadFile(string actionId, string fileName)
@@ -174,7 +174,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 await HandleEndRangeDownloadAsync(filePath, message, file, cancellationToken);
             }
-            if (file.Report.CompleteRanges == (message.RangesCount == 1 ? "0" : $"0-{message.RangesCount - 1}"))
+            if (file.Report.CompletedRanges == (message.RangesCount == 1 ? "0" : $"0-{message.RangesCount - 1}"))
             {
                 await HandleCompletedDownloadAsync(file, cancellationToken);
             }
@@ -216,12 +216,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private async Task<bool> VerifyRangeCheckSumAsync(string filePath, long startPosition, long endPosition, string checkSum)
     {
         long lengthToRead = endPosition - startPosition;
-        byte[] data = new byte[lengthToRead];
-        using (Stream stream = _fileStreamerWrapper.CreateStream(filePath, FileMode.Open, FileAccess.Read))
-        {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-            stream.Read(data, 0, (int)lengthToRead);
-        }
+        byte[] data = _fileStreamerWrapper.ReadStream(filePath, startPosition, lengthToRead);
 
         var streamCheckSum = await _checkSumService.CalculateCheckSumAsync(data);
         return checkSum == streamCheckSum;
