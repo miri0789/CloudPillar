@@ -40,16 +40,17 @@ public class BlobService : IBlobService
         return blockBlob.Properties;
     }
 
-    public async Task<string> GetFileCheckSum(string fileName)
+    public async Task<byte[]> GetFileBytes(string fileName)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
         var data = new byte[fileSize];
         await blockBlob.DownloadRangeToByteArrayAsync(data, 0, 0, fileSize);
-        return await _checkSumService.CalculateCheckSumAsync(data);
+        return data;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, string fileCheckSum)
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, 
+    int rangeIndex, long startPosition, string ActionId, int rangesCount)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
@@ -70,7 +71,6 @@ public class BlobService : IBlobService
                 Offset = offset,
                 FileName = fileName,
                 ActionId = ActionId,
-                FileCheckSum = fileCheckSum,
                 FileSize = fileSize,
                 Data = data
             };
@@ -78,6 +78,7 @@ public class BlobService : IBlobService
             {
                 blobMessage.RangeStartPosition = startPosition;
                 blobMessage.RangeEndPosition = rangeEndPosition;
+                blobMessage.RangesCount = rangesCount;
                 blobMessage.RangeCheckSum = await _checkSumService.CalculateCheckSumAsync(rangeBytes.ToArray());
             }
 

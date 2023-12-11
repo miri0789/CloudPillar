@@ -5,6 +5,8 @@ public interface IFileStreamerWrapper
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
 
+    byte[] ReadStream(string fullFilePath, long startPosition, long lengthToRead);
+
     DirectoryInfo CreateDirectory(string directoryPath);
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
@@ -43,4 +45,5 @@ public interface IFileStreamerWrapper
 
     string? GetExtension(string path);
 
+    long GetFileLength(string path);
 }

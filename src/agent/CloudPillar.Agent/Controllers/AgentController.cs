@@ -98,16 +98,16 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("SetBusy")]
-    public async Task<ActionResult<string>> SetBusyAsync()
+    public async Task<ActionResult<string>> SetBusyAsync(CancellationToken cancellationToken)
     {
-        await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy, cancellationToken);
         return await _twinHandler.GetLatestTwinAsync(CancellationToken.None);
     }
 
     [HttpPost("SetReady")]
-    public async Task<ActionResult<string>> SetReadyAsync()
+    public async Task<ActionResult<string>> SetReadyAsync(CancellationToken cancellationToken)
     {
-        await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready, cancellationToken);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
@@ -156,8 +156,8 @@ public class AgentController : ControllerBase
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
-        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning);
-        await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken);
+        await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }
 }
 

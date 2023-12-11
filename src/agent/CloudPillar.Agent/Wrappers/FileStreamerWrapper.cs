@@ -1,7 +1,6 @@
 ﻿
 using System.IO.Compression;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace CloudPillar.Agent.Wrappers;
 public class FileStreamerWrapper : IFileStreamerWrapper
@@ -13,6 +12,16 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     public FileStream CreateStream(string fullFilePath, FileMode fileMode)
     {
         return new FileStream(fullFilePath, fileMode);
+    }
+    public byte[] ReadStream(string fullFilePath, long startPosition, long lengthToRead)
+    {
+        byte[] data = new byte[lengthToRead];
+        using (Stream stream = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read))
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            stream.Read(data, 0, (int)lengthToRead);
+        }
+        return data;
     }
 
     public DirectoryInfo CreateDirectory(string directoryPath)
@@ -140,5 +149,9 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetExtension(path);
     }
-
+    public long GetFileLength(string path)
+    {
+        FileInfo fileInfo = new FileInfo(path);
+        return fileInfo.Length;
+    }
 }
