@@ -101,8 +101,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
             {
                 CleanCertificates(store, certificate, deviceId, iotHubHostName);
             }
-            // InstallCertificateInTrustArea(certificate, deviceId, iotHubHostName);
-
         }
         catch (Exception ex)
         {
