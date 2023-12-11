@@ -40,19 +40,13 @@ public class BlobService : IBlobService
         return blockBlob.Properties;
     }
 
-    public async Task<byte[]> GetBlobContentAsync(string fileName)
+    public async Task<byte[]> GetFileBytes(string fileName)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
         var data = new byte[fileSize];
         await blockBlob.DownloadRangeToByteArrayAsync(data, 0, 0, fileSize);
         return data;
-    }
-
-    public async Task<string> GetFileCheckSum(string fileName)
-    {
-        var data = await GetBlobContentAsync(fileName);
-        return await _checkSumService.CalculateCheckSumAsync(data);
     }
 
     public async Task<byte[]> CalculateHashAsync(string filePath, int bufferSize)
@@ -85,7 +79,8 @@ public class BlobService : IBlobService
         }
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, string fileCheckSum)
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize,
+    int rangeIndex, long startPosition, string ActionId, int rangesCount)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);

@@ -152,7 +152,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         file.Stopwatch?.Stop();
         var filePath = file.TempPath ?? file.Action.DestinationPath;
-        var isVerify = await _signatureHandler.VerifyFileSignatureAsync(filePath, file.DownloadAction.Sign);
+        var isVerify = await _signatureHandler.VerifyFileSignatureAsync(filePath, file.Action.Sign);
         if (isVerify)
         {
             if (!string.IsNullOrWhiteSpace(file.TempPath))
@@ -167,7 +167,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         else
         {
-            _fileStreamerWrapper.DeleteFile(file.DownloadAction.DestinationPath);
+            _fileStreamerWrapper.DeleteFile(file.Action.DestinationPath);
             file.Report.Status = StatusType.Failed;
         }
     }

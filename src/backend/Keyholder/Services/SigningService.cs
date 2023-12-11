@@ -12,10 +12,9 @@ using Shared.Entities.Twin;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Converters;
 using Backend.Infra.Common.Services.Interfaces;
-
+using Shared.Entities.Utilities;
 
 namespace Backend.Keyholder.Services;
-
 
 public class SigningService : ISigningService
 {

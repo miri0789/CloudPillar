@@ -24,13 +24,6 @@ public class BlobController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("GetBlobContent")]
-    public async Task<IActionResult> GetBlobContentAsync(string fileName)
-    {
-        var result = await _blobService.GetBlobContentAsync(fileName);
-        return Ok(result);
-    }
-
     [HttpGet("CalculateHash")]
     public async Task<IActionResult> CalculateHashtAsync(string fileName, int bufferSize)
     {
