@@ -24,10 +24,10 @@ public class RunDiagnosticsHandlerTestFixture
     private Mock<FileStream> _fileStreamMock;
     private Mock<ILoggerHandler> _logger;
     private const int FILE_SIZE_BYTES = 128 * 1024;
-    private string uploadFilePath ="uploadFilePath";
-    private string downloadFilePath = "downloadFilePath";
+    private const string uploadFilePath = "uploadFilePath";
+    private const string downloadFilePath = "downloadFilePath";
     private string actionId = Guid.NewGuid().ToString();
-    private string checkSum = "testCheckSum";
+    private const string checkSum = "testCheckSum";
 
     private CancellationToken cancellationToken = CancellationToken.None;
 
@@ -95,9 +95,13 @@ public class RunDiagnosticsHandlerTestFixture
             FileName = uploadFilePath,
             ActionId = actionId
         };
-
         await _target.HandleRunDiagnosticsProcess(CancellationToken.None);
-        _fileUploaderHandlerMock.Setup(x => x.UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, It.IsAny<ActionToReport>(), cancellationToken, true));
+
+        _fileUploaderHandlerMock.Verify(
+         x => x.UploadFilesToBlobStorageAsync(It.Is<string>(x => x == uploadFilePath), It.Is<UploadAction>
+         (item => item.ActionId == actionId && item.FileName == uploadFilePath)
+     , It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>(), It.Is<bool>(x => x == true)), Times.Once);
+
     }
 
     [Test]
@@ -125,7 +129,7 @@ public class RunDiagnosticsHandlerTestFixture
         Assert.AreEqual(StatusType.Failed, reported.Status);
 
     }
-   
+
     [Test]
     public async Task CheckDownloadStatus_FullProcess_DeletTempFiles()
     {
