@@ -33,6 +33,15 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return Directory.CreateDirectory(directoryPath);
     }
 
+    public async Task WriteAsync(Stream stream, byte[] bytes)
+    {
+        await stream.WriteAsync(bytes);
+    }
+
+    public void SetLength(Stream stream, long length)
+    {
+        stream.SetLength(length);
+    }
 
     public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {
@@ -101,6 +110,11 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     public string[] Concat(string[] files, string[] directoories)
     {
         return files.Concat(directoories).ToArray();
+    }
+
+    public FileStream OpenRead(string filePath)
+    {
+       return File.OpenRead(filePath);
     }
 
     public async Task UnzipFileAsync(string filePath, string destinationPath)
