@@ -35,7 +35,7 @@ public class TwinActionsHandlerTestFixture
         await _target.UpdateReportActionAsync(actionsToReported, cancellationToken);
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
-            nameof(TwinReported.ChangeSpec), It.IsAny<JObject>()), Times.Once);
+            nameof(TwinReported.ChangeSpec), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private List<ActionToReport> CreateReportForUpdating()

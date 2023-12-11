@@ -14,20 +14,17 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     private readonly IMessageSubscriber _messageSubscriber;
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IMessageFactory _messageFactory;
-    private readonly ITwinActionsHandler _twinActionsHandler;
     private readonly IStateMachineHandler _stateMachineHandler;
     private readonly ILoggerHandler _logger;
     public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
                                        IMessageSubscriber messageSubscriber,
                                        IMessageFactory messageFactory,
-                                       ITwinActionsHandler twinActionsHandler,
                                        IStateMachineHandler stateMachineHandler,
                                        ILoggerHandler logger)
     {
         _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _messageSubscriber = messageSubscriber ?? throw new ArgumentNullException(nameof(messageSubscriber));
-        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(stateMachineHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -80,7 +77,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             {
                 if (messageType != C2DMessageType.Reprovisioning)
                 {
-                    await _deviceClient.CompleteAsync(receivedMessage);
+                    await _deviceClient.CompleteAsync(receivedMessage, cancellationToken);
                     _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
                 }
             }
@@ -94,7 +91,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             case C2DMessageType.Reprovisioning:
                 var reprovisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
                 await _messageSubscriber.HandleReprovisioningMessageAsync(receivedMessage, reprovisioningMessage, cancellationToken);
-                await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
+                await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready, cancellationToken);
                 break;
             case C2DMessageType.RequestDeviceCertificate:
                 var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<RequestDeviceCertificateMessage>(receivedMessage);
@@ -113,8 +110,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
         {
             case C2DMessageType.DownloadChunk:
                 var message = _messageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
-                var actionToReport = await _messageSubscriber.HandleDownloadMessageAsync(message, cancellationToken);
-                await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+                await _messageSubscriber.HandleDownloadMessageAsync(message, cancellationToken);
                 break;
             default:
                 _logger.Warn($"Receive  message was not processed type: {messageType?.ToString()}");

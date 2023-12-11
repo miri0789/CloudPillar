@@ -8,6 +8,6 @@ public class TwinActionReported
     public string ResultCode { get; set; }
     public string ResultText { get; set; }
     public string CheckSum { get; set; }
-    public string CompleteRanges { get; set; }
+    public string CompletedRanges { get; set; }
     public string CorrelationId { get; set; }
 }

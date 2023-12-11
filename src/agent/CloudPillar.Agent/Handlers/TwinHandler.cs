@@ -63,7 +63,7 @@ public class TwinHandler : ITwinHandler
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
-            if (twinDesired?.ChangeSign == null)
+            if (string.IsNullOrWhiteSpace(twinDesired?.ChangeSign))
             {
                 _logger.Info($"There is no twin change sign, send sign event..");
                 await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign), cancellationToken);
@@ -74,11 +74,11 @@ public class TwinHandler : ITwinHandler
                 if (isSignValid == false)
                 {
                     _logger.Error($"Twin Change signature is invalid");
-                    await UpdateReportedTwinChangeSignAsync("Twin Change signature is invalid");
+                    await UpdateReportedTwinChangeSignAsync("Twin Change signature is invalid", cancellationToken);
                 }
                 else
                 {
-                    await UpdateReportedTwinChangeSignAsync(null);
+                    await UpdateReportedTwinChangeSignAsync(null, cancellationToken);
                     foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
                     {
                         await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, isInitial, cancellationToken);
@@ -116,7 +116,7 @@ public class TwinHandler : ITwinHandler
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
 
-        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial);
+        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
         _logger.Info($"HandleTwinUpdatesAsync: {actions.Count()} actions to execute for {changeSpecKey.ToString()}");
 
         if (actions.Count() > 0)
@@ -124,12 +124,12 @@ public class TwinHandler : ITwinHandler
             await HandleTwinActionsAsync(actions, cancellationToken);
         }
     }
-    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState)
+    public async Task UpdateDeviceStateAsync(DeviceStateType deviceState, CancellationToken cancellationToken)
     {
         try
         {
             var deviceStateKey = nameof(TwinReported.DeviceState);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString());
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateKey, deviceState.ToString(), cancellationToken);
             _logger.Info($"UpdateDeviceStateAsync success");
         }
         catch (Exception ex)
@@ -152,12 +152,12 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateDeviceSecretKeyAsync(string secretKey)
+    public async Task UpdateDeviceSecretKeyAsync(string secretKey, CancellationToken cancellationToken)
     {
         try
         {
             var deviceSecretKey = nameof(TwinReported.SecretKey);
-            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceSecretKey, secretKey, cancellationToken);
             _logger.Info($"UpdateDeviceSecretKeyAsync success");
         }
         catch (Exception ex)
@@ -166,14 +166,14 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task InitReportDeviceParamsAsync()
+    public async Task InitReportDeviceParamsAsync(CancellationToken cancellationToken)
     {
         try
         {
             var supportedShellsKey = nameof(TwinReported.SupportedShells);
-            await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells);
+            await _deviceClient.UpdateReportedPropertiesAsync(supportedShellsKey, _supportedShells, cancellationToken);
             var agentPlatformKey = nameof(TwinReported.AgentPlatform);
-            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, _runtimeInformationWrapper.GetOSDescription());
+            await _deviceClient.UpdateReportedPropertiesAsync(agentPlatformKey, _runtimeInformationWrapper.GetOSDescription(), cancellationToken);
             _logger.Info("InitReportedDeviceParams success");
         }
         catch (Exception ex)
@@ -182,12 +182,12 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateReportedTwinChangeSignAsync(string message)
+    public async Task UpdateReportedTwinChangeSignAsync(string message, CancellationToken cancellationToken)
     {
         try
         {
             var twinChangeSign = nameof(TwinReported.ChangeSign);
-            await _deviceClient.UpdateReportedPropertiesAsync(twinChangeSign, message);
+            await _deviceClient.UpdateReportedPropertiesAsync(twinChangeSign, message, cancellationToken);
             _logger.Info($"UpdateReportedTwinChangeSignAsync success");
         }
         catch (Exception ex)
@@ -262,7 +262,7 @@ public class TwinHandler : ITwinHandler
                     }
                 }
                 var deviceCustomProps = nameof(TwinReported.Custom);
-                await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, twinReportedCustom);
+                await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, twinReportedCustom, cancellationToken);
             }
             _logger.Info($"UpdateDeviceSecretKeyAsync success");
         }
@@ -279,32 +279,38 @@ public class TwinHandler : ITwinHandler
 
             foreach (var action in actions)
             {
-                switch (action.TwinAction.Action)
+                var filePath = string.Empty;
+                if (action.TwinAction is DownloadAction || action.TwinAction is UploadAction)
                 {
-                    case TwinActionType.SingularDownload:
-                        var fileName = await HandleStrictMode(action, cancellationToken);
-                        if (string.IsNullOrEmpty(fileName)) { continue; }
-                        await _fileDownloadHandler.InitFileDownloadAsync((DownloadAction)action.TwinAction, action, cancellationToken);
+                    filePath = await GetReplacedFilePath(action, cancellationToken);
+                    if (string.IsNullOrWhiteSpace(filePath))
+                    {
+                        continue;
+                    }
+                }
+
+                switch (action.TwinAction)
+                {
+                    case DownloadAction downloadAction:
+                        downloadAction.DestinationPath = filePath;
+                        await _fileDownloadHandler.InitFileDownloadAsync(action, cancellationToken);
                         break;
 
-                    case TwinActionType.SingularUpload:
-                        var uploadFileName = await HandleStrictMode(action, cancellationToken);
-                        if (string.IsNullOrEmpty(uploadFileName)) { continue; }
-                        await _fileUploaderHandler.FileUploadAsync((UploadAction)action.TwinAction, action, uploadFileName, cancellationToken);
+                    case UploadAction uploadAction:
+                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, cancellationToken);
                         break;
-                    case TwinActionType.ExecuteOnce:
-                        if (_strictModeSettings.StrictMode)
-                        {
-                            _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
-                            await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
-                            continue;
-                        }
+
+                    case ExecuteAction execOnce when _strictModeSettings.StrictMode:
+                        _logger.Info("Strict Mode is active, Bash/PowerShell actions are not allowed");
+                        await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.StrictModeBashPowerShell.ToString(), cancellationToken);
                         break;
+
                     default:
                         await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.NotFound.ToString(), cancellationToken);
                         _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
                         break;
                 }
+
             }
         }
         catch (Exception ex)
@@ -312,23 +318,25 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed", ex);
         }
     }
-    private async Task<string> HandleStrictMode(ActionToReport action, CancellationToken cancellationToken)
+    private async Task<string> GetReplacedFilePath(ActionToReport action, CancellationToken cancellationToken)
     {
-        var fileName = string.Empty;
         try
         {
-            var actionFileName = GetFileNameByAction(action);
-
-            fileName = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName) ?? actionFileName;
-            _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, fileName);
-
+            var actionFileName = action.TwinAction switch
+            {
+                DownloadAction downloadAction => downloadAction.DestinationPath,
+                UploadAction uploadAction => uploadAction.FileName,
+                _ => string.Empty
+            };
+            var filePath = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName) ?? actionFileName;
+            _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, filePath);
+            return filePath;
         }
         catch (Exception ex)
         {
             await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
             return string.Empty;
         }
-        return fileName;
     }
     private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
     {
@@ -351,7 +359,7 @@ public class TwinHandler : ITwinHandler
         return fileName;
     }
 
-    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial)
+    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         try
         {
@@ -406,7 +414,7 @@ public class TwinHandler : ITwinHandler
             }
             if (isReportedChanged)
             {
-                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey);
+                await _twinActionsHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey, cancellationToken);
             }
             return actions;
         }

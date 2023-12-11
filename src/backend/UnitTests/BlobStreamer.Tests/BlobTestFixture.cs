@@ -34,6 +34,7 @@ namespace Backend.BlobStreamer.Tests
         private const int _rangeSize = 4096;
         private const int _rangeIndex = 0;
         private const long _startPosition = 0;
+        private const int _rangesCount = 0;
 
         [SetUp]
         public void Setup()
@@ -63,7 +64,7 @@ namespace Backend.BlobStreamer.Tests
             _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
 
             _mockDeviceConnectService.Setup(s => s.SendDeviceMessagesAsync(It.IsAny<Message[]>(), _deviceId)).Returns(Task.CompletedTask);
-            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid().ToString(), "");
+            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid().ToString(), _rangesCount);
             _mockDeviceConnectService.Verify(s => s.SendDeviceMessagesAsync(
                                                 It.Is<Message[]>(messages => messages.Length == 4),
                                                 _deviceId),
@@ -75,7 +76,7 @@ namespace Backend.BlobStreamer.Tests
         {
             _mockCheckSumService.Setup(b => b.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>()));
 
-            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid().ToString(), "");
+            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid().ToString(), _rangesCount);
             _mockCheckSumService.Verify(s => s.CalculateCheckSumAsync(It.Is<byte[]>(b => b.Length == _rangeSize), It.IsAny<CheckSumType>()), Times.Once);
         }
 
@@ -97,21 +98,6 @@ namespace Backend.BlobStreamer.Tests
             async Task GetBlobMetadataAsync() => await _target.GetBlobMetadataAsync(fileName);
             Assert.ThrowsAsync<NullReferenceException>(GetBlobMetadataAsync);
         }
-
-        [Test]
-        public async Task GetFileCheckSum_ValidBlob_ShouldGetBlockBlobReference()
-        {
-            var result = await _target.GetFileCheckSum(_fileName);
-            _mockCloudStorageWrapper.Verify(b => b.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName), Times.Once);
-        }
-
-        [Test]
-        public async Task GetFileCheckSum_ValidBlob_ShouldReturnCheckSum()
-        {
-            var checkSum = "1234";
-            _mockCheckSumService.Setup(b => b.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync(checkSum);
-            var result = await _target.GetFileCheckSum(_fileName);
-            Assert.AreEqual(result, checkSum);
-        }
+        
     }
 }

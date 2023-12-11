@@ -5,9 +5,15 @@ public interface IFileStreamerWrapper
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
 
+    byte[] ReadStream(string fullFilePath, long startPosition, long lengthToRead);
+
     DirectoryInfo CreateDirectory(string directoryPath);
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
+
+    Task WriteAsync(Stream stream, byte[] bytes);
+
+    void SetLength(Stream stream, long length);
 
     void DeleteFile(string filePath);
 
@@ -24,7 +30,7 @@ public interface IFileStreamerWrapper
     string GetDirectoryName(string filePathPattern);
 
     string GetFileName(string filePathPattern);
-    
+
     string GetTempFileName();
 
     string[] GetFiles(string directoryPath, string searchPattern);
@@ -33,8 +39,11 @@ public interface IFileStreamerWrapper
 
     string[] GetDirectories(string directoryPath, string searchPattern);
 
+    FileStream OpenRead(string filePath);
+
     string[] Concat(string[] files, string[] directoories);
 
     string? GetExtension(string path);
 
+    long GetFileLength(string path);
 }
