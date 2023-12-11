@@ -34,14 +34,14 @@ namespace CloudPillar.Agent.Handlers
             await HandleStateActionAsync(state);
         }
 
-        public async Task SetStateAsync(DeviceStateType state)
+        public async Task SetStateAsync(DeviceStateType state, CancellationToken cancellationToken)
         {
 
             var currentState = await GetStateAsync();
             if (currentState != state || state == DeviceStateType.Provisioning)
             {
                 _currentDeviceState = state;
-                await _twinHandler.UpdateDeviceStateAsync(state);
+                await _twinHandler.UpdateDeviceStateAsync(state, cancellationToken);
                 await HandleStateActionAsync(state);
                 _logger.Info($"Set device state: {state}");
             }

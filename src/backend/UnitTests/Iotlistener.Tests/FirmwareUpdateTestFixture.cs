@@ -20,7 +20,7 @@ public class FirmwareUpdateTestFixture
     private const string _deviceId = "testDevice";
     private const string _actionId = "123";
     private const string _fileName = "testFile.bin";
-    private const string _checkSum = "abcdef";
+    private const string _rangesCount = "2";
     private const int _chunkSize = 1024;
     private const long _startPosition = 0L;
     private const long _rangeSize = 1024L;
@@ -38,16 +38,27 @@ public class FirmwareUpdateTestFixture
         _mockEnvironmentsWrapper.Setup(f => f.rangeBytes).Returns(_rangeSize);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest<string>($"{_blobStreamerUrl.AbsoluteUri}blob/GetFileCheckSum?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_checkSum); 
-        _httpRequestorServiceMock
             .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new BlobData(){Length = _blobSize});
+            .ReturnsAsync(new BlobData() { Length = _blobSize });
         _target = new FirmwareUpdateService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
     
     private string BuildBlobRangeUrl(long rangeIndex = 0, long startPosition = 0)
     {
-        return $"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex={rangeIndex}&startPosition={startPosition}&actionId={_actionId}&checkSum={_checkSum}";
+        return $"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex={rangeIndex}&startPosition={startPosition}&actionId={_actionId}&rangesCount={_rangesCount}";
     }
+
+
+
+    [Test]
+    public async Task SendFirmwareUpdateAsync_GetBlobSizeFails_ThrowsException()
+    {
+        _httpRequestorServiceMock
+            .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Failed to retrieve blob size."));
+
+        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.SendFirmwareUpdateAsync(_deviceId, new FirmwareUpdateEvent() { FileName = _fileName }));
+    }
+
+
 }
