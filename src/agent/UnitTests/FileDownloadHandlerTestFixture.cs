@@ -175,6 +175,10 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             action.Action.Unzip = true;
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(action.Action.Source)).Returns(".zip");
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(action.Action.DestinationPath)).Returns("");
+            _fileStreamerWrapperMock.Setup(f => f.Combine(It.IsAny<string>(), It.IsAny<string>())).Returns(action.Action.Source);
+            
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
             action.Report.Status = StatusType.Unzip;
             _fileStreamerWrapperMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(true);

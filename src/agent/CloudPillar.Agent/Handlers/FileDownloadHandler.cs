@@ -16,6 +16,8 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
     private static readonly ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
+
+
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
 
@@ -274,12 +276,13 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private void RemoveFileFromList(string actionId, string fileName)
     {
-        while (_filesDownloads.TryTake(out var removedItem))
+        var itemsToRemove = _filesDownloads
+        .Where(item => item.Action.Source == fileName || item.Action.ActionId == actionId)
+        .ToList();
+
+        foreach (var removedItem in itemsToRemove)
         {
-            if (removedItem.Action.Source != fileName || removedItem.Action.ActionId != actionId)
-            {
-                _filesDownloads.Add(removedItem);
-            }
+            _filesDownloads.TryTake(out _);
         }
     }
 }
