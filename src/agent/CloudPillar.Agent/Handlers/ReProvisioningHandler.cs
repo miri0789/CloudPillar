@@ -101,7 +101,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
             {
                 CleanCertificates(store, certificate, deviceId, iotHubHostName);
             }
-            InstallCertificateInTrustArea(certificate, deviceId, iotHubHostName);
+            // InstallCertificateInTrustArea(certificate, deviceId, iotHubHostName);
 
         }
         catch (Exception ex)
@@ -110,22 +110,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
             throw;
         }
 
-    }
-
-    private void InstallCertificateInTrustArea(X509Certificate2 certificate, string deviceId, string iotHubHostName)
-    {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, StoreName.Root))
-        {
-            X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
-            if (certificates == null)
-            {
-                throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
-            }
-
-            RemoveCertificatesFromStore(store, certificate.Thumbprint);
-            certificate.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
-            _x509CertificateWrapper.Add(store, certificate);
-        }
     }
 
     private void CleanCertificates(X509Store store, X509Certificate2 certificate, string deviceId, string iotHubHostName)
