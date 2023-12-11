@@ -6,17 +6,17 @@ namespace Shared.Entities.Services;
 
 public class CheckSumService : ICheckSumService
 {
-    public async Task<string> CalculateCheckSumAsync(byte[] data, CheckSumType checkSumType = CheckSumType.MD5)
+    public async Task<string> CalculateCheckSumAsync(byte[] data, CheckSumType checkSumType = CheckSumType.SHA256)
     {
         Stream stream = new MemoryStream(data);
         return await CalculateCheckSumAsync(stream, checkSumType);
     }
-    public async Task<string> CalculateCheckSumAsync(Stream stream, CheckSumType checkSumType = CheckSumType.MD5)
+    public async Task<string> CalculateCheckSumAsync(Stream stream, CheckSumType checkSumType = CheckSumType.SHA256)
     {
 
         switch (checkSumType)
         {
-            case CheckSumType.MD5:
+            case CheckSumType.SHA256:
                 return await CalculateMdsCheckSumAsync(stream);
             default:
                 throw new ArgumentNullException("CheckSum Type not provided");
@@ -25,7 +25,7 @@ public class CheckSumService : ICheckSumService
 
     private async Task<string> CalculateMdsCheckSumAsync(Stream stream)
     {
-        using (var md5 = MD5.Create())
+        using (var md5 = SHA256.Create())
         {
             stream.Seek(0, SeekOrigin.Begin);
             byte[] hashBytes = await md5.ComputeHashAsync(stream);
