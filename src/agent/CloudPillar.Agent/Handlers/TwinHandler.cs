@@ -400,7 +400,7 @@ public class TwinHandler : ITwinHandler
                                TwinAction = item,
                                TwinReport = reportedValue[index]
                            })
-                        .Where((item, index) => reportedValue[index].Status == StatusType.Pending
+                        .Where((item, index) => reportedValue[index].Status == StatusType.Pending || reportedValue[index].Status == StatusType.SentForSignature
                             || (isInitial && reportedValue[index].Status != StatusType.Success && reportedValue[index].Status != StatusType.Failed)));
 
 

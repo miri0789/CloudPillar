@@ -1,5 +1,6 @@
 
 using System.Security.Cryptography.X509Certificates;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 public interface ID2CMessengerHandler
@@ -8,4 +9,5 @@ public interface ID2CMessengerHandler
     Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum, CancellationToken cancellationToken, bool isRunDiagnostics = false);
     Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate, CancellationToken cancellationToken);
     Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken);
+    Task SendSignFileEventAsync(SignFileEvent d2CMessage, CancellationToken cancellationToken);
 }

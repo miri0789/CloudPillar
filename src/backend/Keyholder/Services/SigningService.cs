@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 using Shared.Entities.Twin;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Converters;
-using Shared.Entities.Utilities;
+using Backend.Infra.Common.Services.Interfaces;
 
 
 namespace Backend.Keyholder.Services;
@@ -22,11 +22,13 @@ public class SigningService : ISigningService
     private ECDsa _signingPrivateKey;
     private readonly RegistryManager _registryManager;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly ITwinDiseredService _twinDesiredService;
     private readonly ILoggerHandler _logger;
 
-    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
+    public SigningService(IEnvironmentsWrapper environmentsWrapper, ITwinDiseredService twinDiseredService, ILoggerHandler logger)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _twinDesiredService = twinDiseredService ?? throw new ArgumentNullException(nameof(twinDiseredService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         if (string.IsNullOrEmpty(_environmentsWrapper.iothubConnectionString))
         {
@@ -123,7 +125,7 @@ public class SigningService : ISigningService
 
     public async Task CreateTwinKeySignature(string deviceId)
     {
-        if(_signingPrivateKey == null)
+        if (_signingPrivateKey == null)
         {
             await Init();
         }
@@ -142,9 +144,18 @@ public class SigningService : ISigningService
         var signatureString = Convert.ToBase64String(signature);
 
         twinDesired.ChangeSign = signatureString;
-        
         // Update the device twin
         twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
         await _registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
+    }
+
+    public async Task CreateFileKeySignature(string deviceId, string actionId, byte[] hash)
+    {
+        if (_signingPrivateKey == null)
+        {
+            await Init();
+        }
+        var signature = _signingPrivateKey.SignHash(hash);
+        await _twinDesiredService.ChangeDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.ChangeSpec, actionId, Convert.ToBase64String(signature));
     }
 }

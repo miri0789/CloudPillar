@@ -78,6 +78,9 @@ builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
 builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
 
+var signFileSettings = builder.Configuration.GetSection("SignFileSettings");
+builder.Services.Configure<SignFileSettings>(signFileSettings);
+
 var servcieProvider = builder.Services.BuildServiceProvider();
 var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
 builder.WebHost.UseKestrel(options =>

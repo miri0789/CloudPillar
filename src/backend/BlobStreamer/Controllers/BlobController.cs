@@ -24,6 +24,20 @@ public class BlobController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("GetBlobContent")]
+    public async Task<IActionResult> GetBlobContentAsync(string fileName)
+    {
+        var result = await _blobService.GetBlobContentAsync(fileName);
+        return Ok(result);
+    }
+
+    [HttpGet("CalculateHash")]
+    public async Task<IActionResult> CalculateHashtAsync(string fileName, int bufferSize)
+    {
+        var result = await _blobService.CalculateHashAsync(fileName, bufferSize);
+        return Ok(result);
+    }
+
     [HttpPost("range")]
     public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string actionId, int rangesCount)
     {

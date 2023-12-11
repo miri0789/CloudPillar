@@ -35,7 +35,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var diagnosticsFilePath = await CreateFileAsync();
         var actionId = await UploadFileAsync(diagnosticsFilePath, cancellationToken);
         var reported = await CheckDownloadStatus(actionId, diagnosticsFilePath);
-        
+
         var downloafFile = reported.Status == StatusType.Success ? reported.ResultText : string.Empty;
         await DeleteFileAsync(diagnosticsFilePath, downloafFile, actionId, cancellationToken);
         return reported;

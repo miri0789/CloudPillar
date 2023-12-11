@@ -24,4 +24,9 @@ src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/DesignTimeBuild
 **/tfplan
 **/*.terraform*
 terraform.tfstate*
-.vscode/launch.json
+*.lock
+*.vsidx
+src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/v17/.suo
+*.v2
+src/backend/Keyholder/.vs/Keyholder/v17/.suo
+src/backend/Keyholder/.vs/Keyholder/v17/.suo

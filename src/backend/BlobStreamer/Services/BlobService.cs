@@ -6,8 +6,8 @@ using Backend.BlobStreamer.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
 using Shared.Entities.Services;
 using Microsoft.Azure.Devices;
-using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
+using System.Security.Cryptography;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -22,7 +22,7 @@ public class BlobService : IBlobService
     private readonly ICheckSumService _checkSumService;
 
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
-     IDeviceConnectService deviceConnectService,ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory)
+     IDeviceConnectService deviceConnectService, ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));
@@ -40,7 +40,7 @@ public class BlobService : IBlobService
         return blockBlob.Properties;
     }
 
-    public async Task<byte[]> GetFileBytes(string fileName)
+    public async Task<byte[]> GetBlobContentAsync(string fileName)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
@@ -49,8 +49,43 @@ public class BlobService : IBlobService
         return data;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, 
-    int rangeIndex, long startPosition, string ActionId, int rangesCount)
+    public async Task<string> GetFileCheckSum(string fileName)
+    {
+        var data = await GetBlobContentAsync(fileName);
+        return await _checkSumService.CalculateCheckSumAsync(data);
+    }
+
+    public async Task<byte[]> CalculateHashAsync(string filePath, int bufferSize)
+    {
+        var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, filePath);
+        var fileSize = (int)_cloudStorageWrapper.GetBlobLength(blockBlob);
+        bufferSize = fileSize < bufferSize ? fileSize : bufferSize;
+
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            try
+            {
+                long offset = 0;
+                while (offset < fileSize)
+                {
+                    var length = Math.Min(bufferSize, fileSize - offset);
+                    var data = new byte[length];
+                    await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
+                    sha256.TransformBlock(data, 0, (int)length, null, 0);
+                    offset += bufferSize;
+                }
+                sha256.TransformFinalBlock(new byte[0], 0, 0);
+                return sha256.Hash;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"CalculateHashAsync failed.", ex);
+                throw;
+            }
+        }
+    }
+
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, string fileCheckSum)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);

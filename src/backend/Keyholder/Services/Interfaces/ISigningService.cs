@@ -5,4 +5,5 @@ public interface ISigningService
 {
     Task Init();
     Task CreateTwinKeySignature(string deviceId);
+    Task CreateFileKeySignature(string deviceId, string actionId, byte[] hash);
 }

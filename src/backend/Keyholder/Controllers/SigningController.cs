@@ -20,7 +20,13 @@ public class SigningController : ControllerBase
         await _signingService.CreateTwinKeySignature(deviceId);
         return Ok();
     }
+
+    [HttpPost("createFileSign")]
+    public async Task<IActionResult> GetMeatadataFile(string deviceId, string actionId, byte[] data)
+    {
+        await _signingService.CreateFileKeySignature(deviceId, actionId, data);
+        return Ok();
+    }
 }
 
 
-    
