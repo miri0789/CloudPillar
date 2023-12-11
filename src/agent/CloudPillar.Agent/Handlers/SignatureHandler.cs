@@ -63,9 +63,9 @@ public class SignatureHandler : ISignatureHandler
 
     public async Task<bool> VerifyFileSignatureAsync(string filePath, string signature)
     {
-        byte[] hash = CalculateHash(filePath);
         try
         {
+            byte[] hash = CalculateHash(filePath);
             if (_signingPublicKey == null)
             {
                 await InitPublicKeyAsync();

@@ -46,19 +46,19 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
-        if (((DownloadAction)actionToReport.TwinAction).Sign is null)
+        var fileDownload = GetDownloadFile(actionToReport.TwinAction.ActionId, ((DownloadAction)actionToReport.TwinAction).Source);
+        if (fileDownload == null)
         {
-            await SendForSignatureAsync(actionToReport, cancellationToken);
+            fileDownload = new FileDownload { ActionReported = actionToReport, Stopwatch = new Stopwatch() };
+            _filesDownloads.Add(fileDownload);
         }
-        else
+        try
         {
-            var fileDownload = GetDownloadFile(actionToReport.TwinAction.ActionId, ((DownloadAction)actionToReport.TwinAction).Source);
-            if (fileDownload == null)
+            if (((DownloadAction)actionToReport.TwinAction).Sign is null)
             {
-                fileDownload = new FileDownload { ActionReported = actionToReport, Stopwatch = new Stopwatch() };
-                _filesDownloads.Add(fileDownload);
+                await SendForSignatureAsync(actionToReport, cancellationToken);
             }
-            try
+            else
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(fileDownload.Action.DestinationPath);
                 var isFileExist = _fileStreamerWrapper.FileExists(fileDownload.TempPath ?? fileDownload.Action.DestinationPath);
@@ -87,24 +87,24 @@ public class FileDownloadHandler : IFileDownloadHandler
                     await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.Action.ActionId, currentRangeIndex);
                 }
             }
-            catch (Exception ex)
+        }
+        catch (Exception ex)
+        {
+            HandleDownloadException(ex, fileDownload);
+        }
+        finally
+        {
+            if (fileDownload.Report.Status != null)
             {
-                HandleDownloadException(ex, fileDownload);
-            }
-            finally
-            {
-                if (fileDownload.Report.Status != null)
-                {
-                    await SaveReportAsync(fileDownload, cancellationToken);
-                }
+                await SaveReportAsync(fileDownload, cancellationToken);
             }
         }
+
     }
 
     private async Task SendForSignatureAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
         actionToReport.TwinReport.Status = StatusType.SentForSignature;
-        await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport> { actionToReport }, cancellationToken);
         SignFileEvent signFileEvent = new SignFileEvent()
         {
             MessageType = D2CMessageType.SignFileKey,

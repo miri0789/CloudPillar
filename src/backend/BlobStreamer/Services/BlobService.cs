@@ -52,7 +52,7 @@ public class BlobService : IBlobService
     public async Task<byte[]> CalculateHashAsync(string filePath, int bufferSize)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, filePath);
-        var fileSize = (int)_cloudStorageWrapper.GetBlobLength(blockBlob);
+        var fileSize = (int)blockBlob.Properties.Length;
         bufferSize = fileSize < bufferSize ? fileSize : bufferSize;
 
         using (SHA256 sha256 = SHA256.Create())
