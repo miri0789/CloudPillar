@@ -25,6 +25,7 @@ namespace CloudPillar.Agent.Tests
         private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
         private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
 
+        private int actionIndex = 0;
 
         [SetUp]
         public void Setup()
@@ -62,7 +63,7 @@ namespace CloudPillar.Agent.Tests
                     TwinReport = new TwinActionReported(),
                     TwinAction = new DownloadAction()
                     {
-                        ActionId = Guid.NewGuid().ToString(),
+                        ActionId = (actionIndex++).ToString(),
                         Source = "file.txt",
                         DestinationPath = "C:\\Downloads"
                     }
@@ -87,7 +88,7 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             action.Report.CompletedRanges = "0-5,8,10";
-            await _target.InitFileDownloadAsync( action.ActionReported, CancellationToken.None);
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
 
             _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.Action.ActionId, 6, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
@@ -170,10 +171,11 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleDownloadMessageAsync_InProgressZippedStatusFile_UnzipFile()
+        public async Task HandleDownloadMessageAsync_ResumeZippedStatusFile_UnzipFile()
         {
             var action = initAction();
             action.Action.Unzip = true;
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
             action.Report.Status = StatusType.Unzip;
             _fileStreamerWrapperMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(true);
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
@@ -308,6 +310,7 @@ namespace CloudPillar.Agent.Tests
         public async Task HandleDownloadMessageAsync_NoDestinationPath_ReportFailure()
         {
             var action = initAction();
+            action.Action.DestinationPath = "";
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
@@ -345,5 +348,6 @@ namespace CloudPillar.Agent.Tests
             , It.IsAny<CancellationToken>()), Times.Once);
 
         }
+
     }
 }
