@@ -38,7 +38,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddWindowsService(options =>
 {
-    options.ServiceName = "CP_Agent_Service11_neww";
+    options.ServiceName = Constants.AGENT_SERVICE_NAME;
 });
 builder.Host.UseWindowsService();
 
@@ -116,6 +116,7 @@ if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     var windowsServiceWrapper = app.Services.GetService<IWindowsServiceWrapper>();
     windowsServiceWrapper?.InstallWindowsService();
+    Environment.Exit(0);
 }
 
 app.UseSwagger();
