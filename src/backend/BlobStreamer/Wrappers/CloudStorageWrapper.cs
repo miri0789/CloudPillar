@@ -1,6 +1,6 @@
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
-using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Wrappers.Interfaces;
 
 namespace Backend.BlobStreamer.Wrappers;
 
@@ -17,9 +17,14 @@ public class CloudStorageWrapper : ICloudStorageWrapper
 
     public async Task<CloudBlockBlob> GetBlockBlobReference(CloudBlobContainer storageContainer, string fileName)
     {
+        
         CloudBlockBlob blockBlob = storageContainer.GetBlockBlobReference(fileName);
         await blockBlob.FetchAttributesAsync();
         return blockBlob;
+    }
+    public long GetBlobLength(CloudBlockBlob cloudBlockBlob)
+    {
+        return cloudBlockBlob.Properties.Length;
     }
 
 }

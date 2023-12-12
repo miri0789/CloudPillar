@@ -11,6 +11,8 @@ src/agent/CloudPillar.Agent/publish/osx*
 src/agent/CloudPillar.Agent/publish/*.zip
 src/agent/CloudPillar.Agent/publish/appsettings.json
 src/agent/CloudPillar.Agent/publish/log4net.config
+src/agent/CloudPillar.Agent/publish/env/**/*.json
+src/agent/CloudPillar.Agent/publish/env/**/*.config
 .venv
 .conda
 **/.DS_Store
@@ -22,3 +24,4 @@ src/agent/CloudPillar.Agent/.vs/CloudPillar.Agent/DesignTimeBuild
 **/tfplan
 **/*.terraform*
 terraform.tfstate*
+.vscode/launch.json

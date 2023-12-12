@@ -136,7 +136,7 @@ public class AgentEventProcessor : IEventProcessor
                         break;
                     case D2CMessageType.StreamingUploadChunk:
                         var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
-                        await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent);
+                        await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent, deviceId);
                         break;
                     case D2CMessageType.ProvisionDeviceCertificate:
                         var provisionDeviceCertificateEvent = JsonSerializer.Deserialize<ProvisionDeviceCertificateEvent>(data)!;

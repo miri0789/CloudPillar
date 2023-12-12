@@ -7,7 +7,7 @@ using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Shared.Entities.Authentication;
 using DeviceMessage = Microsoft.Azure.Devices.Client;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
@@ -77,7 +77,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         var iotHubHostName = parts[1];
         var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENTION_KEY).RawData);
 
-        if (!IsInitializedLoad && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
+        if ((!IsInitializedLoad || checkAuthorization) && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
         {
             var error = "The deviceId or the SecretKey are incorrect.";
             _logger.Error(error);
@@ -134,7 +134,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
-        await OnProvisioningCompleted(message);
+        await OnProvisioningCompleted(message, cancellationToken);
 
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
 
@@ -158,14 +158,14 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
     }
 
-    private async Task OnProvisioningCompleted(DeviceMessage.Message message)
+    private async Task OnProvisioningCompleted(DeviceMessage.Message message, CancellationToken cancellationToken)
     {
         //before initialize the device client, we need to complete the message
         try
         {
             if (message != null)
             {
-                await _deviceClientWrapper.CompleteAsync(message);
+                await _deviceClientWrapper.CompleteAsync(message, cancellationToken);
             }
         }
         catch (Exception ex)

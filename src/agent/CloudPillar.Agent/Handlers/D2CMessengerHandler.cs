@@ -4,9 +4,8 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using Shared.Entities.Factories;
 using Shared.Entities.Messages;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -21,7 +20,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task SendFirmwareUpdateEventAsync(string fileName, string actionId, long? startPosition = null, long? endPosition = null)
+    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string fileName, string actionId, int? rangeIndex, long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
@@ -30,30 +29,34 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         {
             FileName = fileName,
             ChunkSize = chunkSize,
+            RangeIndex = rangeIndex ?? 0,
             StartPosition = startPosition ?? 0,
             EndPosition = endPosition,
             ActionId = actionId
         };
 
-        await SendMessageAsync(firmwareUpdateEvent);
+        await SendMessageAsync(firmwareUpdateEvent, cancellationToken);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum)
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum, CancellationToken cancellationToken, bool isRunDiagnostic = false)
     {
-        var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
+        if (!cancellationToken.IsCancellationRequested)
         {
-            StorageUri = storageUri,
-            CheckSum = checkSum,
-            StartPosition = currentPosition,
-            ActionId = actionId ?? Guid.NewGuid().ToString(),
-            Data = buffer
-        };
+            var streamingUploadChunkEvent = new StreamingUploadChunkEvent()
+            {
+                StorageUri = storageUri,
+                CheckSum = checkSum,
+                StartPosition = currentPosition,
+                ActionId = actionId ?? Guid.NewGuid().ToString(),
+                Data = buffer,
+                IsRunDiagnostics = isRunDiagnostic
+            };
 
-        await SendMessageAsync(streamingUploadChunkEvent);
+            await SendMessageAsync(streamingUploadChunkEvent, cancellationToken);
+        }
     }
 
-
-    public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate)
+    public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
     {
         var ProvisionDeviceCertificateEvent = new ProvisionDeviceCertificateEvent()
         {
@@ -61,15 +64,21 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             ActionId = Guid.NewGuid().ToString()
         };
 
-        await SendMessageAsync(ProvisionDeviceCertificateEvent);
+        await SendMessageAsync(ProvisionDeviceCertificateEvent, cancellationToken);
     }
 
-
-
-    private async Task SendMessageAsync(D2CMessage d2CMessage)
+    public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)
     {
-        Message message = PrepareD2CMessage(d2CMessage);
-        await _deviceClientWrapper.SendEventAsync(message);
+        await SendMessageAsync(new SignEvent(), cancellationToken);
+    }
+
+    private async Task SendMessageAsync(D2CMessage d2CMessage, CancellationToken cancellationToken)
+    {
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            Message message = PrepareD2CMessage(d2CMessage);
+            await _deviceClientWrapper.SendEventAsync(message, cancellationToken);
+        }
     }
 
     private Message PrepareD2CMessage(D2CMessage d2CMessage)

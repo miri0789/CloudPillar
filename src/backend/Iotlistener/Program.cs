@@ -1,7 +1,5 @@
 using System.Reflection;
 using Shared.Logger;
-using Shared.Entities.Factories;
-using Shared.Entities.Services;
 using Backend.Iotlistener.Wrappers;
 using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Services;
@@ -9,6 +7,8 @@ using Backend.Iotlistener.Processors;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using System.Runtime.Loader;
+using Backend.Infra.Common.Services.Interfaces;
+using Backend.Infra.Common.Services;
 using Backend.Infra.Common;
 
 var informationalVersion = Assembly.GetEntryAssembly()?

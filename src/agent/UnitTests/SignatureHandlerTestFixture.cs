@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using Moq;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 
 namespace CloudPillar.Agent.Tests;
@@ -13,6 +13,7 @@ public class SignatureHandlerTestFixture
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private Mock<ECDsa> _ecdsaMock;
     private Mock<ILoggerHandler> _loggerHandlerMock;
+    private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
     private ISignatureHandler _target;
 
 
@@ -21,7 +22,8 @@ public class SignatureHandlerTestFixture
     {
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
-        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object);
+        _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object);
         _ecdsaMock = new Mock<ECDsa>();
 
         string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
@@ -51,7 +53,7 @@ public class SignatureHandlerTestFixture
         await _target.InitPublicKeyAsync();
         string message = "value";
         string signatureString = "AamBQZxGNBGWsm9NkOyWiZRCWGponIRIJo3nnKytRyQlcpJv/iUy5fS1FUodBAX6Sn5kJV9g3DMn2GkJovSWOFXTAdNgY+OJsV42919LetahmaR1M7V8wcHqm+0ddfwF9MzO11fl39PZTT6upInvAVb8KA7Hazjn9enCWCxcise/2RZy";
-        bool result = _target.VerifySignature(message, signatureString);
+        bool result = await _target.VerifySignatureAsync(message, signatureString);
         Assert.IsTrue(result);
     }
 
@@ -61,7 +63,7 @@ public class SignatureHandlerTestFixture
         await _target.InitPublicKeyAsync();
         string message = "Hello, world!";
         string signatureString = "SGVsbG8sIHdvcmxkIQ==";
-        bool result = _target.VerifySignature(message, signatureString);
+        bool result = await _target.VerifySignatureAsync(message, signatureString);
         Assert.IsFalse(result);
     }
 

@@ -1,15 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
 using Shared.Logger;
+using Backend.Infra.Common.Services.Interfaces;
 
-namespace Backend.Infra.Common;
 
-public interface IHttpRequestorService
-{
-
-    Task SendRequest(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default);
-    Task<TResponse> SendRequest<TResponse>(string url, HttpMethod method, object? requestData = null, CancellationToken cancellationToken = default);
-}
+namespace Backend.Infra.Common.Services;
 
 public class HttpRequestorService : IHttpRequestorService
 {
