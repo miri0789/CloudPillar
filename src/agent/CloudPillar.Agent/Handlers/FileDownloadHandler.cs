@@ -56,11 +56,13 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             if (((DownloadAction)actionToReport.TwinAction).Sign is null)
             {
+                _logger.Info("No sign file key is sent, sending for signature");
                 await SendForSignatureAsync(actionToReport, cancellationToken);
             }
             else
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(fileDownload.Action.DestinationPath);
+                fileDownload.Action.Sign = ((DownloadAction)actionToReport.TwinAction).Sign;
                 var isFileExist = _fileStreamerWrapper.FileExists(fileDownload.TempPath ?? fileDownload.Action.DestinationPath);
                 if (!isFileExist && fileDownload.Action.Unzip) // create unzip temp file
                 {
@@ -151,7 +153,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private async Task HandleCompletedDownloadAsync(FileDownload file, CancellationToken cancellationToken)
     {
         file.Stopwatch?.Stop();
-        var filePath = file.TempPath ?? file.Action.DestinationPath;
+        var filePath = file.TempPath is not null ? file.TempPath : file.Action.DestinationPath;
         var isVerify = await _signatureHandler.VerifyFileSignatureAsync(filePath, file.Action.Sign);
         if (isVerify)
         {

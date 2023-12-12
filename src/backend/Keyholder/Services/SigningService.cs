@@ -21,13 +21,11 @@ public class SigningService : ISigningService
     private ECDsa _signingPrivateKey;
     private readonly RegistryManager _registryManager;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-    private readonly ITwinDiseredService _twinDesiredService;
     private readonly ILoggerHandler _logger;
 
-    public SigningService(IEnvironmentsWrapper environmentsWrapper, ITwinDiseredService twinDiseredService, ILoggerHandler logger)
+    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
-        _twinDesiredService = twinDiseredService ?? throw new ArgumentNullException(nameof(twinDiseredService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         if (string.IsNullOrEmpty(_environmentsWrapper.iothubConnectionString))
         {
@@ -135,14 +133,10 @@ public class SigningService : ISigningService
         // Parse the JSON twin
         var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
-        // Sign the value using the ES512 algorithm
-        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-        var signature = _signingPrivateKey!.SignData(dataToSign, HashAlgorithmName.SHA512);
-
         // Convert the signature to a Base64 string
-        var signatureString = Convert.ToBase64String(signature);
-
+        var signatureString = GetSignatue(twinDesired);
         twinDesired.ChangeSign = signatureString;
+
         // Update the device twin
         twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
         await _registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
@@ -155,6 +149,46 @@ public class SigningService : ISigningService
             await Init();
         }
         var signature = _signingPrivateKey.SignHash(hash);
-        await _twinDesiredService.ChangeDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.ChangeSpec, actionId, Convert.ToBase64String(signature));
+        await AddFileSignToDesired(deviceId, TwinPatchChangeSpec.ChangeSpec, actionId, Convert.ToBase64String(signature));
+
+    }
+
+    private async Task AddFileSignToDesired(string deviceId, TwinPatchChangeSpec changeSpecKey, string actionId, string fileSign)
+    {
+        ArgumentNullException.ThrowIfNull(deviceId);
+
+        try
+        {
+            var twin = await _registryManager.GetTwinAsync(deviceId);
+            TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+            var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
+
+            TwinAction[] changeSpecData = twinDesiredChangeSpec.Patch.TransitPackage as TwinAction[] ?? new TwinAction[0];
+
+            var updatedArray = new List<TwinAction>(changeSpecData);
+            var action = (DownloadAction)updatedArray.Where(x => x.ActionId == actionId).FirstOrDefault();
+            action.Sign = fileSign;
+
+            twinDesired.ChangeSign = GetSignatue(twinDesired);
+            twinDesiredChangeSpec.Patch.TransitPackage = updatedArray.ToArray();
+            var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
+            twin.Properties.Desired = new TwinCollection(twinDesiredJson);
+
+            await _registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
+            _logger.Info($"Recipe: {action.ActionId} has been successfully changed. DeviceId: {deviceId} ");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while attempting to update ChangeSpec: {ex.Message}");
+        }
+    }
+
+    private string GetSignatue(TwinDesired twinDesired)
+    {
+        // Sign the value using the ES512 algorithm
+        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
+        var signature = _signingPrivateKey!.SignData(dataToSign, HashAlgorithmName.SHA512);
+        // Convert the signature to a Base64 string
+        return Convert.ToBase64String(signature);
     }
 }

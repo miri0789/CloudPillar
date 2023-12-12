@@ -53,17 +53,16 @@ public class BlobService : IBlobService
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, filePath);
         var fileSize = (int)blockBlob.Properties.Length;
-        bufferSize = fileSize < bufferSize ? fileSize : bufferSize;
 
         using (SHA256 sha256 = SHA256.Create())
         {
             try
             {
                 long offset = 0;
+                var data = new byte[bufferSize];
                 while (offset < fileSize)
                 {
                     var length = Math.Min(bufferSize, fileSize - offset);
-                    var data = new byte[length];
                     await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
                     sha256.TransformBlock(data, 0, (int)length, null, 0);
                     offset += bufferSize;

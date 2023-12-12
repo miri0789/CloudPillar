@@ -9,10 +9,6 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return new FileStream(fullFilePath, fileMode, fileAccess, fileShare, BufferSize, useAsync);
     }
-    public Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess)
-    {
-        return new FileStream(fullFilePath, fileMode, fileAccess);
-    }
     public FileStream CreateStream(string fullFilePath, FileMode fileMode)
     {
         return new FileStream(fullFilePath, fileMode);
@@ -114,7 +110,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
 
     public FileStream OpenRead(string filePath)
     {
-       return File.OpenRead(filePath);
+        return File.OpenRead(filePath);
     }
 
     public async Task UnzipFileAsync(string filePath, string destinationPath)

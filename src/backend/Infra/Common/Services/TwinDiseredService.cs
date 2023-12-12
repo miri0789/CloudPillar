@@ -48,34 +48,4 @@ public class TwinDiseredService : ITwinDiseredService
         }
 
     }
-
-    public async Task ChangeDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, string actionId, string signature)
-    {
-        ArgumentNullException.ThrowIfNull(deviceId);
-
-        try
-        {
-            var twin = await _registryManagerWrapper.GetTwinAsync(deviceId);
-            TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-            var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-
-            TwinAction[] changeSpecData = twinDesiredChangeSpec.Patch.TransitPackage as TwinAction[] ?? new TwinAction[0];
-
-            var updatedArray = new List<TwinAction>(changeSpecData);
-            var action = (DownloadAction)updatedArray.Where(x => x.ActionId == actionId).FirstOrDefault();
-            action.Sign = signature;
-
-            twinDesiredChangeSpec.Patch.TransitPackage = updatedArray.ToArray();
-            var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
-            twin.Properties.Desired = new TwinCollection(twinDesiredJson);
-
-            await _registryManagerWrapper.UpdateTwinAsync(deviceId, twin, twin.ETag);
-            _logger.Info($"Recipe: {action.ActionId} has been successfully changed. DeviceId: {deviceId} ");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"An error occurred while attempting to update ChangeSpec: {ex.Message}");
-        }
-    }
-
 }
