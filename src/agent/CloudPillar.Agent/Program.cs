@@ -41,7 +41,6 @@ builder.Services.AddWindowsService(options =>
     options.ServiceName = "CP_Agent_Service11_neww";
 });
 builder.Host.UseWindowsService();
-//builder.Services.AddHostedService<AgentService>();
 
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
