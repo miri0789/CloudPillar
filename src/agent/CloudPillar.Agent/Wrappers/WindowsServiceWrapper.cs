@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Threading.Tasks;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Wrappers
 {
