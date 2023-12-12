@@ -1,12 +1,12 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
-using CloudPillar.Agent.Wrappers.interfaces;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler
