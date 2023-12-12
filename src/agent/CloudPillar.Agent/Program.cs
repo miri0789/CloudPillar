@@ -5,12 +5,12 @@ using CloudPillar.Agent.Sevices;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
-using CloudPillar.Agent.Wrappers.interfaces;
 using FluentValidation;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));

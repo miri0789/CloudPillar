@@ -1,5 +1,5 @@
 
-namespace CloudPillar.Agent.Wrappers.interfaces;
+namespace CloudPillar.Agent.Wrappers.Interfaces;
 
 public interface IGuidWrapper
 {

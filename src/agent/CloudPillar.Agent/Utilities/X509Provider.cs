@@ -7,8 +7,8 @@ using Shared.Entities.Authentication;
 
 namespace CloudPillar.Agent.Utilities;
 
-        
-public  class X509Provider : IX509Provider
+
+public class X509Provider : IX509Provider
 {
     private const int KEY_SIZE_IN_BITS = 4096;
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
@@ -56,18 +56,10 @@ public  class X509Provider : IX509Provider
         }
     }
 
-    public X509Certificate2? GetCertificate()
-    {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly, StoreName.Root))
-        {
-            var certificates = _x509CertificateWrapper.GetCertificates(store);
-            return GetCPCertificate(certificates);
-        }
-    }
 
     public X509Certificate2 GetHttpsCertificate()
     {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly, StoreName.Root))
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly, StoreName.My))
         {
             var certificates = _x509CertificateWrapper.GetCertificates(store);
             var filteredCertificate = GetCPCertificate(certificates);
@@ -115,7 +107,7 @@ public  class X509Provider : IX509Provider
         {
             FriendlyName = "cloud pillar agent anonymous"
         };
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, StoreName.Root))
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, StoreName.My))
         {
             store.Add(privateCertificate);
         }
