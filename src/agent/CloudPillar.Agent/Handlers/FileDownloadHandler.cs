@@ -66,7 +66,14 @@ public class FileDownloadHandler : IFileDownloadHandler
                 var isFileExist = _fileStreamerWrapper.FileExists(fileDownload.TempPath ?? fileDownload.Action.DestinationPath);
                 if (!isFileExist && fileDownload.Action.Unzip) // create unzip temp file
                 {
-                    InitUnzipPath(fileDownload);
+                    if (fileDownload.Action.Unzip)
+                    {
+                        InitUnzipPath(fileDownload); // create unzip temp file
+                    }
+                    else
+                    {
+                        InitDownloadPath(fileDownload);
+                    }
                 }
                 if (actionToReport.TwinReport.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
                 {
@@ -143,6 +150,17 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
     }
 
+    private void InitDownloadPath(FileDownload file)
+    {
+        var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
+        if (string.IsNullOrEmpty(extention))
+        {
+            throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not a file.");
+        }
+        var directory = Path.GetDirectoryName(file.Action.DestinationPath);
+        _fileStreamerWrapper.CreateDirectory(directory);
+    }
+
     private void HandleFirstMessageAsync(FileDownload file, DownloadBlobChunkMessage message)
     {
         file.TotalBytes = message.FileSize;
@@ -213,6 +231,9 @@ public class FileDownloadHandler : IFileDownloadHandler
             }
 
             await _fileStreamerWrapper.WriteChunkToFileAsync(filePath, message.Offset, message.Data);
+
+            var downloadedFileBytes = _fileStreamerWrapper.GetFileLength(filePath);
+            _strictModeHandler.CheckSizeStrictMode(TwinActionType.SingularDownload, downloadedFileBytes, file.Action.DestinationPath);
 
             if (message.RangeCheckSum != null)
             {

@@ -24,11 +24,6 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return data;
     }
 
-    public DirectoryInfo CreateDirectory(string directoryPath)
-    {
-        return Directory.CreateDirectory(directoryPath);
-    }
-
     public async Task WriteAsync(Stream stream, byte[] bytes)
     {
         await stream.WriteAsync(bytes);
@@ -113,14 +108,19 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return File.OpenRead(filePath);
     }
 
+    public void CreateDirectory(string destinationPath)
+    {
+        if (!Directory.Exists(destinationPath))
+        {
+            Directory.CreateDirectory(destinationPath);
+        }
+    }
+
     public async Task UnzipFileAsync(string filePath, string destinationPath)
     {
         if (File.Exists(filePath))
         {
-            if (!Directory.Exists(destinationPath))
-            {
-                Directory.CreateDirectory(destinationPath);
-            }
+            CreateDirectory(destinationPath);
             using (ZipArchive archive = ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8))
             {
                 foreach (ZipArchiveEntry entry in archive.Entries)
