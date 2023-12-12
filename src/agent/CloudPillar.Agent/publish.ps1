@@ -2,7 +2,7 @@
 
 # Define the target platforms and architectures
 $platforms = @(
-    "linux-x64",
+    # "linux-x64",
     # "linux-arm",
     # "linux-arm64",
     # "osx-x64",

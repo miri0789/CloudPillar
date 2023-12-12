@@ -63,7 +63,7 @@ public class StateMachineListenerService : BackgroundService
             //_logger.Info("CloudPilar.Agent is stopping.");
 
             // Your graceful shutdown logic here
-            await SetBusyAsync();
+            //await SetBusyAsync();
 
             await base.StopAsync(cancellationToken);
         }
