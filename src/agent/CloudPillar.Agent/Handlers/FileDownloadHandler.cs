@@ -47,18 +47,9 @@ public class FileDownloadHandler : IFileDownloadHandler
         try
         {
             ArgumentNullException.ThrowIfNullOrEmpty(fileDownload.Action.DestinationPath);
-            var isFileExist = _fileStreamerWrapper.FileExists(fileDownload.TempPath ?? fileDownload.Action.DestinationPath);
-            if (!isFileExist)
-            {
-                if (fileDownload.Action.Unzip)
-                {
-                    InitUnzipPath(fileDownload); // create unzip temp file
-                }
-                else
-                {
-                    InitDownloadPath(fileDownload);
-                }
-            }
+            InitDownloadPath(fileDownload);
+            var destPath = GetDestinationPath(fileDownload);
+            var isFileExist = _fileStreamerWrapper.FileExists(destPath);
             if (actionToReport.TwinReport.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
             {
                 fileDownload.TotalBytesDownloaded = 0;
@@ -75,7 +66,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                 var currentRangeIndex = !existRanges.Contains(0) ? 0 : existRanges.FirstOrDefault(n => !existRanges.Contains(n + 1) && n != 0) + 1;
                 if (currentRangeIndex > 0 && isFileExist && fileDownload.TotalBytesDownloaded == 0)
                 {
-                    fileDownload.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(fileDownload.TempPath ?? fileDownload.Action.DestinationPath);
+                    fileDownload.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
                 }
                 await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.Action.ActionId, currentRangeIndex);
             }
@@ -95,34 +86,33 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private void HandleDownloadException(Exception ex, FileDownload file)
     {
-        var filePath = file.TempPath ?? file.Action.DestinationPath;
         file.Report.Status = StatusType.Failed;
         file.Report.ResultText = ex.Message;
         file.Report.ResultCode = ex.GetType().Name;
-        _fileStreamerWrapper.DeleteFile(filePath);
+        _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
     }
 
-    private void InitUnzipPath(FileDownload file)
+    private string GetDestinationPath(FileDownload file)
     {
-        if (_fileStreamerWrapper.GetExtension(file.Action.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
-        {
-            var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
-            if (!string.IsNullOrEmpty(extention))
-            {
-                throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not directory path.");
-            }
-            file.TempPath = _fileStreamerWrapper.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".zip");
-        }
-        else
-        {
-            throw new ArgumentException("No zip file is sent");
-        }
+        return file.Action.Unzip ? _fileStreamerWrapper.Combine(file.Action.DestinationPath, file.Action.Source) :
+        file.Action.DestinationPath;
     }
 
     private void InitDownloadPath(FileDownload file)
     {
         var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
-        if (string.IsNullOrEmpty(extention))
+        if (file.Action.Unzip)
+        {
+            if (!string.IsNullOrEmpty(extention))
+            {
+                throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not directory path.");
+            }
+            if (!_fileStreamerWrapper.GetExtension(file.Action.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("No zip file is sent");
+            }
+        }
+        else if (string.IsNullOrEmpty(extention))
         {
             throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not a file.");
         }
@@ -140,12 +130,13 @@ public class FileDownloadHandler : IFileDownloadHandler
     private async Task HandleCompletedDownloadAsync(FileDownload file, CancellationToken cancellationToken)
     {
         file.Stopwatch?.Stop();
-        if (!string.IsNullOrWhiteSpace(file.TempPath))
+        var destPath = GetDestinationPath(file);
+        if (file.Action.Unzip)
         {
             file.Report.Status = StatusType.Unzip;
             await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-            await _fileStreamerWrapper.UnzipFileAsync(file.TempPath, file.Action.DestinationPath);
-            _fileStreamerWrapper.DeleteFile(file.TempPath);
+            await _fileStreamerWrapper.UnzipFileAsync(destPath, file.Action.DestinationPath);
+            _fileStreamerWrapper.DeleteFile(destPath);
         }
         file.Report.Status = StatusType.Success;
         file.Report.Progress = 100;
@@ -180,7 +171,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
             return;
         }
-        var filePath = file.TempPath ?? file.Action.DestinationPath;
+        var filePath = GetDestinationPath(file);
         try
         {
             if (!file.Stopwatch.IsRunning)
@@ -197,7 +188,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 await HandleEndRangeDownloadAsync(filePath, message, file, cancellationToken);
             }
-            if (file.Report.CompletedRanges == (message.RangesCount == 1 ? "0" : $"0-{message.RangesCount - 1}"))
+            if (file.Report.CompletedRanges == GetCompletedRangesString(message.RangesCount))
             {
                 await HandleCompletedDownloadAsync(file, cancellationToken);
             }
@@ -216,6 +207,17 @@ public class FileDownloadHandler : IFileDownloadHandler
             await SaveReportAsync(file, cancellationToken);
         }
     }
+
+    private string GetCompletedRangesString(int? rangesCount)
+    {
+        return rangesCount switch
+        {
+            1 => "0",
+            2 => "0,1",
+            _ => $"0-{rangesCount - 1}"
+        };
+    }
+
 
     private async Task SaveReportAsync(FileDownload file, CancellationToken cancellationToken)
     {
