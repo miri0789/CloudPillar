@@ -17,18 +17,18 @@ public class CheckSumService : ICheckSumService
         switch (checkSumType)
         {
             case CheckSumType.SHA256:
-                return await CalculateMdsCheckSumAsync(stream);
+                return await CalculateSHA256CheckSumAsync(stream);
             default:
                 throw new ArgumentNullException("CheckSum Type not provided");
         }
     }
 
-    private async Task<string> CalculateMdsCheckSumAsync(Stream stream)
+    private async Task<string> CalculateSHA256CheckSumAsync(Stream stream)
     {
-        using (var md5 = SHA256.Create())
+        using (var hash = SHA256.Create())
         {
             stream.Seek(0, SeekOrigin.Begin);
-            byte[] hashBytes = await md5.ComputeHashAsync(stream);
+            byte[] hashBytes = await hash.ComputeHashAsync(stream);
             stream.Seek(0, SeekOrigin.Begin);
             string checkSum = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
             return checkSum;
