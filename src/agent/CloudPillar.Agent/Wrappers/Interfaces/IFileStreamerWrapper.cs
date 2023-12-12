@@ -7,7 +7,7 @@ public interface IFileStreamerWrapper
 
     byte[] ReadStream(string fullFilePath, long startPosition, long lengthToRead);
 
-    DirectoryInfo CreateDirectory(string directoryPath);
+    void CreateDirectory(string destinationPath);
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 

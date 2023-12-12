@@ -353,5 +353,33 @@ namespace CloudPillar.Agent.Tests
 
         }
 
+
+        [Test]
+        public async Task HandleDownloadMessageAsync_DestinationPathNotContainsExtention_ReportFailure()
+        {
+            var action = initAction();
+
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns("");
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+
+            _twinActionsHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
+                item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
+            , It.IsAny<CancellationToken>()), Times.Once);
+
+        }
+
+        [Test]
+        public async Task HandleDownloadMessageAsync_NotExistFileDirectories_CreateSubDirectories()
+        {
+            var action = initAction();
+
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".txt");
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            _fileStreamerWrapperMock.Verify(
+                x => x.CreateDirectory(It.IsAny<string>()), Times.Once);
+
+        }
+
     }
 }
