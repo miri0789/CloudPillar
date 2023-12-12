@@ -71,7 +71,7 @@ public class SigningTestFixture
     {
         var deviceId = "testDevice";
         var keyPath = "path";
-        var signatureKey = "signatureKey";
+        var signatureKey = "changeSign";
 
         var twin = new Twin();
         twin.Properties.Desired = new TwinCollection();
@@ -104,28 +104,7 @@ public class SigningTestFixture
                         .ReturnsAsync(twin)
                         .Verifiable();
 
-        await _target.CreateTwinKeySignature(deviceId, keyPath, signatureKey);
+        await _target.CreateTwinKeySignature(deviceId);
         Assert.IsTrue(updateTwinCalled);
-    }
-
-    [Test]
-    public async Task CreateTwinKeySignature_InvalidJsonPath_ThrowsArgumentException()
-    {
-        var deviceId = "testDevice";
-        var invalidKeyPath = "invalidpath";
-        var signatureKey = "signatureKey";
-
-        var twin = new Twin();
-        twin.Properties.Desired = new TwinCollection();
-        twin.Properties.Desired["path"] = "value";
-
-        _registryManagerMock.Setup(mock => mock.GetTwinAsync(deviceId))
-                        .ReturnsAsync(twin)
-                        .Verifiable();
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(async () =>
-            await _target.CreateTwinKeySignature(deviceId, invalidKeyPath, signatureKey));
-
-        Assert.AreEqual("Invalid JSON path specified", ex.Message);
     }
 }

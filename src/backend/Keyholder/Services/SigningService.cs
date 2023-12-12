@@ -7,6 +7,12 @@ using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json.Linq;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
+using Newtonsoft.Json;
+using Shared.Entities.Twin;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Converters;
+using Shared.Entities.Utilities;
+
 
 namespace Backend.Keyholder.Services;
 
@@ -115,35 +121,30 @@ public class SigningService : ISigningService
     }
 
 
-    public async Task CreateTwinKeySignature(string deviceId, string keyPath, string signatureKey)
+    public async Task CreateTwinKeySignature(string deviceId)
     {
+        if(_signingPrivateKey == null)
+        {
+            await Init();
+        }
+
         // Get the current device twin
         var twin = await _registryManager.GetTwinAsync(deviceId);
 
         // Parse the JSON twin
-        var twinJson = JObject.FromObject(twin.Properties.Desired);
-
-        // Get the value at the specified JSON path
-        var keyElement = twinJson.SelectToken(keyPath);
-
-        if (keyElement == null)
-        {
-            throw new ArgumentException("Invalid JSON path specified");
-        }
+        var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
         // Sign the value using the ES512 algorithm
-        var dataToSign = Encoding.UTF8.GetBytes(keyElement.ToString());
+        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
         var signature = _signingPrivateKey!.SignData(dataToSign, HashAlgorithmName.SHA512);
 
         // Convert the signature to a Base64 string
         var signatureString = Convert.ToBase64String(signature);
 
-        if (keyElement.Parent?.Parent != null)
-            keyElement.Parent.Parent[signatureKey] = signatureString;
-
+        twinDesired.ChangeSign = signatureString;
+        
         // Update the device twin
-        twin.Properties.Desired = new TwinCollection(twinJson.ToString());
+        twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
         await _registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
     }
-
 }

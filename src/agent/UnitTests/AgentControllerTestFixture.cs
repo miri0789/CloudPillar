@@ -4,7 +4,7 @@ using CloudPillar.Agent.Handlers;
 using FluentValidation;
 using Moq;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -39,7 +39,7 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task SetBusyAsync_ValidProccess_Success()
         {
-            await _target.SetBusyAsync();
+            await _target.SetBusyAsync(default);
             _twinHandler.Verify(h => h.GetLatestTwinAsync(CancellationToken.None), Times.Once);
         }
     }

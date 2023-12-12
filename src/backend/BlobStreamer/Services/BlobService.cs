@@ -1,11 +1,13 @@
 using Microsoft.Azure.Storage.Blob;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
-using Backend.BlobStreamer.Interfaces;
 using Shared.Logger;
+using Backend.BlobStreamer.Services.Interfaces;
+using Backend.BlobStreamer.Wrappers.Interfaces;
 using Shared.Entities.Services;
-using Backend.Infra.Common;
 using Microsoft.Azure.Devices;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -19,12 +21,8 @@ public class BlobService : IBlobService
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
 
-    public BlobService(IEnvironmentsWrapper environmentsWrapper,
-                       ICloudStorageWrapper cloudStorageWrapper,
-                       IDeviceConnectService deviceConnectService,
-                       ILoggerHandler logger,
-                       IMessageFactory messageFactory,
-                       ICheckSumService checkSumService)
+    public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
+     IDeviceConnectService deviceConnectService,ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));
@@ -42,16 +40,17 @@ public class BlobService : IBlobService
         return blockBlob.Properties;
     }
 
-    public async Task<string> GetFileCheckSum(string fileName)
+    public async Task<byte[]> GetFileBytes(string fileName)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
         var data = new byte[fileSize];
         await blockBlob.DownloadRangeToByteArrayAsync(data, 0, 0, fileSize);
-        return await _checkSumService.CalculateCheckSumAsync(data);
+        return data;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string ActionId, string fileCheckSum)
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, 
+    int rangeIndex, long startPosition, string ActionId, int rangesCount)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
@@ -72,7 +71,6 @@ public class BlobService : IBlobService
                 Offset = offset,
                 FileName = fileName,
                 ActionId = ActionId,
-                FileCheckSum = fileCheckSum,
                 FileSize = fileSize,
                 Data = data
             };
@@ -80,6 +78,7 @@ public class BlobService : IBlobService
             {
                 blobMessage.RangeStartPosition = startPosition;
                 blobMessage.RangeEndPosition = rangeEndPosition;
+                blobMessage.RangesCount = rangesCount;
                 blobMessage.RangeCheckSum = await _checkSumService.CalculateCheckSumAsync(rangeBytes.ToArray());
             }
 
@@ -97,6 +96,5 @@ public class BlobService : IBlobService
         chunkSize = Math.Min(chunkSize, maxChunkSizeBeforeEncoding);
         return chunkSize;
     }
-
 
 }

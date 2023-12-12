@@ -3,7 +3,7 @@ using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
@@ -111,9 +111,9 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// </summary>
     /// <param name="message">The message object containing the data to be sent.</param>
     /// <returns>a task representing the asynchronous operation.</returns>
-    public async Task SendEventAsync(Message message)
+    public async Task SendEventAsync(Message message, CancellationToken cancellationToken)
     {
-        await _deviceClient.SendEventAsync(message);
+        await _deviceClient.SendEventAsync(message, cancellationToken);
     }
 
     /// <summary>
@@ -121,9 +121,12 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// </summary>
     /// <param name="message">the message object representing the received message to be completed.</param>
     /// <returns>a task representing the asynchronous operation.</returns>
-    public async Task CompleteAsync(Message message)
+    public async Task CompleteAsync(Message message, CancellationToken cancellationToken)
     {
-        await _deviceClient.CompleteAsync(message);
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            await _deviceClient.CompleteAsync(message, cancellationToken);
+        }
     }
 
     public async Task DisposeAsync()
@@ -137,22 +140,21 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         return twin;
     }
 
-    public async Task UpdateReportedPropertiesAsync(string key, object value)
+    public async Task UpdateReportedPropertiesAsync(string key, object value, CancellationToken cancellationToken)
     {
         var updatedReportedProperties = new TwinCollection();
         updatedReportedProperties[char.ToLower(key[0]) + key.Substring(1)] = value;
-        await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties);
+        await _deviceClient.UpdateReportedPropertiesAsync(updatedReportedProperties, cancellationToken);
     }
 
-    public async Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties)
+    public async Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties, CancellationToken cancellationToken)
     {
-        await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+        await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
     }
 
     public async Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default)
     {
-        FileUploadSasUriResponse response = await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
-        return response;
+        return await _deviceClient.GetFileUploadSasUriAsync(request, cancellationToken);
     }
 
     public async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default)

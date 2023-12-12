@@ -23,10 +23,13 @@ $zipPath = Join-Path -Path $scriptDir -ChildPath "$zipName"
 $targetZipPath = Join-Path -Path $sourceDir -ChildPath "$zipName"
 $appSettingsFileName = "appsettings.json"
 $appSettingsPath = Join-Path -Path $scriptDir -ChildPath $appSettingsFileName
-$appSettingsDestinationPath = Join-Path -Path $sourceDir -ChildPath $appSettingsFileName
 $log4netFileName = "log4net.config"
 $log4netPath = Join-Path -Path $scriptDir -ChildPath $log4netFileName
-$log4netDestinationPath = Join-Path -Path $sourceDir -ChildPath $log4netFileName
+
+$appSettingsDestinationPathDev = Join-Path -Path $sourceDir -ChildPath env/dev/$appSettingsFileName
+$appSettingsDestinationPathProd = Join-Path -Path $sourceDir -ChildPath env/prod/$appSettingsFileName
+$log4netDestinationPathDev = Join-Path -Path $sourceDir -ChildPath env/dev/$log4netFileName
+$log4netDestinationPathProd = Join-Path -Path $sourceDir -ChildPath env/prod/$log4netFileName
 
 # Remove the existing zip file if it exists
 if (Test-Path $zipPath) {
@@ -35,6 +38,16 @@ if (Test-Path $zipPath) {
 if (Test-Path $targetZipPath) {
     Remove-Item $targetZipPath
 }
+# Create the source directory if it doesn't exist
+if (-not (Test-Path $sourceDir)) {
+    New-Item -ItemType Directory -Path $sourceDir | Out-Null
+}
+
+# Copy appSettings.json and log4net files
+Copy-Item -Path $appSettingsPath -Destination $appSettingsDestinationPathProd -Force
+Copy-Item -Path $log4netPath -Destination $log4netDestinationPathProd -Force
+Copy-Item -Path $appSettingsPath -Destination $appSettingsDestinationPathDev -Force
+Copy-Item -Path $log4netPath -Destination $log4netDestinationPathDev -Force
 Write-Host "* Publishing in $sourceDir..."
 
 # Loop through each platform and architecture
@@ -52,14 +65,6 @@ foreach ($platform in $platforms) {
 
 Write-Host "Publishing completed. Zipping to $zipPath"
 
-# Create the source directory if it doesn't exist
-if (-not (Test-Path $sourceDir)) {
-    New-Item -ItemType Directory -Path $sourceDir | Out-Null
-}
-
-# Copy appSettings.json and log4net files
-Copy-Item -Path $appSettingsPath -Destination $appSettingsDestinationPath -Force
-Copy-Item -Path $log4netPath -Destination $log4netDestinationPath -Force
 
 # Create a new zip file and add all files and subdirectories, excluding the script file
 Add-Type -A 'System.IO.Compression.FileSystem'

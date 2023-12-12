@@ -1,4 +1,4 @@
-﻿namespace Backend.Infra.Common;
+﻿namespace Backend.Infra.Common.Services.Interfaces;
 
 public interface IHttpRequestorService
 {

@@ -2,6 +2,9 @@
 Here is the publish directory, where the publish.ps1 script creates self-contained deployments per OS and CPU architecture.
 
 # Setup instructions
+````
+cd env/prod/
+````
 ## Linux and MacOS
 ````
 chmod +x startagent.sh

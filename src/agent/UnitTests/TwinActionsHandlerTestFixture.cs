@@ -5,7 +5,7 @@ using Microsoft.Azure.Devices.Shared;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -35,7 +35,7 @@ public class TwinActionsHandlerTestFixture
         await _target.UpdateReportActionAsync(actionsToReported, cancellationToken);
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
-            nameof(TwinReported.ChangeSpec), It.IsAny<JObject>()), Times.Once);
+            nameof(TwinReported.ChangeSpec), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private List<ActionToReport> CreateReportForUpdating()

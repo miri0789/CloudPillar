@@ -1,4 +1,4 @@
-using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Wrappers.Interfaces;
 using Microsoft.Azure.Storage.Blob;
 
 namespace Backend.BlobStreamer.Wrappers;

@@ -7,7 +7,7 @@ using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Shared.Entities.Authentication;
 using DeviceMessage = Microsoft.Azure.Devices.Client;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
@@ -134,7 +134,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
-        await OnProvisioningCompleted(message);
+        await OnProvisioningCompleted(message, cancellationToken);
 
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
 
@@ -158,14 +158,14 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
     }
 
-    private async Task OnProvisioningCompleted(DeviceMessage.Message message)
+    private async Task OnProvisioningCompleted(DeviceMessage.Message message, CancellationToken cancellationToken)
     {
         //before initialize the device client, we need to complete the message
         try
         {
             if (message != null)
             {
-                await _deviceClientWrapper.CompleteAsync(message);
+                await _deviceClientWrapper.CompleteAsync(message, cancellationToken);
             }
         }
         catch (Exception ex)

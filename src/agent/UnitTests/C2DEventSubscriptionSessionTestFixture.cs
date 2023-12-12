@@ -5,8 +5,7 @@ using Moq;
 using Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
-using Shared.Logger;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -16,7 +15,6 @@ public class C2DEventSubscriptionSessionTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientMock;
     private Mock<IMessageSubscriber> _messageSubscriberMock;
     private Mock<IMessageFactory> _messageFactoryMock;
-    private Mock<ITwinActionsHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerMock;
     private Mock<IStateMachineHandler> _stateMachineHandlerMock;
     private IC2DEventSubscriptionSession _target;
@@ -31,7 +29,6 @@ public class C2DEventSubscriptionSessionTestFixture
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _messageSubscriberMock = new Mock<IMessageSubscriber>();
         _messageFactoryMock = new Mock<IMessageFactory>();
-        _twinActionsHandler = new Mock<ITwinActionsHandler>();
         _loggerMock = new Mock<ILoggerHandler>();
         _stateMachineHandlerMock = new Mock<IStateMachineHandler>();
 
@@ -39,7 +36,6 @@ public class C2DEventSubscriptionSessionTestFixture
              _deviceClientMock.Object,
              _messageSubscriberMock.Object,
              _messageFactoryMock.Object,
-             _twinActionsHandler.Object,
              _stateMachineHandlerMock.Object,
              _loggerMock.Object);
 
@@ -53,10 +49,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
         var actionToReport = new ActionToReport();
         _messageSubscriberMock
-            .Setup(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage, GetCancellationToken()))
-            .ReturnsAsync(actionToReport);
-
-        _twinActionsHandler.Setup(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            .Setup(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage, GetCancellationToken()));
 
     }
 
@@ -65,14 +58,6 @@ public class C2DEventSubscriptionSessionTestFixture
     {
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
         _messageSubscriberMock.Verify(ms => ms.HandleDownloadMessageAsync(_downloadBlobChunkMessage, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task ReceiveC2DMessagesAsync_ValidDownloadMessage_CallReportHandler()
-    {
-        await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
-
-        _twinActionsHandler.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -106,18 +91,9 @@ public class C2DEventSubscriptionSessionTestFixture
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), true);
 
-        _messageSubscriberMock.Verify(ms => ms.HandleReprovisioningMessageAsync(receivedMessage,It.IsAny<ReprovisioningMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+        _messageSubscriberMock.Verify(ms => ms.HandleReprovisioningMessageAsync(receivedMessage, It.IsAny<ReprovisioningMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Test]
-    public async Task ReceiveC2DMessagesAsync_UnknownMessageType_NotReportCompleteMsg()
-    {
-        var receivedMessage = SetRecivedMessageWithDurationMock("Try");
-
-        await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
-
-        _twinActionsHandler.Verify(th => th.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
 
     [Test]
     public async Task ReceiveC2DMessagesAsync_UnknownMessageType_CompleteMsg()
@@ -126,7 +102,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
 
-        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage), Times.Once);
+        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage, It.IsAny<CancellationToken>()), Times.Once);
     }
 
 
@@ -137,7 +113,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
 
-        _deviceClientMock.Verify(dc => dc.CompleteAsync(It.IsAny<Message>()), Times.Never);
+        _deviceClientMock.Verify(dc => dc.CompleteAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -154,7 +130,7 @@ public class C2DEventSubscriptionSessionTestFixture
 
         await _target.ReceiveC2DMessagesAsync(GetCancellationToken(), false);
 
-        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage), Times.Once);
+        _deviceClientMock.Verify(dc => dc.CompleteAsync(receivedMessage, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private CancellationToken GetCancellationToken()

@@ -1,11 +1,12 @@
 
+using System.Diagnostics;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Controllers;
 
@@ -78,7 +79,7 @@ public class AgentController : ControllerBase
             }
         }
         return await _twinHandler.GetTwinJsonAsync();
-}
+    }
 
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
@@ -97,16 +98,16 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost("SetBusy")]
-    public async Task<ActionResult<string>> SetBusyAsync()
+    public async Task<ActionResult<string>> SetBusyAsync(CancellationToken cancellationToken)
     {
-        await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy, cancellationToken);
         return await _twinHandler.GetLatestTwinAsync(CancellationToken.None);
     }
 
     [HttpPost("SetReady")]
-    public async Task<ActionResult<string>> SetReadyAsync()
+    public async Task<ActionResult<string>> SetReadyAsync(CancellationToken cancellationToken)
     {
-        await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready, cancellationToken);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
@@ -122,9 +123,31 @@ public class AgentController : ControllerBase
     [HttpGet("RunDiagnostics")]
     public async Task<ActionResult<string>> RunDiagnostics()
     {
-        await _runDiagnosticsHandler.CreateFileAsync();
-        await _runDiagnosticsHandler.UploadFileAsync(CancellationToken.None);
-        return await _twinHandler.GetTwinJsonAsync();
+        try
+        {
+            Stopwatch timeTaken = new Stopwatch();
+            timeTaken.Start();
+
+            var reported = await _runDiagnosticsHandler.HandleRunDiagnosticsProcess(CancellationToken.None);
+
+            timeTaken.Stop();
+
+            if (reported.Status == StatusType.Success)
+            {
+                var timeTakenString = timeTaken.Elapsed.ToString(@"mm\:ss");
+                _logger.Info($"RunDiagnostics Success in {timeTakenString}");
+                return Ok($"The diagnostic process has been completed successfully, request-duration: {timeTakenString}");
+            }
+            else
+            {
+                throw new Exception(reported.ResultText);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("RunDiagnostics failed", ex);
+            return BadRequest($"An error occurred while processing run diagnostics: {ex.Message}");
+        }
     }
 
     private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
@@ -133,8 +156,8 @@ public class AgentController : ControllerBase
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
-        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning);
-        await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken);
+        await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }
 }
 

@@ -1,5 +1,5 @@
 using Moq;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 
