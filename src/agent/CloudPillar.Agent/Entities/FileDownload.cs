@@ -8,7 +8,6 @@ public record FileDownload
     public Stopwatch Stopwatch { get; set; }
     public long TotalBytesDownloaded { get; set; }
     public long TotalBytes { get; set; }
-    public string TempPath { get; set; }
     public DownloadAction Action
     {
         get => this.ActionReported.TwinAction as DownloadAction;

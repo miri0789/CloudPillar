@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -11,11 +11,13 @@ public class StrictModeHandler : IStrictModeHandler
     private const string SEPARATOR = "/";
     private const string DOUBLE_SEPARATOR = "\\";
     private readonly StrictModeSettings _strictModeSettings;
+    private readonly IMatcherWrapper _matchWrapper;
     private readonly ILoggerHandler _logger;
 
-    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, ILoggerHandler logger)
+    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, IMatcherWrapper matchWrapper, ILoggerHandler logger)
     {
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
+        _matchWrapper = matchWrapper ?? throw new ArgumentNullException(nameof(matchWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -58,7 +60,7 @@ public class StrictModeHandler : IStrictModeHandler
             return;
         }
 
-        string verbatimFileName = @$"{fileName.Replace("\\\\", "/")}";
+        string verbatimFileName = @$"{fileName.Replace("\\", "/")}";
 
         FileRestrictionDetails zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, actionType);
 
@@ -139,12 +141,8 @@ public class StrictModeHandler : IStrictModeHandler
 
     private bool IsMatch(string rootPath, string filePath, string[] patterns)
     {
-        Matcher matcher = new Matcher();
-
-        matcher.AddIncludePatterns(patterns);
-        var result = matcher.Match(rootPath.ToLower(), filePath.ToLower());
-
-        var fileMatch = result.Files.Any(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR)?.ToLower() == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR)?.ToLower());
+        var result = _matchWrapper.IsMatch(patterns, rootPath.ToLower(), filePath.ToLower());
+        var fileMatch = _matchWrapper.DoesFileMatchPattern(result, rootPath, filePath);
         return fileMatch;
     }
 }
