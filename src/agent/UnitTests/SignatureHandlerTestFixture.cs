@@ -3,7 +3,7 @@ using Moq;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
-
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Tests;
 
@@ -15,7 +15,8 @@ public class SignatureHandlerTestFixture
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
     private ISignatureHandler _target;
-
+    private SignFileSettings mockSignFileSettingsValue = new SignFileSettings();
+    private Mock<IOptions<SignFileSettings>> mockSignFileSettings;
 
     [SetUp]
     public void Setup()
@@ -23,7 +24,11 @@ public class SignatureHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
-        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object);
+        mockSignFileSettingsValue = SignFileSettingsHelper.SetSignFileSettingsValueMock();
+        mockSignFileSettings = new Mock<IOptions<SignFileSettings>>();
+        mockSignFileSettings.Setup(x => x.Value).Returns(mockSignFileSettingsValue);
+
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, mockSignFileSettings.Object);
         _ecdsaMock = new Mock<ECDsa>();
 
         string publicKeyPem = @"-----BEGIN PUBLIC KEY-----

@@ -19,11 +19,14 @@ namespace CloudPillar.Agent.Tests
         private Mock<IStrictModeHandler> _strictModeHandlerMock;
         private Mock<ILoggerHandler> _loggerMock;
         private Mock<ITwinActionsHandler> _twinActionsHandlerMock;
+        private Mock<ISignatureHandler> _signatureHandlerMock;
 
         private Mock<ICheckSumService> _checkSumServiceMock;
         private IFileDownloadHandler _target;
         private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
         private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
+        private SignFileSettings mockSignFileSettingsValue = new SignFileSettings();
+        private Mock<IOptions<SignFileSettings>> mockSignFileSettings;
 
         private int actionIndex = 0;
 
@@ -35,9 +38,14 @@ namespace CloudPillar.Agent.Tests
             mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
             mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
+            mockSignFileSettingsValue = SignFileSettingsHelper.SetSignFileSettingsValueMock();
+            mockSignFileSettings = new Mock<IOptions<SignFileSettings>>();
+            mockSignFileSettings.Setup(x => x.Value).Returns(mockSignFileSettingsValue);
+
             _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
             _strictModeHandlerMock = new Mock<IStrictModeHandler>();
+            _signatureHandlerMock = new Mock<ISignatureHandler>();
             _twinActionsHandlerMock = new Mock<ITwinActionsHandler>();
             _checkSumServiceMock = new Mock<ICheckSumService>();
             _loggerMock = new Mock<ILoggerHandler>();
@@ -50,7 +58,9 @@ namespace CloudPillar.Agent.Tests
              _strictModeHandlerMock.Object,
              _twinActionsHandlerMock.Object,
               _loggerMock.Object,
-              _checkSumServiceMock.Object);
+              _checkSumServiceMock.Object,
+             _signatureHandlerMock.Object,
+              mockSignFileSettings.Object);
         }
 
         private FileDownload initAction()
@@ -65,7 +75,8 @@ namespace CloudPillar.Agent.Tests
                     {
                         ActionId = (actionIndex++).ToString(),
                         Source = "file.txt",
-                        DestinationPath = "C:\\Downloads"
+                        DestinationPath = "C:\\Downloads",
+                        Sign = "aaaaaa"
                     }
                 }
             };
@@ -178,7 +189,8 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(action.Action.Source)).Returns(".zip");
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(action.Action.DestinationPath)).Returns("");
             _fileStreamerWrapperMock.Setup(f => f.Combine(It.IsAny<string>(), It.IsAny<string>())).Returns(action.Action.Source);
-            
+            _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
+
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
             action.Report.Status = StatusType.Unzip;
             _fileStreamerWrapperMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(true);
@@ -215,7 +227,7 @@ namespace CloudPillar.Agent.Tests
 
         [Test]
         public async Task HandleDownloadMessageAsync_CompleteRangeCheckCheckSumValid_UpdateCompletedRanges()
-        {            
+        {
             var action = initAction();
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
             action.Report.CompletedRanges = "0-4,7";
@@ -244,9 +256,11 @@ namespace CloudPillar.Agent.Tests
 
         [Test]
         public async Task HandleDownloadMessageAsync_FullRanges_CompleteDownload()
-        {            
+        {
             var action = initAction();
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
+            _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
+
             action.Report.CompletedRanges = "0-5,7";
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
             var message = new DownloadBlobChunkMessage
