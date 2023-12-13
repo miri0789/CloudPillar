@@ -11,5 +11,5 @@ public enum D2CMessageType
 public class D2CMessage
 {
     public D2CMessageType MessageType { get; set; }
-    public string ActionId { get; set; }
+    public int ActionIndex { get; set; }
 }

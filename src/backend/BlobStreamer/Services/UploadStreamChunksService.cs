@@ -25,7 +25,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
     }
 
-    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool isRunDiagnostics, string uploadActionId)
+    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool isRunDiagnostics)
     {
         try
         {
@@ -63,7 +63,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     _logger.Info($"isRunDiagnostics: {isRunDiagnostics}");
                     if (uploadSuccess && isRunDiagnostics)
                     {
-                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri, uploadActionId);
+                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
                     }
                 }
             }
@@ -96,14 +96,13 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         return uploadSuccess;
     }
 
-    public async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri, string uploadActionId)
+    public async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri)
     {
         _logger.Info($"preparing download action to add device twin");
 
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
-            ActionId = uploadActionId,
             Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
             Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
             DestinationPath = Path.GetTempFileName(),

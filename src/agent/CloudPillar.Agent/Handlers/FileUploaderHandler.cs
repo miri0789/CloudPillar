@@ -179,7 +179,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");

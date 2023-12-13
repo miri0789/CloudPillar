@@ -20,13 +20,11 @@ public class RunDiagnosticsHandlerTestFixture
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private Mock<ICheckSumService> _checkSumServiceMock;
     private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
-    private Mock<IGuidWrapper> _guidWrapperMock;
     private Mock<FileStream> _fileStreamMock;
     private Mock<ILoggerHandler> _logger;
     private const int FILE_SIZE_BYTES = 128 * 1024;
     private const string uploadFilePath = "uploadFilePath";
     private const string downloadFilePath = "downloadFilePath";
-    private string actionId = Guid.NewGuid().ToString();
     private const string checkSum = "testCheckSum";
 
     private CancellationToken cancellationToken = CancellationToken.None;
@@ -39,15 +37,12 @@ public class RunDiagnosticsHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
         _checkSumServiceMock = new Mock<ICheckSumService>();
-        _guidWrapperMock = new Mock<IGuidWrapper>();
         _logger = new Mock<ILoggerHandler>();
 
         _runDiagnosticsSettingsMock = new Mock<IOptions<RunDiagnosticsSettings>>();
-        _runDiagnosticsSettingsMock.Setup(x => x.Value).Returns(new RunDiagnosticsSettings() { FleSizBytes = FILE_SIZE_BYTES, PeriodicResponseWaitSeconds = 2, ResponseTimeoutMinutes = 1 });
+        _runDiagnosticsSettingsMock.Setup(x => x.Value).Returns(new RunDiagnosticsSettings() { FileSizeBytes = FILE_SIZE_BYTES, PeriodicResponseWaitSeconds = 2, ResponseTimeoutMinutes = 1 });
         
         _fileStreamMock = new Mock<FileStream>(MockBehavior.Default, new object[] { "filePath", FileMode.Create });
-
-        _guidWrapperMock.Setup(x => x.CreateNewGUid()).Returns(actionId);
         _fileStreamerWrapperMock.Setup(x => x.GetTempFileName()).Returns(uploadFilePath);
         _checkSumServiceMock.Setup(x => x.CalculateCheckSumAsync(It.IsAny<FileStream>(), It.IsAny<CheckSumType>())).ReturnsAsync(checkSum);
         InitTwin(StatusType.Success);
@@ -81,7 +76,7 @@ public class RunDiagnosticsHandlerTestFixture
     {
         await _target.HandleRunDiagnosticsProcess(CancellationToken.None);
         _fileStreamerWrapperMock.Verify(
-                    x => x.SetLength(It.IsAny<Stream>(), _runDiagnosticsSettingsMock.Object.Value.FleSizBytes), Times.Once);
+                    x => x.SetLength(It.IsAny<Stream>(), _runDiagnosticsSettingsMock.Object.Value.FileSizeBytes), Times.Once);
     }
 
     [Test]
@@ -92,14 +87,13 @@ public class RunDiagnosticsHandlerTestFixture
             Action = TwinActionType.SingularUpload,
             Description = "upload file by run diagnostic",
             Method = FileUploadMethod.Stream,
-            FileName = uploadFilePath,
-            ActionId = actionId
+            FileName = uploadFilePath
         };
         await _target.HandleRunDiagnosticsProcess(CancellationToken.None);
 
         _fileUploaderHandlerMock.Verify(
          x => x.UploadFilesToBlobStorageAsync(It.Is<string>(x => x == uploadFilePath), It.Is<UploadAction>
-         (item => item.ActionId == actionId && item.FileName == uploadFilePath)
+         (item => item.FileName == uploadFilePath)
      , It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>(), It.Is<bool>(x => x == true)), Times.Once);
 
     }
@@ -153,7 +147,6 @@ public class RunDiagnosticsHandlerTestFixture
                     TransitPackage = new List<TwinAction>()
                     {
                         new DownloadAction() {
-                            ActionId = actionId,
                             Action = TwinActionType.SingularDownload,
                             DestinationPath = downloadFilePath
                          }
@@ -184,7 +177,7 @@ public class RunDiagnosticsHandlerTestFixture
     private void CreateTarget()
     {
         _target = new RunDiagnosticsHandler(_fileUploaderHandlerMock.Object, _runDiagnosticsSettingsMock.Object, _fileStreamerWrapperMock.Object,
-         _checkSumServiceMock.Object, _deviceClientWrapperMock.Object, _guidWrapperMock.Object, _logger.Object);
+         _checkSumServiceMock.Object, _deviceClientWrapperMock.Object, _logger.Object);
     }
 
 }

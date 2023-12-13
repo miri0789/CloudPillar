@@ -7,5 +7,5 @@ public interface IBlobService
     Task<BlobProperties> GetBlobMetadataAsync(string fileName);
     Task<byte[]> GetFileBytes(string fileName);
     Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, 
-    int rangeIndex, long startPosition, string ActionId, int rangesCount);
+    int rangeIndex, long startPosition, int actionIndex, int rangesCount);
 }

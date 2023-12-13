@@ -25,15 +25,15 @@ public class BlobController : ControllerBase
     }
 
     [HttpPost("range")]
-    public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string actionId, int rangesCount)
+    public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
-        await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionId, rangesCount);
+        await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionIndex, rangesCount);
         return Ok();
     }
 
     [HttpPost("uploadStream")]
     public async Task UploadStream([FromBody] StreamingUploadChunkEvent data, string deviceId)
     {
-        await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum, deviceId, data.IsRunDiagnostics, data.ActionId);
+        await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum, deviceId, data.IsRunDiagnostics);
     }
 }
