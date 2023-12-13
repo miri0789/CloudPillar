@@ -75,6 +75,7 @@ builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
 builder.Services.AddScoped<IWindowsServiceWrapper, WindowsServiceWrapper>();
+builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
 
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
