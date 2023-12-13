@@ -64,7 +64,7 @@ namespace Backend.BlobStreamer.Tests
             _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
 
             _mockDeviceConnectService.Setup(s => s.SendDeviceMessagesAsync(It.IsAny<Message[]>(), _deviceId)).Returns(Task.CompletedTask);
-            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid().ToString(), _rangesCount);
+            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
             _mockDeviceConnectService.Verify(s => s.SendDeviceMessagesAsync(
                                                 It.Is<Message[]>(messages => messages.Length == 4),
                                                 _deviceId),
@@ -76,7 +76,7 @@ namespace Backend.BlobStreamer.Tests
         {
             _mockCheckSumService.Setup(b => b.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>()));
 
-            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid().ToString(), _rangesCount);
+            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
             _mockCheckSumService.Verify(s => s.CalculateCheckSumAsync(It.Is<byte[]>(b => b.Length == _rangeSize), It.IsAny<CheckSumType>()), Times.Once);
         }
 

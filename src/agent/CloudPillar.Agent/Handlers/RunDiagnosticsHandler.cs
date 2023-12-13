@@ -16,29 +16,28 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ICheckSumService _checkSumService;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
-    private readonly IGuidWrapper _guidWrapper;
     private readonly ILoggerHandler _logger;
 
     public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper,
-    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, IGuidWrapper guidWrapper, ILoggerHandler logger)
+    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
-        _guidWrapper = guidWrapper ?? throw new ArgumentNullException(nameof(guidWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<TwinActionReported> HandleRunDiagnosticsProcess(CancellationToken cancellationToken)
     {
         var diagnosticsFilePath = await CreateFileAsync();
-        var actionId = await UploadFileAsync(diagnosticsFilePath, cancellationToken);
-        var reported = await CheckDownloadStatus(actionId, diagnosticsFilePath);
+        await UploadFileAsync(diagnosticsFilePath, cancellationToken);
+        var fileName = _fileStreamerWrapper.GetFileName(diagnosticsFilePath);
+        var reported = await CheckDownloadStatus(fileName, diagnosticsFilePath);
 
         var downloadFile = reported.Status == StatusType.Success ? reported.ResultText : string.Empty;
-        await DeleteFileAsync(diagnosticsFilePath, downloadFile, actionId, cancellationToken);
+        await DeleteFileAsync(diagnosticsFilePath, downloadFile);
         return reported;
     }
 
@@ -49,12 +48,12 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             var diagnosticsFilePath = _fileStreamerWrapper.GetTempFileName();
 
             //create random content
-            var bytes = new Byte[_runDiagnosticsSettings.FleSizBytes];
+            var bytes = new Byte[_runDiagnosticsSettings.FileSizeBytes];
             new Random().NextBytes(bytes);
 
             using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.Open))
             {
-                _fileStreamerWrapper.SetLength(fileStream, _runDiagnosticsSettings.FleSizBytes);
+                _fileStreamerWrapper.SetLength(fileStream, _runDiagnosticsSettings.FileSizeBytes);
                 await _fileStreamerWrapper.WriteAsync(fileStream, bytes);
             }
             _logger.Info($"File for diagnostics was created");
@@ -67,23 +66,20 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    private async Task<string> UploadFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
+    private async Task UploadFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
     {
         try
         {
-            var actionId = _guidWrapper.CreateNewGUid();
             var uploadAction = new UploadAction()
             {
                 Action = TwinActionType.SingularUpload,
                 Description = "upload file by run diagnostic",
                 Method = FileUploadMethod.Stream,
-                FileName = diagnosticsFilePath,
-                ActionId = actionId
+                FileName = diagnosticsFilePath
             };
 
             var actionToReport = new ActionToReport(TwinPatchChangeSpec.ChangeSpecDiagnostics);
             await _fileUploaderHandler.UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, actionToReport, cancellationToken, true);
-            return actionId;
         }
         catch (Exception ex)
         {
@@ -92,7 +88,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    private async Task<TwinActionReported> CheckDownloadStatus(string actionId, string diagnosticsFilePath)
+    private async Task<TwinActionReported> CheckDownloadStatus(string fileName, string diagnosticsFilePath)
     {
         TwinActionReported reported = new TwinActionReported();
         var taskCompletion = new TaskCompletionSource<TwinActionReported>();
@@ -111,7 +107,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         {
             while (!taskCompletion.Task.IsCompleted && await timer.WaitForNextTickAsync())
             {
-                reported = await GetDownloadStatus(actionId);
+                reported = await GetDownloadStatus(fileName);
                 _logger.Info($"CheckResponse response is {reported.Status}");
 
                 if (reported.Status == StatusType.Success)
@@ -145,7 +141,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
-    private async Task DeleteFileAsync(string uploadFilePath, string downloadFilePath, string actionId, CancellationToken cancellationToken)
+    private async Task DeleteFileAsync(string uploadFilePath, string downloadFilePath)
     {
         try
         {
@@ -161,7 +157,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    private async Task<TwinActionReported> GetDownloadStatus(string actionId)
+    private async Task<TwinActionReported> GetDownloadStatus(string fileName)
     {
 
         var twin = await _deviceClientWrapper.GetTwinAsync(CancellationToken.None);
@@ -172,10 +168,10 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var desiredList = twinDesired?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
         var reportedList = twinReported?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
 
-        var indexDesired = desiredList?.FindIndex(x => x.ActionId == actionId) ?? -1;
+        var indexDesired = desiredList?.FindIndex(x => x is DownloadAction && ((DownloadAction)x).Source == fileName) ?? -1;
         if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())
         {
-            _logger.Info($"No report with actionId {actionId}");
+            _logger.Info($"No report with fileName {fileName}");
             return new TwinActionReported() { Status = StatusType.Pending };
         }
 
