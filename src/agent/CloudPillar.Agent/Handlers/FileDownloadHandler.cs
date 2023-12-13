@@ -175,8 +175,6 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         else
         {
-            file.Report.Status = StatusType.Failed;
-            _fileStreamerWrapper.DeleteFile(file.Action.DestinationPath);
             throw new Exception($"File {file.Action.DestinationPath} signature is not valid, the file will be deleted.");
         }
     }
