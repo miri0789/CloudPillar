@@ -54,7 +54,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         try
         {
-            if (((DownloadAction)actionToReport.TwinAction).Sign is null)
+            if (fileDownload.Action.Sign is null)
             {
                 _logger.Info("No sign file key is sent, sending for signature");
                 await SendForSignatureAsync(actionToReport, cancellationToken);
