@@ -62,7 +62,7 @@ public class AgentEventProcessorTestFixture
     [Test]
     public async Task ProcessEventsAsync_FirmwareUpdateMessage_CallFirmwareUpdate()
     {
-        var messages = InitMessage("{\"MessageType\": 0, \"FileName\": \"fileName1\",\"ChunkSize\": 1234, \"ActionGuid\": \"" + new Guid() + "\"}");
+        var messages = InitMessage("{\"MessageType\": 0, \"FileName\": \"fileName1\",\"ChunkSize\": 1234, \"ActionIndex\":0}");
 
         var contextMock = new Mock<PartitionContext>(null, "1", "consumerGroupName", "eventHubPath", null)
         {

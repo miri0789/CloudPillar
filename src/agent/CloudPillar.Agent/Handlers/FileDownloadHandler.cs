@@ -46,7 +46,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
-        var fileDownload = GetDownloadFile(actionToReport.TwinAction.ActionId, ((DownloadAction)actionToReport.TwinAction).Source);
+        var fileDownload = GetDownloadFile(actionToReport.ReportIndex, ((DownloadAction)actionToReport.TwinAction).Source);
         if (fileDownload == null)
         {
             fileDownload = new FileDownload { ActionReported = actionToReport, Stopwatch = new Stopwatch() };
@@ -83,7 +83,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                     {
                         fileDownload.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
                     }
-                    await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.Action.ActionId, currentRangeIndex);
+                    await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.ActionReported.ReportIndex, currentRangeIndex);
                 }
             }
         }
@@ -184,7 +184,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isRangeValid = await VerifyRangeCheckSumAsync(filePath, (long)message.RangeStartPosition, (long)message.RangeEndPosition, message.RangeCheckSum);
         if (!isRangeValid)
         {
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, message.FileName, message.ActionId, 0, message.RangeStartPosition, message.RangeEndPosition);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, message.FileName, file.ActionReported.ReportIndex, 0, message.RangeStartPosition, message.RangeEndPosition);
             file.TotalBytesDownloaded -= (long)(message.RangeEndPosition - message.RangeStartPosition);
             if (file.TotalBytesDownloaded < 0) { file.TotalBytesDownloaded = 0; }
         }
@@ -193,16 +193,16 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Report.CompletedRanges = AddRange(file.Report.CompletedRanges, message.RangeIndex);
         }
     }
-    private FileDownload GetDownloadFile(string actionId, string fileName)
+    private FileDownload GetDownloadFile(int actionIndex, string fileName)
     {
-        var file = _filesDownloads.FirstOrDefault(item => item.Action.ActionId == actionId &&
+        var file = _filesDownloads.FirstOrDefault(item => item.ActionReported.ReportIndex == actionIndex &&
                                     item.Action.Source == fileName);
         return file;
     }
 
     public async Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
     {
-        var file = GetDownloadFile(message.ActionId, message.FileName);
+        var file = GetDownloadFile(message.ActionIndex, message.FileName);
         if (file == null)
         {
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
@@ -261,7 +261,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
         if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
         {
-            RemoveFileFromList(file.Action.ActionId, file.Action.Source);
+            RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
         }
     }
 
@@ -334,10 +334,10 @@ public class FileDownloadHandler : IFileDownloadHandler
         return ranges;
     }
 
-    private void RemoveFileFromList(string actionId, string fileName)
+    private void RemoveFileFromList(int actionIndex, string fileName)
     {
         var itemsToRemove = _filesDownloads
-        .Where(item => item.Action.Source == fileName || item.Action.ActionId == actionId)
+        .Where(item => item.Action.Source == fileName || item.ActionReported.ReportIndex == actionIndex)
         .ToList();
 
         foreach (var removedItem in itemsToRemove)
