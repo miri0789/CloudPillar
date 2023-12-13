@@ -1,7 +1,7 @@
 using CloudPillar.Agent.Wrappers.Interfaces;
 using Microsoft.Extensions.FileSystemGlobbing;
 
-namespace CloudPillar.Agent.Wrappers.interfaces;
+namespace CloudPillar.Agent.Wrappers.Interfaces;
 
 public class MatcherWrapper : IMatcherWrapper
 {
