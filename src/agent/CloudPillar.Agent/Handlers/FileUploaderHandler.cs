@@ -4,7 +4,10 @@ using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client.Transport;
 using System.IO.Compression;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
+using Newtonsoft.Json;
+using Microsoft.Azure.Storage.Blob;
+using Shared.Entities.Utilities;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -159,9 +162,9 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         try
         {
-            if (actionToReport.TwinReport.Progress > 0)
+            if (uploadAction.Method == FileUploadMethod.Blob && actionToReport.TwinReport.Status == StatusType.InProgress)
             {
-                notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
+                notification.CorrelationId ??= actionToReport.TwinReport.CorrelationId;
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
             var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
@@ -181,7 +184,8 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, uploadAction.ActionId, cancellationToken);
+                    await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");

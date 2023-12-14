@@ -56,9 +56,25 @@ public class TwinHandler : ITwinHandler
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-            string desiredJson = twin.Properties.Desired.ToJson();
-            var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(desiredJson,
-                    new JsonSerializerSettings
+            var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+
+            if (string.IsNullOrWhiteSpace(twinDesired?.ChangeSign))
+            {
+                _logger.Info($"There is no twin change sign, send sign event..");
+                await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign), cancellationToken);
+            }
+            else
+            {
+                var isSignValid = true;//await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign);
+                if (isSignValid == false)
+                {
+                    _logger.Error($"Twin Change signature is invalid");
+                    await UpdateReportedTwinChangeSignAsync("Twin Change signature is invalid", cancellationToken);
+                }
+                else
+                {
+                    await UpdateReportedTwinChangeSignAsync(null, cancellationToken);
+                    foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
                     {
                         Converters = new List<JsonConverter> {
                             new TwinDesiredConverter(), new TwinActionConverter() }
