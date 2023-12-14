@@ -12,7 +12,6 @@ namespace CloudPillar.Agent.Tests;
 public class SignatureHandlerTestFixture
 {
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
-    private Mock<ECDsa> _ecdsaMock;
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
     private ISignatureHandler _target;
@@ -25,7 +24,6 @@ public class SignatureHandlerTestFixture
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
         _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object);
-        _ecdsaMock = new Mock<ECDsa>();
 
         string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
                                 MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBgc4HZz+/fBbC7lmEww0AO3NK9wVZ
