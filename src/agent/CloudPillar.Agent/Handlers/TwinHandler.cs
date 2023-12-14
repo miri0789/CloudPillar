@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Entities.Utilities;
+using System.Text;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -70,7 +71,8 @@ public class TwinHandler : ITwinHandler
             }
             else
             {
-                var isSignValid = await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign);
+                byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
+                var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired.ChangeSign);
                 if (isSignValid == false)
                 {
                     _logger.Error($"Twin Change signature is invalid");

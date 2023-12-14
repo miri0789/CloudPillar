@@ -10,7 +10,6 @@ namespace CloudPillar.Agent.Handlers;
 public class SignatureHandler : ISignatureHandler
 {
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
-    private ECDsa _signingPublicKey;
     private readonly ILoggerHandler _logger;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
 
@@ -20,7 +19,7 @@ public class SignatureHandler : ISignatureHandler
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
     }
-    public async Task InitPublicKeyAsync()
+    private async Task<ECDsa> InitPublicKeyAsync()
     {
         string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync("pki/sign-pubkey.pem");
         if (publicKeyPem == null)
@@ -28,7 +27,7 @@ public class SignatureHandler : ISignatureHandler
             _logger.Error("sign pubkey not exist");
             throw new ArgumentNullException();
         }
-        _signingPublicKey = (ECDsa)LoadPublicKeyFromPem(publicKeyPem);
+        return (ECDsa)LoadPublicKeyFromPem(publicKeyPem);
     }
 
     private AsymmetricAlgorithm LoadPublicKeyFromPem(string pemContent)
@@ -48,15 +47,13 @@ public class SignatureHandler : ISignatureHandler
         return ecdsa;
     }
 
-    public async Task<bool> VerifySignatureAsync(string message, string signatureString)
+    public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)
     {
-        if (_signingPublicKey == null)
+        using (var ecdsa = await InitPublicKeyAsync())
         {
-            await InitPublicKeyAsync();
+            byte[] signature = Convert.FromBase64String(signatureString);
+            return ecdsa.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA512);
         }
-        byte[] signature = Convert.FromBase64String(signatureString);
-        byte[] dataToVerify = Encoding.UTF8.GetBytes(message);
-        return _signingPublicKey.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA512);
     }
 
     public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)

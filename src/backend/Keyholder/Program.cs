@@ -16,7 +16,7 @@ var informationalVersion = Assembly.GetEntryAssembly()?
 
 var builder = LoggerHostCreator.Configure("keyholder", WebApplication.CreateBuilder(args));
 
-builder.Services.AddSingleton<ISigningService, SigningService>();
+builder.Services.AddScoped<ISigningService, SigningService>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IIndividualEnrollmentWrapper, IndividualEnrollmentWrapper>();
@@ -33,9 +33,6 @@ var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
-
-var signingService = app.Services.GetService<ISigningService>();
-signingService?.Init();
 
 if (app.Environment.IsDevelopment())
 {

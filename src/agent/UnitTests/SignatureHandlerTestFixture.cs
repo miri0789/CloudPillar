@@ -3,6 +3,7 @@ using Moq;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
+using System.Text;
 
 
 namespace CloudPillar.Agent.Tests;
@@ -35,48 +36,25 @@ public class SignatureHandlerTestFixture
         _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync(It.IsAny<string>())).ReturnsAsync(() => publicKeyPem);
     }
 
-    [Test]
-    public async Task InitPublicKeyAsync_LoadsPublicKey_Success()
-    {
-        await _target.InitPublicKeyAsync();
-        _target.GetType()
-            .GetField("_signingPublicKey", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .SetValue(_target, _ecdsaMock.Object);
-
-        Assert.IsInstanceOf<ECDsa>(_ecdsaMock.Object);
-    }
 
 
     [Test]
     public async Task VerifySignature_ValidSignature_ReturnsTrue()
     {
-        await _target.InitPublicKeyAsync();
         string message = "value";
         string signatureString = "AamBQZxGNBGWsm9NkOyWiZRCWGponIRIJo3nnKytRyQlcpJv/iUy5fS1FUodBAX6Sn5kJV9g3DMn2GkJovSWOFXTAdNgY+OJsV42919LetahmaR1M7V8wcHqm+0ddfwF9MzO11fl39PZTT6upInvAVb8KA7Hazjn9enCWCxcise/2RZy";
-        bool result = await _target.VerifySignatureAsync(message, signatureString);
+        bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), signatureString);
         Assert.IsTrue(result);
     }
 
     [Test]
     public async Task VerifySignature_InvalidSignature_ReturnsFalse()
     {
-        await _target.InitPublicKeyAsync();
         string message = "Hello, world!";
         string signatureString = "SGVsbG8sIHdvcmxkIQ==";
-        bool result = await _target.VerifySignatureAsync(message, signatureString);
+        bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), signatureString);
         Assert.IsFalse(result);
     }
 
 
-
-    [Test]
-    public async Task InitPublicKeyAsync_FileNotExist_ThrowNull()
-    {
-        _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync(It.IsAny<string>())).ReturnsAsync(() => null);
-
-        Assert.ThrowsAsync<ArgumentNullException>(async () =>
-               {
-                   await _target.InitPublicKeyAsync();
-               });
-    }
 }

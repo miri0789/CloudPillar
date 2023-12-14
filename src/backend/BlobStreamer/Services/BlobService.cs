@@ -22,7 +22,7 @@ public class BlobService : IBlobService
     private readonly ICheckSumService _checkSumService;
 
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
-     IDeviceConnectService deviceConnectService,ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory)
+     IDeviceConnectService deviceConnectService, ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));
@@ -49,7 +49,7 @@ public class BlobService : IBlobService
         return data;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, 
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize,
     int rangeIndex, long startPosition, string ActionId, int rangesCount)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
@@ -58,10 +58,11 @@ public class BlobService : IBlobService
         var rangeBytes = new List<byte>();
         var rangeEndPosition = Math.Min(rangeSize + startPosition, fileSize);
         List<Message> messages = new List<Message>();
+        var data = new byte[chunkSize];
         for (long offset = startPosition, chunkIndex = 0; offset < rangeEndPosition; offset += chunkSize, chunkIndex++)
         {
             var length = Math.Min(chunkSize, rangeEndPosition - offset);
-            var data = new byte[length];
+            if (length != chunkSize) { Array.Resize(ref data, (int)length); }
             await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
             rangeBytes.AddRange(data);
             var blobMessage = new DownloadBlobChunkMessage

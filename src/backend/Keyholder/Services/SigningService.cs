@@ -4,13 +4,9 @@ using k8s;
 using Backend.Keyholder.Interfaces;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Shared;
-using Newtonsoft.Json.Linq;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Newtonsoft.Json;
-using Shared.Entities.Twin;
-using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json.Converters;
 using Shared.Entities.Utilities;
 
 
@@ -19,8 +15,6 @@ namespace Backend.Keyholder.Services;
 
 public class SigningService : ISigningService
 {
-    private ECDsa _signingPrivateKey;
-    private readonly RegistryManager _registryManager;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
@@ -32,12 +26,6 @@ public class SigningService : ISigningService
         {
             throw new ArgumentNullException(nameof(_environmentsWrapper.iothubConnectionString));
         }
-        _registryManager = RegistryManager.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
-    }
-
-    public async Task Init()
-    {
-        _signingPrivateKey = await GetSigningPrivateKeyAsync();
     }
 
 
@@ -71,34 +59,38 @@ public class SigningService : ISigningService
     private async Task<string> GetPrivateKeyFromK8sSecretAsync(string secretName, string secretKey, string? secretNamespace = null)
     {
         _logger.Debug($"GetPrivateKeyFromK8sSecretAsync {secretName}, {secretKey}, {secretNamespace}");
+
         var config = KubernetesClientConfiguration.BuildDefaultConfig();
-        var k8sClient = new Kubernetes(config);
-        _logger.Debug($"Got k8s client in namespace {config.Namespace}");
 
-        var ns = String.IsNullOrWhiteSpace(secretNamespace) ? config.Namespace : secretNamespace;
-        if (String.IsNullOrWhiteSpace(ns))
+        using (var k8sClient = new Kubernetes(config))
         {
-            throw new Exception("k8s namespace not found.");
+            _logger.Debug($"Got k8s client in namespace {config.Namespace}");
+
+            var ns = String.IsNullOrWhiteSpace(secretNamespace) ? config.Namespace : secretNamespace;
+            if (String.IsNullOrWhiteSpace(ns))
+            {
+                throw new Exception("k8s namespace not found.");
+            }
+
+            var secrets = await k8sClient.ListNamespacedSecretAsync(ns);
+
+            _logger.Debug($"Secrets in namespace '{ns}':");
+            foreach (var secret in secrets.Items)
+            {
+                _logger.Debug($"- {secret.Metadata.Name}");
+            }
+
+            var targetSecret = await k8sClient.ReadNamespacedSecretAsync(secretName, ns);
+            _logger.Debug($"Got k8s secret");
+
+            if (targetSecret.Data.TryGetValue(secretKey, out var privateKeyBytes))
+            {
+                _logger.Debug($"Got k8s secret bytes");
+                return Encoding.UTF8.GetString(privateKeyBytes);
+            }
+
+            throw new Exception("Private key not found in the Kubernetes secret.");
         }
-
-        var secrets = await k8sClient.ListNamespacedSecretAsync(ns);
-
-        _logger.Debug($"Secrets in namespace '{ns}':");
-        foreach (var secret in secrets.Items)
-        {
-            _logger.Debug($"- {secret.Metadata.Name}");
-        }
-
-        var targetSecret = await k8sClient.ReadNamespacedSecretAsync(secretName, ns);
-        _logger.Debug($"Got k8s secret");
-
-        if (targetSecret.Data.TryGetValue(secretKey, out var privateKeyBytes))
-        {
-            _logger.Debug($"Got k8s secret bytes");
-            return Encoding.UTF8.GetString(privateKeyBytes);
-        }
-
-        throw new Exception("Private key not found in the Kubernetes secret.");
     }
 
     private ECDsa LoadPrivateKeyFromPem(string pemContent)
@@ -123,28 +115,37 @@ public class SigningService : ISigningService
 
     public async Task CreateTwinKeySignature(string deviceId)
     {
-        if(_signingPrivateKey == null)
+        try
         {
-            await Init();
+            using (var registryManager = RegistryManager.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
+            {
+                var twin = await registryManager.GetTwinAsync(deviceId);
+                var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+
+                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
+                twinDesired.ChangeSign = await SignData(dataToSign);
+            }
         }
+        catch (Exception ex)
+        {
+            _logger.Error($"CreateTwinKeySignature error: {ex.Message}");
+        }
+    }
 
-        // Get the current device twin
-        var twin = await _registryManager.GetTwinAsync(deviceId);
-
-        // Parse the JSON twin
-        var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-
-        // Sign the value using the ES512 algorithm
-        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-        var signature = _signingPrivateKey!.SignData(dataToSign, HashAlgorithmName.SHA512);
-
-        // Convert the signature to a Base64 string
-        var signatureString = Convert.ToBase64String(signature);
-
-        twinDesired.ChangeSign = signatureString;
-        
-        // Update the device twin
-        twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
-        await _registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
+    public async Task<string> SignData(byte[] data)
+    {
+        try
+        {
+            using (var signingPrivateKey = await GetSigningPrivateKeyAsync())
+            {
+                var signature = signingPrivateKey!.SignData(data, HashAlgorithmName.SHA512);
+                return Convert.ToBase64String(signature);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"SignData error: {ex.Message}");
+            return "";
+        }
     }
 }

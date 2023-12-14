@@ -320,7 +320,7 @@ public class TwinHandlerTestFixture
         var reported = new TwinReportedChangeSpec();
 
         CreateTwinMock(desired, reported);
-        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(false);
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -334,7 +334,7 @@ public class TwinHandlerTestFixture
         var reported = new TwinReportedChangeSpec();
 
         CreateTwinMock(desired, reported);
-        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(true);
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -540,7 +540,7 @@ public class TwinHandlerTestFixture
     {
         var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, null, null, twinReportedCustomProps, changeSign);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
-        _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+        _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(true);
 
     }
 }
