@@ -49,8 +49,8 @@ public class BlobService : IBlobService
         return data;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize,
-    int rangeIndex, long startPosition, string ActionId, int rangesCount)
+    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, 
+    int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
@@ -71,7 +71,7 @@ public class BlobService : IBlobService
                 ChunkIndex = (int)chunkIndex,
                 Offset = offset,
                 FileName = fileName,
-                ActionId = ActionId,
+                ActionIndex = actionIndex,
                 FileSize = fileSize,
                 Data = data
             };

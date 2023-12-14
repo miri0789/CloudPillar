@@ -309,7 +309,7 @@ public class TwinHandler : ITwinHandler
 
                     default:
                         await UpdateTwinReportedAsync(action, StatusType.Failed, ResultCode.NotFound.ToString(), cancellationToken);
-                        _logger.Info($"HandleTwinActions, no handler found guid: {action.TwinAction.ActionId}");
+                        _logger.Info($"HandleTwinActions, no handler found for index: {action.ReportIndex}");
                         break;
                 }
 

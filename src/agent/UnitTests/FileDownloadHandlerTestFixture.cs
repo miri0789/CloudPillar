@@ -59,11 +59,10 @@ namespace CloudPillar.Agent.Tests
             {
                 ActionReported = new ActionToReport()
                 {
-                    ReportIndex = 1,
+                    ReportIndex = actionIndex++,
                     TwinReport = new TwinActionReported(),
                     TwinAction = new DownloadAction()
                     {
-                        ActionId = (actionIndex++).ToString(),
                         Source = "file.txt",
                         DestinationPath = "C:\\Downloads"
                     }
@@ -79,7 +78,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.Action.ActionId, 0, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 0, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
         }
 
@@ -90,7 +89,7 @@ namespace CloudPillar.Agent.Tests
             action.Report.CompletedRanges = "0-5,8,10";
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.Action.ActionId, 6, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 6, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
         }
 
@@ -99,7 +98,7 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             _d2CMessengerHandlerMock.Setup(dc =>
-                    dc.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<long?>(), It.IsAny<long?>()))
+                    dc.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<long?>(), It.IsAny<long?>()))
                     .ThrowsAsync(new Exception());
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
 
@@ -116,7 +115,7 @@ namespace CloudPillar.Agent.Tests
 
             var message = new DownloadBlobChunkMessage
             {
-                ActionId = action.Action.ActionId,
+                ActionIndex = action.ActionReported.ReportIndex,
                 FileName = action.Action.Source,
                 Offset = 0,
                 Data = new byte[1024],
@@ -128,7 +127,7 @@ namespace CloudPillar.Agent.Tests
 
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
-                item.Any(rep => rep.TwinAction.ActionId == action.Action.ActionId && rep.TwinReport.Status == StatusType.InProgress && rep.TwinReport.Progress == 25))
+                item.Any(rep => rep.TwinReport.Status == StatusType.InProgress && rep.TwinReport.Progress == 25))
             , It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -140,7 +139,7 @@ namespace CloudPillar.Agent.Tests
 
             var message = new DownloadBlobChunkMessage
             {
-                ActionId = action.Action.ActionId,
+                ActionIndex = action.ActionReported.ReportIndex,
                 FileName = action.Action.Source,
                 Offset = 0,
                 Data = new byte[1024],
@@ -198,7 +197,7 @@ namespace CloudPillar.Agent.Tests
             var rangeEndPosition = 456;
             var message = new DownloadBlobChunkMessage
             {
-                ActionId = action.Action.ActionId,
+                ActionIndex = action.ActionReported.ReportIndex,
                 FileName = action.Action.Source,
                 Offset = 0,
                 Data = new byte[1024],
@@ -209,7 +208,7 @@ namespace CloudPillar.Agent.Tests
                 RangeEndPosition = rangeEndPosition
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.Action.ActionId, 0, rangeStartPosition, rangeEndPosition), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 0, rangeStartPosition, rangeEndPosition), Times.Once);
 
         }
 
@@ -224,7 +223,7 @@ namespace CloudPillar.Agent.Tests
             var rangeEndPosition = 456;
             var message = new DownloadBlobChunkMessage
             {
-                ActionId = action.Action.ActionId,
+                ActionIndex = action.ActionReported.ReportIndex,
                 FileName = action.Action.Source,
                 Offset = 0,
                 Data = new byte[1024],
@@ -251,7 +250,7 @@ namespace CloudPillar.Agent.Tests
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
             var message = new DownloadBlobChunkMessage
             {
-                ActionId = action.Action.ActionId,
+                ActionIndex = action.ActionReported.ReportIndex,
                 FileName = action.Action.Source,
                 Offset = 0,
                 Data = new byte[1024],
@@ -275,7 +274,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             var message = new DownloadBlobChunkMessage
             {
-                ActionId = "NotExistActionId",
+                ActionIndex = -1,
                 FileName = action.Action.Source,
                 Offset = 0,
                 Data = new byte[1024],
@@ -296,7 +295,7 @@ namespace CloudPillar.Agent.Tests
 
             var message = new DownloadBlobChunkMessage
             {
-                ActionId = action.Action.ActionId,
+                ActionIndex = action.ActionReported.ReportIndex,
                 FileName = action.Action.Source,
                 FileSize = 2048
             };
