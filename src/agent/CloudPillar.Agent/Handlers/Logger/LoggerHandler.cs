@@ -10,14 +10,6 @@ public class LoggerHandler : ILoggerHandler
 
     private ILoggerHandlerFactory _loggerHandlerFactory;
 
-    private string _applicationName;
-
-    private bool _hasHttpContext;
-
-    private readonly IHttpContextAccessor? _httpContextAccessor;
-
-    private Level? _appendersLogLevel;
-
     public LoggerHandler(ILoggerHandlerFactory loggerFactory, IConfiguration configuration, IHttpContextAccessor? httpContextAccessor, ILog logger, string? log4netConfigFile = null, string applicationName = "", bool hasHttpContext = true)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -27,15 +19,10 @@ public class LoggerHandler : ILoggerHandler
         _loggerHandlerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         ArgumentNullException.ThrowIfNull(configuration);
 
-        _hasHttpContext = hasHttpContext;
-        _httpContextAccessor = httpContextAccessor;
-
-        _applicationName = applicationName;
-
         // Add Console Appender if not configured
         if (_loggerHandlerFactory.FindAppender<ConsoleAppender>() == null)
         {
-            var hierarchy = ((log4net.Core.ILoggerWrapper)_logger).Logger.Repository as log4net.Repository.Hierarchy.Hierarchy;
+            var hierarchy = _logger.Logger.Repository as log4net.Repository.Hierarchy.Hierarchy;
             if (hierarchy != null)
             {
                 hierarchy.Root.AddAppender(CreateConsoleAppender());

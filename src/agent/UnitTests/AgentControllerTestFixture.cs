@@ -40,7 +40,7 @@ namespace CloudPillar.Agent.Tests
         public async Task SetBusyAsync_ValidProccess_Success()
         {
             await _target.SetBusyAsync(default);
-            _twinHandler.Verify(h => h.GetLatestTwinAsync(CancellationToken.None), Times.Once);
+            _twinHandler.Verify(h => h.GetLatestTwin(CancellationToken.None), Times.Once);
         }
     }
 }

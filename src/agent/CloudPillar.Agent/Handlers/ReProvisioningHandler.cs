@@ -142,7 +142,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         }
     }
 
-    private X509Certificate2 GetTempCertificate()
+    private X509Certificate2? GetTempCertificate()
     {
         using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {

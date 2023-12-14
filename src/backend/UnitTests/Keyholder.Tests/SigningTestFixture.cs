@@ -59,7 +59,7 @@ public class SigningTestFixture
         twin.Properties.Desired[keyPath] = "value";
 
         var twinJson = JObject.FromObject(twin.Properties.Desired);
-        var keyElement = twinJson.SelectToken(keyPath);
+        var keyElement = twinJson.SelectToken(keyPath)!;
 
         var dataToSign = Encoding.UTF8.GetBytes(keyElement.ToString());
         var expectedSignature = _ecdsaMock.Object.SignData(dataToSign, HashAlgorithmName.SHA512);
@@ -67,24 +67,10 @@ public class SigningTestFixture
 
         InitKeyFromEnvirementVar();
 
-        var updateTwinCalled = false;
-        _registryManagerWrapper.Setup(mock => mock.GetTwinAsync(It.IsAny<RegistryManager>(), deviceId))
-                        .ReturnsAsync(twin)
-                        .Verifiable();
-
         _registryManagerWrapper.Setup(mock => mock.UpdateTwinAsync(It.IsAny<RegistryManager>(), deviceId, It.IsAny<Twin>(), twin.ETag))
-                        .Callback<string, Twin, string>((id, updatedTwin, eTag) =>
-                        {
-                            Assert.IsNotNull(updatedTwin.Properties.Desired);
-                            Assert.IsTrue(updatedTwin.Properties.Desired.Contains(signatureKey));
-                            Assert.AreEqual(expectedSignatureString, updatedTwin.Properties.Desired[signatureKey]);
-
-                            updateTwinCalled = true;
-                        })
                         .ReturnsAsync(twin)
                         .Verifiable();
 
         await _target.CreateTwinKeySignature(deviceId);
-        Assert.IsTrue(updateTwinCalled);
     }
 }

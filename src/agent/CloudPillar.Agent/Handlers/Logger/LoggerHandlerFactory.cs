@@ -16,10 +16,14 @@ public class LoggerHandlerFactory : ILoggerHandlerFactory
         return LogManager.GetLogger(filename);
     }
 
-    public ILoggerRepository CreateLogRepository(string? log4netConfigFile)
+    public LoggerHandlerFactory()
     {
         m_repository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
-        if (String.IsNullOrEmpty(log4netConfigFile))
+    }
+
+    public ILoggerRepository CreateLogRepository(string? log4netConfigFile)
+    {
+        if (string.IsNullOrEmpty(log4netConfigFile))
         {
             XmlConfigurator.Configure(m_repository);
         }
@@ -39,7 +43,7 @@ public class LoggerHandlerFactory : ILoggerHandlerFactory
     {
         return m_repository.LevelMap[logLevel];
     }
-    
+
     public T? FindAppender<T>() where T : IAppender
     {
         var appenders = GetAppenders();

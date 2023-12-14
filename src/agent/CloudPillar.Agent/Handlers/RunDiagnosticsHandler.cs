@@ -36,7 +36,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var reported = await CheckDownloadStatus(fileName, diagnosticsFilePath);
 
         var downloadFile = reported.Status == StatusType.Success ? reported.ResultText : string.Empty;
-        await DeleteFileAsync(diagnosticsFilePath, downloadFile);
+        DeleteFileAsync(diagnosticsFilePath, downloadFile);
         return reported;
     }
 
@@ -60,8 +60,9 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"CreateFileAsync error: {ex.Message}");
-            throw ex;
+            var err = $"CreateFileAsync error: {ex.Message}";
+            _logger.Error($"CreateFileAsync error: {ex.Message}", ex);
+            throw new Exception(err);
         }
     }
 
@@ -82,20 +83,21 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"UploadFileAsync error: {ex.Message}");
-            throw ex;
+            var err = $"UploadFileAsync error: {ex.Message}";
+            _logger.Error(err, ex);
+            throw new Exception(err); ;
         }
     }
 
     private async Task<TwinActionReported> CheckDownloadStatus(string fileName, string diagnosticsFilePath)
     {
-        TwinActionReported reported = new TwinActionReported();
+        TwinActionReported? reported = new TwinActionReported();
         var taskCompletion = new TaskCompletionSource<TwinActionReported>();
         var timer = new PeriodicTimer(TimeSpan.FromSeconds(_runDiagnosticsSettings.PeriodicResponseWaitSeconds));
 
-        Timer timeTaken = new Timer((Object reported) =>
+        Timer timeTaken = new Timer(reported =>
         {
-            var state = ((TwinActionReported)reported).Status;
+            var state = ((TwinActionReported?)reported)?.Status;
             if (state != StatusType.Success && state != StatusType.Failed)
             {
                 taskCompletion.SetException(new TimeoutException($"Something is wrong, no response was received within {_runDiagnosticsSettings.ResponseTimeoutMinutes} minutes"));
@@ -107,9 +109,9 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             while (!taskCompletion.Task.IsCompleted && await timer.WaitForNextTickAsync())
             {
                 reported = await GetDownloadStatus(fileName);
-                _logger.Info($"CheckResponse response is {reported.Status}");
+                _logger.Info($"CheckResponse response is {reported?.Status}");
 
-                if (reported.Status == StatusType.Success)
+                if (reported?.Status == StatusType.Success)
                 {
                     var res = await CompareUploadAndDownloadFiles(diagnosticsFilePath, reported.ResultText);
                     if (!res)
@@ -121,7 +123,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                 }
                 else
                 {
-                    if (reported.Status == StatusType.Failed)
+                    if (reported?.Status == StatusType.Failed)
                     {
                         taskCompletion.SetResult(reported);
                     }
@@ -140,7 +142,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
-    private async Task DeleteFileAsync(string uploadFilePath, string downloadFilePath)
+    private void DeleteFileAsync(string uploadFilePath, string downloadFilePath)
     {
         try
         {
@@ -151,12 +153,13 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"DeleteFileAsync error: {ex.Message}");
-            throw ex;
+            var err = $"DeleteFileAsync error: {ex.Message}";
+            _logger.Error(err, ex);
+            throw new Exception(err);
         }
     }
 
-    private async Task<TwinActionReported> GetDownloadStatus(string fileName)
+    private async Task<TwinActionReported?> GetDownloadStatus(string fileName)
     {
 
         var twin = await _deviceClientWrapper.GetTwinAsync(CancellationToken.None);
@@ -174,12 +177,12 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             return new TwinActionReported() { Status = StatusType.Pending };
         }
 
-        var report = reportedList[indexDesired];
-        if (report.Status == StatusType.Success)
+        var report = reportedList?[indexDesired];
+        if (report?.Status == StatusType.Success)
         {
-            report.ResultText = ((DownloadAction)desiredList[indexDesired]).DestinationPath;
+            report.ResultText = ((DownloadAction)desiredList?[indexDesired]!).DestinationPath;
         }
-        return reportedList[indexDesired];
+        return reportedList?[indexDesired];
     }
 
     private async Task<bool> CompareUploadAndDownloadFiles(string uploadFilePath, string downloadFilePath)

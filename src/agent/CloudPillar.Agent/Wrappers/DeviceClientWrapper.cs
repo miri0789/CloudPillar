@@ -54,7 +54,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
         catch (Exception ex)
         {
-            _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized.");
+            _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized. {ex.Message}");
             return false;
         }
     }
@@ -170,7 +170,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         await _deviceClient.CompleteFileUploadAsync(notification, cancellationToken);
     }
 
-    public async Task<Uri> GetBlobUriAsync(FileUploadSasUriResponse sasUri, CancellationToken cancellationToken)
+    public Uri GetBlobUri(FileUploadSasUriResponse sasUri)
     {
         return sasUri.GetBlobUri();
     }

@@ -2,11 +2,11 @@ namespace CloudPillar.Agent.Handlers.Logger
 {
     public static class LoggerHostCreator
     {
-        public static WebApplicationBuilder Configure(string applicationName, WebApplicationBuilder? builder = null, string[]? args = null)
+        public static WebApplicationBuilder Configure(string applicationName, WebApplicationBuilder? builder = null)
         {
             if (builder == null)
             {
-                builder = WebApplication.CreateBuilder(args);
+                builder = WebApplication.CreateBuilder();
             }
             builder.Services.AddHttpContextAccessor();
             string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
