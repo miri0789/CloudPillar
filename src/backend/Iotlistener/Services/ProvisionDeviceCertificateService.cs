@@ -1,4 +1,3 @@
-using Backend.Infra.Common;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Iotlistener.Interfaces;
 using Shared.Entities.Messages;
@@ -26,7 +25,7 @@ public class ProvisionDeviceCertificateService : IProvisionDeviceCertificateServ
         ArgumentNullException.ThrowIfNull(provisionEvent.Data);
         try
         {
-            string requestUrl = $"{_environmentsWrapper.keyHolderUrl}RegisterByCertificate/ProvisionDeviceCertificate?deviceId={deviceId}";
+            string requestUrl = $"{_environmentsWrapper.keyHolderUrl}RegisterByCertificate/ProvisionDeviceCertificate?deviceId={deviceId}&prefix={provisionEvent.CertificatePrefix}";
             await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, provisionEvent.Data);
         }
         catch (Exception ex)

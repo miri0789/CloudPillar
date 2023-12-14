@@ -27,7 +27,7 @@ public static class MockHelper
             '$version': 1,
         }";
 
-    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, TwinChangeSpec? changeSpecDiagnosticsDesired = null, TwinReportedChangeSpec? changeSpecDiagnosticsReported = null, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "----")
+    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, TwinChangeSpec? changeSpecDiagnosticsDesired = null, TwinReportedChangeSpec? changeSpecDiagnosticsReported = null, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "----", string certificatePrefix = CertificateConstants.CLOUD_PILLAR_SUBJECT)
     {
         var desiredJson = JObject.Parse(_baseDesierd);
         desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinDesired()
@@ -59,12 +59,12 @@ public static class MockHelper
         return new Twin(twinProp);
     }
 
-    public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays)
+    public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays, string certificatePrefix = CertificateConstants.CLOUD_PILLAR_SUBJECT)
     {
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}", rsa
+                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{certificatePrefix}{deviceId}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(secretKey);

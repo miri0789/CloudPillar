@@ -29,9 +29,9 @@ public class RegisterByCertificateController : ControllerBase
     }
 
     [HttpPost("ProvisionDeviceCertificate")]
-    public async Task<IActionResult> ProvisionDeviceCertificateAsync(string deviceId, [FromBody] byte[] certificate)
+    public async Task<IActionResult> ProvisionDeviceCertificateAsync(string deviceId,string prefix, [FromBody] byte[] certificate)
     {
-        await _registrationService.ProvisionDeviceCertificateAsync(deviceId, certificate);
+        await _registrationService.ProvisionDeviceCertificateAsync(deviceId,prefix, certificate);
         return Ok();
     }
 

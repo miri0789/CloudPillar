@@ -1,3 +1,5 @@
+using Shared.Entities.Authentication;
+
 public class AuthenticationSettings
 {
     private const int DEFUALT_EXPIRED_DAYS = 365;
@@ -7,5 +9,6 @@ public class AuthenticationSettings
     public string GlobalDeviceEndpoint { get; set; } = GLOBAL_DEVICE_ENDPOINT;
     public int CertificateExpiredDays { get; set; } = DEFUALT_EXPIRED_DAYS;
     public string GroupEnrollmentKey { get; set; }
+    public string CertificatePrefix { get; set; } = CertificateConstants.CLOUD_PILLAR_SUBJECT;
    
 }
