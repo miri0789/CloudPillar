@@ -4,7 +4,6 @@ using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using static Microsoft.Azure.EventHubs.EventData;
 using Shared.Entities.Messages;
-using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 using Shared.Logger;
 using Backend.Iotlistener.Processors;

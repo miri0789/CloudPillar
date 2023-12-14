@@ -6,7 +6,6 @@ using Backend.BlobStreamer.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
 using Shared.Entities.Services;
 using Microsoft.Azure.Devices;
-using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
 
 namespace Backend.BlobStreamer.Services;

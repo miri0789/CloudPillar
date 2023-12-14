@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text;
 using Microsoft.Azure.Devices;
 using Shared.Entities.Messages;
 

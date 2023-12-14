@@ -1,5 +1,4 @@
 ﻿using System.Security.Cryptography;
-using System.Text;
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-
-namespace Shared.Logger;
+﻿namespace Shared.Logger;
 
 public interface ILoggerHandler
 {

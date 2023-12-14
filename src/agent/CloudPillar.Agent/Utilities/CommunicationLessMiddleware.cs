@@ -1,7 +1,6 @@
 
 using System.Text;
 using CloudPillar.Agent.Entities;
-using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shared.Entities.Twin;

@@ -1,5 +1,3 @@
-using Newtonsoft.Json;
-
 namespace CloudPillar.Agent.Entities;
 
 public class UpdateReportedProps

@@ -3,7 +3,6 @@ using System.Text;
 using k8s;
 using Backend.Keyholder.Interfaces;
 using Microsoft.Azure.Devices;
-using Microsoft.Azure.Devices.Shared;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Newtonsoft.Json;

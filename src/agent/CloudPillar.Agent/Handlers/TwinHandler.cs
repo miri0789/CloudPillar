@@ -8,8 +8,6 @@ using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Shared.Entities.Utilities;
 using System.Text;
 

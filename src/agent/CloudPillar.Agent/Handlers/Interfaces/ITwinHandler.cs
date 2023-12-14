@@ -1,4 +1,3 @@
-using Microsoft.Azure.Devices.Shared;
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;

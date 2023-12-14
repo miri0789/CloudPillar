@@ -1,12 +1,10 @@
-using System.Text.RegularExpressions;
-using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices.Client.Transport;
 using System.IO.Compression;
-using Shared.Entities.Twin;
+using System.Text.RegularExpressions;
+using Microsoft.Azure.Devices.Client.Transport;
+using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers.Logger;
-using Newtonsoft.Json;
-using Microsoft.Azure.Storage.Blob;
+using CloudPillar.Agent.Wrappers;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 

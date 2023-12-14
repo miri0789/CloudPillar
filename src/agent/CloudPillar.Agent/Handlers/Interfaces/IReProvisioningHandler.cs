@@ -1,4 +1,3 @@
-using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Devices.Client;
 using Shared.Entities.Messages;
 

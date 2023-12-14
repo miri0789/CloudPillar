@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;

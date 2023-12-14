@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;

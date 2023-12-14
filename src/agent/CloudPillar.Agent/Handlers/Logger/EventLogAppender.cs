@@ -24,9 +24,7 @@
 // SSCLI 1.0 has no support for EventLog
 #if !SSCLI
 
-using System;
 using System.Diagnostics;
-using System.Globalization;
 
 using log4net.Util;
 using log4net.Layout;
@@ -34,57 +32,57 @@ using log4net.Core;
 
 namespace log4net.Appender
 {
-	/// <summary>
-	/// Writes events to the system event log.
-	/// </summary>
-	/// <remarks>
+    /// <summary>
+    /// Writes events to the system event log.
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// The appender will fail if you try to write using an event source that doesn't exist unless it is running with local administrator privileges.
     /// See also http://logging.apache.org/log4net/release/faq.html#trouble-EventLog
     /// </para>
-	/// <para>
-	/// The <c>EventID</c> of the event log entry can be
-	/// set using the <c>EventID</c> property (<see cref="LoggingEvent.Properties"/>)
-	/// on the <see cref="LoggingEvent"/>.
-	/// </para>
+    /// <para>
+    /// The <c>EventID</c> of the event log entry can be
+    /// set using the <c>EventID</c> property (<see cref="LoggingEvent.Properties"/>)
+    /// on the <see cref="LoggingEvent"/>.
+    /// </para>
     /// <para>
     /// The <c>Category</c> of the event log entry can be
-	/// set using the <c>Category</c> property (<see cref="LoggingEvent.Properties"/>)
-	/// on the <see cref="LoggingEvent"/>.
-	/// </para>
-	/// <para>
-	/// There is a limit of 32K characters for an event log message
-	/// </para>
-	/// <para>
-	/// When configuring the EventLogAppender a mapping can be
-	/// specified to map a logging level to an event log entry type. For example:
-	/// </para>
-	/// <code lang="XML">
-	/// &lt;mapping&gt;
-	/// 	&lt;level value="ERROR" /&gt;
-	/// 	&lt;eventLogEntryType value="Error" /&gt;
-	/// &lt;/mapping&gt;
-	/// &lt;mapping&gt;
-	/// 	&lt;level value="DEBUG" /&gt;
-	/// 	&lt;eventLogEntryType value="Information" /&gt;
-	/// &lt;/mapping&gt;
-	/// </code>
-	/// <para>
-	/// The Level is the standard log4net logging level and eventLogEntryType can be any value
-	/// from the <see cref="EventLogEntryType"/> enum, i.e.:
-	/// <list type="bullet">
-	/// <item><term>Error</term><description>an error event</description></item>
-	/// <item><term>Warning</term><description>a warning event</description></item>
-	/// <item><term>Information</term><description>an informational event</description></item>
-	/// </list>
-	/// </para>
-	/// </remarks>
-	/// <author>Aspi Havewala</author>
-	/// <author>Douglas de la Torre</author>
-	/// <author>Nicko Cadell</author>
-	/// <author>Gert Driesen</author>
-	/// <author>Thomas Voss</author>
-	public class EventLogAppender : AppenderSkeleton
+    /// set using the <c>Category</c> property (<see cref="LoggingEvent.Properties"/>)
+    /// on the <see cref="LoggingEvent"/>.
+    /// </para>
+    /// <para>
+    /// There is a limit of 32K characters for an event log message
+    /// </para>
+    /// <para>
+    /// When configuring the EventLogAppender a mapping can be
+    /// specified to map a logging level to an event log entry type. For example:
+    /// </para>
+    /// <code lang="XML">
+    /// &lt;mapping&gt;
+    /// 	&lt;level value="ERROR" /&gt;
+    /// 	&lt;eventLogEntryType value="Error" /&gt;
+    /// &lt;/mapping&gt;
+    /// &lt;mapping&gt;
+    /// 	&lt;level value="DEBUG" /&gt;
+    /// 	&lt;eventLogEntryType value="Information" /&gt;
+    /// &lt;/mapping&gt;
+    /// </code>
+    /// <para>
+    /// The Level is the standard log4net logging level and eventLogEntryType can be any value
+    /// from the <see cref="EventLogEntryType"/> enum, i.e.:
+    /// <list type="bullet">
+    /// <item><term>Error</term><description>an error event</description></item>
+    /// <item><term>Warning</term><description>a warning event</description></item>
+    /// <item><term>Information</term><description>an informational event</description></item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    /// <author>Aspi Havewala</author>
+    /// <author>Douglas de la Torre</author>
+    /// <author>Nicko Cadell</author>
+    /// <author>Gert Driesen</author>
+    /// <author>Thomas Voss</author>
+    public class EventLogAppender : AppenderSkeleton
 	{
 		#region Public Instance Constructors
 

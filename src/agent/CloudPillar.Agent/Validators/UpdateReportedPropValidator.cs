@@ -1,4 +1,3 @@
-using CloudPillar.Agent.Entities;
 using FluentValidation;
 namespace CloudPillar.Agent.Validators
 {

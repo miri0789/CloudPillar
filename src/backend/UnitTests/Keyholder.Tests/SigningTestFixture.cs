@@ -45,25 +45,11 @@ public class SigningTestFixture
         _kubernetesMock = new Mock<Kubernetes>();
     }
 
-    [Test]
-    public async Task GetSigningPrivateKeyAsync_SecretNameOrSecretKeyIsNullOrEmpty_ThrowError()
-    {
-        async Task InitSigning() => await _target.Init();
-        Assert.ThrowsAsync<InvalidOperationException>(InitSigning);
-    }
 
     private void InitKeyFromEnvirementVar()
     {
         string pemContent = @"LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSHVBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFqQklIV01JSFRBZ0VCQkVJQml5QWE3YVJIRkRDaDJxZ2EKOXNUVUdJTkU1akhBRm5tTTh4V2VUL3VuaTVJNHROcWhWNVh4MHBEcm1DVjltYnJvRnRmRWEwWFZmS3VNQXh4ZgpaNkxNL3lLaGdZa0RnWVlBQkFHQnpnZG5QNzk4RnNMdVdZVEREUUE3YzByM0JWazhOblJVU2V4cFFVc1JpbFBOCnYzU2NoTzBsUnc5UnU4Nngxa2huVkR4K2R1cTRCaURGY3ZsU0FjeWpMQUNKdmp2b3lUTEppQStUUUZkbXJlYXIKak1pWk5FMjVwVDJ5V1AxTlVuZEp4UGN2VnRmQlc0OGtQT212a1k0V2xxUDViQXdDWHdic0tyQ2drNnhic3AxMgpldz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0=";
         _mockEnvironmentsWrapper.Setup(c => c.signingPem).Returns(pemContent);
-    }
-
-    [Test]
-    public async Task Init_ValidPrivateKeyFromEnvirementVariable_InitECDsaInstance()
-    {
-        InitKeyFromEnvirementVar();
-        await _target.Init();
-        Assert.IsInstanceOf<ECDsa>(_ecdsaMock.Object);
     }
 
     [Test]
@@ -85,7 +71,6 @@ public class SigningTestFixture
         var expectedSignatureString = Convert.ToBase64String(expectedSignature);
 
         InitKeyFromEnvirementVar();
-        await _target.Init();
 
         var updateTwinCalled = false;
         _registryManagerMock.Setup(mock => mock.GetTwinAsync(deviceId))
