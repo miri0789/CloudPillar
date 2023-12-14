@@ -9,40 +9,35 @@ using Backend.Keyholder.Interfaces;
 using Shared.Logger;
 using Backend.Keyholder.Services;
 using Backend.Keyholder.Wrappers.Interfaces;
+using Backend.Infra.Common.Wrappers.Interfaces;
 
 namespace Backend.Keyholder.Tests;
 
 
 public class SigningTestFixture
 {
-    private Mock<RegistryManager> _registryManagerMock;
-    private Mock<ECDsa> _ecdsaMock;
     private ISigningService _target;
-    private Mock<Kubernetes> _kubernetesMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
     private Mock<ILoggerHandler> _mockLogger;
+    private Mock<IRegistryManagerWrapper> _registryManagerWrapper;
+    private Mock<ECDsa> _ecdsaMock;
 
     [SetUp]
     public void Setup()
     {
-        _registryManagerMock = new Mock<RegistryManager>();
         _ecdsaMock = new Mock<ECDsa>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLogger = new Mock<ILoggerHandler>();
+        _registryManagerWrapper = new Mock<IRegistryManagerWrapper>();
         _mockEnvironmentsWrapper.Setup(c => c.iothubConnectionString).Returns("HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=");
         _mockEnvironmentsWrapper.Setup(c => c.signingPem).Returns("");
         _mockEnvironmentsWrapper.Setup(c => c.kubernetesServiceHost).Returns("your-kubernetes-service-host");
         _mockEnvironmentsWrapper.Setup(c => c.secretName).Returns("");
         _mockEnvironmentsWrapper.Setup(c => c.secretKey).Returns("your-secret-key");
-
-        _target = new SigningService(_mockEnvironmentsWrapper.Object, _mockLogger.Object);
-        _target.GetType()
-            .GetField("_registryManager", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .SetValue(_target, _registryManagerMock.Object);
-        _target.GetType()
-            .GetField("_signingPrivateKey", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .SetValue(_target, _ecdsaMock.Object);
-        _kubernetesMock = new Mock<Kubernetes>();
+        var registryManagerMock = new Mock<RegistryManager>();
+        _registryManagerWrapper.Setup(mock => mock.CreateFromConnectionString())
+                        .Returns(registryManagerMock.Object);
+        _target = new SigningService(_mockEnvironmentsWrapper.Object, _mockLogger.Object, _registryManagerWrapper.Object);
     }
 
 
@@ -73,11 +68,11 @@ public class SigningTestFixture
         InitKeyFromEnvirementVar();
 
         var updateTwinCalled = false;
-        _registryManagerMock.Setup(mock => mock.GetTwinAsync(deviceId))
+        _registryManagerWrapper.Setup(mock => mock.GetTwinAsync(It.IsAny<RegistryManager>(), deviceId))
                         .ReturnsAsync(twin)
                         .Verifiable();
 
-        _registryManagerMock.Setup(mock => mock.UpdateTwinAsync(deviceId, It.IsAny<Twin>(), twin.ETag))
+        _registryManagerWrapper.Setup(mock => mock.UpdateTwinAsync(It.IsAny<RegistryManager>(), deviceId, It.IsAny<Twin>(), twin.ETag))
                         .Callback<string, Twin, string>((id, updatedTwin, eTag) =>
                         {
                             Assert.IsNotNull(updatedTwin.Properties.Desired);

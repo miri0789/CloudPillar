@@ -1,10 +1,13 @@
-using Shared.Logger;
 using Microsoft.Azure.Devices.Shared;
-using Shared.Entities.Twin;
-using Newtonsoft.Json;
-using Shared.Entities.Utilities;
-using Backend.Infra.Common.Wrappers.Interfaces;
+
 using Backend.Infra.Common.Services.Interfaces;
+using Backend.Infra.Common.Wrappers.Interfaces;
+
+using Newtonsoft.Json;
+
+using Shared.Entities.Twin;
+using Shared.Entities.Utilities;
+using Shared.Logger;
 
 namespace Backend.Infra.Common.Services;
 
@@ -23,24 +26,27 @@ public class TwinDiseredService : ITwinDiseredService
     public async Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
-        
+
         try
         {
-            var twin = await _registryManagerWrapper.GetTwinAsync(deviceId);
-            TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-            var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
+            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+            {
+                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
+                TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
-            TwinAction[] changeSpecData = twinDesiredChangeSpec.Patch.TransitPackage as TwinAction[] ?? new TwinAction[0];
+                TwinAction[] changeSpecData = twinDesiredChangeSpec.Patch?.TransitPackage ?? new TwinAction[0];
 
-            var updatedArray = new List<TwinAction>(changeSpecData);
-            updatedArray.Add(downloadAction);
+                var updatedArray = new List<TwinAction>(changeSpecData);
+                updatedArray.Add(downloadAction);
 
-            twinDesiredChangeSpec.Patch.TransitPackage = updatedArray.ToArray();
-            var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
-            twin.Properties.Desired = new TwinCollection(twinDesiredJson);
+                twinDesiredChangeSpec.Patch.TransitPackage = updatedArray.ToArray();
+                var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
+                twin.Properties.Desired = new TwinCollection(twinDesiredJson);
 
-            await _registryManagerWrapper.UpdateTwinAsync(deviceId, twin, twin.ETag);
-            _logger.Info($"A new recipe has been successfully added to {deviceId} ");
+                await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
+                _logger.Info($"A new recipe has been successfully added to {deviceId} ");
+            }
         }
         catch (Exception ex)
         {

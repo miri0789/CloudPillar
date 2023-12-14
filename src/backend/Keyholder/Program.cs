@@ -9,6 +9,7 @@ using Backend.Infra.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Services;
+using Backend.Infra.Common.Wrappers;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -26,6 +27,7 @@ builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper
 builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
+builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();

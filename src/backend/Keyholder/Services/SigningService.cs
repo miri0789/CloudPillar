@@ -2,11 +2,12 @@
 using System.Text;
 using k8s;
 using Backend.Keyholder.Interfaces;
-using Microsoft.Azure.Devices;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Newtonsoft.Json;
 using Shared.Entities.Utilities;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Microsoft.Azure.Devices.Shared;
 
 
 namespace Backend.Keyholder.Services;
@@ -16,11 +17,13 @@ public class SigningService : ISigningService
 {
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
+    private readonly IRegistryManagerWrapper _registryManagerWrapper;
 
-    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
+    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
         if (string.IsNullOrEmpty(_environmentsWrapper.iothubConnectionString))
         {
             throw new ArgumentNullException(nameof(_environmentsWrapper.iothubConnectionString));
@@ -116,13 +119,16 @@ public class SigningService : ISigningService
     {
         try
         {
-            using (var registryManager = RegistryManager.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
+            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
             {
-                var twin = await registryManager.GetTwinAsync(deviceId);
+                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
                 var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
                 var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
                 twinDesired.ChangeSign = await SignData(dataToSign);
+
+                twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
+                await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
             }
         }
         catch (Exception ex)
