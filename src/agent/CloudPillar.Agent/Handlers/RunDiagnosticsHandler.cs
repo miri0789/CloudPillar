@@ -33,8 +33,8 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var diagnosticsFilePath = await CreateFileAsync();
         await UploadFileAsync(diagnosticsFilePath, cancellationToken);
         var fileName = _fileStreamerWrapper.GetFileName(diagnosticsFilePath);
-        var reported = await CheckDownloadStatus(fileName, diagnosticsFilePath);
 
+        var reported = await CheckDownloadStatus(fileName, diagnosticsFilePath);
         var downloadFile = reported.Status == StatusType.Success ? reported.ResultText : string.Empty;
         DeleteFileAsync(diagnosticsFilePath, downloadFile);
         return reported;
@@ -170,7 +170,8 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var desiredList = twinDesired?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
         var reportedList = twinReported?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
 
-        var indexDesired = desiredList?.FindIndex(x => x is DownloadAction && ((DownloadAction)x).Source == fileName) ?? -1;
+        var indexDesired = desiredList?.FindIndex(x => x is DownloadAction &&
+                Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
         if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())
         {
             _logger.Info($"No report with fileName {fileName}");

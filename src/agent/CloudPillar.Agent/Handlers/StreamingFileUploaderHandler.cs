@@ -65,7 +65,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     long bytesToUpload = Math.Min(chunkSize, readStream.Length - currentPosition);
-                    if (bytesToUpload != chunkSize) { Array.Resize(ref buffer, (int)bytesToUpload); }
+                    if (bytesToUpload != chunkSize) { buffer = new byte[bytesToUpload]; }
                     _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
                     var isLastMessage = IsLastMessage(currentPosition, chunkSize, streamLength);
