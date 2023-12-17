@@ -1,6 +1,5 @@
 using Microsoft.Azure.Devices.Provisioning.Service;
 using Shared.Logger;
-using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Shared.Entities.Messages;

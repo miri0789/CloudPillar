@@ -2,7 +2,6 @@ using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
-using Backend.Infra.Common;
 using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.BlobStreamer.Wrappers;

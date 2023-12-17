@@ -10,14 +10,14 @@ public class CommonEnvironmentsWrapper: ICommonEnvironmentsWrapper
     {
         get
         {
-            return int.TryParse(GetVariable(_retryPolicyBaseDelay), out int value) ? value : 1;
+            return int.TryParse(GetVariable(_retryPolicyBaseDelay), out int value) ? value : 20;
         }
     }
     public int retryPolicyExponent
     {
         get
         {
-            return int.TryParse(GetVariable(_retryPolicyExponent), out int value) ? value : 3;
+            return int.TryParse(GetVariable(_retryPolicyExponent), out int value) ? value : 5;
         }
     }
 

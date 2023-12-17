@@ -1,19 +1,11 @@
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Provisioning.Client;
-using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Microsoft.Azure.Devices.Provisioning.Service;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
-using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Handlers;
@@ -154,7 +146,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         }
     }
 
-    private X509Certificate2 GetTempCertificate()
+    private X509Certificate2? GetTempCertificate()
     {
         using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {
