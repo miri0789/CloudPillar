@@ -75,8 +75,15 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             {
                 if (messageType != C2DMessageType.Reprovisioning)
                 {
-                    await _deviceClient.CompleteAsync(receivedMessage, cancellationToken);
-                    _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
+                    try
+                    {
+                        await _deviceClient.CompleteAsync(receivedMessage, cancellationToken);
+                        _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Complete message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} failed", ex);
+                    }
                 }
             }
         }
