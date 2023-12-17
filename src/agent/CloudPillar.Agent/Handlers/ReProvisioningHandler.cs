@@ -75,6 +75,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var data = JsonConvert.DeserializeObject<AuthenticationKeys>(Encoding.Unicode.GetString(message.Data));
         ArgumentNullException.ThrowIfNull(data);
         var certificate = _x509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _authenticationSettings.CertificateExpiredDays);
+        ArgumentNullException.ThrowIfNull(certificate);
         InstallTemporaryCertificate(certificate, data.SecretKey);
         await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(_authenticationSettings.CertificatePrefix, certificate, cancellationToken);
     }

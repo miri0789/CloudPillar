@@ -59,7 +59,7 @@ public static class MockHelper
         return new Twin(twinProp);
     }
 
-    public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays, string certificatePrefix = CertificateConstants.CLOUD_PILLAR_SUBJECT)
+    public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays, string certificatePrefix)
     {
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {

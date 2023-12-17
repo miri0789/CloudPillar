@@ -1,6 +1,5 @@
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
-using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client;
@@ -8,6 +7,7 @@ using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using Moq;
 using CloudPillar.Agent.Handlers.Logger;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -19,14 +19,14 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     private Mock<IProvisioningDeviceClientWrapper> _provisioningDeviceClientWrapperMock;
     private X509Certificate2 _unitTestCertificate;
     private IDPSProvisioningDeviceClientHandler _target;
-
+    private Mock<IOptions<AuthenticationSettings>> _authenticationSettingsMock;
 
     private const string DEVICE_ID = "UnitTest";
     private const string SECRET_KEY = "secert";
     private const string IOT_HUB_HOST_NAME = "IoTHubHostName";
     const string DPS_SCOPE_ID = "dpsScopeId";
     const string GLOBAL_DEVICE_ENDPOINT = "globalDeviceEndpoint";
-
+    private const string CERTIFICATE_PREFIX = "UnitTest-CP-";
 
     [SetUp]
     public void Setup()
@@ -36,7 +36,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
         _provisioningDeviceClientWrapperMock = new Mock<IProvisioningDeviceClientWrapper>();
 
-        _unitTestCertificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60);
+        _unitTestCertificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60, CERTIFICATE_PREFIX);
         _unitTestCertificate.FriendlyName = $"{DEVICE_ID}@{IOT_HUB_HOST_NAME}";
         _x509CertificateWrapperMock.Setup(x => x.GetSecurityProvider(_unitTestCertificate)).Returns(new SecurityProviderX509Certificate(_unitTestCertificate));
         _deviceClientWrapperMock.Setup(x => x.GetProvisioningTransportHandler()).Returns(Mock.Of<ProvisioningTransportHandler>());
@@ -47,7 +47,10 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
             .Returns(Task.CompletedTask);
         _deviceClientWrapperMock.Setup(x => x.IsDeviceInitializedAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        _target = new X509DPSProvisioningDeviceClientHandler(_loggerMock.Object, _deviceClientWrapperMock.Object, _x509CertificateWrapperMock.Object, _provisioningDeviceClientWrapperMock.Object);
+        _authenticationSettingsMock = new Mock<IOptions<AuthenticationSettings>>();
+        _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings() { CertificatePrefix = "UnitTest-CP-" });
+
+        CreateTarget();
     }
 
     [Test]
@@ -61,6 +64,17 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         });
         var target = _target.GetCertificate();
         Assert.IsNotNull(target);
+
+    }
+
+    [Test]
+    public void GetCertificate_NoMatchCertificatePrefix_ReturnsNull()
+    {
+        _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings() { CertificatePrefix = "NoValidUnitTest-CP-" });
+        CreateTarget();
+
+        var target = _target.GetCertificate();
+        Assert.IsNull(target);
 
     }
 
@@ -156,5 +170,10 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         });
         Assert.ThrowsAsync<ArgumentException>(async () => await _target.ProvisioningAsync(string.Empty, _unitTestCertificate, string.Empty, It.IsAny<Message>(), CancellationToken.None));
 
+    }
+
+    private void CreateTarget()
+    {
+        _target = new X509DPSProvisioningDeviceClientHandler(_loggerMock.Object, _deviceClientWrapperMock.Object, _x509CertificateWrapperMock.Object, _provisioningDeviceClientWrapperMock.Object, _authenticationSettingsMock.Object);
     }
 }
