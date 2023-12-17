@@ -44,8 +44,8 @@ public class FileUploaderHandlerTestFixture
         _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(sasUriResponse);
 
-        _deviceClientWrapperMock.Setup(device => device.GetBlobUri(It.IsAny<FileUploadSasUriResponse>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(STORAGE_URI);
+        _deviceClientWrapperMock.Setup(device => device.GetBlobUri(It.IsAny<FileUploadSasUriResponse>()))
+        .Returns(STORAGE_URI);
 
         _fileStreamerWrapperMock.Setup(f => f.CreateStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>(), It.IsAny<int>(), It.IsAny<bool>()))
         .Returns(() => READ_STREAM);
