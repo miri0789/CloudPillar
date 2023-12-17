@@ -1,5 +1,4 @@
-﻿using NUnit.Framework;
-using Moq;
+﻿using Moq;
 using System.Net;
 using System.Text;
 using Shared.Logger;

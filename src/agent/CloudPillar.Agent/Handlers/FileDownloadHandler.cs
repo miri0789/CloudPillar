@@ -41,7 +41,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var fileDownload = GetDownloadFile(actionToReport.ReportIndex, ((DownloadAction)actionToReport.TwinAction).Source);
         if (fileDownload == null)
         {
-            fileDownload = new FileDownload { ActionReported = actionToReport, Stopwatch = new Stopwatch() };
+            fileDownload = new FileDownload { ActionReported = actionToReport };
             _filesDownloads.Add(fileDownload);
         }
         try
@@ -107,7 +107,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not directory path.");
             }
-            if (!_fileStreamerWrapper.GetExtension(file.Action.Source).Equals(".zip", StringComparison.OrdinalIgnoreCase))
+            if (_fileStreamerWrapper.GetExtension(file.Action.Source)?.Equals(".zip", StringComparison.OrdinalIgnoreCase) == false)
             {
                 throw new ArgumentException("No zip file is sent");
             }
@@ -117,7 +117,10 @@ public class FileDownloadHandler : IFileDownloadHandler
             throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not a file.");
         }
         var directory = Path.GetDirectoryName(file.Action.DestinationPath);
-        _fileStreamerWrapper.CreateDirectory(directory);
+        if (directory != null)
+        {
+            _fileStreamerWrapper.CreateDirectory(directory);
+        }
     }
 
     private void HandleFirstMessageAsync(FileDownload file, DownloadBlobChunkMessage message)
@@ -144,11 +147,11 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private async Task HandleEndRangeDownloadAsync(string filePath, DownloadBlobChunkMessage message, FileDownload file, CancellationToken cancellationToken)
     {
-        var isRangeValid = await VerifyRangeCheckSumAsync(filePath, (long)message.RangeStartPosition, (long)message.RangeEndPosition, message.RangeCheckSum);
+        var isRangeValid = await VerifyRangeCheckSumAsync(filePath, message.RangeStartPosition.GetValueOrDefault(), message.RangeEndPosition.GetValueOrDefault(), message.RangeCheckSum);
         if (!isRangeValid)
         {
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, message.FileName, file.ActionReported.ReportIndex, 0, message.RangeStartPosition, message.RangeEndPosition);
-            file.TotalBytesDownloaded -= (long)(message.RangeEndPosition - message.RangeStartPosition);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, message.FileName, file.ActionReported.ReportIndex, message.RangeIndex, message.RangeStartPosition, message.RangeEndPosition);
+            file.TotalBytesDownloaded -= (long)(message.RangeEndPosition - message.RangeStartPosition).GetValueOrDefault();
             if (file.TotalBytesDownloaded < 0) { file.TotalBytesDownloaded = 0; }
         }
         else
@@ -156,7 +159,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Report.CompletedRanges = AddRange(file.Report.CompletedRanges, message.RangeIndex);
         }
     }
-    private FileDownload GetDownloadFile(int actionIndex, string fileName)
+    private FileDownload? GetDownloadFile(int actionIndex, string fileName)
     {
         var file = _filesDownloads.FirstOrDefault(item => item.ActionReported.ReportIndex == actionIndex &&
                                     item.Action.Source == fileName);
