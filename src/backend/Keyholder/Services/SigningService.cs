@@ -142,18 +142,18 @@ public class SigningService : ISigningService
         await _registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
     }
 
-    public async Task CreateFileKeySignature(string deviceId, string actionId, byte[] hash)
+    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash)
     {
         if (_signingPrivateKey == null)
         {
             await Init();
         }
         var signature = _signingPrivateKey.SignHash(hash);
-        await AddFileSignToDesired(deviceId, TwinPatchChangeSpec.ChangeSpec, actionId, Convert.ToBase64String(signature));
+        await AddFileSignToDesired(deviceId, TwinPatchChangeSpec.ChangeSpec, propName, actionIndex, Convert.ToBase64String(signature));
 
     }
 
-    private async Task AddFileSignToDesired(string deviceId, TwinPatchChangeSpec changeSpecKey, string actionId, string fileSign)
+    private async Task AddFileSignToDesired(string deviceId, TwinPatchChangeSpec changeSpecKey, string propName, int actionIndex, string fileSign)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 
@@ -163,19 +163,19 @@ public class SigningService : ISigningService
             TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
             var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
-            TwinAction[] changeSpecData = twinDesiredChangeSpec.Patch.TransitPackage as TwinAction[] ?? new TwinAction[0];
+            TwinAction[] changeSpecData = GetTwinActionsByName(twinDesiredChangeSpec.Patch, propName);
 
             var updatedArray = new List<TwinAction>(changeSpecData);
-            var action = (DownloadAction)updatedArray.Where(x => x.ActionId == actionId).FirstOrDefault();
+            var action = (DownloadAction)updatedArray[actionIndex];
             action.Sign = fileSign;
 
             twinDesired.ChangeSign = GetSignatue(twinDesired);
-            twinDesiredChangeSpec.Patch.TransitPackage = updatedArray.ToArray();
+            changeSpecData = updatedArray.ToArray();
             var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
             twin.Properties.Desired = new TwinCollection(twinDesiredJson);
 
             await _registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
-            _logger.Info($"Recipe: {action.ActionId} has been successfully changed. DeviceId: {deviceId} ");
+            _logger.Info($"Recipe: {actionIndex} has been successfully changed. DeviceId: {deviceId} ");
         }
         catch (Exception ex)
         {
@@ -190,5 +190,31 @@ public class SigningService : ISigningService
         var signature = _signingPrivateKey!.SignData(dataToSign, HashAlgorithmName.SHA512);
         // Convert the signature to a Base64 string
         return Convert.ToBase64String(signature);
+    }
+
+    private TwinAction[] GetTwinActionsByName(TwinPatch petch, string propName)
+    {
+        TwinAction[] changeSpecData;// = twinDesiredChangeSpec.Patch[propName] as TwinAction[] ?? new TwinAction[0];
+        switch (propName)
+        {
+            case nameof(petch.TransitPackage):
+                changeSpecData = petch.TransitPackage;
+                break;
+            case nameof(petch.PostInstallConfig):
+                changeSpecData = petch.PostInstallConfig;
+                break;
+            case nameof(petch.PreInstallConfig):
+                changeSpecData = petch.PreInstallConfig;
+                break;
+            case nameof(petch.PreTransitConfig):
+                changeSpecData = petch.PreTransitConfig;
+                break;
+            case nameof(petch.InstallSteps):
+                changeSpecData = petch.InstallSteps;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(propName), propName, null);
+        }
+        return changeSpecData;
     }
 }

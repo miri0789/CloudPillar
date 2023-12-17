@@ -52,6 +52,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             fileDownload = new FileDownload { ActionReported = actionToReport, Stopwatch = new Stopwatch() };
             _filesDownloads.Add(fileDownload);
         }
+        fileDownload.Action.Sign = fileDownload.Action.Sign ?? ((DownloadAction)actionToReport.TwinAction).Sign;
         try
         {
             if (fileDownload.Action.Sign is null)
@@ -106,9 +107,10 @@ public class FileDownloadHandler : IFileDownloadHandler
         SignFileEvent signFileEvent = new SignFileEvent()
         {
             MessageType = D2CMessageType.SignFileKey,
-            ActionId = ((DownloadAction)actionToReport.TwinAction).ActionId,
+            ActionIndex = actionToReport.ReportIndex,
             FileName = ((DownloadAction)actionToReport.TwinAction).Source,
-            BufferSize = _signFileSettings.BufferSize
+            BufferSize = _signFileSettings.BufferSize,
+            PropName = actionToReport.ReportPartName
         };
         await _d2CMessengerHandler.SendSignFileEventAsync(signFileEvent, cancellationToken);
     }

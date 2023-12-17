@@ -4,8 +4,8 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using Shared.Entities.Messages;
 using CloudPillar.Agent.Handlers.Logger;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 

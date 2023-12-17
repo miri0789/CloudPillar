@@ -40,7 +40,7 @@ public class SigningService : ISigningService
             string blobRequestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/CalculateHash?fileName={signFileEvent.FileName}&bufferSize={signFileEvent.BufferSize}";
             var signatureFileBytes = await _httpRequestorService.SendRequest<string>(blobRequestUrl, HttpMethod.Get);
 
-            string signRequestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createFileSign?deviceId={deviceId}&actionId={signFileEvent.ActionId}";
+            string signRequestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createFileSign?deviceId={deviceId}&propName={signFileEvent.PropName}&actionIndex={signFileEvent.ActionIndex}";
             await _httpRequestorService.SendRequest(signRequestUrl, HttpMethod.Post, signatureFileBytes);
         }
         catch (Exception ex)

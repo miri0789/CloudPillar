@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Backend.Keyholder.Interfaces;
+using System.Runtime.ConstrainedExecution;
 
 namespace Backend.Keyholder;
 
@@ -22,9 +23,9 @@ public class SigningController : ControllerBase
     }
 
     [HttpPost("createFileSign")]
-    public async Task<IActionResult> GetMeatadataFile(string deviceId, string actionId, byte[] data)
+    public async Task<IActionResult> GetMeatadataFile(string deviceId, string propName, int actionIndex, byte[] data)
     {
-        await _signingService.CreateFileKeySignature(deviceId, actionId, data);
+        await _signingService.CreateFileKeySignature(deviceId, propName, actionIndex, data);
         return Ok();
     }
 }
