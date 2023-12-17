@@ -9,7 +9,6 @@ using Microsoft.Azure.EventHubs.Processor;
 using System.Runtime.Loader;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Services;
-using Backend.Infra.Common;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?

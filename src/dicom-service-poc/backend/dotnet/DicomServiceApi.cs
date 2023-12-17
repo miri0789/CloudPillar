@@ -1,9 +1,6 @@
 using System.Net;
 using FellowOakDicom;
-using Microsoft.Health.Dicom.Client;
-using Microsoft.Health.Dicom.Client.Models;
 using Microsoft.Identity.Client;
-using Microsoft.Health.Dicom.Core.Extensions;
 
 namespace DicomBackendPoC
 {

@@ -1,6 +1,4 @@
-using System;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
 using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Utilities;

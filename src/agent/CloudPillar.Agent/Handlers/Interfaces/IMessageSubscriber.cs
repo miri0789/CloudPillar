@@ -1,5 +1,4 @@
-﻿using CloudPillar.Agent.Entities;
-using Microsoft.Azure.Devices.Client;
+﻿using Microsoft.Azure.Devices.Client;
 using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;

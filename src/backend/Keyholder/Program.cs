@@ -18,7 +18,7 @@ var informationalVersion = Assembly.GetEntryAssembly()?
 var builder = LoggerHostCreator.Configure("keyholder", WebApplication.CreateBuilder(args));
 
 builder.Services.AddScoped<ISigningService, SigningService>();
-builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IIndividualEnrollmentWrapper, IndividualEnrollmentWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();

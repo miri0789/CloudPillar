@@ -1,5 +1,3 @@
-using Microsoft.Azure.Devices.Client;
-
 namespace Shared.Entities.Messages;
 
 public class RequestDeviceCertificateMessage : C2DMessages

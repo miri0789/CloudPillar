@@ -55,9 +55,9 @@ public class TwinActionsHandler : ITwinActionsHandler
                 {
                     if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;
                     var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
-                    var reportedValue = (TwinActionReported[])reportedProp.GetValue(twinReportedChangeSpec.Patch);
+                    var reportedValue = (TwinActionReported[])reportedProp?.GetValue(twinReportedChangeSpec.Patch)!;
                     reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
-                    reportedProp.SetValue(twinReportedChangeSpec.Patch, reportedValue);
+                    reportedProp?.SetValue(twinReportedChangeSpec.Patch, reportedValue);
                 });
                 await UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey, cancellationToken);
             }

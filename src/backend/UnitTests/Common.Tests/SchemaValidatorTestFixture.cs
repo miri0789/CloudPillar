@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using Moq;
 using Shared.Logger;
 using Backend.Infra.Common.Services;

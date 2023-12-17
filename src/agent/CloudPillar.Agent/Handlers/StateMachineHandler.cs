@@ -1,6 +1,3 @@
-
-using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 
