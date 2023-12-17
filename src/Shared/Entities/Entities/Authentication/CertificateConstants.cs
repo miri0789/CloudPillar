@@ -3,5 +3,5 @@ public class CertificateConstants
 {
     public const string CLOUD_PILLAR_SUBJECT = "CloudPillar-";
 
-    public const string TEMPORARY_CERTIFICATE_NAME = "CPTemporaryCertificate";
+    public const string TEMPORARY_CERTIFICATE_NAME = "TemporaryCertificate";
 }
