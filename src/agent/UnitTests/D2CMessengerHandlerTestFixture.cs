@@ -4,7 +4,7 @@ using Moq;
 using Microsoft.Azure.Devices.Client;
 using System.Text;
 using Newtonsoft.Json;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Messages;
 using System.Security.Cryptography;
 
@@ -19,7 +19,6 @@ namespace CloudPillar.Agent.Tests
         private ID2CMessengerHandler _target;
 
         private const string FILE_NAME = "fileName.txt";
-        private const string ACTION_ID = "action123";
         private const long START_POSITION = 10;
         private const long END_POSITION = 20;
         private const int KB = 1024;
@@ -47,8 +46,8 @@ namespace CloudPillar.Agent.Tests
         {
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(expectedChunkSize);
 
-            await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, ACTION_ID, START_POSITION, END_POSITION);
-            _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, FILE_NAME, ACTION_ID, START_POSITION, END_POSITION) == true)), Times.Once);
+            await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, 0, 0, START_POSITION, END_POSITION);
+            _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, FILE_NAME, 0, START_POSITION, END_POSITION) == true), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -56,11 +55,11 @@ namespace CloudPillar.Agent.Tests
         {
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(MQQT_KB);
 
-            _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).ThrowsAsync(new Exception());
+            _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, ACTION_ID);
+                await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, 0, 0);
             });
         }
 
@@ -69,10 +68,10 @@ namespace CloudPillar.Agent.Tests
         {
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(MQQT_KB);
 
-            _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).Returns(Task.CompletedTask);
+            _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION, checkSum, CancellationToken.None);
-            _deviceClientMock.Verify(dc => dc.SendEventAsync(It.IsAny<Message>()), Times.Once);
+            await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, START_POSITION, checkSum, CancellationToken.None);
+            _deviceClientMock.Verify(dc => dc.SendEventAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -80,23 +79,23 @@ namespace CloudPillar.Agent.Tests
         {
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(MQQT_KB);
 
-            _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>())).ThrowsAsync(new Exception());
+            _deviceClientMock.Setup(dc => dc.SendEventAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, ACTION_ID, START_POSITION, checkSum, CancellationToken.None);
+                await _target.SendStreamingUploadChunkEventAsync(READ_STREAM.ToArray(), STORAGE_URI, START_POSITION, checkSum, CancellationToken.None);
             });
 
         }
 
-        private bool CheckMessageContent(Message msg, int chunkSize, string fileName, string actionId, long? startPosition, long? endPosition)
+        private bool CheckMessageContent(Message msg, int chunkSize, string fileName, int actionIndex, long? startPosition, long? endPosition)
         {
             string messageString = Encoding.UTF8.GetString(msg.GetBytes());
             FirmwareUpdateEvent firmwareUpdateEvent = JsonConvert.DeserializeObject<FirmwareUpdateEvent>(messageString);
             return firmwareUpdateEvent.ChunkSize == chunkSize &&
                   firmwareUpdateEvent.StartPosition == startPosition &&
                   firmwareUpdateEvent.FileName == fileName &&
-                  firmwareUpdateEvent.ActionId == actionId &&
+                  firmwareUpdateEvent.ActionIndex == actionIndex &&
                   firmwareUpdateEvent.EndPosition == endPosition;
         }
 

@@ -1,8 +1,5 @@
-
-using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Handlers
 {
@@ -34,14 +31,14 @@ namespace CloudPillar.Agent.Handlers
             await HandleStateActionAsync(state);
         }
 
-        public async Task SetStateAsync(DeviceStateType state)
+        public async Task SetStateAsync(DeviceStateType state, CancellationToken cancellationToken)
         {
 
             var currentState = await GetStateAsync();
             if (currentState != state || state == DeviceStateType.Provisioning)
             {
                 _currentDeviceState = state;
-                await _twinHandler.UpdateDeviceStateAsync(state);
+                await _twinHandler.UpdateDeviceStateAsync(state, cancellationToken);
                 await HandleStateActionAsync(state);
                 _logger.Info($"Set device state: {state}");
             }

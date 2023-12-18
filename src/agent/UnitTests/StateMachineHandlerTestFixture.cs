@@ -1,8 +1,7 @@
 using Moq;
 using CloudPillar.Agent.Handlers;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
-using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -76,22 +75,22 @@ public class StateMachineHandlerTestFixture
     public async Task SetStateAsync_ValidState_UpdateTwinState()
     {
         _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Busy);
-        _twinHandler.Setup(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready));
+        _twinHandler.Setup(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready, It.IsAny<CancellationToken>()));
 
-        await _target.SetStateAsync(DeviceStateType.Ready);
+        await _target.SetStateAsync(DeviceStateType.Ready, default);
 
-        _twinHandler.Verify(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready), Times.Once);
+        _twinHandler.Verify(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
     public async Task SetStateAsync_SameState_NotUpdateState()
     {
         _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
-        _twinHandler.Setup(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready));
+        _twinHandler.Setup(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready, It.IsAny<CancellationToken>()));
 
-        await _target.SetStateAsync(DeviceStateType.Ready);
+        await _target.SetStateAsync(DeviceStateType.Ready, default);
 
-        _twinHandler.Verify(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready), Times.Never);
+        _twinHandler.Verify(h => h.UpdateDeviceStateAsync(DeviceStateType.Ready, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -101,7 +100,7 @@ public class StateMachineHandlerTestFixture
 
         _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
 
-        await _target.SetStateAsync(DeviceStateType.Busy);
+        await _target.SetStateAsync(DeviceStateType.Busy, default);
 
         var updatedState = _target.GetCurrentDeviceState();
         Assert.AreEqual(newState, updatedState);
@@ -113,7 +112,7 @@ public class StateMachineHandlerTestFixture
     {
         _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
 
-        await _target.SetStateAsync(DeviceStateType.Busy);
+        await _target.SetStateAsync(DeviceStateType.Busy, default);
 
         _twinHandler.Verify(x => x.SaveLastTwinAsync(CancellationToken.None), Times.Once);
     }

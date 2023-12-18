@@ -11,22 +11,22 @@ public interface IDeviceClientWrapper
     TransportType GetTransportType();
     int GetChunkSizeByTransportType();
 
-    Task SendEventAsync(Message message);
+    Task SendEventAsync(Message message, CancellationToken cancellationToken);
 
     Task<Message> ReceiveAsync(CancellationToken cancellationToken);
 
-    Task CompleteAsync(Message message);
+    Task CompleteAsync(Message message, CancellationToken cancellationToken);
 
     Task DisposeAsync();
    
     Task<Twin> GetTwinAsync(CancellationToken cancellationToken);
 
-    Task UpdateReportedPropertiesAsync(string key, object value);
+    Task UpdateReportedPropertiesAsync(string key, object value, CancellationToken cancellationToken);
 
-    Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties);
+    Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties, CancellationToken cancellationToken);
 
     Task<FileUploadSasUriResponse> GetFileUploadSasUriAsync(FileUploadSasUriRequest request, CancellationToken cancellationToken = default);
-    Task<Uri> GetBlobUriAsync(FileUploadSasUriResponse sasUri, CancellationToken cancellationToken = default);
+    Uri GetBlobUri(FileUploadSasUriResponse sasUri);
     Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken = default);
     Task CompleteFileUploadAsync(string correlationId, bool isSuccess, CancellationToken cancellationToken = default);
 

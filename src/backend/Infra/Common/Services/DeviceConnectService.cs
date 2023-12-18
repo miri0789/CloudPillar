@@ -1,9 +1,10 @@
 ﻿using Shared.Logger;
 using Microsoft.Azure.Devices;
-using Backend.Infra.Wrappers;
 using Polly;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
 
-namespace Backend.Infra.Common;
+namespace Backend.Infra.Common.Services;
 
 public class DeviceConnectService : IDeviceConnectService
 {
@@ -16,7 +17,6 @@ public class DeviceConnectService : IDeviceConnectService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
-        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.iothubConnectionString);
     }
 
     public async Task SendDeviceMessageAsync(Message c2dMessage, string deviceId)
@@ -24,11 +24,16 @@ public class DeviceConnectService : IDeviceConnectService
         await SendDeviceMessagesAsync(new Message[] { c2dMessage }, deviceId);
     }
 
+    public async Task SendDeviceMessageAsync(ServiceClient serviceClient, Message c2dMessage, string deviceId)
+    {
+        await SendMessage(serviceClient, c2dMessage, deviceId);
+    }
+
     public async Task SendDeviceMessagesAsync(Message[] c2dMessages, string deviceId)
     {
         try
         {
-            using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString))
+            using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString())
             {
                 foreach (var msg in c2dMessages)
                 {

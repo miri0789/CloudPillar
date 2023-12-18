@@ -1,7 +1,6 @@
 ﻿
 using System.IO.Compression;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace CloudPillar.Agent.Wrappers;
 public class FileStreamerWrapper : IFileStreamerWrapper
@@ -10,14 +9,31 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return new FileStream(fullFilePath, fileMode, fileAccess, fileShare, BufferSize, useAsync);
     }
-    public Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess)
-    {
-        return new FileStream(fullFilePath, fileMode, fileAccess);
-    }
     public FileStream CreateStream(string fullFilePath, FileMode fileMode)
     {
         return new FileStream(fullFilePath, fileMode);
     }
+    public byte[] ReadStream(string fullFilePath, long startPosition, long lengthToRead)
+    {
+        byte[] data = new byte[lengthToRead];
+        using (Stream stream = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read))
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            stream.Read(data, 0, (int)lengthToRead);
+        }
+        return data;
+    }
+
+    public async Task WriteAsync(Stream stream, byte[] bytes)
+    {
+        await stream.WriteAsync(bytes);
+    }
+
+    public void SetLength(Stream stream, long length)
+    {
+        stream.SetLength(length);
+    }
+
     public async Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes)
     {
         using (FileStream fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
@@ -64,6 +80,11 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetFileName(filePathPattern);
     }
+    public string GetTempFileName()
+    {
+        return Path.GetTempFileName();
+    }
+
     public string[] GetFiles(string directoryPath, string searchPattern)
     {
         return Directory.GetFiles(directoryPath, searchPattern);
@@ -82,21 +103,30 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return files.Concat(directoories).ToArray();
     }
 
+    public FileStream OpenRead(string filePath)
+    {
+        return File.OpenRead(filePath);
+    }
+
+    public void CreateDirectory(string destinationPath)
+    {
+        if (!Directory.Exists(destinationPath))
+        {
+            Directory.CreateDirectory(destinationPath);
+        }
+    }
+
     public async Task UnzipFileAsync(string filePath, string destinationPath)
     {
         if (File.Exists(filePath))
         {
-            if (!Directory.Exists(destinationPath))
-            {
-                Directory.CreateDirectory(destinationPath);
-            }
             using (ZipArchive archive = ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8))
             {
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
                     string entryFilePath = Path.Combine(destinationPath, entry.FullName);
 
-                    Directory.CreateDirectory(Path.GetDirectoryName(entryFilePath));
+                    Directory.CreateDirectory(Path.GetDirectoryName(entryFilePath)!);
 
                     using (Stream entryStream = entry.Open())
                     using (FileStream fileStream = File.Create(entryFilePath))
@@ -118,5 +148,9 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetExtension(path);
     }
-
+    public long GetFileLength(string path)
+    {
+        FileInfo fileInfo = new FileInfo(path);
+        return fileInfo.Length;
+    }
 }

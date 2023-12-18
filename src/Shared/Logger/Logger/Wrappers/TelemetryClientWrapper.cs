@@ -1,7 +1,6 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
-using Shared.Logger;
 
 namespace Shared.Logger.Wrappers;
 

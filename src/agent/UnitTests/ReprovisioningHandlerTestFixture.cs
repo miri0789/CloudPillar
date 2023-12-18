@@ -1,7 +1,6 @@
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CloudPillar.Agent.Handlers;
-using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Service;
@@ -10,7 +9,7 @@ using Moq;
 using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]

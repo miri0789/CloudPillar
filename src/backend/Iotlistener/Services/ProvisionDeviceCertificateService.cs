@@ -1,4 +1,4 @@
-using Backend.Infra.Common;
+using Backend.Infra.Common.Services.Interfaces;
 using Backend.Iotlistener.Interfaces;
 using Shared.Entities.Messages;
 using Shared.Logger;

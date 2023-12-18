@@ -1,20 +1,12 @@
 ﻿using System.Security.Cryptography;
-using System.Text;
-using Newtonsoft.Json.Linq;
 using Microsoft.Azure.Devices;
 using Moq;
-using k8s;
-using k8s.Models;
-using Microsoft.Azure.Devices.Shared;
-using Backend.Keyholder.Interfaces;
 using Shared.Logger;
-using Backend.Keyholder.Services;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Factories;
-using Shared.Entities.Messages;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Devices.Provisioning.Service;
-using Backend.Infra.Common;
+using Backend.Infra.Common.Services.Interfaces;
 
 
 namespace Backend.Keyholder.Tests;

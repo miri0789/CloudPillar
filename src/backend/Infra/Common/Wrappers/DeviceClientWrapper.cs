@@ -1,19 +1,19 @@
+using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Azure.Devices;
-using Shared.Logger;
 
 namespace Backend.Infra.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
-    private readonly ILoggerHandler _logger;
-
-    public DeviceClientWrapper(ILoggerHandler logger)
+    private readonly ICommonEnvironmentsWrapper _environmentsWrapper;
+    public DeviceClientWrapper(ICommonEnvironmentsWrapper environmentsWrapper)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.iothubConnectionString);
     }
 
-    public ServiceClient CreateFromConnectionString(string connString)
+    public ServiceClient CreateFromConnectionString()
     {
-        var serviceClient = ServiceClient.CreateFromConnectionString(connString);
+        var serviceClient = ServiceClient.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
         return serviceClient;
     }
 

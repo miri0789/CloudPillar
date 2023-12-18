@@ -1,9 +1,9 @@
-﻿using Backend.Infra.Common;
-using Backend.Iotlistener.Services;
+﻿using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 using Moq;
 using Shared.Entities.Messages;
 using Shared.Logger;
+using Backend.Infra.Common.Services.Interfaces;
 
 namespace Backend.Iotlistener.Tests;
 public class SigningTestFixture
@@ -15,8 +15,6 @@ public class SigningTestFixture
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
 
     const string deviceId = "testDeviceId";
-    const string keyPath = "testKeyPath";
-    const string signatureKey = "testSignatureKey";
 
     [SetUp]
     public void Setup()
@@ -32,18 +30,14 @@ public class SigningTestFixture
     [Test]
     public async Task CreateTwinKeySignature_ValidParameters_SendsRequest()
     {
-        SignEvent signEvent = new SignEvent
-        {
-            KeyPath = keyPath,
-            SignatureKey = signatureKey
-        };
+        
+        SignEvent signEvent = new SignEvent();
 
-        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
-
+        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}";
         await _target.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
-            service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+            service => service.SendRequest(requestUrl, HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
@@ -51,22 +45,18 @@ public class SigningTestFixture
     [Test]
     public async Task CreateTwinKeySignature_ExceptionThrown_WrapsAndThrowsException()
     {
-        SignEvent signEvent = new SignEvent
-        {
-            KeyPath = keyPath,
-            SignatureKey = signatureKey
-        };
+        SignEvent signEvent = new SignEvent();
 
-        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
+        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}";
 
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.SendRequest(requestUrl, HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception());
 
         await _target.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
-            service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+            service => service.SendRequest(requestUrl, HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }

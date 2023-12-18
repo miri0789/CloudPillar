@@ -4,7 +4,7 @@ using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Storage.Core.Util;
 using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Handlers
 {
@@ -33,7 +33,7 @@ namespace CloudPillar.Agent.Handlers
                );
             await _cloudBlockBlobWrapper.UploadFromStreamAsync(cloudBlockBlob, readStream, progressHandler, cancellationToken);
         }
-
+       
         private async Task SetReportProggress(long bytesTransferred, long totalSize, ActionToReport actionToReport, FileUploadCompletionNotification notification, CancellationToken cancellationToken)
         {
             float progressPercent = (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100;

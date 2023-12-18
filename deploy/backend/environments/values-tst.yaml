@@ -4,6 +4,7 @@
 
 controllers:
   - title: "blobstreamer"
+    replicaCount: 3
     path: /blobstreamer-service
     port: 8081
     env:
@@ -16,9 +17,9 @@ controllers:
     - name: MessageExpiredMinutes
       value: "60"
     - name: RetryPolicyBaseDelay
-      value: "2"
+      value: "20"
     - name: RetryPolicyExponent
-      value: "3"
+      value: "5"
     # - name: PARTITION_ID
     #   valueFrom:
     #     fieldRef:

@@ -1,4 +1,4 @@
-﻿using Backend.Infra.Common;
+﻿using Backend.Infra.Common.Services.Interfaces;
 using Backend.Iotlistener.Interfaces;
 using Shared.Entities.Messages;
 using Shared.Logger;
@@ -23,8 +23,8 @@ public class SigningService : ISigningService
     {
         try
         {
-            string requestUrl = $"{_environmentsWrapper.keyHolderUrl}signing/create?deviceId={deviceId}&keyPath={signEvent.KeyPath}&signatureKey={signEvent.SignatureKey}";
-            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
+            string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createTwinKeySignature?deviceId={deviceId}";
+            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Get);
         }
         catch (Exception ex)
         {

@@ -5,5 +5,5 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface IStreamingFileUploaderHandler
 {
-    Task UploadFromStreamAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, string actionId, CancellationToken cancellationToken);
+    Task UploadFromStreamAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, string correlationId, CancellationToken cancellationToken, bool isRunDiagnostics = false);
 }

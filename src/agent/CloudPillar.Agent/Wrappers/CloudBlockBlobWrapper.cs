@@ -25,4 +25,8 @@ public class CloudBlockBlobWrapper : ICloudBlockBlobWrapper
                   );
     }
 
+    public async Task DeleteIfExistsAsync(CloudBlockBlob cloudBlockBlob){
+        await cloudBlockBlob.DeleteIfExistsAsync();
+    }
+
 }

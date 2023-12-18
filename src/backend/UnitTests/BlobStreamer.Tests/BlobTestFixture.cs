@@ -1,5 +1,4 @@
-﻿using Backend.BlobStreamer.Interfaces;
-using Backend.BlobStreamer.Services;
+﻿using Backend.BlobStreamer.Services;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
@@ -7,11 +6,12 @@ using Moq;
 using Shared.Entities.Factories;
 using Shared.Entities.Messages;
 using Shared.Logger;
-using Backend.Infra.Common;
-using System.Linq.Expressions;
 using Shared.Entities.Services;
-using System.Reflection;
 using Shared.Enums;
+using Backend.BlobStreamer.Wrappers.Interfaces;
+using Backend.Infra.Common.Services.Interfaces;
+using Backend.BlobStreamer.Services.Interfaces;
+using Backend.Infra.Common.Wrappers.Interfaces;
 
 namespace Backend.BlobStreamer.Tests
 {
@@ -26,6 +26,7 @@ namespace Backend.BlobStreamer.Tests
         private Mock<IMessageFactory> _mockMessageFactory;
         private Mock<IDeviceConnectService> _mockDeviceConnectService;
         private Mock<ICheckSumService> _mockCheckSumService;
+        private Mock<IDeviceClientWrapper> _mockDeviceClientWrapper;
         private IBlobService _target;
 
 
@@ -35,6 +36,7 @@ namespace Backend.BlobStreamer.Tests
         private const int _rangeSize = 4096;
         private const int _rangeIndex = 0;
         private const long _startPosition = 0;
+        private const int _rangesCount = 0;
 
         [SetUp]
         public void Setup()
@@ -44,16 +46,17 @@ namespace Backend.BlobStreamer.Tests
             _mockLogger = new Mock<ILoggerHandler>();
             _mockMessageFactory = new Mock<IMessageFactory>();
             _mockMessageFactory.Setup(c => c.PrepareC2DMessage(It.IsAny<C2DMessages>(), It.IsAny<int>())).Returns(new Message());
-            _mockEnvironmentsWrapper.Setup(c => c.retryPolicyExponent).Returns(3);
             _mockDeviceConnectService = new Mock<IDeviceConnectService>();
             _mockCheckSumService = new Mock<ICheckSumService>();
+            _mockDeviceClientWrapper = new Mock<IDeviceClientWrapper>();
             var mockDeviceClient = new Mock<ServiceClient>();
 
             _mockBlockBlob = new Mock<CloudBlockBlob>(new Uri("http://storageaccount/container/blob"));
             _mockCloudStorageWrapper.Setup(c => c.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName)).ReturnsAsync(_mockBlockBlob.Object);
             _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
             _target = new BlobService(_mockEnvironmentsWrapper.Object,
-                _mockCloudStorageWrapper.Object, _mockDeviceConnectService.Object, _mockLogger.Object, _mockMessageFactory.Object, _mockCheckSumService.Object);
+                _mockCloudStorageWrapper.Object, _mockDeviceConnectService.Object, _mockCheckSumService.Object, _mockLogger.Object, _mockMessageFactory.Object,
+                _mockDeviceClientWrapper.Object);
 
         }
 
@@ -63,12 +66,13 @@ namespace Backend.BlobStreamer.Tests
         {
             _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
 
-            _mockDeviceConnectService.Setup(s => s.SendDeviceMessagesAsync(It.IsAny<Message[]>(), _deviceId)).Returns(Task.CompletedTask);
-            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid().ToString(), "");
-            _mockDeviceConnectService.Verify(s => s.SendDeviceMessagesAsync(
-                                                It.Is<Message[]>(messages => messages.Length == 4),
+            _mockDeviceConnectService.Setup(s => s.SendDeviceMessageAsync(It.IsAny<ServiceClient>(), It.IsAny<Message>(), _deviceId)).Returns(Task.CompletedTask);
+            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
+            _mockDeviceConnectService.Verify(s => s.SendDeviceMessageAsync(
+                                                It.IsAny<ServiceClient>(),
+                                                It.IsAny<Message>(),
                                                 _deviceId),
-                                                Times.Once);
+                                                Times.Exactly(4));
         }
 
         [Test]
@@ -76,7 +80,7 @@ namespace Backend.BlobStreamer.Tests
         {
             _mockCheckSumService.Setup(b => b.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>()));
 
-            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, new Guid().ToString(), "");
+            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
             _mockCheckSumService.Verify(s => s.CalculateCheckSumAsync(It.Is<byte[]>(b => b.Length == _rangeSize), It.IsAny<CheckSumType>()), Times.Once);
         }
 
@@ -98,21 +102,6 @@ namespace Backend.BlobStreamer.Tests
             async Task GetBlobMetadataAsync() => await _target.GetBlobMetadataAsync(fileName);
             Assert.ThrowsAsync<NullReferenceException>(GetBlobMetadataAsync);
         }
-
-        [Test]
-        public async Task GetFileCheckSum_ValidBlob_ShouldGetBlockBlobReference()
-        {
-            var result = await _target.GetFileCheckSum(_fileName);
-            _mockCloudStorageWrapper.Verify(b => b.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName), Times.Once);
-        }
-
-        [Test]
-        public async Task GetFileCheckSum_ValidBlob_ShouldReturnCheckSum()
-        {
-            var checkSum = "1234";
-            _mockCheckSumService.Setup(b => b.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync(checkSum);
-            var result = await _target.GetFileCheckSum(_fileName);
-            Assert.AreEqual(result, checkSum);
-        }
+        
     }
 }

@@ -1,5 +1,4 @@
-﻿using CloudPillar.Agent.Entities;
-using Microsoft.Azure.Devices.Client;
+﻿using Microsoft.Azure.Devices.Client;
 using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
@@ -14,9 +13,9 @@ public class MessageSubscriber : IMessageSubscriber
         _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
     }
 
-    public async Task<ActionToReport> HandleDownloadMessageAsync(DownloadBlobChunkMessage message , CancellationToken cancellationToken)
+    public async Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message , CancellationToken cancellationToken)
     {
-        return await _fileDownloadHandler.HandleDownloadMessageAsync(message, cancellationToken);
+        await _fileDownloadHandler.HandleDownloadMessageAsync(message, cancellationToken);
     }
 
     public async Task HandleReprovisioningMessageAsync(Message recivedMessage, ReprovisioningMessage message, CancellationToken cancellationToken)

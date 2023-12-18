@@ -1,20 +1,12 @@
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Provisioning.Client;
-using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Microsoft.Azure.Devices.Provisioning.Service;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
-using Shared.Entities.Twin;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Handlers;
 public class ReprovisioningHandler : IReprovisioningHandler
@@ -101,8 +93,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
             {
                 CleanCertificates(store, certificate, deviceId, iotHubHostName);
             }
-            InstallCertificateInTrustArea(certificate, deviceId, iotHubHostName);
-
         }
         catch (Exception ex)
         {
@@ -110,22 +100,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
             throw;
         }
 
-    }
-
-    private void InstallCertificateInTrustArea(X509Certificate2 certificate, string deviceId, string iotHubHostName)
-    {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, StoreName.Root))
-        {
-            X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
-            if (certificates == null)
-            {
-                throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
-            }
-
-            RemoveCertificatesFromStore(store, certificate.Thumbprint);
-            certificate.FriendlyName = $"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}{iotHubHostName.Replace(ProvisioningConstants.IOT_HUB_NAME_SUFFIX, string.Empty)}";
-            _x509CertificateWrapper.Add(store, certificate);
-        }
     }
 
     private void CleanCertificates(X509Store store, X509Certificate2 certificate, string deviceId, string iotHubHostName)
@@ -168,7 +142,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         }
     }
 
-    private X509Certificate2 GetTempCertificate()
+    private X509Certificate2? GetTempCertificate()
     {
         using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {

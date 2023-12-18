@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
 using Shared.Logger;
+using Backend.Infra.Common.Services.Interfaces;
 
-namespace Backend.Infra.Common;
+
+namespace Backend.Infra.Common.Services;
 
 public class HttpRequestorService : IHttpRequestorService
 {
@@ -61,7 +63,7 @@ public class HttpRequestorService : IHttpRequestorService
                     throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
                 }
             }
-            TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
+            TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent)!;
             return result;
         }
 

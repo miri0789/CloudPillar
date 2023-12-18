@@ -1,4 +1,4 @@
-using Backend.BlobStreamer.Interfaces;
+using Backend.BlobStreamer.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Messages;
 
@@ -25,15 +25,15 @@ public class BlobController : ControllerBase
     }
 
     [HttpPost("range")]
-    public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, string actionId, string checkSum)
+    public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
-        await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionId, checkSum);
+        await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionIndex, rangesCount);
         return Ok();
     }
 
     [HttpPost("uploadStream")]
-    public async Task UploadStream([FromBody] StreamingUploadChunkEvent data)
+    public async Task UploadStream([FromBody] StreamingUploadChunkEvent data, string deviceId)
     {
-        await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum);
+        await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum, deviceId, data.IsRunDiagnostics);
     }
 }

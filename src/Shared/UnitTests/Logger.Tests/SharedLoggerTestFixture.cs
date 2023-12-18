@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using log4net;
 using log4net.Repository;
 using log4net.Core;
@@ -8,12 +5,9 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
 using NUnit.Framework;
-using System.Linq;
-using Shared.Logger;
 using Shared.Logger.Wrappers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.ApplicationInsights.Log4NetAppender;
-using log4net.Appender;
 
 namespace Shared.Logger.Tests;
 

@@ -1,10 +1,9 @@
-using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
-using Shared.Logger;
+using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Utilities;
@@ -27,15 +26,15 @@ public class AuthorizationCheckMiddleware
     {
         if (!context.Request.IsHttps)
         {
-            await NextWithRedirectAsync(context, x509Provider);
+            NextWithRedirectAsync(context, x509Provider);
             return;
         }
-        Endpoint endpoint = context.GetEndpoint();
+        var endpoint = context.GetEndpoint();
         //context
         var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
         if (deviceIsBusy)
         {
-            DeviceStateFilterAttribute isActionBlockByBusy = endpoint.Metadata.GetMetadata<DeviceStateFilterAttribute>();
+            var isActionBlockByBusy = endpoint?.Metadata.GetMetadata<DeviceStateFilterAttribute>();
             if (isActionBlockByBusy != null)
             {
                 context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
@@ -44,7 +43,7 @@ public class AuthorizationCheckMiddleware
             }
         }
         ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
-        CancellationToken cancellationToken = context?.RequestAborted ?? CancellationToken.None;
+        CancellationToken cancellationToken = context.RequestAborted;
         if (IsActionMethod(endpoint))
         {
             // check the headers for all the actions also for the AllowAnonymous.
@@ -71,8 +70,7 @@ public class AuthorizationCheckMiddleware
                 return;
             }
 
-
-            var checkAuthorization = deviceIsBusy && (context.Request.Path.Value.Contains("SetReady") || context.Request.Path.Value.Contains("SetBusy"));
+            var checkAuthorization = deviceIsBusy && (context.Request.Path.Value?.Contains("SetReady") == true || context.Request.Path.Value?.Contains("SetBusy") == true);
             bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
             if (!isAuthorized)
             {
@@ -88,7 +86,7 @@ public class AuthorizationCheckMiddleware
             await _requestDelegate(context);
         }
     }
-    private async Task NextWithRedirectAsync(HttpContext context, IX509Provider x509Provider)
+    private void NextWithRedirectAsync(HttpContext context, IX509Provider x509Provider)
     {
         context.Connection.ClientCertificate = x509Provider.GetHttpsCertificate();
 
