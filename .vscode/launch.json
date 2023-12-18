@@ -38,7 +38,7 @@
                 "MessageTimeoutMinutes": "10",
                 "RangeCalculateType": "percent",
                 "RangePercent": "25",
-                "RangeBytes": "1234560",
+                "RangeBytes": "123456",
                 "IothubConnectionDeviceId": "iothub-connection-device-id"
             }
         },
