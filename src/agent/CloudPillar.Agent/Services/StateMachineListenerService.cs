@@ -34,11 +34,8 @@ public class StateMachineListenerService : BackgroundService
             ArgumentNullException.ThrowIfNull(dpsProvisioningDeviceClientHandler);
             var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
             ArgumentNullException.ThrowIfNull(StateMachineHandlerService);
-            var isAuth = await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
-            if (isAuth)
-            {
-                await StateMachineHandlerService.InitStateMachineHandlerAsync();
-            }
+            await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
+            await StateMachineHandlerService.InitStateMachineHandlerAsync();
         }
     }
 
