@@ -156,6 +156,7 @@ public class AgentController : ControllerBase
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
+        
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken);
         await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }
