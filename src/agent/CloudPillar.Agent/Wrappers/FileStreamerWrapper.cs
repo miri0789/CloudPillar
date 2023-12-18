@@ -120,7 +120,6 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         if (File.Exists(filePath))
         {
-            CreateDirectory(destinationPath);
             using (ZipArchive archive = ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8))
             {
                 foreach (ZipArchiveEntry entry in archive.Entries)

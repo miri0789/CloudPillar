@@ -6,8 +6,8 @@ using Microsoft.Extensions.Options;
 using Shared.Entities.Services;
 using CloudPillar.Agent.Entities;
 using Shared.Enums;
-using CloudPillar.Agent.Wrappers.interfaces;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
