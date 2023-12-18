@@ -195,7 +195,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
 
-            throw new Exception(ex.Message);
+            throw ex;
         }
     }
 
