@@ -19,7 +19,13 @@ var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Cons
 var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
-builder.WebHost.UseUrls(httpUrl, httpsUrl);
+var isStrictmode = builder.Configuration.GetValue("StrictModeSettings:StrictMode", false);
+var activeUrls = new string[] { httpsUrl };
+if (!isStrictmode)
+{
+    activeUrls.Append(httpUrl);
+}
+builder.WebHost.UseUrls(activeUrls);
 
 
 
@@ -27,7 +33,7 @@ builder.Services.AddCors(options =>
         {
             options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
             {
-                b.WithOrigins(httpUrl, httpsUrl)
+                b.WithOrigins(activeUrls)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
             });
@@ -81,7 +87,10 @@ var servcieProvider = builder.Services.BuildServiceProvider();
 var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
 builder.WebHost.UseKestrel(options =>
 {
-    options.Listen(IPAddress.Any, port);
+    if (!isStrictmode)
+    {
+        options.Listen(IPAddress.Any, port);
+    }
     options.Listen(IPAddress.Any, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
