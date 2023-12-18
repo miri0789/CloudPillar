@@ -5,13 +5,15 @@ using Backend.Keyholder.Interfaces;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Newtonsoft.Json;
+using Shared.Entities.Twin;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Converters;
+using Backend.Infra.Common.Services.Interfaces;
 using Shared.Entities.Utilities;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Azure.Devices.Shared;
 
-
 namespace Backend.Keyholder.Services;
-
 
 public class SigningService : ISigningService
 {
@@ -152,5 +154,72 @@ public class SigningService : ISigningService
             _logger.Error($"SignData error: {ex.Message}");
             return "";
         }
+    }
+
+    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash)
+    {
+        var signature = await SignData(hash);
+        await AddFileSignToDesired(deviceId, TwinPatchChangeSpec.ChangeSpec, propName, actionIndex, signature);
+
+    }
+
+    private async Task AddFileSignToDesired(string deviceId, TwinPatchChangeSpec changeSpecKey, string propName, int actionIndex, string fileSign)
+    {
+        ArgumentNullException.ThrowIfNull(deviceId);
+
+        try
+        {
+            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+            {
+                var twin = await registryManager.GetTwinAsync(deviceId);
+                TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
+
+                TwinAction[] changeSpecData = GetTwinActionsByName(twinDesiredChangeSpec.Patch, propName);
+
+                var updatedArray = new List<TwinAction>(changeSpecData);
+                var action = (DownloadAction)updatedArray[actionIndex];
+                action.Sign = fileSign;
+
+                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
+                twinDesired.ChangeSign = await SignData(dataToSign);
+                changeSpecData = updatedArray.ToArray();
+                var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
+                twin.Properties.Desired = new TwinCollection(twinDesiredJson);
+
+                await registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
+                _logger.Info($"Recipe: {actionIndex} has been successfully changed. DeviceId: {deviceId} ");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while attempting to update ChangeSpec: {ex.Message}");
+        }
+    }
+
+    private TwinAction[] GetTwinActionsByName(TwinPatch petch, string propName)
+    {
+        TwinAction[] changeSpecData;// = twinDesiredChangeSpec.Patch[propName] as TwinAction[] ?? new TwinAction[0];
+        switch (propName)
+        {
+            case nameof(petch.TransitPackage):
+                changeSpecData = petch.TransitPackage;
+                break;
+            case nameof(petch.PostInstallConfig):
+                changeSpecData = petch.PostInstallConfig;
+                break;
+            case nameof(petch.PreInstallConfig):
+                changeSpecData = petch.PreInstallConfig;
+                break;
+            case nameof(petch.PreTransitConfig):
+                changeSpecData = petch.PreTransitConfig;
+                break;
+            case nameof(petch.InstallSteps):
+                changeSpecData = petch.InstallSteps;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(propName), propName, null);
+        }
+        return changeSpecData;
     }
 }

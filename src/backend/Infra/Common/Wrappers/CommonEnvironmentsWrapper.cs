@@ -1,6 +1,6 @@
-﻿using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Common.Wrappers.Interfaces;
 namespace Backend.Infra.Wrappers;
-public class CommonEnvironmentsWrapper: ICommonEnvironmentsWrapper
+public class CommonEnvironmentsWrapper : ICommonEnvironmentsWrapper
 {
     private const string _iothubConnectionString = "IothubConnectionString";
     private const string _retryPolicyBaseDelay = "RetryPolicyBaseDelay";
