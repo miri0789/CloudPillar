@@ -35,11 +35,6 @@ public class ReprovisioningHandlerTestFixture
     private X509Certificate2 _certificate;
     private string temporaryCertificateName;
 
-    public string GetCertificatePrefix()
-    {
-        return !string.IsNullOrEmpty(ENVITOMENT) ? $"{CERTIFICATE_PREFIX}-{ENVITOMENT}-" : $"{CERTIFICATE_PREFIX}-";
-    }
-
     [SetUp]
     public void Setup()
     {
@@ -201,6 +196,11 @@ public class ReprovisioningHandlerTestFixture
         await _target.HandleRequestDeviceCertificateAsync(message, CancellationToken.None);
 
         _d2CMessengerHandlerMock.Verify(d => d.ProvisionDeviceCertificateEventAsync(It.Is<string>(x => x == GetCertificatePrefix()), It.IsAny<X509Certificate2>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private string GetCertificatePrefix()
+    {
+        return !string.IsNullOrEmpty(ENVITOMENT) ? $"{CERTIFICATE_PREFIX}-{ENVITOMENT}-" : $"{CERTIFICATE_PREFIX}-";
     }
 
     private void SetupX509CertificateWrapperMock()

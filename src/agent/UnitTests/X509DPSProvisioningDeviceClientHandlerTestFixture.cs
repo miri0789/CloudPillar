@@ -26,7 +26,8 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     private const string IOT_HUB_HOST_NAME = "IoTHubHostName";
     const string DPS_SCOPE_ID = "dpsScopeId";
     const string GLOBAL_DEVICE_ENDPOINT = "globalDeviceEndpoint";
-    private const string CERTIFICATE_PREFIX = "UnitTest-CP-";
+    private const string CERTIFICATE_PREFIX = "CP";
+    private const string ENVITOMENT = "UnitTest";
 
     [SetUp]
     public void Setup()
@@ -36,7 +37,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
         _provisioningDeviceClientWrapperMock = new Mock<IProvisioningDeviceClientWrapper>();
 
-        _unitTestCertificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60, CERTIFICATE_PREFIX);
+        _unitTestCertificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60, GetCertificatePrefix());
         _unitTestCertificate.FriendlyName = $"{DEVICE_ID}@{IOT_HUB_HOST_NAME}";
         _x509CertificateWrapperMock.Setup(x => x.GetSecurityProvider(_unitTestCertificate)).Returns(new SecurityProviderX509Certificate(_unitTestCertificate));
         _deviceClientWrapperMock.Setup(x => x.GetProvisioningTransportHandler()).Returns(Mock.Of<ProvisioningTransportHandler>());
@@ -48,7 +49,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _deviceClientWrapperMock.Setup(x => x.IsDeviceInitializedAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         _authenticationSettingsMock = new Mock<IOptions<AuthenticationSettings>>();
-        _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings() { CertificatePrefix = "UnitTest-CP-" });
+        _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings() { CertificatePrefix = CERTIFICATE_PREFIX, Environment = ENVITOMENT });
 
         CreateTarget();
     }
@@ -170,6 +171,10 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         });
         Assert.ThrowsAsync<ArgumentException>(async () => await _target.ProvisioningAsync(string.Empty, _unitTestCertificate, string.Empty, It.IsAny<Message>(), CancellationToken.None));
 
+    }
+    private string GetCertificatePrefix()
+    {
+        return !string.IsNullOrEmpty(ENVITOMENT) ? $"{CERTIFICATE_PREFIX}-{ENVITOMENT}-" : $"{CERTIFICATE_PREFIX}-";
     }
 
     private void CreateTarget()
