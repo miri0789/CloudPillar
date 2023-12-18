@@ -1,12 +1,10 @@
-using System.Text.RegularExpressions;
-using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices.Client.Transport;
 using System.IO.Compression;
-using Shared.Entities.Twin;
+using System.Text.RegularExpressions;
+using Microsoft.Azure.Devices.Client.Transport;
+using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers.Logger;
-using Newtonsoft.Json;
-using Microsoft.Azure.Storage.Blob;
+using CloudPillar.Agent.Wrappers;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -166,7 +164,7 @@ public class FileUploaderHandler : IFileUploaderHandler
             {
                 BlobName = blobname
             });
-            var storageUri = await _deviceClientWrapper.GetBlobUriAsync(sasUriResponse);
+            var storageUri = _deviceClientWrapper.GetBlobUri(sasUriResponse);
             notification.CorrelationId = sasUriResponse.CorrelationId;
             switch (uploadAction.Method)
             {
@@ -179,7 +177,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, uploadAction.ActionId, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");

@@ -61,7 +61,7 @@ public class AgentController : ControllerBase
         var currentState = _stateMachineHandler.GetCurrentDeviceState();
         if (currentState == DeviceStateType.Busy)
         {
-            return await _twinHandler.GetLatestTwinAsync();
+            return _twinHandler.GetLatestTwin();
         }
 
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
@@ -101,7 +101,7 @@ public class AgentController : ControllerBase
     public async Task<ActionResult<string>> SetBusyAsync(CancellationToken cancellationToken)
     {
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Busy, cancellationToken);
-        return await _twinHandler.GetLatestTwinAsync(CancellationToken.None);
+        return _twinHandler.GetLatestTwin();
     }
 
     [HttpPost("SetReady")]

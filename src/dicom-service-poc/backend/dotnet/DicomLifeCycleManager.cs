@@ -1,4 +1,3 @@
-using Microsoft.Health.Dicom.Client;
 using FellowOakDicom;
 using System.Text;
 using System.Text.Json;

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-
-namespace CloudPillar.Agent.Handlers.Logger;
+﻿namespace CloudPillar.Agent.Handlers.Logger;
 
 public interface ILoggerHandler
 {

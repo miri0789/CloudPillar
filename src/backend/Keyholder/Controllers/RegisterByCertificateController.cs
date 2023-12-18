@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using Shared.Logger;
-using System.Text;
 
 namespace Backend.Keyholder;
 

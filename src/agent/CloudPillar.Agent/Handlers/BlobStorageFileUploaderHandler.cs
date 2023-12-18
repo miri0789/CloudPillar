@@ -33,7 +33,7 @@ namespace CloudPillar.Agent.Handlers
                );
             await _cloudBlockBlobWrapper.UploadFromStreamAsync(cloudBlockBlob, readStream, progressHandler, cancellationToken);
         }
-       
+
         private async Task SetReportProggress(long bytesTransferred, long totalSize, ActionToReport actionToReport, FileUploadCompletionNotification notification, CancellationToken cancellationToken)
         {
             float progressPercent = (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100;
