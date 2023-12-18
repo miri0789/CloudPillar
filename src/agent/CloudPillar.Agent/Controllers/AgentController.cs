@@ -155,8 +155,8 @@ public class AgentController : ControllerBase
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
-        await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken);
+        await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
         await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }
 }
