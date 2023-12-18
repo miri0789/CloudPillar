@@ -71,8 +71,9 @@ public class FileDownloadHandler : IFileDownloadHandler
                     fileDownload.TotalBytesDownloaded = 0;
                     fileDownload.Report.Progress = 0;
                     fileDownload.Report.Status = StatusType.Pending;
+                    fileDownload.Report.CompletedRanges = "";
                 }
-                if (actionToReport.TwinReport.Status == StatusType.Unzip) // file download complete , only need to unzio it
+                if (actionToReport.TwinReport.Status == StatusType.Unzip) // file download complete , only need to unzip it
                 {
                     await HandleCompletedDownloadAsync(fileDownload, cancellationToken);
                 }
@@ -84,7 +85,11 @@ public class FileDownloadHandler : IFileDownloadHandler
                     {
                         fileDownload.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
                     }
-                    await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.ActionReported.ReportIndex, currentRangeIndex);
+                    if (actionToReport.TwinReport.Status != StatusType.InProgress || await CheckIfNotRecivedDownloadMsgToFile(fileDownload,cancellationToken))
+                    {
+                        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.ActionReported.ReportIndex, currentRangeIndex);
+                    }
+
                 }
             }
         }
@@ -99,6 +104,13 @@ public class FileDownloadHandler : IFileDownloadHandler
                 await SaveReportAsync(fileDownload, cancellationToken);
             }
         }
+    }
+
+    private async Task<bool> CheckIfNotRecivedDownloadMsgToFile(FileDownload file, CancellationToken cancellationToken)
+    {
+        var downloadedBytes = file.TotalBytesDownloaded;
+        await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+        return downloadedBytes == file.TotalBytesDownloaded;
     }
 
     private async Task SendForSignatureAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
