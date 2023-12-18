@@ -32,10 +32,9 @@ public class StateMachineListenerService : BackgroundService
         {
             var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
             ArgumentNullException.ThrowIfNull(dpsProvisioningDeviceClientHandler);
-            await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
-
             var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
             ArgumentNullException.ThrowIfNull(StateMachineHandlerService);
+            await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
             await StateMachineHandlerService.InitStateMachineHandlerAsync();
         }
     }
@@ -60,7 +59,7 @@ public class StateMachineListenerService : BackgroundService
                 await SetReadyAsync();
                 break;
             case DeviceStateType.Busy:
-                await SetBusyAsync();
+                await CancelOperationsAsync();
                 break;
             default:
                 break;
@@ -69,6 +68,7 @@ public class StateMachineListenerService : BackgroundService
 
     private async Task SetProvisioningAsync()
     {
+        await CancelOperationsAsync();
         _cts = new CancellationTokenSource();
         if (_c2DEventSubscriptionSession != null)
         {
@@ -89,7 +89,7 @@ public class StateMachineListenerService : BackgroundService
     }
 
 
-    private async Task SetBusyAsync()
+    private async Task CancelOperationsAsync()
     {
         _cts?.Cancel();
         await _deviceClientWrapper.DisposeAsync();
