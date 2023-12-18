@@ -22,7 +22,7 @@ public class X509Provider : IX509Provider
     {
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
         _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        tempPrefixCertificate = $"{_authenticationSettings.CertificatePrefix}{TEMPORARY_CERTIFICATE}";
+        tempPrefixCertificate = $"{_authenticationSettings.GetCertificatePrefix()}{TEMPORARY_CERTIFICATE}";
     }
 
     public X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays)
@@ -30,11 +30,11 @@ public class X509Provider : IX509Provider
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{_authenticationSettings.CertificatePrefix}{deviceId}", rsa
+                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{_authenticationSettings.GetCertificatePrefix()}{deviceId}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             SubjectAlternativeNameBuilder subjectAlternativeNameBuilder = new SubjectAlternativeNameBuilder();
-            subjectAlternativeNameBuilder.AddDnsName($"{_authenticationSettings.CertificatePrefix}{deviceId}");
+            subjectAlternativeNameBuilder.AddDnsName($"{_authenticationSettings.GetCertificatePrefix()}{deviceId}");
             subjectAlternativeNameBuilder.AddDnsName(DNS_NAME);
             request.CertificateExtensions.Add(subjectAlternativeNameBuilder.Build());
 
@@ -84,7 +84,7 @@ public class X509Provider : IX509Provider
     private X509Certificate2? GetCPCertificate(X509Certificate2Collection certificates)
     {
         return certificates?.Cast<X509Certificate2>()
-                      .FirstOrDefault(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.CertificatePrefix));
+                      .FirstOrDefault(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix()));
     }
 
     private X509Certificate2 GenerateTemporaryAnonymousCertificate()

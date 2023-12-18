@@ -28,12 +28,17 @@ public class ReprovisioningHandlerTestFixture
     private const string DEVICE_ID = "UnitTest";
     private const string SECRET_KEY = "secert";
     private const string IOTHUB_HOST_NAME = "IotHubHostName";
-    private const string CERTIFICATE_PREFIX = "UnitTest-CP-";
+    private const string CERTIFICATE_PREFIX = "CP";
+    private const string ENVITOMENT = "UnitTest";
     private ReprovisioningMessage _validReprovisioningMessage;
 
     private X509Certificate2 _certificate;
     private string temporaryCertificateName;
 
+    public string GetCertificatePrefix()
+    {
+        return !string.IsNullOrEmpty(ENVITOMENT) ? $"{CERTIFICATE_PREFIX}-{ENVITOMENT}-" : $"{CERTIFICATE_PREFIX}-";
+    }
 
     [SetUp]
     public void Setup()
@@ -42,7 +47,7 @@ public class ReprovisioningHandlerTestFixture
         _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
         _dPSProvisioningDeviceClientHandlerMock = new Mock<IDPSProvisioningDeviceClientHandler>();
         _authenticationSettingsMock = new Mock<IOptions<AuthenticationSettings>>();
-        _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings() { CertificatePrefix = CERTIFICATE_PREFIX });
+        _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings() { CertificatePrefix = CERTIFICATE_PREFIX, Environment = ENVITOMENT });
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
         _sHA256WrapperMock = new Mock<ISHA256Wrapper>();
         _provisioningServiceClientWrapperMock = new Mock<IProvisioningServiceClientWrapper>();
@@ -64,10 +69,10 @@ public class ReprovisioningHandlerTestFixture
             DPSConnectionString = "dpsConnectionString"
         };
 
-        _certificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60, CERTIFICATE_PREFIX);
+        _certificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60, GetCertificatePrefix());
         _x509CertificateWrapperMock.Setup(x => x.CreateFromBytes(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<X509KeyStorageFlags>())).Returns(_certificate);
         _sHA256WrapperMock.Setup(x => x.ComputeHash(It.IsAny<byte[]>())).Returns(Encoding.UTF8.GetBytes("hash"));
-        _d2CMessengerHandlerMock.Setup(x => x.ProvisionDeviceCertificateEventAsync(CERTIFICATE_PREFIX, _certificate, CancellationToken.None)).Returns(Task.CompletedTask);
+        _d2CMessengerHandlerMock.Setup(x => x.ProvisionDeviceCertificateEventAsync(GetCertificatePrefix(), _certificate, CancellationToken.None)).Returns(Task.CompletedTask);
 
         _target = new ReprovisioningHandler(
         _x509CertificateWrapperMock.Object,
@@ -79,7 +84,7 @@ public class ReprovisioningHandlerTestFixture
         _x509ProviderMock.Object,
         _loggerMock.Object);
 
-        temporaryCertificateName = $"{CERTIFICATE_PREFIX}{CertificateConstants.TEMPORARY_CERTIFICATE_NAME}";
+        temporaryCertificateName = $"{GetCertificatePrefix()}{CertificateConstants.TEMPORARY_CERTIFICATE_NAME}";
 
     }
 
@@ -174,7 +179,7 @@ public class ReprovisioningHandlerTestFixture
     [Test]
     public async Task HandleRequestDeviceCertificateAsync_CertificateIsNull_ThrowException()
     {
-        _x509ProviderMock.Setup(x => x.GenerateCertificate(CERTIFICATE_PREFIX, It.IsAny<string>(), It.IsAny<int>())).Returns(null as X509Certificate2);
+        _x509ProviderMock.Setup(x => x.GenerateCertificate(GetCertificatePrefix(), It.IsAny<string>(), It.IsAny<int>())).Returns(null as X509Certificate2);
         var message = new RequestDeviceCertificateMessage
         {
             Data = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(new AuthenticationKeys { DeviceId = DEVICE_ID, SecretKey = SECRET_KEY })),
@@ -187,7 +192,7 @@ public class ReprovisioningHandlerTestFixture
     [Test]
     public async Task HandleRequestDeviceCertificateAsync_CertificatePrefix_ValidPrefix()
     {
-        _x509ProviderMock.Setup(x => x.GenerateCertificate( It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(_certificate);
+        _x509ProviderMock.Setup(x => x.GenerateCertificate(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(_certificate);
         var message = new RequestDeviceCertificateMessage
         {
             Data = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(new AuthenticationKeys { DeviceId = DEVICE_ID, SecretKey = SECRET_KEY })),
@@ -195,7 +200,7 @@ public class ReprovisioningHandlerTestFixture
 
         await _target.HandleRequestDeviceCertificateAsync(message, CancellationToken.None);
 
-        _d2CMessengerHandlerMock.Verify(d => d.ProvisionDeviceCertificateEventAsync(It.Is<string>(x => x == CERTIFICATE_PREFIX), It.IsAny<X509Certificate2>(), It.IsAny<CancellationToken>()), Times.Once);
+        _d2CMessengerHandlerMock.Verify(d => d.ProvisionDeviceCertificateEventAsync(It.Is<string>(x => x == GetCertificatePrefix()), It.IsAny<X509Certificate2>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private void SetupX509CertificateWrapperMock()

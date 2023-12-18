@@ -40,7 +40,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             var certificates = _X509CertificateWrapper.GetCertificates(store);
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.CertificatePrefix) && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR))
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix()) && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR))
                .FirstOrDefault();
 
             return filteredCertificate;

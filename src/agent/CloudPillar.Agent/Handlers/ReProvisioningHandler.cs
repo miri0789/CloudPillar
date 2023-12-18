@@ -43,7 +43,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        temporaryCertificateName = $"{_authenticationSettings.CertificatePrefix}{CertificateConstants.TEMPORARY_CERTIFICATE_NAME}";
+        temporaryCertificateName = $"{_authenticationSettings.GetCertificatePrefix()}{CertificateConstants.TEMPORARY_CERTIFICATE_NAME}";
     }
     public async Task HandleReprovisioningMessageAsync(Message recivedMessage, ReprovisioningMessage message, CancellationToken cancellationToken)
     {
@@ -52,7 +52,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var certificate = GetTempCertificate();
         ArgumentNullException.ThrowIfNull(certificate);
 
-        var deviceId = certificate.Subject.Replace($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{_authenticationSettings.CertificatePrefix}", string.Empty);
+        var deviceId = certificate.Subject.Replace($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{_authenticationSettings.GetCertificatePrefix()}", string.Empty);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
 
         string iotHubHostName = await GetIotHubHostNameAsync(message.DPSConnectionString, message.Data, cancellationToken);
@@ -69,7 +69,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var certificate = _x509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _authenticationSettings.CertificateExpiredDays);
         ArgumentNullException.ThrowIfNull(certificate);
         InstallTemporaryCertificate(certificate, data.SecretKey);
-        await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(_authenticationSettings.CertificatePrefix, certificate, cancellationToken);
+        await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(_authenticationSettings.GetCertificatePrefix(), certificate, cancellationToken);
     }
 
 
@@ -170,7 +170,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         var filteredCertificates = certificates?.Cast<X509Certificate2>()
            .Where(cert => string.IsNullOrEmpty(thumbprint) ? cert.FriendlyName == temporaryCertificateName :
-            (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.CertificatePrefix)
+            (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix())
            && cert.Thumbprint != thumbprint))
            .ToArray();
 
