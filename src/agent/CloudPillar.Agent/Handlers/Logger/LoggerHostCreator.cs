@@ -20,7 +20,8 @@ namespace CloudPillar.Agent.Handlers.Logger
             }
             builder.Services.AddHttpContextAccessor();
             string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
-            var lo4NetPath = "log4net.config";
+            var fileName = "log4net.config";
+            var lo4NetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, fileName); 
             if (!File.Exists(lo4NetPath))
             {
                 throw new Exception("no log4net config file");
