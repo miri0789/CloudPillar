@@ -6,6 +6,7 @@ using Backend.BlobStreamer.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
 using Shared.Entities.Services;
 using Backend.Infra.Common.Services.Interfaces;
+using System.Security.Cryptography;
 using Backend.Infra.Common.Wrappers.Interfaces;
 
 namespace Backend.BlobStreamer.Services;
@@ -49,6 +50,35 @@ public class BlobService : IBlobService
         var data = new byte[fileSize];
         await blockBlob.DownloadRangeToByteArrayAsync(data, 0, 0, fileSize);
         return data;
+    }
+
+    public async Task<byte[]> CalculateHashAsync(string filePath, int bufferSize)
+    {
+        var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, filePath);
+        var fileSize = blockBlob.Properties.Length;
+
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            try
+            {
+                long offset = 0;
+                var data = new byte[bufferSize];
+                while (offset < fileSize)
+                {
+                    var length = Math.Min(bufferSize, fileSize - offset);
+                    await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
+                    sha256.TransformBlock(data, 0, (int)length, null, 0);
+                    offset += bufferSize;
+                }
+                sha256.TransformFinalBlock(new byte[0], 0, 0);
+                return sha256.Hash;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"CalculateHashAsync failed.", ex);
+                throw;
+            }
+        }
     }
 
     public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize,

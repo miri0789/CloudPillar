@@ -6,6 +6,8 @@ using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Services;
+using System.Security.Cryptography;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -15,25 +17,31 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
+    private readonly ISignatureHandler _signatureHandler;
     private static readonly ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
 
 
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
+    private readonly SignFileSettings _signFileSettings;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
                                IStrictModeHandler strictModeHandler,
                                ITwinActionsHandler twinActionsHandler,
                                ILoggerHandler loggerHandler,
-                               ICheckSumService checkSumService)
+                               ICheckSumService checkSumService,
+                               ISignatureHandler signatureHandler,
+                                IOptions<SignFileSettings> options)
     {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
+        _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
+        _signFileSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
@@ -44,31 +52,40 @@ public class FileDownloadHandler : IFileDownloadHandler
             fileDownload = new FileDownload { ActionReported = actionToReport };
             _filesDownloads.Add(fileDownload);
         }
+        fileDownload.Action.Sign = fileDownload.Action.Sign ?? ((DownloadAction)actionToReport.TwinAction).Sign;
         try
         {
-            ArgumentNullException.ThrowIfNullOrEmpty(fileDownload.Action.DestinationPath);
-            InitDownloadPath(fileDownload);
-            var destPath = GetDestinationPath(fileDownload);
-            var isFileExist = _fileStreamerWrapper.FileExists(destPath);
-            if (actionToReport.TwinReport.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
+            if (fileDownload.Action.Sign is null)
             {
-                fileDownload.TotalBytesDownloaded = 0;
-                fileDownload.Report.Progress = 0;
-                fileDownload.Report.Status = StatusType.Pending;
-            }
-            if (actionToReport.TwinReport.Status == StatusType.Unzip) // file download complete , only need to unzio it
-            {
-                await HandleCompletedDownloadAsync(fileDownload, cancellationToken);
+                _logger.Info("No sign file key is sent, sending for signature");
+                await SendForSignatureAsync(actionToReport, cancellationToken);
             }
             else
             {
-                var existRanges = GetExistRangesList(fileDownload.Report.CompletedRanges); // get next range for downloading
-                var currentRangeIndex = !existRanges.Contains(0) ? 0 : existRanges.FirstOrDefault(n => !existRanges.Contains(n + 1) && n != 0) + 1;
-                if (currentRangeIndex > 0 && isFileExist && fileDownload.TotalBytesDownloaded == 0)
+                ArgumentNullException.ThrowIfNullOrEmpty(fileDownload.Action.DestinationPath);
+                InitDownloadPath(fileDownload);
+                var destPath = GetDestinationPath(fileDownload);
+                var isFileExist = _fileStreamerWrapper.FileExists(destPath);
+                if (actionToReport.TwinReport.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
                 {
-                    fileDownload.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                    fileDownload.TotalBytesDownloaded = 0;
+                    fileDownload.Report.Progress = 0;
+                    fileDownload.Report.Status = StatusType.Pending;
                 }
-                await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.ActionReported.ReportIndex, currentRangeIndex);
+                if (actionToReport.TwinReport.Status == StatusType.Unzip) // file download complete , only need to unzio it
+                {
+                    await HandleCompletedDownloadAsync(fileDownload, cancellationToken);
+                }
+                else
+                {
+                    var existRanges = GetExistRangesList(fileDownload.Report.CompletedRanges); // get next range for downloading
+                    var currentRangeIndex = !existRanges.Contains(0) ? 0 : existRanges.FirstOrDefault(n => !existRanges.Contains(n + 1) && n != 0) + 1;
+                    if (currentRangeIndex > 0 && isFileExist && fileDownload.TotalBytesDownloaded == 0)
+                    {
+                        fileDownload.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                    }
+                    await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.ActionReported.ReportIndex, currentRangeIndex);
+                }
             }
         }
         catch (Exception ex)
@@ -82,6 +99,20 @@ public class FileDownloadHandler : IFileDownloadHandler
                 await SaveReportAsync(fileDownload, cancellationToken);
             }
         }
+    }
+
+    private async Task SendForSignatureAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
+    {
+        actionToReport.TwinReport.Status = StatusType.SentForSignature;
+        SignFileEvent signFileEvent = new SignFileEvent()
+        {
+            MessageType = D2CMessageType.SignFileKey,
+            ActionIndex = actionToReport.ReportIndex,
+            FileName = ((DownloadAction)actionToReport.TwinAction).Source,
+            BufferSize = _signFileSettings.BufferSize,
+            PropName = actionToReport.ReportPartName
+        };
+        await _d2CMessengerHandler.SendSignFileEventAsync(signFileEvent, cancellationToken);
     }
 
     private void HandleDownloadException(Exception ex, FileDownload file)
@@ -134,15 +165,23 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         file.Stopwatch?.Stop();
         var destPath = GetDestinationPath(file);
-        if (file.Action.Unzip)
+        var isVerify = await _signatureHandler.VerifyFileSignatureAsync(destPath, file.Action.Sign);
+        if (isVerify)
         {
-            file.Report.Status = StatusType.Unzip;
-            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-            await _fileStreamerWrapper.UnzipFileAsync(destPath, file.Action.DestinationPath);
-            _fileStreamerWrapper.DeleteFile(destPath);
+            if (file.Action.Unzip)
+            {
+                file.Report.Status = StatusType.Unzip;
+                await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
+                await _fileStreamerWrapper.UnzipFileAsync(destPath, file.Action.DestinationPath);
+                _fileStreamerWrapper.DeleteFile(destPath);
+            }
+            file.Report.Status = StatusType.Success;
+            file.Report.Progress = 100;
         }
-        file.Report.Status = StatusType.Success;
-        file.Report.Progress = 100;
+        else
+        {
+            throw new Exception($"File {file.Action.DestinationPath} signature is not valid, the file will be deleted.");
+        }
     }
 
     private async Task HandleEndRangeDownloadAsync(string filePath, DownloadBlobChunkMessage message, FileDownload file, CancellationToken cancellationToken)

@@ -39,6 +39,7 @@ builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
+builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
 builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
@@ -76,6 +77,9 @@ builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
 builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
+
+var signFileSettings = builder.Configuration.GetSection("SignFileSettings");
+builder.Services.Configure<SignFileSettings>(signFileSettings);
 
 var servcieProvider = builder.Services.BuildServiceProvider();
 var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();

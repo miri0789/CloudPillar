@@ -4,8 +4,8 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using Shared.Entities.Messages;
 using CloudPillar.Agent.Handlers.Logger;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -64,6 +64,11 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         };
 
         await SendMessageAsync(ProvisionDeviceCertificateEvent, cancellationToken);
+    }
+
+    public async Task SendSignFileEventAsync(SignFileEvent d2CMessage, CancellationToken cancellationToken)
+    {
+        await SendMessageAsync(d2CMessage, cancellationToken);
     }
 
     public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)

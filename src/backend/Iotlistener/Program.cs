@@ -59,7 +59,7 @@ var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
 var signingService = app.Services.GetService<ISigningService>();
 var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
 var provisionDeviceCertificateService = app.Services.GetService<IProvisionDeviceCertificateService>();
-var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent,provisionDeviceCertificateService, _envirementVariable, logger, PartitionId);
+var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, provisionDeviceCertificateService, _envirementVariable, logger, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 

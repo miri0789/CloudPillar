@@ -5,13 +5,15 @@ using Backend.Keyholder.Interfaces;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Newtonsoft.Json;
+using Shared.Entities.Twin;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Converters;
+using Backend.Infra.Common.Services.Interfaces;
 using Shared.Entities.Utilities;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Azure.Devices.Shared;
 
-
 namespace Backend.Keyholder.Services;
-
 
 public class SigningService : ISigningService
 {
@@ -153,4 +155,45 @@ public class SigningService : ISigningService
             return "";
         }
     }
+
+    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash)
+    {
+        var signature = await SignData(hash);
+        await AddFileSignToDesired(deviceId, TwinPatchChangeSpec.ChangeSpec, propName, actionIndex, signature);
+
+    }
+
+    private async Task AddFileSignToDesired(string deviceId, TwinPatchChangeSpec changeSpecKey, string propName, int actionIndex, string fileSign)
+    {
+        ArgumentNullException.ThrowIfNull(deviceId);
+
+        try
+        {
+            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+            {
+                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
+                TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+
+                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
+                var desiredProp = typeof(TwinPatch).GetProperty(propName);
+                var desiredValue = (TwinAction[])desiredProp?.GetValue(twinDesiredChangeSpec.Patch)!;
+                ((DownloadAction)desiredValue[actionIndex]).Sign = fileSign;
+                desiredProp?.SetValue(twinDesiredChangeSpec.Patch, desiredValue);
+
+                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
+                twinDesired.ChangeSign = await SignData(dataToSign);                
+
+                var twinDesiredJson = twinDesired.ConvertToJObject().ToString();
+                twin.Properties.Desired = new TwinCollection(twinDesiredJson);
+
+                await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
+                _logger.Info($"Recipe: {actionIndex} has been successfully changed. DeviceId: {deviceId} ");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while attempting to update ChangeSpec: {ex.Message}");
+        }
+    }
+
 }
