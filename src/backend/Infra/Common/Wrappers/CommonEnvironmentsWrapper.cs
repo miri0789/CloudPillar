@@ -17,7 +17,7 @@ public class CommonEnvironmentsWrapper: ICommonEnvironmentsWrapper
     {
         get
         {
-            return int.TryParse(GetVariable(_retryPolicyExponent), out int value) ? value : 5;
+            return int.TryParse(GetVariable(_retryPolicyExponent), out int value) ? value : 15;
         }
     }
 
