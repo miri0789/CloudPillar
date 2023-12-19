@@ -25,6 +25,7 @@ public class AgentController : ControllerBase
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
     private readonly IRunDiagnosticsHandler _runDiagnosticsHandler;
+    private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -34,7 +35,8 @@ public class AgentController : ControllerBase
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
      IRunDiagnosticsHandler runDiagnosticsHandler,
-     ILoggerHandler logger)
+     ILoggerHandler logger,
+     IStateMachineChangedEvent stateMachineChangedEvent)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
@@ -44,6 +46,7 @@ public class AgentController : ControllerBase
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
         _runDiagnosticsHandler = runDiagnosticsHandler ?? throw new ArgumentNullException(nameof(runDiagnosticsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
     }
 
     [HttpPost("AddRecipe")]
@@ -155,6 +158,7 @@ public class AgentController : ControllerBase
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
+        _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken);
         await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
