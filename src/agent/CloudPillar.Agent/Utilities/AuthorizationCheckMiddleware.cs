@@ -69,8 +69,8 @@ public class AuthorizationCheckMiddleware
                 await _requestDelegate(context);
                 return;
             }
-
-            var checkAuthorization = deviceIsBusy && (context.Request.Path.Value?.Contains("SetReady") == true || context.Request.Path.Value?.Contains("SetBusy") == true);
+            var action = context.Request.Path.Value?.ToLower() ?? "";
+            var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
             bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
             if (!isAuthorized)
             {

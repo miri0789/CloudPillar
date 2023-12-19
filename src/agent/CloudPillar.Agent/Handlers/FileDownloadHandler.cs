@@ -52,42 +52,48 @@ public class FileDownloadHandler : IFileDownloadHandler
             fileDownload = new FileDownload { ActionReported = actionToReport };
             _filesDownloads.Add(fileDownload);
         }
-        fileDownload.Action.Sign = fileDownload.Action.Sign ?? ((DownloadAction)actionToReport.TwinAction).Sign;
+
+        // call async because messages of file data continue received 
+        Task.Run(async () => HandleInitFileDownloadAsync(fileDownload, cancellationToken));
+    }
+
+    private async Task HandleInitFileDownloadAsync(FileDownload file, CancellationToken cancellationToken)
+    {
         try
         {
-            if (fileDownload.Action.Sign is null)
+            if (file.Action.Sign is null)
             {
                 _logger.Info("No sign file key is sent, sending for signature");
-                await SendForSignatureAsync(actionToReport, cancellationToken);
+                await SendForSignatureAsync(file.ActionReported, cancellationToken);
             }
             else
             {
-                ArgumentNullException.ThrowIfNullOrEmpty(fileDownload.Action.DestinationPath);
-                InitDownloadPath(fileDownload);
-                var destPath = GetDestinationPath(fileDownload);
+                ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
+                InitDownloadPath(file);
+                var destPath = GetDestinationPath(file);
                 var isFileExist = _fileStreamerWrapper.FileExists(destPath);
-                if (actionToReport.TwinReport.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
+                if (file.Report.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
                 {
-                    fileDownload.TotalBytesDownloaded = 0;
-                    fileDownload.Report.Progress = 0;
-                    fileDownload.Report.Status = StatusType.Pending;
-                    fileDownload.Report.CompletedRanges = "";
+                    file.TotalBytesDownloaded = 0;
+                    file.Report.Progress = 0;
+                    file.Report.Status = StatusType.Pending;
+                    file.Report.CompletedRanges = "";
                 }
-                if (actionToReport.TwinReport.Status == StatusType.Unzip) // file download complete , only need to unzip it
+                if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
                 {
-                    await HandleCompletedDownloadAsync(fileDownload, cancellationToken);
+                    await HandleCompletedDownloadAsync(file, cancellationToken);
                 }
                 else
                 {
-                    var existRanges = GetExistRangesList(fileDownload.Report.CompletedRanges); // get next range for downloading
+                    var existRanges = GetExistRangesList(file.Report.CompletedRanges); // get next range for downloading
                     var currentRangeIndex = !existRanges.Contains(0) ? 0 : existRanges.FirstOrDefault(n => !existRanges.Contains(n + 1) && n != 0) + 1;
-                    if (currentRangeIndex > 0 && isFileExist && fileDownload.TotalBytesDownloaded == 0)
+                    if (currentRangeIndex > 0 && isFileExist && file.TotalBytesDownloaded == 0)
                     {
-                        fileDownload.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                        file.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
                     }
-                    if (actionToReport.TwinReport.Status != StatusType.InProgress || await CheckIfNotRecivedDownloadMsgToFile(fileDownload,cancellationToken))
+                    if (file.Report.Status != StatusType.InProgress || await CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken))
                     {
-                        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, fileDownload.Action.Source, fileDownload.ActionReported.ReportIndex, currentRangeIndex);
+                        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex, currentRangeIndex);
                     }
 
                 }
@@ -95,13 +101,13 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         catch (Exception ex)
         {
-            HandleDownloadException(ex, fileDownload);
+            HandleDownloadException(ex, file);
         }
         finally
         {
-            if (fileDownload.Report.Status != null)
+            if (file.Report.Status != null)
             {
-                await SaveReportAsync(fileDownload, cancellationToken);
+                await SaveReportAsync(file, cancellationToken);
             }
         }
     }
@@ -275,11 +281,19 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private async Task SaveReportAsync(FileDownload file, CancellationToken cancellationToken)
     {
-        await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-        if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
+        try
         {
-            RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
+            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
+            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
+            {
+                RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
+            }
         }
+        catch (Exception ex)
+        {
+            _logger.Error($"SaveReportAsync failed message: {ex.Message}");
+        }
+
     }
 
     private float CalculateBytesDownloadedPercent(FileDownload file, long bytesLength, long offset)
