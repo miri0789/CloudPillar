@@ -57,12 +57,11 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     {
         try
         {
-            var diagnosticsFilePath = CreateTempFile();
-            //create random content
             var bytes = new Byte[_runDiagnosticsSettings.FileSizeBytes];
             new Random().NextBytes(bytes);
-
-            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.Open))
+            
+            string diagnosticsFilePath = Path.Combine(_fileStreamerWrapper.GetTempPath(), $"{_guidWrapper.CreateNewGuid()}{DIAGNOSTICS_EXTENSION}");
+            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.OpenOrCreate))
             {
                 _fileStreamerWrapper.SetLength(fileStream, _runDiagnosticsSettings.FileSizeBytes);
                 await _fileStreamerWrapper.WriteAsync(fileStream, bytes);
@@ -199,18 +198,5 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             _fileStreamerWrapper.DeleteFile(filePath);
             _logger.Info($"File {filePath} was deleted");
         }
-    }
-
-    private string CreateTempFile()
-    {
-        string filePath = $"{_fileStreamerWrapper.GetTempPath()}/{_guidWrapper.CreateNewGuid()}{DIAGNOSTICS_EXTENSION}";
-        if (!_fileStreamerWrapper.FileExists(filePath))
-        {
-            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(filePath, FileMode.Create))
-            {
-                _logger.Info($"File {filePath} was created");
-            }
-        }
-        return filePath;
     }
 }
