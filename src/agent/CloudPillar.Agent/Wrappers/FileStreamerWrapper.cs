@@ -80,9 +80,9 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetFileName(filePathPattern);
     }
-    public string GetTempFileName()
+    public string GetTempPath()
     {
-        return Path.GetTempFileName();
+        return Path.GetTempPath();
     }
 
     public string[] GetFiles(string directoryPath, string searchPattern)
