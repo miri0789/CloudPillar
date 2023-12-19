@@ -61,7 +61,8 @@ public class SignatureHandler : ISignatureHandler
         try
         {
             byte[] hash = CalculateHash(filePath);
-            return await VerifySignatureAsync(hash, signature);
+            string cc = Convert.ToBase64String(hash);
+            return await VerifySignatureAsync(Convert.FromBase64String(cc), signature);
         }
         catch (Exception ex)
         {

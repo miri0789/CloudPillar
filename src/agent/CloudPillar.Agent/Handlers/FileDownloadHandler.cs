@@ -230,6 +230,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 await HandleEndRangeDownloadAsync(filePath, message, file, cancellationToken);
             }
+            var r = GetCompletedRangesString(message.RangesCount);
             if (file.Report.CompletedRanges == GetCompletedRangesString(message.RangesCount))
             {
                 await HandleCompletedDownloadAsync(file, cancellationToken);

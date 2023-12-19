@@ -59,5 +59,13 @@ public class SignatureHandlerTestFixture
         Assert.IsFalse(result);
     }
 
-
+    [Test]
+    public async Task VerifyFileSignatureAsync_ValidSignature_ReturnsTrue()
+    {
+        //צריך להריץ את הפרויקט עם קובץ מתאים ולקחת משם את החתימה שלו ולשים פה. רק ככה זה יעבד
+        string filePath = "C:/cp/tryDownloadShort.txt";
+        string signatureString = "T8grJq7LR9KGjE7741gXMqPny8xsLvsyBiwIFwoF7rg=";
+        bool result = await _target.VerifyFileSignatureAsync(filePath, signatureString);
+        Assert.IsTrue(result);
+    }
 }

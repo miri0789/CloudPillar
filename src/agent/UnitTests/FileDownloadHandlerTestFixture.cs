@@ -94,6 +94,17 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
+        public async Task InitFileDownloadAsync_NewDownloadWithoutSign_SendForSignature()
+        {
+            var action = initAction();
+            action.Action.Sign = null;
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendSignFileEventAsync(It.IsAny<SignFileEvent>(), It.IsAny<CancellationToken>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 0, It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
+        }
+
+        [Test]
         public async Task InitFileDownloadAsync_ActiveDownload_SendFirmwareUpdateEventWithRange()
         {
             var action = initAction();
@@ -164,6 +175,38 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Verify(f => f.DeleteFile(It.IsAny<string>()), Times.Once);
         }
 
+        [Test]
+        public async Task HandleDownloadMessageAsync_VerifyFailed_DeleteFile()
+        {
+            var action = initAction();
+            _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
+            _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
+
+            action.Report.CompletedRanges = "0-5,7";
+
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionIndex = action.ActionReported.ReportIndex,
+                FileName = action.Action.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 4096,
+                RangeIndex = 6,
+                RangesCount = 8,
+                RangeCheckSum = "abcd",
+                RangeStartPosition = 1,
+                RangeEndPosition = 2
+            };
+
+            await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+            _fileStreamerWrapperMock.Verify(f => f.DeleteFile(It.IsAny<string>()), Times.Once);
+            _twinActionsHandlerMock.Verify(
+                          x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
+                          item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
+                      , It.IsAny<CancellationToken>()), Times.Once);
+        }
 
         [Test]
         public async Task HandleDownloadMessageAsync_InProgressDeletedFile_InitProgress()
