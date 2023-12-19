@@ -30,6 +30,7 @@ namespace CloudPillar.Agent.Tests
         private ActionExecutingContext _context;
         private AgentController agentController;
         private DeviceStateFilterAttribute _target;
+        private Mock<IStateMachineChangedEvent> _stateMachineChangedEventMock;
 
         public DeviceStateFilterAttributeTestFixture()
         {
@@ -41,13 +42,15 @@ namespace CloudPillar.Agent.Tests
             _twinDesiredPropsValidator = new Mock<IValidator<TwinDesired>>();
             _stateMachineHandler = new Mock<IStateMachineHandler>();
             _loggerMock = new Mock<ILoggerHandler>();
+            _stateMachineChangedEventMock = new Mock<IStateMachineChangedEvent>();
             runDiagnosticsHandler = new Mock<IRunDiagnosticsHandler>();
             actionExecutingContextMock = new Mock<ActionExecutingContext>();
 
             _target = new DeviceStateFilterAttribute();
 
             agentController = new AgentController(_twinHandler.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
-            _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, runDiagnosticsHandler.Object, _loggerMock.Object);
+            _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, runDiagnosticsHandler.Object, 
+            _loggerMock.Object, _stateMachineChangedEventMock.Object);
 
 
             var actionContext = new ActionContext

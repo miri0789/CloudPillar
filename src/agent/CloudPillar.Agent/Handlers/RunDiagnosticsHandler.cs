@@ -72,8 +72,9 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"CreateFileAsync error: {ex.Message}");
-            throw ex;
+            var err = $"CreateFileAsync error: {ex.Message}";
+            _logger.Error($"CreateFileAsync error: {ex.Message}", ex);
+            throw new Exception(err);
         }
     }
 
@@ -97,20 +98,21 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"UploadFileAsync error: {ex.Message}");
-            throw ex;
+            var err = $"UploadFileAsync error: {ex.Message}";
+            _logger.Error(err, ex);
+            throw new Exception(err); ;
         }
     }
 
     private async Task<TwinActionReported> CheckDownloadStatus(string fileName)
     {
-        TwinActionReported reported = new TwinActionReported();
+        TwinActionReported? reported = new TwinActionReported();
         var taskCompletion = new TaskCompletionSource<TwinActionReported>();
         var timer = new PeriodicTimer(TimeSpan.FromSeconds(_runDiagnosticsSettings.PeriodicResponseWaitSeconds));
 
-        Timer timeTaken = new Timer((Object reported) =>
+        Timer timeTaken = new Timer(reported =>
         {
-            var state = ((TwinActionReported)reported).Status;
+            var state = ((TwinActionReported?)reported)?.Status;
             if (state != StatusType.Success && state != StatusType.Failed)
             {
                 taskCompletion.SetException(new TimeoutException($"Something is wrong, no response was received within {_runDiagnosticsSettings.ResponseTimeoutMinutes} minutes"));
@@ -122,7 +124,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             while (!taskCompletion.Task.IsCompleted && await timer.WaitForNextTickAsync())
             {
                 reported = await GetDownloadStatus(fileName);
-                _logger.Info($"CheckResponse response is {reported.Status}");
+                _logger.Info($"CheckResponse response is {reported?.Status}");
 
                 if (reported.Status == StatusType.Success || reported.Status == StatusType.Failed)
                 {
@@ -153,7 +155,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var desiredList = twinDesired?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
         var reportedList = twinReported?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
 
-        var indexDesired = desiredList?.FindIndex(x => x is DownloadAction && ((DownloadAction)x).Source.Contains(fileName)) ?? -1;
+        var indexDesired = desiredList?.FindIndex(x => x is DownloadAction && Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
         if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())
         {
             _logger.Info($"No report with fileName {fileName}");

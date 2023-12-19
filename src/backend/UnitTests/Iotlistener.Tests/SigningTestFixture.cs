@@ -1,10 +1,9 @@
-﻿using Backend.Infra.Common;
+﻿using Backend.Infra.Common.Services.Interfaces;
 using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 using Moq;
 using Shared.Entities.Messages;
 using Shared.Logger;
-using Backend.Infra.Common.Services.Interfaces;
 
 namespace Backend.Iotlistener.Tests;
 public class SigningTestFixture

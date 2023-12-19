@@ -1,10 +1,7 @@
 ﻿using System.Web;
-using System.Reflection;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
-using log4net.Repository;
-using log4net.Repository.Hierarchy;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.ApplicationInsights.Log4NetAppender;

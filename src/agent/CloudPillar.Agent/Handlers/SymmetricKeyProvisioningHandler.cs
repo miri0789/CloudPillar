@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;
@@ -61,16 +60,18 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                 {
                     HandleError("RegisterAsync failed");
                 }
-
-                _logger.Debug($"Registration status: {result.Status}.");
-
-                if (result.Status != ProvisioningRegistrationStatusType.Assigned)
+                else
                 {
-                    HandleError("Registration status did not assign a hub");
-                }
+                    _logger.Debug($"Registration status: {result.Status}.");
 
-                _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
-                await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
+                    if (result.Status != ProvisioningRegistrationStatusType.Assigned)
+                    {
+                        HandleError("Registration status did not assign a hub");
+                    }
+
+                    _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
+                    await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
+                }
             }
         }
     }

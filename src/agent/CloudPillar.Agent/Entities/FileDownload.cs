@@ -4,18 +4,18 @@ using Shared.Entities.Twin;
 namespace CloudPillar.Agent.Entities;
 public record FileDownload
 {
-    public ActionToReport ActionReported { get; init; }
-    public Stopwatch Stopwatch { get; set; }
+    public required ActionToReport ActionReported { get; init; }
+    public Stopwatch Stopwatch { get; set; } = new Stopwatch();
     public long TotalBytesDownloaded { get; set; }
     public long TotalBytes { get; set; }
     public DownloadAction Action
     {
-        get => this.ActionReported.TwinAction as DownloadAction;
-        set => this.ActionReported.TwinAction = value;
+        get => (ActionReported.TwinAction as DownloadAction)!;
+        set => ActionReported.TwinAction = value;
     }
     public TwinActionReported Report
     {
-        get => this.ActionReported.TwinReport;
-        set => this.ActionReported.TwinReport = value;
+        get => ActionReported.TwinReport;
+        set => ActionReported.TwinReport = value;
     }
 }

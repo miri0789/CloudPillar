@@ -1,8 +1,6 @@
-﻿using System.Reflection;
-using Backend.Infra.Common.Services.Interfaces;
+﻿using Backend.Infra.Common.Services.Interfaces;
 using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
-using Microsoft.Azure.Storage.Blob;
 using Moq;
 using Shared.Entities.Messages;
 using Shared.Logger;
@@ -42,7 +40,7 @@ public class FirmwareUpdateTestFixture
             .ReturnsAsync(new BlobData() { Length = _blobSize });
         _target = new FirmwareUpdateService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
-    
+
     private string BuildBlobRangeUrl(long rangeIndex = 0, long startPosition = 0)
     {
         return $"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex={rangeIndex}&startPosition={startPosition}&actionId={_actionId}&rangesCount={_rangesCount}";

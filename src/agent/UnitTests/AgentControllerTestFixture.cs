@@ -11,6 +11,7 @@ namespace CloudPillar.Agent.Tests
     [TestFixture]
     public class AgentControllerTestFixture
     {
+        private Mock<IStateMachineChangedEvent> _stateMachineChangedEventMock;
         private Mock<ITwinHandler> _twinHandler;
         private Mock<IValidator<UpdateReportedProps>> _updateReportedPropsValidator;
         private Mock<IDPSProvisioningDeviceClientHandler> _dPSProvisioningDeviceClientHandler;
@@ -31,16 +32,17 @@ namespace CloudPillar.Agent.Tests
             _stateMachineHandler = new Mock<IStateMachineHandler>();
             _runDiagnosticsHandler = new Mock<IRunDiagnosticsHandler>();
             _loggerMock = new Mock<ILoggerHandler>();
+            _stateMachineChangedEventMock = new Mock<IStateMachineChangedEvent>();
 
             _target = new AgentController(_twinHandler.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
-                        _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _runDiagnosticsHandler.Object, _loggerMock.Object);
+                        _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _runDiagnosticsHandler.Object, _loggerMock.Object, _stateMachineChangedEventMock.Object);
         }
 
         [Test]
         public async Task SetBusyAsync_ValidProccess_Success()
         {
             await _target.SetBusyAsync(default);
-            _twinHandler.Verify(h => h.GetLatestTwinAsync(CancellationToken.None), Times.Once);
+            _twinHandler.Verify(h => h.GetLatestTwin(), Times.Once);
         }
     }
 }

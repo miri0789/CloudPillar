@@ -8,9 +8,8 @@ using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Shared.Entities.Utilities;
+using System.Text;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -28,7 +27,7 @@ public class TwinHandler : ITwinHandler
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ISignatureHandler _signatureHandler;
     private readonly ILoggerHandler _logger;
-    private static Twin _latestTwin { get; set; }
+    private static Twin? _latestTwin { get; set; }
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
@@ -60,7 +59,7 @@ public class TwinHandler : ITwinHandler
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             string reportedJson = twin.Properties.Reported.ToJson();
-            var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
+            var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson)!;
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
             if (string.IsNullOrWhiteSpace(twinDesired?.ChangeSign))
@@ -70,7 +69,8 @@ public class TwinHandler : ITwinHandler
             }
             else
             {
-                var isSignValid = await _signatureHandler.VerifySignatureAsync(JsonConvert.SerializeObject(twinDesired.ChangeSpec), twinDesired.ChangeSign);
+                byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
+                var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired.ChangeSign);
                 if (isSignValid == false)
                 {
                     _logger.Error($"Twin Change signature is invalid");
@@ -78,7 +78,7 @@ public class TwinHandler : ITwinHandler
                 }
                 else
                 {
-                    await UpdateReportedTwinChangeSignAsync(null, cancellationToken);
+                    await UpdateReportedTwinChangeSignAsync(string.Empty, cancellationToken);
                     foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
                     {
                         await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, isInitial, cancellationToken);
@@ -117,9 +117,9 @@ public class TwinHandler : ITwinHandler
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
 
         var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
-        _logger.Info($"HandleTwinUpdatesAsync: {actions.Count()} actions to execute for {changeSpecKey.ToString()}");
+        _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
 
-        if (actions.Count() > 0)
+        if (actions?.Count() > 0)
         {
             await HandleTwinActionsAsync(actions, cancellationToken);
         }
@@ -143,7 +143,7 @@ public class TwinHandler : ITwinHandler
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
-            return reported.DeviceState;
+            return reported?.DeviceState;
         }
         catch (Exception ex)
         {
@@ -202,11 +202,7 @@ public class TwinHandler : ITwinHandler
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            if (twin != null)
-            {
-                return twin.ToJson();
-            }
-            return null;
+            return twin?.ToJson() ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -221,19 +217,15 @@ public class TwinHandler : ITwinHandler
         _latestTwin = twin;
     }
 
-    public async Task<string> GetLatestTwinAsync(CancellationToken cancellationToken = default)
+    public string GetLatestTwin()
     {
         try
         {
-            if (_latestTwin != null)
-            {
-                return _latestTwin.ToJson();
-            }
-            return null;
+            return _latestTwin?.ToJson() ?? string.Empty;
         }
         catch (Exception ex)
         {
-            _logger.Error($"GetLatestTwinAsync failed: {ex.Message}");
+            _logger.Error($"GetLatestTwi failed: {ex.Message}");
             throw;
         }
     }
@@ -247,7 +239,7 @@ public class TwinHandler : ITwinHandler
                 var twin = await _deviceClient.GetTwinAsync(cancellationToken);
                 string reportedJson = twin.Properties.Reported.ToJson();
                 var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-                var twinReportedCustom = twinReported.Custom ?? new List<TwinReportedCustomProp>();
+                var twinReportedCustom = twinReported?.Custom ?? new List<TwinReportedCustomProp>();
                 foreach (var item in customProps)
                 {
                     var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);
@@ -328,7 +320,7 @@ public class TwinHandler : ITwinHandler
                 UploadAction uploadAction => uploadAction.FileName,
                 _ => string.Empty
             };
-            var filePath = _strictModeHandler.ReplaceRootById(action.TwinAction.Action.Value, actionFileName) ?? actionFileName;
+            var filePath = _strictModeHandler.ReplaceRootById(action.TwinAction.Action!.Value, actionFileName) ?? actionFileName;
             _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, filePath);
             return filePath;
         }
@@ -359,7 +351,7 @@ public class TwinHandler : ITwinHandler
         return fileName;
     }
 
-    private async Task<IEnumerable<ActionToReport>> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    private async Task<IEnumerable<ActionToReport>?> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         try
         {
@@ -378,11 +370,11 @@ public class TwinHandler : ITwinHandler
             {
                 try
                 {
-                    var desiredValue = (TwinAction[])property.GetValue(twinDesiredChangeSpec.Patch);
+                    var desiredValue = (TwinAction[]?)property.GetValue(twinDesiredChangeSpec.Patch);
                     if (desiredValue?.Length > 0)
                     {
                         var reportedProp = typeof(TwinReportedPatch).GetProperty(property.Name);
-                        var reportedValue = ((TwinActionReported[])(reportedProp.GetValue(twinReportedChangeSpec.Patch) ?? new TwinActionReported[0])).ToList();
+                        var reportedValue = ((TwinActionReported[])(reportedProp?.GetValue(twinReportedChangeSpec.Patch) ?? new TwinActionReported[0])).ToList();
 
                         while (reportedValue.Count < desiredValue.Length)
                         {
@@ -391,7 +383,7 @@ public class TwinHandler : ITwinHandler
                             isReportedChanged = true;
                         }
 
-                        reportedProp.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
+                        reportedProp?.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
                         actions.AddRange(desiredValue
                            .Select((item, index) => new ActionToReport(changeSpecKey)
                            {
@@ -400,7 +392,7 @@ public class TwinHandler : ITwinHandler
                                TwinAction = item,
                                TwinReport = reportedValue[index]
                            })
-                        .Where((item, index) => reportedValue[index].Status == StatusType.Pending
+                        .Where((item, index) => reportedValue[index].Status == StatusType.Pending || reportedValue[index].Status == StatusType.SentForSignature
                             || (isInitial && reportedValue[index].Status != StatusType.Success && reportedValue[index].Status != StatusType.Failed)));
 
 

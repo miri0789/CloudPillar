@@ -17,9 +17,9 @@ controllers:
     - name: MessageExpiredMinutes
       value: "60"
     - name: RetryPolicyBaseDelay
-      value: "2"
+      value: "20"
     - name: RetryPolicyExponent
-      value: "3"
+      value: "30"
     # - name: PARTITION_ID
     #   valueFrom:
     #     fieldRef:
@@ -56,6 +56,7 @@ controllers:
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
+    replicaCount: 2
     path: /keyholder-service
     port: 8082
     env:

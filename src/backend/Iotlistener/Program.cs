@@ -9,7 +9,6 @@ using Microsoft.Azure.EventHubs.Processor;
 using System.Runtime.Loader;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Services;
-using Backend.Infra.Common;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -60,7 +59,7 @@ var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
 var signingService = app.Services.GetService<ISigningService>();
 var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
 var provisionDeviceCertificateService = app.Services.GetService<IProvisionDeviceCertificateService>();
-var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent,provisionDeviceCertificateService, _envirementVariable, logger, PartitionId);
+var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, provisionDeviceCertificateService, _envirementVariable, logger, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 

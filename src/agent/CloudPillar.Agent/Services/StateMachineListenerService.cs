@@ -10,13 +10,13 @@ public class StateMachineListenerService : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private CancellationTokenSource _cts;
-    private ITwinHandler _twinHandler;
-    private IC2DEventSubscriptionSession _c2DEventSubscriptionSession;
+    private ITwinHandler? _twinHandler;
+    private IC2DEventSubscriptionSession? _c2DEventSubscriptionSession;
 
     public StateMachineListenerService(
         IStateMachineChangedEvent stateMachineChangedEvent,
-    IServiceProvider serviceProvider,
-    IDeviceClientWrapper deviceClientWrapper
+        IServiceProvider serviceProvider,
+        IDeviceClientWrapper deviceClientWrapper
     )
     {
         _cts = new CancellationTokenSource();
@@ -32,10 +32,9 @@ public class StateMachineListenerService : BackgroundService
         {
             var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
             ArgumentNullException.ThrowIfNull(dpsProvisioningDeviceClientHandler);
-            await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
-
             var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
             ArgumentNullException.ThrowIfNull(StateMachineHandlerService);
+            await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
             await StateMachineHandlerService.InitStateMachineHandlerAsync();
         }
     }
@@ -46,10 +45,8 @@ public class StateMachineListenerService : BackgroundService
         {
             using (var scope = _serviceProvider.CreateScope())
             {
-                _c2DEventSubscriptionSession = scope.ServiceProvider.GetService<IC2DEventSubscriptionSession>();
-                ArgumentNullException.ThrowIfNull(_c2DEventSubscriptionSession);
-                _twinHandler = scope.ServiceProvider.GetService<ITwinHandler>();
-                ArgumentNullException.ThrowIfNull(_twinHandler);
+                _c2DEventSubscriptionSession = scope.ServiceProvider.GetService<IC2DEventSubscriptionSession>() ?? throw new ArgumentNullException(nameof(_c2DEventSubscriptionSession));
+                _twinHandler = scope.ServiceProvider.GetService<ITwinHandler>() ?? throw new ArgumentNullException(nameof(_twinHandler));
             }
         }
 
@@ -62,7 +59,7 @@ public class StateMachineListenerService : BackgroundService
                 await SetReadyAsync();
                 break;
             case DeviceStateType.Busy:
-                await SetBusyAsync();
+                await CancelOperationsAsync();
                 break;
             default:
                 break;
@@ -72,20 +69,26 @@ public class StateMachineListenerService : BackgroundService
     private async Task SetProvisioningAsync()
     {
         _cts = new CancellationTokenSource();
-        await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, true);
+        if (_c2DEventSubscriptionSession != null)
+        {
+            await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, true);
+        }
     }
 
     private async Task SetReadyAsync()
     {
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
-        var subscribeTask = _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
-        var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
-        await Task.WhenAll(subscribeTask, handleTwinTask);
+        if (_c2DEventSubscriptionSession != null && _twinHandler != null)
+        {
+            var subscribeTask = _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
+            var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
+            await Task.WhenAll(subscribeTask, handleTwinTask);
+        }
     }
 
 
-    private async Task SetBusyAsync()
+    private async Task CancelOperationsAsync()
     {
         _cts?.Cancel();
         await _deviceClientWrapper.DisposeAsync();

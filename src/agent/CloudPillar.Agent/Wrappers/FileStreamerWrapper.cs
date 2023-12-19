@@ -126,7 +126,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
                 {
                     string entryFilePath = Path.Combine(destinationPath, entry.FullName);
 
-                    Directory.CreateDirectory(Path.GetDirectoryName(entryFilePath));
+                    Directory.CreateDirectory(Path.GetDirectoryName(entryFilePath)!);
 
                     using (Stream entryStream = entry.Open())
                     using (FileStream fileStream = File.Create(entryFilePath))

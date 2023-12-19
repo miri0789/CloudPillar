@@ -1,12 +1,10 @@
-using System.Text.RegularExpressions;
-using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices.Client.Transport;
 using System.IO.Compression;
-using Shared.Entities.Twin;
+using System.Text.RegularExpressions;
+using Microsoft.Azure.Devices.Client.Transport;
+using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers.Logger;
-using Newtonsoft.Json;
-using Microsoft.Azure.Storage.Blob;
+using CloudPillar.Agent.Wrappers;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -157,16 +155,16 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         try
         {
-            if (actionToReport.TwinReport.Progress > 0)
+            if (uploadAction.Method == FileUploadMethod.Blob && actionToReport.TwinReport.Status == StatusType.InProgress)
             {
-                notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
+                notification.CorrelationId ??= actionToReport.TwinReport.CorrelationId;
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
             var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
             {
                 BlobName = blobname
             });
-            var storageUri = await _deviceClientWrapper.GetBlobUriAsync(sasUriResponse);
+            var storageUri = _deviceClientWrapper.GetBlobUri(sasUriResponse);
             notification.CorrelationId = sasUriResponse.CorrelationId;
             switch (uploadAction.Method)
             {
@@ -179,6 +177,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
+                    await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                     await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
                     break;
                 default:
@@ -196,7 +195,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
 
-            throw new Exception(ex.Message);
+            throw ex;
         }
     }
 
