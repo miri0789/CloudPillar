@@ -53,7 +53,7 @@ public class DeviceConnectService : IDeviceConnectService
         try
         {
             var retryPolicy = Policy.Handle<Exception>()
-                .WaitAndRetryAsync(_environmentsWrapper.retryPolicyExponent, retryAttempt => TimeSpan.FromSeconds(Math.Pow(_environmentsWrapper.retryPolicyBaseDelay, retryAttempt)),
+                .WaitAndRetryAsync(_environmentsWrapper.retryPolicyExponent, retryAttempt => TimeSpan.FromSeconds(_environmentsWrapper.retryPolicyBaseDelay),
                 (ex, time) => _logger.Warn($"Failed to send message. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
             await retryPolicy.ExecuteAsync(async () => await _deviceClientWrapper.SendAsync(serviceClient, deviceId, c2dMessage));
             _logger.Info($"Blobstreamer SendMessage success. message title: {c2dMessage.MessageId}");

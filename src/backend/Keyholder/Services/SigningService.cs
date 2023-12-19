@@ -171,23 +171,22 @@ public class SigningService : ISigningService
         {
             using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
             {
-                var twin = await registryManager.GetTwinAsync(deviceId);
+                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-
-                TwinAction[] changeSpecData = GetTwinActionsByName(twinDesiredChangeSpec.Patch, propName);
-
-                var updatedArray = new List<TwinAction>(changeSpecData);
-                var action = (DownloadAction)updatedArray[actionIndex];
-                action.Sign = fileSign;
+                var desiredProp = typeof(TwinPatch).GetProperty(propName);
+                var desiredValue = (TwinAction[])desiredProp?.GetValue(twinDesiredChangeSpec.Patch)!;
+                ((DownloadAction)desiredValue[actionIndex]).Sign = fileSign;
+                desiredProp?.SetValue(twinDesiredChangeSpec.Patch, desiredValue);
 
                 var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                twinDesired.ChangeSign = await SignData(dataToSign);
-                changeSpecData = updatedArray.ToArray();
-                var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
+                twinDesired.ChangeSign = await SignData(dataToSign);                
+
+                var twinDesiredJson = twinDesired.ConvertToJObject().ToString();
                 twin.Properties.Desired = new TwinCollection(twinDesiredJson);
 
-                await registryManager.UpdateTwinAsync(deviceId, twin, twin.ETag);
+                await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
                 _logger.Info($"Recipe: {actionIndex} has been successfully changed. DeviceId: {deviceId} ");
             }
         }
@@ -197,29 +196,4 @@ public class SigningService : ISigningService
         }
     }
 
-    private TwinAction[] GetTwinActionsByName(TwinPatch petch, string propName)
-    {
-        TwinAction[] changeSpecData;// = twinDesiredChangeSpec.Patch[propName] as TwinAction[] ?? new TwinAction[0];
-        switch (propName)
-        {
-            case nameof(petch.TransitPackage):
-                changeSpecData = petch.TransitPackage;
-                break;
-            case nameof(petch.PostInstallConfig):
-                changeSpecData = petch.PostInstallConfig;
-                break;
-            case nameof(petch.PreInstallConfig):
-                changeSpecData = petch.PreInstallConfig;
-                break;
-            case nameof(petch.PreTransitConfig):
-                changeSpecData = petch.PreTransitConfig;
-                break;
-            case nameof(petch.InstallSteps):
-                changeSpecData = petch.InstallSteps;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(propName), propName, null);
-        }
-        return changeSpecData;
-    }
 }
