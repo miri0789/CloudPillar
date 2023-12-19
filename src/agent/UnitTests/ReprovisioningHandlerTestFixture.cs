@@ -79,7 +79,7 @@ public class ReprovisioningHandlerTestFixture
         _x509ProviderMock.Object,
         _loggerMock.Object);
 
-        temporaryCertificateName = $"{GetCertificatePrefix()}{CertificateConstants.TEMPORARY_CERTIFICATE_NAME}";
+        temporaryCertificateName = $"{GetCertificatePrefix()}{ProvisioningConstants.TEMPORARY_CERTIFICATE_NAME}";
 
     }
 
@@ -110,7 +110,7 @@ public class ReprovisioningHandlerTestFixture
     public async Task HandleReprovisioningMessageAsync_InvalidCertificatePrefix_ThrowException()
     {
 
-        _certificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
+        _certificate.FriendlyName = ProvisioningConstants.TEMPORARY_CERTIFICATE_NAME;
         SetupX509CertificateWrapperMock();
 
         Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.HandleReprovisioningMessageAsync(It.IsAny<Message>(), It.IsAny<ReprovisioningMessage>(), CancellationToken.None));

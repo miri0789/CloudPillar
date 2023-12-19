@@ -43,7 +43,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        temporaryCertificateName = $"{_authenticationSettings.GetCertificatePrefix()}{CertificateConstants.TEMPORARY_CERTIFICATE_NAME}";
+        temporaryCertificateName = $"{_authenticationSettings.GetCertificatePrefix()}{ProvisioningConstants.TEMPORARY_CERTIFICATE_NAME}";
     }
     public async Task HandleReprovisioningMessageAsync(Message recivedMessage, ReprovisioningMessage message, CancellationToken cancellationToken)
     {

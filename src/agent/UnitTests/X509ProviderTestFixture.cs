@@ -57,7 +57,7 @@ public class X509ProviderTestFixture
         _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings() { CertificatePrefix = null, Environment = ENVITOMENT });
         CreateTarget();
 
-        var subjectName = $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}-{ENVITOMENT}-{DEVICE_ID}";
+        var subjectName = $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{ProvisioningConstants.CLOUD_PILLAR_SUBJECT}-{ENVITOMENT}-{DEVICE_ID}";
         var certificate = _target.GenerateCertificate(DEVICE_ID, SECRET_KEY, EXPIRED_DAYS);
 
         Assert.AreEqual(certificate.Subject, subjectName);
