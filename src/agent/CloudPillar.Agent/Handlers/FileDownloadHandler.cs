@@ -1,12 +1,10 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Services;
-using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Handlers;
@@ -216,6 +214,10 @@ public class FileDownloadHandler : IFileDownloadHandler
         var filePath = GetDestinationPath(file);
         try
         {
+            if (!string.IsNullOrWhiteSpace(message.Error))
+            {
+                throw new Exception($"Backend error: {message.Error}");
+            }
             if (!file.Stopwatch.IsRunning)
             {
                 HandleFirstMessageAsync(file, message);

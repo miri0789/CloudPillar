@@ -22,11 +22,10 @@ public class FirmwareUpdateService : IFirmwareUpdateService
 
     public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)
     {
-        var blobSize = await GetBlobSize(data.FileName);
-        ArgumentNullException.ThrowIfNull(blobSize);
-
         try
         {
+            var blobSize = await GetBlobSize(data.FileName);
+            ArgumentNullException.ThrowIfNull(blobSize);
             long rangeSize = GetRangeSize((long)blobSize, data.ChunkSize);
             var rangesCount = Math.Ceiling((decimal)blobSize / rangeSize);
             if (data.EndPosition != null)
@@ -47,20 +46,38 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 while (offset < blobSize)
                 {
                     _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
-                    var requests = new List<Task>();
+                    var requests = new List<Task<bool>>();
                     for (var i = 0; i < 1 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                     {
                         string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
-                        requests.Add(_httpRequestorService.SendRequest(requestUrl, HttpMethod.Post));
+                        requests.Add(_httpRequestorService.SendRequest<bool>(requestUrl, HttpMethod.Post));
                     }
                     await Task.WhenAll(requests);
+                    if (requests.Any(task => !task.Result))
+                    {
+                        _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed to send range.");
+                        break;
+                    }
                 }
             }
         }
         catch (Exception ex)
         {
             _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
+            await SendRangeError(deviceId, data.FileName, data.ActionIndex, ex.Message);
+        }
+    }
 
+    private async Task SendRangeError(string deviceId, string fileName, int actionIndex, string error)
+    {
+        try
+        {
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/rangeError?deviceId={deviceId}&fileName={fileName}&actionIndex={actionIndex}&error={error}";
+            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"FirmwareUpdateService SendRangeError failed. Message: {ex.Message}");
         }
     }
 
@@ -74,8 +91,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         }
         catch (Exception ex)
         {
-            _logger.Error($"FirmwareUpdateService GetBlobSize failed. Message: {ex.Message}");
-            return null;
+            throw ex;
         }
     }
 
