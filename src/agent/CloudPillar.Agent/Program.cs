@@ -19,26 +19,6 @@ var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Cons
 var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
-var isStrictmode = builder.Configuration.GetValue("StrictModeSettings:StrictMode", false);
-var activeUrls = new string[] { httpsUrl };
-if (!isStrictmode)
-{
-    activeUrls.Append(httpUrl);
-}
-builder.WebHost.UseUrls(activeUrls);
-
-
-
-builder.Services.AddCors(options =>
-        {
-            options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
-            {
-                b.WithOrigins(activeUrls)
-                               .AllowAnyHeader()
-                               .AllowAnyMethod();
-            });
-        });
-
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
@@ -74,8 +54,6 @@ builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
 
-var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
-builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
 builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
@@ -83,8 +61,31 @@ builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
 builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
 
+var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
+builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
+
+var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
+var activeUrls = new string[] { httpsUrl };
+if (!isStrictmode)
+{
+    activeUrls.Append(httpUrl);
+}
+builder.WebHost.UseUrls(activeUrls);
+
+builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
+            {
+                b.WithOrigins(activeUrls)
+                               .AllowAnyHeader()
+                               .AllowAnyMethod();
+            });
+        });
+
+
 var servcieProvider = builder.Services.BuildServiceProvider();
 var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
+
 builder.WebHost.UseKestrel(options =>
 {
     if (!isStrictmode)
