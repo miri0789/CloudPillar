@@ -110,7 +110,9 @@ public class FileDownloadHandler : IFileDownloadHandler
             ActionIndex = actionToReport.ReportIndex,
             FileName = ((DownloadAction)actionToReport.TwinAction).Source,
             BufferSize = _signFileSettings.BufferSize,
-            PropName = actionToReport.ReportPartName
+            PropName = actionToReport.ReportPartName,
+            ChangeSpec = actionToReport.ChangeSpecKey
+            
         };
         await _d2CMessengerHandler.SendSignFileEventAsync(signFileEvent, cancellationToken);
     }

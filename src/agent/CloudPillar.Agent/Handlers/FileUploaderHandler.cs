@@ -177,7 +177,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
+                    // await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                     await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
                     break;
                 default:

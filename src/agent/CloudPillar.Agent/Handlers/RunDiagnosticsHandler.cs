@@ -172,7 +172,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         string downloadChecksum = await GetFileCheckSumAsync(downloadFilePath);
 
         var isEqual = uploadCheckSum?.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase) ?? false;
-        
+
         if (isEqual == true)
         {
             _logger.Info("Upload file is equal to Download file");
@@ -203,7 +203,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
     private string CreateTempFile()
     {
-        string filePath = _fileStreamerWrapper.GetTempPath() + _guidWrapper.CreateNewGuid() + DIAGNOSTICS_EXTENSION;
+        string filePath = $"{_fileStreamerWrapper.GetTempPath()}/{_guidWrapper.CreateNewGuid()}{DIAGNOSTICS_EXTENSION}";
         if (!_fileStreamerWrapper.FileExists(filePath))
         {
             using (FileStream fileStream = _fileStreamerWrapper.CreateStream(filePath, FileMode.Create))
