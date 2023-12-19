@@ -82,7 +82,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Complete message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} failed");
+                        _logger.Error($"Complete message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} failed message {ex.Message}");
                     }
                 }
             }
