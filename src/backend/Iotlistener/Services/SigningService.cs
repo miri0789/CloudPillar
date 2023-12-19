@@ -13,7 +13,7 @@ public class SigningService : ISigningService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
     public SigningService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
-    { 
+    {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
@@ -32,4 +32,19 @@ public class SigningService : ISigningService
         }
     }
 
+    public async Task CreateFileKeySignature(string deviceId, SignFileEvent signFileEvent)
+    {
+        try
+        {
+            string blobRequestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/CalculateHash?fileName={signFileEvent.FileName}&bufferSize={signFileEvent.BufferSize}";
+            var signatureFileBytes = await _httpRequestorService.SendRequest<string>(blobRequestUrl, HttpMethod.Get);
+
+            string signRequestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createFileSign?deviceId={deviceId}&propName={signFileEvent.PropName}&actionIndex={signFileEvent.ActionIndex}";
+            await _httpRequestorService.SendRequest(signRequestUrl, HttpMethod.Post, signatureFileBytes);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"SigningService CreateTwinKeySignature failed.", ex);
+        }
+    }
 }

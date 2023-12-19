@@ -134,6 +134,10 @@ public class AgentEventProcessor : IEventProcessor
                         var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;
                         await _signingService.CreateTwinKeySignature(deviceId, signTwinKeyEvent);
                         break;
+                    case D2CMessageType.SignFileKey:
+                        var signFileKeyEvent = JsonSerializer.Deserialize<SignFileEvent>(data)!;
+                        await _signingService.CreateFileKeySignature(deviceId, signFileKeyEvent);
+                        break;
                     case D2CMessageType.StreamingUploadChunk:
                         var streamingUploadChunkEvent = JsonSerializer.Deserialize<StreamingUploadChunkEvent>(data)!;
                         await _streamingUploadChunkService.UploadStreamToBlob(streamingUploadChunkEvent, deviceId);

@@ -155,9 +155,9 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         try
         {
-            if (actionToReport.TwinReport.Progress > 0)
+            if (uploadAction.Method == FileUploadMethod.Blob && actionToReport.TwinReport.Status == StatusType.InProgress)
             {
-                notification.CorrelationId = actionToReport.TwinReport.CorrelationId;
+                notification.CorrelationId ??= actionToReport.TwinReport.CorrelationId;
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
             var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
@@ -177,6 +177,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
                     break;
                 case FileUploadMethod.Stream:
+                    await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                     await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, sasUriResponse.CorrelationId, cancellationToken, isRunDiagnostics);
                     break;
                 default:
@@ -194,7 +195,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
 
-            throw new Exception(ex.Message);
+            throw ex;
         }
     }
 
