@@ -288,7 +288,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         try
         {
             await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
+            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success || file.Report.Status == StatusType.SentForSignature)
             {
                 RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
             }
