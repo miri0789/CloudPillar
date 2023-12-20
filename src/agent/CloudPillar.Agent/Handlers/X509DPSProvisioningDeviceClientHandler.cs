@@ -152,7 +152,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         catch (Exception ex)
         {
-            _logger.Error($"Exception during IoT Hub connection: ", ex);
+            _logger.Error($"Exception during IoT Hub connection message: {ex.Message}");
             return false;
         }
     }
@@ -169,7 +169,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         catch (Exception ex)
         {
-            _logger.Error("ProvisioningAsync, Complete message failed", ex);
+            _logger.Error("ProvisioningAsync, Complete message failed message: {ex.Message}");
         }
     }
 }

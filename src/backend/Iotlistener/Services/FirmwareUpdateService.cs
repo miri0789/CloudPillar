@@ -47,7 +47,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 {
                     _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
                     var requests = new List<Task<bool>>();
-                    for (var i = 0; i < 1 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
+                    for (var i = 0; i < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                     {
                         string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
                         requests.Add(_httpRequestorService.SendRequest<bool>(requestUrl, HttpMethod.Post));
