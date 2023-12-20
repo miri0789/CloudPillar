@@ -37,7 +37,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             else
             {
                 long offset = data.StartPosition;
-                var existRanges = GetExistRangesList(data.CompletedRanges);
+                var existRanges = data.CompletedRanges.Split(',').ToList();
                 var rangeIndex = 0;
                 while (offset < blobSize)
                 {
@@ -45,7 +45,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                     var requests = new List<Task<bool>>();
                     for (var i = 0; requests.Count < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                     {
-                        if (existRanges.IndexOf(rangeIndex) == -1)
+                        if (existRanges.IndexOf(rangeIndex.ToString()) == -1)
                         {
                             string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
                             requests.Add(_httpRequestorService.SendRequest<bool>(requestUrl, HttpMethod.Post));
@@ -110,20 +110,5 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         return blobSize;
     }
 
-
-    private List<int> GetExistRangesList(string rangesString)
-    {
-        var ranges = new List<int>();
-        if (!string.IsNullOrWhiteSpace(rangesString))
-        {
-            ranges = rangesString.Split(',')
-                .SelectMany(part => part.Contains('-')
-                    ? Enumerable.Range(
-                        int.Parse(part.Split('-')[0]),
-                        int.Parse(part.Split('-')[1]) - int.Parse(part.Split('-')[0]) + 1)
-                    : new[] { int.Parse(part) })
-                .ToList();
-        }
-        return ranges;
-    }
+  
 }

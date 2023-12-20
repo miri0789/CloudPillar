@@ -121,7 +121,8 @@ public class FileDownloadHandler : IFileDownloadHandler
         if (isSameDownloadBytes)
         {
             _logger.Info($"CheckIfNotRecivedDownloadMsgToFile no change in download bytes, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex, existRanges);
+            var ranges = string.Join(",", GetExistRangesList(existRanges));
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex, ranges);
         }
     }
 
