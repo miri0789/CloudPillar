@@ -89,7 +89,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 0, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
         }
 
@@ -100,7 +100,7 @@ namespace CloudPillar.Agent.Tests
             action.Report.CompletedRanges = "0-5,8,10";
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, "6", It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 6, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
         }
 
@@ -109,7 +109,7 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             _d2CMessengerHandlerMock.Setup(dc =>
-                    dc.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()))
+                    dc.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<long?>(), It.IsAny<long?>()))
                     .ThrowsAsync(new Exception());
             await InitFileDownloadAsync(action);
 
@@ -220,7 +220,7 @@ namespace CloudPillar.Agent.Tests
                 RangeEndPosition = rangeEndPosition
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, "6", rangeStartPosition, rangeEndPosition), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 6, rangeStartPosition, rangeEndPosition), Times.Once);
 
         }
 
