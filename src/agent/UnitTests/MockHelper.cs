@@ -58,12 +58,12 @@ public static class MockHelper
         return new Twin(twinProp);
     }
 
-    public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays)
+    public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays, string certificatePrefix)
     {
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}{deviceId}", rsa
+                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{certificatePrefix}{deviceId}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(secretKey);
