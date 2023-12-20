@@ -32,10 +32,9 @@ public class StateMachineListenerService : BackgroundService
         {
             var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
             ArgumentNullException.ThrowIfNull(dpsProvisioningDeviceClientHandler);
-            await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
-
             var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
             ArgumentNullException.ThrowIfNull(StateMachineHandlerService);
+            await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
             await StateMachineHandlerService.InitStateMachineHandlerAsync();
         }
     }
@@ -61,7 +60,7 @@ public class StateMachineListenerService : BackgroundService
                 await SetReadyAsync();
                 break;
             case DeviceStateType.Busy:
-                await SetBusyAsync();
+                await CancelOperationsAsync();
                 break;
             default:
                 break;
@@ -83,14 +82,14 @@ public class StateMachineListenerService : BackgroundService
         _cts = new CancellationTokenSource();
         if (_c2DEventSubscriptionSession != null && _twinHandler != null)
         {
-            var subscribeTask = _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
-            var handleTwinTask = _twinHandler.HandleTwinActionsAsync(_cts.Token);
-            await Task.WhenAll(subscribeTask, handleTwinTask);
+            // handle twin need to be before recived messages
+            await _twinHandler.HandleTwinActionsAsync(_cts.Token);
+            await _c2DEventSubscriptionSession.ReceiveC2DMessagesAsync(_cts.Token, false);
         }
     }
 
 
-    private async Task SetBusyAsync()
+    private async Task CancelOperationsAsync()
     {
         _cts?.Cancel();
         await _deviceClientWrapper.DisposeAsync();

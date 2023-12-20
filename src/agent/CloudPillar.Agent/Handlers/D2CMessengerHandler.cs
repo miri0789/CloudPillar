@@ -55,11 +55,12 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         }
     }
 
-    public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
+    public async Task ProvisionDeviceCertificateEventAsync(string prefix, X509Certificate2 certificate, CancellationToken cancellationToken)
     {
         var ProvisionDeviceCertificateEvent = new ProvisionDeviceCertificateEvent()
         {
-            Data = certificate.Export(X509ContentType.Cert)
+            Data = certificate.Export(X509ContentType.Cert),
+            CertificatePrefix = prefix
         };
 
         await SendMessageAsync(ProvisionDeviceCertificateEvent, cancellationToken);

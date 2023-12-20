@@ -25,6 +25,7 @@ public class RegistrationTestFixture
 
     private const string DEVICE_ID = "deviceId";
     private const string SECRET_KEY = "secretKey";
+    private const string CERTIFICATE_PREFIX = "UnitTest-CP-";
 
 
     [SetUp]
@@ -40,7 +41,7 @@ public class RegistrationTestFixture
         _environmentsWrapperMock.Setup(c => c.dpsConnectionString).Returns("dpsConnectionString");
         _environmentsWrapperMock.Setup(c => c.iothubConnectionString).Returns("HostName=unitTest;SharedAccessKeyName=iothubowner;");
 
-        var enrollment = new IndividualEnrollment("", new SymmetricKeyAttestation("", ""));
+        var enrollment = new IndividualEnrollment(CERTIFICATE_PREFIX, new SymmetricKeyAttestation("", ""));
         _x509CertificateWrapperMock.Setup(x => x.CreateCertificate(It.IsAny<byte[]>())).Returns(new X509Certificate2(GenerateCertificate().Export(X509ContentType.Cert)));
         _individualEnrollmentWrapperMock.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<Attestation>())).Returns(enrollment);
         _provisioningServiceClientWrapperMock.Setup(x => x.CreateOrUpdateIndividualEnrollmentAsync(It.IsAny<ProvisioningServiceClient>(), It.IsAny<IndividualEnrollment>())).ReturnsAsync(enrollment);
@@ -83,21 +84,29 @@ public class RegistrationTestFixture
     [Test]
     public async Task ProvisionDeviceCertificateAsync_ValidParameter_MessageSendToAgent()
     {
-        await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, new byte[100]);
+        await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, CERTIFICATE_PREFIX, new byte[100]);
 
         _deviceConnectServiceMock.Verify(x => x.SendDeviceMessageAsync(It.IsAny<Message>(), It.IsAny<string>()), Times.Once);
     }
 
     [Test]
+    public async Task ProvisionDeviceCertificateAsync_CertificatePrefix_CreateEntollmentWithPrefix()
+    {
+        await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, CERTIFICATE_PREFIX, new byte[100]);
+
+        _provisioningServiceClientWrapperMock.Verify(x => x.CreateOrUpdateIndividualEnrollmentAsync(It.IsAny<ProvisioningServiceClient>(), It.Is<IndividualEnrollment>(y => y.RegistrationId.StartsWith(CERTIFICATE_PREFIX))), Times.Once);
+    }
+
+    [Test]
     public async Task ProvisionDeviceCertificateAsync_InvalidCertificateParameter_ThrowException()
     {
-        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, null));
+        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.ProvisionDeviceCertificateAsync(DEVICE_ID, CERTIFICATE_PREFIX, null));
 
     }
     [Test]
     public async Task ProvisionDeviceCertificateAsync_InvalidDeviceIdParameter_ThrowException()
     {
-        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.ProvisionDeviceCertificateAsync(null, new byte[100]));
+        Assert.ThrowsAsync<ArgumentNullException>(async () => await _target.ProvisionDeviceCertificateAsync(null, CERTIFICATE_PREFIX, new byte[100]));
     }
 
     private X509Certificate2 GenerateCertificate()
@@ -105,7 +114,7 @@ public class RegistrationTestFixture
         using (RSA rsa = RSA.Create(4096))
         {
             var request = new CertificateRequest(
-                $"CN=test", rsa
+                $"CN={CERTIFICATE_PREFIX}{DEVICE_ID}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             var certificate = request.CreateSelfSigned(

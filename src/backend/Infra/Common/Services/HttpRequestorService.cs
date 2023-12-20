@@ -68,6 +68,6 @@ public class HttpRequestorService : IHttpRequestorService
         }
 
         _logger.Error($"HTTP request failed: {response.ReasonPhrase}: {method}{url} {responseContent}");
-        throw new HttpRequestException($"HTTP request failed: {response.ReasonPhrase}", null, response.StatusCode);
+        throw new HttpRequestException($"HTTP request failed: {responseContent}", null, response.StatusCode);
     }
 }

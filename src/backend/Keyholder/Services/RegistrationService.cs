@@ -75,7 +75,7 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    public async Task ProvisionDeviceCertificateAsync(string deviceId, byte[] certificate)
+    public async Task ProvisionDeviceCertificateAsync(string deviceId, string prefix, byte[] certificate)
     {
         ArgumentNullException.ThrowIfNull(certificate);
         ArgumentException.ThrowIfNullOrEmpty(deviceId);
@@ -83,7 +83,7 @@ public class RegistrationService : IRegistrationService
         try
         {
             var cert = _x509CertificateWrapper.CreateCertificate(certificate);
-            var enrollment = await CreateEnrollmentAsync(cert, deviceId);
+            var enrollment = await CreateEnrollmentAsync(cert, deviceId, prefix);
             await SendReprovisioningMessageToAgentAsync(deviceId, enrollment);
         }
         catch (Exception ex)
@@ -93,12 +93,12 @@ public class RegistrationService : IRegistrationService
         }
     }
 
-    private async Task<IndividualEnrollment> CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId)
+    private async Task<IndividualEnrollment> CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId, string prefix)
     {
         ArgumentNullException.ThrowIfNull(certificate);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
         _loggerHandler.Debug($"CreateEnrollmentAsync for deviceId {deviceId}");
-        var enrollmentName = CertificateConstants.CLOUD_PILLAR_SUBJECT + deviceId;
+        var enrollmentName = prefix + deviceId;
         var provisioningServiceClient = _provisioningServiceClientWrapper.Create(_environmentsWrapper.dpsConnectionString);
 
 

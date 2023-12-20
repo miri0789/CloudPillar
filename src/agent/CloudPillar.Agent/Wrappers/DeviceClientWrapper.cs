@@ -130,7 +130,10 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
     public async Task DisposeAsync()
     {
-        await _deviceClient.DisposeAsync();
+        if (_deviceClient != null)
+        {
+            await _deviceClient.DisposeAsync();
+        }
     }
 
     public async Task<Twin> GetTwinAsync(CancellationToken cancellationToken)

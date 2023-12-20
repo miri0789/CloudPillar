@@ -61,7 +61,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         catch (Exception ex)
         {
             var err = $"CreateFileAsync error: {ex.Message}";
-            _logger.Error($"CreateFileAsync error: {ex.Message}", ex);
+            _logger.Error(err);
             throw new Exception(err);
         }
     }
@@ -84,7 +84,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         catch (Exception ex)
         {
             var err = $"UploadFileAsync error: {ex.Message}";
-            _logger.Error(err, ex);
+            _logger.Error(err);
             throw new Exception(err); ;
         }
     }
@@ -154,7 +154,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         catch (Exception ex)
         {
             var err = $"DeleteFileAsync error: {ex.Message}";
-            _logger.Error(err, ex);
+            _logger.Error(err);
             throw new Exception(err);
         }
     }

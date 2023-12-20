@@ -22,14 +22,15 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private readonly AuthenticationSettings _authenticationSettings;
     private readonly ILoggerHandler _logger;
 
-    public ReprovisioningHandler(IDeviceClientWrapper deviceClientWrapper,
+
+    public ReprovisioningHandler(
         IX509CertificateWrapper X509CertificateWrapper,
         IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
         ID2CMessengerHandler d2CMessengerHandler,
         ISHA256Wrapper sHA256Wrapper,
         IProvisioningServiceClientWrapper provisioningServiceClientWrapper,
         IOptions<AuthenticationSettings> options,
-        IX509Provider x509Provider, 
+        IX509Provider x509Provider,
         ILoggerHandler logger)
     {
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
@@ -49,7 +50,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var certificate = GetTempCertificate();
         ArgumentNullException.ThrowIfNull(certificate);
 
-        var deviceId = certificate.Subject.Replace($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{CertificateConstants.CLOUD_PILLAR_SUBJECT}", string.Empty);
+        var deviceId = certificate.Subject.Replace($"{ProvisioningConstants.CERTIFICATE_SUBJECT}{_authenticationSettings.GetCertificatePrefix()}", string.Empty);
         ArgumentNullException.ThrowIfNullOrEmpty(deviceId);
 
         string iotHubHostName = await GetIotHubHostNameAsync(message.DPSConnectionString, message.Data, cancellationToken);
@@ -64,8 +65,9 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var data = JsonConvert.DeserializeObject<AuthenticationKeys>(Encoding.Unicode.GetString(message.Data));
         ArgumentNullException.ThrowIfNull(data);
         var certificate = _x509Provider.GenerateCertificate(data.DeviceId, data.SecretKey, _authenticationSettings.CertificateExpiredDays);
+        ArgumentNullException.ThrowIfNull(certificate);
         InstallTemporaryCertificate(certificate, data.SecretKey);
-        await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(certificate,cancellationToken);
+        await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(_authenticationSettings.GetCertificatePrefix(), certificate, cancellationToken);
     }
 
 
@@ -133,7 +135,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         var privateCertificate = _x509CertificateWrapper.CreateFromBytes(pfxBytes, passwordString, X509KeyStorageFlags.PersistKeySet);
 
-        privateCertificate.FriendlyName = CertificateConstants.TEMPORARY_CERTIFICATE_NAME;
+        privateCertificate.FriendlyName = _authenticationSettings.GetTemporaryCertificate();
 
         using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite))
         {
@@ -149,7 +151,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
             X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
 
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.FriendlyName == CertificateConstants.TEMPORARY_CERTIFICATE_NAME)
+               .Where(cert => cert.FriendlyName == _authenticationSettings.GetTemporaryCertificate())
                .FirstOrDefault();
 
             if (filteredCertificate == null)
@@ -165,8 +167,8 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var certificates = _x509CertificateWrapper.GetCertificates(store);
 
         var filteredCertificates = certificates?.Cast<X509Certificate2>()
-           .Where(cert => string.IsNullOrEmpty(thumbprint) ? cert.FriendlyName == CertificateConstants.TEMPORARY_CERTIFICATE_NAME :
-            (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT)
+           .Where(cert => string.IsNullOrEmpty(thumbprint) ? cert.FriendlyName == _authenticationSettings.GetTemporaryCertificate() :
+            (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix())
            && cert.Thumbprint != thumbprint))
            .ToArray();
 

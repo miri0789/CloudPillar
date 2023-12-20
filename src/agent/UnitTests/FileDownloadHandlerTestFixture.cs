@@ -87,7 +87,7 @@ namespace CloudPillar.Agent.Tests
         public async Task InitFileDownloadAsync_NewDownload_SendFirmwareUpdateEvent()
         {
             var action = initAction();
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
 
             _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 0, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
@@ -98,7 +98,7 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             action.Report.CompletedRanges = "0-5,8,10";
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
 
             _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 6, It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
@@ -111,7 +111,7 @@ namespace CloudPillar.Agent.Tests
             _d2CMessengerHandlerMock.Setup(dc =>
                     dc.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<long?>(), It.IsAny<long?>()))
                     .ThrowsAsync(new Exception());
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
 
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
@@ -122,7 +122,7 @@ namespace CloudPillar.Agent.Tests
         public async Task HandleDownloadMessageAsync_PartiallyData_ReportInprogressWithProgress()
         {
             var action = initAction();
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
 
             var message = new DownloadBlobChunkMessage
             {
@@ -146,7 +146,7 @@ namespace CloudPillar.Agent.Tests
         public async Task HandleDownloadMessageAsync_Failure_DeleteFile()
         {
             var action = initAction();
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
 
             var message = new DownloadBlobChunkMessage
             {
@@ -169,11 +169,11 @@ namespace CloudPillar.Agent.Tests
         public async Task HandleDownloadMessageAsync_InProgressDeletedFile_InitProgress()
         {
             var action = initAction();
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             action.Report.Progress = 50;
             action.Report.Status = StatusType.InProgress;
             _fileStreamerWrapperMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(false);
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             _twinActionsHandlerMock.Verify(
                            x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                            item.Any(rep => rep.TwinReport.Status == StatusType.Pending && rep.TwinReport.Progress == 0))
@@ -190,10 +190,10 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(f => f.Combine(It.IsAny<string>(), It.IsAny<string>())).Returns(action.Action.Source);
             _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             action.Report.Status = StatusType.Unzip;
             _fileStreamerWrapperMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(true);
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             _fileStreamerWrapperMock.Verify(x => x.UnzipFileAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
 
@@ -204,7 +204,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
             action.Report.CompletedRanges = "0-5,7";
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             var rangeStartPosition = 123;
             var rangeEndPosition = 456;
             var message = new DownloadBlobChunkMessage
@@ -230,7 +230,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
             action.Report.CompletedRanges = "0-4,7";
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             var rangeStartPosition = 123;
             var rangeEndPosition = 456;
             var message = new DownloadBlobChunkMessage
@@ -261,7 +261,7 @@ namespace CloudPillar.Agent.Tests
             _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
             action.Report.CompletedRanges = "0-5,7";
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             var message = new DownloadBlobChunkMessage
             {
                 ActionIndex = action.ActionReported.ReportIndex,
@@ -304,7 +304,7 @@ namespace CloudPillar.Agent.Tests
         public async Task HandleDownloadMessageAsync_CheckMaxSizeStrictModeException_ReportFailure()
         {
             var action = initAction();
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             _strictModeHandlerMock.Setup(th => th.CheckSizeStrictMode(It.IsAny<TwinActionType>(), It.IsAny<long>(), It.IsAny<string>())).Throws<ArgumentException>();
 
             var message = new DownloadBlobChunkMessage
@@ -328,7 +328,7 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             action.Action.DestinationPath = "";
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
@@ -342,7 +342,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             action.Action.Unzip = true;
 
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
@@ -357,7 +357,7 @@ namespace CloudPillar.Agent.Tests
             action.Action.Unzip = true;
 
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".txt");
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
 
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
@@ -373,8 +373,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
 
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns("");
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
-
+            await InitFileDownloadAsync(action);
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
@@ -388,10 +387,35 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
 
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".txt");
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             _fileStreamerWrapperMock.Verify(
                 x => x.CreateDirectory(It.IsAny<string>()), Times.Once);
 
+        }
+        public async Task HandleDownloadMessageAsync_MessageWithBackendError_ReportFailure()
+        {
+            var action = initAction();
+            await InitFileDownloadAsync(action);
+            _strictModeHandlerMock.Setup(th => th.CheckSizeStrictMode(It.IsAny<TwinActionType>(), It.IsAny<long>(), It.IsAny<string>())).Throws<ArgumentException>();
+            var errMsg = "error msg";
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionIndex = action.ActionReported.ReportIndex,
+                FileName = action.Action.Source,
+                Error = errMsg
+            };
+            await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+            _twinActionsHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
+                item.Any(rep => rep.TwinReport.Status == StatusType.Failed && rep.TwinReport.ResultText == $"Backend error: {errMsg}"))
+            , It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+        private async Task InitFileDownloadAsync(FileDownload action)
+        {
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await Task.Delay(100); // for init that run in background
         }
 
     }

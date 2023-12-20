@@ -19,7 +19,7 @@ controllers:
     - name: RetryPolicyBaseDelay
       value: "20"
     - name: RetryPolicyExponent
-      value: "5"
+      value: "30"
     # - name: PARTITION_ID
     #   valueFrom:
     #     fieldRef:
