@@ -59,7 +59,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         {
             var bytes = new Byte[_runDiagnosticsSettings.FileSizeBytes];
             new Random().NextBytes(bytes);
-            
+
             string diagnosticsFilePath = Path.Combine(_fileStreamerWrapper.GetTempPath(), $"{_guidWrapper.CreateNewGuid()}{DIAGNOSTICS_EXTENSION}");
             using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.OpenOrCreate))
             {
@@ -99,7 +99,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         {
             var err = $"UploadFileAsync error: {ex.Message}";
             _logger.Error(err, ex);
-            throw new Exception(err); ;
+            throw new Exception(err);
         }
     }
 

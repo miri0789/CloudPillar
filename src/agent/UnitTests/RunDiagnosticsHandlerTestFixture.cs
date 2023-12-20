@@ -36,7 +36,7 @@ public class RunDiagnosticsHandlerTestFixture
     [SetUp]
     public void Setup()
     {
-        filePath = $"{uploadFilePath}/{guid}{DIAGNOSTICS_EXTENSION}";
+        filePath = Path.Combine(uploadFilePath, $"{guid}{DIAGNOSTICS_EXTENSION}");
 
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
