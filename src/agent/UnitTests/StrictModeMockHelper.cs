@@ -10,6 +10,10 @@ public static class StrictModeMockHelper
 
     public static StrictModeSettings SetStrictModeSettingsValueMock()
     {
+        var globalPatterns = new List<string>
+        {
+            "*.txt"
+        };
         var uploadRestrictionDetails = new FileRestrictionDetails()
         {
             Id = "LogUploadAllow",
@@ -39,6 +43,7 @@ public static class StrictModeMockHelper
         return new StrictModeSettings()
         {
             StrictMode = true,
+            GlobalPatterns = globalPatterns,
             FilesRestrictions = new List<FileRestrictionDetails> { uploadRestrictionDetails, downloadRestrictionDetails }
         };
 

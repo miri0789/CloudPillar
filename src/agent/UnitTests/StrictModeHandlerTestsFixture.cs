@@ -110,9 +110,20 @@ namespace CloudPillar.Agent.Handlers.Tests
         }
 
         [Test]
-        public void CheckFileAccessPermissions_NotExistsZone_ExitingTheFunction()
+        public void CheckFileAccessPermissions_NotExistsZoneWithGlobalPatterns_ExitingTheFunction()
         {
             var fileName = "notExistsZone";
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
+            mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+
+        }
+        [Test]
+        public void CheckFileAccessPermissions_NotExistsZoneAndNoGlobalPatterns_ExitingTheFunction()
+        {
+            var fileName = "notExistsZone";
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>();
+
             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
             mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
@@ -120,10 +131,21 @@ namespace CloudPillar.Agent.Handlers.Tests
         }
 
         [Test]
-        public void CheckFileAccessPermissions_NotAllowPatterns_ExitingTheFunction()
+        public void CheckFileAccessPermissions_NotAllowPatternsWithGlobalPatterns_UseGlobalPatterns()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
             mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>();
+
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
+            mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        }
+        [Test]
+        public void CheckFileAccessPermissions_NotAllowPatternsAndNoGlobalPattern_ExitingTheFunction()
+        {
+            var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>();
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>();
 
             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
@@ -134,9 +156,11 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void CheckFileAccessPermissions_EmptyPatternString_ThrowException()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>();
+
             mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>() { "" };
 
-             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
             mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
         [Test]

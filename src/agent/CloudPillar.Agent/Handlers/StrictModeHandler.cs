@@ -64,8 +64,9 @@ public class StrictModeHandler : IStrictModeHandler
 
         var zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, actionType);
 
-        if (zoneRestrictions is null)
+        if (zoneRestrictions is null && _strictModeSettings.GlobalPatterns is null)
         {
+            _logger.Info("No restrictions were found");
             return;
         }
 
@@ -76,7 +77,7 @@ public class StrictModeHandler : IStrictModeHandler
             return;
         }
 
-        bool isMatch = IsMatch((zoneRestrictions.Root ?? "").ToLower(), verbatimFileName.ToLower(), allowPatterns.ToArray());
+        bool isMatch = IsMatch((zoneRestrictions?.Root ?? "").ToLower(), verbatimFileName.ToLower(), allowPatterns.ToArray());
         if (!isMatch)
         {
             _logger.Error("Denied by the lack of local allowance");
