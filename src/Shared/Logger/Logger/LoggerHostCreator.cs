@@ -23,8 +23,7 @@ namespace Shared.Logger
             builder.Services.AddHttpContextAccessor();
             IConfigurationRefresher? refresher = null;
             string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
-            var fileName = "log4net.config";
-            var lo4NetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, fileName); 
+            var lo4NetPath = "log4net.config";
             if (!File.Exists(lo4NetPath))
             {
                 throw new Exception("no log4net config file");

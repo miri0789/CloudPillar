@@ -13,8 +13,10 @@ using System.Runtime.InteropServices;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
 
+var workingDir = args != null && args.Length > 0 ? args[0]: Directory.GetCurrentDirectory();
+Environment.CurrentDirectory = workingDir;
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
-var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
+var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args), args);
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
 var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var httpUrl = $"http://localhost:{port}";
@@ -34,11 +36,21 @@ builder.Services.AddCors(options =>
             });
         });
 
+var serviceName = builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
+
+bool runAsService = args != null && args.Length > 1 && args[1] == "--winsrv";
+if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    builder.Services.AddScoped<IWindowsServiceWrapper, WindowsServiceWrapper>();
+    var windowsServiceWrapper = builder.Services.BuildServiceProvider().GetRequiredService<IWindowsServiceWrapper>();
+    windowsServiceWrapper?.InstallWindowsService(serviceName, workingDir);
+    Environment.Exit(0);
+}
+
 builder.Services.AddWindowsService(options =>
 {
-    options.ServiceName = Constants.AGENT_SERVICE_NAME;
+    options.ServiceName = serviceName;
 });
-builder.Host.UseWindowsService();
 
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
@@ -75,7 +87,6 @@ builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
-builder.Services.AddScoped<IWindowsServiceWrapper, WindowsServiceWrapper>();
 builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
 
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
@@ -111,14 +122,6 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
-bool runAsService = args != null && args.Length > 0 && args[0] == "--winsrv";
-if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-{
-    var windowsServiceWrapper = app.Services.GetService<IWindowsServiceWrapper>();
-    windowsServiceWrapper?.InstallWindowsService();
-    Environment.Exit(0);
-}
 
 app.UseSwagger();
 app.UseSwaggerUI();

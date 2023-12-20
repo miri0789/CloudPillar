@@ -19,9 +19,10 @@ namespace CloudPillar.Agent.Handlers.Logger
                 builder = WebApplication.CreateBuilder(args);
             }
             builder.Services.AddHttpContextAccessor();
-            string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
-            var fileName = "log4net.config";
-            var lo4NetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, fileName); 
+            //string workingDir = args != null && args.Length > 0 ? args[0] : Directory.GetCurrentDirectory();
+            //builder.Configuration.SetBasePath(workingDir).AddJsonFile("appsettings.json");
+
+            var lo4NetPath = "log4net.config";
             if (!File.Exists(lo4NetPath))
             {
                 throw new Exception("no log4net config file");

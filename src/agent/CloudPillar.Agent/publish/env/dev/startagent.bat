@@ -6,8 +6,10 @@ if "%ARCHITECTURE%"=="" set ARCHITECTURE=win-x64
 shift
 set WINSEERV=%~1
 shift
+set WORKINGDIR=%~1
+shift
 
 :: Run the self-contained deployment
 
-..\..\%ARCHITECTURE%\CloudPillar.Agent.exe %WINSEERV% %*
+..\..\%ARCHITECTURE%\CloudPillar.Agent.exe %WORKINGDIR% %WINSEERV% %*
 

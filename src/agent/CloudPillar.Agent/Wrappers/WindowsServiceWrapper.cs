@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.ServiceProcess;
-using System.Threading.Tasks;
 using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Wrappers
@@ -46,40 +42,40 @@ namespace CloudPillar.Agent.Wrappers
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-        public void InstallWindowsService()
+        public void InstallWindowsService(string serviceName, string workingDirectory)
         {
-            if (ServiceExists(Constants.AGENT_SERVICE_NAME))
+            if (ServiceExists(serviceName))
             {
-                if (IsServiceRunning(Constants.AGENT_SERVICE_NAME))
+                if (IsServiceRunning(serviceName))
                 {
-                    if (StopService(Constants.AGENT_SERVICE_NAME))
+                    if (StopService(serviceName))
                     {
                         _logger.Info("Service stopped successfully.");
                     }
                     else
                     {
-                        _logger.Info("Failed to stop service.");
+                        _logger.Error("Failed to stop service.");
                     }
                 }
                 // delete existing service
-                if (DeleteExistingService(Constants.AGENT_SERVICE_NAME))
+                if (DeleteExistingService(serviceName))
                 {
                     _logger.Info("Service deleted successfully.");
                 }
                 else
                 {
-                    _logger.Info("Failed to delete service.");
+                    _logger.Error("Failed to delete service.");
                 }
             }
             
             // Service doesn't exist, so create and start it
-            if (CreateAndStartService())
+            if (CreateAndStartService(serviceName, workingDirectory))
             {
                 _logger.Info("Service created and started successfully.");
             }
             else
             {
-                _logger.Info("Failed to create and start service.");
+                _logger.Error("Failed to create and start service.");
             }
             
         }
@@ -110,7 +106,7 @@ namespace CloudPillar.Agent.Wrappers
 
             return success;
         }
-        private bool CreateAndStartService()
+        private bool CreateAndStartService(string serviceName, string workingDirectory)
         {
             IntPtr scm = OpenSCManager(null, null, SC_MANAGER_CREATE_SERVICE);
             if (scm == IntPtr.Zero)
@@ -118,9 +114,9 @@ namespace CloudPillar.Agent.Wrappers
                 throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
             }
 
-            string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+            string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName + " " + workingDirectory;
 
-            IntPtr svc = CreateService(scm, Constants.AGENT_SERVICE_NAME, Constants.AGENT_SERVICE_NAME, SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, null, null);
+            IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, null, null);
 
             if (svc == IntPtr.Zero)
             {

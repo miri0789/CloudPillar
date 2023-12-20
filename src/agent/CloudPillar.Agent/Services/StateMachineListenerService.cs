@@ -40,34 +40,6 @@ public class StateMachineListenerService : BackgroundService
         }
     }
 
-    public override Task StartAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                 //_logger.Info("CloudPilar.Agent is starting at: {time}", DateTimeOffset.Now);
-
-            // Your setup logic here
-
-            return base.StartAsync(cancellationToken);
-            }
-            catch (System.Exception)
-            {
-                
-                throw;
-            }
-           
-        }
-
-        public override async Task StopAsync(CancellationToken cancellationToken)
-        {
-            //_logger.Info("CloudPilar.Agent is stopping.");
-
-            // Your graceful shutdown logic here
-            //await SetBusyAsync();
-
-            await base.StopAsync(cancellationToken);
-        }
-
 
     internal async void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
     {
