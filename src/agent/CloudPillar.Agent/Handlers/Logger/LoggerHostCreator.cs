@@ -1,22 +1,12 @@
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using System.Text.RegularExpressions;
-using log4net.Repository;
-using log4net.Appender;
-using log4net;
-
 namespace CloudPillar.Agent.Handlers.Logger
 {
     public static class LoggerHostCreator
     {
-        public static WebApplicationBuilder Configure(string applicationName, WebApplicationBuilder? builder = null, string[]? args = null)
+        public static WebApplicationBuilder Configure(string applicationName, WebApplicationBuilder? builder = null)
         {
             if (builder == null)
             {
-                builder = WebApplication.CreateBuilder(args);
+                builder = WebApplication.CreateBuilder();
             }
             builder.Services.AddHttpContextAccessor();
             //string workingDir = args != null && args.Length > 0 ? args[0] : Directory.GetCurrentDirectory();

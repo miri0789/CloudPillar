@@ -3,12 +3,17 @@ using Microsoft.Azure.Devices;
 
 namespace Backend.Infra.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
-{   
-    
-
-    public ServiceClient CreateFromConnectionString(string connString)
+{
+    private readonly ICommonEnvironmentsWrapper _environmentsWrapper;
+    public DeviceClientWrapper(ICommonEnvironmentsWrapper environmentsWrapper)
     {
-        var serviceClient = ServiceClient.CreateFromConnectionString(connString);
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        ArgumentNullException.ThrowIfNullOrEmpty(_environmentsWrapper.iothubConnectionString);
+    }
+
+    public ServiceClient CreateFromConnectionString()
+    {
+        var serviceClient = ServiceClient.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
         return serviceClient;
     }
 

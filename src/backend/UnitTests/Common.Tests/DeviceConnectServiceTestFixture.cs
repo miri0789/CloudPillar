@@ -22,7 +22,7 @@ public class DeviceConnectServiceTestFixture
         _mockEnvironmentsWrapper.Setup(f => f.iothubConnectionString).Returns("123456");
         _mockEnvironmentsWrapper.Setup(f => f.retryPolicyExponent).Returns(3);
         var mockDeviceClient = new Mock<ServiceClient>();
-        _mockDeviceClientWrapper.Setup(c => c.CreateFromConnectionString(It.IsAny<string>()))
+        _mockDeviceClientWrapper.Setup(c => c.CreateFromConnectionString())
         .Returns(mockDeviceClient.Object);
         _target = new DeviceConnectService(_mockLoggerHandler.Object, _mockDeviceClientWrapper.Object, _mockEnvironmentsWrapper.Object);
     }

@@ -1,6 +1,5 @@
 ﻿using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
-using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 

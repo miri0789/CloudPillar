@@ -1,13 +1,11 @@
-﻿
-using Microsoft.Azure.Devices;
-
-namespace Shared.Entities.Twin;
+﻿namespace Shared.Entities.Twin;
 
 public class DownloadAction : TwinAction
 {
     public string Source { get; set; }
     public string DestinationPath { get; set; }
     public bool Unzip { get; set; }
+    public string Sign { get; set; }
 
     public DownloadAction()
     {

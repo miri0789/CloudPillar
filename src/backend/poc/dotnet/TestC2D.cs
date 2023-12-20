@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Azure.Devices;
+﻿using Microsoft.Azure.Devices;
 
 namespace AzureIoTHubExample
 {

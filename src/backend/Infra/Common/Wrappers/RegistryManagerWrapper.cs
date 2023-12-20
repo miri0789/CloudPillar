@@ -6,22 +6,25 @@ namespace Backend.Infra.Common.Wrappers;
 
 public class RegistryManagerWrapper : IRegistryManagerWrapper
 {
-    private readonly RegistryManager _registryManager;
     private readonly ICommonEnvironmentsWrapper _environmentsWrapper;
 
     public RegistryManagerWrapper(ICommonEnvironmentsWrapper environmentsWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
-        _registryManager = RegistryManager.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
     }
 
-    public async Task<Twin> GetTwinAsync(string deviceId)
+    public RegistryManager CreateFromConnectionString()
     {
-        return await _registryManager.GetTwinAsync(deviceId);
+        return RegistryManager.CreateFromConnectionString(_environmentsWrapper.iothubConnectionString);
     }
 
-    public async Task<Twin> UpdateTwinAsync(string deviceId, Twin twinPatch, string etag)
+    public async Task<Twin> GetTwinAsync(RegistryManager registryManager, string deviceId)
     {
-        return await _registryManager.UpdateTwinAsync(deviceId, twinPatch, etag);
+        return await registryManager.GetTwinAsync(deviceId);
+    }
+
+    public async Task<Twin> UpdateTwinAsync(RegistryManager registryManager,string deviceId, Twin twinPatch, string etag)
+    {
+        return await registryManager.UpdateTwinAsync(deviceId, twinPatch, etag);
     }
 }

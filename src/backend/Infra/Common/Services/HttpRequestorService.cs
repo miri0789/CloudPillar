@@ -63,7 +63,7 @@ public class HttpRequestorService : IHttpRequestorService
                     throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
                 }
             }
-            TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
+            TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent)!;
             return result;
         }
 
