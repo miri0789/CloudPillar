@@ -25,8 +25,8 @@ namespace CloudPillar.Agent.Tests
         private IFileDownloadHandler _target;
         private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
         private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
-        private SignFileSettings mockSignFileSettingsValue = new SignFileSettings();
-        private Mock<IOptions<SignFileSettings>> mockSignFileSettings;
+        private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
+        private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
 
         private int actionIndex = 0;
 
@@ -38,9 +38,9 @@ namespace CloudPillar.Agent.Tests
             mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
             mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
-            mockSignFileSettingsValue = SignFileSettingsHelper.SetSignFileSettingsValueMock();
-            mockSignFileSettings = new Mock<IOptions<SignFileSettings>>();
-            mockSignFileSettings.Setup(x => x.Value).Returns(mockSignFileSettingsValue);
+            mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
+            mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
+            mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
 
             _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
@@ -60,7 +60,7 @@ namespace CloudPillar.Agent.Tests
               _loggerMock.Object,
               _checkSumServiceMock.Object,
              _signatureHandlerMock.Object,
-              mockSignFileSettings.Object);
+              mockDownloadSettings.Object);
         }
 
         private FileDownload initAction()

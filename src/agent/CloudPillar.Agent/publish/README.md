@@ -29,20 +29,23 @@ startagent.bat win-x64
 To configure the application settings, please refer to the appsettings.json file and customize the following parameters as needed.
 | Setting Name   | Description                    | Default Value   |
 | ---------------| ------------------------------ | --------------- |
-| `GlobalDeviceEndpoint`       | the global device endpoint  |  `global.azure-devices-provisioning.net` |
-| `CertificateExpiredDays`       | Certificate expired days  |  `365` |
-| `DpsScopeId`       | DPS scope id  |  `true` |
-| `GroupEnrollmentKey`       | DPS enrollment group key  |   |
-| `ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
-| `PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
-| `GlobalPatterns`    | general file access permissions or restrictions across the application | `[]` |
-| `FilesRestrictions`    | collection of restrictions or rules that apply specifically to file operations within the application | `{}` |
-| `Id`    |  unique identifier for the specific restriction set | `LogUpload` |
-| `Type`    |  specifies the type of action that the restrictions apply to | `Upload` or  `Download` |
-| `Root`    |  represents the root directory or location where the specified file restrictions apply | `c:/` |
-| `MaxSize`    |  maximum size limit for file downloads | `1` |
-| `AllowPatterns`    |  array that contains patterns specifying the types of files that are allowed for the defined action | `[]`       |
-| `DenyPatterns`    |  array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
+| `Authentication.GlobalDeviceEndpoint`       | the global device endpoint  |  `global.azure-devices-provisioning.net` |
+| `Authentication.CertificateExpiredDays`       | Certificate expired days  |  `365` |
+| `Authentication.DpsScopeId`       | DPS scope id  |  `true` |
+| `Authentication.GroupEnrollmentKey`       | DPS enrollment group key  |   |
+| `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
+| `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
+| `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
+| `StrictModeSettings.GlobalPatterns`    | general file access permissions or restrictions across the application | `[]` |
+| `StrictModeSettings.FilesRestrictions`    | collection of restrictions or rules that apply specifically to file operations within the application | `{}` |
+| `StrictModeSettings.FilesRestrictions.Id`    |  unique identifier for the specific restriction set | `LogUpload` |
+| `StrictModeSettings.FilesRestrictions.Type`    |  specifies the type of action that the restrictions apply to | `Upload` or  `Download` |
+| `StrictModeSettings.FilesRestrictions.Root`    |  represents the root directory or location where the specified file restrictions apply | `c:/` |
+| `StrictModeSettings.FilesRestrictions.MaxSize`    |  maximum size limit for file downloads | `1` |
+| `StrictModeSettings.FilesRestrictions.AllowPatterns`    |  array that contains patterns specifying the types of files that are allowed for the defined action | `[]`       |
+| `StrictModeSettings.FilesRestrictions.DenyPatterns`    |  array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
+| `DownloadSettings.SignFileBufferSize`    | sing documents buffer size | `16384`         |
+| `DownloadSettings.CommunicationDelaySeconds`    | download delay seconds for check less communication | `30`         |
 
 ## Call GetDeviceState in C# Example
 ```csharp

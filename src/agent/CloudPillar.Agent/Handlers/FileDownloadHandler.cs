@@ -21,7 +21,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
-    private readonly SignFileSettings _signFileSettings;
+    private readonly DownloadSettings _downloadSettings;
 
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
@@ -30,7 +30,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                                ILoggerHandler loggerHandler,
                                ICheckSumService checkSumService,
                                ISignatureHandler signatureHandler,
-                                IOptions<SignFileSettings> options)
+                                IOptions<DownloadSettings> options)
     {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
@@ -39,7 +39,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
-        _signFileSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
@@ -116,7 +116,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         var downloadedBytes = file.TotalBytesDownloaded;
         var existRanges = file.Report.CompletedRanges;
-        await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+        await Task.Delay(TimeSpan.FromSeconds(_downloadSettings.CommunicationDelaySeconds), cancellationToken);
         var isSameDownloadBytes = downloadedBytes == file.TotalBytesDownloaded && existRanges == file.Report.CompletedRanges;
         if (isSameDownloadBytes)
         {
@@ -133,7 +133,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             MessageType = D2CMessageType.SignFileKey,
             ActionIndex = actionToReport.ReportIndex,
             FileName = ((DownloadAction)actionToReport.TwinAction).Source,
-            BufferSize = _signFileSettings.BufferSize,
+            BufferSize = _downloadSettings.SignFileBufferSize,
             PropName = actionToReport.ReportPartName
         };
         await _d2CMessengerHandler.SendSignFileEventAsync(signFileEvent, cancellationToken);

@@ -15,8 +15,8 @@ public class SignatureHandlerTestFixture
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
     private ISignatureHandler _target;
-    private SignFileSettings mockSignFileSettingsValue = new SignFileSettings();
-    private Mock<IOptions<SignFileSettings>> mockSignFileSettings;
+    private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
+    private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
 
     [SetUp]
     public void Setup()
@@ -24,11 +24,11 @@ public class SignatureHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
-        mockSignFileSettingsValue = SignFileSettingsHelper.SetSignFileSettingsValueMock();
-        mockSignFileSettings = new Mock<IOptions<SignFileSettings>>();
-        mockSignFileSettings.Setup(x => x.Value).Returns(mockSignFileSettingsValue);
+        mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
+        mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
+        mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
 
-        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, mockSignFileSettings.Object);
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, mockDownloadSettings.Object);
 
         string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
                                 MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBgc4HZz+/fBbC7lmEww0AO3NK9wVZ
