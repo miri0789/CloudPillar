@@ -68,7 +68,6 @@ public class StateMachineListenerService : BackgroundService
 
     private async Task SetProvisioningAsync()
     {
-        await CancelOperationsAsync();
         _cts = new CancellationTokenSource();
         if (_c2DEventSubscriptionSession != null)
         {
