@@ -13,10 +13,15 @@ using System.Runtime.InteropServices;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
 
-var workingDir = args != null && args.Length > 0 ? args[0]: Directory.GetCurrentDirectory();
-Environment.CurrentDirectory = workingDir;
+bool runAsService = args.FirstOrDefault() == "--winsrv";
+Environment.CurrentDirectory = Directory.GetCurrentDirectory();
+if(!runAsService && args.FirstOrDefault()!=null)
+{
+    Environment.CurrentDirectory = args.FirstOrDefault();
+}
+
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
-var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args), args);
+var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
 var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_DEFAULT_PORT);
 var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var httpUrl = $"http://localhost:{port}";
@@ -38,12 +43,11 @@ builder.Services.AddCors(options =>
 
 var serviceName = builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
 
-bool runAsService = args != null && args.Length > 1 && args[1] == "--winsrv";
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     builder.Services.AddScoped<IWindowsServiceWrapper, WindowsServiceWrapper>();
     var windowsServiceWrapper = builder.Services.BuildServiceProvider().GetRequiredService<IWindowsServiceWrapper>();
-    windowsServiceWrapper?.InstallWindowsService(serviceName, workingDir);
+    windowsServiceWrapper?.InstallWindowsService(serviceName, Environment.CurrentDirectory);
     Environment.Exit(0);
 }
 

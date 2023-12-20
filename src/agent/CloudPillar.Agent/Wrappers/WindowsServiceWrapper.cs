@@ -114,7 +114,7 @@ namespace CloudPillar.Agent.Wrappers
                 throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
             }
 
-            string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName + " " + workingDirectory;
+            string exePath = $"{System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName} {workingDirectory}";
 
             IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, null, null);
 
