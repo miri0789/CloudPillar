@@ -1,7 +1,6 @@
 
 using System.Text;
 using CloudPillar.Agent.Entities;
-using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shared.Entities.Twin;
@@ -95,7 +94,7 @@ public class CommunicationLessMiddleware
     }
 }";
 
-    private static dynamic _twinJsonObject = JsonConvert.DeserializeObject(_twinJson);
+    private static dynamic _twinJsonObject = JsonConvert.DeserializeObject(_twinJson)!;
 
     public CommunicationLessMiddleware(RequestDelegate next)
     {
@@ -103,7 +102,7 @@ public class CommunicationLessMiddleware
     }
     public async Task Invoke(HttpContext context)
     {
-        string functionName = context.GetEndpoint()?.Metadata.GetMetadata<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>()?.ActionName;
+        var functionName = context.GetEndpoint()?.Metadata.GetMetadata<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>()?.ActionName;
         _twinJsonObject.properties.reported.deviceState = DeviceStateType.Ready.ToString();
         _twinJsonObject.properties.deviceId = context.Request.Headers.TryGetValue(Constants.X_DEVICE_ID, out var deviceId) ? deviceId.ToString() : string.Empty;
         _twinJsonObject.properties.reported.secretKey = context.Request.Headers.TryGetValue(Constants.X_SECRET_KEY, out var secretKey) ? secretKey.ToString() : string.Empty;
@@ -117,7 +116,7 @@ public class CommunicationLessMiddleware
                 {
                     requestBody = await reader.ReadToEndAsync();
                 }
-                var updateReportedProps = JsonConvert.DeserializeObject<UpdateReportedProps>(requestBody);
+                var updateReportedProps = JsonConvert.DeserializeObject<UpdateReportedProps>(requestBody)!;
                 foreach (var item in updateReportedProps.Properties)
                 {
                     _twinJsonObject.properties.reported[item.Name] = JToken.FromObject(item.Value);

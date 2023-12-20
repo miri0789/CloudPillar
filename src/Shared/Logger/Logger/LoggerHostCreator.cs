@@ -1,12 +1,8 @@
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using System.Text.RegularExpressions;
-using log4net.Repository;
-using log4net.Appender;
 using log4net;
 using Microsoft.ApplicationInsights.Log4NetAppender;
 

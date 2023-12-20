@@ -1,10 +1,8 @@
-using System.Text;
 using Microsoft.Azure.Devices.Client;
 using Shared.Entities.Messages;
 using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Factories;
 using CloudPillar.Agent.Handlers.Logger;
-using CloudPillar.Agent.Entities;
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
@@ -44,7 +42,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                _logger.Error("Exception hit when receiving the message, ignoring it", ex);
+                _logger.Error($"Exception hit when receiving the message, ignoring it message: {ex.Message}");
                 continue;
             }
             var parseMessage = Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType);
@@ -70,15 +68,22 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                _logger.Error("Exception hit when parsing the message, ignoring it", ex);
+                _logger.Error($"Exception hit when parsing the message, ignoring it message: {ex.Message}");
                 continue;
             }
             finally
             {
                 if (messageType != C2DMessageType.Reprovisioning)
                 {
-                    await _deviceClient.CompleteAsync(receivedMessage, cancellationToken);
-                    _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
+                    try
+                    {
+                        await _deviceClient.CompleteAsync(receivedMessage, cancellationToken);
+                        _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Complete message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} failed message {ex.Message}");
+                    }
                 }
             }
         }

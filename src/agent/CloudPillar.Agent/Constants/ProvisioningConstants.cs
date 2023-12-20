@@ -8,4 +8,8 @@ public class ProvisioningConstants
     public const char CERTIFICATE_NAME_SEPARATOR = '@';
 
     public const string IOT_HUB_NAME_SUFFIX = ".azure-devices.net";
+
+    public const string CLOUD_PILLAR_SUBJECT = "CloudPillar";
+
+    public const string TEMPORARY_CERTIFICATE_NAME = "TemporaryCertificate";
 }

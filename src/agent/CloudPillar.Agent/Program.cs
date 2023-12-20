@@ -5,12 +5,12 @@ using CloudPillar.Agent.Sevices;
 using CloudPillar.Agent.Utilities;
 using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
-using CloudPillar.Agent.Wrappers.interfaces;
 using FluentValidation;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
@@ -19,26 +19,13 @@ var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Cons
 var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
-builder.WebHost.UseUrls(httpUrl, httpsUrl);
-
-
-
-builder.Services.AddCors(options =>
-        {
-            options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
-            {
-                b.WithOrigins(httpUrl, httpsUrl)
-                               .AllowAnyHeader()
-                               .AllowAnyMethod();
-            });
-        });
-
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
+builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
 builder.Services.AddScoped<IStrictModeHandler, StrictModeHandler>();
 builder.Services.AddScoped<ISymmetricKeyProvisioningHandler, SymmetricKeyProvisioningHandler>();
 builder.Services.AddScoped<IC2DEventSubscriptionSession, C2DEventSubscriptionSession>();
@@ -63,13 +50,13 @@ builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
 builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
-builder.Services.AddScoped<IGuidWrapper, GuidWrapper>();
+builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
 
-var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
-builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
+var signFileSettings = builder.Configuration.GetSection("SignFileSettings");
+builder.Services.Configure<SignFileSettings>(signFileSettings);
 
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
 builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
@@ -77,11 +64,37 @@ builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
 builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
 
+var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
+builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
+
+var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
+var activeUrls = new string[] { httpsUrl };
+if (!isStrictmode)
+{
+    activeUrls.Append(httpUrl);
+}
+builder.WebHost.UseUrls(activeUrls);
+
+builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(MY_ALLOW_SPECIFICORIGINS, b =>
+            {
+                b.WithOrigins(activeUrls)
+                               .AllowAnyHeader()
+                               .AllowAnyMethod();
+            });
+        });
+
+
 var servcieProvider = builder.Services.BuildServiceProvider();
 var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
+
 builder.WebHost.UseKestrel(options =>
 {
-    options.Listen(IPAddress.Any, port);
+    if (!isStrictmode)
+    {
+        options.Listen(IPAddress.Any, port);
+    }
     options.Listen(IPAddress.Any, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(x509Provider.GetHttpsCertificate());

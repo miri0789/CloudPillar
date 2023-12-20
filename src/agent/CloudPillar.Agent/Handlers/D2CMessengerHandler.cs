@@ -4,8 +4,8 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
-using Shared.Entities.Messages;
 using CloudPillar.Agent.Handlers.Logger;
+using Shared.Entities.Messages;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -20,7 +20,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string fileName, string actionId, int? rangeIndex, long? startPosition = null, long? endPosition = null)
+    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string fileName, int actionIndex, int? rangeIndex, long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
@@ -32,13 +32,13 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             RangeIndex = rangeIndex ?? 0,
             StartPosition = startPosition ?? 0,
             EndPosition = endPosition,
-            ActionId = actionId
+            ActionIndex = actionIndex
         };
 
         await SendMessageAsync(firmwareUpdateEvent, cancellationToken);
     }
 
-    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, string actionId, long currentPosition, string checkSum, CancellationToken cancellationToken, bool isRunDiagnostic = false)
+    public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, long currentPosition, string checkSum, CancellationToken cancellationToken, bool isRunDiagnostic = false)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -47,7 +47,6 @@ public class D2CMessengerHandler : ID2CMessengerHandler
                 StorageUri = storageUri,
                 CheckSum = checkSum,
                 StartPosition = currentPosition,
-                ActionId = actionId ?? Guid.NewGuid().ToString(),
                 Data = buffer,
                 IsRunDiagnostics = isRunDiagnostic
             };
@@ -56,15 +55,20 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         }
     }
 
-    public async Task ProvisionDeviceCertificateEventAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
+    public async Task ProvisionDeviceCertificateEventAsync(string prefix, X509Certificate2 certificate, CancellationToken cancellationToken)
     {
         var ProvisionDeviceCertificateEvent = new ProvisionDeviceCertificateEvent()
         {
             Data = certificate.Export(X509ContentType.Cert),
-            ActionId = Guid.NewGuid().ToString()
+            CertificatePrefix = prefix
         };
 
         await SendMessageAsync(ProvisionDeviceCertificateEvent, cancellationToken);
+    }
+
+    public async Task SendSignFileEventAsync(SignFileEvent d2CMessage, CancellationToken cancellationToken)
+    {
+        await SendMessageAsync(d2CMessage, cancellationToken);
     }
 
     public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)

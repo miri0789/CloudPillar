@@ -1,12 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using FellowOakDicom;
-using Microsoft.Health.Dicom.Client;
 using Microsoft.Identity.Client;
-using Microsoft.Health.Dicom.Client.Models;
-using Microsoft.Health.Dicom.Core.Extensions;
 
 namespace DicomAgentPoC
 {

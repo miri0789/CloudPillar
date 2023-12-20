@@ -1,7 +1,4 @@
-using System;
 using FellowOakDicom;
-using Microsoft.Health.Dicom.Client.Models;
-using Microsoft.Health.Dicom.Core.Extensions;
 
 namespace DicomAgentPoC
 {

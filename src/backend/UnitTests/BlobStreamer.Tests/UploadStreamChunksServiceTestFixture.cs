@@ -47,7 +47,7 @@ namespace Backend.BlobStreamer.Tests
         public async Task UploadStreamChunkAsync_ValidData_Success()
         {
 
-            await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", false, "");
+            await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", false);
             _mockCloudBlockBlobWrapper.Verify(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>()), Times.Once);
         }
 
@@ -56,7 +56,7 @@ namespace Backend.BlobStreamer.Tests
         {
             Uri? emptyUri = null;
 
-            await _target.UploadStreamChunkAsync(emptyUri, BYTES, _startPosition, _checkSum, "", false, "");
+            await _target.UploadStreamChunkAsync(emptyUri, BYTES, _startPosition, _checkSum, "", false);
             _mockCloudBlockBlobWrapper.Verify(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>()), Times.Never);
         }
 
@@ -66,7 +66,7 @@ namespace Backend.BlobStreamer.Tests
 
             _mockCloudBlockBlobWrapper.Setup(b => b.BlobExists(It.IsAny<CloudBlockBlob>())).ReturnsAsync(true);
 
-            await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", false, "");
+            await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", false);
             _mockCloudBlockBlobWrapper.Verify(b => b.DownloadToStreamAsync(It.IsAny<CloudBlockBlob>()), Times.Once);
         }
     }

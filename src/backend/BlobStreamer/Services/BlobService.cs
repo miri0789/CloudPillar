@@ -5,9 +5,9 @@ using Shared.Logger;
 using Backend.BlobStreamer.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
 using Shared.Entities.Services;
-using Microsoft.Azure.Devices;
-using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
+using System.Security.Cryptography;
+using Backend.Infra.Common.Wrappers.Interfaces;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -20,9 +20,11 @@ public class BlobService : IBlobService
     private readonly IMessageFactory _messageFactory;
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
+    private readonly IDeviceClientWrapper _deviceClientWrapper;
 
     public BlobService(IEnvironmentsWrapper environmentsWrapper, ICloudStorageWrapper cloudStorageWrapper,
-     IDeviceConnectService deviceConnectService,ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory)
+     IDeviceConnectService deviceConnectService, ICheckSumService checkSumService, ILoggerHandler logger, IMessageFactory messageFactory,
+     IDeviceClientWrapper deviceClientWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _cloudStorageWrapper = cloudStorageWrapper ?? throw new ArgumentNullException(nameof(cloudStorageWrapper));
@@ -30,6 +32,7 @@ public class BlobService : IBlobService
         _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
+        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
     }
@@ -49,42 +52,105 @@ public class BlobService : IBlobService
         return data;
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize, 
-    int rangeIndex, long startPosition, string ActionId, int rangesCount)
+    public async Task<byte[]> CalculateHashAsync(string filePath, int bufferSize)
+    {
+        var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, filePath);
+        var fileSize = blockBlob.Properties.Length;
+
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            try
+            {
+                long offset = 0;
+                var data = new byte[bufferSize];
+                while (offset < fileSize)
+                {
+                    var length = Math.Min(bufferSize, fileSize - offset);
+                    await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
+                    sha256.TransformBlock(data, 0, (int)length, null, 0);
+                    offset += bufferSize;
+                }
+                sha256.TransformFinalBlock(new byte[0], 0, 0);
+                return sha256.Hash;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"CalculateHashAsync failed.", ex);
+                throw;
+            }
+        }
+    }
+
+    public async Task SendDownloadErrorAsync(string deviceId, string fileName, int actionIndex, string error)
+    {
+        using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString())
+        {
+            var blobMessage = new DownloadBlobChunkMessage
+            {
+                FileName = fileName,
+                ActionIndex = actionIndex,
+                Error = error,
+                Data = new byte[0]
+            };
+            try
+            {
+                var c2dMsg = _messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
+                await _deviceConnectService.SendDeviceMessageAsync(serviceClient, c2dMsg, deviceId);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"BlobService SendErrorAsync failed. Message: {ex.Message}");
+            }
+        }
+    }
+
+    public async Task<bool> SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize,
+    int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
         chunkSize = GetMaxChunkSize(chunkSize);
         var rangeBytes = new List<byte>();
         var rangeEndPosition = Math.Min(rangeSize + startPosition, fileSize);
-        List<Message> messages = new List<Message>();
-        for (long offset = startPosition, chunkIndex = 0; offset < rangeEndPosition; offset += chunkSize, chunkIndex++)
+        var data = new byte[chunkSize];
+        using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString())
         {
-            var length = Math.Min(chunkSize, rangeEndPosition - offset);
-            var data = new byte[length];
-            await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
-            rangeBytes.AddRange(data);
-            var blobMessage = new DownloadBlobChunkMessage
+            for (long offset = startPosition, chunkIndex = 0; offset < rangeEndPosition; offset += chunkSize, chunkIndex++)
             {
-                RangeIndex = rangeIndex,
-                ChunkIndex = (int)chunkIndex,
-                Offset = offset,
-                FileName = fileName,
-                ActionId = ActionId,
-                FileSize = fileSize,
-                Data = data
-            };
-            if (offset + chunkSize >= rangeEndPosition)
-            {
-                blobMessage.RangeStartPosition = startPosition;
-                blobMessage.RangeEndPosition = rangeEndPosition;
-                blobMessage.RangesCount = rangesCount;
-                blobMessage.RangeCheckSum = await _checkSumService.CalculateCheckSumAsync(rangeBytes.ToArray());
+                var length = Math.Min(chunkSize, rangeEndPosition - offset);
+                if (length != chunkSize) { data = new byte[length]; }
+                await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
+                rangeBytes.AddRange(data);
+                var blobMessage = new DownloadBlobChunkMessage
+                {
+                    RangeIndex = rangeIndex,
+                    ChunkIndex = (int)chunkIndex,
+                    Offset = offset,
+                    FileName = fileName,
+                    ActionIndex = actionIndex,
+                    FileSize = fileSize,
+                    Data = data
+                };
+                if (offset + chunkSize >= rangeEndPosition)
+                {
+                    blobMessage.RangeStartPosition = startPosition;
+                    blobMessage.RangeEndPosition = rangeEndPosition;
+                    blobMessage.RangesCount = rangesCount;
+                    blobMessage.RangeCheckSum = await _checkSumService.CalculateCheckSumAsync(rangeBytes.ToArray());
+                }
+                try
+                {
+                    var c2dMsg = _messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
+                    await _deviceConnectService.SendDeviceMessageAsync(serviceClient, c2dMsg, deviceId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"BlobService SendRangeByChunksAsync failed. Message: {ex.Message}");
+                    return false;
+                }
             }
-
-            messages.Add(_messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes));
         }
-        await _deviceConnectService.SendDeviceMessagesAsync(messages.ToArray(), deviceId);
+        return true;
     }
 
     private int GetMaxChunkSize(int chunkSize)

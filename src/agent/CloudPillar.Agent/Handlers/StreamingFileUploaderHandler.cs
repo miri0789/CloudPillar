@@ -25,7 +25,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task UploadFromStreamAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, string actionId, string correlationId, CancellationToken cancellationToken, bool isRunDiagnostics = false)
+    public async Task UploadFromStreamAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, string correlationId, CancellationToken cancellationToken, bool isRunDiagnostics = false)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -37,7 +37,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             {
                 _logger.Info($"Start send messages with chunks. Total chunks is: {totalChunks}");
 
-                await HandleUploadChunkAsync(notification, actionToReport, readStream, storageUri, actionId, chunkSize, isRunDiagnostics, cancellationToken);
+                await HandleUploadChunkAsync(notification, actionToReport, readStream, storageUri, chunkSize, isRunDiagnostics, cancellationToken);
 
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
@@ -50,7 +50,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         }
     }
 
-    private async Task HandleUploadChunkAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, string actionId, int chunkSize, bool isRunDiagnostics, CancellationToken cancellationToken)
+    private async Task HandleUploadChunkAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, int chunkSize, bool isRunDiagnostics, CancellationToken cancellationToken)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -59,35 +59,34 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
 
             int calculatedPosition = CalculateCurrentPosition(readStream.Length, actionToReport.TwinReport.Progress ?? 0);
             var calculatedChunkIndex = (int)Math.Round(calculatedPosition / (double)chunkSize) + 1;
+            byte[] buffer = new byte[chunkSize];
             for (int currentPosition = calculatedPosition, chunkIndex = calculatedChunkIndex; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
+                    long bytesToUpload = Math.Min(chunkSize, readStream.Length - currentPosition);
+                    if (bytesToUpload != chunkSize) { buffer = new byte[bytesToUpload]; }
                     _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
                     var isLastMessage = IsLastMessage(currentPosition, chunkSize, streamLength);
-                    await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, actionId, chunkSize, currentPosition, isLastMessage ? checkSum : string.Empty, isRunDiagnostics, cancellationToken);
+                    await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, buffer, currentPosition, isLastMessage ? checkSum : string.Empty, isRunDiagnostics, cancellationToken);
                 }
             }
             _logger.Debug($"All bytes sent successfuly");
         }
     }
 
-    private async Task ProcessChunkAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, string actionId, int chunkSize, long currentPosition, string checkSum, bool isRunDiagnostics, CancellationToken cancellationToken)
+    private async Task ProcessChunkAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, byte[] buffer, long currentPosition, string checkSum, bool isRunDiagnostics, CancellationToken cancellationToken)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
-            long remainingBytes = readStream.Length - currentPosition;
-            long bytesToUpload = Math.Min(chunkSize, remainingBytes);
-
-            byte[] buffer = new byte[bytesToUpload];
             readStream.Seek(currentPosition, SeekOrigin.Begin);
             _logger.Info($"Seek readStream to position: {currentPosition}");
-            await readStream.ReadAsync(buffer, 0, (int)bytesToUpload);
+            await readStream.ReadAsync(buffer, 0, buffer.Length);
 
-            await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, actionId, currentPosition, checkSum, cancellationToken, isRunDiagnostics);
+            await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, currentPosition, checkSum, cancellationToken, isRunDiagnostics);
 
-            var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, bytesToUpload);
+            var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, buffer.Length);
             await UpdateReportedDetailsAsync(actionToReport, percents, notification.CorrelationId, cancellationToken);
         }
     }

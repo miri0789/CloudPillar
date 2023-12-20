@@ -104,8 +104,8 @@ public class TwinHandlerTestFixture
                 Patch = new TwinPatch()
                 {
                     InstallSteps = new List<TwinAction>()
-                    {   new TwinAction() { ActionId = "123"},
-                        new TwinAction() { ActionId = "456"}
+                    {   new TwinAction(),
+                        new TwinAction()
                     }.ToArray()
                 }
             }
@@ -161,10 +161,10 @@ public class TwinHandlerTestFixture
                 Patch = new TwinPatch()
                 {
                     InstallSteps = new List<TwinAction>()
-                    {   new DownloadAction() { ActionId = "123", DestinationPath = "123", Action = TwinActionType.SingularDownload},
-                        new DownloadAction() { ActionId = "456", DestinationPath = "456", Action = TwinActionType.SingularDownload},
-                        new DownloadAction() { ActionId = "789", DestinationPath = "789", Action = TwinActionType.SingularDownload},
-                        new DownloadAction() { ActionId = "1", DestinationPath = "1", Action = TwinActionType.SingularDownload},
+                    {   new DownloadAction() {  DestinationPath = "123", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { DestinationPath = "456", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { DestinationPath = "789", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { DestinationPath = "1", Action = TwinActionType.SingularDownload},
                     }.ToArray()
                 }
             }
@@ -201,7 +201,7 @@ public class TwinHandlerTestFixture
             Patch = new TwinPatch()
             {
                 InstallSteps = new List<TwinAction>()
-                    {   new TwinAction() { ActionId = "123", Action = TwinActionType.SingularDownload},
+                    {   new TwinAction() { Action = TwinActionType.SingularDownload},
                     }.ToArray()
             }
         };
@@ -233,7 +233,7 @@ public class TwinHandlerTestFixture
             Patch = new TwinPatch()
             {
                 InstallSteps = new List<TwinAction>()
-                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath="abc"},
+                    {   new DownloadAction() { Action = TwinActionType.SingularDownload, DestinationPath="abc"},
                     }.ToArray()
             }
         };
@@ -256,8 +256,8 @@ public class TwinHandlerTestFixture
             Patch = new TwinPatch()
             {
                 InstallSteps = new List<TwinAction>()
-                    {   new TwinAction() { ActionId = "123",Action=TwinActionType.SingularDownload,},
-                        new TwinAction() { ActionId = "456",Action=TwinActionType.SingularUpload}
+                    {   new TwinAction() { Action=TwinActionType.SingularDownload},
+                        new TwinAction() { Action=TwinActionType.SingularUpload}
                     }.ToArray()
             }
         };
@@ -289,7 +289,7 @@ public class TwinHandlerTestFixture
             Patch = new TwinPatch()
             {
                 InstallSteps = new List<TwinAction>()
-                    {   new DownloadAction() { ActionId = "123", Action = TwinActionType.SingularDownload, DestinationPath=""},
+                    {   new DownloadAction() { Action = TwinActionType.SingularDownload, DestinationPath=""},
                     }.ToArray()
             }
         };
@@ -320,7 +320,7 @@ public class TwinHandlerTestFixture
         var reported = new TwinReportedChangeSpec();
 
         CreateTwinMock(desired, reported);
-        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(false);
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -334,7 +334,7 @@ public class TwinHandlerTestFixture
         var reported = new TwinReportedChangeSpec();
 
         CreateTwinMock(desired, reported);
-        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+        _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(true);
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -360,9 +360,7 @@ public class TwinHandlerTestFixture
         {
             Patch = new TwinPatch()
             {
-                TransitPackage = new List<TwinAction>()
-                    {   new UploadAction() { ActionId = "123"}
-                    }.ToArray()
+                TransitPackage = new List<TwinAction>() { new UploadAction() }.ToArray()
             }
         };
 
@@ -540,7 +538,7 @@ public class TwinHandlerTestFixture
     {
         var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, null, null, twinReportedCustomProps, changeSign);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
-        _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+        _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(true);
 
     }
 }

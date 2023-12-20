@@ -17,9 +17,9 @@ controllers:
     - name: MessageExpiredMinutes
       value: "60"
     - name: RetryPolicyBaseDelay
-      value: "1"
+      value: "20"
     - name: RetryPolicyExponent
-      value: "1"
+      value: "30"
     # - name: PARTITION_ID
     #   valueFrom:
     #     fieldRef:

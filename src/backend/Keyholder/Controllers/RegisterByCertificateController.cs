@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using Shared.Logger;
-using System.Text;
 
 namespace Backend.Keyholder;
 
@@ -29,9 +26,9 @@ public class RegisterByCertificateController : ControllerBase
     }
 
     [HttpPost("ProvisionDeviceCertificate")]
-    public async Task<IActionResult> ProvisionDeviceCertificateAsync(string deviceId, [FromBody] byte[] certificate)
+    public async Task<IActionResult> ProvisionDeviceCertificateAsync(string deviceId,string prefix, [FromBody] byte[] certificate)
     {
-        await _registrationService.ProvisionDeviceCertificateAsync(deviceId, certificate);
+        await _registrationService.ProvisionDeviceCertificateAsync(deviceId,prefix, certificate);
         return Ok();
     }
 

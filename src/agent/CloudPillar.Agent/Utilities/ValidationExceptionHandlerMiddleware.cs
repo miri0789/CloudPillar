@@ -1,8 +1,4 @@
-using System;
-using System.Threading.Tasks;
 using FluentValidation;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using CloudPillar.Agent.Handlers.Logger;
 
 namespace CloudPillar.Agent.Utilities

@@ -63,11 +63,11 @@ public class HttpRequestorService : IHttpRequestorService
                     throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
                 }
             }
-            TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent);
+            TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent)!;
             return result;
         }
 
         _logger.Error($"HTTP request failed: {response.ReasonPhrase}: {method}{url} {responseContent}");
-        throw new HttpRequestException($"HTTP request failed: {response.ReasonPhrase}", null, response.StatusCode);
+        throw new HttpRequestException($"HTTP request failed: {responseContent}", null, response.StatusCode);
     }
 }
