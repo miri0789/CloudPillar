@@ -7,6 +7,7 @@ using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Shared.Entities.Authentication;
 using DeviceMessage = Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Handlers.Logger;
+using Microsoft.Extensions.Options;
 namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
@@ -16,17 +17,21 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     private IDeviceClientWrapper _deviceClientWrapper;
     private readonly IX509CertificateWrapper _X509CertificateWrapper;
     private readonly IProvisioningDeviceClientWrapper _provisioningDeviceClientWrapper;
+    private readonly AuthenticationSettings _authenticationSettings;
 
     public X509DPSProvisioningDeviceClientHandler(
         ILoggerHandler loggerHandler,
         IDeviceClientWrapper deviceClientWrapper,
         IX509CertificateWrapper X509CertificateWrapper,
-        IProvisioningDeviceClientWrapper provisioningDeviceClientWrapper)
+        IProvisioningDeviceClientWrapper provisioningDeviceClientWrapper,
+        IOptions<AuthenticationSettings> options
+)
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _X509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
         _provisioningDeviceClientWrapper = provisioningDeviceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningDeviceClientWrapper));
+        _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     public X509Certificate2? GetCertificate()
@@ -35,7 +40,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             var certificates = _X509CertificateWrapper.GetCertificates(store);
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + CertificateConstants.CLOUD_PILLAR_SUBJECT) && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR))
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix()) && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR))
                .FirstOrDefault();
 
             return filteredCertificate;
@@ -53,7 +58,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     }
 
     private async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool IsInitializedLoad = false, bool checkAuthorization = false)
-    {        
+    {
         X509Certificate2? userCertificate = GetCertificate();
 
         if (userCertificate == null)
@@ -152,7 +157,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         catch (Exception ex)
         {
-            _logger.Error($"Exception during IoT Hub connection: ", ex);
+            _logger.Error($"Exception during IoT Hub connection message: {ex.Message}");
             return false;
         }
     }
@@ -169,7 +174,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         catch (Exception ex)
         {
-            _logger.Error("ProvisioningAsync, Complete message failed", ex);
+            _logger.Error("ProvisioningAsync, Complete message failed message: {ex.Message}");
         }
     }
 }
