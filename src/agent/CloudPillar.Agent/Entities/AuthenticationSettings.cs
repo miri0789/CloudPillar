@@ -18,9 +18,15 @@ public class AuthenticationSettings
         var prefix = CertificatePrefix ?? ProvisioningConstants.CLOUD_PILLAR_SUBJECT;
         return !string.IsNullOrEmpty(Environment) ? $"{prefix}-{Environment}-" : $"{prefix}-";
     }
-    public string GetTemporaryCertificate()
+    public string GetAnonymousCertificate()
     {
         var tempPrefixCertificate = $"{GetCertificatePrefix()}{ANONYMOUS_CERTIFICATE}";
+        return tempPrefixCertificate;
+    }
+
+    public string GetTemporaryCertificate()
+    {
+        var tempPrefixCertificate = $"{GetCertificatePrefix()}{ProvisioningConstants.TEMPORARY_CERTIFICATE_NAME}";
         return tempPrefixCertificate;
     }
 }

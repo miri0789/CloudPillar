@@ -65,7 +65,7 @@ public class X509Provider : IX509Provider
             if (filteredCertificate == null)
             {
                 var temporaryAnonymousCertificate = certificates?.Cast<X509Certificate2>()
-                            .FirstOrDefault(cert => cert.Subject == ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetTemporaryCertificate());
+                            .FirstOrDefault(cert => cert.Subject == ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetAnonymousCertificate());
 
                 if (temporaryAnonymousCertificate != null)
                 {
@@ -89,7 +89,7 @@ public class X509Provider : IX509Provider
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{_authenticationSettings.GetTemporaryCertificate()}", rsa
+                $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{_authenticationSettings.GetAnonymousCertificate()}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             SubjectAlternativeNameBuilder subjectAlternativeNameBuilder = new SubjectAlternativeNameBuilder();

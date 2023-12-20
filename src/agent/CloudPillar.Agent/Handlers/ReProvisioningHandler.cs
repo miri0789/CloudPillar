@@ -22,7 +22,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
     private readonly AuthenticationSettings _authenticationSettings;
     private readonly ILoggerHandler _logger;
 
-    private string temporaryCertificateName;
 
     public ReprovisioningHandler(
         IX509CertificateWrapper X509CertificateWrapper,
@@ -43,7 +42,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        temporaryCertificateName = $"{_authenticationSettings.GetCertificatePrefix()}{ProvisioningConstants.TEMPORARY_CERTIFICATE_NAME}";
     }
     public async Task HandleReprovisioningMessageAsync(Message recivedMessage, ReprovisioningMessage message, CancellationToken cancellationToken)
     {
@@ -137,7 +135,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         var privateCertificate = _x509CertificateWrapper.CreateFromBytes(pfxBytes, passwordString, X509KeyStorageFlags.PersistKeySet);
 
-        privateCertificate.FriendlyName = temporaryCertificateName;
+        privateCertificate.FriendlyName = _authenticationSettings.GetTemporaryCertificate();
 
         using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite))
         {
@@ -153,7 +151,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
             X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
 
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.FriendlyName == temporaryCertificateName)
+               .Where(cert => cert.FriendlyName == _authenticationSettings.GetTemporaryCertificate())
                .FirstOrDefault();
 
             if (filteredCertificate == null)
@@ -169,7 +167,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var certificates = _x509CertificateWrapper.GetCertificates(store);
 
         var filteredCertificates = certificates?.Cast<X509Certificate2>()
-           .Where(cert => string.IsNullOrEmpty(thumbprint) ? cert.FriendlyName == temporaryCertificateName :
+           .Where(cert => string.IsNullOrEmpty(thumbprint) ? cert.FriendlyName == _authenticationSettings.GetTemporaryCertificate() :
             (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix())
            && cert.Thumbprint != thumbprint))
            .ToArray();
