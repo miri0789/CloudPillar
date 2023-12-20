@@ -42,7 +42,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                _logger.Error("Exception hit when receiving the message, ignoring it", ex);
+                _logger.Error($"Exception hit when receiving the message, ignoring it message: {ex.Message}");
                 continue;
             }
             var parseMessage = Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType);
@@ -68,7 +68,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                _logger.Error("Exception hit when parsing the message, ignoring it", ex);
+                _logger.Error($"Exception hit when parsing the message, ignoring it message: {ex.Message}");
                 continue;
             }
             finally
@@ -82,7 +82,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Complete message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} failed", ex);
+                        _logger.Error($"Complete message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} failed message {ex.Message}");
                     }
                 }
             }

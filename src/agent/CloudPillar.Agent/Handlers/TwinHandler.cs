@@ -88,7 +88,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"OnDesiredPropertiesUpdate failed", ex);
+            _logger.Error($"OnDesiredPropertiesUpdate failed message: {ex.Message}");
         }
     }
     public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
@@ -105,7 +105,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActionsAsync failed", ex);
+            _logger.Error($"HandleTwinActionsAsync failed message: {ex.Message}");
         }
 
     }
@@ -162,7 +162,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"UpdateDeviceSecretKeyAsync failed", ex);
+            _logger.Error($"UpdateDeviceSecretKeyAsync failed message: {ex.Message}");
         }
     }
 
@@ -192,7 +192,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"UpdateReportedTwinChangeSignAsync failed", ex);
+            _logger.Error($"UpdateReportedTwinChangeSignAsync failed message: {ex.Message}");
         }
     }
 
@@ -260,7 +260,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"UpdateDeviceCustomPropsAsync failed", ex);
+            _logger.Error($"UpdateDeviceCustomPropsAsync failed message: {ex.Message}");
         }
     }
 
@@ -268,7 +268,6 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-
             foreach (var action in actions)
             {
                 var filePath = string.Empty;
@@ -307,7 +306,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleTwinActions failed", ex);
+            _logger.Error($"HandleTwinActions failed message: {ex.Message}");
         }
     }
     private async Task<string> GetReplacedFilePath(ActionToReport action, CancellationToken cancellationToken)

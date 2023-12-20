@@ -65,7 +65,7 @@ public class SignatureHandler : ISignatureHandler
         }
         catch (Exception ex)
         {
-            _logger.Error(ex.Message);
+            _logger.Error($"VerifyFileSignatureAsync failed message: {ex.Message}");
             return false;
         }
     }
