@@ -1,3 +1,4 @@
+using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -10,7 +11,7 @@ public static class DownloadSettingsHelper
     {
         return new DownloadSettings()
         {
-            BufferSize = 8192
+            SignFileBufferSize = 8192
         };
     }
 }
