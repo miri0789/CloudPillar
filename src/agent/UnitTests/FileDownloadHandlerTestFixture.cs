@@ -94,13 +94,13 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task InitFileDownloadAsync_ActiveDownload_SendFirmwareUpdateEventWithRange()
+        public async Task InitFileDownloadAsync_ActiveDownload_NowFirmwareUpdateEventWithRange()
         {
             var action = initAction();
             action.Report.CompletedRanges = "0-5,8,10";
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, "6", It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, "6", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
 
         }
 
