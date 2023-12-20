@@ -20,8 +20,15 @@ public class BlobController : ControllerBase
     [HttpGet("metadata")]
     public async Task<IActionResult> GetMeatadata(string fileName)
     {
-        var result = await _blobService.GetBlobMetadataAsync(fileName);
-        return Ok(result);
+        try
+        {
+            var result = await _blobService.GetBlobMetadataAsync(fileName);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpGet("CalculateHash")]
@@ -34,7 +41,14 @@ public class BlobController : ControllerBase
     [HttpPost("range")]
     public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
-        await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionIndex, rangesCount);
+        var isSendRangeComplete = await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionIndex, rangesCount);
+        return Ok(isSendRangeComplete);
+    }
+
+    [HttpPost("rangeError")]
+    public async Task<IActionResult> SendRangeError(string deviceId, string fileName, int actionIndex, string error)
+    {
+        await _blobService.SendDownloadErrorAsync(deviceId, fileName, actionIndex, error);
         return Ok();
     }
 

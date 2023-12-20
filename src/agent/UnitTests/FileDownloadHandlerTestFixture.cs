@@ -392,6 +392,24 @@ namespace CloudPillar.Agent.Tests
                 x => x.CreateDirectory(It.IsAny<string>()), Times.Once);
 
         }
+        public async Task HandleDownloadMessageAsync_MessageWithBackendError_ReportFailure()
+        {
+            var action = initAction();
+            await InitFileDownloadAsync(action);
+            _strictModeHandlerMock.Setup(th => th.CheckSizeStrictMode(It.IsAny<TwinActionType>(), It.IsAny<long>(), It.IsAny<string>())).Throws<ArgumentException>();
+            var errMsg = "error msg";
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionIndex = action.ActionReported.ReportIndex,
+                FileName = action.Action.Source,
+                Error = errMsg
+            };
+            await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+            _twinActionsHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
+                item.Any(rep => rep.TwinReport.Status == StatusType.Failed && rep.TwinReport.ResultText == $"Backend error: {errMsg}"))
+            , It.IsAny<CancellationToken>()), Times.Once);
+        }
 
 
         private async Task InitFileDownloadAsync(FileDownload action)

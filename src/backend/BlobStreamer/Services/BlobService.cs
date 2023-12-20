@@ -81,7 +81,30 @@ public class BlobService : IBlobService
         }
     }
 
-    public async Task SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize,
+    public async Task SendDownloadErrorAsync(string deviceId, string fileName, int actionIndex, string error)
+    {
+        using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString())
+        {
+            var blobMessage = new DownloadBlobChunkMessage
+            {
+                FileName = fileName,
+                ActionIndex = actionIndex,
+                Error = error,
+                Data = new byte[0]
+            };
+            try
+            {
+                var c2dMsg = _messageFactory.PrepareC2DMessage(blobMessage, _environmentsWrapper.messageExpiredMinutes);
+                await _deviceConnectService.SendDeviceMessageAsync(serviceClient, c2dMsg, deviceId);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"BlobService SendErrorAsync failed. Message: {ex.Message}");
+            }
+        }
+    }
+
+    public async Task<bool> SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize,
     int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
@@ -123,10 +146,11 @@ public class BlobService : IBlobService
                 catch (Exception ex)
                 {
                     _logger.Error($"BlobService SendRangeByChunksAsync failed. Message: {ex.Message}");
-                    throw;
+                    return false;
                 }
             }
         }
+        return true;
     }
 
     private int GetMaxChunkSize(int chunkSize)
