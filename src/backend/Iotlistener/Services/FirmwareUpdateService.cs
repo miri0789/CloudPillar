@@ -31,26 +31,25 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             if (data.EndPosition != null)
             {
                 rangeSize = (long)data.EndPosition - data.StartPosition;
-                string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={data.RangeIndex}&startPosition={data.StartPosition}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
+                string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={data.CompletedRanges}&startPosition={data.StartPosition}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
                 await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
             }
             else
             {
                 long offset = data.StartPosition;
-                int rangeIndex = data.RangeIndex;
-                if (rangeIndex > 0)
-                {
-                    offset = rangeIndex * rangeSize;
-                }
-
+                var existRanges = GetExistRangesList(data.CompletedRanges);
+                var rangeIndex = 0;
                 while (offset < blobSize)
                 {
                     _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
                     var requests = new List<Task<bool>>();
-                    for (var i = 0; i < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
+                    for (var i = 0; requests.Count < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                     {
-                        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
-                        requests.Add(_httpRequestorService.SendRequest<bool>(requestUrl, HttpMethod.Post));
+                        if (existRanges.IndexOf(rangeIndex) == -1)
+                        {
+                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
+                            requests.Add(_httpRequestorService.SendRequest<bool>(requestUrl, HttpMethod.Post));
+                        }
                     }
                     await Task.WhenAll(requests);
                     if (requests.Any(task => !task.Result))
@@ -109,5 +108,22 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         }
 
         return blobSize;
+    }
+
+
+    private List<int> GetExistRangesList(string rangesString)
+    {
+        var ranges = new List<int>();
+        if (!string.IsNullOrWhiteSpace(rangesString))
+        {
+            ranges = rangesString.Split(',')
+                .SelectMany(part => part.Contains('-')
+                    ? Enumerable.Range(
+                        int.Parse(part.Split('-')[0]),
+                        int.Parse(part.Split('-')[1]) - int.Parse(part.Split('-')[0]) + 1)
+                    : new[] { int.Parse(part) })
+                .ToList();
+        }
+        return ranges;
     }
 }
