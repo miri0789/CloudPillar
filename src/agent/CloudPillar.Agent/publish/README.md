@@ -46,6 +46,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `StrictModeSettings.FilesRestrictions.DenyPatterns`    |  array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
 | `DownloadSettings.SignFileBufferSize`    | sing documents buffer size | `16384`         |
 | `DownloadSettings.CommunicationDelaySeconds`    | download delay seconds for check less communication | `30`         |
+| `CommunicationLess`    | API returns mocks and not connect to IOT hub | `false`         |
 
 ## Call GetDeviceState in C# Example
 ```csharp
