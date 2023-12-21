@@ -45,6 +45,7 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task SendStreamingUploadChunks_SingleChunk_CompleteTask()
         {
+            actionToReport.TwinReport.Progress = 0;
             var stream = CreateLargeStream(CHUNK_SIZE * 1);
 
             await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, CORRELATION_ID, CancellationToken.None);
