@@ -5,6 +5,7 @@ using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using System.Text;
 using System.Security.Cryptography;
+using CloudPillar.Agent.Entities;
 
 
 namespace CloudPillar.Agent.Tests;
@@ -21,6 +22,8 @@ public class SignatureHandlerTestFixture
     private Mock<FileStream> _fileStreamMock;
     private Mock<ISHA256Wrapper> _sha256WrapperMock;
     private Mock<IECDsaWrapper> _ecdsaWrapperMock;
+    private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
+    private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
 
     [SetUp]
     public void Setup()
@@ -33,10 +36,13 @@ public class SignatureHandlerTestFixture
         _sha256WrapperMock = new Mock<ISHA256Wrapper>();
         _ecdsaWrapperMock = new Mock<IECDsaWrapper>();
         _fileStreamMock = new Mock<FileStream>(MockBehavior.Default, new object[] { "filePath", FileMode.Create });
+        mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
+        mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
+        mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
 
         mockSignFileSettings.Setup(x => x.Value).Returns(mockSignFileSettingsValue);
 
-        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, mockSignFileSettings.Object, _sha256WrapperMock.Object, _ecdsaWrapperMock.Object);
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, mockSignFileSettings.Object, _sha256WrapperMock.Object, _ecdsaWrapperMock.Object, mockDownloadSettings.Object);
 
         string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
                                 MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBgc4HZz+/fBbC7lmEww0AO3NK9wVZ
