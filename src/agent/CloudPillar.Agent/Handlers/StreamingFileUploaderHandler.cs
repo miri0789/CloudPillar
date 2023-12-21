@@ -18,6 +18,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     private readonly ITwinActionsHandler _twinActionsHandler;
     private readonly UploadCompleteRetrySettings _uploadCompleteRetrySettings;
     private readonly ILoggerHandler _logger;
+    private bool _completeUploadDone = false;
 
     public StreamingFileUploaderHandler(ID2CMessengerHandler d2CMessengerHandler, IDeviceClientWrapper deviceClientWrapper, ICheckSumService checkSumService, ITwinActionsHandler twinActionsHandler, IOptions<UploadCompleteRetrySettings> uploadCompleteRetrySettings, ILoggerHandler logger)
     {
@@ -85,7 +86,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             await readStream.ReadAsync(buffer, 0, buffer.Length);
 
             await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, currentPosition, checkSum, cancellationToken, isRunDiagnostics);
-            if (currentPosition == 0)
+            if (!_completeUploadDone)
             {
                 await CompleteFileUploadAsync(notification, cancellationToken);
             }
@@ -104,6 +105,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
                     (ex, time) => _logger.Warn($"Failed to complete file upload. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
                 await retryPolicy.ExecuteAsync(async () => await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken));
                 _logger.Info($"CompleteFileUploadAsync ended successfully");
+                _completeUploadDone = true;
             }
             catch (Exception ex)
             {
