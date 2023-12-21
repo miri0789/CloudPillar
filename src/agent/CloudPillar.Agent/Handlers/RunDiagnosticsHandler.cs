@@ -39,7 +39,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var uploadCheckSum = await UploadFileAsync(diagnosticsFilePath, cancellationToken);
 
         var fileName = _fileStreamerWrapper.GetFileName(diagnosticsFilePath);
-        var reported = await CheckDownloadStatus(fileName);
+        var reported = await CheckDownloadStatus(fileName, cancellationToken);
         if (reported.Status == StatusType.Success)
         {
             var equal = await CompareUploadAndDownloadFiles(uploadCheckSum, diagnosticsFilePath);
@@ -104,7 +104,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    private async Task<TwinActionReported> CheckDownloadStatus(string fileName)
+    private async Task<TwinActionReported> CheckDownloadStatus(string fileName, CancellationToken cancellationToken)
     {
         TwinActionReported? reported = new TwinActionReported();
         var taskCompletion = new TaskCompletionSource<TwinActionReported>();
@@ -121,7 +121,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
         try
         {
-            while (!taskCompletion.Task.IsCompleted && await timer.WaitForNextTickAsync())
+            while (!taskCompletion.Task.IsCompleted && await timer.WaitForNextTickAsync() && !cancellationToken.IsCancellationRequested)
             {
                 reported = await GetDownloadStatus(fileName);
                 _logger.Info($"CheckResponse response is {reported?.Status}");
