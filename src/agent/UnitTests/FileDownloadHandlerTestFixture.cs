@@ -114,7 +114,7 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task InitFileDownloadAsync_ActiveDownload_NotSendFirmwareUpdateEvent()
+        public async Task InitFileDownloadAsync_ActiveDownload_SendFirmwareUpdateEventWithRange()
         {
             var action = initAction();
             action.Report.CompletedRanges = "0-5,8,10";
