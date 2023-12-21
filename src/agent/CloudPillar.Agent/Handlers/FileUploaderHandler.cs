@@ -34,14 +34,15 @@ public class FileUploaderHandler : IFileUploaderHandler
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string fileName, CancellationToken cancellationToken)
+
+    public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string fileName, string changeSpecId, CancellationToken cancellationToken)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(fileName);
             if (uploadAction.Enabled)
             {
-                await UploadFilesToBlobStorageAsync(fileName, uploadAction, actionToReport, cancellationToken);
+                await UploadFilesToBlobStorageAsync(fileName, uploadAction, actionToReport, changeSpecId, cancellationToken);
                 SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString());
             }
         }
@@ -56,7 +57,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, CancellationToken cancellationToken, bool isRunDiagnostics = false)
+    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, string changeSpecId, CancellationToken cancellationToken, bool isRunDiagnostics = false)
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
@@ -79,6 +80,12 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             string blobname = BuildBlobName(fullFilePath);
 
+            if (!string.IsNullOrEmpty(changeSpecId))
+            {
+                blobname = $"{changeSpecId}/{blobname}";
+            }
+
+
             using (Stream readStream = CreateStream(fullFilePath))
             {
                 await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, isRunDiagnostics, cancellationToken);
@@ -88,7 +95,6 @@ public class FileUploaderHandler : IFileUploaderHandler
 
     private string BuildBlobName(string fullFilePath)
     {
-        _logger.Info($"BuildBlobName");
 
         string blobname = Regex.Replace(fullFilePath.Replace("//:", "_protocol_").Replace("\\", "/").Replace(":/", "_driveroot_/"), "^\\/", "_root_");
 
@@ -96,6 +102,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         {
             blobname += ".zip";
         }
+        _logger.Info($"BuildBlobName success name: {blobname}");
         return blobname;
     }
 

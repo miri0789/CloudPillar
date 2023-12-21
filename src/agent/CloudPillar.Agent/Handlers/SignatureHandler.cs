@@ -2,6 +2,7 @@
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -13,9 +14,11 @@ public class SignatureHandler : ISignatureHandler
     private readonly SignFileSettings _signFileSettings;
     private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IECDsaWrapper _ecdsaWrapper;
+    private readonly DownloadSettings _downloadSettings;
+
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
-    IOptions<SignFileSettings> options, ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper)
+    IOptions<SignFileSettings> options, ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IOptions<DownloadSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
@@ -23,6 +26,7 @@ public class SignatureHandler : ISignatureHandler
         _signFileSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _sha256Wrapper = sha256Wrapper ?? throw new ArgumentNullException(nameof(sha256Wrapper));
         _ecdsaWrapper = ecdsaWrapper ?? throw new ArgumentNullException(nameof(ecdsaWrapper));
+        _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     private async Task<ECDsa> InitPublicKeyAsync()
@@ -82,7 +86,7 @@ public class SignatureHandler : ISignatureHandler
         {
             using (FileStream fileStream = _fileStreamerWrapper.OpenRead(filePath))
             {
-                byte[] buffer = new byte[_signFileSettings.BufferSize];
+                byte[] buffer = new byte[_downloadSettings.SignFileBufferSize];
                 int bytesRead;
 
                 while ((bytesRead = _fileStreamerWrapper.Read(fileStream, buffer, 0, buffer.Length)) > 0)
