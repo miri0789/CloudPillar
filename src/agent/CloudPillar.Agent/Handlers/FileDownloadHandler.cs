@@ -50,7 +50,8 @@ public class FileDownloadHandler : IFileDownloadHandler
             fileDownload = new FileDownload { ActionReported = actionToReport };
             _filesDownloads.Add(fileDownload);
         }
-
+        fileDownload.Action.Sign = fileDownload.Action.Sign ?? ((DownloadAction)actionToReport.TwinAction).Sign;
+        
         // call async because messages of file data continue received 
         Task.Run(async () => HandleInitFileDownloadAsync(fileDownload, cancellationToken));
     }
@@ -77,7 +78,12 @@ public class FileDownloadHandler : IFileDownloadHandler
                     file.Report.Status = StatusType.Pending;
                     file.Report.CompletedRanges = "";
                 }
-                if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
+
+                if (isFileExist && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
+                {
+                    SetBlockedStatus(file, cancellationToken);
+                }
+                else if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
                 {
                     await HandleCompletedDownloadAsync(file, cancellationToken);
                 }
@@ -112,6 +118,26 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
     }
 
+    private void SetBlockedStatus(FileDownload file, CancellationToken cancellationToken)
+    {
+        file.Report.Status = StatusType.Blocked;
+        file.Report.ResultCode = "FileAlreadyExist";
+        _logger.Info($"File {file.Action.DestinationPath} already exist, sending blocked status");
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            Task.Run(async () => WaitInBlockedBeforeDownload(file, cancellationToken));
+        }
+    }
+
+    private async Task WaitInBlockedBeforeDownload(FileDownload file, CancellationToken cancellationToken)
+    {
+        await Task.Delay(TimeSpan.FromMinutes(_downloadSettings.BlockedDelayMinutes), cancellationToken);
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            await HandleInitFileDownloadAsync(file, cancellationToken);
+        }
+    }
+
     private async Task CheckIfNotRecivedDownloadMsgToFile(FileDownload file, CancellationToken cancellationToken)
     {
         var downloadedBytes = file.TotalBytesDownloaded;
@@ -137,7 +163,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             BufferSize = _downloadSettings.SignFileBufferSize,
             PropName = actionToReport.ReportPartName,
             ChangeSpec = actionToReport.ChangeSpecKey
-            
+
         };
         await _d2CMessengerHandler.SendSignFileEventAsync(signFileEvent, cancellationToken);
     }
@@ -299,7 +325,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         try
         {
             await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success || file.Report.Status == StatusType.SentForSignature)
+            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
             {
                 RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
             }
