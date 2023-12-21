@@ -86,7 +86,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"Exception during IoT Hub connection message: {ex.Message}");
+            _logger.Error($"Exception during IoT Hub connection: ", ex);
         }
     }
 
