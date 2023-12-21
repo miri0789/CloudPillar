@@ -321,10 +321,8 @@ namespace CloudPillar.Agent.Tests
         }
 
 
-
-
         [Test]
-        public async Task HandleDownloadMessageAsync_NoDestinationPath_ReportFailure()
+        public async Task InitFileDownloadAsync_NoDestinationPath_ReportFailure()
         {
             var action = initAction();
             action.Action.DestinationPath = "";
@@ -337,7 +335,7 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleDownloadMessageAsync_DestinationPathIsNotFolder_ReportFailure()
+        public async Task InitFileDownloadAsync_DestinationPathIsNotFolder_ReportFailure()
         {
             var action = initAction();
             action.Action.Unzip = true;
@@ -351,7 +349,7 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleDownloadMessageAsync_UnzipNotZipFile_ReportFailure()
+        public async Task InitFileDownloadAsync_UnzipNotZipFile_ReportFailure()
         {
             var action = initAction();
             action.Action.Unzip = true;
@@ -368,7 +366,7 @@ namespace CloudPillar.Agent.Tests
 
 
         [Test]
-        public async Task HandleDownloadMessageAsync_DestinationPathNotContainsExtention_ReportFailure()
+        public async Task InitFileDownloadAsync_DestinationPathNotContainsExtention_ReportFailure()
         {
             var action = initAction();
 
@@ -382,7 +380,7 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleDownloadMessageAsync_NotExistFileDirectories_CreateSubDirectories()
+        public async Task InitFileDownloadAsync_NotExistFileDirectories_CreateSubDirectories()
         {
             var action = initAction();
 
@@ -416,6 +414,31 @@ namespace CloudPillar.Agent.Tests
         {
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
             await Task.Delay(100); // for init that run in background
+        }
+
+        public async Task InitFileDownloadAsync_FileExist_ReportBlockedStatus()
+        {
+            var action = initAction();
+            _fileStreamerWrapperMock.Setup(item => item.FileExists(It.IsAny<string>())).Returns(true);
+            await InitFileDownloadAsync(action);
+            
+            _twinActionsHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
+                item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
+            , It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        public async Task InitFileDownloadAsync_ZippedDirectoryExist_ReportBlockedStatus()
+        {
+            var action = initAction();
+            action.Action.Unzip = true;
+            _fileStreamerWrapperMock.Setup(item => item.DirectoryExists(It.IsAny<string>())).Returns(true);
+            await InitFileDownloadAsync(action);
+            
+            _twinActionsHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
+                item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
+            , It.IsAny<CancellationToken>()), Times.Once);
         }
 
     }
