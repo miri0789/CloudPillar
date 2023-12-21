@@ -38,13 +38,9 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
                 _logger.Info($"Start send messages with chunks. Total chunks is: {totalChunks}");
 
                 await HandleUploadChunkAsync(notification, actionToReport, readStream, storageUri, chunkSize, isRunDiagnostics, cancellationToken);
-
-                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
             catch (Exception ex)
             {
-                notification.IsSuccess = false;
-                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                 _logger.Error($"SendStreamingUploadChunkEventAsync failed: {ex.Message}");
             }
         }

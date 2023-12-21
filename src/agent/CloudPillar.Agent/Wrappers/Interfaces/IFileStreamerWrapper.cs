@@ -31,8 +31,7 @@ public interface IFileStreamerWrapper
 
     string GetFileName(string filePathPattern);
 
-    string GetTempFileName();
-
+    string GetTempPath();
     string[] GetFiles(string directoryPath, string searchPattern);
 
     string[] GetFiles(string fullFilePath, string searchPattern, SearchOption searchOption);

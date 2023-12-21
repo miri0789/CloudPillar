@@ -6,6 +6,7 @@ using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 public class RunDiagnosticsHandler : IRunDiagnosticsHandler
@@ -15,28 +16,40 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ICheckSumService _checkSumService;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IGuidWrapper _guidWrapper;
     private readonly ILoggerHandler _logger;
 
+    private const string DIAGNOSTICS_EXTENSION = ".tmp";
+
     public RunDiagnosticsHandler(IFileUploaderHandler fileUploaderHandler, IOptions<RunDiagnosticsSettings> runDiagnosticsSettings, IFileStreamerWrapper fileStreamerWrapper,
-    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, ILoggerHandler logger)
+    ICheckSumService checkSumService, IDeviceClientWrapper deviceClientWrapper, IGuidWrapper guidWrapper, ILoggerHandler logger)
     {
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _runDiagnosticsSettings = runDiagnosticsSettings?.Value ?? throw new ArgumentNullException(nameof(runDiagnosticsSettings));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _guidWrapper = guidWrapper ?? throw new ArgumentNullException(nameof(guidWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<TwinActionReported> HandleRunDiagnosticsProcess(CancellationToken cancellationToken)
     {
         var diagnosticsFilePath = await CreateFileAsync();
-        await UploadFileAsync(diagnosticsFilePath, cancellationToken);
-        var fileName = _fileStreamerWrapper.GetFileName(diagnosticsFilePath);
+        var uploadCheckSum = await UploadFileAsync(diagnosticsFilePath, cancellationToken);
 
-        var reported = await CheckDownloadStatus(fileName, diagnosticsFilePath);
-        var downloadFile = reported.Status == StatusType.Success ? reported.ResultText : string.Empty;
-        DeleteFileAsync(diagnosticsFilePath, downloadFile);
+        var fileName = _fileStreamerWrapper.GetFileName(diagnosticsFilePath);
+        var reported = await CheckDownloadStatus(fileName);
+        if (reported.Status == StatusType.Success)
+        {
+            var equal = await CompareUploadAndDownloadFiles(uploadCheckSum, diagnosticsFilePath);
+            if (!equal)
+            {
+                reported.Status = StatusType.Failed;
+                reported.ResultText = "Upload file is not equal to Download file";
+            }
+        }
+        DeleteTempFile(diagnosticsFilePath);
         return reported;
     }
 
@@ -44,13 +57,11 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     {
         try
         {
-            var diagnosticsFilePath = _fileStreamerWrapper.GetTempFileName();
-
-            //create random content
             var bytes = new Byte[_runDiagnosticsSettings.FileSizeBytes];
             new Random().NextBytes(bytes);
 
-            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.Open))
+            string diagnosticsFilePath = Path.Combine(_fileStreamerWrapper.GetTempPath(), $"{_guidWrapper.CreateNewGuid()}{DIAGNOSTICS_EXTENSION}");
+            using (FileStream fileStream = _fileStreamerWrapper.CreateStream(diagnosticsFilePath, FileMode.OpenOrCreate))
             {
                 _fileStreamerWrapper.SetLength(fileStream, _runDiagnosticsSettings.FileSizeBytes);
                 await _fileStreamerWrapper.WriteAsync(fileStream, bytes);
@@ -66,7 +77,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         }
     }
 
-    private async Task UploadFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
+    private async Task<string> UploadFileAsync(string diagnosticsFilePath, CancellationToken cancellationToken)
     {
         try
         {
@@ -80,16 +91,19 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
             var actionToReport = new ActionToReport(TwinPatchChangeSpec.ChangeSpecDiagnostics);
             await _fileUploaderHandler.UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, actionToReport, cancellationToken, true);
+            var checkSum = await GetFileCheckSumAsync(diagnosticsFilePath);
+            DeleteTempFile(diagnosticsFilePath);
+            return checkSum;
         }
         catch (Exception ex)
         {
             var err = $"UploadFileAsync error: {ex.Message}";
-            _logger.Error(err);
-            throw new Exception(err); ;
+            _logger.Error(err, ex);
+            throw new Exception(err);
         }
     }
 
-    private async Task<TwinActionReported> CheckDownloadStatus(string fileName, string diagnosticsFilePath)
+    private async Task<TwinActionReported> CheckDownloadStatus(string fileName)
     {
         TwinActionReported? reported = new TwinActionReported();
         var taskCompletion = new TaskCompletionSource<TwinActionReported>();
@@ -111,22 +125,9 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                 reported = await GetDownloadStatus(fileName);
                 _logger.Info($"CheckResponse response is {reported?.Status}");
 
-                if (reported?.Status == StatusType.Success)
+                if (reported.Status == StatusType.Success || reported.Status == StatusType.Failed)
                 {
-                    var res = await CompareUploadAndDownloadFiles(diagnosticsFilePath, reported.ResultText);
-                    if (!res)
-                    {
-                        reported.Status = StatusType.Failed;
-                        reported.ResultText = "Upload file is not equal to Download file";
-                    }
                     taskCompletion.SetResult(reported);
-                }
-                else
-                {
-                    if (reported?.Status == StatusType.Failed)
-                    {
-                        taskCompletion.SetResult(reported);
-                    }
                 }
             }
         }
@@ -142,24 +143,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         return await taskCompletion.Task;
     }
 
-    private void DeleteFileAsync(string uploadFilePath, string downloadFilePath)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(uploadFilePath);
-            ArgumentNullException.ThrowIfNull(downloadFilePath);
-            DeleteTempFile(uploadFilePath);
-            DeleteTempFile(downloadFilePath);
-        }
-        catch (Exception ex)
-        {
-            var err = $"DeleteFileAsync error: {ex.Message}";
-            _logger.Error(err);
-            throw new Exception(err);
-        }
-    }
-
-    private async Task<TwinActionReported?> GetDownloadStatus(string fileName)
+    private async Task<TwinActionReported> GetDownloadStatus(string fileName)
     {
 
         var twin = await _deviceClientWrapper.GetTwinAsync(CancellationToken.None);
@@ -170,30 +154,24 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var desiredList = twinDesired?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
         var reportedList = twinReported?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
 
-        var indexDesired = desiredList?.FindIndex(x => x is DownloadAction &&
-                Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
+        var indexDesired = desiredList?.FindIndex(x => x is DownloadAction && Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
         if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())
         {
             _logger.Info($"No report with fileName {fileName}");
             return new TwinActionReported() { Status = StatusType.Pending };
         }
 
-        var report = reportedList?[indexDesired];
-        if (report?.Status == StatusType.Success)
-        {
-            report.ResultText = ((DownloadAction)desiredList?[indexDesired]!).DestinationPath;
-        }
-        return reportedList?[indexDesired];
+        return reportedList[indexDesired];
     }
 
-    private async Task<bool> CompareUploadAndDownloadFiles(string uploadFilePath, string downloadFilePath)
+    private async Task<bool> CompareUploadAndDownloadFiles(string uploadCheckSum, string downloadFilePath)
     {
         _logger.Info("Start compare upload and download files");
 
-        string uploadChecksum = await GetFileCheckSumAsync(uploadFilePath);
         string downloadChecksum = await GetFileCheckSumAsync(downloadFilePath);
 
-        var isEqual = uploadChecksum?.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase) ?? false;
+        var isEqual = uploadCheckSum?.Equals(downloadChecksum, StringComparison.OrdinalIgnoreCase) ?? false;
+
         if (isEqual == true)
         {
             _logger.Info("Upload file is equal to Download file");
@@ -214,10 +192,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
     private void DeleteTempFile(string filePath)
     {
-        if (string.IsNullOrEmpty(filePath))
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(filePath);
         if (_fileStreamerWrapper.FileExists(filePath))
         {
             _fileStreamerWrapper.DeleteFile(filePath);

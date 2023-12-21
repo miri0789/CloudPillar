@@ -5,6 +5,7 @@ using Shared.Entities.Services;
 using Shared.Entities.Twin;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
+using System.Text.RegularExpressions;
 
 
 
@@ -105,9 +106,16 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             Action = TwinActionType.SingularDownload,
             Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
             Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
-            DestinationPath = Path.GetTempFileName(),
+            DestinationPath = GetFilePathFromBlobName(Uri.UnescapeDataString(storageUri.Segments.Last())),
         };
         await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.ChangeSpecDiagnostics, downloadAction);
     }
 
+    private string GetFilePathFromBlobName(string blobName)
+    {
+        string result = blobName.Substring(blobName.IndexOf("/") + 1);
+        var filePath =  Regex.Replace(result.Replace("_protocol_", "//:").Replace("_driveroot_", ":").Replace("/", "\\"), "^\\/", "_root_");
+        _logger.Info($"GetFilePathFromBlobName, filePath is: {filePath}");
+        return filePath;
+    }
 }
