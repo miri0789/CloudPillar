@@ -16,10 +16,8 @@ public class FileUploaderHandlerTestFixture
     private Mock<ITwinActionsHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerMock;
     private IFileUploaderHandler _target;
-    private MemoryStream READ_STREAM = new MemoryStream(new byte[] { 1, 2, 3 });
-    private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
-    FileUploadSasUriResponse sasUriResponse = new FileUploadSasUriResponse();
     private const string FILE_NAME = "testFileName";
+    private const string CHANGE_SPEC_ID = "123.456.789";
     private UploadAction uploadAction = new UploadAction
     {
         FileName = FILE_NAME,
@@ -42,13 +40,13 @@ public class FileUploaderHandlerTestFixture
         _loggerMock = new Mock<ILoggerHandler>();
 
         _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponse);
-
+        .ReturnsAsync(new FileUploadSasUriResponse());
+        var storageUri = new Uri("https://mockstorage.example.com/mock-container");
         _deviceClientWrapperMock.Setup(device => device.GetBlobUri(It.IsAny<FileUploadSasUriResponse>()))
-        .Returns(STORAGE_URI);
+        .Returns(storageUri);
 
         _fileStreamerWrapperMock.Setup(f => f.CreateStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>(), It.IsAny<int>(), It.IsAny<bool>()))
-        .Returns(() => READ_STREAM);
+        .Returns(() => new MemoryStream(new byte[] { 1, 2, 3 }));
         _fileStreamerWrapperMock.Setup(x => x.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { });
         _fileStreamerWrapperMock.Setup(x => x.GetDirectories(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { });
 
@@ -56,15 +54,24 @@ public class FileUploaderHandlerTestFixture
         _twinActionsHandler.Object, _loggerMock.Object);
     }
 
+    [Test]
+    public async Task UploadFilesToBlobStorageAsync_ValidStorageFiles_UploadStream()
+    {
+        _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[1] { $"test.txt" });
+        
+        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CHANGE_SPEC_ID, CancellationToken.None);
+
+        _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
     [Test]
-    public async Task UploadFilesToBlobStorageAsync_ValidStorageFiles_ReturnStatusSuccess()
+    public async Task UploadFilesToBlobStorageAsync_ValidChangeSpecId_CreateBlobUrlWithId()
     {
         _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[1] { $"test.txt" });
 
-        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CancellationToken.None);
+        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CHANGE_SPEC_ID, CancellationToken.None);
 
-        _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
+        _deviceClientWrapperMock.Verify(mf => mf.GetFileUploadSasUriAsync(It.Is<FileUploadSasUriRequest>(file => file.BlobName.Contains(CHANGE_SPEC_ID)), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -74,7 +81,7 @@ public class FileUploaderHandlerTestFixture
         _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[] { });
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CancellationToken.None);
+        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CHANGE_SPEC_ID, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Failed);
     }
@@ -85,8 +92,10 @@ public class FileUploaderHandlerTestFixture
         _fileStreamerWrapperMock.Setup(x => x.GetFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>())).Returns(new string[] { });
         _fileStreamerWrapperMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(true);
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CancellationToken.None);
+        await _target.FileUploadAsync(uploadAction, actionToReport, FILE_NAME, CHANGE_SPEC_ID, CancellationToken.None);
 
         Assert.AreEqual(actionToReport.TwinReport.Status, StatusType.Failed);
     }
+
+
 }

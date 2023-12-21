@@ -90,7 +90,8 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
             };
 
             var actionToReport = new ActionToReport(TwinPatchChangeSpec.ChangeSpecDiagnostics);
-            await _fileUploaderHandler.UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, actionToReport, cancellationToken, true);
+            const string DIAGNOSTICS_ID = "diagnostics";
+            await _fileUploaderHandler.UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, actionToReport, DIAGNOSTICS_ID, cancellationToken, true);
             var checkSum = await GetFileCheckSumAsync(diagnosticsFilePath);
             DeleteTempFile(diagnosticsFilePath);
             return checkSum;
