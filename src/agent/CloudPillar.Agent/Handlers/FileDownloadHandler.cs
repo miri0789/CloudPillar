@@ -68,6 +68,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             else
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
+                var isZippedDirectoryExist = _fileStreamerWrapper.DirectoryExists(file.Action.DestinationPath);
                 InitDownloadPath(file);
                 var destPath = GetDestinationPath(file);
                 var isFileExist = _fileStreamerWrapper.FileExists(destPath);
@@ -79,7 +80,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                     file.Report.CompletedRanges = "";
                 }
 
-                if (isFileExist && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
+                if ((isFileExist || isZippedDirectoryExist) && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
                 {
                     SetBlockedStatus(file, cancellationToken);
                 }
