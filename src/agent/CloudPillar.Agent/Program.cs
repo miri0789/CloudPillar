@@ -9,8 +9,16 @@ using FluentValidation;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
 using Shared.Entities.Twin;
+using System.Runtime.InteropServices;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
+
+bool runAsService = args.FirstOrDefault() == "--winsrv";
+Environment.CurrentDirectory = Directory.GetCurrentDirectory();
+if(!runAsService && args.FirstOrDefault()!=null)
+{
+    Environment.CurrentDirectory = args.FirstOrDefault();
+}
 
 const string MY_ALLOW_SPECIFICORIGINS = "AllowLocalhost";
 var builder = LoggerHostCreator.Configure("Agent API", WebApplication.CreateBuilder(args));
@@ -18,6 +26,21 @@ var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_
 var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
+
+var serviceName = builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
+
+if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    builder.Services.AddScoped<IWindowsServiceWrapper, WindowsServiceWrapper>();
+    var windowsServiceWrapper = builder.Services.BuildServiceProvider().GetRequiredService<IWindowsServiceWrapper>();
+    windowsServiceWrapper?.InstallWindowsService(serviceName, Environment.CurrentDirectory);
+    Environment.Exit(0);
+}
+
+builder.Services.AddWindowsService(options =>
+{
+    options.ServiceName = serviceName;
+});
 
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
@@ -115,8 +138,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-
-
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -139,4 +160,3 @@ app.MapControllers();
 app.ValidateAuthenticationSettings();
 
 app.Run();
-
