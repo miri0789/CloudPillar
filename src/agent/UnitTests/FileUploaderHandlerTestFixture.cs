@@ -16,8 +16,6 @@ public class FileUploaderHandlerTestFixture
     private Mock<ITwinActionsHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerMock;
     private IFileUploaderHandler _target;
-    private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
-    FileUploadSasUriResponse sasUriResponse = new FileUploadSasUriResponse();
     private const string FILE_NAME = "testFileName";
     private const string CHANGE_SPEC_ID = "123.456.789";
     private UploadAction uploadAction = new UploadAction
@@ -42,10 +40,10 @@ public class FileUploaderHandlerTestFixture
         _loggerMock = new Mock<ILoggerHandler>();
 
         _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(sasUriResponse);
-
+        .ReturnsAsync(new FileUploadSasUriResponse());
+        var storageUri = new Uri("https://mockstorage.example.com/mock-container");
         _deviceClientWrapperMock.Setup(device => device.GetBlobUri(It.IsAny<FileUploadSasUriResponse>()))
-        .Returns(STORAGE_URI);
+        .Returns(storageUri);
 
         _fileStreamerWrapperMock.Setup(f => f.CreateStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>(), It.IsAny<int>(), It.IsAny<bool>()))
         .Returns(() => new MemoryStream(new byte[] { 1, 2, 3 }));
