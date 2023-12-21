@@ -9,7 +9,7 @@ namespace CloudPillar.Agent.Handlers.Logger
                 builder = WebApplication.CreateBuilder();
             }
             builder.Services.AddHttpContextAccessor();
-            string? appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
+
             var lo4NetPath = "log4net.config";
             if (!File.Exists(lo4NetPath))
             {

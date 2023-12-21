@@ -156,10 +156,10 @@ public class SigningService : ISigningService
         }
     }
 
-    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash)
+    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash, TwinPatchChangeSpec changeSpecKey)
     {
         var signature = await SignData(hash);
-        await AddFileSignToDesired(deviceId, TwinPatchChangeSpec.ChangeSpec, propName, actionIndex, signature);
+        await AddFileSignToDesired(deviceId, changeSpecKey, propName, actionIndex, signature);
 
     }
 

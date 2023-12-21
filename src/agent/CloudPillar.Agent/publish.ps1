@@ -25,11 +25,23 @@ $appSettingsFileName = "appsettings.json"
 $appSettingsPath = Join-Path -Path $scriptDir -ChildPath $appSettingsFileName
 $log4netFileName = "log4net.config"
 $log4netPath = Join-Path -Path $scriptDir -ChildPath $log4netFileName
+$startAgentBatFileName = "startagent.bat"
+$startAgentBatPath = Join-Path -Path $scriptDir -ChildPath $startAgentBatFileName
+$startAgentShellFileName = "startagent.sh"
+$startAgentShellPath = Join-Path -Path $scriptDir -ChildPath $startAgentShellFileName
+$pkiDirName = "pki"
+$pkiPath = Join-Path -Path $scriptDir -ChildPath $pkiDirName
 
 $appSettingsDestinationPathDev = Join-Path -Path $sourceDir -ChildPath env/dev/$appSettingsFileName
 $appSettingsDestinationPathProd = Join-Path -Path $sourceDir -ChildPath env/prod/$appSettingsFileName
 $log4netDestinationPathDev = Join-Path -Path $sourceDir -ChildPath env/dev/$log4netFileName
 $log4netDestinationPathProd = Join-Path -Path $sourceDir -ChildPath env/prod/$log4netFileName
+$startAgentBatDestinationPathDev = Join-Path -Path $sourceDir -ChildPath env/dev/$startAgentBatFileName
+$startAgentBatDestinationPathProd = Join-Path -Path $sourceDir -ChildPath env/prod/$startAgentBatFileName
+$startAgentShellDestinationPathDev = Join-Path -Path $sourceDir -ChildPath env/dev/$startAgentShellFileName
+$startAgentShellDestinationPathProd = Join-Path -Path $sourceDir -ChildPath env/prod/$startAgentShellFileName
+$pkiDestinationPathDev = Join-Path -Path $sourceDir -ChildPath env/dev
+$pkiDestinationPathProd = Join-Path -Path $sourceDir -ChildPath env/prod
 
 # Remove the existing zip file if it exists
 if (Test-Path $zipPath) {
@@ -46,8 +58,14 @@ if (-not (Test-Path $sourceDir)) {
 # Copy appSettings.json and log4net files
 Copy-Item -Path $appSettingsPath -Destination $appSettingsDestinationPathProd -Force
 Copy-Item -Path $log4netPath -Destination $log4netDestinationPathProd -Force
+Copy-Item -Path $startAgentBatPath -Destination $startAgentBatDestinationPathProd -Force
+Copy-Item -Path $startAgentShellPath -Destination $startAgentShellDestinationPathProd -Force
+Copy-Item -Path $pkiPath -Destination $pkiDestinationPathProd -Recurse -Force
 Copy-Item -Path $appSettingsPath -Destination $appSettingsDestinationPathDev -Force
 Copy-Item -Path $log4netPath -Destination $log4netDestinationPathDev -Force
+Copy-Item -Path $startAgentBatPath -Destination $startAgentBatDestinationPathDev -Force
+Copy-Item -Path $startAgentShellPath -Destination $startAgentShellDestinationPathDev -Force
+Copy-Item -Path $pkiPath -Destination $pkiDestinationPathDev -Recurse -Force
 Write-Host "* Publishing in $sourceDir..."
 
 # Loop through each platform and architecture
