@@ -101,6 +101,15 @@ namespace CloudPillar.Agent.Tests
             await InitFileDownloadAsync(action);
 
             _d2CMessengerHandlerMock.Verify(mf => mf.SendSignFileEventAsync(It.IsAny<SignFileEvent>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task InitFileDownloadAsync_NewDownloadWithoutSign_NotSendFirmwareUpdate()
+        {
+            var action = initAction();
+            action.Action.Sign = null;
+            await InitFileDownloadAsync(action);
+
             _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 0, It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
         }
 
@@ -176,7 +185,7 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleDownloadMessageAsync_VerifyFailed_DeleteFile()
+        public async Task HandleDownloadMessageAsync_SignVerifyFailed_DeleteFile()
         {
             var action = initAction();
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");

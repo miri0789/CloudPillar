@@ -75,7 +75,7 @@ public class SigningTestFixture
     }
 
     [Test]
-    public async Task CreateFileKeySignature_ValidArguments_SignatureAddedToFile()
+    public async Task CreateFileKeySignature_ValidArguments_UpdateTwinWithSignature()
     {
         var deviceId = "testDevice";
         var propName = "propName";
