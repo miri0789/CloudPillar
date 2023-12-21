@@ -102,6 +102,25 @@ namespace Backend.BlobStreamer.Tests
             async Task GetBlobMetadataAsync() => await _target.GetBlobMetadataAsync(fileName);
             Assert.ThrowsAsync<NullReferenceException>(GetBlobMetadataAsync);
         }
-        
+
+
+        [Test]
+        public async Task CalculateHashAsync_ShouldReturnHash()
+        {
+            _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<long>()));
+            _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
+            _mockCloudStorageWrapper.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
+            var result = await _target.CalculateHashAsync(_fileName, _chunkSize);
+            _mockCloudStorageWrapper.Verify(b => b.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName), Times.Once);
+            _mockBlockBlob.Verify(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<long>()), Times.AtLeast(1));
+            Assert.IsNotNull(result);
+        }
+        [Test]
+        public async Task CalculateHashAsync_OnNoLength_ShouldnotDownloadRange()
+        {
+            var result = await _target.CalculateHashAsync(_fileName, _chunkSize);
+            _mockCloudStorageWrapper.Verify(b => b.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName), Times.Once);
+            _mockBlockBlob.Verify(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<long>()), Times.Never());
+        }
     }
 }

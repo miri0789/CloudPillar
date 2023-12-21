@@ -50,7 +50,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             fileDownload = new FileDownload { ActionReported = actionToReport };
             _filesDownloads.Add(fileDownload);
         }
-
+        fileDownload.Action.Sign = fileDownload.Action.Sign ?? ((DownloadAction)actionToReport.TwinAction).Sign;
         // call async because messages of file data continue received 
         Task.Run(async () => HandleInitFileDownloadAsync(fileDownload, cancellationToken));
     }
@@ -128,7 +128,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             BufferSize = _signFileSettings.BufferSize,
             PropName = actionToReport.ReportPartName,
             ChangeSpec = actionToReport.ChangeSpecKey
-            
+
         };
         await _d2CMessengerHandler.SendSignFileEventAsync(signFileEvent, cancellationToken);
     }
@@ -198,7 +198,9 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         else
         {
-            throw new Exception($"File {file.Action.DestinationPath} signature is not valid, the file will be deleted.");
+            var message = $"File {file.Action.DestinationPath} signature is not valid, the file will be deleted.";
+            _logger.Error(message);
+            throw new Exception(message);
         }
     }
 
