@@ -120,11 +120,11 @@ public class AuthorizationCheckMiddleware
 
     private async Task<bool> IsValidDeviceId(HttpContext context, string deviceId)
     {
-        string pattern = @"^[A-Za-z0-9\-:.+%_#*?!(),=@$']{1,128}$";
+        string pattern = @"^[A-Za-z0-9\-:.+%_#*?!(),=$']{1,128}$";
         var regex = new Regex(pattern);
         if (!regex.IsMatch(deviceId))
         {
-            var error = "Device ID contains one or more invalid character. ID may contain [Aa-Zz] [0-9] and [-:.+%_#*?!(),=@$']";
+            var error = "Device ID contains one or more invalid character. ID may contain [Aa-Zz] [0-9] and [-:.+%_#*?!(),=$']";
             _logger.Error(error);
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await context.Response.WriteAsync(error);
