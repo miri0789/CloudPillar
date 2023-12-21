@@ -162,20 +162,12 @@ public class ReprovisioningHandler : IReprovisioningHandler
         }
     }
 
-    public void RemoveX509CertificatesFromStore()
-    {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite))
-        {
-            RemoveCertificatesFromStore(store, string.Empty);
-        }
-    }
-
     private void RemoveCertificatesFromStore(X509Store store, string thumbprint)
     {
         var certificates = _x509CertificateWrapper.GetCertificates(store);
 
         var filteredCertificates = certificates?.Cast<X509Certificate2>()
-           .Where(cert => string.IsNullOrEmpty(thumbprint) && cert.FriendlyName == _authenticationSettings.GetTemporaryCertificate() ||
+           .Where(cert => string.IsNullOrEmpty(thumbprint) ? cert.FriendlyName == _authenticationSettings.GetTemporaryCertificate() :
             (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix())
            && cert.Thumbprint != thumbprint))
            .ToArray();

@@ -8,8 +8,8 @@ public class FirmwareUpdateEvent : D2CMessage
 
     public int ChunkSize { get; set; }
     
-    [DefaultValue("")]
-    public string CompletedRanges { get; set; }
+    [DefaultValue(0)]
+    public int RangeIndex { get; set; }
 
     [DefaultValue(0)]
     public long StartPosition { get; set; }

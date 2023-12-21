@@ -46,7 +46,7 @@ namespace CloudPillar.Agent.Tests
         {
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(expectedChunkSize);
 
-            await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, 0, "0", START_POSITION, END_POSITION);
+            await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, 0, 0, START_POSITION, END_POSITION);
             _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, FILE_NAME, 0, START_POSITION, END_POSITION) == true), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -59,7 +59,7 @@ namespace CloudPillar.Agent.Tests
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, 0);
+                await _target.SendFirmwareUpdateEventAsync(CancellationToken.None, FILE_NAME, 0, 0);
             });
         }
 

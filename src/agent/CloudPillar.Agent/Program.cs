@@ -80,8 +80,8 @@ builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
 builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 
-var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
-builder.Services.Configure<DownloadSettings>(DownloadSettings);
+var signFileSettings = builder.Configuration.GetSection("SignFileSettings");
+builder.Services.Configure<SignFileSettings>(signFileSettings);
 
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
 builder.Services.Configure<AuthenticationSettings>(authenticationSettings);

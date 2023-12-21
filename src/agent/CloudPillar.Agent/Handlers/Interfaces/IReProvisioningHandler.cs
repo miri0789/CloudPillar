@@ -7,6 +7,4 @@ public interface IReprovisioningHandler
     Task HandleReprovisioningMessageAsync(Message recivedMessage,ReprovisioningMessage message, CancellationToken cancellationToken);
 
     Task HandleRequestDeviceCertificateAsync(RequestDeviceCertificateMessage message, CancellationToken cancellationToken);
-
-    void RemoveX509CertificatesFromStore();
 }

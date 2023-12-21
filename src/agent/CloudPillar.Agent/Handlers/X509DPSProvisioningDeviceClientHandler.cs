@@ -34,15 +34,13 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public X509Certificate2? GetCertificate(string deviceId = "")
+    public X509Certificate2? GetCertificate()
     {
         using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly))
         {
             var certificates = _X509CertificateWrapper.GetCertificates(store);
             var filteredCertificate = certificates?.Cast<X509Certificate2>()
-               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix())
-                && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR)
-                && (string.IsNullOrEmpty(deviceId) || cert.FriendlyName.Contains($"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}")))
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix()) && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR))
                .FirstOrDefault();
 
             return filteredCertificate;
