@@ -4,6 +4,7 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using System.Text;
+using System.Security.Cryptography;
 
 
 namespace CloudPillar.Agent.Tests;

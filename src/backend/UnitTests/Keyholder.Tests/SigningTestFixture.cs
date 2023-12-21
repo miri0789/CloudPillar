@@ -85,7 +85,7 @@ public class SigningTestFixture
         _registryManagerWrapper.Setup(mock => mock.UpdateTwinAsync(It.IsAny<RegistryManager>(), deviceId, It.IsAny<Twin>(), twin.ETag))
                         .ReturnsAsync(twin)
                         .Verifiable();
-        await _target.CreateFileKeySignature(deviceId, propName, actionIndex, hash);
+        await _target.CreateFileKeySignature(deviceId, propName, actionIndex, hash, TwinPatchChangeSpec.ChangeSpec);
         _registryManagerWrapper.Verify(r => r.GetTwinAsync(It.IsAny<RegistryManager>(), deviceId), Times.Once);
     }
 }
