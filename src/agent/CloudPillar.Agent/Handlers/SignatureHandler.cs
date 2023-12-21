@@ -11,7 +11,6 @@ public class SignatureHandler : ISignatureHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ILoggerHandler _logger;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
-    private readonly SignFileSettings _signFileSettings;
     private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IECDsaWrapper _ecdsaWrapper;
     private readonly DownloadSettings _downloadSettings;
@@ -22,7 +21,6 @@ public class SignatureHandler : ISignatureHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
-        _signFileSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _sha256Wrapper = sha256Wrapper ?? throw new ArgumentNullException(nameof(sha256Wrapper));
         _ecdsaWrapper = ecdsaWrapper ?? throw new ArgumentNullException(nameof(ecdsaWrapper));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));

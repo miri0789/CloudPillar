@@ -17,8 +17,6 @@ public class SignatureHandlerTestFixture
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
     private ISignatureHandler _target;
-    private SignFileSettings mockSignFileSettingsValue = new SignFileSettings();
-    private Mock<IOptions<SignFileSettings>> mockSignFileSettings;
     private Mock<FileStream> _fileStreamMock;
     private Mock<ISHA256Wrapper> _sha256WrapperMock;
     private Mock<IECDsaWrapper> _ecdsaWrapperMock;
@@ -31,8 +29,6 @@ public class SignatureHandlerTestFixture
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
-        mockSignFileSettingsValue = SignFileSettingsHelper.SetSignFileSettingsValueMock();
-        mockSignFileSettings = new Mock<IOptions<SignFileSettings>>();
         _sha256WrapperMock = new Mock<ISHA256Wrapper>();
         _ecdsaWrapperMock = new Mock<IECDsaWrapper>();
         _fileStreamMock = new Mock<FileStream>(MockBehavior.Default, new object[] { "filePath", FileMode.Create });
@@ -40,9 +36,7 @@ public class SignatureHandlerTestFixture
         mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
         mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
 
-        mockSignFileSettings.Setup(x => x.Value).Returns(mockSignFileSettingsValue);
-
-        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, mockSignFileSettings.Object, _sha256WrapperMock.Object, _ecdsaWrapperMock.Object, mockDownloadSettings.Object);
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, _sha256WrapperMock.Object, _ecdsaWrapperMock.Object, mockDownloadSettings.Object);
 
         string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
                                 MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBgc4HZz+/fBbC7lmEww0AO3NK9wVZ

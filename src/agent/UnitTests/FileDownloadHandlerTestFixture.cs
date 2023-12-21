@@ -110,7 +110,7 @@ namespace CloudPillar.Agent.Tests
             action.Action.Sign = null;
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, 0, It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, "0", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
         }
 
         [Test]
