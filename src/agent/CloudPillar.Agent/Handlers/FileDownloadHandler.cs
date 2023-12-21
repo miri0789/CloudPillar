@@ -126,7 +126,9 @@ public class FileDownloadHandler : IFileDownloadHandler
             ActionIndex = actionToReport.ReportIndex,
             FileName = ((DownloadAction)actionToReport.TwinAction).Source,
             BufferSize = _signFileSettings.BufferSize,
-            PropName = actionToReport.ReportPartName
+            PropName = actionToReport.ReportPartName,
+            ChangeSpec = actionToReport.ChangeSpecKey
+            
         };
         await _d2CMessengerHandler.SendSignFileEventAsync(signFileEvent, cancellationToken);
     }
@@ -286,7 +288,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         try
         {
             await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
+            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success || file.Report.Status == StatusType.SentForSignature)
             {
                 RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
             }

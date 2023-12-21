@@ -21,13 +21,14 @@ public class CommonEnvironmentsWrapper : ICommonEnvironmentsWrapper
         }
     }
 
-    private string GetVariable(string name)
-    {
-        return Environment.GetEnvironmentVariable(name);
-    }
     public string iothubConnectionString
     {
         get { return GetVariable(_iothubConnectionString); }
+    }
+    
+    private string GetVariable(string name)
+    {
+        return Environment.GetEnvironmentVariable(name);
     }
 
 }
