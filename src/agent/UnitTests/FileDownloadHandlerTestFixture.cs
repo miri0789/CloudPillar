@@ -390,6 +390,8 @@ namespace CloudPillar.Agent.Tests
                 x => x.CreateDirectory(It.IsAny<string>()), Times.Once);
 
         }
+
+        [Test]
         public async Task HandleDownloadMessageAsync_MessageWithBackendError_ReportFailure()
         {
             var action = initAction();
@@ -410,12 +412,8 @@ namespace CloudPillar.Agent.Tests
         }
 
 
-        private async Task InitFileDownloadAsync(FileDownload action)
-        {
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
-            await Task.Delay(100); // for init that run in background
-        }
 
+        [Test]
         public async Task InitFileDownloadAsync_FileExist_ReportBlockedStatus()
         {
             var action = initAction();
@@ -428,10 +426,12 @@ namespace CloudPillar.Agent.Tests
             , It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        [Test]
         public async Task InitFileDownloadAsync_ZippedDirectoryExist_ReportBlockedStatus()
         {
             var action = initAction();
             action.Action.Unzip = true;
+            action.Action.DestinationPath = "C:\\Downloads";
             _fileStreamerWrapperMock.Setup(item => item.DirectoryExists(It.IsAny<string>())).Returns(true);
             await InitFileDownloadAsync(action);
             
@@ -439,6 +439,13 @@ namespace CloudPillar.Agent.Tests
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        
+        private async Task InitFileDownloadAsync(FileDownload action)
+        {
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await Task.Delay(100); // for init that run in background
         }
 
     }
