@@ -37,7 +37,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             else
             {
                 long offset = data.StartPosition;
-                var existRanges = data.CompletedRanges.Split(',').ToList();
+                var existRanges = (data.CompletedRanges ?? "").Split(',').ToList();
                 var rangeIndex = 0;
                 while (offset < blobSize)
                 {
@@ -110,5 +110,5 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         return blobSize;
     }
 
-  
+
 }
