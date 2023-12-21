@@ -131,7 +131,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     {
         bytesToUpload += currentPosition;
         float progressPercent = (float)Math.Floor((bytesToUpload / (double)streamLength) * 100 * 100) / 100;
-        Console.WriteLine($"Upload Progress: {progressPercent:F2}%");
+        _logger.Info($"Upload Progress: {progressPercent:F2}%");
         return progressPercent;
     }
 
@@ -143,7 +143,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         }
         int currentPosition = (int)Math.Floor(progressPercent * (float)streamLength / 100);
 
-        Console.WriteLine($"Current Position: {currentPosition} bytes");
+        _logger.Info($"Current Position: {currentPosition} bytes");
         return currentPosition;
     }
 

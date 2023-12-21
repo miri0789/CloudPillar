@@ -19,6 +19,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IStateMachineHandler> _stateMachineHandler;
         private Mock<ILoggerHandler> _loggerMock;
         private Mock<IRunDiagnosticsHandler> _runDiagnosticsHandler;
+        private Mock<IStateMachineChangedEvent> _stateMachineChangedEventMock;
         private AgentController _target;
         public AgentControllerTestFixture()
         {
@@ -30,10 +31,11 @@ namespace CloudPillar.Agent.Tests
             _twinDesiredPropsValidator = new Mock<IValidator<TwinDesired>>();
             _stateMachineHandler = new Mock<IStateMachineHandler>();
             _runDiagnosticsHandler = new Mock<IRunDiagnosticsHandler>();
+            _stateMachineChangedEventMock = new Mock<IStateMachineChangedEvent>();
             _loggerMock = new Mock<ILoggerHandler>();
 
             _target = new AgentController(_twinHandler.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
-                        _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _runDiagnosticsHandler.Object, _loggerMock.Object);
+                        _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _runDiagnosticsHandler.Object, _loggerMock.Object, _stateMachineChangedEventMock.Object);
         }
 
         [Test]
