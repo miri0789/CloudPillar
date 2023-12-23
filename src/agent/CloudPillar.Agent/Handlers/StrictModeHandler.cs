@@ -140,6 +140,17 @@ public class StrictModeHandler : IStrictModeHandler
 
     private bool IsMatch(string rootPath, string filePath, string[] patterns)
     {
+        if (string.IsNullOrWhiteSpace(rootPath))
+        {
+            string pattern = @"^[A-Za-z]:/";
+            bool startsWithRootFolder = Regex.IsMatch(filePath, pattern);
+            if (!(rootPath.StartsWith("**") || startsWithRootFolder))
+            {
+                return false;
+            }
+            rootPath = Path.GetDirectoryName(filePath).Replace("\\", "/") + "/";
+
+        }
         var result = _matchWrapper.IsMatch(patterns, rootPath, filePath);
         var fileMatch = _matchWrapper.DoesFileMatchPattern(result, rootPath, filePath);
         return fileMatch;

@@ -12,6 +12,7 @@ public class MatcherWrapper : IMatcherWrapper
     {
         Matcher matcher = new Matcher();
 
+        patterns = patterns.Select(s => s.ToLower()).ToArray();
         matcher.AddIncludePatterns(patterns);
         return matcher.Match(rootPath.ToLower(), filePath.ToLower());
     }
