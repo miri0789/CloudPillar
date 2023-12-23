@@ -2,6 +2,7 @@
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -10,14 +11,14 @@ public class SignatureHandler : ISignatureHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ILoggerHandler _logger;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
-    private readonly SignFileSettings _signFileSettings;
+    private readonly DownloadSettings _downloadSettings;
 
-    public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler, IOptions<SignFileSettings> options)
+    public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler, IOptions<DownloadSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
-        _signFileSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
     private async Task<ECDsa> InitPublicKeyAsync()
     {
@@ -76,7 +77,7 @@ public class SignatureHandler : ISignatureHandler
         {
             using (FileStream fileStream = File.OpenRead(filePath))
             {
-                byte[] buffer = new byte[_signFileSettings.BufferSize];
+                byte[] buffer = new byte[_downloadSettings.SignFileBufferSize];
                 int bytesRead;
 
                 while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
