@@ -47,5 +47,15 @@ namespace CloudPillar.Agent.Tests
             await _target.SetBusyAsync(default);
             _twinHandler.Verify(h => h.GetLatestTwin(), Times.Once);
         }
+
+        [Test]
+        public async Task RunDiagnostics_ProccessActive_BadRequest()
+        {
+            RunDiagnosticsHandler.IsDiagnosticsProcessRunning = true;
+            await _target.RunDiagnostics();
+            _runDiagnosticsHandler.Verify(x => x.HandleRunDiagnosticsProcess(It.IsAny<CancellationToken>()), Times.Never);
+            RunDiagnosticsHandler.IsDiagnosticsProcessRunning = false;
+
+        }
     }
 }

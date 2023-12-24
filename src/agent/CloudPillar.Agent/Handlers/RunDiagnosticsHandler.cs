@@ -19,7 +19,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
     private readonly IGuidWrapper _guidWrapper;
     private readonly ILoggerHandler _logger;
 
-    public static bool Flag { get; set; }
+    public static bool IsDiagnosticsProcessRunning { get; set; }
 
 
     private const string DIAGNOSTICS_EXTENSION = ".tmp";

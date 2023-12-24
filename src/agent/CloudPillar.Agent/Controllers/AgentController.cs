@@ -130,7 +130,7 @@ public class AgentController : ControllerBase
     [HttpGet("RunDiagnostics")]
     public async Task<ActionResult<string>> RunDiagnostics()
     {
-        if (RunDiagnosticsHandler.Flag)
+        if (RunDiagnosticsHandler.IsDiagnosticsProcessRunning)
         {
             var message = "RunDiagnostics is already running";
             _logger.Info(message);
@@ -138,7 +138,7 @@ public class AgentController : ControllerBase
         }
         try
         {
-            RunDiagnosticsHandler.Flag = true;
+            RunDiagnosticsHandler.IsDiagnosticsProcessRunning = true;
             Stopwatch timeTaken = new Stopwatch();
             timeTaken.Start();
 
@@ -164,7 +164,7 @@ public class AgentController : ControllerBase
         }
         finally
         {
-            RunDiagnosticsHandler.Flag = false;
+            RunDiagnosticsHandler.IsDiagnosticsProcessRunning = false;
         }
     }
 

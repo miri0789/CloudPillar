@@ -46,7 +46,9 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             }
             catch (Exception ex)
             {
-                _logger.Error($"SendStreamingUploadChunkEventAsync failed: {ex.Message}");
+                var error = $"SendStreamingUploadChunkEventAsync failed: {ex.Message}";
+                _logger.Error(error);
+                throw new Exception(error);
             }
         }
     }
