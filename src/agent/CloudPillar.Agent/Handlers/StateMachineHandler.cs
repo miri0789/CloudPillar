@@ -23,12 +23,20 @@ namespace CloudPillar.Agent.Handlers
         }
 
 
-        public async Task InitStateMachineHandlerAsync()
+        public async Task InitStateMachineHandlerAsync(CancellationToken cancellationToken)
         {
-            var state = await GetStateAsync();
+            var state = await GetInitStateAsync();
             _logger.Info($"InitStateMachineHandlerAsync: init device state: {state}");
             _currentDeviceState = state;
-            await HandleStateActionAsync(state);
+            if(state != await GetStateAsync())
+            {
+                await SetStateAsync(state, cancellationToken);
+                await _twinHandler.UpdateDeviceStateAfterServiceRestartAsync(null, cancellationToken);
+            }
+            else
+            {
+                await HandleStateActionAsync(state);
+            }
         }
 
         public async Task SetStateAsync(DeviceStateType state, CancellationToken cancellationToken)
@@ -64,6 +72,12 @@ namespace CloudPillar.Agent.Handlers
         public DeviceStateType GetCurrentDeviceState()
         {
             return _currentDeviceState;
+        }
+
+        public async Task<DeviceStateType> GetInitStateAsync()
+        {
+            var state = await _twinHandler.GetDeviceStateAfterServiceRestartAsync() ?? await _twinHandler.GetDeviceStateAsync() ?? GetCurrentDeviceState();
+            return state;
         }
 
     }

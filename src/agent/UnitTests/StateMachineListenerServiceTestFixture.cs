@@ -1,4 +1,5 @@
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Sevices;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ public class StateMachineListenerServiceTestFixture
     private Mock<IC2DEventSubscriptionSession> _c2DEventSubscriptionSessionMock;
 
     private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
+    private Mock<ILoggerHandler> _logger;
 
     [SetUp]
     public void Setup()
@@ -26,6 +28,7 @@ public class StateMachineListenerServiceTestFixture
         _twinHandlerMock = new Mock<ITwinHandler>();
         _c2DEventSubscriptionSessionMock = new Mock<IC2DEventSubscriptionSession>();
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
+        _logger = new Mock<ILoggerHandler>();
 
         var serviceScopeFactory = new Mock<IServiceScopeFactory>();
         var serviceScope = new Mock<IServiceScope>();
@@ -35,13 +38,13 @@ public class StateMachineListenerServiceTestFixture
         serviceScope.Setup(s => s.ServiceProvider.GetService(typeof(IC2DEventSubscriptionSession))).Returns(_c2DEventSubscriptionSessionMock.Object);
         serviceScope.Setup(s => s.ServiceProvider.GetService(typeof(ITwinHandler))).Returns(_twinHandlerMock.Object);
 
-        _target = new StateMachineListenerService(_stateMachineChangedEventMock.Object, _serviceProviderMock.Object, _deviceClientWrapperMock.Object);
+        _target = new StateMachineListenerService(_stateMachineChangedEventMock.Object, _serviceProviderMock.Object, _deviceClientWrapperMock.Object, _logger.Object);
     }
 
     [Test]
     public void Constructor_NullParameters_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new StateMachineListenerService(_stateMachineChangedEventMock.Object, null, _deviceClientWrapperMock.Object));
+        Assert.Throws<ArgumentNullException>(() => new StateMachineListenerService(_stateMachineChangedEventMock.Object, null, _deviceClientWrapperMock.Object, _logger.Object));
     }
 
     [Test]

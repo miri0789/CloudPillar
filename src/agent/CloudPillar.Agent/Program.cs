@@ -15,7 +15,7 @@ using CloudPillar.Agent.Wrappers.Interfaces;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
-if(!runAsService && args.FirstOrDefault()!=null)
+if (!runAsService && args.FirstOrDefault() != null)
 {
     Environment.CurrentDirectory = args.FirstOrDefault();
 }
@@ -78,6 +78,7 @@ builder.Services.AddScoped<IGuidWrapper, GuidWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
+builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 
 var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
 builder.Services.Configure<DownloadSettings>(DownloadSettings);
