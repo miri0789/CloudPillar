@@ -419,7 +419,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             _fileStreamerWrapperMock.Setup(item => item.FileExists(It.IsAny<string>())).Returns(true);
             await InitFileDownloadAsync(action);
-            
+
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
@@ -431,10 +431,11 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             action.Action.Unzip = true;
-            action.Action.DestinationPath = "C:\\Downloads";
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(action.Action.Source)).Returns(".zip");
+            _fileStreamerWrapperMock.Setup(f => f.GetExtension(action.Action.DestinationPath)).Returns("");
             _fileStreamerWrapperMock.Setup(item => item.DirectoryExists(It.IsAny<string>())).Returns(true);
             await InitFileDownloadAsync(action);
-            
+
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
