@@ -156,7 +156,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var deviceStateAfterServiceRestartKey = nameof(TwinReported.deviceStateAfterServiceRestart);
+            var deviceStateAfterServiceRestartKey = nameof(TwinReported.DeviceStateAfterServiceRestart);
             await _deviceClient.UpdateReportedPropertiesAsync(deviceStateAfterServiceRestartKey, deviceState?.ToString(), cancellationToken);
             _logger.Info($"UpdateDeviceStateAfterServiceRestartAsync success");
         }
@@ -172,7 +172,7 @@ public class TwinHandler : ITwinHandler
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
             var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
-            return reported?.deviceStateAfterServiceRestart;
+            return reported?.DeviceStateAfterServiceRestart;
         }
         catch (Exception ex)
         {
