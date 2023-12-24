@@ -117,4 +117,14 @@ public class StateMachineHandlerTestFixture
         _twinHandler.Verify(x => x.SaveLastTwinAsync(CancellationToken.None), Times.Once);
     }
 
+    [Test]
+    public async Task GetInitStateAsync_ValidState_ReturnsState()
+    {
+        _twinHandler.Setup(th => th.GetDeviceStateAfterServiceRestartAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+
+        var state = await _target.GetInitStateAsync();
+
+        _twinHandler.Verify(th => th.GetDeviceStateAfterServiceRestartAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.AreEqual(DeviceStateType.Ready, state);
+    }
 }

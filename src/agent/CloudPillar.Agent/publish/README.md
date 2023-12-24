@@ -24,6 +24,16 @@ For example
 startagent.bat win-x64 
 ````
 
+### Windows - windows service
+```
+./startagent.bat <ARCHITECTURE_DIR> --winsrv
+```
+
+For example
+````
+startagent.bat win-x64 --winsrv
+````
+
 ## appsettings.json Configuration
 
 To configure the application settings, please refer to the appsettings.json file and customize the following parameters as needed.
@@ -52,6 +62,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `RunDiagnosticsSettings.ResponseTimeoutMinutes`    | Sets the maximum time duration in minutes for which the diagnostics process should wait for a response before timing out | 5         |
 | `UploadCompleteRetrySettings.MaxRetries`    | Specifies the maximum number of retry attempts that will be made in case of a failed upload or completion task | 3         |
 | `UploadCompleteRetrySettings.DelaySeconds`    | Defines the delay duration in seconds between successive retry attempts | 30         |
+| `AgentServiceName`    | Windows service agent name to install and start | `CARTO v8 CloudPillar`         |
 
 
 ## Call GetDeviceState in C# Example
