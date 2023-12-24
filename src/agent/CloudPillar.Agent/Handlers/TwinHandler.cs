@@ -152,6 +152,36 @@ public class TwinHandler : ITwinHandler
         }
     }
 
+    public async Task UpdateDeviceStateAfterServiceRestartAsync(DeviceStateType? deviceState, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var deviceStateAfterServiceRestartKey = nameof(TwinReported.deviceStateAfterServiceRestart);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateAfterServiceRestartKey, deviceState?.ToString(), cancellationToken);
+            _logger.Info($"UpdateDeviceStateAfterServiceRestartAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceStateAfterServiceRestartAsync failed: {ex.Message}");
+        }
+    }
+
+    public async Task<DeviceStateType?> GetDeviceStateAfterServiceRestartAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reported?.deviceStateAfterServiceRestart;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetDeviceStateAfterServiceRestartAsync failed: {ex.Message}");
+            return null;
+        }
+    }
+
+
     public async Task UpdateDeviceSecretKeyAsync(string secretKey, CancellationToken cancellationToken)
     {
         try

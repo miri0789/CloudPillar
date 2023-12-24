@@ -15,4 +15,6 @@ public interface ITwinHandler
     Task SaveLastTwinAsync(CancellationToken cancellationToken = default);
     string GetLatestTwin();
     Task UpdateReportedTwinChangeSignAsync(string message, CancellationToken cancellationToken);
+    Task UpdateDeviceStateAfterServiceRestartAsync(DeviceStateType? deviceState, CancellationToken cancellationToken);
+    Task<DeviceStateType?> GetDeviceStateAfterServiceRestartAsync(CancellationToken cancellationToken = default);
 }
