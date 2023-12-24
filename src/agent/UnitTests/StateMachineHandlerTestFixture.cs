@@ -66,7 +66,7 @@ public class StateMachineHandlerTestFixture
     {
         _twinHandler.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
 
-        await _target.InitStateMachineHandlerAsync();
+        await _target.InitStateMachineHandlerAsync(default);
 
         _stateMachineChangedEventMock.Verify(h => h.SetStateChanged(It.IsAny<StateMachineEventArgs>()), Times.Once);
     }
