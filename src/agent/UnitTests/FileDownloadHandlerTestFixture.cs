@@ -475,6 +475,6 @@ namespace CloudPillar.Agent.Tests
                 RangeEndPosition = 2
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-
         }
     }
+}
