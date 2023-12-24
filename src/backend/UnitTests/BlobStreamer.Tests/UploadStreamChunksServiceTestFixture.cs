@@ -6,6 +6,7 @@ using Shared.Entities.Services;
 using Backend.BlobStreamer.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.BlobStreamer.Services.Interfaces;
+using Shared.Entities.Twin;
 
 namespace Backend.BlobStreamer.Tests
 {
@@ -18,7 +19,7 @@ namespace Backend.BlobStreamer.Tests
         private Mock<ITwinDiseredService> _mockTwinDiseredService;
         private Mock<ILoggerHandler> _mockLogger;
         private IUploadStreamChunksService _target;
-        private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mock-container");
+        private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mockcontainer/n-12%2FC_driveroot_%2FUsers%2FTest%2FAppData%2FLocal%2FTemp%2Ftest.tmp");
         private byte[] BYTES = { 1, 2, 3 };
         private const long _startPosition = 0;
         private const string _checkSum = "xxx";
@@ -68,6 +69,17 @@ namespace Backend.BlobStreamer.Tests
 
             await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", false);
             _mockCloudBlockBlobWrapper.Verify(b => b.DownloadToStreamAsync(It.IsAny<CloudBlockBlob>()), Times.Once);
+        }
+
+        [Test]
+        public async Task HandleDownloadForDiagnosticsAsync_DestinationPath_BuildDestionationBySource()
+        {
+            await _target.HandleDownloadForDiagnosticsAsync("", STORAGE_URI);
+
+            var destionationPath = "C:\\Users\\Test\\AppData\\Local\\Temp\\test.tmp";
+
+            _mockTwinDiseredService.Verify(b => b.AddDesiredRecipeAsync(It.IsAny<string>(), TwinPatchChangeSpec.ChangeSpecDiagnostics,
+            It.Is<DownloadAction>(x => x.DestinationPath == destionationPath)), Times.Once);
         }
     }
 }

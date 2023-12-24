@@ -7,5 +7,8 @@ public enum StatusType
     SentForSignature,
     Failed,
     Unzip,
-    Success
+    Success,
+    Blocked,
+    Idle,
+    
 }

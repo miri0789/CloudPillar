@@ -26,7 +26,7 @@ public class AgentController : ControllerBase
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
     private readonly IRunDiagnosticsHandler _runDiagnosticsHandler;
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
-    private readonly IStrictModeHandler _strictModeHandler;
+    private readonly IReprovisioningHandler _reprovisioningHandler;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -36,9 +36,9 @@ public class AgentController : ControllerBase
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
      IRunDiagnosticsHandler runDiagnosticsHandler,
-     IStrictModeHandler strictModeHandler,
      ILoggerHandler logger,
-     IStateMachineChangedEvent stateMachineChangedEvent)
+     IStateMachineChangedEvent stateMachineChangedEvent,
+     IReprovisioningHandler reprovisioningHandler)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
@@ -49,7 +49,7 @@ public class AgentController : ControllerBase
         _runDiagnosticsHandler = runDiagnosticsHandler ?? throw new ArgumentNullException(nameof(runDiagnosticsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
-        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
+        _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
     }
 
     [HttpPost("AddRecipe")]
@@ -77,7 +77,8 @@ public class AgentController : ControllerBase
         if (!isX509Authorized)
         {
             _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");
-            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
+            var x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate(deviceId);
+            var isSymetricKeyAuthorized = x509Certificate is not null && await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
             if (!isSymetricKeyAuthorized)
             {
                 _logger.Info("GetDeviceStateAsync, the device is symmetric key unAuthorized, start provisinig proccess");
@@ -87,12 +88,6 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
 
-    [AllowAnonymous]
-    [HttpGet("TetStrictMode")]
-    public void TetStrictMode(string filePath)
-    {
-        _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularUpload, filePath);
-    }
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
     public async Task<ActionResult<string>> InitiateProvisioningAsync(CancellationToken cancellationToken)
@@ -169,6 +164,7 @@ public class AgentController : ControllerBase
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
+        _reprovisioningHandler.RemoveX509CertificatesFromStore();
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken);
         await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }

@@ -55,7 +55,7 @@ namespace Shared.Logger
                    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
                    var logggerFactory = new LoggerHandlerFactory();
                    var logger = new LoggerHandler(logggerFactory, builder.Configuration, httpContextAccessor, logggerFactory.CreateLogger(applicationName),
-                        lo4NetPath,
+                       lo4NetPath,
                        applicationName, true);
                    return logger;
                });

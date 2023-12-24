@@ -39,6 +39,7 @@ public class StateMachineListenerService : BackgroundService
         }
     }
 
+
     internal async void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
     {
         if (_c2DEventSubscriptionSession == null)
