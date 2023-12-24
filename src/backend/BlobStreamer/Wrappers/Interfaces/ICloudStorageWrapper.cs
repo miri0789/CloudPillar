@@ -6,6 +6,6 @@ public interface ICloudStorageWrapper
 {
     CloudBlobContainer GetBlobContainer(string storageConnectionString, string blobContainerName);
     Task<CloudBlockBlob> GetBlockBlobReference(CloudBlobContainer storageContainer, string fileName);
-
+    Task DownloadRangeToByteArrayAsync(CloudBlockBlob cloudBlockBlob, byte[] data, int index, long? blobOffset, long? length);
     long GetBlobLength(CloudBlockBlob cloudBlockBlob);
 }

@@ -53,7 +53,6 @@ namespace Backend.BlobStreamer.Tests
 
             _mockBlockBlob = new Mock<CloudBlockBlob>(new Uri("http://storageaccount/container/blob"));
             _mockCloudStorageWrapper.Setup(c => c.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName)).ReturnsAsync(_mockBlockBlob.Object);
-            _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
             _target = new BlobService(_mockEnvironmentsWrapper.Object,
                 _mockCloudStorageWrapper.Object, _mockDeviceConnectService.Object, _mockCheckSumService.Object, _mockLogger.Object, _mockMessageFactory.Object,
                 _mockDeviceClientWrapper.Object);
@@ -65,6 +64,7 @@ namespace Backend.BlobStreamer.Tests
         public async Task SendRangeByChunksAsync_ShouldSendBlobMessages()
         {
             _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
+            _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
 
             _mockDeviceConnectService.Setup(s => s.SendDeviceMessageAsync(It.IsAny<ServiceClient>(), It.IsAny<Message>(), _deviceId)).Returns(Task.CompletedTask);
             await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
@@ -79,6 +79,7 @@ namespace Backend.BlobStreamer.Tests
         public async Task SendRangeByChunksAsync_ValidRange_GetRangeCheckSum()
         {
             _mockCheckSumService.Setup(b => b.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>()));
+            _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
 
             await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
             _mockCheckSumService.Verify(s => s.CalculateCheckSumAsync(It.Is<byte[]>(b => b.Length == _rangeSize), It.IsAny<CheckSumType>()), Times.Once);
@@ -102,6 +103,31 @@ namespace Backend.BlobStreamer.Tests
             async Task GetBlobMetadataAsync() => await _target.GetBlobMetadataAsync(fileName);
             Assert.ThrowsAsync<NullReferenceException>(GetBlobMetadataAsync);
         }
-        
+
+
+        [Test]
+        public async Task CalculateHashAsync_onCall_ShouldReardTheFile()
+        {
+            _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
+            var result = await _target.CalculateHashAsync(_fileName, _chunkSize);
+            _mockCloudStorageWrapper.Verify(b => b.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName), Times.Once);
+            _mockBlockBlob.Verify(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<long>()), Times.AtLeast(1));
+        }
+
+        [Test]
+        public async Task CalculateHashAsync_OnCall_ShouldReturnHash()
+        {
+            _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
+            var result = await _target.CalculateHashAsync(_fileName, _chunkSize);
+            Assert.IsNotNull(result);
+        }
+
+        [Test]
+        public async Task CalculateHashAsync_OnNoLength_ShouldnotDownloadRange()
+        {
+            var result = await _target.CalculateHashAsync(_fileName, _chunkSize);
+            _mockCloudStorageWrapper.Verify(b => b.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName), Times.Once);
+            _mockBlockBlob.Verify(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<long>()), Times.Never());
+        }
     }
 }

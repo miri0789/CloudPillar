@@ -5,6 +5,8 @@ public interface IFileStreamerWrapper
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
 
+    int Read(FileStream fileStream, byte[] buffer, int offset, int count);
+
     byte[] ReadStream(string fullFilePath, long startPosition, long lengthToRead);
 
     void CreateDirectory(string destinationPath);
@@ -31,8 +33,7 @@ public interface IFileStreamerWrapper
 
     string GetFileName(string filePathPattern);
 
-    string GetTempFileName();
-
+    string GetTempPath();
     string[] GetFiles(string directoryPath, string searchPattern);
 
     string[] GetFiles(string fullFilePath, string searchPattern, SearchOption searchOption);

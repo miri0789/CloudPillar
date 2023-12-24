@@ -24,6 +24,11 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return data;
     }
 
+    public int Read(FileStream fileStream, byte[] buffer, int offset, int count)
+    {
+        return fileStream.Read(buffer, offset, count);
+    }
+
     public async Task WriteAsync(Stream stream, byte[] bytes)
     {
         await stream.WriteAsync(bytes);
@@ -80,9 +85,9 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetFileName(filePathPattern);
     }
-    public string GetTempFileName()
+    public string GetTempPath()
     {
-        return Path.GetTempFileName();
+        return Path.GetTempPath();
     }
 
     public string[] GetFiles(string directoryPath, string searchPattern)
@@ -110,10 +115,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
 
     public void CreateDirectory(string destinationPath)
     {
-        if (!Directory.Exists(destinationPath))
-        {
-            Directory.CreateDirectory(destinationPath);
-        }
+        Directory.CreateDirectory(destinationPath);
     }
 
     public async Task UnzipFileAsync(string filePath, string destinationPath)

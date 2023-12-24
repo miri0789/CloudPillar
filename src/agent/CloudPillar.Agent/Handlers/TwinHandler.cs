@@ -121,7 +121,7 @@ public class TwinHandler : ITwinHandler
 
         if (actions?.Count() > 0)
         {
-            await HandleTwinActionsAsync(actions, cancellationToken);
+            await HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken);
         }
     }
     public async Task UpdateDeviceStateAsync(DeviceStateType deviceState, CancellationToken cancellationToken)
@@ -294,7 +294,7 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, CancellationToken cancellationToken)
+    private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, string changeSpecId, CancellationToken cancellationToken)
     {
         try
         {
@@ -318,7 +318,7 @@ public class TwinHandler : ITwinHandler
                         break;
 
                     case UploadAction uploadAction:
-                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, cancellationToken);
+                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, changeSpecId, cancellationToken);
                         break;
 
                     case ExecuteAction execOnce when _strictModeSettings.StrictMode:

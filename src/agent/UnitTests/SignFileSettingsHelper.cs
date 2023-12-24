@@ -1,16 +1,17 @@
+using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Entities.Twin;
 
-public static class SignFileSettingsHelper
+public static class DownloadSettingsHelper
 {
-    public static SignFileSettings SetSignFileSettingsValueMock()
+    public static DownloadSettings SetDownloadSettingsValueMock()
     {
-        return new SignFileSettings()
+        return new DownloadSettings()
         {
-            BufferSize = 8192
+            SignFileBufferSize = 8192
         };
     }
 }
