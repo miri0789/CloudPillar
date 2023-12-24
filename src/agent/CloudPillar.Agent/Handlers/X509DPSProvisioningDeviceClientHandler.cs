@@ -8,6 +8,7 @@ using Shared.Entities.Authentication;
 using DeviceMessage = Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
+
 namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
@@ -18,13 +19,14 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
     private readonly IX509CertificateWrapper _X509CertificateWrapper;
     private readonly IProvisioningDeviceClientWrapper _provisioningDeviceClientWrapper;
     private readonly AuthenticationSettings _authenticationSettings;
-
+    private readonly ITwinHandler _twinHandler;
     public X509DPSProvisioningDeviceClientHandler(
         ILoggerHandler loggerHandler,
         IDeviceClientWrapper deviceClientWrapper,
         IX509CertificateWrapper X509CertificateWrapper,
         IProvisioningDeviceClientWrapper provisioningDeviceClientWrapper,
-        IOptions<AuthenticationSettings> options
+        IOptions<AuthenticationSettings> options,
+        ITwinHandler twinHandler
 )
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
@@ -32,6 +34,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         _X509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
         _provisioningDeviceClientWrapper = provisioningDeviceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningDeviceClientWrapper));
         _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
     }
 
     public X509Certificate2? GetCertificate(string deviceId = "")
@@ -144,6 +147,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
 
+        await _twinHandler.UpdateDeviceCertificateValidity(_authenticationSettings.CertificateExpiredDays, cancellationToken);
     }
 
     private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, bool initialize, CancellationToken cancellationToken)

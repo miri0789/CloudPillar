@@ -196,6 +196,25 @@ public class TwinHandler : ITwinHandler
         }
     }
 
+    public async Task UpdateDeviceCertificateValidity(int CertificateExpiredDays, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var certificateValidity = new CertificateValidity()
+            {
+                CreationDate = DateTime.UtcNow,
+                ExpirationDate = DateTime.UtcNow.AddDays(CertificateExpiredDays)
+            };
+            var certificateDates = nameof(TwinReported.CertificateValidity);
+            await _deviceClient.UpdateReportedPropertiesAsync(certificateDates, certificateValidity, cancellationToken);
+            _logger.Info($"UpdateDeviceCertificateValidity success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceCertificateValidity failed message: {ex.Message}");
+        }
+    }
+
     public async Task InitReportDeviceParamsAsync(CancellationToken cancellationToken)
     {
         try
