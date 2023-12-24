@@ -362,6 +362,7 @@ public class TwinHandler : ITwinHandler
                 twinReportedChangeSpec.Patch = new TwinReportedPatch();
                 twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id;
                 isReportedChanged = true;
+                _fileDownloadHandler.InitDownloadsList();
             }
 
             PropertyInfo[] properties = typeof(TwinPatch).GetProperties();
@@ -384,7 +385,7 @@ public class TwinHandler : ITwinHandler
 
                         reportedProp?.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
                         actions.AddRange(desiredValue
-                           .Select((item, index) => new ActionToReport(changeSpecKey)
+                           .Select((item, index) => new ActionToReport(changeSpecKey, twinDesiredChangeSpec.Id)
                            {
                                ReportPartName = property.Name,
                                ReportIndex = index,

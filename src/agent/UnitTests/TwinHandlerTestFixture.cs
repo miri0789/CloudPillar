@@ -129,7 +129,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired.ChangeSpec, reported.ChangeSpec);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _strictModeHandlerMock.Verify(dc => dc.CheckFileAccessPermissions(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Never);
     }
 
@@ -137,7 +137,7 @@ public class TwinHandlerTestFixture
     public async Task OnDesiredPropertiesUpdate_FirstTimeGetActions_ExecInprogressActions()
     {
         InitDataForTestInprogressActions();
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
 
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
     }
@@ -146,9 +146,18 @@ public class TwinHandlerTestFixture
     public async Task OnDesiredPropertiesUpdate_NotInitial_ExecPendingActions()
     {
         InitDataForTestInprogressActions();
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
 
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_NewSpecId_InitDownloadFiles()
+    {
+        InitDataForTestInprogressActions();
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
+
+        _fileDownloadHandlerMock.Verify(dc => dc.InitDownloadsList(), Times.Once);
     }
 
     private void InitDataForTestInprogressActions()
