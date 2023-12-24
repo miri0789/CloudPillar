@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Wrappers.Interfaces;
 using Microsoft.Extensions.FileSystemGlobbing;
+using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Handlers.Tests
 {
@@ -14,6 +15,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
         private Mock<IMatcherWrapper> mockMatchWrapper;
         private Mock<ILoggerHandler> mockLogger;
+        private Mock<FileStreamerWrapper> mockFileStreamer;
         private StrictModeHandler _target;
         private const TwinActionType UPLAOD_ACTION = TwinActionType.SingularUpload;
         private const TwinActionType DOWNLOAD_ACTION = TwinActionType.SingularDownload;
@@ -22,7 +24,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void Setup()
         {
             mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
-
+            mockFileStreamer = new Mock<FileStreamerWrapper>();
             mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
             mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
@@ -32,7 +34,7 @@ namespace CloudPillar.Agent.Handlers.Tests
             mockMatchWrapper.Setup(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(new PatternMatchingResult(new List<FilePatternMatch>() { new FilePatternMatch() { } }, true));
             mockMatchWrapper.Setup(x => x.DoesFileMatchPattern(It.IsAny<PatternMatchingResult>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            _target = new StrictModeHandler(mockStrictModeSettings.Object, mockMatchWrapper.Object, mockLogger.Object);
+            _target = new StrictModeHandler(mockStrictModeSettings.Object, mockMatchWrapper.Object,mockFileStreamer.Object, mockLogger.Object);
         }
         [Test]
         public void ReplaceRootById_ValidData_ReturnReplacedString()

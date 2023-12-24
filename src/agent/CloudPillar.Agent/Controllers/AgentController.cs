@@ -26,6 +26,7 @@ public class AgentController : ControllerBase
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
     private readonly IRunDiagnosticsHandler _runDiagnosticsHandler;
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
+    private readonly IStrictModeHandler _strictModeHandler;
     private readonly IReprovisioningHandler _reprovisioningHandler;
 
 
@@ -36,6 +37,7 @@ public class AgentController : ControllerBase
      IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
      IRunDiagnosticsHandler runDiagnosticsHandler,
+     IStrictModeHandler strictModeHandler,
      ILoggerHandler logger,
      IStateMachineChangedEvent stateMachineChangedEvent,
      IReprovisioningHandler reprovisioningHandler)
@@ -49,6 +51,7 @@ public class AgentController : ControllerBase
         _runDiagnosticsHandler = runDiagnosticsHandler ?? throw new ArgumentNullException(nameof(runDiagnosticsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
+        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
     }
 
@@ -88,6 +91,12 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
 
+    [AllowAnonymous]
+    [HttpGet("TetStrictMode")]
+    public void TetStrictMode(string filePath)
+    {
+        _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularUpload, filePath);
+    }
     [AllowAnonymous]
     [HttpPost("InitiateProvisioning")]
     public async Task<ActionResult<string>> InitiateProvisioningAsync(CancellationToken cancellationToken)
