@@ -441,7 +441,6 @@ namespace CloudPillar.Agent.Tests
             , It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        
         private async Task InitFileDownloadAsync(FileDownload action)
         {
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);

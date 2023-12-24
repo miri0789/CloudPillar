@@ -110,10 +110,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
 
     public void CreateDirectory(string destinationPath)
     {
-        if (!Directory.Exists(destinationPath))
-        {
-            Directory.CreateDirectory(destinationPath);
-        }
+        Directory.CreateDirectory(destinationPath);
     }
 
     public async Task UnzipFileAsync(string filePath, string destinationPath)

@@ -51,7 +51,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             _filesDownloads.Add(fileDownload);
         }
         fileDownload.Action.Sign = fileDownload.Action.Sign ?? ((DownloadAction)actionToReport.TwinAction).Sign;
-        
+
         // call async because messages of file data continue received 
         Task.Run(async () => HandleInitFileDownloadAsync(fileDownload, cancellationToken));
     }
@@ -68,8 +68,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             else
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
-                var isZippedDirectoryExist = _fileStreamerWrapper.DirectoryExists(file.Action.DestinationPath);
-                InitDownloadPath(file);
+                var isCreateDownloadDirectory = InitDownloadPath(file);
                 var destPath = GetDestinationPath(file);
                 var isFileExist = _fileStreamerWrapper.FileExists(destPath);
                 if (file.Report.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
@@ -80,7 +79,8 @@ public class FileDownloadHandler : IFileDownloadHandler
                     file.Report.CompletedRanges = "";
                 }
 
-                if ((isFileExist || isZippedDirectoryExist) && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
+                if ((isFileExist || (!isCreateDownloadDirectory && file.Action.Unzip))
+                 && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
                 {
                     SetBlockedStatus(file, cancellationToken);
                 }
@@ -183,7 +183,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.Action.DestinationPath;
     }
 
-    private void InitDownloadPath(FileDownload file)
+    private bool InitDownloadPath(FileDownload file)
     {
         var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
         if (file.Action.Unzip)
@@ -202,10 +202,12 @@ public class FileDownloadHandler : IFileDownloadHandler
             throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not a file.");
         }
         var directory = Path.GetDirectoryName(file.Action.DestinationPath);
-        if (directory != null)
+        if (directory != null && !_fileStreamerWrapper.DirectoryExists(directory))
         {
             _fileStreamerWrapper.CreateDirectory(directory);
+            return true;
         }
+        return false;
     }
 
     private void HandleFirstMessageAsync(FileDownload file, DownloadBlobChunkMessage message)
