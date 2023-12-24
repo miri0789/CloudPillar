@@ -47,6 +47,12 @@ To configure the application settings, please refer to the appsettings.json file
 | `DownloadSettings.SignFileBufferSize`    | sing documents buffer size | `16384`         |
 | `DownloadSettings.CommunicationDelaySeconds`    | download delay seconds for check less communication | `30`         |
 | `CommunicationLess`    | API returns mocks and not connect to IOT hub | `false`         |
+| `RunDiagnosticsSettings.FileSizeBytes`    | The size of the file to be created for diagnostics  |131072         |
+| `RunDiagnosticsSettings.PeriodicResponseWaitSeconds`    | Defines the time in seconds that the diagnostics process should check the download status | 10         |
+| `RunDiagnosticsSettings.ResponseTimeoutMinutes`    | Sets the maximum time duration in minutes for which the diagnostics process should wait for a response before timing out | 5         |
+| `UploadCompleteRetrySettings.MaxRetries`    | Specifies the maximum number of retry attempts that will be made in case of a failed upload or completion task | 3         |
+| `UploadCompleteRetrySettings.DelaySeconds`    | Defines the delay duration in seconds between successive retry attempts | 30         |
+
 
 ## Call GetDeviceState in C# Example
 ```csharp

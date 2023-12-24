@@ -17,7 +17,7 @@ public class CloudStorageWrapper : ICloudStorageWrapper
 
     public async Task<CloudBlockBlob> GetBlockBlobReference(CloudBlobContainer storageContainer, string fileName)
     {
-        
+
         CloudBlockBlob blockBlob = storageContainer.GetBlockBlobReference(fileName);
         await blockBlob.FetchAttributesAsync();
         return blockBlob;
@@ -27,4 +27,8 @@ public class CloudStorageWrapper : ICloudStorageWrapper
         return cloudBlockBlob.Properties.Length;
     }
 
+    public async Task DownloadRangeToByteArrayAsync(CloudBlockBlob cloudBlockBlob, byte[] data, int index, long? blobOffset, long? length)
+    {
+        await cloudBlockBlob.DownloadRangeToByteArrayAsync(data, index, blobOffset, length);
+    }
 }

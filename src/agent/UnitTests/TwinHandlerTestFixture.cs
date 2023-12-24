@@ -139,7 +139,7 @@ public class TwinHandlerTestFixture
         InitDataForTestInprogressActions();
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
 
-        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
     }
 
     [Test]
@@ -148,7 +148,7 @@ public class TwinHandlerTestFixture
         InitDataForTestInprogressActions();
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
 
-        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
 
     private void InitDataForTestInprogressActions()
@@ -165,6 +165,7 @@ public class TwinHandlerTestFixture
                         new DownloadAction() { DestinationPath = "456", Action = TwinActionType.SingularDownload},
                         new DownloadAction() { DestinationPath = "789", Action = TwinActionType.SingularDownload},
                         new DownloadAction() { DestinationPath = "1", Action = TwinActionType.SingularDownload},
+                        new DownloadAction() { DestinationPath = "12", Action = TwinActionType.SingularDownload},
                     }.ToArray()
                 }
             }
@@ -182,6 +183,7 @@ public class TwinHandlerTestFixture
                         new TwinActionReported() {Status = StatusType.Success},
                         new TwinActionReported() {Status = StatusType.Pending},
                         new TwinActionReported() {Status = StatusType.Pending},
+                        new TwinActionReported() {Status = StatusType.SentForSignature},
                         new TwinActionReported() {Status = StatusType.InProgress}
                     }.ToArray()
                 }

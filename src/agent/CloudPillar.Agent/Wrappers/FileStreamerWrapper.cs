@@ -24,6 +24,11 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return data;
     }
 
+    public int Read(FileStream fileStream, byte[] buffer, int offset, int count)
+    {
+        return fileStream.Read(buffer, offset, count);
+    }
+
     public async Task WriteAsync(Stream stream, byte[] bytes)
     {
         await stream.WriteAsync(bytes);
