@@ -18,7 +18,6 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     private readonly ITwinActionsHandler _twinActionsHandler;
     private readonly UploadCompleteRetrySettings _uploadCompleteRetrySettings;
     private readonly ILoggerHandler _logger;
-    private bool _completeUploadDone = false;
 
     public StreamingFileUploaderHandler(ID2CMessengerHandler d2CMessengerHandler, IDeviceClientWrapper deviceClientWrapper, ICheckSumService checkSumService, ITwinActionsHandler twinActionsHandler, IOptions<UploadCompleteRetrySettings> uploadCompleteRetrySettings, ILoggerHandler logger)
     {
@@ -86,15 +85,15 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             await readStream.ReadAsync(buffer, 0, buffer.Length);
 
             await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, currentPosition, checkSum, cancellationToken, isRunDiagnostics);
-            if (!_completeUploadDone)
+            if (!actionToReport.UploadCompleted)
             {
-                await CompleteFileUploadAsync(notification, cancellationToken);
+                await CompleteFileUploadAsync(notification, actionToReport, cancellationToken);
             }
             var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, buffer.Length);
             await UpdateReportedDetailsAsync(actionToReport, percents, notification.CorrelationId, cancellationToken);
         }
     }
-    private async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, CancellationToken cancellationToken)
+    private async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, CancellationToken cancellationToken)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -105,7 +104,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
                     (ex, time) => _logger.Warn($"Failed to complete file upload. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
                 await retryPolicy.ExecuteAsync(async () => await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken));
                 _logger.Info($"CompleteFileUploadAsync ended successfully");
-                _completeUploadDone = true;
+                actionToReport.UploadCompleted = true;
             }
             catch (Exception ex)
             {
