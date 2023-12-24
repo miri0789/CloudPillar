@@ -187,26 +187,14 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task HandleDownloadMessageAsync_SignVerifyFailed_DeleteFile()
         {
-            var action = initAction();
-            _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
-            _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
-            action.Report.CompletedRanges = "0-5,7";
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
-            var message = new DownloadBlobChunkMessage
-            {
-                ActionIndex = action.ActionReported.ReportIndex,
-                FileName = action.Action.Source,
-                Offset = 0,
-                Data = new byte[1024],
-                FileSize = 4096,
-                RangeIndex = 6,
-                RangesCount = 8,
-                RangeCheckSum = "abcd",
-                RangeStartPosition = 1,
-                RangeEndPosition = 2
-            };
-            await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+            await SetUpHandleDownloadMessageAsync_SignVerifyFailed();
             _fileStreamerWrapperMock.Verify(f => f.DeleteFile(It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public async Task HandleDownloadMessageAsync_SignVerifyFailed_UpdateReport()
+        {
+            await SetUpHandleDownloadMessageAsync_SignVerifyFailed();
             _twinActionsHandlerMock.Verify(
                           x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                           item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
@@ -466,5 +454,27 @@ namespace CloudPillar.Agent.Tests
             await Task.Delay(100); // for init that run in background
         }
 
+        private async Task SetUpHandleDownloadMessageAsync_SignVerifyFailed()
+        {
+            var action = initAction();
+            _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
+            _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+            action.Report.CompletedRanges = "0-5,7";
+            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionIndex = action.ActionReported.ReportIndex,
+                FileName = action.Action.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 4096,
+                RangeIndex = 6,
+                RangesCount = 8,
+                RangeCheckSum = "abcd",
+                RangeStartPosition = 1,
+                RangeEndPosition = 2
+            };
+            await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+
+        }
     }
-}
