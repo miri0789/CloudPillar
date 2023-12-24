@@ -516,6 +516,18 @@ public class TwinHandlerTestFixture
             props => props.Count == 3), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Test]
+    public async Task UpdateDeviceStateAfterServiceRestartAsync_ValidState_Success()
+    {
+        var deviceState = DeviceStateType.Busy;
+        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                       .Returns(Task.CompletedTask);
+
+        _target.UpdateDeviceStateAfterServiceRestartAsync(deviceState, default);
+
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.DeviceStateAfterServiceRestart), deviceState.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private List<ActionToReport> CreateReportForUpdating()
     {
         var actionsToReported = new List<ActionToReport> { new ActionToReport
