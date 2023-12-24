@@ -44,8 +44,6 @@ public class StateMachineListenerService : BackgroundService
         }
     }
 
-<<<<<<< Updated upstream
-=======
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         if (_stateMachineHandlerService != null && _twinHandler != null)
@@ -63,7 +61,6 @@ public class StateMachineListenerService : BackgroundService
         await base.StopAsync(cancellationToken);
     }
 
->>>>>>> Stashed changes
     internal async void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
     {
         if (_c2DEventSubscriptionSession == null)
