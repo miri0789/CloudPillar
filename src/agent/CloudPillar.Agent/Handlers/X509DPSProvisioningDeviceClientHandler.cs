@@ -147,7 +147,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
 
-        await _twinHandler.UpdateDeviceCertificateValidity(cancellationToken);
+        await _twinHandler.UpdateDeviceCertificateValidity(_authenticationSettings.CertificateExpiredDays, cancellationToken);
     }
 
     private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, bool initialize, CancellationToken cancellationToken)

@@ -196,14 +196,14 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateDeviceCertificateValidity(CancellationToken cancellationToken)
+    public async Task UpdateDeviceCertificateValidity(int CertificateExpiredDays, CancellationToken cancellationToken)
     {
         try
         {
             var certificateValidity = new CertificateValidity()
             {
                 CreationDate = DateTime.UtcNow,
-                ExpirationDate = DateTime.UtcNow.AddYears(2)
+                ExpirationDate = DateTime.UtcNow.AddDays(CertificateExpiredDays)
             };
             var certificateDates = nameof(TwinReported.CertificateValidity);
             await _deviceClient.UpdateReportedPropertiesAsync(certificateDates, certificateValidity, cancellationToken);
