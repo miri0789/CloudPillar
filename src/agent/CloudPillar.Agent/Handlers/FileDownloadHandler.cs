@@ -50,7 +50,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             fileDownload = new FileDownload { ActionReported = actionToReport };
             _filesDownloads.Add(fileDownload);
         }
-        fileDownload.Action.Sign = fileDownload.Action.Sign ?? ((DownloadAction)actionToReport.TwinAction).Sign;
+        fileDownload.Action.Sign = ((DownloadAction)actionToReport.TwinAction).Sign;
         // call async because messages of file data continue received 
         Task.Run(async () => HandleInitFileDownloadAsync(fileDownload, cancellationToken));
     }
@@ -67,7 +67,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             else
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
-                InitDownloadPath(file);
+                var isCreatedDownloadDirectory = InitDownloadPath(file);
                 var destPath = GetDestinationPath(file);
                 var isFileExist = _fileStreamerWrapper.FileExists(destPath);
                 if (file.Report.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
@@ -77,7 +77,13 @@ public class FileDownloadHandler : IFileDownloadHandler
                     file.Report.Status = StatusType.Pending;
                     file.Report.CompletedRanges = "";
                 }
-                if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
+
+                if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
+                 && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
+                {
+                    SetBlockedStatus(file, cancellationToken);
+                }
+                else if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
                 {
                     await HandleCompletedDownloadAsync(file, cancellationToken);
                 }
@@ -109,6 +115,26 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 await SaveReportAsync(file, cancellationToken);
             }
+        }
+    }
+
+    private void SetBlockedStatus(FileDownload file, CancellationToken cancellationToken)
+    {
+        file.Report.Status = StatusType.Blocked;
+        file.Report.ResultCode = "FileAlreadyExist";
+        _logger.Info($"File {file.Action.DestinationPath} already exist, sending blocked status");
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            Task.Run(async () => WaitInBlockedBeforeDownload(file, cancellationToken));
+        }
+    }
+
+    private async Task WaitInBlockedBeforeDownload(FileDownload file, CancellationToken cancellationToken)
+    {
+        await Task.Delay(TimeSpan.FromMinutes(_downloadSettings.BlockedDelayMinutes), cancellationToken);
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            await HandleInitFileDownloadAsync(file, cancellationToken);
         }
     }
 
@@ -156,7 +182,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.Action.DestinationPath;
     }
 
-    private void InitDownloadPath(FileDownload file)
+    private bool InitDownloadPath(FileDownload file)
     {
         var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
         if (file.Action.Unzip)
@@ -175,10 +201,12 @@ public class FileDownloadHandler : IFileDownloadHandler
             throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not a file.");
         }
         var directory = Path.GetDirectoryName(file.Action.DestinationPath);
-        if (directory != null)
+        if (directory != null && !_fileStreamerWrapper.DirectoryExists(directory))
         {
             _fileStreamerWrapper.CreateDirectory(directory);
+            return true;
         }
+        return false;
     }
 
     private void HandleFirstMessageAsync(FileDownload file, DownloadBlobChunkMessage message)
@@ -301,7 +329,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         try
         {
             await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success || file.Report.Status == StatusType.SentForSignature)
+            if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
             {
                 RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
             }
