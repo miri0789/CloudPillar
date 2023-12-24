@@ -79,12 +79,12 @@ public class FileStreamerWrapper : IFileStreamerWrapper
 
     public string GetDirectoryName(string filePathPattern)
     {
-        return Path.GetDirectoryName(filePathPattern) ?? "";
+        return Path.GetDirectoryName(filePathPattern);
     }
 
     public string GetPathRoot(string filePathPattern)
     {
-        return Path.GetPathRoot(filePathPattern) ?? "";
+        return Path.GetPathRoot(filePathPattern);
     }
 
     public string GetFileName(string filePathPattern)

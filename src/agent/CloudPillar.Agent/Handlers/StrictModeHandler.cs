@@ -61,7 +61,7 @@ public class StrictModeHandler : IStrictModeHandler
             return;
         }
 
-        string verbatimFileName = @$"{fileName.Replace("\\", "/")}";
+        string verbatimFileName = @$"{replaceSlashString(fileName)}";
 
         var zone = HandleRestictionWithGlobal(verbatimFileName, actionType);
         if (zone is null)
@@ -184,22 +184,24 @@ public class StrictModeHandler : IStrictModeHandler
         var pattern = string.Empty;
         patterns.ForEach(p =>
         {
-            if (p.Contains("**"))
+            if (p.Contains(FileConstants.DOUEBLE_ASTERISK))
             {
-                var parts = p.Split("**");
+                var parts = p.Split(FileConstants.DOUEBLE_ASTERISK);
                 rootPath = parts[0];
-                pattern = $"**{parts[1]}";
+                pattern = $"{FileConstants.DOUEBLE_ASTERISK}{parts[1]}";
                 if (string.IsNullOrWhiteSpace(rootPath))
                 {
-                    rootPath = _fileStreamer.GetPathRoot(filePath).Replace("\\", "/");
+                    rootPath = _fileStreamer.GetPathRoot(filePath);
                 }
             }
             else
             {
-                rootPath = _fileStreamer.GetPathRoot(p).Replace("\\", "/");
+                rootPath = _fileStreamer.GetPathRoot(p);
                 pattern = p.Replace(rootPath, "");
             }
 
+            rootPath = replaceSlashString(rootPath);
+            pattern = replaceSlashString(pattern);
             var existsRoot = zoneRestrictionsList.FirstOrDefault(x => x.Root?.ToLower() == rootPath?.ToLower());
             if (existsRoot is null)
             {
@@ -219,5 +221,9 @@ public class StrictModeHandler : IStrictModeHandler
         return zoneRestrictionsList;
     }
 
-
+    private string replaceSlashString(string str)
+    {
+        return str.Replace(FileConstants.DOUBLE_SEPARATOR, FileConstants.SEPARATOR)
+            .Replace(FileConstants.DOUBLE_FORWARD_SLASH_SEPARATOR, FileConstants.SEPARATOR);
+    }
 }

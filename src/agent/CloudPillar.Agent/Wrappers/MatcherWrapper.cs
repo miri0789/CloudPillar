@@ -5,9 +5,6 @@ namespace CloudPillar.Agent.Wrappers;
 
 public class MatcherWrapper : IMatcherWrapper
 {
-    private const string SEPARATOR = "/";
-    private const string DOUBLE_SEPARATOR = "\\";
-    private const string DOUBLE_FORWARD_SLASH_SEPARATOR  = "//";
 
     public PatternMatchingResult IsMatch(string[] patterns, string rootPath, string filePath)
     {
@@ -19,7 +16,10 @@ public class MatcherWrapper : IMatcherWrapper
     }
     public bool DoesFileMatchPattern(PatternMatchingResult matchingResult, string rootPath, string filePath)
     {
-        return matchingResult?.Files.Any(file => filePath.Replace(DOUBLE_SEPARATOR, SEPARATOR).Replace(DOUBLE_FORWARD_SLASH_SEPARATOR , SEPARATOR)?.ToLower() == Path.Combine(rootPath, file.Path).Replace(DOUBLE_SEPARATOR, SEPARATOR).Replace(DOUBLE_FORWARD_SLASH_SEPARATOR , SEPARATOR)?.ToLower()) ?? false;
+        return matchingResult?.Files.Any(file => filePath.Replace(FileConstants.DOUBLE_SEPARATOR, FileConstants.SEPARATOR)
+        .Replace(FileConstants.DOUBLE_FORWARD_SLASH_SEPARATOR, FileConstants.SEPARATOR)?.ToLower() ==
+        Path.Combine(rootPath, file.Path).Replace(FileConstants.DOUBLE_SEPARATOR, FileConstants.SEPARATOR)
+        .Replace(FileConstants.DOUBLE_FORWARD_SLASH_SEPARATOR, FileConstants.SEPARATOR)?.ToLower()) ?? false;
     }
 
 }
