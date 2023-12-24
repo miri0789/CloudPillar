@@ -68,7 +68,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             else
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
-                var isCreateDownloadDirectory = InitDownloadPath(file);
+                var isCreatedDownloadDirectory = InitDownloadPath(file);
                 var destPath = GetDestinationPath(file);
                 var isFileExist = _fileStreamerWrapper.FileExists(destPath);
                 if (file.Report.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
@@ -79,7 +79,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                     file.Report.CompletedRanges = "";
                 }
 
-                if ((isFileExist || (!isCreateDownloadDirectory && file.Action.Unzip))
+                if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
                  && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
                 {
                     SetBlockedStatus(file, cancellationToken);
