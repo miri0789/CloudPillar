@@ -11,6 +11,7 @@ public class ActionToReport
     public string ReportPartName { get; set; }
     public string ChangeSpecId { get; set; }
     public TwinPatchChangeSpec ChangeSpecKey { get; }
+    public bool UploadCompleted { get; set; } = false;
 
     public ActionToReport(TwinPatchChangeSpec changeSpecKey = TwinPatchChangeSpec.ChangeSpec, string changeSpecId = "")
     {

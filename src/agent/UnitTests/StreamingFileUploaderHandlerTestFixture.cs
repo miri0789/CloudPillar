@@ -49,6 +49,7 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task SendStreamingUploadChunks_SingleChunk_CompleteTask()
         {
+            actionToReport.UploadCompleted = false;
             actionToReport.TwinReport.Progress = 0;
             var stream = CreateStream(CHUNK_SIZE * 1);
 
@@ -60,6 +61,7 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task SendStreamingUploadChunks_InprogressUpload_CompleteUploadOnlyOnce()
         {
+            actionToReport.UploadCompleted = false;
             actionToReport.TwinReport.Progress = PROGRESS_PERCENTAGE;
             var largeStream = CreateStream(CHUNK_SIZE * NUM_OF_CHUNKS);
             await _target.UploadFromStreamAsync(notification, actionToReport, largeStream, STORAGE_URI, CORRELATION_ID, CancellationToken.None);
