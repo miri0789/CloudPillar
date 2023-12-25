@@ -4,6 +4,7 @@ using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -167,8 +168,14 @@ public class StrictModeHandler : IStrictModeHandler
     private bool IsMatch(string rootPath, string filePath, string[] patterns)
     {
         var result = _matchWrapper.IsMatch(patterns, rootPath, filePath);
-        var fileMatch = _matchWrapper.DoesFileMatchPattern(result, rootPath, filePath);
+        var fileMatch = DoesFileMatchPattern(result, rootPath, filePath);
         return fileMatch;
+    }
+    
+    private bool DoesFileMatchPattern(PatternMatchingResult matchingResult, string rootPath, string filePath)
+    {
+        return matchingResult?.Files.Any(file => replaceSlashString(filePath)?.ToLower() ==
+       replaceSlashString(Path.Combine(rootPath, file.Path))?.ToLower()) ?? false;
     }
 
     private List<FileRestrictionDetails> ConvertGlobalPatternsToRestrictions(string filePath)
