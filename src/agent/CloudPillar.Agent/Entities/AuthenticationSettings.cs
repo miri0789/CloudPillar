@@ -3,7 +3,7 @@ using Shared.Entities.Authentication;
 
 public class AuthenticationSettings
 {
-    private const int DEFUALT_EXPIRED_DAYS = 365;
+    private const int DEFUALT_EXPIRED_DAYS = 365 * 2;
     private const string GLOBAL_DEVICE_ENDPOINT = "global.azure-devices-provisioning.net";
     private const string ANONYMOUS_CERTIFICATE = "Temporary-anonymous";
 

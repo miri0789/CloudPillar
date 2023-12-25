@@ -113,8 +113,11 @@ public class UploadStreamChunksService : IUploadStreamChunksService
 
     private string GetFilePathFromBlobName(string blobName)
     {
-        string result = blobName.Substring(blobName.IndexOf("/") + 1);
-        var filePath =  Regex.Replace(result.Replace("_protocol_", "//:").Replace("_driveroot_", ":").Replace("/", "\\"), "^\\/", "_root_");
+        string[] parts = blobName.Split('/');
+        var partIndex = parts.ToList().FindIndex(x => x.Contains("_driveroot_"));
+        string result = string.Join("\\", parts, partIndex, parts.Length - partIndex);  
+
+        var filePath = Regex.Replace(result.Replace("_protocol_", "//:").Replace("_driveroot_", ":").Replace("/", "\\"), "^\\/", "_root_");
         _logger.Info($"GetFilePathFromBlobName, filePath is: {filePath}");
         return filePath;
     }

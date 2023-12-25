@@ -11,15 +11,21 @@ public class SignatureHandler : ISignatureHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ILoggerHandler _logger;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
+    private readonly ISHA256Wrapper _sha256Wrapper;
+    private readonly IECDsaWrapper _ecdsaWrapper;
     private readonly DownloadSettings _downloadSettings;
 
-    public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler, IOptions<DownloadSettings> options)
+    public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
+    ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IOptions<DownloadSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
+        _sha256Wrapper = sha256Wrapper ?? throw new ArgumentNullException(nameof(sha256Wrapper));
+        _ecdsaWrapper = ecdsaWrapper ?? throw new ArgumentNullException(nameof(ecdsaWrapper));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
+
     private async Task<ECDsa> InitPublicKeyAsync()
     {
         string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync("pki/sign-pubkey.pem");
@@ -53,7 +59,7 @@ public class SignatureHandler : ISignatureHandler
         using (var ecdsa = await InitPublicKeyAsync())
         {
             byte[] signature = Convert.FromBase64String(signatureString);
-            return ecdsa.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA512);
+            return _ecdsaWrapper.VerifyData(ecdsa, dataToVerify, signature, HashAlgorithmName.SHA512);
         }
     }
 
@@ -75,18 +81,18 @@ public class SignatureHandler : ISignatureHandler
     {
         using (SHA256 sha256 = SHA256.Create())
         {
-            using (FileStream fileStream = File.OpenRead(filePath))
+            using (FileStream fileStream = _fileStreamerWrapper.OpenRead(filePath))
             {
                 byte[] buffer = new byte[_downloadSettings.SignFileBufferSize];
                 int bytesRead;
 
-                while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+                while ((bytesRead = _fileStreamerWrapper.Read(fileStream, buffer, 0, buffer.Length)) > 0)
                 {
-                    sha256.TransformBlock(buffer, 0, bytesRead, null, 0);
+                    _sha256Wrapper.TransformBlock(sha256, buffer, 0, bytesRead, null, 0);
                 }
 
-                sha256.TransformFinalBlock(new byte[0], 0, 0);
-                return sha256.Hash;
+                _sha256Wrapper.TransformFinalBlock(sha256, new byte[0], 0, 0);
+                return _sha256Wrapper.GetHash(sha256);
             }
         }
     }
