@@ -16,7 +16,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly ITwinActionsHandler _twinActionsHandler;
     private readonly ISignatureHandler _signatureHandler;
-    private static readonly ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
+    private static ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
 
 
     private readonly ILoggerHandler _logger;
@@ -132,7 +132,8 @@ public class FileDownloadHandler : IFileDownloadHandler
     private async Task WaitInBlockedBeforeDownload(FileDownload file, CancellationToken cancellationToken)
     {
         await Task.Delay(TimeSpan.FromMinutes(_downloadSettings.BlockedDelayMinutes), cancellationToken);
-        if (!cancellationToken.IsCancellationRequested)
+        var fileDownload = GetDownloadFile(file.ActionReported.ReportIndex, file.Action.Source, file.ActionReported.ChangeSpecId);
+        if (!cancellationToken.IsCancellationRequested && fileDownload is not null)
         {
             await HandleInitFileDownloadAsync(file, cancellationToken);
         }
@@ -256,10 +257,11 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Report.CompletedRanges = AddRange(file.Report.CompletedRanges, message.RangeIndex);
         }
     }
-    private FileDownload? GetDownloadFile(int actionIndex, string fileName)
+    private FileDownload? GetDownloadFile(int actionIndex, string fileName, string changeSpecId = "")
     {
         var file = _filesDownloads.FirstOrDefault(item => item.ActionReported.ReportIndex == actionIndex &&
-                                    item.Action.Source == fileName);
+                                    item.Action.Source == fileName &&
+                                    (string.IsNullOrWhiteSpace(changeSpecId) || item.ActionReported.ChangeSpecId == changeSpecId));
         return file;
     }
 
@@ -421,5 +423,10 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             _filesDownloads.TryTake(out _);
         }
+    }
+
+    public void InitDownloadsList()
+    {
+        _filesDownloads = new ConcurrentBag<FileDownload>();
     }
 }
