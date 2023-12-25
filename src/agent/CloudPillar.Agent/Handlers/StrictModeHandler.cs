@@ -196,8 +196,8 @@ public class StrictModeHandler : IStrictModeHandler
             }
             else
             {
-                rootPath = $"{replaceSlashString(_fileStreamer.GetDirectoryName(p))}/";
-                pattern = p.Replace(rootPath, "");
+                rootPath = replaceSlashString(_fileStreamer.GetDirectoryName(p));
+                pattern = p.Replace($"{rootPath}/", "");
             }
 
             rootPath = replaceSlashString(rootPath);
