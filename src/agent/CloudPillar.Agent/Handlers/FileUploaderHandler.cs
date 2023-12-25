@@ -40,11 +40,8 @@ public class FileUploaderHandler : IFileUploaderHandler
         try
         {
             ArgumentNullException.ThrowIfNull(fileName);
-            if (uploadAction.Enabled)
-            {
-                await UploadFilesToBlobStorageAsync(fileName, uploadAction, actionToReport, changeSpecId, cancellationToken);
-                SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString());
-            }
+            await UploadFilesToBlobStorageAsync(fileName, uploadAction, actionToReport, changeSpecId, cancellationToken);
+            SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString());
         }
         catch (Exception ex)
         {
