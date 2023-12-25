@@ -32,6 +32,7 @@ namespace CloudPillar.Agent.Tests
         private DeviceStateFilterAttribute _target;
         private Mock<IStateMachineChangedEvent> _stateMachineChangedEventMock;
         private Mock<IReprovisioningHandler> _reprovisioningHandlerMock;
+        private Mock<ITwinReportHandler> _twinReportHandlerMock;
 
         public DeviceStateFilterAttributeTestFixture()
         {
@@ -47,11 +48,12 @@ namespace CloudPillar.Agent.Tests
             runDiagnosticsHandler = new Mock<IRunDiagnosticsHandler>();
             actionExecutingContextMock = new Mock<ActionExecutingContext>();
             _reprovisioningHandlerMock = new Mock<IReprovisioningHandler>();
+            _twinReportHandlerMock = new Mock<ITwinReportHandler>();
 
             _target = new DeviceStateFilterAttribute();
 
-            agentController = new AgentController(_twinHandler.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
-            _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, runDiagnosticsHandler.Object, 
+            agentController = new AgentController(_twinHandler.Object, _twinReportHandlerMock.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
+            _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, runDiagnosticsHandler.Object,
             _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object);
 
 

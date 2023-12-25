@@ -15,6 +15,7 @@ public class StateMachineListenerServiceTestFixture
     private Mock<IServiceProvider> _serviceProviderMock;
     private StateMachineListenerService _target;
     private Mock<ITwinHandler> _twinHandlerMock;
+    private Mock<ITwinReportHandler> _twinReportHandlerMock;
     private Mock<IC2DEventSubscriptionSession> _c2DEventSubscriptionSessionMock;
 
     private Mock<IDeviceClientWrapper> _deviceClientWrapperMock;
@@ -28,6 +29,7 @@ public class StateMachineListenerServiceTestFixture
         _twinHandlerMock = new Mock<ITwinHandler>();
         _c2DEventSubscriptionSessionMock = new Mock<IC2DEventSubscriptionSession>();
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
+        _twinReportHandlerMock = new Mock<ITwinReportHandler>();
         _logger = new Mock<ILoggerHandler>();
 
         var serviceScopeFactory = new Mock<IServiceScopeFactory>();
@@ -70,14 +72,14 @@ public class StateMachineListenerServiceTestFixture
     }
 
 
-   
-   
+
+
     [Test]
     public async Task SetStateAsync_BusyState_DisposeTwin()
     {
-        _twinHandlerMock.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+        _twinReportHandlerMock.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
 
-         _target.HandleStateChangedEvent(null, new StateMachineEventArgs(DeviceStateType.Busy));
+        _target.HandleStateChangedEvent(null, new StateMachineEventArgs(DeviceStateType.Busy));
 
         _deviceClientWrapperMock.Verify(x => x.DisposeAsync(), Times.Once);
     }

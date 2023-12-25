@@ -11,7 +11,7 @@ using Microsoft.Azure.Devices.Client.Transport;
 public class BlobStorageFileUploaderHandlerTestFixture
 {
     private Mock<ICloudBlockBlobWrapper> _cloudBlockBlobWrapperMock;
-    private Mock<ITwinActionsHandler> _twinActionsHandlerMock;
+    private Mock<ITwinReportHandler> _twinActionsHandlerMock;
     private Mock<ILoggerHandler> _loggerMock;
     private IBlobStorageFileUploaderHandler _target;
     private FileUploadCompletionNotification notification = new FileUploadCompletionNotification();
@@ -21,7 +21,7 @@ public class BlobStorageFileUploaderHandlerTestFixture
     public void Setup()
     {
         _cloudBlockBlobWrapperMock = new Mock<ICloudBlockBlobWrapper>();
-        _twinActionsHandlerMock = new Mock<ITwinActionsHandler>();
+        _twinActionsHandlerMock = new Mock<ITwinReportHandler>();
         _loggerMock = new Mock<ILoggerHandler>();
         _target = new BlobStorageFileUploaderHandler(_cloudBlockBlobWrapperMock.Object, _twinActionsHandlerMock.Object, _loggerMock.Object);
     }

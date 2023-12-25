@@ -17,21 +17,21 @@ public class FileUploaderHandler : IFileUploaderHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
     private readonly IStreamingFileUploaderHandler _streamingFileUploaderHandler;
-    private readonly ITwinActionsHandler _twinActionsHandler;
+    private readonly ITwinReportHandler _twinReportHandler;
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
         IFileStreamerWrapper fileStreamerWrapper,
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
         IStreamingFileUploaderHandler StreamingFileUploaderHandler,
-        ITwinActionsHandler twinActionsHandler,
+        ITwinReportHandler twinActionsHandler,
         ILoggerHandler logger)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _blobStorageFileUploaderHandler = blobStorageFileUploaderHandler ?? throw new ArgumentNullException(nameof(blobStorageFileUploaderHandler));
         _streamingFileUploaderHandler = StreamingFileUploaderHandler ?? throw new ArgumentNullException(nameof(StreamingFileUploaderHandler));
-        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
+        _twinReportHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -50,7 +50,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
         finally
         {
-            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+            await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         }
     }
 

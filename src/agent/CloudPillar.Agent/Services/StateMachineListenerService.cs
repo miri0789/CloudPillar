@@ -12,6 +12,7 @@ public class StateMachineListenerService : BackgroundService
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private CancellationTokenSource _cts;
     private ITwinHandler? _twinHandler;
+    private ITwinReportHandler? _twinReportHandler;
     private IC2DEventSubscriptionSession? _c2DEventSubscriptionSession;
     private IStateMachineHandler? _stateMachineHandlerService;
     private readonly ILoggerHandler _logger;
@@ -46,17 +47,24 @@ public class StateMachineListenerService : BackgroundService
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        if (_stateMachineHandlerService != null && _twinHandler != null)
+        if (_stateMachineHandlerService != null)
         {
             _logger.Info("StopAsync: set device state to busy");
 
             var state = _stateMachineHandlerService.GetCurrentDeviceState();
-            if(state != DeviceStateType.Busy)
+            if (state != DeviceStateType.Busy)
             {
-                await _twinHandler.UpdateDeviceStateAfterServiceRestartAsync(state, _cts.Token);
+                if (_twinReportHandler == null)
+                {
+                    using (var scope = _serviceProvider.CreateScope())
+                    {
+                        _twinReportHandler = scope.ServiceProvider.GetService<ITwinReportHandler>() ?? throw new ArgumentNullException(nameof(_twinReportHandler));
+                        await _twinReportHandler.UpdateDeviceStateAfterServiceRestartAsync(state, _cts.Token);
+                    }
+                }
                 await _stateMachineHandlerService.SetStateAsync(DeviceStateType.Busy, _cts.Token);
             }
-            
+
         }
         await base.StopAsync(cancellationToken);
     }

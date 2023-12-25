@@ -14,7 +14,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IStrictModeHandler _strictModeHandler;
-    private readonly ITwinActionsHandler _twinActionsHandler;
+    private readonly ITwinReportHandler _twinActionsHandler;
     private readonly ISignatureHandler _signatureHandler;
     private static ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
 
@@ -26,7 +26,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
                                IStrictModeHandler strictModeHandler,
-                               ITwinActionsHandler twinActionsHandler,
+                               ITwinReportHandler twinActionsHandler,
                                ILoggerHandler loggerHandler,
                                ICheckSumService checkSumService,
                                ISignatureHandler signatureHandler,

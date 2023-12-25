@@ -15,11 +15,11 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly ICheckSumService _checkSumService;
-    private readonly ITwinActionsHandler _twinActionsHandler;
+    private readonly ITwinReportHandler _twinActionsHandler;
     private readonly UploadCompleteRetrySettings _uploadCompleteRetrySettings;
     private readonly ILoggerHandler _logger;
 
-    public StreamingFileUploaderHandler(ID2CMessengerHandler d2CMessengerHandler, IDeviceClientWrapper deviceClientWrapper, ICheckSumService checkSumService, ITwinActionsHandler twinActionsHandler, IOptions<UploadCompleteRetrySettings> uploadCompleteRetrySettings, ILoggerHandler logger)
+    public StreamingFileUploaderHandler(ID2CMessengerHandler d2CMessengerHandler, IDeviceClientWrapper deviceClientWrapper, ICheckSumService checkSumService, ITwinReportHandler twinActionsHandler, IOptions<UploadCompleteRetrySettings> uploadCompleteRetrySettings, ILoggerHandler logger)
     {
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));

@@ -13,6 +13,7 @@ namespace CloudPillar.Agent.Tests
     {
         private Mock<IStateMachineChangedEvent> _stateMachineChangedEventMock;
         private Mock<IReprovisioningHandler> _reprovisioningHandlerMock;
+        private Mock<ITwinReportHandler> _twinReportHandlerMock;
         private Mock<ITwinHandler> _twinHandler;
         private Mock<IValidator<UpdateReportedProps>> _updateReportedPropsValidator;
         private Mock<IDPSProvisioningDeviceClientHandler> _dPSProvisioningDeviceClientHandler;
@@ -35,8 +36,9 @@ namespace CloudPillar.Agent.Tests
             _loggerMock = new Mock<ILoggerHandler>();
             _stateMachineChangedEventMock = new Mock<IStateMachineChangedEvent>();
             _reprovisioningHandlerMock = new Mock<IReprovisioningHandler>();
+            _twinReportHandlerMock = new Mock<ITwinReportHandler>();
 
-            _target = new AgentController(_twinHandler.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
+            _target = new AgentController(_twinHandler.Object, _twinReportHandlerMock.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
                         _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _runDiagnosticsHandler.Object,
                          _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object);
         }
