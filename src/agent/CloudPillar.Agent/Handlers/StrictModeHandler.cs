@@ -3,21 +3,23 @@ using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
+using CloudPillar.Agent.Wrappers;
+using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace CloudPillar.Agent.Handlers;
 
 public class StrictModeHandler : IStrictModeHandler
 {
-    private const string SEPARATOR = "/";
-    private const string DOUBLE_SEPARATOR = "\\";
     private readonly StrictModeSettings _strictModeSettings;
     private readonly IMatcherWrapper _matchWrapper;
+    private readonly IFileStreamerWrapper _fileStreamer;
     private readonly ILoggerHandler _logger;
 
-    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, IMatcherWrapper matchWrapper, ILoggerHandler logger)
+    public StrictModeHandler(IOptions<StrictModeSettings> strictModeSettings, IMatcherWrapper matchWrapper, IFileStreamerWrapper fileStreamer, ILoggerHandler logger)
     {
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
         _matchWrapper = matchWrapper ?? throw new ArgumentNullException(nameof(matchWrapper));
+        _fileStreamer = fileStreamer ?? throw new ArgumentNullException(nameof(fileStreamer));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -60,23 +62,15 @@ public class StrictModeHandler : IStrictModeHandler
             return;
         }
 
-        string verbatimFileName = @$"{fileName.Replace("\\", "/")}";
+        string verbatimFileName = @$"{replaceSlashString(fileName)}";
 
-        var zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, actionType);
-
-        if (zoneRestrictions is null)
+        var zone = HandleRestictionWithGlobal(verbatimFileName, actionType);
+        if (zone is null)
         {
             return;
         }
 
-        List<string> allowPatterns = GetAllowRestrictions(zoneRestrictions);
-        if (allowPatterns.Count == 0)
-        {
-            _logger.Info("No allow patterns were found");
-            return;
-        }
-
-        bool isMatch = IsMatch((zoneRestrictions.Root ?? "").ToLower(), verbatimFileName.ToLower(), allowPatterns.ToArray());
+        bool isMatch = IsMatch(zone?.Root?.ToLower(), verbatimFileName.ToLower(), zone?.AllowPatterns?.ToArray());
         if (!isMatch)
         {
             _logger.Error("Denied by the lack of local allowance");
@@ -85,6 +79,36 @@ public class StrictModeHandler : IStrictModeHandler
         _logger.Info($"{verbatimFileName} is match to strict mode allow patterns");
     }
 
+    private FileRestrictionDetails? HandleRestictionWithGlobal(string verbatimFileName, TwinActionType actionType)
+    {
+        var restrictions = GetRestrictionsByActionType(actionType);
+        var globalRestrictions = ConvertGlobalPatternsToRestrictions(verbatimFileName);
+
+        if (restrictions is null && globalRestrictions is null)
+        {
+            _logger.Info("No restrictions were found");
+            return null;
+        }
+        var zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, restrictions);
+        var globalZoneRestrictions = GetRestrinctionsByZone(verbatimFileName, globalRestrictions);
+
+        if (zoneRestrictions is null && globalZoneRestrictions is null)
+        {
+            _logger.Info("No restrictions were found");
+            return null;
+        }
+        List<string> allowPatterns = GetAllowRestrictions(zoneRestrictions);
+        List<string> globalAllowPatterns = GetAllowRestrictions(globalZoneRestrictions);
+        if (allowPatterns.Count == 0 && globalAllowPatterns.Count == 0)
+        {
+            _logger.Info("No allow patterns were found");
+            return null;
+        }
+        var zone = new FileRestrictionDetails();
+        zone.Root = zoneRestrictions?.Root ?? globalZoneRestrictions?.Root;
+        zone.AllowPatterns = allowPatterns?.Concat(globalAllowPatterns).ToList();
+        return zone;
+    }
     private List<FileRestrictionDetails>? GetRestrictionsByActionType(TwinActionType actionType)
     {
         _logger.Info($"Get restrictions for {actionType} action");
@@ -107,14 +131,18 @@ public class StrictModeHandler : IStrictModeHandler
                                     .FirstOrDefault();
         return bestMatch;
     }
+    private FileRestrictionDetails? GetRestrinctionsByZone(string fileName, List<FileRestrictionDetails> fileRestrictions)
+    {
+        var bestMatch = fileRestrictions?
+                                    .Where(x => fileName.ToLower().Contains((x.Root ?? "").ToLower()))
+                                    .OrderByDescending(f => fileName.ToLower().StartsWith((f.Root ?? "").ToLower()) ? f.Root?.Length : 0).ToList()
+                                    .FirstOrDefault();
+        return bestMatch;
+    }
 
     private List<string> GetAllowRestrictions(FileRestrictionDetails zoneRestrictions)
     {
         var allowPatterns = zoneRestrictions?.AllowPatterns ?? new List<string>();
-        if (_strictModeSettings.GlobalPatterns != null)
-        {
-            allowPatterns.AddRange(_strictModeSettings.GlobalPatterns);
-        }
 
         _logger.Info($"{allowPatterns.Count} allow pattern was found");
         var nonEmptyPatterns = allowPatterns.Where(pattern => !string.IsNullOrWhiteSpace(pattern)).ToList();
@@ -140,7 +168,69 @@ public class StrictModeHandler : IStrictModeHandler
     private bool IsMatch(string rootPath, string filePath, string[] patterns)
     {
         var result = _matchWrapper.IsMatch(patterns, rootPath, filePath);
-        var fileMatch = _matchWrapper.DoesFileMatchPattern(result, rootPath, filePath);
+        var fileMatch = DoesFileMatchPattern(result, rootPath, filePath);
         return fileMatch;
+    }
+    
+    private bool DoesFileMatchPattern(PatternMatchingResult matchingResult, string rootPath, string filePath)
+    {
+        return matchingResult?.Files.Any(file => replaceSlashString(filePath)?.ToLower() ==
+       replaceSlashString(Path.Combine(rootPath, file.Path))?.ToLower()) ?? false;
+    }
+
+    private List<FileRestrictionDetails> ConvertGlobalPatternsToRestrictions(string filePath)
+    {
+        List<FileRestrictionDetails> zoneRestrictionsList = new List<FileRestrictionDetails>();
+        if (_strictModeSettings.GlobalPatterns == null)
+        {
+            _logger.Info($"Global patterns were not found");
+            return zoneRestrictionsList;
+        }
+        var patterns = _strictModeSettings.GlobalPatterns.ToList();
+        var rootPath = string.Empty;
+        var pattern = string.Empty;
+        patterns.ForEach(p =>
+        {
+            if (p.Contains(FileConstants.DOUEBLE_ASTERISK))
+            {
+                var parts = p.Split(FileConstants.DOUEBLE_ASTERISK);
+                rootPath = parts[0];
+                pattern = $"{FileConstants.DOUEBLE_ASTERISK}{parts[1]}";
+                if (string.IsNullOrWhiteSpace(rootPath))
+                {
+                    rootPath = _fileStreamer.GetPathRoot(filePath);
+                }
+            }
+            else
+            {
+                rootPath = replaceSlashString(_fileStreamer.GetDirectoryName(p));
+                pattern = p.Replace($"{rootPath}/", "");
+            }
+
+            rootPath = replaceSlashString(rootPath);
+            pattern = replaceSlashString(pattern);
+            var existsRoot = zoneRestrictionsList.FirstOrDefault(x => x.Root?.ToLower() == rootPath?.ToLower());
+            if (existsRoot is null)
+            {
+                FileRestrictionDetails fileRestrictionDetails = new FileRestrictionDetails
+                {
+                    Root = rootPath,
+                    AllowPatterns = new List<string> { pattern }
+                };
+                zoneRestrictionsList.Add(fileRestrictionDetails);
+            }
+            else
+            {
+                existsRoot.AllowPatterns.Add(pattern);
+            }
+        });
+
+        return zoneRestrictionsList;
+    }
+
+    private string replaceSlashString(string str)
+    {
+        return str.Replace(FileConstants.DOUBLE_SEPARATOR, FileConstants.SEPARATOR)
+            .Replace(FileConstants.DOUBLE_FORWARD_SLASH_SEPARATOR, FileConstants.SEPARATOR);
     }
 }

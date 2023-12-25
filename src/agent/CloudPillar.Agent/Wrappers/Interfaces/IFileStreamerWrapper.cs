@@ -30,6 +30,8 @@ public interface IFileStreamerWrapper
     string Combine(string baseDir, string path);
 
     string GetDirectoryName(string filePathPattern);
+    
+    string GetPathRoot(string filePathPattern);
 
     string GetFileName(string filePathPattern);
 

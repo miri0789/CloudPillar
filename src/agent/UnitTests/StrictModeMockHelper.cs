@@ -1,6 +1,7 @@
 public static class StrictModeMockHelper
 {
     public static string ROOT_UPLOAD_UPPERCASE = "C:/demoUpload";
+    public static string ROOT_GLOBAL = "c:/globalUpload";
     public static string ROOT_UPLOAD = "c:/demoUpload";
     public static string ROOT_DOWNLOAD = "c:/demoDownload";
     public static string DOWNLOAD = "Download";
@@ -10,6 +11,10 @@ public static class StrictModeMockHelper
 
     public static StrictModeSettings SetStrictModeSettingsValueMock()
     {
+        var globalPatterns = new List<string>
+        {
+            $"{ROOT_GLOBAL}/*.txt"
+        };
         var uploadRestrictionDetails = new FileRestrictionDetails()
         {
             Id = "LogUploadAllow",
@@ -39,6 +44,7 @@ public static class StrictModeMockHelper
         return new StrictModeSettings()
         {
             StrictMode = true,
+            GlobalPatterns = globalPatterns,
             FilesRestrictions = new List<FileRestrictionDetails> { uploadRestrictionDetails, downloadRestrictionDetails }
         };
 

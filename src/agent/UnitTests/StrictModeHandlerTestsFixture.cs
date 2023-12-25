@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Wrappers.Interfaces;
 using Microsoft.Extensions.FileSystemGlobbing;
+using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Handlers.Tests
 {
@@ -14,6 +15,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
         private Mock<IMatcherWrapper> mockMatchWrapper;
         private Mock<ILoggerHandler> mockLogger;
+        private Mock<FileStreamerWrapper> mockFileStreamer;
         private StrictModeHandler _target;
         private const TwinActionType UPLAOD_ACTION = TwinActionType.SingularUpload;
         private const TwinActionType DOWNLOAD_ACTION = TwinActionType.SingularDownload;
@@ -22,17 +24,14 @@ namespace CloudPillar.Agent.Handlers.Tests
         public void Setup()
         {
             mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
-
+            mockFileStreamer = new Mock<FileStreamerWrapper>();
             mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
             mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
             mockMatchWrapper = new Mock<IMatcherWrapper>();
             mockLogger = new Mock<ILoggerHandler>();
-
-            mockMatchWrapper.Setup(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(new PatternMatchingResult(new List<FilePatternMatch>() { new FilePatternMatch() { } }, true));
-            mockMatchWrapper.Setup(x => x.DoesFileMatchPattern(It.IsAny<PatternMatchingResult>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            _target = new StrictModeHandler(mockStrictModeSettings.Object, mockMatchWrapper.Object, mockLogger.Object);
+            SetMatchResult("test.txt", "");
+            _target = new StrictModeHandler(mockStrictModeSettings.Object, mockMatchWrapper.Object, mockFileStreamer.Object, mockLogger.Object);
         }
         [Test]
         public void ReplaceRootById_ValidData_ReturnReplacedString()
@@ -110,9 +109,22 @@ namespace CloudPillar.Agent.Handlers.Tests
         }
 
         [Test]
-        public void CheckFileAccessPermissions_NotExistsZone_ExitingTheFunction()
+        public void CheckFileAccessPermissions_NotExistsZoneWithGlobalPatterns_ExitingTheFunction()
+        {
+            SetMatchResult(StrictModeMockHelper.ROOT_GLOBAL, "");
+
+            var fileName = StrictModeMockHelper.ROOT_GLOBAL;
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
+            mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+
+        }
+        [Test]
+        public void CheckFileAccessPermissions_NotExistsZoneAndNoGlobalPatterns_ExitingTheFunction()
         {
             var fileName = "notExistsZone";
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>();
+
             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
             mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
@@ -120,23 +132,72 @@ namespace CloudPillar.Agent.Handlers.Tests
         }
 
         [Test]
-        public void CheckFileAccessPermissions_NotAllowPatterns_ExitingTheFunction()
+        public void CheckFileAccessPermissions_NotAllowPatternsWithGlobalPatterns_UseGlobalPatterns()
         {
-            var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
+            var fileName = $"{StrictModeMockHelper.ROOT_GLOBAL}/test.txt";
             mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>();
 
             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
+            mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        }
+        [Test]
+        public void CheckFileAccessPermissions_NotAllowPatternsAndNoGlobalPattern_ExitingTheFunction()
+        {
+            var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
+            mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>();
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>();
+
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
             mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+
+        [Test]
+        public void CheckFileAccessPermissions_GlobalPatternStartWithDoubleAstreisk_RootPathFromFile()
+        {
+            SetMatchResult("globalupload/test.txt", "");
+            var fileName = $"{StrictModeMockHelper.ROOT_GLOBAL}/test.txt";
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>() { $"{FileConstants.DOUEBLE_ASTERISK}/test.txt" };
+
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
+            mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.Is<string>(x => x == "c:/"), It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public void CheckFileAccessPermissions_GlobalPatternContainsDoubleAstreisk_SplitPatternToRootAndPAttern()
+        {
+            var fileName = $"{StrictModeMockHelper.ROOT_GLOBAL}/test.txt";
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>() { $"{StrictModeMockHelper.ROOT_GLOBAL}/{FileConstants.DOUEBLE_ASTERISK}/test.txt" };
+
+
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
+            mockMatchWrapper.Verify(x => x.IsMatch(It.Is<string[]>(x => x[0] == "**/test.txt"), It.Is<string>(x => x == "c:/globalupload/"), It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public void CheckFileAccessPermissions_GlobalPatternAbsolutePath_RootFromPattern()
+        {
+            var fileName = $"{StrictModeMockHelper.ROOT_GLOBAL}/test.txt";
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>() { $"{StrictModeMockHelper.ROOT_GLOBAL}/test.txt" };
+
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+
+            mockMatchWrapper.Verify(x => x.IsMatch(It.Is<string[]>(x => x[0] == "test.txt"), It.Is<string>(x => x == "c:/globalupload"), It.IsAny<string>()), Times.Once);
         }
 
         [Test]
         public void CheckFileAccessPermissions_EmptyPatternString_ThrowException()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/test.txt";
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>();
+
             mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>() { "" };
 
-             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+            _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
             mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
         [Test]
@@ -158,7 +219,6 @@ namespace CloudPillar.Agent.Handlers.Tests
         [Test]
         public void CheckFileAccessPermissions_NoMatchPatternToFileName_ThrowException()
         {
-            mockMatchWrapper.Setup(x => x.DoesFileMatchPattern(It.IsAny<PatternMatchingResult>(), It.IsAny<string>(), It.IsAny<string>())).Returns(false);
             var fileName = $"{StrictModeMockHelper.ROOT_UPLOAD}/img.png";
 
             Assert.Throws<FormatException>(() =>
@@ -179,6 +239,12 @@ namespace CloudPillar.Agent.Handlers.Tests
             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
             mockMatchWrapper.Verify(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        }
+        
+        private void SetMatchResult(string path, string stem = "")
+        {
+            mockMatchWrapper.Setup(x => x.IsMatch(It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<string>()))
+              .Returns(new PatternMatchingResult(new List<FilePatternMatch>() { new FilePatternMatch(path, stem) }, true));
         }
     }
 }
