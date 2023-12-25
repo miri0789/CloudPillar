@@ -11,4 +11,6 @@ public class TwinReported
    public string SecretKey { get; set; }
    public List<TwinReportedCustomProp> Custom { get; set; }
    public string ChangeSign { get; set; }
+   public CertificateValidity CertificateValidity { get; set; }
+   public DeviceStateType? DeviceStateAfterServiceRestart { get; set; }
 }

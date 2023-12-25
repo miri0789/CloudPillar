@@ -15,7 +15,6 @@
                 "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpiotnechamafiles;AccountKey=PXNJl8/a4a0DiyGUD7JWbXiKg+Zc8pKMQeQGXcAjeccDEPDmt8q39wf4d6KMOxaheOkE1JPC3aAx+AStVUGGuQ==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "cpiotnechamafiles",
                 "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
-
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
                 "RetryPolicyExponent": "3"

@@ -5,6 +5,8 @@ using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Services;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Twin;
+using Polly;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -14,14 +16,16 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly ICheckSumService _checkSumService;
     private readonly ITwinActionsHandler _twinActionsHandler;
+    private readonly UploadCompleteRetrySettings _uploadCompleteRetrySettings;
     private readonly ILoggerHandler _logger;
 
-    public StreamingFileUploaderHandler(ID2CMessengerHandler d2CMessengerHandler, IDeviceClientWrapper deviceClientWrapper, ICheckSumService checkSumService, ITwinActionsHandler twinActionsHandler, ILoggerHandler logger)
+    public StreamingFileUploaderHandler(ID2CMessengerHandler d2CMessengerHandler, IDeviceClientWrapper deviceClientWrapper, ICheckSumService checkSumService, ITwinActionsHandler twinActionsHandler, IOptions<UploadCompleteRetrySettings> uploadCompleteRetrySettings, ILoggerHandler logger)
     {
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
+        _uploadCompleteRetrySettings = uploadCompleteRetrySettings.Value ?? throw new ArgumentNullException(nameof(uploadCompleteRetrySettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -41,7 +45,9 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             }
             catch (Exception ex)
             {
-                _logger.Error($"SendStreamingUploadChunkEventAsync failed: {ex.Message}");
+                var error = $"SendStreamingUploadChunkEventAsync failed: {ex.Message}";
+                _logger.Error(error);
+                throw new Exception(error);
             }
         }
     }
@@ -81,9 +87,32 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             await readStream.ReadAsync(buffer, 0, buffer.Length);
 
             await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, currentPosition, checkSum, cancellationToken, isRunDiagnostics);
-
+            if (!actionToReport.UploadCompleted)
+            {
+                await CompleteFileUploadAsync(notification, actionToReport, cancellationToken);
+            }
             var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, buffer.Length);
             await UpdateReportedDetailsAsync(actionToReport, percents, notification.CorrelationId, cancellationToken);
+        }
+    }
+    private async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, CancellationToken cancellationToken)
+    {
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                var retryPolicy = Policy.Handle<Exception>()
+                    .WaitAndRetryAsync(_uploadCompleteRetrySettings.MaxRetries, retryAttempt => TimeSpan.FromSeconds(_uploadCompleteRetrySettings.DelaySeconds),
+                    (ex, time) => _logger.Warn($"Failed to complete file upload. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
+                await retryPolicy.ExecuteAsync(async () => await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken));
+                _logger.Info($"CompleteFileUploadAsync ended successfully");
+                actionToReport.UploadCompleted = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Upload file by streamibg failed. Message: {ex.Message}");
+                throw ex;
+            }
         }
     }
 

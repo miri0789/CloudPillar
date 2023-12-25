@@ -139,8 +139,15 @@ public class AgentController : ControllerBase
     [HttpGet("RunDiagnostics")]
     public async Task<ActionResult<string>> RunDiagnostics()
     {
+        if (RunDiagnosticsHandler.IsDiagnosticsProcessRunning)
+        {
+            var message = "RunDiagnostics is already running";
+            _logger.Info(message);
+            return BadRequest(message);
+        }
         try
         {
+            RunDiagnosticsHandler.IsDiagnosticsProcessRunning = true;
             Stopwatch timeTaken = new Stopwatch();
             timeTaken.Start();
 
@@ -163,6 +170,10 @@ public class AgentController : ControllerBase
         {
             _logger.Error("RunDiagnostics failed", ex);
             return BadRequest($"An error occurred while processing run diagnostics: {ex.Message}");
+        }
+        finally
+        {
+            RunDiagnosticsHandler.IsDiagnosticsProcessRunning = false;
         }
     }
 

@@ -152,6 +152,36 @@ public class TwinHandler : ITwinHandler
         }
     }
 
+    public async Task UpdateDeviceStateAfterServiceRestartAsync(DeviceStateType? deviceState, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var deviceStateAfterServiceRestartKey = nameof(TwinReported.DeviceStateAfterServiceRestart);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceStateAfterServiceRestartKey, deviceState?.ToString(), cancellationToken);
+            _logger.Info($"UpdateDeviceStateAfterServiceRestartAsync success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceStateAfterServiceRestartAsync failed: {ex.Message}");
+        }
+    }
+
+    public async Task<DeviceStateType?> GetDeviceStateAfterServiceRestartAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reported?.DeviceStateAfterServiceRestart;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetDeviceStateAfterServiceRestartAsync failed: {ex.Message}");
+            return null;
+        }
+    }
+
+
     public async Task UpdateDeviceSecretKeyAsync(string secretKey, CancellationToken cancellationToken)
     {
         try
@@ -163,6 +193,25 @@ public class TwinHandler : ITwinHandler
         catch (Exception ex)
         {
             _logger.Error($"UpdateDeviceSecretKeyAsync failed message: {ex.Message}");
+        }
+    }
+
+    public async Task UpdateDeviceCertificateValidity(int CertificateExpiredDays, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var certificateValidity = new CertificateValidity()
+            {
+                CreationDate = DateTime.UtcNow,
+                ExpirationDate = DateTime.UtcNow.AddDays(CertificateExpiredDays)
+            };
+            var certificateDates = nameof(TwinReported.CertificateValidity);
+            await _deviceClient.UpdateReportedPropertiesAsync(certificateDates, certificateValidity, cancellationToken);
+            _logger.Info($"UpdateDeviceCertificateValidity success");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"UpdateDeviceCertificateValidity failed message: {ex.Message}");
         }
     }
 
@@ -362,6 +411,7 @@ public class TwinHandler : ITwinHandler
                 twinReportedChangeSpec.Patch = new TwinReportedPatch();
                 twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id;
                 isReportedChanged = true;
+                _fileDownloadHandler.InitDownloadsList();
             }
 
             PropertyInfo[] properties = typeof(TwinPatch).GetProperties();
@@ -384,7 +434,7 @@ public class TwinHandler : ITwinHandler
 
                         reportedProp?.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
                         actions.AddRange(desiredValue
-                           .Select((item, index) => new ActionToReport(changeSpecKey)
+                           .Select((item, index) => new ActionToReport(changeSpecKey, twinDesiredChangeSpec.Id)
                            {
                                ReportPartName = property.Name,
                                ReportIndex = index,

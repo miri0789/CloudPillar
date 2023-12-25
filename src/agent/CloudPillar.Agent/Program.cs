@@ -89,6 +89,9 @@ builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
 builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
 
+var uploadCompleteRetrySettings = builder.Configuration.GetSection("UploadCompleteRetrySettings");
+builder.Services.Configure<UploadCompleteRetrySettings>(uploadCompleteRetrySettings);
+
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 

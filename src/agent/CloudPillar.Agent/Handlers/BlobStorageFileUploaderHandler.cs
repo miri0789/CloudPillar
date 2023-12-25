@@ -36,7 +36,7 @@ namespace CloudPillar.Agent.Handlers
 
         private async Task SetReportProggress(long bytesTransferred, long totalSize, ActionToReport actionToReport, FileUploadCompletionNotification notification, CancellationToken cancellationToken)
         {
-            float progressPercent = (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100;
+            float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 0;
 
             actionToReport.TwinReport.Progress = progressPercent;
             actionToReport.TwinReport.CorrelationId = notification.CorrelationId;

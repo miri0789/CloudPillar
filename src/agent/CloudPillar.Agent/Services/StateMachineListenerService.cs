@@ -1,5 +1,6 @@
 
 using CloudPillar.Agent.Handlers;
+using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Twin;
 
@@ -12,17 +13,21 @@ public class StateMachineListenerService : BackgroundService
     private CancellationTokenSource _cts;
     private ITwinHandler? _twinHandler;
     private IC2DEventSubscriptionSession? _c2DEventSubscriptionSession;
+    private IStateMachineHandler? _stateMachineHandlerService;
+    private readonly ILoggerHandler _logger;
 
     public StateMachineListenerService(
         IStateMachineChangedEvent stateMachineChangedEvent,
         IServiceProvider serviceProvider,
-        IDeviceClientWrapper deviceClientWrapper
+        IDeviceClientWrapper deviceClientWrapper,
+        ILoggerHandler logger
     )
     {
         _cts = new CancellationTokenSource();
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,13 +37,29 @@ public class StateMachineListenerService : BackgroundService
         {
             var dpsProvisioningDeviceClientHandler = scope.ServiceProvider.GetService<IDPSProvisioningDeviceClientHandler>();
             ArgumentNullException.ThrowIfNull(dpsProvisioningDeviceClientHandler);
-            var StateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
-            ArgumentNullException.ThrowIfNull(StateMachineHandlerService);
+            _stateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
+            ArgumentNullException.ThrowIfNull(_stateMachineHandlerService);
             await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
-            await StateMachineHandlerService.InitStateMachineHandlerAsync();
+            await _stateMachineHandlerService.InitStateMachineHandlerAsync(stoppingToken);
         }
     }
 
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        if (_stateMachineHandlerService != null && _twinHandler != null)
+        {
+            _logger.Info("StopAsync: set device state to busy");
+
+            var state = _stateMachineHandlerService.GetCurrentDeviceState();
+            if(state != DeviceStateType.Busy)
+            {
+                await _twinHandler.UpdateDeviceStateAfterServiceRestartAsync(state, _cts.Token);
+                await _stateMachineHandlerService.SetStateAsync(DeviceStateType.Busy, _cts.Token);
+            }
+            
+        }
+        await base.StopAsync(cancellationToken);
+    }
 
     internal async void HandleStateChangedEvent(object? sender, StateMachineEventArgs e)
     {
@@ -88,12 +109,9 @@ public class StateMachineListenerService : BackgroundService
         }
     }
 
-
     private async Task CancelOperationsAsync()
     {
         _cts?.Cancel();
         await _deviceClientWrapper.DisposeAsync();
     }
-
-
 }
