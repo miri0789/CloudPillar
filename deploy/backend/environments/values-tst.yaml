@@ -84,11 +84,11 @@ controllers:
     port: 8083
     env:
     - name: IothubConnectionString
-      value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
+      value: "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE="
     - name: DPSConnectionString
-      value: "HostName=cp-dev-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=OvCnPzeHY0yu211bWFmtWmxzvKz2jNYje3bUbDCOQDg="
+      value: "HostName=cp-tst-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=z4ZY+yWfPMSQBVDxLqszzI4Z2vsvsEVR7QYkwi8E1Fc="
     - name: DPSIdScope
-      value: "0ne00B51BC7"
+      value: "0ne00B56E85"
     - name: GlobalDeviceEndpoint
       value: "global.azure-devices-provisioning.net"
     - name: ExpirationCertificatePercent
