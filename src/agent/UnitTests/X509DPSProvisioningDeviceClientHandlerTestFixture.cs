@@ -20,7 +20,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
     private X509Certificate2 _unitTestCertificate;
     private IDPSProvisioningDeviceClientHandler _target;
     private Mock<IOptions<AuthenticationSettings>> _authenticationSettingsMock;
-    private Mock<ITwinHandler> _twinHandlerMock;
+    private Mock<ITwinReportHandler> _twinReportHandlerMock;
 
     private const string DEVICE_ID = "UnitTest";
     private const string SECRET_KEY = "secert";
@@ -37,7 +37,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _deviceClientWrapperMock = new Mock<IDeviceClientWrapper>();
         _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
         _provisioningDeviceClientWrapperMock = new Mock<IProvisioningDeviceClientWrapper>();
-        _twinHandlerMock = new Mock<ITwinHandler>();
+        _twinReportHandlerMock = new Mock<ITwinReportHandler>();
 
         _unitTestCertificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60, GetCertificatePrefix());
         _unitTestCertificate.FriendlyName = $"{DEVICE_ID}@{IOT_HUB_HOST_NAME}";
@@ -181,6 +181,6 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
 
     private void CreateTarget()
     {
-        _target = new X509DPSProvisioningDeviceClientHandler(_loggerMock.Object, _deviceClientWrapperMock.Object, _x509CertificateWrapperMock.Object, _provisioningDeviceClientWrapperMock.Object, _authenticationSettingsMock.Object, _twinHandlerMock.Object);
+        _target = new X509DPSProvisioningDeviceClientHandler(_loggerMock.Object, _deviceClientWrapperMock.Object, _x509CertificateWrapperMock.Object, _provisioningDeviceClientWrapperMock.Object, _authenticationSettingsMock.Object, _twinReportHandlerMock.Object);
     }
 }

@@ -17,11 +17,10 @@ public class TwinHandlerTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientMock;
     private Mock<IFileDownloadHandler> _fileDownloadHandlerMock;
     private Mock<IFileUploaderHandler> _fileUploaderHandlerMock;
-    private Mock<ITwinActionsHandler> _twinActionsHandler;
+    private Mock<ITwinReportHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IStrictModeHandler> _strictModeHandlerMock;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
-    private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapper;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private ITwinHandler _target;
     private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
@@ -42,11 +41,10 @@ public class TwinHandlerTestFixture
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _fileDownloadHandlerMock = new Mock<IFileDownloadHandler>();
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
-        _twinActionsHandler = new Mock<ITwinActionsHandler>();
+        _twinActionsHandler = new Mock<ITwinReportHandler>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
-        _runtimeInformationWrapper = new Mock<IRuntimeInformationWrapper>();
         _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
         _signatureHandlerMock = new Mock<ISignatureHandler>();
         CreateTarget();
@@ -60,7 +58,6 @@ public class TwinHandlerTestFixture
           _fileUploaderHandlerMock.Object,
           _twinActionsHandler.Object,
           _loggerHandlerMock.Object,
-          _runtimeInformationWrapper.Object,
           _strictModeHandlerMock.Object,
           _fileStreamerWrapper.Object,
           mockStrictModeSettings.Object,
@@ -232,7 +229,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -255,7 +252,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -288,7 +285,7 @@ public class TwinHandlerTestFixture
 
         CreateTwinMock(desired, reported);
         _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<CancellationToken>()));
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _strictModeHandlerMock.Verify(x => x.CheckFileAccessPermissions(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch.InstallSteps.Count()));
     }
 
@@ -311,7 +308,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -320,7 +317,7 @@ public class TwinHandlerTestFixture
     {
         mockStrictModeSettingsValue.StrictMode = true;
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
     }
 
@@ -334,7 +331,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(false);
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -348,7 +345,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(true);
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -412,7 +409,7 @@ public class TwinHandlerTestFixture
 
         CreateTwinMock(desired, reported, changeSign: null);
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -432,166 +429,12 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        Assert.AreEqual(FileUploadMethod.Stream, (desired.Patch.TransitPackage[0] as UploadAction).Method);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        Assert.That((desired.Patch.TransitPackage[0] as UploadAction)?.Method, Is.EqualTo(FileUploadMethod.Stream));
     }
-    [Test]
-    public async Task UpdateDeviceStateAsync_ValidState_Success()
+    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, string? changeSign = "----")
     {
-        var deviceState = DeviceStateType.Busy;
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                       .Returns(Task.CompletedTask);
-
-        _target.UpdateDeviceStateAsync(deviceState, default);
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.DeviceState), deviceState.ToString(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task UpdateDeviceStateAsync_OnUpdateReportFailed_LogFailure()
-    {
-        var expectedErrorMessage = "my error";
-        var deviceState = DeviceStateType.Busy;
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), deviceState.ToString(), It.IsAny<CancellationToken>()))
-                       .ThrowsAsync(new Exception(expectedErrorMessage));
-        _target.UpdateDeviceStateAsync(deviceState, default);
-        _loggerHandlerMock.Verify(logger => logger.Error($"UpdateDeviceStateAsync failed: {expectedErrorMessage}"), Times.Once);
-    }
-
-    [Test]
-    public async Task InitReportDeviceParamsAsync_OnExec_UpdateOSDescription()
-    {
-        var agentPlatformKey = nameof(TwinReported.AgentPlatform);
-        var osDescription = "Mocked OS Description";
-        _runtimeInformationWrapper.Setup(dc => dc.GetOSDescription()).Returns(osDescription);
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(agentPlatformKey, osDescription, It.IsAny<CancellationToken>()))
-                       .Returns(Task.CompletedTask);
-
-        await _target.InitReportDeviceParamsAsync(default);
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(agentPlatformKey, osDescription, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task InitReportDeviceParamsAsync_WindowsSupportedShells_UpdateWindowsSupportedShells()
-    {
-        var supportedShellsKey = nameof(TwinReported.SupportedShells);
-        _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Windows)).Returns(true);
-        _fileStreamerWrapperMock.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
-
-        CreateTarget();
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey, It.IsAny<object>(), It.IsAny<CancellationToken>()))
-                       .Returns(Task.CompletedTask);
-
-        await _target.InitReportDeviceParamsAsync(default);
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey,
-        new List<ShellType>() { ShellType.Cmd, ShellType.Powershell }, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task InitReportDeviceParamsAsync_LinuxSupportedShells_UpdateLinuxSupportedShells()
-    {
-        var supportedShellsKey = nameof(TwinReported.SupportedShells);
-        _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Linux)).Returns(true);
-        _runtimeInformationWrapper.Setup(dc => dc.IsOSPlatform(OSPlatform.Windows)).Returns(false);
-        _fileStreamerWrapperMock.Setup(dc => dc.FileExists(It.IsAny<string>())).Returns(true);
-
-        CreateTarget();
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey, It.IsAny<object>(), It.IsAny<CancellationToken>()))
-                       .Returns(Task.CompletedTask);
-
-        await _target.InitReportDeviceParamsAsync(default);
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(supportedShellsKey,
-        new List<ShellType>() { ShellType.Bash }, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task InitReportDeviceParamsAsync_OnUpdateReportFailed_LogFailure()
-    {
-        var expectedErrorMessage = "Simulated error message";
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
-                       .ThrowsAsync(new Exception(expectedErrorMessage));
-
-        await _target.InitReportDeviceParamsAsync(default);
-        _loggerHandlerMock.Verify(logger => logger.Error($"InitReportedDeviceParams failed: {expectedErrorMessage}"), Times.Once);
-    }
-
-    [Test]
-    public async Task UpdateDeviceCustomPropsAsync_CustomPropsNull_UpdateNotExecute()
-    {
-        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec());
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
-                       .Returns(Task.CompletedTask);
-
-        _target.UpdateDeviceCustomPropsAsync(null, cancellationToken);
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.IsAny<List<TwinReportedCustomProp>>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Test]
-    public async Task UpdateDeviceCustomPropsAsync_NewProps_AddProps()
-    {
-        var existingCustomProps = new List<TwinReportedCustomProp>
-        {
-            new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
-            new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
-        };
-        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), existingCustomProps);
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
-                       .Returns(Task.CompletedTask);
-        var newCustomProps = new List<TwinReportedCustomProp>
-        {
-            new TwinReportedCustomProp { Name = "Property4", Value = "Value4" },
-            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
-        };
-
-        _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
-
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.Is<List<TwinReportedCustomProp>>(
-            props => props.Count == 4), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task UpdateDeviceCustomPropsAsync_ExistingProps_OverrideProps()
-    {
-        var existingCustomProps = new List<TwinReportedCustomProp>
-        {
-            new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
-            new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
-        };
-        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), existingCustomProps);
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
-                       .Returns(Task.CompletedTask);
-        var newCustomProps = new List<TwinReportedCustomProp>
-        {
-            new TwinReportedCustomProp { Name = "Property2", Value = "NewValue2" },
-            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
-        };
-
-        _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.Is<List<TwinReportedCustomProp>>(
-            props => props.Count == 3), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task UpdateDeviceStateAfterServiceRestartAsync_ValidState_Success()
-    {
-        var deviceState = DeviceStateType.Busy;
-        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                       .Returns(Task.CompletedTask);
-
-        _target.UpdateDeviceStateAfterServiceRestartAsync(deviceState, default);
-
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.DeviceStateAfterServiceRestart), deviceState.ToString(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "----")
-    {
-        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, null, null, twinReportedCustomProps, changeSign);
+        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, null, null, null, changeSign);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
         _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(true);
 

@@ -13,7 +13,7 @@ public class FileUploaderHandlerTestFixture
     private Mock<IBlobStorageFileUploaderHandler> _blobStorageFileUploaderHandlerMock;
     private Mock<IStreamingFileUploaderHandler> _streamingFileUploaderHandlerMock;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
-    private Mock<ITwinActionsHandler> _twinActionsHandler;
+    private Mock<ITwinReportHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerMock;
     private IFileUploaderHandler _target;
     private const string FILE_NAME = "testFileName";
@@ -36,7 +36,7 @@ public class FileUploaderHandlerTestFixture
         _blobStorageFileUploaderHandlerMock = new Mock<IBlobStorageFileUploaderHandler>();
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _streamingFileUploaderHandlerMock = new Mock<IStreamingFileUploaderHandler>();
-        _twinActionsHandler = new Mock<ITwinActionsHandler>();
+        _twinActionsHandler = new Mock<ITwinReportHandler>();
         _loggerMock = new Mock<ILoggerHandler>();
 
         _deviceClientWrapperMock.Setup(device => device.GetFileUploadSasUriAsync(It.IsAny<FileUploadSasUriRequest>(), It.IsAny<CancellationToken>()))

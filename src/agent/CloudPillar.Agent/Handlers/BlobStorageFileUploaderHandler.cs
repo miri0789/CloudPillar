@@ -11,10 +11,10 @@ namespace CloudPillar.Agent.Handlers
     public class BlobStorageFileUploaderHandler : IBlobStorageFileUploaderHandler
     {
         private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
-        private readonly ITwinActionsHandler _twinActionsHandler;
+        private readonly ITwinReportHandler _twinActionsHandler;
         private readonly ILoggerHandler _logger;
 
-        public BlobStorageFileUploaderHandler(ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinActionsHandler twinActionsHandler, ILoggerHandler logger)
+        public BlobStorageFileUploaderHandler(ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinReportHandler twinActionsHandler, ILoggerHandler logger)
         {
             _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
             _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
