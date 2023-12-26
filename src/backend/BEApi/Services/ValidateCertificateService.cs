@@ -30,7 +30,6 @@ public class ValidateCertificateService : IValidateCertificateService
             var expiredDate = twinReported.CertificateValidity.ExpirationDate;
             var currentDate = DateTime.UtcNow;
 
-            currentDate = currentDate < creationDate ? creationDate : (currentDate > expiredDate ? expiredDate : currentDate);
             TimeSpan totalDuration = expiredDate - creationDate;
             TimeSpan passedDuration = currentDate - creationDate;
             double percentagePassed = (double)passedDuration.Ticks / totalDuration.Ticks;
