@@ -19,8 +19,6 @@ public interface ITwinReportHandler
 
     Task UpdateDeviceCertificateValidity(int CertificateExpiredDays, CancellationToken cancellationToken);
 
-    Task UpdateReportedTwinChangeSignAsync(string message, CancellationToken cancellationToken);
-
     Task InitReportDeviceParamsAsync(CancellationToken cancellationToken);
 
     Task UpdateDeviceCustomPropsAsync(List<TwinReportedCustomProp> customProps, CancellationToken cancellationToken = default);

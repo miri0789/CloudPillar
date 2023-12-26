@@ -66,18 +66,18 @@ public class TwinHandler : ITwinHandler
             {
                 byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
                 var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired.ChangeSign);
-                if (isSignValid == false)
+                var message = isSignValid ? null : "Twin Change signature is invalid";
+                await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), message, cancellationToken);
+                if (isSignValid)
                 {
-                    _logger.Error($"Twin Change signature is invalid");
-                    await _twinReportHandler.UpdateReportedTwinChangeSignAsync("Twin Change signature is invalid", cancellationToken);
-                }
-                else
-                {
-                    await _twinReportHandler.UpdateReportedTwinChangeSignAsync(string.Empty, cancellationToken);
                     foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
                     {
                         await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, isInitial, cancellationToken);
                     }
+                }
+                else
+                {
+                    _logger.Error(message);
                 }
             }
         }
@@ -119,8 +119,8 @@ public class TwinHandler : ITwinHandler
             await HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken);
         }
     }
-    
-    
+
+
     public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
     {
         try

@@ -167,21 +167,6 @@ public class TwinReportHandler : ITwinReportHandler
         }
     }
 
-
-    public async Task UpdateReportedTwinChangeSignAsync(string message, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var twinChangeSign = nameof(TwinReported.ChangeSign);
-            await _deviceClient.UpdateReportedPropertiesAsync(twinChangeSign, message, cancellationToken);
-            _logger.Info($"UpdateReportedTwinChangeSignAsync success");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UpdateReportedTwinChangeSignAsync failed message: {ex.Message}");
-        }
-    }
-
     public async Task InitReportDeviceParamsAsync(CancellationToken cancellationToken)
     {
         try

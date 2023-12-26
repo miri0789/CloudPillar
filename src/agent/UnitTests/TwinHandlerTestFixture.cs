@@ -331,7 +331,7 @@ public class TwinHandlerTestFixture
         _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(false);
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _twinActionsHandler.Verify(x => x.UpdateReportedTwinChangeSignAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
