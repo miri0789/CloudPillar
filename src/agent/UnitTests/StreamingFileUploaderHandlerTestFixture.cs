@@ -17,7 +17,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<ILoggerHandler> _loggerMock;
         private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
         private Mock<ICheckSumService> _checkSumServiceMock;
-        private Mock<ITwinActionsHandler> _twinActionsHandler;
+        private Mock<ITwinReportHandler> _twinActionsHandler;
         private StreamingFileUploaderHandler _target;
 
         private const string CORRELATION_ID = "correlation123";
@@ -35,7 +35,7 @@ namespace CloudPillar.Agent.Tests
             _deviceClientMock = new Mock<IDeviceClientWrapper>();
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
             _checkSumServiceMock = new Mock<ICheckSumService>();
-            _twinActionsHandler = new Mock<ITwinActionsHandler>();
+            _twinActionsHandler = new Mock<ITwinReportHandler>();
             _loggerMock = new Mock<ILoggerHandler>();
             _uploadCompleteRetrySettingsMock = new Mock<IOptions<UploadCompleteRetrySettings>>();
             _uploadCompleteRetrySettingsMock.Setup(s => s.Value).Returns(new UploadCompleteRetrySettings { });

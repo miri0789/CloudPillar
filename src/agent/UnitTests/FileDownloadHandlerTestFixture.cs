@@ -18,7 +18,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
         private Mock<IStrictModeHandler> _strictModeHandlerMock;
         private Mock<ILoggerHandler> _loggerMock;
-        private Mock<ITwinActionsHandler> _twinActionsHandlerMock;
+        private Mock<ITwinReportHandler> _twinActionsHandlerMock;
         private Mock<ISignatureHandler> _signatureHandlerMock;
 
         private Mock<ICheckSumService> _checkSumServiceMock;
@@ -46,7 +46,7 @@ namespace CloudPillar.Agent.Tests
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
             _strictModeHandlerMock = new Mock<IStrictModeHandler>();
             _signatureHandlerMock = new Mock<ISignatureHandler>();
-            _twinActionsHandlerMock = new Mock<ITwinActionsHandler>();
+            _twinActionsHandlerMock = new Mock<ITwinReportHandler>();
             _checkSumServiceMock = new Mock<ICheckSumService>();
             _loggerMock = new Mock<ILoggerHandler>();
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".zip");

@@ -17,6 +17,7 @@ public class AgentController : ControllerBase
     private readonly ILoggerHandler _logger;
 
     private readonly ITwinHandler _twinHandler;
+    private readonly ITwinReportHandler _twinReportHandler;
 
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
@@ -30,6 +31,7 @@ public class AgentController : ControllerBase
 
 
     public AgentController(ITwinHandler twinHandler,
+     ITwinReportHandler twinReportHandler,
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
@@ -41,6 +43,7 @@ public class AgentController : ControllerBase
      IReprovisioningHandler reprovisioningHandler)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
+        _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
         _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
         _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
@@ -123,7 +126,7 @@ public class AgentController : ControllerBase
     public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps, CancellationToken cancellationToken)
     {
         _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
-        await _twinHandler.UpdateDeviceCustomPropsAsync(updateReportedProps.Properties, cancellationToken);
+        await _twinReportHandler.UpdateDeviceCustomPropsAsync(updateReportedProps.Properties, cancellationToken);
         return await _twinHandler.GetTwinJsonAsync(cancellationToken);
     }
 
@@ -177,7 +180,8 @@ public class AgentController : ControllerBase
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
         _reprovisioningHandler.RemoveX509CertificatesFromStore();
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken);
-        await _twinHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
+        await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
+        await _twinReportHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }
 }
 
