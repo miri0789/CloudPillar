@@ -228,7 +228,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -251,7 +251,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -284,7 +284,7 @@ public class TwinHandlerTestFixture
 
         CreateTwinMock(desired, reported);
         _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<CancellationToken>()));
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _strictModeHandlerMock.Verify(x => x.CheckFileAccessPermissions(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch.InstallSteps.Count()));
     }
 
@@ -307,7 +307,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -316,7 +316,7 @@ public class TwinHandlerTestFixture
     {
         mockStrictModeSettingsValue.StrictMode = true;
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
     }
 
@@ -330,7 +330,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(false);
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -344,7 +344,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _signatureHandlerMock.Setup(sh => sh.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(true);
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -357,7 +357,7 @@ public class TwinHandlerTestFixture
 
         CreateTwinMock(desired, reported, changeSign: null);
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _signatureHandlerMock.Verify(sh => sh.SendSignTwinKeyEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -377,8 +377,8 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()));
 
-        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        Assert.AreEqual(FileUploadMethod.Stream, (desired.Patch.TransitPackage[0] as UploadAction).Method);
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        Assert.That((desired.Patch.TransitPackage[0] as UploadAction)?.Method, Is.EqualTo(FileUploadMethod.Stream));
     }
     private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, string? changeSign = "----")
     {
