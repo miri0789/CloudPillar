@@ -1,7 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
-using Backend.Keyholder.Wrappers.Interfaces;
+using Backend.BEApi.Wrappers.Interfaces;
 
-namespace Backend.Keyholder.Wrappers;
+namespace Backend.BEApi.Wrappers;
 public class X509CertificateWrapper : IX509CertificateWrapper
 {
     public X509Certificate2 CreateCertificate(byte[] bytes)

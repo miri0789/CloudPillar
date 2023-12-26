@@ -1,7 +1,6 @@
-namespace Backend.BEApi.Services.Interfaces
+namespace Backend.BEApi.Services.Interfaces;
+
+public interface IValidateCertificateService
 {
-    public interface IValidateCertificateService
-    {
-        Task<bool> IsCertificateExpiredAsync(string deviceId);
-    }
+    Task<bool> IsCertificateExpiredAsync(string deviceId);
 }

@@ -1,3 +1,5 @@
+namespace Backend.BEApi.Services.Interfaces;
+
 public interface IRegistrationService
 {
     Task RegisterAsync(string deviceId, string secretKey);

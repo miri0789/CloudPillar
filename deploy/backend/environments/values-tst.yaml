@@ -45,6 +45,8 @@ controllers:
       value: "http://blobstreamer-service:8081/"
     - name: KeyHolderUrl
       value: "http://keyholder-service:8082/"
+    - name: BEApiUrl
+      value: "http://keyholder-service:8083/"
     - name: RangeCalculateType
       value: "percent"
     - name: RangePercent

@@ -2,9 +2,16 @@
 using System.Reflection;
 using Backend.BEApi.Services;
 using Backend.BEApi.Services.Interfaces;
+using Backend.BEApi.Wrappers;
+using Backend.BEApi.Wrappers.Interfaces;
+using Backend.Infra.Common.Services;
+using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Wrappers;
+using Backend.Keyholder.Wrappers;
+using Backend.Keyholder.Wrappers.Interfaces;
+using Shared.Entities.Factories;
 using Shared.Logger;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
@@ -13,6 +20,14 @@ var informationalVersion = Assembly.GetEntryAssembly()?
 
 var builder = LoggerHostCreator.Configure("beapi", WebApplication.CreateBuilder(args));
 
+builder.Services.AddScoped<IMessageFactory, MessageFactory>();
+builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
+builder.Services.AddScoped<IIndividualEnrollmentWrapper, IndividualEnrollmentWrapper>();
+builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
+builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
+builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<IValidateCertificateService, ValidateCertificateService>();
