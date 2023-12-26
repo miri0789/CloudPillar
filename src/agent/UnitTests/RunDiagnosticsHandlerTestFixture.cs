@@ -103,8 +103,7 @@ public class RunDiagnosticsHandlerTestFixture
 
 
         _fileUploaderHandlerMock.Verify(
-         x => x.UploadFilesToBlobStorageAsync(It.Is<string>(x => x == filePath), It.Is<UploadAction>
-         (item => item.FileName == filePath)
+         x => x.UploadFilesToBlobStorageAsync(It.Is<UploadAction>(item => item.FileName == filePath)
      , It.IsAny<ActionToReport>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.Is<bool>(x => x == true)), Times.Once);
 
     }

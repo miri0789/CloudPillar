@@ -94,7 +94,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
 
             var actionToReport = new ActionToReport(TwinPatchChangeSpec.ChangeSpecDiagnostics);
             const string DIAGNOSTICS_ID = "diagnostics";
-            await _fileUploaderHandler.UploadFilesToBlobStorageAsync(uploadAction.FileName, uploadAction, actionToReport, DIAGNOSTICS_ID, cancellationToken, true);
+            await _fileUploaderHandler.UploadFilesToBlobStorageAsync(uploadAction, actionToReport, DIAGNOSTICS_ID, cancellationToken, true);
             var checkSum = await GetFileCheckSumAsync(diagnosticsFilePath);
             DeleteTempFile(diagnosticsFilePath);
             return checkSum;

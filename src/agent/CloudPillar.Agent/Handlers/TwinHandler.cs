@@ -20,7 +20,6 @@ public class TwinHandler : ITwinHandler
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly ITwinReportHandler _twinReportHandler;
-    private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ISignatureHandler _signatureHandler;
@@ -33,7 +32,6 @@ public class TwinHandler : ITwinHandler
                        ITwinReportHandler twinActionsHandler,
                        ILoggerHandler loggerHandler,
                        IStrictModeHandler strictModeHandler,
-                       IFileStreamerWrapper fileStreamerWrapper,
                        IOptions<StrictModeSettings> strictModeSettings,
                        ISignatureHandler signatureHandler)
     {
@@ -41,7 +39,6 @@ public class TwinHandler : ITwinHandler
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _twinReportHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
-        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
         _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
@@ -160,30 +157,22 @@ public class TwinHandler : ITwinHandler
         {
             foreach (var action in actions)
             {
-                var filePath = string.Empty;
-                if (action.TwinAction is DownloadAction || action.TwinAction is UploadAction || action.TwinAction is PeriodicUploadAction)
+                var isReplacedSuccess = await SetReplaceFilePathByAction(action, cancellationToken);
+                if (!isReplacedSuccess)
                 {
-                    filePath = await GetReplacedFilePath(action, cancellationToken);
-                    if (string.IsNullOrWhiteSpace(filePath))
-                    {
-                        _logger.Error($"HandleTwinActions action not handle path is empty");
-                        continue;
-                    }
+                    continue;
                 }
-
                 switch (action.TwinAction)
                 {
                     case DownloadAction downloadAction:
-                        downloadAction.DestinationPath = filePath;
                         await _fileDownloadHandler.InitFileDownloadAsync(action, cancellationToken);
                         break;
 
                     case PeriodicUploadAction uploadAction:
-                        uploadAction.DirName = filePath;
                         break;
 
                     case UploadAction uploadAction:
-                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, changeSpecId, cancellationToken);
+                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, changeSpecId, cancellationToken);
                         break;
 
                     case ExecuteAction execOnce when _strictModeSettings.StrictMode:
@@ -204,7 +193,7 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"HandleTwinActions failed message: {ex.Message}");
         }
     }
-    private async Task<string> GetReplacedFilePath(ActionToReport action, CancellationToken cancellationToken)
+    private async Task<bool> SetReplaceFilePathByAction(ActionToReport action, CancellationToken cancellationToken)
     {
         try
         {
@@ -216,13 +205,18 @@ public class TwinHandler : ITwinHandler
                 _ => string.Empty
             };
             var filePath = _strictModeHandler.ReplaceRootById(action.TwinAction.Action!.Value, actionFileName) ?? actionFileName;
-            _strictModeHandler.CheckFileAccessPermissions(action.TwinAction.Action.Value, filePath);
-            return filePath;
+            switch (action.TwinAction)
+            {
+                case DownloadAction downloadAction: downloadAction.DestinationPath = filePath; break;
+                case UploadAction uploadAction: uploadAction.FileName = filePath; break;
+                case PeriodicUploadAction uploadAction: uploadAction.DirName = filePath; break;
+            }
+            return true;
         }
         catch (Exception ex)
         {
             await UpdateTwinReportedAsync(action, StatusType.Failed, ex.Message, cancellationToken);
-            return string.Empty;
+            return false;
         }
     }
     private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)

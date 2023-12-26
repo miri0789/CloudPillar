@@ -59,6 +59,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         try
         {
+            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);
             if (file.Action.Sign is null)
             {
                 _logger.Info("No sign file key is sent, sending for signature");

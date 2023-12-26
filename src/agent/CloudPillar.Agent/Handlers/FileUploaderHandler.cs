@@ -18,6 +18,7 @@ public class FileUploaderHandler : IFileUploaderHandler
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
     private readonly IStreamingFileUploaderHandler _streamingFileUploaderHandler;
     private readonly ITwinReportHandler _twinReportHandler;
+    private readonly IStrictModeHandler _strictModeHandler;
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
@@ -25,7 +26,8 @@ public class FileUploaderHandler : IFileUploaderHandler
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
         IStreamingFileUploaderHandler StreamingFileUploaderHandler,
         ITwinReportHandler twinActionsHandler,
-        ILoggerHandler logger)
+        ILoggerHandler logger,
+        IStrictModeHandler strictModeHandler)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
@@ -33,19 +35,21 @@ public class FileUploaderHandler : IFileUploaderHandler
         _streamingFileUploaderHandler = StreamingFileUploaderHandler ?? throw new ArgumentNullException(nameof(StreamingFileUploaderHandler));
         _twinReportHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
     }
 
-    public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string fileName, string changeSpecId, CancellationToken cancellationToken)
+    public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string changeSpecId, CancellationToken cancellationToken)
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(fileName);
-            await UploadFilesToBlobStorageAsync(fileName, uploadAction, actionToReport, changeSpecId, cancellationToken);
+            ArgumentNullException.ThrowIfNull(uploadAction.FileName);
+            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularUpload,  uploadAction.FileName);
+            await UploadFilesToBlobStorageAsync(uploadAction, actionToReport, changeSpecId, cancellationToken);
             SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString());
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error uploading file '{fileName}': {ex.Message}");
+            _logger.Error($"Error uploading file '{uploadAction.FileName}': {ex.Message}");
             SetReportProperties(actionToReport, StatusType.Failed, ex.Message, ex.GetType().Name);
         }
         finally
@@ -54,12 +58,12 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, string changeSpecId, CancellationToken cancellationToken, bool isRunDiagnostics = false)
+    public async Task UploadFilesToBlobStorageAsync(UploadAction uploadAction, ActionToReport actionToReport, string changeSpecId, CancellationToken cancellationToken, bool isRunDiagnostics = false)
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
-        string directoryPath = _fileStreamerWrapper.GetDirectoryName(filePathPattern) ?? "";
-        string searchPattern = _fileStreamerWrapper.GetFileName(filePathPattern);
+        string directoryPath = _fileStreamerWrapper.GetDirectoryName(uploadAction.FileName) ?? "";
+        string searchPattern = _fileStreamerWrapper.GetFileName(uploadAction.FileName);
 
         // Get a list of all matching files
         string[] files = _fileStreamerWrapper.GetFiles(directoryPath, searchPattern);
@@ -70,7 +74,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         if (filesToUpload.Length == 0)
         {
-            throw new ArgumentNullException($"The file {filePathPattern} not found");
+            throw new ArgumentNullException($"The file {uploadAction.FileName} not found");
         }
         // Upload each file
         foreach (string fullFilePath in _fileStreamerWrapper.Concat(files, directories))

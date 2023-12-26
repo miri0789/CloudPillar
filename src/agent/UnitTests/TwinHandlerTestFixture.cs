@@ -58,7 +58,6 @@ public class TwinHandlerTestFixture
           _twinActionsHandler.Object,
           _loggerHandlerMock.Object,
           _strictModeHandlerMock.Object,
-          _fileStreamerWrapper.Object,
           mockStrictModeSettings.Object,
           _signatureHandlerMock.Object);
     }
@@ -285,11 +284,11 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<CancellationToken>()));
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _strictModeHandlerMock.Verify(x => x.CheckFileAccessPermissions(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch.InstallSteps.Count()));
+        _strictModeHandlerMock.Verify(x => x.ReplaceRootById(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch.InstallSteps.Count()));
     }
 
     [Test]
-    public async Task OnDesiredPropertiesUpdate_StrictModeWrongDestination_NotExecuteDownload()
+    public async Task OnDesiredPropertiesUpdate_ReplaceRootByIdFailed_NotExecuteDownload()
     {
         var desired = new TwinChangeSpec()
         {
@@ -303,6 +302,7 @@ public class TwinHandlerTestFixture
         };
 
         var reported = new TwinReportedChangeSpec();
+        _strictModeHandlerMock.Setup(x => x.ReplaceRootById(It.IsAny<TwinActionType>(), It.IsAny<string>())).Throws(new Exception());
 
         CreateTwinMock(desired, reported);
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
