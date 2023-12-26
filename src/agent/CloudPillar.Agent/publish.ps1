@@ -21,6 +21,17 @@ $sourceDir = Join-Path -Path $scriptDir -ChildPath "publish"
 $zipName = "cloudpillar.zip"
 $zipPath = Join-Path -Path $scriptDir -ChildPath "$zipName"
 $targetZipPath = Join-Path -Path $sourceDir -ChildPath "$zipName"
+
+$environments = @('dev', 'prod')
+$envDirPath = Join-Path -Path $sourceDir -ChildPath "env"
+New-Item -ItemType Directory -Path $envDirPath -Force
+
+foreach ($env in $environments) {
+    $subDirPath = Join-Path -Path $envDirPath -ChildPath $env
+    New-Item -ItemType Directory -Path $subDirPath -Force
+    Write-Host "Created folder: $subDirPath"
+}
+
 $appSettingsFileName = "appsettings.json"
 $appSettingsPath = Join-Path -Path $scriptDir -ChildPath $appSettingsFileName
 $log4netFileName = "log4net.config"
