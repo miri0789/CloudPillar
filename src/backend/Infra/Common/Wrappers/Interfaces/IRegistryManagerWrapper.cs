@@ -6,5 +6,6 @@ public interface IRegistryManagerWrapper
 {
     RegistryManager CreateFromConnectionString();
     Task<Twin> GetTwinAsync(RegistryManager registryManager, string deviceId);
-    Task<Twin> UpdateTwinAsync(RegistryManager registryManager,string deviceId, Twin twinPatch, string etag);
+    Task<Twin> UpdateTwinAsync(RegistryManager registryManager, string deviceId, Twin twinPatch, string etag);
+    Task<IEnumerable<Device>> GetIotDevicesAsync(RegistryManager registryManager);
 }

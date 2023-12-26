@@ -11,10 +11,9 @@
             "cwd": "${workspaceFolder}/src/backend/BlobStreamer",
             "console": "internalConsole",
             "env": {
-                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-nechama-25375812-139f638778.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=;EntityPath=cp-nechama-iothub",
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpiotnechamafiles;AccountKey=PXNJl8/a4a0DiyGUD7JWbXiKg+Zc8pKMQeQGXcAjeccDEPDmt8q39wf4d6KMOxaheOkE1JPC3aAx+AStVUGGuQ==;EndpointSuffix=core.windows.net",
-                "BlobContainerName": "cpiotnechamafiles",
-                "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
+                "IothubConnectionString": "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE=",
+                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpiottstfiles;AccountKey=WgZ7bI603Y/+WCEK0nv+r9/M6vQ/rgMcfJUAgOSeehcqPqPpXhDSZfAsFGVuGIGPp2/eTrA3JGot+ASt4rFCqA==;EndpointSuffix=core.windows.net",
+                "BlobContainerName": "cpiottstfiles",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
                 "RetryPolicyExponent": "3"
@@ -30,16 +29,16 @@
             "cwd": "${workspaceFolder}/src/backend/Iotlistener",
             "console": "internalConsole",
             "env": {
-                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-nechama-25375812-139f638778.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=;EntityPath=cp-nechama-iothub",
-                "IothubEventHubCompatiblePath": "cp-nechama-iothub",
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpiotnechamafiles;AccountKey=PXNJl8/a4a0DiyGUD7JWbXiKg+Zc8pKMQeQGXcAjeccDEPDmt8q39wf4d6KMOxaheOkE1JPC3aAx+AStVUGGuQ==;EndpointSuffix=core.windows.net",
-                "BlobContainerName": "cpiotnechamafiles",
+                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-tst-iot-25330145-534ea4de78.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE=;EntityPath=cp-tst-iothub",
+                "IothubEventHubCompatiblePath": "cp-tst-iothub",
+                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpiottstfiles;AccountKey=WgZ7bI603Y/+WCEK0nv+r9/M6vQ/rgMcfJUAgOSeehcqPqPpXhDSZfAsFGVuGIGPp2/eTrA3JGot+ASt4rFCqA==;EndpointSuffix=core.windows.net",
+                "BlobContainerName": "cpiottstfiles",
                 "BlobStreamerUrl": "http://localhost:5019/",
                 "KeyHolderUrl": "http://localhost:5164/",
                 "MessageTimeoutMinutes": "10",
                 "RangeCalculateType": "percent",
                 "RangePercent": "25",
-                "RangeBytes": "123456",
+                "RangeBytes": "1234560",
                 "IothubConnectionDeviceId": "iothub-connection-device-id"
             }
         },
@@ -57,9 +56,9 @@
                 "SigningPem": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSHVBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFqQklIV01JSFRBZ0VCQkVJQml5QWE3YVJIRkRDaDJxZ2EKOXNUVUdJTkU1akhBRm5tTTh4V2VUL3VuaTVJNHROcWhWNVh4MHBEcm1DVjltYnJvRnRmRWEwWFZmS3VNQXh4ZgpaNkxNL3lLaGdZa0RnWVlBQkFHQnpnZG5QNzk4RnNMdVdZVEREUUE3YzByM0JWazhOblJVU2V4cFFVc1JpbFBOCnYzU2NoTzBsUnc5UnU4Nngxa2huVkR4K2R1cTRCaURGY3ZsU0FjeWpMQUNKdmp2b3lUTEppQStUUUZkbXJlYXIKak1pWk5FMjVwVDJ5V1AxTlVuZEp4UGN2VnRmQlc0OGtQT212a1k0V2xxUDViQXdDWHdic0tyQ2drNnhic3AxMgpldz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0=",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
-                "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
-                "DPSConnectionString": "HostName=cp-nechama-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=zh9gSAqFvin2Esh1kXZMVP2IPPOOhDuAfv+TXAZnHho=",
-                "DPSIdScope": "0ne00B889E4",
+                "IothubConnectionString": "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE=",
+                "DPSConnectionString": "HostName=cp-tst-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=z4ZY+yWfPMSQBVDxLqszzI4Z2vsvsEVR7QYkwi8E1Fc=",
+                "DPSIdScope": "0ne00B56E85",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
             }
         },
@@ -73,7 +72,11 @@
             "cwd": "${workspaceFolder}/src/backend/BEApi",
             "console": "internalConsole",
             "env": {
-                "IothubConnectionString": "HostName=cp-yael-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7RSXkreHYFV3A5TyPkKDFBajEgVCP7ENFAIoTC+lecw=",
+                "IothubConnectionString": "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE=",
+                "DPSConnectionString": "HostName=cp-tst-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=z4ZY+yWfPMSQBVDxLqszzI4Z2vsvsEVR7QYkwi8E1Fc=",
+                "DPSIdScope": "0ne00B56E85",
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                "ExpirationCertificatePercent": "0.6",
             }
         },
         {
@@ -94,9 +97,10 @@
             "name": "Server/Client",
             "configurations": [
                 "Cloud Pillar Agent",
+                "Iot Listener Service",
                 "Key Holder Service",
                 "Blob Streamer Service",
-                "Iot Listener Service"
+                "BEApi Service"
             ]
         }
     ]

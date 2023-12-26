@@ -4,10 +4,10 @@ namespace Backend.BEApi.Wrappers;
 public class EnvironmentsWrapper : IEnvironmentsWrapper
 {
     private const string _iothubConnectionString = "IothubConnectionString";
-
     private const string _dpsConnectionString = "DPSConnectionString";
     private const string _dpsIdScope = "DPSIdScope";
     private const string _globalDeviceEndpoint = "GlobalDeviceEndpoint";
+    private const string _expirationCertificatePercent = "ExpirationCertificatePercent";
 
     public string iothubConnectionString
     {
@@ -27,6 +27,11 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public string globalDeviceEndpoint
     {
         get { return GetVariable(_globalDeviceEndpoint); }
+    }
+
+    public double expirationCertificatePercent
+    {
+        get { return double.Parse(GetVariable(_expirationCertificatePercent)); }
     }
 
 

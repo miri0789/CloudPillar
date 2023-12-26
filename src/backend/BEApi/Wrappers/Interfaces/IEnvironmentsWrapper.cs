@@ -5,4 +5,5 @@ public interface IEnvironmentsWrapper
     string dpsConnectionString { get; }
     string dpsIdScope { get; }
     string globalDeviceEndpoint { get; }
+    double expirationCertificatePercent { get; }
 }
