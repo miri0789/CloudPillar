@@ -76,6 +76,13 @@ controllers:
       value: "0ne00B56E85"
     - name: GlobalDeviceEndpoint
       value: "global.azure-devices-provisioning.net"
+  - title: "beapi"
+    replicaCount: 3
+    path: /beapi-service
+    port: 8083
+    env:
+    - name: IothubConnectionString
+      value: "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE="
 
 replicaCount: 1
 
