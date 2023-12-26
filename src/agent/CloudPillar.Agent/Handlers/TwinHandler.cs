@@ -57,6 +57,11 @@ public class TwinHandler : ITwinHandler
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson)!;
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
+            if (await CheckEmptyChangeSpecId(twinDesired?.ChangeSpec?.Id, cancellationToken))
+            {
+                _logger.Info($"There is no twin change spec id");
+                return;
+            }
             if (string.IsNullOrWhiteSpace(twinDesired?.ChangeSign))
             {
                 _logger.Info($"There is no twin change sign, send sign event..");
@@ -119,7 +124,6 @@ public class TwinHandler : ITwinHandler
             await HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken);
         }
     }
-
 
     public async Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default)
     {
@@ -299,4 +303,11 @@ public class TwinHandler : ITwinHandler
         }
     }
 
+    private async Task<bool> CheckEmptyChangeSpecId(string? changeSpecId, CancellationToken cancellationToken)
+    {
+        var emptyChangeSpecId = string.IsNullOrWhiteSpace(changeSpecId);
+        var message = emptyChangeSpecId ? "There is no ID for changeSpec.." : null;
+        await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSpecId), message, cancellationToken);
+        return emptyChangeSpecId;
+    }
 }
