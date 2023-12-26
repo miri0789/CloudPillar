@@ -62,6 +62,10 @@ public class TwinHandler : ITwinHandler
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson)!;
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
+            if (await CheckEmptySpecId(twinDesired?.ChangeSpec?.Id, cancellationToken))
+            {
+                return;
+            }
             if (string.IsNullOrWhiteSpace(twinDesired?.ChangeSign))
             {
                 _logger.Info($"There is no twin change sign, send sign event..");
@@ -73,12 +77,11 @@ public class TwinHandler : ITwinHandler
                 var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired.ChangeSign);
                 if (isSignValid == false)
                 {
-                    _logger.Error($"Twin Change signature is invalid");
-                    await UpdateReportedTwinChangeSignAsync("Twin Change signature is invalid", cancellationToken);
+                    await UpdateReportedAsync(nameof(TwinReported.ChangeSign), "Twin Change signature is invalid", cancellationToken);
                 }
                 else
                 {
-                    await UpdateReportedTwinChangeSignAsync(string.Empty, cancellationToken);
+                    await UpdateReportedAsync(nameof(TwinReported.ChangeSign), string.Empty, cancellationToken);
                     foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
                     {
                         await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, isInitial, cancellationToken);
@@ -231,17 +234,17 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    public async Task UpdateReportedTwinChangeSignAsync(string message, CancellationToken cancellationToken)
+    public async Task UpdateReportedAsync(string key, string message, CancellationToken cancellationToken)
     {
         try
         {
-            var twinChangeSign = nameof(TwinReported.ChangeSign);
-            await _deviceClient.UpdateReportedPropertiesAsync(twinChangeSign, message, cancellationToken);
-            _logger.Info($"UpdateReportedTwinChangeSignAsync success");
+            _logger.Info(message);
+            await _deviceClient.UpdateReportedPropertiesAsync(key, message, cancellationToken);
+            _logger.Info($"UpdateReportedAsync success");
         }
         catch (Exception ex)
         {
-            _logger.Error($"UpdateReportedTwinChangeSignAsync failed message: {ex.Message}");
+            _logger.Error($"UpdateReportedAsync failed message: {ex.Message}");
         }
     }
 
@@ -384,20 +387,6 @@ public class TwinHandler : ITwinHandler
         action.TwinReport.ResultCode = resultCode;
         await _twinActionsHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
     }
-    private string GetFileNameByAction(ActionToReport action)
-    {
-        string fileName = string.Empty;
-        switch (action.TwinAction.Action)
-        {
-            case TwinActionType.SingularDownload:
-                fileName = ((DownloadAction)action.TwinAction).DestinationPath;
-                break;
-            case TwinActionType.SingularUpload:
-                fileName = ((UploadAction)action.TwinAction).FileName;
-                break;
-        }
-        return fileName;
-    }
 
     private async Task<IEnumerable<ActionToReport>?> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
@@ -494,5 +483,13 @@ public class TwinHandler : ITwinHandler
             }
         }
         return supportedShells;
+    }
+
+    private async Task<bool> CheckEmptySpecId(string? changeSpecId, CancellationToken cancellationToken)
+    {
+        var emptyChangeSpecId = string.IsNullOrWhiteSpace(changeSpecId);
+        var message = emptyChangeSpecId ? "There is no ID for changeSpec.." : null;
+        await UpdateReportedAsync(nameof(TwinReported.ChangeSpecId), message, cancellationToken);
+        return emptyChangeSpecId;
     }
 }

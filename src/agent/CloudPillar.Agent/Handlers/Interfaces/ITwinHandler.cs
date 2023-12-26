@@ -14,7 +14,7 @@ public interface ITwinHandler
     Task OnDesiredPropertiesUpdateAsync(CancellationToken cancellationToken, bool isInitial = false);
     Task SaveLastTwinAsync(CancellationToken cancellationToken = default);
     string GetLatestTwin();
-    Task UpdateReportedTwinChangeSignAsync(string message, CancellationToken cancellationToken);
+    Task UpdateReportedAsync(string key, string message, CancellationToken cancellationToken);
     Task UpdateDeviceCertificateValidity(int CertificateExpiredDays, CancellationToken cancellationToken);
     Task UpdateDeviceStateAfterServiceRestartAsync(DeviceStateType? deviceState, CancellationToken cancellationToken);
     Task<DeviceStateType?> GetDeviceStateAfterServiceRestartAsync(CancellationToken cancellationToken = default);
