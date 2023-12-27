@@ -26,6 +26,7 @@ public class TwinHandler : ITwinHandler
     private readonly ISignatureHandler _signatureHandler;
     private readonly ILoggerHandler _logger;
     private static Twin? _latestTwin { get; set; }
+    private static CancellationTokenSource twinCancellationTokenSource = new CancellationTokenSource();
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
@@ -46,6 +47,31 @@ public class TwinHandler : ITwinHandler
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
         _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
+    }
+
+    public void CancelCancellationToken()
+    {
+        twinCancellationTokenSource?.Cancel();
+        twinCancellationTokenSource = new CancellationTokenSource();
+    }
+    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await OnDesiredPropertiesUpdateAsync(cancellationToken, true);
+            DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
+                            {
+                                _logger.Info($"Desired properties were updated.");
+                                await OnDesiredPropertiesUpdateAsync(cancellationToken);
+
+                            };
+            await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"HandleTwinActionsAsync failed message: {ex.Message}");
+        }
+
     }
 
     public async Task OnDesiredPropertiesUpdateAsync(CancellationToken cancellationToken, bool isInitial = false)
@@ -91,37 +117,25 @@ public class TwinHandler : ITwinHandler
             _logger.Error($"OnDesiredPropertiesUpdate failed message: {ex.Message}");
         }
     }
-    public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await OnDesiredPropertiesUpdateAsync(cancellationToken, true);
-            DesiredPropertyUpdateCallback callback = async (desiredProperties, userContext) =>
-                            {
-                                _logger.Info($"Desired properties were updated.");
-                                await OnDesiredPropertiesUpdateAsync(cancellationToken);
-                            };
-            await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(callback, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"HandleTwinActionsAsync failed message: {ex.Message}");
-        }
 
-    }
 
     private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
     TwinReported twinReported, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+        if (twinDesiredChangeSpec.Id != twinReportedChangeSpec.Id)
+        {
+            CancelCancellationToken();
+        }
+
 
         var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
         _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
 
         if (actions?.Count() > 0)
         {
-            await HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken);
+            Task.Run(async () => HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken));
         }
     }
 
@@ -187,7 +201,7 @@ public class TwinHandler : ITwinHandler
                         break;
 
                     case UploadAction uploadAction:
-                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, changeSpecId, cancellationToken);
+                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, changeSpecId, twinCancellationTokenSource.Token);
                         break;
 
                     case ExecuteAction execOnce when _strictModeSettings.StrictMode:
