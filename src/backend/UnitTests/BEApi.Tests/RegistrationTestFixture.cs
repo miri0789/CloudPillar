@@ -9,7 +9,6 @@ using Microsoft.Azure.Devices.Provisioning.Service;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.BEApi.Services.Interfaces;
-using NUnit.Framework;
 using Backend.BEApi.Services;
 
 
