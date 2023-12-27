@@ -20,13 +20,12 @@ public class TwinHandler : ITwinHandler
     private readonly IFileDownloadHandler _fileDownloadHandler;
     private readonly IFileUploaderHandler _fileUploaderHandler;
     private readonly ITwinReportHandler _twinReportHandler;
-    private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ISignatureHandler _signatureHandler;
     private readonly ILoggerHandler _logger;
     private static Twin? _latestTwin { get; set; }
-    private static CancellationTokenSource twinCancellationTokenSource = new CancellationTokenSource();
+    private static CancellationTokenSource? _twinCancellationTokenSource;
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
@@ -34,7 +33,6 @@ public class TwinHandler : ITwinHandler
                        ITwinReportHandler twinActionsHandler,
                        ILoggerHandler loggerHandler,
                        IStrictModeHandler strictModeHandler,
-                       IFileStreamerWrapper fileStreamerWrapper,
                        IOptions<StrictModeSettings> strictModeSettings,
                        ISignatureHandler signatureHandler)
     {
@@ -42,7 +40,6 @@ public class TwinHandler : ITwinHandler
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
         _fileUploaderHandler = fileUploaderHandler ?? throw new ArgumentNullException(nameof(fileUploaderHandler));
         _twinReportHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
-        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
         _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
@@ -51,8 +48,7 @@ public class TwinHandler : ITwinHandler
 
     public void CancelCancellationToken()
     {
-        twinCancellationTokenSource?.Cancel();
-        twinCancellationTokenSource = new CancellationTokenSource();
+        _twinCancellationTokenSource?.Cancel();
     }
     public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
     {
@@ -127,6 +123,7 @@ public class TwinHandler : ITwinHandler
         if (twinDesiredChangeSpec.Id != twinReportedChangeSpec.Id)
         {
             CancelCancellationToken();
+            _twinCancellationTokenSource = new CancellationTokenSource();
         }
 
 
@@ -201,7 +198,7 @@ public class TwinHandler : ITwinHandler
                         break;
 
                     case UploadAction uploadAction:
-                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, changeSpecId, twinCancellationTokenSource.Token);
+                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, filePath, changeSpecId, _twinCancellationTokenSource.Token);
                         break;
 
                     case ExecuteAction execOnce when _strictModeSettings.StrictMode:
