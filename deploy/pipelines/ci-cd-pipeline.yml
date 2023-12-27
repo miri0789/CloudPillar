@@ -17,7 +17,8 @@ parameters:
   default:
   - BlobStreamer
   - Iotlistener
-  - Keyholder  
+  - Keyholder 
+  - BEApi 
 trigger:
   batch: true
   branches:
@@ -91,6 +92,7 @@ stages:
           case "${{ item }}" in
             "BlobStreamer") echo "##vso[task.setvariable variable=PORT]8081" ;;
             "Keyholder") echo "##vso[task.setvariable variable=PORT]8082" ;;
+            "BEApi") echo "##vso[task.setvariable variable=PORT]8083" ;;
             *) echo "##vso[task.setvariable variable=PORT]8080" ;;
           esac
           echo "Port for ${{ item }}: $PORT"

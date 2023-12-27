@@ -9,5 +9,5 @@ shift
 
 :: Run the self-contained deployment
 
-..\..\%ARCHITECTURE%\CloudPillar.Agent.exe %WINSEERV% %*
+..\..\%ARCHITECTURE%\CloudPillar.Agent.exe %WINSEERV%
 

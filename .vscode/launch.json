@@ -64,6 +64,19 @@
             }
         },
         {
+            "name": "BEApi Service",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildBEApi",
+            "program": "${workspaceFolder}/src/backend/BEApi/bin/Debug/net7.0/BEApi.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/backend/BEApi",
+            "console": "internalConsole",
+            "env": {
+                "IothubConnectionString": "HostName=cp-yael-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7RSXkreHYFV3A5TyPkKDFBajEgVCP7ENFAIoTC+lecw=",
+            }
+        },
+        {
             "name": "Cloud Pillar Agent",
             "type": "coreclr",
             "request": "launch",
