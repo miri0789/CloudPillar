@@ -36,7 +36,7 @@ public class ValidateCertificateService : IValidateCertificateService
                 var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
                 var creationDate = twinReported.CertificateValidity.CreationDate;
                 var expiredDate = twinReported.CertificateValidity.ExpirationDate;
-                var currentDate = DateTime.UtcNow.AddDays(550);
+                var currentDate = DateTime.UtcNow;
 
                 TimeSpan totalDuration = expiredDate - creationDate;
                 TimeSpan passedDuration = currentDate - creationDate;
