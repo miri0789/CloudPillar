@@ -61,7 +61,7 @@ public class FileUploaderHandlerTestFixture
     {
         _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[1] { $"test.txt" });
 
-        await _target.FileUploadAsync(uploadAction, actionToReport, CHANGE_SPEC_ID, CancellationToken.None);
+        await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
         _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -72,7 +72,7 @@ public class FileUploaderHandlerTestFixture
         _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[1] { $"test.txt" });
         _strictModeHandlerMock.Setup(x => x.CheckFileAccessPermissions(TwinActionType.SingularUpload, It.IsAny<string>())).Throws(new Exception());
 
-        await _target.FileUploadAsync(uploadAction, actionToReport, CHANGE_SPEC_ID, CancellationToken.None);
+        await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
         Assert.That(actionToReport.TwinReport.Status, Is.EqualTo(StatusType.Failed));
     }
@@ -82,7 +82,7 @@ public class FileUploaderHandlerTestFixture
     {
         _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[1] { $"test.txt" });
 
-        await _target.FileUploadAsync(uploadAction, actionToReport, CHANGE_SPEC_ID, CancellationToken.None);
+        await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
         _deviceClientWrapperMock.Verify(mf => mf.GetFileUploadSasUriAsync(It.Is<FileUploadSasUriRequest>(file => file.BlobName.Contains(CHANGE_SPEC_ID)), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -94,7 +94,7 @@ public class FileUploaderHandlerTestFixture
         _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[] { });
 
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, CHANGE_SPEC_ID, CancellationToken.None);
+        await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
         Assert.That(actionToReport.TwinReport.Status, Is.EqualTo(StatusType.Failed));
     }
@@ -105,7 +105,7 @@ public class FileUploaderHandlerTestFixture
         _fileStreamerWrapperMock.Setup(x => x.GetFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>())).Returns(new string[] { });
         _fileStreamerWrapperMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(true);
         // Act
-        await _target.FileUploadAsync(uploadAction, actionToReport, CHANGE_SPEC_ID, CancellationToken.None);
+        await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
         Assert.That(actionToReport.TwinReport.Status, Is.EqualTo(StatusType.Failed));
     }

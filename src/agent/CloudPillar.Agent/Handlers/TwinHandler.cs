@@ -172,7 +172,7 @@ public class TwinHandler : ITwinHandler
                         break;
 
                     case UploadAction uploadAction:
-                        await _fileUploaderHandler.FileUploadAsync(uploadAction, action, changeSpecId, cancellationToken);
+                        await _fileUploaderHandler.FileUploadAsync(action, uploadAction.Method, uploadAction.FileName, changeSpecId, cancellationToken);
                         break;
 
                     case ExecuteAction execOnce when _strictModeSettings.StrictMode:
