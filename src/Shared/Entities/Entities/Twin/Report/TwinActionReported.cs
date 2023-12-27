@@ -10,5 +10,5 @@ public class TwinActionReported
     public string? CheckSum { get; set; }
     public string? CompletedRanges { get; set; }
     public string? CorrelationId { get; set; }
-    public Dictionary<string, TwinActionReported>? periodicReported { get; set; }
+    public Dictionary<string, TwinActionReported>? PeriodicReported { get; set; }
 }
