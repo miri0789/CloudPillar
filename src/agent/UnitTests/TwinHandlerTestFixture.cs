@@ -20,8 +20,6 @@ public class TwinHandlerTestFixture
     private Mock<ITwinReportHandler> _twinActionsHandler;
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IStrictModeHandler> _strictModeHandlerMock;
-    private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
-    private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private ITwinHandler _target;
     private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
     private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
@@ -44,8 +42,6 @@ public class TwinHandlerTestFixture
         _twinActionsHandler = new Mock<ITwinReportHandler>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
-        _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
-        _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
         _signatureHandlerMock = new Mock<ISignatureHandler>();
         CreateTarget();
     }
@@ -59,10 +55,10 @@ public class TwinHandlerTestFixture
           _twinActionsHandler.Object,
           _loggerHandlerMock.Object,
           _strictModeHandlerMock.Object,
-          _fileStreamerWrapper.Object,
           mockStrictModeSettings.Object,
           _signatureHandlerMock.Object);
     }
+    
 
     [Test]
     public async Task GetTwinJsonAsync_ValidTwin_ReturnJson()
