@@ -6,6 +6,7 @@ public class AuthenticationSettings
     private const int DEFUALT_EXPIRED_DAYS = 365 * 2;
     private const string GLOBAL_DEVICE_ENDPOINT = "global.azure-devices-provisioning.net";
     private const string ANONYMOUS_CERTIFICATE = "Temporary-anonymous";
+    public string TransportType { get; set; }
 
     public string? DpsScopeId { get; set; }
     public string GlobalDeviceEndpoint { get; set; } = GLOBAL_DEVICE_ENDPOINT;

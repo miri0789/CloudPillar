@@ -59,6 +59,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         try
         {
+            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);
             if (file.Action.Sign is null)
             {
                 _logger.Info("No sign file key is sent, sending for signature");
@@ -188,10 +189,6 @@ public class FileDownloadHandler : IFileDownloadHandler
         var extention = _fileStreamerWrapper.GetExtension(file.Action.DestinationPath);
         if (file.Action.Unzip)
         {
-            if (!string.IsNullOrEmpty(extention))
-            {
-                throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not directory path.");
-            }
             if (_fileStreamerWrapper.GetExtension(file.Action.Source)?.Equals(".zip", StringComparison.OrdinalIgnoreCase) == false)
             {
                 throw new ArgumentException("No zip file is sent");
@@ -201,8 +198,8 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             throw new ArgumentException($"Destination path {file.Action.DestinationPath} is not a file.");
         }
-        var directory = Path.GetDirectoryName(file.Action.DestinationPath);
-        if (directory != null && !_fileStreamerWrapper.DirectoryExists(directory))
+        var directory = file.Action.Unzip ? file.Action.DestinationPath : Path.GetDirectoryName(file.Action.DestinationPath);
+        if (!string.IsNullOrWhiteSpace(directory) && !_fileStreamerWrapper.DirectoryExists(directory))
         {
             _fileStreamerWrapper.CreateDirectory(directory);
             return true;

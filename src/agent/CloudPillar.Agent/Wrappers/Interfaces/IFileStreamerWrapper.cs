@@ -3,6 +3,8 @@
 public interface IFileStreamerWrapper
 {
     Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, int BufferSize, bool useAsync);
+
+    Stream CreateStream(string fullFilePath, FileMode fileMode, FileAccess fileAccess);
     FileStream CreateStream(string fullFilePath, FileMode fileMode);
 
     int Read(FileStream fileStream, byte[] buffer, int offset, int count);

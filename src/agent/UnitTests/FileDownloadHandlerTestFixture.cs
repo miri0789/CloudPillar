@@ -139,6 +139,18 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
+        public async Task InitFileDownloadAsync_InvalidFileAccessPermissions_UpdateReportedToFaild()
+        {
+            _strictModeHandlerMock.Setup(x => x.CheckFileAccessPermissions(TwinActionType.SingularDownload, It.IsAny<string>())).Throws(new Exception());
+            var action = initAction();
+            await InitFileDownloadAsync(action);
+
+            _twinActionsHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
+            , It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
         public async Task HandleDownloadMessageAsync_PartiallyData_ReportInprogressWithProgress()
         {
             var action = initAction();
@@ -362,20 +374,6 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             action.Action.DestinationPath = "";
-            await InitFileDownloadAsync(action);
-            _twinActionsHandlerMock.Verify(
-                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
-                item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
-            , It.IsAny<CancellationToken>()), Times.Once);
-
-        }
-
-        [Test]
-        public async Task InitFileDownloadAsync_DestinationPathIsNotFolder_ReportFailure()
-        {
-            var action = initAction();
-            action.Action.Unzip = true;
-
             await InitFileDownloadAsync(action);
             _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>

@@ -3,12 +3,13 @@ using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using CloudPillar.Agent.Handlers.Logger;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
     private DeviceClient _deviceClient;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly AuthenticationSettings _authenticationSettings;
     private readonly ILoggerHandler _logger;
     private const int kB = 1024;
 
@@ -17,9 +18,9 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// </summary>
     /// <param name="environmentsWrapper"></param>
     /// <exception cref="NullReferenceException"></exception>
-    public DeviceClientWrapper(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
+    public DeviceClientWrapper(IOptions<AuthenticationSettings> authenticationSettings, ILoggerHandler logger)
     {
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _authenticationSettings = authenticationSettings?.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -77,7 +78,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
     public TransportType GetTransportType()
     {
-        var transportTypeString = _environmentsWrapper.transportType;
+        var transportTypeString = _authenticationSettings.TransportType;
         return Enum.TryParse(transportTypeString, out TransportType transportType)
             ? transportType
             : TransportType.Amqp;

@@ -18,6 +18,7 @@ public class FileUploaderHandler : IFileUploaderHandler
     private readonly IBlobStorageFileUploaderHandler _blobStorageFileUploaderHandler;
     private readonly IStreamingFileUploaderHandler _streamingFileUploaderHandler;
     private readonly ITwinReportHandler _twinReportHandler;
+    private readonly IStrictModeHandler _strictModeHandler;
 
     public FileUploaderHandler(
         IDeviceClientWrapper deviceClientWrapper,
@@ -25,7 +26,8 @@ public class FileUploaderHandler : IFileUploaderHandler
         IBlobStorageFileUploaderHandler blobStorageFileUploaderHandler,
         IStreamingFileUploaderHandler StreamingFileUploaderHandler,
         ITwinReportHandler twinActionsHandler,
-        ILoggerHandler logger)
+        ILoggerHandler logger,
+        IStrictModeHandler strictModeHandler)
     {
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
@@ -33,18 +35,17 @@ public class FileUploaderHandler : IFileUploaderHandler
         _streamingFileUploaderHandler = StreamingFileUploaderHandler ?? throw new ArgumentNullException(nameof(StreamingFileUploaderHandler));
         _twinReportHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
     }
 
-    public async Task FileUploadAsync(UploadAction uploadAction, ActionToReport actionToReport, string fileName, string changeSpecId, CancellationToken twinCancellationToken)
+    public async Task FileUploadAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string changeSpecId, CancellationToken twinCancellationToken)
     {
         try
         {
-            if (!twinCancellationToken.IsCancellationRequested)
-            {
-                ArgumentNullException.ThrowIfNull(fileName);
-                await UploadFilesToBlobStorageAsync(fileName, uploadAction, actionToReport, changeSpecId, twinCancellationToken);
-                SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString());
-            }
+            ArgumentNullException.ThrowIfNull(fileName);
+            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularUpload, fileName);
+            await UploadFilesToBlobStorageAsync(actionToReport, method, fileName, changeSpecId, twinCancellationToken);
+            SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString());
         }
         catch (Exception ex)
         {
@@ -57,12 +58,12 @@ public class FileUploaderHandler : IFileUploaderHandler
         }
     }
 
-    public async Task UploadFilesToBlobStorageAsync(string filePathPattern, UploadAction uploadAction, ActionToReport actionToReport, string changeSpecId, CancellationToken twinCancellationToken, bool isRunDiagnostics = false)
+    public async Task UploadFilesToBlobStorageAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string changeSpecId, CancellationToken twinCancellationToken, bool isRunDiagnostics = false)
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
-        string directoryPath = _fileStreamerWrapper.GetDirectoryName(filePathPattern) ?? "";
-        string searchPattern = _fileStreamerWrapper.GetFileName(filePathPattern);
+        string directoryPath = _fileStreamerWrapper.GetDirectoryName(fileName) ?? "";
+        string searchPattern = _fileStreamerWrapper.GetFileName(fileName);
 
         // Get a list of all matching files
         string[] files = _fileStreamerWrapper.GetFiles(directoryPath, searchPattern);
@@ -73,7 +74,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         if (filesToUpload.Length == 0)
         {
-            throw new ArgumentNullException($"The file {filePathPattern} not found");
+            throw new ArgumentNullException($"The file {fileName} not found");
         }
         // Upload each file
         foreach (string fullFilePath in _fileStreamerWrapper.Concat(files, directories))
@@ -88,7 +89,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
             using (Stream readStream = CreateStream(fullFilePath))
             {
-                await UploadFileAsync(uploadAction, actionToReport, blobname, readStream, isRunDiagnostics, twinCancellationToken);
+                await UploadFileAsync(actionToReport, method, fileName, blobname, readStream, isRunDiagnostics, twinCancellationToken);
             }
         }
     }
@@ -151,7 +152,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         return readStream;
     }
 
-    private async Task UploadFileAsync(UploadAction uploadAction, ActionToReport actionToReport, string blobname, Stream readStream, bool isRunDiagnostics, CancellationToken twinCancellationToken)
+    private async Task UploadFileAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string blobname, Stream readStream, bool isRunDiagnostics, CancellationToken twinCancellationToken)
     {
         _logger.Info($"UploadFileAsync");
 
@@ -162,7 +163,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
         try
         {
-            if (uploadAction.Method == FileUploadMethod.Blob && actionToReport.TwinReport.Status == StatusType.InProgress)
+            if (method == FileUploadMethod.Blob && actionToReport.TwinReport.Status == StatusType.InProgress)
             {
                 notification.CorrelationId ??= actionToReport.TwinReport.CorrelationId;
                 await _deviceClientWrapper.CompleteFileUploadAsync(notification, twinCancellationToken);
@@ -173,14 +174,14 @@ public class FileUploaderHandler : IFileUploaderHandler
             });
             var storageUri = _deviceClientWrapper.GetBlobUri(sasUriResponse);
             notification.CorrelationId = sasUriResponse.CorrelationId;
-            switch (uploadAction.Method)
+            switch (method)
             {
                 case FileUploadMethod.Blob:
-                    _logger.Info($"Upload file: {uploadAction.FileName} by http");
+                    _logger.Info($"Upload file: {fileName} by http");
 
                     await _blobStorageFileUploaderHandler.UploadFromStreamAsync(notification, storageUri, readStream, actionToReport, twinCancellationToken);
                     await _deviceClientWrapper.CompleteFileUploadAsync(notification, twinCancellationToken);
-                    _logger.Info($"The file: {uploadAction.FileName} uploaded successfully");
+                    _logger.Info($"The file: {fileName} uploaded successfully");
 
                     break;
                 case FileUploadMethod.Stream:
