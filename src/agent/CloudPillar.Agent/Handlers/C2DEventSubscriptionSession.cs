@@ -51,14 +51,11 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 if (parseMessage)
                 {
                     _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]}");
-                    if (isProvisioning)
-                    {
-                        await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
-                    }
-                    else
+                    if (!isProvisioning)
                     {
                         await HandleMessage(receivedMessage, cancellationToken, messageType);
                     }
+                    await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
                 }
                 else
                 {
@@ -122,6 +119,4 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 break;
         }
     }
-
-
 }

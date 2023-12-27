@@ -120,6 +120,7 @@ public class StateMachineListenerService : BackgroundService
     private async Task CancelOperationsAsync()
     {
         _cts?.Cancel();
+        _twinHandler?.CancelCancellationToken();
         await _deviceClientWrapper.DisposeAsync();
     }
 }

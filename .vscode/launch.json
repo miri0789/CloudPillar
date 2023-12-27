@@ -14,7 +14,6 @@
                 "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-nechama-25375812-139f638778.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=;EntityPath=cp-nechama-iothub",
                 "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpiotnechamafiles;AccountKey=PXNJl8/a4a0DiyGUD7JWbXiKg+Zc8pKMQeQGXcAjeccDEPDmt8q39wf4d6KMOxaheOkE1JPC3aAx+AStVUGGuQ==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "cpiotnechamafiles",
-                "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
                 "RetryPolicyExponent": "3"
@@ -74,6 +73,11 @@
             "console": "internalConsole",
             "env": {
                 "IothubConnectionString": "HostName=cp-yael-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7RSXkreHYFV3A5TyPkKDFBajEgVCP7ENFAIoTC+lecw=",
+                "DPSConnectionString": "HostName=cp-nechama-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=zh9gSAqFvin2Esh1kXZMVP2IPPOOhDuAfv+TXAZnHho=",
+                "DPSIdScope": "0ne00B889E4",
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                "ExpirationCertificatePercent": "0.6",
+                "maxCountDevices": "100",
             }
         },
         {
@@ -94,9 +98,10 @@
             "name": "Server/Client",
             "configurations": [
                 "Cloud Pillar Agent",
+                "Iot Listener Service",
                 "Key Holder Service",
                 "Blob Streamer Service",
-                "Iot Listener Service"
+                "BEApi Service"
             ]
         }
     ]

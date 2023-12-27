@@ -23,27 +23,33 @@ namespace CloudPillar.Agent.Handlers
 
         public async Task UploadFromStreamAsync(FileUploadCompletionNotification notification, Uri storageUri, Stream readStream, ActionToReport actionToReport, CancellationToken cancellationToken)
         {
-            ArgumentNullException.ThrowIfNull(storageUri);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                ArgumentNullException.ThrowIfNull(storageUri);
 
-            CloudBlockBlob cloudBlockBlob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
+                CloudBlockBlob cloudBlockBlob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
 
-            IProgress<StorageProgress> progressHandler = new Progress<StorageProgress>(
-                async progress =>
-                            await SetReportProggress(progress.BytesTransferred, readStream.Length, actionToReport, notification, cancellationToken)
-               );
-            await _cloudBlockBlobWrapper.UploadFromStreamAsync(cloudBlockBlob, readStream, progressHandler, cancellationToken);
+                IProgress<StorageProgress> progressHandler = new Progress<StorageProgress>(
+                    async progress =>
+                                await SetReportProggress(progress.BytesTransferred, readStream.Length, actionToReport, notification, cancellationToken)
+                   );
+                await _cloudBlockBlobWrapper.UploadFromStreamAsync(cloudBlockBlob, readStream, progressHandler, cancellationToken);
+            }
         }
 
         private async Task SetReportProggress(long bytesTransferred, long totalSize, ActionToReport actionToReport, FileUploadCompletionNotification notification, CancellationToken cancellationToken)
         {
-            float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 0;
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 0;
 
-            actionToReport.TwinReport.Progress = progressPercent;
-            actionToReport.TwinReport.CorrelationId = notification.CorrelationId;
-            actionToReport.TwinReport.Status = StatusType.InProgress;
+                actionToReport.TwinReport.Progress = progressPercent;
+                actionToReport.TwinReport.CorrelationId = notification.CorrelationId;
+                actionToReport.TwinReport.Status = StatusType.InProgress;
 
-            _logger.Info($"Percentage uploaded: {progressPercent}%");
-            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+                _logger.Info($"Percentage uploaded: {progressPercent}%");
+                await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+            }
         }
     }
 }

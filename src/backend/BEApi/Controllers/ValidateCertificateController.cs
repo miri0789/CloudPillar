@@ -14,9 +14,16 @@ public class ValidateCertificateController : ControllerBase
         _validateCertificateService = validateCertificateService ?? throw new ArgumentNullException(nameof(validateCertificateService));
     }
 
-    [HttpGet("IsCertificateExpired/{deviceId}")]
-    public async Task<bool> IsCertificateValid(string deviceId)
+    [HttpGet("IsCertificateExpired")]
+    public async Task IsCertificateValid()
     {
-        return await _validateCertificateService.IsCertificateExpiredAsync(deviceId);
+        try
+        {
+            await _validateCertificateService.IsDevicesCertificateExpiredAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Error validating certificates.", ex);
+        }
     }
 }
