@@ -6,7 +6,6 @@ using Backend.BEApi.Services;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
-using Backend.Keyholder.Wrappers.Interfaces;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Provisioning.Service;
 using Moq;

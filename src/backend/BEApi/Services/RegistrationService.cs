@@ -7,7 +7,6 @@ using Shared.Entities.Authentication;
 using Newtonsoft.Json;
 using Backend.Infra.Common.Services.Interfaces;
 using Microsoft.Azure.Devices.Provisioning.Service;
-using Backend.Keyholder.Wrappers.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.BEApi.Services.Interfaces;
 

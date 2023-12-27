@@ -9,8 +9,6 @@ using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Wrappers;
-using Backend.Keyholder.Wrappers;
-using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Factories;
 using Shared.Logger;
 
