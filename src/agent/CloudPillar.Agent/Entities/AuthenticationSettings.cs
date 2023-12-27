@@ -1,4 +1,5 @@
 using System.Runtime.ConstrainedExecution;
+using System.Security.Cryptography.X509Certificates;
 using Shared.Entities.Authentication;
 
 public class AuthenticationSettings
@@ -13,6 +14,10 @@ public class AuthenticationSettings
     public string? GroupEnrollmentKey { get; set; }
     public string Environment { get; set; }
     public string CertificatePrefix { get; set; } = ProvisioningConstants.CLOUD_PILLAR_SUBJECT;
+    public string? Domain { get; set; }
+    public string? UserName { get; set; }
+    public string? UserPassword { get; set; }
+    public StoreLocation? StoreLocation { get; set; } = System.Security.Cryptography.X509Certificates.StoreLocation.LocalMachine;
     public string GetCertificatePrefix()
     {
         var prefix = CertificatePrefix ?? ProvisioningConstants.CLOUD_PILLAR_SUBJECT;

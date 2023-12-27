@@ -28,6 +28,8 @@ var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
 var serviceName = builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
+var authenticationSettings = builder.Configuration.GetSection("Authentication");
+builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
@@ -82,9 +84,6 @@ builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 
 var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
 builder.Services.Configure<DownloadSettings>(DownloadSettings);
-
-var authenticationSettings = builder.Configuration.GetSection("Authentication");
-builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 var runDiagnosticsSettings = builder.Configuration.GetSection("RunDiagnosticsSettings");
 builder.Services.Configure<RunDiagnosticsSettings>(runDiagnosticsSettings);
