@@ -1,20 +1,21 @@
-using Microsoft.Azure.Devices.Provisioning.Service;
 using Shared.Logger;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Shared.Entities.Messages;
 using Shared.Entities.Factories;
-using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Authentication;
 using Newtonsoft.Json;
 using Backend.Infra.Common.Services.Interfaces;
+using Microsoft.Azure.Devices.Provisioning.Service;
+using Backend.BEApi.Wrappers.Interfaces;
+using Backend.BEApi.Services.Interfaces;
+
+namespace Backend.BEApi.Services;
 
 public class RegistrationService : IRegistrationService
 {
     private readonly ILoggerHandler _loggerHandler;
-
     private readonly IMessageFactory _messageFactory;
-
     private readonly IDeviceConnectService _deviceConnectService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly IIndividualEnrollmentWrapper _individualEnrollmentWrapper;

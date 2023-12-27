@@ -3,10 +3,11 @@ using Backend.Iotlistener.Models.Enums;
 using Backend.Iotlistener.Interfaces;
 
 namespace Backend.Iotlistener.Wrappers;
-public class EnvironmentsWrapper: IEnvironmentsWrapper
+public class EnvironmentsWrapper : IEnvironmentsWrapper
 {
     public static readonly string _blobStreamerUrl = "BlobStreamerUrl";
     public static readonly string _keyHolderUrl = "KeyHolderUrl";
+    public static readonly string _beApiUrl = "BEApiUrl";
     public static readonly string _rangeCalculateType = "RangeCalculateType";
     public static readonly string _rangePercent = "RangePercent";
     public static readonly string _rangeBytes = "RangeBytes";
@@ -26,6 +27,10 @@ public class EnvironmentsWrapper: IEnvironmentsWrapper
     public string keyHolderUrl
     {
         get { return GetVariable(_keyHolderUrl); }
+    }
+    public string beApiUrl
+    {
+        get { return GetVariable(_beApiUrl); }
     }
     public int rangePercent
     {

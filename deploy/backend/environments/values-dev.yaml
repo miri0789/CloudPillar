@@ -45,6 +45,8 @@ controllers:
       value: "http://blobstreamer-service:8081/"
     - name: KeyHolderUrl
       value: "http://keyholder-service:8082/"
+    - name: BEApiUrl
+      value: "http://keyholder-service:8083/"
     - name: RangeCalculateType
       value: "percent"
     - name: RangePercent
@@ -82,6 +84,16 @@ controllers:
     env:
     - name: IothubConnectionString
       value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
+    - name: DPSConnectionString
+      value: "HostName=cp-dev-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=OvCnPzeHY0yu211bWFmtWmxzvKz2jNYje3bUbDCOQDg="
+    - name: DPSIdScope
+      value: "0ne00B51BC7"
+    - name: GlobalDeviceEndpoint
+      value: "global.azure-devices-provisioning.net"
+    - name: ExpirationCertificatePercent
+      value: "0.6"
+    - name: "maxCountOfDevices"
+      value: "100"
     
 replicaCount: 1
 

@@ -1,7 +1,7 @@
-using Backend.Keyholder.Wrappers.Interfaces;
+using Backend.BEApi.Wrappers.Interfaces;
 using Microsoft.Azure.Devices.Provisioning.Service;
 
-namespace Backend.Keyholder.Wrappers;
+namespace Backend.BEApi.Wrappers;
 
 public class ProvisioningServiceClientWrapper : IProvisioningServiceClientWrapper
 {

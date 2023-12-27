@@ -1,6 +1,6 @@
 using Microsoft.Azure.Devices.Provisioning.Service;
 
-namespace Backend.Keyholder.Wrappers.Interfaces;
+namespace Backend.BEApi.Wrappers.Interfaces;
 public interface IProvisioningServiceClientWrapper
 {
     ProvisioningServiceClient Create(string connectionString);

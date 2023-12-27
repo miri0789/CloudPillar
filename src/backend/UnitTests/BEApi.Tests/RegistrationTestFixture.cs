@@ -1,15 +1,18 @@
-﻿using System.Security.Cryptography;
-using Microsoft.Azure.Devices;
-using Moq;
-using Shared.Logger;
-using Backend.Keyholder.Wrappers.Interfaces;
-using Shared.Entities.Factories;
+﻿
+
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Azure.Devices.Provisioning.Service;
+using Backend.BEApi.Services;
+using Backend.BEApi.Services.Interfaces;
+using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
+using Microsoft.Azure.Devices;
+using Microsoft.Azure.Devices.Provisioning.Service;
+using Moq;
+using Shared.Entities.Factories;
+using Shared.Logger;
 
-
-namespace Backend.Keyholder.Tests;
+namespace Backend.BEApi.Tests;
 
 
 public class RegistrationTestFixture

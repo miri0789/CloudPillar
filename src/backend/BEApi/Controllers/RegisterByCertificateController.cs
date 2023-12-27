@@ -1,16 +1,15 @@
+using Backend.BEApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Logger;
 
-namespace Backend.Keyholder;
+namespace Backend.BEApi.Controllers;
 
 [ApiController]
 [Route("[controller]")]
 public class RegisterByCertificateController : ControllerBase
 {
-
     private readonly IRegistrationService _registrationService;
     private readonly ILoggerHandler _logger;
-
 
     public RegisterByCertificateController(IRegistrationService registrationService, ILoggerHandler logger)
     {
@@ -26,10 +25,9 @@ public class RegisterByCertificateController : ControllerBase
     }
 
     [HttpPost("ProvisionDeviceCertificate")]
-    public async Task<IActionResult> ProvisionDeviceCertificateAsync(string deviceId,string prefix, [FromBody] byte[] certificate)
+    public async Task<IActionResult> ProvisionDeviceCertificateAsync(string deviceId, string prefix, [FromBody] byte[] certificate)
     {
-        await _registrationService.ProvisionDeviceCertificateAsync(deviceId,prefix, certificate);
+        await _registrationService.ProvisionDeviceCertificateAsync(deviceId, prefix, certificate);
         return Ok();
     }
-
 }
