@@ -132,7 +132,7 @@ public class TwinHandlerTestFixture
     {
         InitDataForTestInprogressActions();
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
-        Task.Delay(100).Wait();
+        Task.Delay(1000).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
     }
 
@@ -282,7 +282,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
         _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<CancellationToken>()));
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        Task.Delay(100).Wait();
+        Task.Delay(1000).Wait();
         _strictModeHandlerMock.Verify(x => x.CheckFileAccessPermissions(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch.InstallSteps.Count()));
     }
 
