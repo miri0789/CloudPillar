@@ -45,7 +45,6 @@ builder.Services.AddWindowsService(options =>
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
-builder.Services.AddSingleton<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
