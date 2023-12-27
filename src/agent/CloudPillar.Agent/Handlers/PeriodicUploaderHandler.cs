@@ -20,22 +20,6 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
 
     public async Task UploadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
-        var uploadAction = (PeriodicUploadAction)actionToReport.TwinAction;
-        var isDirectory =string.IsNullOrWhiteSpace(_fileStreamerWrapper.GetExtension(uploadAction.DirName)) ;
-        _logger.Info("UploadAsync: start");
-        try
-        {
-
-//  string[] files = Directory ontent of file: {filePath}");
-            
-
-
-            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
-            _logger.Info("UploadAsync: end");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UploadAsync: {ex.Message}");
-        }
+        
     }
 }
