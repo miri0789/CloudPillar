@@ -152,13 +152,13 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task OnDesiredPropertiesUpdate_NewSpecId_InitDownloadFiles()
     {
-        InitDataForTestInprogressActions();
+        InitDataForTestInprogressActions($"{CHANGE_SPEC_ID}1");
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
 
         _fileDownloadHandlerMock.Verify(dc => dc.InitDownloadsList(), Times.Once);
     }
 
-    private void InitDataForTestInprogressActions()
+    private void InitDataForTestInprogressActions(string reportId = CHANGE_SPEC_ID)
     {
         var desired = new TwinDesired()
         {
@@ -182,7 +182,7 @@ public class TwinHandlerTestFixture
         {
             ChangeSpec = new TwinReportedChangeSpec()
             {
-                Id = CHANGE_SPEC_ID,
+                Id = reportId,
                 Patch = new TwinReportedPatch()
                 {
                     InstallSteps = new List<TwinActionReported>()
