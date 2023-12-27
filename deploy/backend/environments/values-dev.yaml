@@ -92,6 +92,8 @@ controllers:
       value: "global.azure-devices-provisioning.net"
     - name: ExpirationCertificatePercent
       value: "0.6"
+    - name: "maxCountOfDevices"
+      value: "100"
     
 replicaCount: 1
 

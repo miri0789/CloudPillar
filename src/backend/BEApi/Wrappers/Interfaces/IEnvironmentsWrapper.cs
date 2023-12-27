@@ -6,4 +6,5 @@ public interface IEnvironmentsWrapper
     string dpsIdScope { get; }
     string globalDeviceEndpoint { get; }
     double expirationCertificatePercent { get; }
+    int maxCountDevices { get; }
 }

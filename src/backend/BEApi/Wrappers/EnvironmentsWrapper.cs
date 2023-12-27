@@ -8,6 +8,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _dpsIdScope = "DPSIdScope";
     private const string _globalDeviceEndpoint = "GlobalDeviceEndpoint";
     private const string _expirationCertificatePercent = "ExpirationCertificatePercent";
+    private const string _maxCountDevices = "MaxCountDevices";
 
     public string iothubConnectionString
     {
@@ -32,6 +33,11 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public double expirationCertificatePercent
     {
         get { return double.Parse(GetVariable(_expirationCertificatePercent)); }
+    }
+
+    public int maxCountDevices
+    {
+        get { return int.Parse(GetVariable(_maxCountDevices)); }
     }
 
 

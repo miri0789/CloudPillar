@@ -28,8 +28,8 @@ public class RegistryManagerWrapper : IRegistryManagerWrapper
         return await registryManager.UpdateTwinAsync(deviceId, twinPatch, etag);
     }
 
-    public async Task<IEnumerable<Device>> GetIotDevicesAsync(RegistryManager registryManager)
+    public async Task<IEnumerable<Device>> GetIotDevicesAsync(RegistryManager registryManager, int maxCountDevices)
     {
-        return await registryManager.GetDevicesAsync(100);
+        return await registryManager.GetDevicesAsync(maxCountDevices);
     }
 }

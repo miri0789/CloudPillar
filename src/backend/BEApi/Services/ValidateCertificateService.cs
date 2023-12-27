@@ -27,38 +27,31 @@ public class ValidateCertificateService : IValidateCertificateService
         _logger.Info("Validating all certificates...");
         using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
         {
-            var devices = await _registryManagerWrapper.GetIotDevicesAsync(registryManager);
+            var tasks = new List<Task>();
+            var devices = await _registryManagerWrapper.GetIotDevicesAsync(registryManager, _environmentsWrapper.maxCountDevices);
             foreach (var device in devices)
             {
-                await IsCertificateExpiredAsync(device.Id);
-            }
-        }
-    }
+                _logger.Info($"Device {device.Id}: Validating certificate...");
+                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, device.Id);
+                var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+                var creationDate = twinReported.CertificateValidity.CreationDate;
+                var expiredDate = twinReported.CertificateValidity.ExpirationDate;
+                var currentDate = DateTime.UtcNow.AddDays(550);
 
-    private async Task IsCertificateExpiredAsync(string deviceId)
-    {
-        _logger.Info($"Device {deviceId}: Validating certificate...");
-        using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
-        {
-            var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
-            var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
-            var creationDate = twinReported.CertificateValidity.CreationDate;
-            var expiredDate = twinReported.CertificateValidity.ExpirationDate;
-            var currentDate = DateTime.UtcNow;
-
-            TimeSpan totalDuration = expiredDate - creationDate;
-            TimeSpan passedDuration = currentDate - creationDate;
-            double percentagePassed = (double)passedDuration.Ticks / totalDuration.Ticks;
-            var isExpired = percentagePassed >= _environmentsWrapper.expirationCertificatePercent;
-            if (isExpired)
-            {
-                _logger.Info("Certificate is expired. Provisioning new certificate...");
-                await _registrationService.RegisterAsync(deviceId, twinReported.SecretKey);
+                TimeSpan totalDuration = expiredDate - creationDate;
+                TimeSpan passedDuration = currentDate - creationDate;
+                double percentagePassed = (double)passedDuration.Ticks / totalDuration.Ticks;
+                if (percentagePassed >= _environmentsWrapper.expirationCertificatePercent)
+                {
+                    _logger.Info($"Device {device.Id}: Certificate is expired. Provisioning new certificate...");
+                    tasks.Add(_registrationService.RegisterAsync(device.Id, twinReported.SecretKey));
+                }
+                else
+                {
+                    _logger.Info($"Device {device.Id}: Certificate is valid.");
+                }
             }
-            else
-            {
-                _logger.Info("Certificate is valid.");
-            }
+            await Task.WhenAll(tasks);
         }
     }
 }
