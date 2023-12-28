@@ -66,7 +66,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `Authentication.StoreLocation`       | location to store the certificate - LocalMachine\CurrentUser.  |  if this value not configure - the default is LocalMachine |
 | `Authentication.Domain`       | machine domain name  |  if this value not configure - the default is `.` |
 | `Authentication.UserName`       | the user name log on as a service  |  if this value not configure - the default is Admin |
-| `Authentication.UserPassword`       | the user password log on as a service  |  if this value not configure - the default is Admin |
+| `Authentication.UserPassword`       | the user password log on as a service  |   |
 | `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
 | `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
 | `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
