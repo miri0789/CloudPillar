@@ -61,7 +61,7 @@ public class ValidateCertificateTestFixture
     }
 
     [Test]
-    public async Task IsDevicesCertificateExpiredAsync_ValidParameters_MessageSendToAgent()
+    public async Task IsDevicesCertificateExpiredAsync_ValidParameters_MessageNotSendToAgent()
     {
         var device = new Device(DEVICE_ID);
         var twin = new Twin();
