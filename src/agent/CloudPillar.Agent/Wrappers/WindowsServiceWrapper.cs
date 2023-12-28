@@ -1,12 +1,15 @@
 using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using CloudPillar.Agent.Handlers.Logger;
+using Microsoft.Extensions.Options;
+using System.ComponentModel;
 
 namespace CloudPillar.Agent.Wrappers
 {
     public class WindowsServiceWrapper: IWindowsServiceWrapper
     {
         private readonly ILoggerHandler _logger;
+        AuthenticationSettings _authenticationSettings;
 
         // P/Invoke declarations
         [DllImport("advapi32.dll", SetLastError = true)]
@@ -31,51 +34,61 @@ namespace CloudPillar.Agent.Wrappers
         // Constants
         private const uint SC_MANAGER_CREATE_SERVICE = 0x0002;
         private const uint SC_MANAGER_ALL_ACCESS = 0xF003F;
-        private const uint SERVICE_WIN32_SHARE_PROCESS = 0x00000020;
+        private const uint SERVICE_WIN32_OWN_PROCESS = 0x00000010;
         private const uint SERVICE_AUTO_START = 0x00000002;
         private const uint SERVICE_ERROR_NORMAL = 0x00000001;
         private const int SERVICE_ALL_ACCESS = 0xF01FF;
+        private const int DELETE = 0x10000;
         
 
-        public WindowsServiceWrapper(ILoggerHandler logger)
+        public WindowsServiceWrapper(ILoggerHandler logger, IOptions<AuthenticationSettings> authenticationSettings)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _authenticationSettings = authenticationSettings.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));
     }
 
         public void InstallWindowsService(string serviceName, string workingDirectory)
         {
-            if (ServiceExists(serviceName))
-            {
-                if (IsServiceRunning(serviceName))
+            try
                 {
-                    if (StopService(serviceName))
+                if (ServiceExists(serviceName))
+                {
+                    if (IsServiceRunning(serviceName))
                     {
-                        _logger.Info("Service stopped successfully.");
+                        if (StopService(serviceName))
+                        {
+                            _logger.Info("Service stopped successfully.");
+                        }
+                        else
+                        {
+                            _logger.Error("Failed to stop service.");
+                        }
+                    }
+                    // delete existing service
+                    if (DeleteExistingService(serviceName))
+                    {
+                        _logger.Info("Service deleted successfully.");
                     }
                     else
                     {
-                        _logger.Error("Failed to stop service.");
+                        _logger.Error("Failed to delete service.");
+                        throw new Win32Exception(Marshal.GetLastWin32Error());
                     }
                 }
-                // delete existing service
-                if (DeleteExistingService(serviceName))
+                
+                // Service doesn't exist, so create and start it
+                if (CreateAndStartService(serviceName, workingDirectory))
                 {
-                    _logger.Info("Service deleted successfully.");
+                    _logger.Info("Service created and started successfully.");
                 }
                 else
                 {
-                    _logger.Error("Failed to delete service.");
+                    _logger.Error("Failed to create and start service.");
                 }
             }
-            
-            // Service doesn't exist, so create and start it
-            if (CreateAndStartService(serviceName, workingDirectory))
+            catch(Win32Exception ex)
             {
-                _logger.Info("Service created and started successfully.");
-            }
-            else
-            {
-                _logger.Error("Failed to create and start service.");
+                throw new Exception($"Failed to start service {ex}");
             }
             
         }
@@ -83,14 +96,14 @@ namespace CloudPillar.Agent.Wrappers
         private bool DeleteExistingService(string serviceName)
         {
             // Open the service control manager
-            IntPtr scmHandle = OpenSCManager(null, null, SC_MANAGER_ALL_ACCESS);
+            IntPtr scmHandle = OpenSCManager(_authenticationSettings.Domain, null, SC_MANAGER_ALL_ACCESS);
             if (scmHandle == IntPtr.Zero)
             {
                 return false;
             }
 
             // Open the existing service
-            IntPtr serviceHandle = OpenService(scmHandle, serviceName, SERVICE_ALL_ACCESS);
+            IntPtr serviceHandle = OpenService(scmHandle, serviceName, DELETE);
             if (serviceHandle == IntPtr.Zero)
             {
                 CloseServiceHandle(scmHandle);
@@ -108,23 +121,33 @@ namespace CloudPillar.Agent.Wrappers
         }
         private bool CreateAndStartService(string serviceName, string workingDirectory)
         {
-            IntPtr scm = OpenSCManager(null, null, SC_MANAGER_CREATE_SERVICE);
+            IntPtr scm = OpenSCManager(_authenticationSettings.Domain, null, SC_MANAGER_CREATE_SERVICE);
             if (scm == IntPtr.Zero)
             {
-                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
             string exePath = $"{System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName} {workingDirectory}";
-
-            IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, null, null);
+            string userName = string.IsNullOrWhiteSpace(_authenticationSettings.UserName)
+                            ? null
+                            : $"{(string.IsNullOrWhiteSpace(_authenticationSettings.Domain) ? "." : _authenticationSettings.Domain)}\\{_authenticationSettings.UserName}";
+            IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, userName, _authenticationSettings.UserPassword);
 
             if (svc == IntPtr.Zero)
             {
+                int error = Marshal.GetLastWin32Error();
                 CloseServiceHandle(scm);
-                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                throw new Win32Exception(error);
             }
 
             bool success = StartService(svc, 0, null);
+            if(success == false)
+            {
+                int error = Marshal.GetLastWin32Error();
+                CloseServiceHandle(svc);
+                CloseServiceHandle(scm);
+                throw new Win32Exception(error);
+            }
 
             CloseServiceHandle(svc);
             
