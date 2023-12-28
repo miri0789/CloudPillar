@@ -141,7 +141,7 @@ public class TwinHandlerTestFixture
     {
         InitDataForTestInprogressActions();
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
-
+        Task.Delay(1000).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
 
