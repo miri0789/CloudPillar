@@ -39,7 +39,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
     public X509Certificate2? GetCertificate(string deviceId = "")
     {
-        using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly, storeLocation: _authenticationSettings.StoreLocation ?? StoreLocation.LocalMachine))
+        using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly, storeLocation: _authenticationSettings.StoreLocation))
         {
             var certificates = _X509CertificateWrapper.GetCertificates(store);
             var filteredCertificate = certificates?.Cast<X509Certificate2>()

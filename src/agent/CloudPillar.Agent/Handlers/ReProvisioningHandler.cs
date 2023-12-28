@@ -91,7 +91,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         try
         {
             await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, recivedMessage, cancellationToken);
-            using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation ?? StoreLocation.LocalMachine))
+            using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation))
             {
                 CleanCertificates(store, certificate, deviceId, iotHubHostName);
             }
@@ -137,7 +137,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         privateCertificate.FriendlyName = _authenticationSettings.GetTemporaryCertificate();
 
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation ?? StoreLocation.LocalMachine))
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation))
         {
             RemoveCertificatesFromStore(store, string.Empty);
             _x509CertificateWrapper.Add(store, privateCertificate);
@@ -146,7 +146,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
     private X509Certificate2? GetTempCertificate()
     {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly, storeLocation: _authenticationSettings.StoreLocation ?? StoreLocation.LocalMachine))
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly, storeLocation: _authenticationSettings.StoreLocation))
         {
             X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
 
@@ -164,7 +164,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
     public void RemoveX509CertificatesFromStore()
     {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation ?? StoreLocation.LocalMachine))
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation))
         {
             RemoveCertificatesFromStore(store, string.Empty);
         }

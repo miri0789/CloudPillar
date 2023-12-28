@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
+using System.ComponentModel;
 
 namespace CloudPillar.Agent.Wrappers
 {
@@ -71,7 +72,7 @@ namespace CloudPillar.Agent.Wrappers
                     else
                     {
                         _logger.Error("Failed to delete service.");
-                        throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                        throw new Win32Exception(Marshal.GetLastWin32Error());
                     }
                 }
                 
@@ -85,7 +86,7 @@ namespace CloudPillar.Agent.Wrappers
                     _logger.Error("Failed to create and start service.");
                 }
             }
-            catch(System.ComponentModel.Win32Exception ex)
+            catch(Win32Exception ex)
             {
                 throw new Exception($"Failed to start service {ex}");
             }
@@ -123,18 +124,20 @@ namespace CloudPillar.Agent.Wrappers
             IntPtr scm = OpenSCManager(_authenticationSettings.Domain, null, SC_MANAGER_CREATE_SERVICE);
             if (scm == IntPtr.Zero)
             {
-                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
             string exePath = $"{System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName} {workingDirectory}";
-            string userName = _authenticationSettings.UserName==null || _authenticationSettings.Domain==null ?null:$"{_authenticationSettings.Domain}\\{_authenticationSettings.UserName}";
+            string userName = string.IsNullOrEmpty(_authenticationSettings.UserName)
+                            ? null
+                            : $"{(string.IsNullOrEmpty(_authenticationSettings.Domain) ? "." : _authenticationSettings.Domain)}\\{_authenticationSettings.UserName}";
             IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, userName, _authenticationSettings.UserPassword);
 
             if (svc == IntPtr.Zero)
             {
                 int error = Marshal.GetLastWin32Error();
                 CloseServiceHandle(scm);
-                throw new System.ComponentModel.Win32Exception(error);
+                throw new Win32Exception(error);
             }
 
             bool success = StartService(svc, 0, null);
@@ -143,7 +146,7 @@ namespace CloudPillar.Agent.Wrappers
                 int error = Marshal.GetLastWin32Error();
                 CloseServiceHandle(svc);
                 CloseServiceHandle(scm);
-                throw new System.ComponentModel.Win32Exception(error);
+                throw new Win32Exception(error);
             }
 
             CloseServiceHandle(svc);
