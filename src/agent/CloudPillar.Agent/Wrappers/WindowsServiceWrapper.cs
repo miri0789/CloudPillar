@@ -128,9 +128,9 @@ namespace CloudPillar.Agent.Wrappers
             }
 
             string exePath = $"{System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName} {workingDirectory}";
-            string userName = string.IsNullOrEmpty(_authenticationSettings.UserName)
+            string userName = string.IsNullOrWhiteSpace(_authenticationSettings.UserName)
                             ? null
-                            : $"{(string.IsNullOrEmpty(_authenticationSettings.Domain) ? "." : _authenticationSettings.Domain)}\\{_authenticationSettings.UserName}";
+                            : $"{(string.IsNullOrWhiteSpace(_authenticationSettings.Domain) ? "." : _authenticationSettings.Domain)}\\{_authenticationSettings.UserName}";
             IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, userName, _authenticationSettings.UserPassword);
 
             if (svc == IntPtr.Zero)
