@@ -398,6 +398,26 @@ public class TwinHandlerTestFixture
     }
 
     [Test]
+    public async Task OnDesiredPropertiesUpdate_ReportChangeSpecIsNull_ExecActions()
+    {
+        var desired = new TwinChangeSpec()
+        {
+            Patch = new TwinPatch()
+            {
+                TransitPackage = new List<TwinAction>() { new UploadAction() }.ToArray()
+            },
+            Id = CHANGE_SPEC_ID
+        };
+
+        var reported = null as TwinReportedChangeSpec;
+
+        CreateTwinMock(desired, reported);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _fileUploaderHandlerMock.Verify(x => x.FileUploadAsync(It.IsAny<ActionToReport>(), It.IsAny<FileUploadMethod>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
     public async Task OnDesiredPropertiesUpdate_ChangeSignNull_SignTwinKeyEventSend()
     {
         var desired = new TwinChangeSpec() { Id = CHANGE_SPEC_ID };

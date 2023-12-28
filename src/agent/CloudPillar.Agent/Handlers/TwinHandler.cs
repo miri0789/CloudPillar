@@ -256,7 +256,10 @@ public class TwinHandler : ITwinHandler
                 twinReportedChangeSpec.Patch = new TwinReportedPatch();
                 twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id;
                 isReportedChanged = true;
-                _fileDownloadHandler.InitDownloadsList();
+                if (changeSpecKey == TwinPatchChangeSpec.ChangeSpecDiagnostics)
+                {
+                    _fileDownloadHandler.InitDownloadsList();
+                }
             }
 
             PropertyInfo[] properties = typeof(TwinPatch).GetProperties();
