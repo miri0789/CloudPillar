@@ -24,6 +24,18 @@ For example
 startagent.bat win-x64 
 ````
 
+### working directory arg
+startagent.bat can run from any local location with get the working dir in argument(path to env\dev or env\prod)
+````
+./startagent.bat <ARCHITECTURE_DIR> <WORKINGDIR>
+````
+
+For example:
+````
+startagent.bat win-x64 c:\env\dev
+````
+**Note: this option enable only when running from cmd (not with --winsrv option)**
+
 ### Windows - windows service
 ```
 ./startagent.bat <ARCHITECTURE_DIR> --winsrv
@@ -54,7 +66,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `Authentication.StoreLocation`       | location to store the certificate - LocalMachine\CurrentUser.  |  if this value not configure - the default is LocalMachine |
 | `Authentication.Domain`       | machine domain name  |  if this value not configure - the default is `.` |
 | `Authentication.UserName`       | the user name log on as a service  |  if this value not configure - the default is Admin |
-| `Authentication.UserPassword`       | the user password log on as a service  |  if this value not configure - the default is Admin |
+| `Authentication.UserPassword`       | the user password log on as a service  |   |
 | `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
 | `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
 | `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
