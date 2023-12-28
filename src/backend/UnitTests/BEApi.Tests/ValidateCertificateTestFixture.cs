@@ -1,14 +1,9 @@
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using Backend.BEApi.Services;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
-using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Azure.Devices;
-using Microsoft.Azure.Devices.Provisioning.Service;
 using Moq;
-using Shared.Entities.Factories;
 using Shared.Logger;
 using Shared.Entities.Twin;
 using Microsoft.Azure.Devices.Shared;
