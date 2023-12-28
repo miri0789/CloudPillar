@@ -49,22 +49,29 @@ public class StateMachineListenerService : BackgroundService
     {
         if (_stateMachineHandlerService != null)
         {
-            _logger.Info("StopAsync: set device state to busy");
-
             var state = _stateMachineHandlerService.GetCurrentDeviceState();
-            if (state != DeviceStateType.Busy)
-            {
-                if (_twinReportHandler == null)
-                {
-                    using (var scope = _serviceProvider.CreateScope())
-                    {
-                        _twinReportHandler = scope.ServiceProvider.GetService<ITwinReportHandler>() ?? throw new ArgumentNullException(nameof(_twinReportHandler));
-                        await _twinReportHandler.UpdateDeviceStateAfterServiceRestartAsync(state, _cts.Token);
-                    }
-                }
-                await _stateMachineHandlerService.SetStateAsync(DeviceStateType.Busy, _cts.Token);
-            }
 
+            if(state == DeviceStateType.Provisioning)
+            {
+                _logger.Info("StopAsync: set device state to Uninitialized");
+                await _stateMachineHandlerService.SetStateAsync(DeviceStateType.Uninitialized, _cts.Token);
+            }
+            else
+            {
+                if(state != DeviceStateType.Busy)
+                {
+                    _logger.Info("StopAsync: set device state to Busy");
+                    if (_twinReportHandler == null)
+                    {
+                        using (var scope = _serviceProvider.CreateScope())
+                        {
+                            _twinReportHandler = scope.ServiceProvider.GetService<ITwinReportHandler>() ?? throw new ArgumentNullException(nameof(_twinReportHandler));
+                            await _twinReportHandler.UpdateDeviceStateAfterServiceRestartAsync(state, _cts.Token);
+                        }
+                    }
+                    await _stateMachineHandlerService.SetStateAsync(DeviceStateType.Busy, _cts.Token);
+                }
+            }
         }
         await base.StopAsync(cancellationToken);
     }
