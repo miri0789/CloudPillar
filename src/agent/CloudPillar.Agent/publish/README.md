@@ -34,6 +34,14 @@ For example
 startagent.bat win-x64 --winsrv
 ````
 
+### Windows service user permissions
+#### **Admin** privileges are needed to **create** windows service, and generate certificate at **LocalMachine** store
+#### The folowing permissions are needed to **use** windowes service:
+* Read and Write permission to folders that are used in recipes for download & upload
+* User should be logged on as service (`Local Security Policy -> Local Policy -> User Rights Assignment -> Log on as a service -> Add User or Group`)
+
+If user detailes not configure in appsettings (`StoreLocation`, `Domain`, `UserName`, `UserPassword`) the service will be instaled with Admin rights, and certificate in LocalMachine.
+
 ## appsettings.json Configuration
 
 To configure the application settings, please refer to the appsettings.json file and customize the following parameters as needed.
@@ -43,6 +51,10 @@ To configure the application settings, please refer to the appsettings.json file
 | `Authentication.CertificateExpiredDays`       | Certificate expired days  |  `365` |
 | `Authentication.DpsScopeId`       | DPS scope id  |  `true` |
 | `Authentication.GroupEnrollmentKey`       | DPS enrollment group key  |   |
+| `Authentication.StoreLocation`       | location to store the certificate - LocalMachine\CurrentUser.  |  if this value not configure - the default is LocalMachine |
+| `Authentication.Domain`       | machine domain name  |  if this value not configure - the default is `.` |
+| `Authentication.UserName`       | the user name log on as a service  |  if this value not configure - the default is Admin |
+| `Authentication.UserPassword`       | the user password log on as a service  |  if this value not configure - the default is Admin |
 | `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
 | `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
 | `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
