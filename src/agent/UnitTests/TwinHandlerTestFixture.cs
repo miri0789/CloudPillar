@@ -414,6 +414,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        Task.Delay(1000).Wait();
         _fileUploaderHandlerMock.Verify(x => x.FileUploadAsync(It.IsAny<ActionToReport>(), It.IsAny<FileUploadMethod>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
