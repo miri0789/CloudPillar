@@ -24,6 +24,18 @@ For example
 startagent.bat win-x64 
 ````
 
+### working directory arg
+startagent.bat can run from any local location with get the working dir in argument(path to env\dev or env\prod)
+````
+./startagent.bat <ARCHITECTURE_DIR> <WORKINGDIR>
+````
+
+For example:
+````
+startagent.bat win-x64 c:\env\dev
+````
+**Note: this option enable only when running from cmd (not with --winsrv option)**
+
 ### Windows - windows service
 ```
 ./startagent.bat <ARCHITECTURE_DIR> --winsrv

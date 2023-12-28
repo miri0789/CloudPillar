@@ -58,7 +58,7 @@ public class StateMachineListenerService : BackgroundService
             }
             else
             {
-                if(state != DeviceStateType.Busy)
+                if(state != DeviceStateType.Busy && state != DeviceStateType.Uninitialized)
                 {
                     _logger.Info("StopAsync: set device state to Busy");
                     if (_twinReportHandler == null)
