@@ -141,7 +141,7 @@ public class TwinHandlerTestFixture
     {
         InitDataForTestInprogressActions();
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
-
+        Task.Delay(1000).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
 
@@ -395,6 +395,27 @@ public class TwinHandlerTestFixture
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == nameof(TwinReported.ChangeSpecId)), It.Is<string>(x => x == null), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_ReportChangeSpecIsNull_ExecActions()
+    {
+        var desired = new TwinChangeSpec()
+        {
+            Patch = new TwinPatch()
+            {
+                TransitPackage = new List<TwinAction>() { new UploadAction() }.ToArray()
+            },
+            Id = CHANGE_SPEC_ID
+        };
+
+        var reported = null as TwinReportedChangeSpec;
+
+        CreateTwinMock(desired, reported);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        Task.Delay(1000).Wait();
+        _fileUploaderHandlerMock.Verify(x => x.FileUploadAsync(It.IsAny<ActionToReport>(), It.IsAny<FileUploadMethod>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

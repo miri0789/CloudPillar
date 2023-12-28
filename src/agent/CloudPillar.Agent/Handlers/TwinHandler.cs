@@ -120,7 +120,7 @@ public class TwinHandler : ITwinHandler
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
-        if (twinDesiredChangeSpec.Id != twinReportedChangeSpec.Id)
+        if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id)
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
@@ -256,7 +256,10 @@ public class TwinHandler : ITwinHandler
                 twinReportedChangeSpec.Patch = new TwinReportedPatch();
                 twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id;
                 isReportedChanged = true;
-                _fileDownloadHandler.InitDownloadsList();
+                if (changeSpecKey == TwinPatchChangeSpec.ChangeSpecDiagnostics)
+                {
+                    _fileDownloadHandler.InitDownloadsList();
+                }
             }
 
             PropertyInfo[] properties = typeof(TwinPatch).GetProperties();
