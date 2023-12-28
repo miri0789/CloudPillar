@@ -46,7 +46,7 @@ public class ValidateCertificateTestFixture
         var twin = new Twin();
         var twinReported = new TwinReported();
         twinReported.CertificateValidity = new CertificateValidity();
-        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-1);
+        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-2);
         twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(1);
         twinReported.SecretKey = SECRET_KEY;
         string reportedJson = JsonConvert.SerializeObject(twinReported);
