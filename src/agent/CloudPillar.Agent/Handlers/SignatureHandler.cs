@@ -26,9 +26,9 @@ public class SignatureHandler : ISignatureHandler
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    private async Task<ECDsa> InitPublicKeyAsync()
+    private async Task<ECDsa> InitPublicKeyAsync(string publicKeyFile)
     {
-        string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync("pki/sign-pubkey.pem");
+        string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync(publicKeyFile);
         if (publicKeyPem == null)
         {
             _logger.Error("sign pubkey not exist");
@@ -56,11 +56,20 @@ public class SignatureHandler : ISignatureHandler
 
     public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)
     {
-        using (var ecdsa = await InitPublicKeyAsync())
+        string pkiFolderPath = "pki";
+        string[] publicKeyFiles = Directory.GetFiles(pkiFolderPath, "*.pem");
+        foreach (string publicKeyFile in publicKeyFiles)
         {
-            byte[] signature = Convert.FromBase64String(signatureString);
-            return _ecdsaWrapper.VerifyData(ecdsa, dataToVerify, signature, HashAlgorithmName.SHA512);
+            using (var ecdsa = await InitPublicKeyAsync(publicKeyFile))
+            {
+                byte[] signature = Convert.FromBase64String(signatureString);
+                if (_ecdsaWrapper.VerifyData(ecdsa, dataToVerify, signature, HashAlgorithmName.SHA512))
+                {
+                    return true;
+                }
+            }
         }
+        return false;
     }
 
     public async Task<bool> VerifyFileSignatureAsync(string filePath, string signature)
