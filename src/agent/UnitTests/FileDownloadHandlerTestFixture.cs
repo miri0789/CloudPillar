@@ -49,6 +49,7 @@ namespace CloudPillar.Agent.Tests
             _twinActionsHandlerMock = new Mock<ITwinReportHandler>();
             _checkSumServiceMock = new Mock<ICheckSumService>();
             _loggerMock = new Mock<ILoggerHandler>();
+            _fileStreamerWrapperMock.Setup(item => item.isPlaceOnDisk(It.IsAny<string>(), It.IsAny<long>())).Returns(true);
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".zip");
             _fileStreamerWrapperMock.Setup(x => x.ReadStream(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                                     .Returns(new byte[0]);
