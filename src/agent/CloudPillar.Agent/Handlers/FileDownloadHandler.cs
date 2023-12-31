@@ -62,7 +62,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         try
         {
-            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);            
+            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);
             if (await ChangeSignExists(file, cancellationToken))
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
@@ -78,9 +78,13 @@ public class FileDownloadHandler : IFileDownloadHandler
                 }
 
                 if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
-                 && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
+             && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
                 {
-                    SetBlockedStatus(file, cancellationToken);
+                    SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
+                }
+                else if (!_fileStreamerWrapper.isPlaceOnDisk(destPath, file.TotalBytes))
+                {
+                    SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
                 }
                 else if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
                 {
@@ -135,11 +139,11 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
     }
 
-    private void SetBlockedStatus(FileDownload file, CancellationToken cancellationToken)
+    private void SetBlockedStatus(FileDownload file, DownloadBlocked resultCode, CancellationToken cancellationToken)
     {
         file.Report.Status = StatusType.Blocked;
-        file.Report.ResultCode = "FileAlreadyExist";
-        _logger.Info($"File {file.Action.DestinationPath} already exist, sending blocked status");
+        file.Report.ResultCode = resultCode.ToString();
+        _logger.Info($"File {file.Action.DestinationPath} sending blocked status, ResultCode: {resultCode}");
         if (!cancellationToken.IsCancellationRequested)
         {
             Task.Run(async () => WaitInBlockedBeforeDownload(file, cancellationToken));

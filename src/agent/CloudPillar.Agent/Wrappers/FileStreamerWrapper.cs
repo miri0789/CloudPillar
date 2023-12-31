@@ -78,6 +78,13 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Directory.Exists(fullFilePath);
     }
+
+    public bool isPlaceOnDisk(string path, long size)
+    {
+        DriveInfo drive = new DriveInfo(path);
+        return drive.AvailableFreeSpace > size;
+    }
+
     public string Combine(string baseDir, string path)
     {
         return Path.Combine(baseDir, path);
@@ -168,5 +175,5 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return fileInfo.Length;
     }
 
-    
+
 }
