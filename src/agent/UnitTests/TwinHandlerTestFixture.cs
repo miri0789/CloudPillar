@@ -141,7 +141,7 @@ public class TwinHandlerTestFixture
     {
         InitDataForTestInprogressActions();
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
-
+        Task.Delay(1000).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
 
@@ -249,6 +249,7 @@ public class TwinHandlerTestFixture
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
 
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        Task.Delay(100).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -398,8 +399,50 @@ public class TwinHandlerTestFixture
     }
 
     [Test]
+    public async Task OnDesiredPropertiesUpdate_ReportChangeSpecIsNull_ExecActions()
+    {
+        var desired = new TwinChangeSpec()
+        {
+            Patch = new TwinPatch()
+            {
+                TransitPackage = new List<TwinAction>() { new UploadAction() }.ToArray()
+            },
+            Id = CHANGE_SPEC_ID
+        };
+
+        var reported = null as TwinReportedChangeSpec;
+
+        CreateTwinMock(desired, reported);
+
+        _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        Task.Delay(1000).Wait();
+        _fileUploaderHandlerMock.Verify(x => x.FileUploadAsync(It.IsAny<ActionToReport>(), It.IsAny<FileUploadMethod>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_ChangeSignNullStrictModeTrue_SignIsRequired()
+    {
+        mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock(true);
+        mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+        CreateTarget();
+
+        var desired = new TwinChangeSpec() { Id = CHANGE_SPEC_ID };
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported, changeSign: null);
+
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == nameof(TwinReported.ChangeSign)), It.Is<string>(x => x == "Change sign is required"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
     public async Task OnDesiredPropertiesUpdate_ChangeSignNull_SignTwinKeyEventSend()
     {
+        mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock(false);
+        mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+        CreateTarget();
+
         var desired = new TwinChangeSpec() { Id = CHANGE_SPEC_ID };
 
         var reported = new TwinReportedChangeSpec();

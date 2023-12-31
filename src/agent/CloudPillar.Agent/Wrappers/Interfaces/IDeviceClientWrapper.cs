@@ -21,7 +21,7 @@ public interface IDeviceClientWrapper
    
     Task<Twin> GetTwinAsync(CancellationToken cancellationToken);
 
-    Task UpdateReportedPropertiesAsync(string key, object value, CancellationToken cancellationToken);
+    Task UpdateReportedPropertiesAsync(string key, object? value, CancellationToken cancellationToken);
 
     Task UpdateReportedPropertiesAsync(TwinCollection reportedProperties, CancellationToken cancellationToken);
 

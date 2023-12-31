@@ -79,9 +79,14 @@ public class AgentController : ControllerBase
         bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
         if (!isX509Authorized)
         {
+            var x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
+            if (x509Certificate is not null)
+            {
+                return Unauthorized("The deviceId or the SecretKey are incorrect.");
+            }
             _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");
-            var x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate(deviceId);
-            var isSymetricKeyAuthorized = x509Certificate is not null && await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
+
+            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
             if (!isSymetricKeyAuthorized)
             {
                 _logger.Info("GetDeviceStateAsync, the device is symmetric key unAuthorized, start provisinig proccess");

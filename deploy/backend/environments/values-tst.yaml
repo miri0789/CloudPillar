@@ -46,7 +46,7 @@ controllers:
     - name: KeyHolderUrl
       value: "http://keyholder-service:8082/"
     - name: BEApiUrl
-      value: "http://keyholder-service:8083/"
+      value: "http://beapi-service:8083/"
     - name: RangeCalculateType
       value: "percent"
     - name: RangePercent
