@@ -115,7 +115,7 @@ public class TwinHandler : ITwinHandler
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
-        if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id)
+        if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id || isInitial)
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
