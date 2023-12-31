@@ -503,8 +503,8 @@ namespace CloudPillar.Agent.Tests
 
         private async Task InitFileDownloadAsync(FileDownload action)
         {
+            _target.AddFileDownload(action.ActionReported);
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
-            await Task.Delay(100); // for init that run in background
         }
 
         private async Task SetUpHandleDownloadMessageAsync_SignVerifyFailed()
@@ -513,7 +513,7 @@ namespace CloudPillar.Agent.Tests
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
             _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
             action.Report.CompletedRanges = "0-5,7";
-            await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+            await InitFileDownloadAsync(action);
             var message = new DownloadBlobChunkMessage
             {
                 ActionIndex = action.ActionReported.ReportIndex,
