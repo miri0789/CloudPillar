@@ -57,7 +57,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
                     actionToReport.TwinReport.PeriodicReported.Add(key, new TwinActionReported() { Status = StatusType.Pending });
                 }
 
-                var currentCheckSum = await GetFileCheckSum(file);
+                var currentCheckSum = await GetFileCheckSumAsync(file);
                 if (currentCheckSum !=  _twinReportHandler.GetActionToReport(actionToReport, file).CheckSum)
                 {
                     await _fileUploaderHandler.FileUploadAsync(actionToReport, uploadAction.Method, file, changeSpecId, cancellationToken);
@@ -71,7 +71,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
             if (uploadAction.Interval > 0)
             {
                 _twinReportHandler.SetReportProperties(actionToReport, StatusType.Idle);
-                Task.Run(async () => IdlePeriodic(actionToReport, changeSpecId, cancellationToken));
+                Task.Run(async () => IdlePeriodicAsync(actionToReport, changeSpecId, cancellationToken));
             }
             else
             {
@@ -90,7 +90,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
         }
     }
 
-    private async Task<string> GetFileCheckSum(string file)
+    private async Task<string> GetFileCheckSumAsync(string file)
     {
         using (Stream readStream = _fileStreamerWrapper.CreateStream(file, FileMode.Open, FileAccess.Read))
         {
@@ -98,7 +98,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
         }
     }
 
-    private async Task IdlePeriodic(ActionToReport actionToReport, string changeSpecId, CancellationToken cancellationToken)
+    private async Task IdlePeriodicAsync(ActionToReport actionToReport, string changeSpecId, CancellationToken cancellationToken)
     {
         var uploadAction = (PeriodicUploadAction)actionToReport.TwinAction;
         _logger.Info($"Upload periodic of directory {uploadAction.DirName} idle");
