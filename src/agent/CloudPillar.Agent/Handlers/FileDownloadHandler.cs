@@ -16,6 +16,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IStrictModeHandler _strictModeHandler;
     private readonly ITwinReportHandler _twinActionsHandler;
     private readonly ISignatureHandler _signatureHandler;
+    private readonly StrictModeSettings _strictModeSettings;
     private static ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
 
 
@@ -30,7 +31,8 @@ public class FileDownloadHandler : IFileDownloadHandler
                                ILoggerHandler loggerHandler,
                                ICheckSumService checkSumService,
                                ISignatureHandler signatureHandler,
-                                IOptions<DownloadSettings> options)
+                               IOptions<StrictModeSettings> strictModeSettings,
+                               IOptions<DownloadSettings> options)
     {
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
@@ -40,6 +42,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
     }
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
@@ -59,13 +62,8 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         try
         {
-            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);
-            if (file.Action.Sign is null)
-            {
-                _logger.Info("No sign file key is sent, sending for signature");
-                await SendForSignatureAsync(file.ActionReported, cancellationToken);
-            }
-            else
+            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);            
+            if (await ChangeSignExists(file, cancellationToken))
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
                 var isCreatedDownloadDirectory = InitDownloadPath(file);
@@ -116,6 +114,24 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 await SaveReportAsync(file, cancellationToken);
             }
+        }
+    }
+
+    private async Task<bool> ChangeSignExists(FileDownload file, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(file?.Action?.Sign))
+        {
+            return true;
+        }
+        if (!_strictModeSettings.StrictMode)
+        {
+            _logger.Info("No sign file key is sent, sending for signature");
+            await SendForSignatureAsync(file?.ActionReported, cancellationToken);
+            return false;
+        }
+        else
+        {
+            throw new ArgumentNullException("Sign file key is required");
         }
     }
 
@@ -172,6 +188,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private void HandleDownloadException(Exception ex, FileDownload file)
     {
+        _logger.Error(ex.Message);
         file.Report.Status = StatusType.Failed;
         file.Report.ResultText = ex.Message;
         file.Report.ResultCode = ex.GetType().Name;
