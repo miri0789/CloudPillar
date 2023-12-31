@@ -22,7 +22,6 @@ public class SignatureHandlerTestFixture
     private Mock<ISHA256Wrapper> _sha256WrapperMock;
     private Mock<IECDsaWrapper> _ecdsaWrapperMock;
     private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
-    private Mock<IDirectoryWrapper> _directoryWrapperMpck;
     private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
 
     [SetUp]
@@ -33,14 +32,13 @@ public class SignatureHandlerTestFixture
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
         _sha256WrapperMock = new Mock<ISHA256Wrapper>();
         _ecdsaWrapperMock = new Mock<IECDsaWrapper>();
-        _directoryWrapperMpck = new Mock<IDirectoryWrapper>();
         _fileStreamMock = new Mock<FileStream>(MockBehavior.Default, new object[] { "filePath", FileMode.Create });
         mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
         mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
         mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
 
-        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, _sha256WrapperMock.Object, _ecdsaWrapperMock.Object, _directoryWrapperMpck.Object, mockDownloadSettings.Object);
-        _directoryWrapperMpck.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { "pathfile.txt", "pathfile2.txt" });
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, _sha256WrapperMock.Object, _ecdsaWrapperMock.Object, mockDownloadSettings.Object);
+        _fileStreamerWrapperMock.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { "pathfile.txt", "pathfile2.txt" });
         string publicKeyPem1 = @"-----BEGIN PUBLIC KEY-----
                                 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESi/IRJco4/1xj3dD+G52BslMo0ZFK
                                 4IlL202eiI/cMnUMs4Z7n/icR19JbGZv3URT2cyPjQfRHlSvJ+11XV+lw==

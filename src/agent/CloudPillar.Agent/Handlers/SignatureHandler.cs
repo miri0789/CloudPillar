@@ -14,18 +14,18 @@ public class SignatureHandler : ISignatureHandler
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IECDsaWrapper _ecdsaWrapper;
-    private readonly IDirectoryWrapper _directoryWrapper;
     private readonly DownloadSettings _downloadSettings;
+    private const string PKI_FOLDER_PATH = "pki";
+    private const string FILE_EXTENSION = "*.pem";
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
-    ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IDirectoryWrapper directoryWrapper, IOptions<DownloadSettings> options)
+    ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IOptions<DownloadSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _sha256Wrapper = sha256Wrapper ?? throw new ArgumentNullException(nameof(sha256Wrapper));
         _ecdsaWrapper = ecdsaWrapper ?? throw new ArgumentNullException(nameof(ecdsaWrapper));
-        _directoryWrapper = directoryWrapper ?? throw new ArgumentNullException(nameof(directoryWrapper));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
@@ -59,8 +59,7 @@ public class SignatureHandler : ISignatureHandler
 
     public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)
     {
-        string pkiFolderPath = "pki";
-        string[] publicKeyFiles = _directoryWrapper.GetFiles(pkiFolderPath, "*.pem");
+        string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(PKI_FOLDER_PATH, FILE_EXTENSION);
         foreach (string publicKeyFile in publicKeyFiles)
         {
             using (var ecdsa = await InitPublicKeyAsync(publicKeyFile))
