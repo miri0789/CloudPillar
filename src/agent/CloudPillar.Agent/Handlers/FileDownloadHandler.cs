@@ -82,7 +82,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                     if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
                      && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
                     {
-                        SetBlockedStatus(file, cancellationToken);
+                        SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
                     }
                     else if (!_fileStreamerWrapper.isPlaceOnDisk(destPath, file.TotalBytes))
                     {
