@@ -340,6 +340,7 @@ public class TwinHandler : ITwinHandler
         }
         else
         {
+            _logger.Info($"There is no twin change sign, strict mode is active");
             await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), "Change sign is required", cancellationToken);
             return false;
         }
