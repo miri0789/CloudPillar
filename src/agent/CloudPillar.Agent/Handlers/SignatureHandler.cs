@@ -3,6 +3,7 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -14,6 +15,8 @@ public class SignatureHandler : ISignatureHandler
     private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IECDsaWrapper _ecdsaWrapper;
     private readonly DownloadSettings _downloadSettings;
+    private const string PKI_FOLDER_PATH = "pki";
+    private const string FILE_EXTENSION = "*.pem";
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
     ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IOptions<DownloadSettings> options)
@@ -26,9 +29,9 @@ public class SignatureHandler : ISignatureHandler
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    private async Task<ECDsa> InitPublicKeyAsync()
+    private async Task<ECDsa> InitPublicKeyAsync(string publicKeyFile)
     {
-        string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync("pki/sign-pubkey.pem");
+        string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync(publicKeyFile);
         if (publicKeyPem == null)
         {
             _logger.Error("sign pubkey not exist");
@@ -56,11 +59,19 @@ public class SignatureHandler : ISignatureHandler
 
     public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)
     {
-        using (var ecdsa = await InitPublicKeyAsync())
+        string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(PKI_FOLDER_PATH, FILE_EXTENSION);
+        foreach (string publicKeyFile in publicKeyFiles)
         {
-            byte[] signature = Convert.FromBase64String(signatureString);
-            return _ecdsaWrapper.VerifyData(ecdsa, dataToVerify, signature, HashAlgorithmName.SHA512);
+            using (var ecdsa = await InitPublicKeyAsync(publicKeyFile))
+            {
+                byte[] signature = Convert.FromBase64String(signatureString);
+                if (_ecdsaWrapper.VerifyData(ecdsa, dataToVerify, signature, HashAlgorithmName.SHA512))
+                {
+                    return true;
+                }
+            }
         }
+        return false;
     }
 
     public async Task<bool> VerifyFileSignatureAsync(string filePath, string signature)
