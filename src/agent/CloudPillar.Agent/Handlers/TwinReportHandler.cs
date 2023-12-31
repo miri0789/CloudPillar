@@ -38,7 +38,10 @@ public class TwinReportHandler : ITwinReportHandler
     }
     public string GetPeriodicReportedKey(PeriodicUploadAction periodicUploadAction, string periodicFileName = "")
     {
-        return periodicFileName.Substring(periodicUploadAction.DirName.Length + 1)
+        var subLength = periodicUploadAction.DirName.EndsWith(FileConstants.SEPARATOR) ||
+        periodicUploadAction.DirName.EndsWith(FileConstants.DOUBLE_SEPARATOR)
+        ? 0 : 1;
+        return periodicFileName.Substring(periodicUploadAction.DirName.Length + subLength)
                    .Replace(FileConstants.SEPARATOR, FileConstants.DOUBLE_SEPARATOR)
                    .Replace(FileConstants.DOT, "_")
                    .Replace(" ", "_");
