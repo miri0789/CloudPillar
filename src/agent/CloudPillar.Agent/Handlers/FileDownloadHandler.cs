@@ -168,12 +168,15 @@ public class FileDownloadHandler : IFileDownloadHandler
         var downloadedBytes = file.TotalBytesDownloaded;
         var existRanges = file.Report.CompletedRanges;
         await Task.Delay(TimeSpan.FromSeconds(_downloadSettings.CommunicationDelaySeconds), cancellationToken);
-        var isSameDownloadBytes = downloadedBytes == file.TotalBytesDownloaded && existRanges == file.Report.CompletedRanges;
-        if (isSameDownloadBytes)
+        if (!cancellationToken.IsCancellationRequested)
         {
-            _logger.Info($"CheckIfNotRecivedDownloadMsgToFile no change in download bytes, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
-            var ranges = string.Join(",", GetExistRangesList(existRanges));
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex, ranges);
+            var isSameDownloadBytes = downloadedBytes == file.TotalBytesDownloaded && existRanges == file.Report.CompletedRanges;
+            if (isSameDownloadBytes)
+            {
+                _logger.Info($"CheckIfNotRecivedDownloadMsgToFile no change in download bytes, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
+                var ranges = string.Join(",", GetExistRangesList(existRanges));
+                await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex, ranges);
+            }
         }
     }
 

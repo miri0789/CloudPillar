@@ -5,6 +5,8 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface ITwinReportHandler
 {
+    void SetReportProperties(ActionToReport actionToReport, StatusType status, string resultCode = "", string resultText = "", string periodicFileName = "");
+    string GetPeriodicReportedKey(PeriodicUploadAction periodicUploadAction, string periodicFileName = "");
     TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "");
 
     Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken);
