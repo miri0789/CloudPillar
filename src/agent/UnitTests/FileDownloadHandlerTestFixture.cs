@@ -114,7 +114,7 @@ namespace CloudPillar.Agent.Tests
 
         [Test]
         public async Task InitFileDownloadAsync_NewDownloadWithoutSignStrictModeTrue_UpdateReportedFailed()
-        {  
+        {
             mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock(true);
             _mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
             CreateTarget();
@@ -493,6 +493,20 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(action.Action.Source)).Returns(".zip");
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(action.Action.DestinationPath)).Returns("");
             _fileStreamerWrapperMock.Setup(item => item.DirectoryExists(It.IsAny<string>())).Returns(true);
+            await InitFileDownloadAsync(action);
+
+            _twinActionsHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
+                item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
+            , It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task InitFileDownloadAsync_NoDiskSpace_ReportBlockedStatus()
+        {
+            var action = initAction();
+            _fileStreamerWrapperMock.Setup(item => item.FileExists(It.IsAny<string>())).Returns(false);
+            _fileStreamerWrapperMock.Setup(item => item.isPlaceOnDisk(It.IsAny<string>(), It.IsAny<long>())).Returns(false);
             await InitFileDownloadAsync(action);
 
             _twinActionsHandlerMock.Verify(
