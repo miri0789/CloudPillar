@@ -58,61 +58,69 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
-        var file = GetDownloadFile(actionToReport.ReportIndex, ((DownloadAction)actionToReport.TwinAction).Source, actionToReport.ChangeSpecId)!;
-        try
+        var file = GetDownloadFile(actionToReport.ReportIndex, ((DownloadAction)actionToReport.TwinAction).Source, actionToReport.ChangeSpecId);
+        if (file != null)
         {
-            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);
-            if (await ChangeSignExists(file, cancellationToken))
-            {
-                ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
-                var isCreatedDownloadDirectory = InitDownloadPath(file);
-                var destPath = GetDestinationPath(file);
-                var isFileExist = _fileStreamerWrapper.FileExists(destPath);
-                if (file.Report.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
-                {
-                    file.TotalBytesDownloaded = 0;
-                    file.Report.Progress = 0;
-                    file.Report.Status = StatusType.Pending;
-                    file.Report.CompletedRanges = "";
-                }
 
-                if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
-                 && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
+            try
+            {
+                _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);
+                if (await ChangeSignExists(file, cancellationToken))
                 {
-                    SetBlockedStatus(file, cancellationToken);
-                }
-                else if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
-                {
-                    await HandleCompletedDownloadAsync(file, cancellationToken);
-                }
-                else
-                {
-                    if (isFileExist && file.TotalBytesDownloaded == 0)
+                    ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
+                    var isCreatedDownloadDirectory = InitDownloadPath(file);
+                    var destPath = GetDestinationPath(file);
+                    var isFileExist = _fileStreamerWrapper.FileExists(destPath);
+                    if (file.Report.Status == StatusType.InProgress && !isFileExist) // init inprogress file if it not exist
                     {
-                        file.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                        file.TotalBytesDownloaded = 0;
+                        file.Report.Progress = 0;
+                        file.Report.Status = StatusType.Pending;
+                        file.Report.CompletedRanges = "";
                     }
-                    if (file.Report.Status != StatusType.InProgress)
+
+                    if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
+                     && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
                     {
-                        await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex);
+                        SetBlockedStatus(file, cancellationToken);
+                    }
+                    else if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
+                    {
+                        await HandleCompletedDownloadAsync(file, cancellationToken);
                     }
                     else
                     {
-                        await CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken);
-                    }
+                        if (isFileExist && file.TotalBytesDownloaded == 0)
+                        {
+                            file.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                        }
+                        if (file.Report.Status != StatusType.InProgress)
+                        {
+                            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex);
+                        }
+                        else
+                        {
+                            await CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken);
+                        }
 
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleDownloadException(ex, file);
+            }
+            finally
+            {
+                if (file.Report.Status != null)
+                {
+                    await SaveReportAsync(file, cancellationToken);
                 }
             }
         }
-        catch (Exception ex)
+        else
         {
-            HandleDownloadException(ex, file);
-        }
-        finally
-        {
-            if (file.Report.Status != null)
-            {
-                await SaveReportAsync(file, cancellationToken);
-            }
+            _logger.Error($"InitFileDownloadAsync, There is no active download for message {actionToReport.ReportIndex}");
         }
     }
 
