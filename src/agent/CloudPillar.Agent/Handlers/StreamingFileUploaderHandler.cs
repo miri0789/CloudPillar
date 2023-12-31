@@ -15,7 +15,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IDeviceClientWrapper _deviceClientWrapper;
     private readonly ICheckSumService _checkSumService;
-    private readonly ITwinReportHandler _twinActionsHandler;
+    private readonly ITwinReportHandler _twinReportHandler;
     private readonly UploadCompleteRetrySettings _uploadCompleteRetrySettings;
     private readonly ILoggerHandler _logger;
 
@@ -24,12 +24,12 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
-        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
+        _twinReportHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
         _uploadCompleteRetrySettings = uploadCompleteRetrySettings.Value ?? throw new ArgumentNullException(nameof(uploadCompleteRetrySettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task UploadFromStreamAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, string correlationId, CancellationToken cancellationToken, bool isRunDiagnostics = false)
+    public async Task UploadFromStreamAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, string correlationId, string fileName, CancellationToken cancellationToken, bool isRunDiagnostics = false)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -41,7 +41,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             {
                 _logger.Info($"Start send messages with chunks. Total chunks is: {totalChunks}");
 
-                await HandleUploadChunkAsync(notification, actionToReport, readStream, storageUri, chunkSize, isRunDiagnostics, cancellationToken);
+                await HandleUploadChunkAsync(notification, actionToReport, readStream, storageUri, chunkSize, isRunDiagnostics, fileName, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -52,14 +52,15 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         }
     }
 
-    private async Task HandleUploadChunkAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, int chunkSize, bool isRunDiagnostics, CancellationToken cancellationToken)
+    private async Task HandleUploadChunkAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, int chunkSize, bool isRunDiagnostics, string fileName, CancellationToken cancellationToken)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
             long streamLength = readStream.Length;
-            string checkSum = await CalcAndUpdateCheckSumAsync(actionToReport, readStream, cancellationToken);
+            string checkSum = await CalcAndUpdateCheckSumAsync(actionToReport, readStream, fileName, cancellationToken);
 
-            int calculatedPosition = CalculateCurrentPosition(readStream.Length, actionToReport.TwinReport.Progress ?? 0);
+            var twinReport = _twinReportHandler.GetActionToReport(actionToReport, fileName);
+            int calculatedPosition = CalculateCurrentPosition(readStream.Length, twinReport.Progress ?? 0);
             var calculatedChunkIndex = (int)Math.Round(calculatedPosition / (double)chunkSize) + 1;
             byte[] buffer = new byte[chunkSize];
             for (int currentPosition = calculatedPosition, chunkIndex = calculatedChunkIndex; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
@@ -71,14 +72,14 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
                     _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
                     var isLastMessage = IsLastMessage(currentPosition, chunkSize, streamLength);
-                    await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, buffer, currentPosition, isLastMessage ? checkSum : string.Empty, isRunDiagnostics, cancellationToken);
+                    await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, buffer, currentPosition, isLastMessage ? checkSum : string.Empty, isRunDiagnostics, fileName, cancellationToken);
                 }
             }
             _logger.Debug($"All bytes sent successfuly");
         }
     }
 
-    private async Task ProcessChunkAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, byte[] buffer, long currentPosition, string checkSum, bool isRunDiagnostics, CancellationToken cancellationToken)
+    private async Task ProcessChunkAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, Stream readStream, Uri storageUri, byte[] buffer, long currentPosition, string checkSum, bool isRunDiagnostics, string fileName, CancellationToken cancellationToken)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -92,7 +93,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
                 await CompleteFileUploadAsync(notification, actionToReport, cancellationToken);
             }
             var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, buffer.Length);
-            await UpdateReportedDetailsAsync(actionToReport, percents, notification.CorrelationId, cancellationToken);
+            await UpdateReportedDetailsAsync(actionToReport, percents, notification.CorrelationId, fileName, cancellationToken);
         }
     }
     private async Task CompleteFileUploadAsync(FileUploadCompletionNotification notification, ActionToReport actionToReport, CancellationToken cancellationToken)
@@ -121,29 +122,30 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         return (int)Math.Ceiling((double)streamLength / chunkSize);
     }
 
-    private async Task<string> CalcAndUpdateCheckSumAsync(ActionToReport actionToReport, Stream stream, CancellationToken cancellationToken)
+    private async Task<string> CalcAndUpdateCheckSumAsync(ActionToReport actionToReport, Stream stream, string fileName, CancellationToken cancellationToken)
     {
         string checkSum = string.Empty;
         if (!cancellationToken.IsCancellationRequested)
         {
             checkSum = await _checkSumService.CalculateCheckSumAsync(stream);
             _logger.Debug($"checkSum was calculated, The checkSum is: {checkSum}");
-
-            actionToReport.TwinReport.CheckSum = checkSum;
-            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+            var twinReport = _twinReportHandler.GetActionToReport(actionToReport, fileName);
+            twinReport.CheckSum = checkSum;
+            await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         }
         return checkSum;
 
     }
 
-    private async Task UpdateReportedDetailsAsync(ActionToReport actionToReport, float percents, string correlationId, CancellationToken cancellationToken)
+    private async Task UpdateReportedDetailsAsync(ActionToReport actionToReport, float percents, string correlationId, string fileName, CancellationToken cancellationToken)
     {
         if (!cancellationToken.IsCancellationRequested)
         {
-            actionToReport.TwinReport.Status = StatusType.InProgress;
-            actionToReport.TwinReport.Progress = percents;
-            actionToReport.TwinReport.CorrelationId = correlationId;
-            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+            var twinReport = _twinReportHandler.GetActionToReport(actionToReport, fileName);
+            twinReport.Status = StatusType.InProgress;
+            twinReport.Progress = percents;
+            twinReport.CorrelationId = correlationId;
+            await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         }
     }
 

@@ -38,27 +38,27 @@ public class FileUploaderHandler : IFileUploaderHandler
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
     }
 
-    public async Task FileUploadAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string changeSpecId, CancellationToken twinCancellationToken)
+    public async Task FileUploadAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string changeSpecId, CancellationToken cancellationToken)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(fileName);
             _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularUpload, fileName);
-            await UploadFilesToBlobStorageAsync(actionToReport, method, fileName, changeSpecId, twinCancellationToken);
-            SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString());
+            await UploadFilesToBlobStorageAsync(actionToReport, method, fileName, changeSpecId, cancellationToken);
+            SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString(), fileName);
         }
         catch (Exception ex)
         {
             _logger.Error($"Error uploading file '{fileName}': {ex.Message}");
-            SetReportProperties(actionToReport, StatusType.Failed, ex.Message, ex.GetType().Name);
+            SetReportProperties(actionToReport, StatusType.Failed, ex.Message, ex.GetType().Name, fileName);
         }
         finally
         {
-            await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), twinCancellationToken);
+            await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         }
     }
 
-    public async Task UploadFilesToBlobStorageAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string changeSpecId, CancellationToken twinCancellationToken, bool isRunDiagnostics = false)
+    public async Task UploadFilesToBlobStorageAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string changeSpecId, CancellationToken cancellationToken, bool isRunDiagnostics = false)
     {
         _logger.Info($"UploadFilesToBlobStorageAsync");
 
@@ -89,7 +89,7 @@ public class FileUploaderHandler : IFileUploaderHandler
 
             using (Stream readStream = CreateStream(fullFilePath))
             {
-                await UploadFileAsync(actionToReport, method, fileName, blobname, readStream, isRunDiagnostics, twinCancellationToken);
+                await UploadFileAsync(actionToReport, method, fileName, blobname, readStream, isRunDiagnostics, cancellationToken);
             }
         }
     }
@@ -152,7 +152,7 @@ public class FileUploaderHandler : IFileUploaderHandler
         return readStream;
     }
 
-    private async Task UploadFileAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string blobname, Stream readStream, bool isRunDiagnostics, CancellationToken twinCancellationToken)
+    private async Task UploadFileAsync(ActionToReport actionToReport, FileUploadMethod method, string fileName, string blobname, Stream readStream, bool isRunDiagnostics, CancellationToken cancellationToken)
     {
         _logger.Info($"UploadFileAsync");
 
@@ -166,7 +166,7 @@ public class FileUploaderHandler : IFileUploaderHandler
             if (method == FileUploadMethod.Blob && actionToReport.TwinReport.Status == StatusType.InProgress)
             {
                 notification.CorrelationId ??= actionToReport.TwinReport.CorrelationId;
-                await _deviceClientWrapper.CompleteFileUploadAsync(notification, twinCancellationToken);
+                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
             var sasUriResponse = await _deviceClientWrapper.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
             {
@@ -179,13 +179,13 @@ public class FileUploaderHandler : IFileUploaderHandler
                 case FileUploadMethod.Blob:
                     _logger.Info($"Upload file: {fileName} by http");
 
-                    await _blobStorageFileUploaderHandler.UploadFromStreamAsync(notification, storageUri, readStream, actionToReport, twinCancellationToken);
-                    await _deviceClientWrapper.CompleteFileUploadAsync(notification, twinCancellationToken);
+                    await _blobStorageFileUploaderHandler.UploadFromStreamAsync(notification, storageUri, readStream, actionToReport, fileName, cancellationToken);
+                    await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
                     _logger.Info($"The file: {fileName} uploaded successfully");
 
                     break;
                 case FileUploadMethod.Stream:
-                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, sasUriResponse.CorrelationId, twinCancellationToken, isRunDiagnostics);
+                    await _streamingFileUploaderHandler.UploadFromStreamAsync(notification, actionToReport, readStream, storageUri, sasUriResponse.CorrelationId, fileName, cancellationToken, isRunDiagnostics);
                     break;
                 default:
                     throw new ArgumentException("Unsupported upload method", "uploadMethod");
@@ -199,21 +199,20 @@ public class FileUploaderHandler : IFileUploaderHandler
 
             if (!string.IsNullOrEmpty(notification.CorrelationId))
             {
-                await _deviceClientWrapper.CompleteFileUploadAsync(notification, twinCancellationToken);
+                await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken);
             }
 
             throw ex;
         }
     }
 
-    private void SetReportProperties(ActionToReport actionToReport, StatusType status, string resultCode)
+
+    private void SetReportProperties(ActionToReport actionToReport, StatusType status, string resultCode, string resultText = "", string periodicFileName = "")
     {
-        actionToReport.TwinReport.Status = status;
-        actionToReport.TwinReport.ResultText = resultCode;
-    }
-    private void SetReportProperties(ActionToReport actionToReport, StatusType status, string resultCode, string resultText)
-    {
-        SetReportProperties(actionToReport, status, resultCode);
-        actionToReport.TwinReport.ResultCode = resultText;
+        var twinReport = _twinReportHandler.GetActionToReport(actionToReport, periodicFileName);
+
+        twinReport.Status = status;
+        twinReport.ResultText = resultCode;
+        twinReport.ResultCode = resultText;
     }
 }

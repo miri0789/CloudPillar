@@ -28,6 +28,19 @@ public class TwinReportHandler : ITwinReportHandler
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
     }
 
+    public TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "")
+    {
+        if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction)
+        {
+            var key = periodicFileName.Substring(periodicUploadAction.DirName.Length)
+                .Replace(FileConstants.SEPARATOR, FileConstants.DOUBLE_SEPARATOR)
+                .Replace(FileConstants.DOT,"_");;
+            return actionToReport.TwinReport.PeriodicReported![key];
+        }
+        return actionToReport.TwinReport;
+
+    }
+
     public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
     {
         var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
@@ -89,7 +102,7 @@ public class TwinReportHandler : ITwinReportHandler
             _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
         }
     }
-    
+
     public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
     {
         try

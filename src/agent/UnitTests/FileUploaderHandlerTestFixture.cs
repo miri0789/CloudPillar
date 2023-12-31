@@ -14,7 +14,7 @@ public class FileUploaderHandlerTestFixture
     private Mock<IStreamingFileUploaderHandler> _streamingFileUploaderHandlerMock;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private Mock<IStrictModeHandler> _strictModeHandlerMock;
-    private Mock<ITwinReportHandler> _twinActionsHandler;
+    private Mock<ITwinReportHandler> _twinReportHandler;
     private Mock<ILoggerHandler> _loggerMock;
     private IFileUploaderHandler _target;
     private const string FILE_NAME = "testFileName";
@@ -37,7 +37,7 @@ public class FileUploaderHandlerTestFixture
         _blobStorageFileUploaderHandlerMock = new Mock<IBlobStorageFileUploaderHandler>();
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _streamingFileUploaderHandlerMock = new Mock<IStreamingFileUploaderHandler>();
-        _twinActionsHandler = new Mock<ITwinReportHandler>();
+        _twinReportHandler = new Mock<ITwinReportHandler>();
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
         _loggerMock = new Mock<ILoggerHandler>();
 
@@ -53,7 +53,7 @@ public class FileUploaderHandlerTestFixture
         _fileStreamerWrapperMock.Setup(x => x.GetDirectories(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { });
 
         _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _fileStreamerWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object,
-        _twinActionsHandler.Object, _loggerMock.Object, _strictModeHandlerMock.Object);
+        _twinReportHandler.Object, _loggerMock.Object, _strictModeHandlerMock.Object);
     }
 
     [Test]

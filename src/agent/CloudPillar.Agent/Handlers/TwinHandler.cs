@@ -24,6 +24,7 @@ public class TwinHandler : ITwinHandler
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ISignatureHandler _signatureHandler;
     private readonly ILoggerHandler _logger;
+    private readonly IPeriodicUploaderHandler _periodicUploaderHandler;
     private static Twin? _latestTwin { get; set; }
     private static CancellationTokenSource? _twinCancellationTokenSource;
 
@@ -34,7 +35,8 @@ public class TwinHandler : ITwinHandler
                        ILoggerHandler loggerHandler,
                        IStrictModeHandler strictModeHandler,
                        IOptions<StrictModeSettings> strictModeSettings,
-                       ISignatureHandler signatureHandler)
+                       ISignatureHandler signatureHandler,
+                       IPeriodicUploaderHandler periodicUploaderHandler)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
@@ -43,6 +45,7 @@ public class TwinHandler : ITwinHandler
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
         _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
+        _periodicUploaderHandler = periodicUploaderHandler ?? throw new ArgumentNullException(nameof(periodicUploaderHandler));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
@@ -120,7 +123,7 @@ public class TwinHandler : ITwinHandler
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
-        if (twinDesiredChangeSpec.Id != twinReportedChangeSpec.Id)
+        if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id)
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
@@ -187,6 +190,7 @@ public class TwinHandler : ITwinHandler
                         break;
 
                     case PeriodicUploadAction uploadAction:
+                        await _periodicUploaderHandler.UploadAsync(action, changeSpecId, cancellationToken);
                         break;
 
                     case UploadAction uploadAction:
