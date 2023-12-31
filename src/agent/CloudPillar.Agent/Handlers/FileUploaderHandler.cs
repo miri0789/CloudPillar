@@ -45,7 +45,7 @@ public class FileUploaderHandler : IFileUploaderHandler
             ArgumentNullException.ThrowIfNull(fileName);
             _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularUpload, fileName);
             await UploadFilesToBlobStorageAsync(actionToReport, method, fileName, changeSpecId, cancellationToken);
-            _twinReportHandler.SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString(), fileName);
+            _twinReportHandler.SetReportProperties(actionToReport, StatusType.Success, ResultCode.Done.ToString(), null, fileName);
         }
         catch (Exception ex)
         {

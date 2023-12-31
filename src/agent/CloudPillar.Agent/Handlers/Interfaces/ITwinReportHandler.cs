@@ -5,7 +5,7 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface ITwinReportHandler
 {
-    void SetReportProperties(ActionToReport actionToReport, StatusType status, string resultCode = "", string resultText = "", string periodicFileName = "");
+    void SetReportProperties(ActionToReport actionToReport, StatusType status, string? resultCode = null, string? resultText = null, string periodicFileName = "");
     string GetPeriodicReportedKey(PeriodicUploadAction periodicUploadAction, string periodicFileName = "");
     TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "");
 

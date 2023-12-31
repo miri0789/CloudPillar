@@ -31,6 +31,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
     public async Task UploadAsync(ActionToReport actionToReport, string changeSpecId, CancellationToken cancellationToken)
     {
         var uploadAction = (PeriodicUploadAction)actionToReport.TwinAction;
+        _logger.Info($"UploadPeriodicAsync: start dir: {uploadAction.DirName}");
         try
         {
             var isDirectory = _fileStreamerWrapper.DirectoryExists(uploadAction.DirName);
@@ -75,7 +76,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
             else
             {
                 _logger.Info($"Upload periodic of directory {uploadAction.DirName} is success because interval is empty");
-                _twinReportHandler.SetReportProperties(actionToReport, StatusType.Success, "", "Interval is empty");
+                _twinReportHandler.SetReportProperties(actionToReport, StatusType.Success, null, "Interval is empty");
             }
         }
         catch (Exception ex)
@@ -101,7 +102,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
     {
         var uploadAction = (PeriodicUploadAction)actionToReport.TwinAction;
         _logger.Info($"Upload periodic of directory {uploadAction.DirName} idle");
-        Task.Delay(TimeSpan.FromSeconds((double)uploadAction.Interval), cancellationToken);
+        await Task.Delay(TimeSpan.FromSeconds((double)uploadAction.Interval), cancellationToken);
         if (!cancellationToken.IsCancellationRequested)
         {
             await UploadAsync(actionToReport, changeSpecId, cancellationToken);

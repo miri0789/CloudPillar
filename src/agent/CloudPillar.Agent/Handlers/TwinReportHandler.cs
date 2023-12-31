@@ -28,7 +28,7 @@ public class TwinReportHandler : ITwinReportHandler
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
     }
 
-    public void SetReportProperties(ActionToReport actionToReport, StatusType status, string resultCode = "", string resultText = "", string periodicFileName = "")
+    public void SetReportProperties(ActionToReport actionToReport, StatusType status, string? resultCode = null, string? resultText = null, string periodicFileName = "")
     {
         var twinReport = GetActionToReport(actionToReport, periodicFileName);
 
@@ -40,13 +40,14 @@ public class TwinReportHandler : ITwinReportHandler
     {
         return periodicFileName.Substring(periodicUploadAction.DirName.Length + 1)
                    .Replace(FileConstants.SEPARATOR, FileConstants.DOUBLE_SEPARATOR)
-                   .Replace(FileConstants.DOT, "_");
+                   .Replace(FileConstants.DOT, "_")
+                   .Replace(" ", "_");
 
     }
 
     public TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "")
     {
-        if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction)
+        if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction && !string.IsNullOrEmpty(periodicFileName))
         {
             var key = GetPeriodicReportedKey(periodicUploadAction, periodicFileName);
             return actionToReport.TwinReport.PeriodicReported![key];
