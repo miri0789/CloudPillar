@@ -438,6 +438,10 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task OnDesiredPropertiesUpdate_ChangeSignNull_SignTwinKeyEventSend()
     {
+        mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock(false);
+        mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+        CreateTarget();
+
         var desired = new TwinChangeSpec() { Id = CHANGE_SPEC_ID };
 
         var reported = new TwinReportedChangeSpec();
