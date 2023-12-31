@@ -63,7 +63,7 @@ public class FileUploaderHandlerTestFixture
 
         await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
-        _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Once);
+        _blobStorageFileUploaderHandlerMock.Verify(mf => mf.UploadFromStreamAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<Uri>(), It.IsAny<Stream>(), It.IsAny<ActionToReport>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

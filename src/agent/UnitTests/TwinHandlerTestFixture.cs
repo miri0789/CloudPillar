@@ -24,6 +24,7 @@ public class TwinHandlerTestFixture
     private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
     private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
     private Mock<ISignatureHandler> _signatureHandlerMock;
+    private Mock<IPeriodicUploaderHandler> _periodicUploaderHandlerMock;
     private CancellationToken cancellationToken = CancellationToken.None;
     private const string CHANGE_SPEC_ID = "123";
 
@@ -43,6 +44,7 @@ public class TwinHandlerTestFixture
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
         _signatureHandlerMock = new Mock<ISignatureHandler>();
+        _periodicUploaderHandlerMock = new Mock<IPeriodicUploaderHandler>();
         CreateTarget();
     }
 
@@ -56,7 +58,8 @@ public class TwinHandlerTestFixture
           _loggerHandlerMock.Object,
           _strictModeHandlerMock.Object,
           mockStrictModeSettings.Object,
-          _signatureHandlerMock.Object);
+          _signatureHandlerMock.Object,
+          _periodicUploaderHandlerMock.Object);
     }
 
 

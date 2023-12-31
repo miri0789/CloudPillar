@@ -123,7 +123,7 @@ namespace CloudPillar.Agent.Tests
             action.Action.Sign = null;
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
             , It.IsAny<CancellationToken>()), Times.Once);
         }

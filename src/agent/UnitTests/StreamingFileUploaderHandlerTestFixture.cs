@@ -21,6 +21,7 @@ namespace CloudPillar.Agent.Tests
         private StreamingFileUploaderHandler _target;
 
         private const string CORRELATION_ID = "correlation123";
+        private const string FILE_NAME = "filename.txt";
         private const int CHUNK_SIZE = 1024;
         private const int NUM_OF_CHUNKS = 5;
         private const int PROGRESS_PERCENTAGE = 10;
@@ -53,7 +54,7 @@ namespace CloudPillar.Agent.Tests
             actionToReport.TwinReport.Progress = 0;
             var stream = CreateStream(CHUNK_SIZE * 1);
 
-            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, CORRELATION_ID, CancellationToken.None);
+            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, CORRELATION_ID, FILE_NAME, CancellationToken.None);
 
             _deviceClientMock.Verify(w => w.CompleteFileUploadAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -64,7 +65,7 @@ namespace CloudPillar.Agent.Tests
             actionToReport.UploadCompleted = false;
             actionToReport.TwinReport.Progress = PROGRESS_PERCENTAGE;
             var largeStream = CreateStream(CHUNK_SIZE * NUM_OF_CHUNKS);
-            await _target.UploadFromStreamAsync(notification, actionToReport, largeStream, STORAGE_URI, CORRELATION_ID, CancellationToken.None);
+            await _target.UploadFromStreamAsync(notification, actionToReport, largeStream, STORAGE_URI, CORRELATION_ID, FILE_NAME, CancellationToken.None);
 
             _deviceClientMock.Verify(w => w.CompleteFileUploadAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -75,7 +76,7 @@ namespace CloudPillar.Agent.Tests
             var largeStream = CreateStream(CHUNK_SIZE * NUM_OF_CHUNKS);
             actionToReport.TwinReport.Progress = PROGRESS_PERCENTAGE;
 
-            await _target.UploadFromStreamAsync(notification, actionToReport, largeStream, STORAGE_URI, CORRELATION_ID, CancellationToken.None);
+            await _target.UploadFromStreamAsync(notification, actionToReport, largeStream, STORAGE_URI, CORRELATION_ID, FILE_NAME, CancellationToken.None);
 
             _d2CMessengerHandlerMock.Verify(w => w.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Exactly(NUM_OF_CHUNKS));
 
@@ -88,7 +89,7 @@ namespace CloudPillar.Agent.Tests
             actionToReport.TwinReport.Status = StatusType.InProgress;
             actionToReport.TwinReport.Progress = PROGRESS_PERCENTAGE;
 
-            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, CORRELATION_ID, CancellationToken.None);
+            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, CORRELATION_ID, FILE_NAME, CancellationToken.None);
 
             var uplodedChuncks = CalculateCurrentPosition(stream.Length, PROGRESS_PERCENTAGE) / CHUNK_SIZE;
             var leftCHhuncks = NUM_OF_CHUNKS - uplodedChuncks;
@@ -113,7 +114,7 @@ namespace CloudPillar.Agent.Tests
                 .Throws(new Exception("Second send failed"))
                 .Returns(Task.CompletedTask);
 
-            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, CORRELATION_ID, CancellationToken.None);
+            await _target.UploadFromStreamAsync(notification, actionToReport, stream, STORAGE_URI, CORRELATION_ID, FILE_NAME, CancellationToken.None);
             _deviceClientMock.Verify(s => s.CompleteFileUploadAsync(It.IsAny<FileUploadCompletionNotification>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
         }
 
