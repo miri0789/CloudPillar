@@ -24,7 +24,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<ICheckSumService> _checkSumServiceMock;
         private IFileDownloadHandler _target;
         private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
-        private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
+        private Mock<IOptions<StrictModeSettings>> _mockStrictModeSettings;
         private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
         private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
 
@@ -35,8 +35,8 @@ namespace CloudPillar.Agent.Tests
         {
 
             mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
-            mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
-            mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+            _mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
+            _mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
             mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
             mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
@@ -53,16 +53,21 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(x => x.ReadStream(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                                     .Returns(new byte[0]);
 
-            _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object,
-             _d2CMessengerHandlerMock.Object,
-             _strictModeHandlerMock.Object,
-             _twinActionsHandlerMock.Object,
-              _loggerMock.Object,
-              _checkSumServiceMock.Object,
-             _signatureHandlerMock.Object,
-              mockDownloadSettings.Object);
+            CreateTarget();
         }
 
+        private void CreateTarget()
+        {
+            _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object,
+              _d2CMessengerHandlerMock.Object,
+              _strictModeHandlerMock.Object,
+              _twinActionsHandlerMock.Object,
+               _loggerMock.Object,
+               _checkSumServiceMock.Object,
+              _signatureHandlerMock.Object,
+                 _mockStrictModeSettings.Object,
+               mockDownloadSettings.Object);
+        }
         private FileDownload initAction()
         {
             var action = new FileDownload()
@@ -96,11 +101,31 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task InitFileDownloadAsync_NewDownloadWithoutSign_SendForSignature()
         {
+            mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock(false);
+            _mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+            CreateTarget();
+
             var action = initAction();
             action.Action.Sign = null;
             await InitFileDownloadAsync(action);
 
             _d2CMessengerHandlerMock.Verify(mf => mf.SendSignFileEventAsync(It.IsAny<SignFileEvent>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task InitFileDownloadAsync_NewDownloadWithoutSignStrictModeTrue_UpdateReportedFailed()
+        {  
+            mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock(true);
+            _mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+            CreateTarget();
+
+            var action = initAction();
+            action.Action.Sign = null;
+            await InitFileDownloadAsync(action);
+
+            _twinActionsHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
+            , It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]

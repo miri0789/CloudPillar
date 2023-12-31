@@ -419,6 +419,23 @@ public class TwinHandlerTestFixture
     }
 
     [Test]
+    public async Task OnDesiredPropertiesUpdate_ChangeSignNullStrictModeTrue_SignIsRequired()
+    {
+        mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock(true);
+        mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+        CreateTarget();
+
+        var desired = new TwinChangeSpec() { Id = CHANGE_SPEC_ID };
+
+        var reported = new TwinReportedChangeSpec();
+
+        CreateTwinMock(desired, reported, changeSign: null);
+
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == nameof(TwinReported.ChangeSign)), It.Is<string>(x => x == "Change sign is required"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
     public async Task OnDesiredPropertiesUpdate_ChangeSignNull_SignTwinKeyEventSend()
     {
         var desired = new TwinChangeSpec() { Id = CHANGE_SPEC_ID };

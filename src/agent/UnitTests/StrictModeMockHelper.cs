@@ -9,7 +9,7 @@ public static class StrictModeMockHelper
     public static string UPLOAD_KEY = "LogUploadAllow";
     public static string DOWNLOAD_KEY = "LogDownloadAllow";
 
-    public static StrictModeSettings SetStrictModeSettingsValueMock()
+    public static StrictModeSettings SetStrictModeSettingsValueMock(bool strictMode = true)
     {
         var globalPatterns = new List<string>
         {
@@ -43,7 +43,7 @@ public static class StrictModeMockHelper
 
         return new StrictModeSettings()
         {
-            StrictMode = true,
+            StrictMode = strictMode,
             GlobalPatterns = globalPatterns,
             FilesRestrictions = new List<FileRestrictionDetails> { uploadRestrictionDetails, downloadRestrictionDetails }
         };
