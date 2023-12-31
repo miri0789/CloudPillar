@@ -47,7 +47,8 @@ public class TwinReportHandler : ITwinReportHandler
 
     public TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "")
     {
-        if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction && !string.IsNullOrEmpty(periodicFileName))
+        if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction &&
+        !string.IsNullOrWhiteSpace(periodicFileName) && periodicUploadAction.DirName != periodicFileName)
         {
             var key = GetPeriodicReportedKey(periodicUploadAction, periodicFileName);
             return actionToReport.TwinReport.PeriodicReported![key];

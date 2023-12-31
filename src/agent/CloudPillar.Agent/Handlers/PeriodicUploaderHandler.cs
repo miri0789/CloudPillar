@@ -51,14 +51,14 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
             }
             foreach (var file in files)
             {
-                var key = _twinReportHandler.GetPeriodicReportedKey(uploadAction, file);
+                var key = isDirectory ? _twinReportHandler.GetPeriodicReportedKey(uploadAction, file) : "";
                 if (isDirectory && !actionToReport.TwinReport.PeriodicReported.ContainsKey(key))
                 {
                     actionToReport.TwinReport.PeriodicReported.Add(key, new TwinActionReported() { Status = StatusType.Pending });
                 }
 
                 var currentCheckSum = await GetFileCheckSum(file);
-                if (currentCheckSum != actionToReport.TwinReport.PeriodicReported[key].CheckSum)
+                if (currentCheckSum !=  _twinReportHandler.GetActionToReport(actionToReport, file).CheckSum)
                 {
                     await _fileUploaderHandler.FileUploadAsync(actionToReport, uploadAction.Method, file, changeSpecId, cancellationToken);
                 }
