@@ -83,7 +83,7 @@ public class TwinHandler : ITwinHandler
             {
                 _logger.Info($"There is no twin change spec id");
                 return;
-            }          
+            }
             if (await ChangeSignExists(twinDesired, cancellationToken))
             {
                 byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
@@ -115,19 +115,33 @@ public class TwinHandler : ITwinHandler
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
-        if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id)
+        if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id || isInitial)
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
         }
 
 
-        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
-        _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
+        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec!, twinReportedChangeSpec!, changeSpecKey, isInitial, cancellationToken);
 
-        if (actions?.Count() > 0)
+        if (actions is not null)
         {
-            Task.Run(async () => HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken));
+            foreach (var action in actions)
+            {
+                await SetReplaceFilePathByAction(action, cancellationToken);
+                if (action.TwinAction is DownloadAction downloadAction)
+                {
+                    _fileDownloadHandler.AddFileDownload(action);
+                }
+            }
+
+
+            _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
+
+            if (actions?.Count() > 0)
+            {
+                Task.Run(async () => HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken));
+            }
         }
     }
 
@@ -168,24 +182,19 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            foreach (var action in actions)
+            foreach (var action in actions.Where(action => action.TwinReport.Status != StatusType.Failed))
             {
-                var isReplacedSuccess = await SetReplaceFilePathByAction(action, cancellationToken);
-                if (!isReplacedSuccess)
-                {
-                    continue;
-                }
                 switch (action.TwinAction)
                 {
                     case DownloadAction downloadAction:
-                        await _fileDownloadHandler.InitFileDownloadAsync(action, cancellationToken);
+                        await _fileDownloadHandler.InitFileDownloadAsync(action, _twinCancellationTokenSource!.Token);
                         break;
 
                     case PeriodicUploadAction uploadAction:
                         break;
 
                     case UploadAction uploadAction:
-                        await _fileUploaderHandler.FileUploadAsync(action, uploadAction.Method, uploadAction.FileName, changeSpecId, _twinCancellationTokenSource.Token);
+                        await _fileUploaderHandler.FileUploadAsync(action, uploadAction.Method, uploadAction.FileName, changeSpecId, _twinCancellationTokenSource!.Token);
                         break;
 
                     case ExecuteAction execOnce when _strictModeSettings.StrictMode:
