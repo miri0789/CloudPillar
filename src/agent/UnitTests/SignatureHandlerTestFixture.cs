@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using System.Text;
 using System.Security.Cryptography;
 using CloudPillar.Agent.Entities;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 
 namespace CloudPillar.Agent.Tests;
@@ -37,14 +38,19 @@ public class SignatureHandlerTestFixture
         mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
 
         _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, _sha256WrapperMock.Object, _ecdsaWrapperMock.Object, mockDownloadSettings.Object);
-
-        string publicKeyPem = @"-----BEGIN PUBLIC KEY-----
+        _fileStreamerWrapperMock.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { "pathfile.txt", "pathfile2.txt" });
+        string publicKeyPem1 = @"-----BEGIN PUBLIC KEY-----
+                                MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESi/IRJco4/1xj3dD+G52BslMo0ZFK
+                                4IlL202eiI/cMnUMs4Z7n/icR19JbGZv3URT2cyPjQfRHlSvJ+11XV+lw==
+                                -----END PUBLIC KEY-----";
+        string publicKeyPem2 = @"-----BEGIN PUBLIC KEY-----
                                 MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBgc4HZz+/fBbC7lmEww0AO3NK9wVZ
                                 PDZ0VEnsaUFLEYpTzb90nITtJUcPUbvOsdZIZ1Q8fnbquAYgxXL5UgHMoywAib47
                                 6MkyyYgPk0BXZq3mq4zImTRNuaU9slj9TVJ3ScT3L1bXwVuPJDzpr5GOFpaj+WwM
                                 Al8G7CqwoJOsW7Kddns=
                                 -----END PUBLIC KEY-----";
-        _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync(It.IsAny<string>())).ReturnsAsync(() => publicKeyPem);
+        _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync("pathfile.txt")).ReturnsAsync(() => publicKeyPem1);
+        _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync("pathfile2.txt")).ReturnsAsync(() => publicKeyPem2);
     }
 
 
@@ -57,6 +63,16 @@ public class SignatureHandlerTestFixture
         _ecdsaWrapperMock.Setup(f => f.VerifyData(It.IsAny<ECDsa>(), It.IsAny<byte[]>(), It.IsAny<byte[]>(), It.IsAny<HashAlgorithmName>())).Returns(true);
         bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), signatureString);
         Assert.IsTrue(result);
+    }
+
+    [Test]
+    public async Task VerifySignature_ValidSignature_TryAllKeyFiles()
+    {
+        string message = "value";
+        string signatureString = "AamBQZxGNBGWsm9NkOyWiZRCWGponIRIJo3nnKytRyQlcpJv/iUy5fS1FUodBAX6Sn5kJV9g3DMn2GkJovSWOFXTAdNgY+OJsV42919LetahmaR1M7V8wcHqm+0ddfwF9MzO11fl39PZTT6upInvAVb8KA7Hazjn9enCWCxcise/2RZy";
+        _ecdsaWrapperMock.Setup(f => f.VerifyData(It.IsAny<ECDsa>(), It.IsAny<byte[]>(), It.IsAny<byte[]>(), It.IsAny<HashAlgorithmName>())).Returns(false);
+        bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), signatureString);
+        _ecdsaWrapperMock.Verify(e => e.VerifyData(It.IsAny<ECDsa>(), It.IsAny<byte[]>(), It.IsAny<byte[]>(), It.IsAny<HashAlgorithmName>()), Times.Exactly(2));
     }
 
     [Test]

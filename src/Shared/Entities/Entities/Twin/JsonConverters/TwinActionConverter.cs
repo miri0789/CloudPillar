@@ -42,13 +42,13 @@ public class TwinActionConverter : JsonConverter
         switch (actionType)
         {
             case TwinActionType.ExecuteOnce:
-                return token.ToObject<ExecuteAction>();
+                return token.ToObject<ExecuteAction>()!;
             case TwinActionType.PeriodicUpload:
-                return token.ToObject<UploadAction>();
+                return token.ToObject<PeriodicUploadAction>()!;
             case TwinActionType.SingularDownload:
-                return token.ToObject<DownloadAction>();
+                return token.ToObject<DownloadAction>()!;
             case TwinActionType.SingularUpload:
-                return token.ToObject<UploadAction>();
+                return token.ToObject<UploadAction>()!;
             default:
                 return token.ToObject<TwinAction>();
 
