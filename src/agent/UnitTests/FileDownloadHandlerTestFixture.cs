@@ -503,8 +503,8 @@ namespace CloudPillar.Agent.Tests
 
         private async Task InitFileDownloadAsync(FileDownload action)
         {
+            _target.AddFileDownload(action.ActionReported);
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
-            await Task.Delay(100); // for init that run in background
         }
 
         private async Task SetUpHandleDownloadMessageAsync_SignVerifyFailed()

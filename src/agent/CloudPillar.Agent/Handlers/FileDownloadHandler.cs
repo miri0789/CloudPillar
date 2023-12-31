@@ -45,24 +45,23 @@ public class FileDownloadHandler : IFileDownloadHandler
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
     }
 
-    public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
+    public void AddFileDownload(ActionToReport actionToReport)
     {
-        var fileDownload = GetDownloadFile(actionToReport.ReportIndex, ((DownloadAction)actionToReport.TwinAction).Source);
+        var fileDownload = GetDownloadFile(actionToReport.ReportIndex, ((DownloadAction)actionToReport.TwinAction).Source, actionToReport.ChangeSpecId);
         if (fileDownload == null)
         {
             fileDownload = new FileDownload { ActionReported = actionToReport };
             _filesDownloads.Add(fileDownload);
         }
         fileDownload.Action.Sign = ((DownloadAction)actionToReport.TwinAction).Sign;
-        // call async because messages of file data continue received 
-        Task.Run(async () => HandleInitFileDownloadAsync(fileDownload, cancellationToken));
     }
 
-    private async Task HandleInitFileDownloadAsync(FileDownload file, CancellationToken cancellationToken)
+    public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
     {
+        var file = GetDownloadFile(actionToReport.ReportIndex, ((DownloadAction)actionToReport.TwinAction).Source, actionToReport.ChangeSpecId)!;
         try
         {
-            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);            
+            _strictModeHandler.CheckFileAccessPermissions(TwinActionType.SingularDownload, file.Action.DestinationPath);
             if (await ChangeSignExists(file, cancellationToken))
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(file.Action.DestinationPath);
@@ -152,7 +151,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var fileDownload = GetDownloadFile(file.ActionReported.ReportIndex, file.Action.Source, file.ActionReported.ChangeSpecId);
         if (!cancellationToken.IsCancellationRequested && fileDownload is not null)
         {
-            await HandleInitFileDownloadAsync(file, cancellationToken);
+            await InitFileDownloadAsync(file.ActionReported, cancellationToken);
         }
     }
 
