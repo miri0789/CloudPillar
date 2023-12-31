@@ -154,8 +154,14 @@ public class StrictModeHandler : IStrictModeHandler
         ArgumentNullException.ThrowIfNull(id);
 
         var fileRestrictionDetails = GetRestrictionsByActionType(actionType);
-        var restriction = fileRestrictionDetails?.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Id) && x.Id.ToLower().Equals(id.ToLower()));
+        var restrictions = fileRestrictionDetails?.Where(x => !string.IsNullOrWhiteSpace(x.Id) && x.Id.ToLower().Equals(id.ToLower()));
 
+        if (restrictions.Count() > 1)
+        {
+            _logger.Error($"Multiple items for Id: {id}");
+            throw new InvalidOperationException(ResultCode.StrictModeMultipleRestrictionSameId.ToString());
+        }
+        var restriction = restrictions.FirstOrDefault();
         if (string.IsNullOrWhiteSpace(restriction?.Root))
         {
             _logger.Error($"No Root found for Id: {id}");
