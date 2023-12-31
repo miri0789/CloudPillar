@@ -246,6 +246,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
             file.Report.Status = StatusType.Success;
+            file.Report.ResultCode = file.Report.ResultText = "";
             file.Report.Progress = 100;
         }
         else
