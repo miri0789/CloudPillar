@@ -43,7 +43,7 @@ namespace CloudPillar.Agent.Tests
 
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(CHUNK_SIZE);
             _d2CMessengerHandlerMock.Setup(d => d.SendStreamingUploadChunkEventAsync(It.IsAny<byte[]>(), It.IsAny<Uri>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<bool>())).Returns(Task.CompletedTask);
-
+            _twinReportHandler.Setup(rep => rep.GetActionToReport(It.IsAny<ActionToReport>(), It.IsAny<string>())).Returns(new TwinActionReported());
             CreateTarget();
         }
 

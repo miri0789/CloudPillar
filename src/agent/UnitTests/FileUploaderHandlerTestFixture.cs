@@ -54,6 +54,7 @@ public class FileUploaderHandlerTestFixture
 
         _target = new FileUploaderHandler(_deviceClientWrapperMock.Object, _fileStreamerWrapperMock.Object, _blobStorageFileUploaderHandlerMock.Object, _streamingFileUploaderHandlerMock.Object,
         _twinReportHandler.Object, _loggerMock.Object, _strictModeHandlerMock.Object);
+
     }
 
     [Test]
@@ -69,12 +70,12 @@ public class FileUploaderHandlerTestFixture
     [Test]
     public async Task UploadFilesToBlobStorageAsync_InvalidFileAccessPermissions_ReturnStatusFailed()
     {
-        _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[1] { $"test.txt" });
+        _fileStreamerWrapperMock.Setup(x => x.Concat(It.IsAny<string[]>(), It.IsAny<string[]>())).Returns(new string[1] { FILE_NAME });
         _strictModeHandlerMock.Setup(x => x.CheckFileAccessPermissions(TwinActionType.SingularUpload, It.IsAny<string>())).Throws(new Exception());
 
         await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
-        Assert.That(actionToReport.TwinReport.Status, Is.EqualTo(StatusType.Failed));
+        _twinReportHandler.Verify(rep => rep.SetReportProperties(It.IsAny<ActionToReport>(), StatusType.Failed, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
 
     [Test]
@@ -96,7 +97,8 @@ public class FileUploaderHandlerTestFixture
         // Act
         await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
-        Assert.That(actionToReport.TwinReport.Status, Is.EqualTo(StatusType.Failed));
+        _twinReportHandler.Verify(rep => rep.SetReportProperties(It.IsAny<ActionToReport>(), StatusType.Failed, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+
     }
     [Test]
     public async Task UploadFilesToBlobStorageAsync_EmptyDirectory_ReturnStatusFailed()
@@ -107,7 +109,7 @@ public class FileUploaderHandlerTestFixture
         // Act
         await _target.FileUploadAsync(actionToReport, uploadAction.Method, uploadAction.FileName, CHANGE_SPEC_ID, CancellationToken.None);
 
-        Assert.That(actionToReport.TwinReport.Status, Is.EqualTo(StatusType.Failed));
+        _twinReportHandler.Verify(rep => rep.SetReportProperties(It.IsAny<ActionToReport>(), StatusType.Failed, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
 
 
