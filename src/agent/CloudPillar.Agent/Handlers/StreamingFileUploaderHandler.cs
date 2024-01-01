@@ -89,6 +89,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, currentPosition, checkSum, cancellationToken, isRunDiagnostics);
             if (!actionToReport.UploadCompleted)
             {
+                Task.Delay(1000).Wait();
                 await CompleteFileUploadAsync(notification, actionToReport, cancellationToken);
             }
             var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, buffer.Length);
