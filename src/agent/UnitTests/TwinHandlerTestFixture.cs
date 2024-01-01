@@ -16,13 +16,14 @@ public class TwinHandlerTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientMock;
     private Mock<IFileDownloadHandler> _fileDownloadHandlerMock;
     private Mock<IFileUploaderHandler> _fileUploaderHandlerMock;
-    private Mock<ITwinReportHandler> _twinActionsHandler;
+    private Mock<ITwinReportHandler> _twinReportHandler;
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<IStrictModeHandler> _strictModeHandlerMock;
     private ITwinHandler _target;
     private StrictModeSettings mockStrictModeSettingsValue = new StrictModeSettings();
     private Mock<IOptions<StrictModeSettings>> mockStrictModeSettings;
     private Mock<ISignatureHandler> _signatureHandlerMock;
+    private Mock<IPeriodicUploaderHandler> _periodicUploaderHandlerMock;
     private CancellationToken cancellationToken = CancellationToken.None;
     private const string CHANGE_SPEC_ID = "123";
 
@@ -38,10 +39,11 @@ public class TwinHandlerTestFixture
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _fileDownloadHandlerMock = new Mock<IFileDownloadHandler>();
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
-        _twinActionsHandler = new Mock<ITwinReportHandler>();
+        _twinReportHandler = new Mock<ITwinReportHandler>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
         _signatureHandlerMock = new Mock<ISignatureHandler>();
+        _periodicUploaderHandlerMock = new Mock<IPeriodicUploaderHandler>();
         CreateTarget();
     }
 
@@ -51,11 +53,12 @@ public class TwinHandlerTestFixture
         _target = new TwinHandler(_deviceClientMock.Object,
           _fileDownloadHandlerMock.Object,
           _fileUploaderHandlerMock.Object,
-          _twinActionsHandler.Object,
+          _twinReportHandler.Object,
           _loggerHandlerMock.Object,
           _strictModeHandlerMock.Object,
           mockStrictModeSettings.Object,
-          _signatureHandlerMock.Object);
+          _signatureHandlerMock.Object,
+          _periodicUploaderHandlerMock.Object);
     }
 
 
@@ -289,7 +292,7 @@ public class TwinHandlerTestFixture
         };
 
         CreateTwinMock(desired, reported);
-        _twinActionsHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<CancellationToken>()));
+        _twinReportHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<CancellationToken>()));
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _strictModeHandlerMock.Verify(x => x.ReplaceRootById(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch.InstallSteps.Count()));
     }
@@ -324,7 +327,7 @@ public class TwinHandlerTestFixture
         mockStrictModeSettingsValue.StrictMode = true;
 
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _twinActionsHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
+        _twinReportHandler.Verify(x => x.UpdateReportActionAsync(new List<ActionToReport>(), cancellationToken), Times.Never);
     }
 
     [Test]

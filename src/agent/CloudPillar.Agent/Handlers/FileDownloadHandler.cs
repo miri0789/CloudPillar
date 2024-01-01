@@ -14,7 +14,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly IStrictModeHandler _strictModeHandler;
-    private readonly ITwinReportHandler _twinActionsHandler;
+    private readonly ITwinReportHandler _twinReportHandler;
     private readonly ISignatureHandler _signatureHandler;
     private readonly StrictModeSettings _strictModeSettings;
     private static ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
@@ -27,7 +27,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     public FileDownloadHandler(IFileStreamerWrapper fileStreamerWrapper,
                                ID2CMessengerHandler d2CMessengerHandler,
                                IStrictModeHandler strictModeHandler,
-                               ITwinReportHandler twinActionsHandler,
+                               ITwinReportHandler twinReportHandler,
                                ILoggerHandler loggerHandler,
                                ICheckSumService checkSumService,
                                ISignatureHandler signatureHandler,
@@ -37,7 +37,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
-        _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
+        _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
         _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
@@ -172,12 +172,15 @@ public class FileDownloadHandler : IFileDownloadHandler
         var downloadedBytes = file.TotalBytesDownloaded;
         var existRanges = file.Report.CompletedRanges;
         await Task.Delay(TimeSpan.FromSeconds(_downloadSettings.CommunicationDelaySeconds), cancellationToken);
-        var isSameDownloadBytes = downloadedBytes == file.TotalBytesDownloaded && existRanges == file.Report.CompletedRanges;
-        if (isSameDownloadBytes)
+        if (!cancellationToken.IsCancellationRequested)
         {
-            _logger.Info($"CheckIfNotRecivedDownloadMsgToFile no change in download bytes, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
-            var ranges = string.Join(",", GetExistRangesList(existRanges));
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex, ranges);
+            var isSameDownloadBytes = downloadedBytes == file.TotalBytesDownloaded && existRanges == file.Report.CompletedRanges;
+            if (isSameDownloadBytes)
+            {
+                _logger.Info($"CheckIfNotRecivedDownloadMsgToFile no change in download bytes, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
+                var ranges = string.Join(",", GetExistRangesList(existRanges));
+                await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex, ranges);
+            }
         }
     }
 
@@ -252,7 +255,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             if (file.Action.Unzip)
             {
                 file.Report.Status = StatusType.Unzip;
-                await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
+                await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
                 await _fileStreamerWrapper.UnzipFileAsync(destPath, file.Action.DestinationPath);
                 _fileStreamerWrapper.DeleteFile(destPath);
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
@@ -356,7 +359,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         try
         {
-            await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
+            await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
             if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
             {
                 RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);

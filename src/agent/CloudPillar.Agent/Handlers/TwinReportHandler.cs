@@ -28,6 +28,38 @@ public class TwinReportHandler : ITwinReportHandler
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
     }
 
+    public void SetReportProperties(ActionToReport actionToReport, StatusType status, string? resultCode = null, string? resultText = null, string periodicFileName = "")
+    {
+        var twinReport = GetActionToReport(actionToReport, periodicFileName);
+
+        twinReport.Status = status;
+        twinReport.ResultText = resultCode;
+        twinReport.ResultCode = resultText;
+    }
+    public string GetPeriodicReportedKey(PeriodicUploadAction periodicUploadAction, string periodicFileName = "")
+    {
+        var subLength = periodicUploadAction.DirName.EndsWith(FileConstants.SEPARATOR) ||
+        periodicUploadAction.DirName.EndsWith(FileConstants.DOUBLE_SEPARATOR)
+        ? 0 : 1;
+        return periodicFileName.Substring(periodicUploadAction.DirName.Length + subLength)
+                   .Replace(FileConstants.SEPARATOR, FileConstants.DOUBLE_SEPARATOR)
+                   .Replace(FileConstants.DOT, "_")
+                   .Replace(" ", "_");
+
+    }
+
+    public TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "")
+    {
+        if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction &&
+        !string.IsNullOrWhiteSpace(periodicFileName) && periodicUploadAction.DirName != periodicFileName)
+        {
+            var key = GetPeriodicReportedKey(periodicUploadAction, periodicFileName);
+            return actionToReport.TwinReport.PeriodicReported![key];
+        }
+        return actionToReport.TwinReport;
+
+    }
+
     public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
     {
         var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
@@ -89,7 +121,7 @@ public class TwinReportHandler : ITwinReportHandler
             _logger.Error($"UpdateDeviceStateAsync failed: {ex.Message}");
         }
     }
-    
+
     public async Task<DeviceStateType?> GetDeviceStateAsync(CancellationToken cancellationToken = default)
     {
         try

@@ -18,7 +18,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
         private Mock<IStrictModeHandler> _strictModeHandlerMock;
         private Mock<ILoggerHandler> _loggerMock;
-        private Mock<ITwinReportHandler> _twinActionsHandlerMock;
+        private Mock<ITwinReportHandler> _twinReportHandlerMock;
         private Mock<ISignatureHandler> _signatureHandlerMock;
 
         private Mock<ICheckSumService> _checkSumServiceMock;
@@ -46,7 +46,7 @@ namespace CloudPillar.Agent.Tests
             _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
             _strictModeHandlerMock = new Mock<IStrictModeHandler>();
             _signatureHandlerMock = new Mock<ISignatureHandler>();
-            _twinActionsHandlerMock = new Mock<ITwinReportHandler>();
+            _twinReportHandlerMock = new Mock<ITwinReportHandler>();
             _checkSumServiceMock = new Mock<ICheckSumService>();
             _loggerMock = new Mock<ILoggerHandler>();
             _fileStreamerWrapperMock.Setup(item => item.isSpaceOnDisk(It.IsAny<string>(), It.IsAny<long>())).Returns(true);
@@ -62,11 +62,11 @@ namespace CloudPillar.Agent.Tests
             _target = new FileDownloadHandler(_fileStreamerWrapperMock.Object,
               _d2CMessengerHandlerMock.Object,
               _strictModeHandlerMock.Object,
-              _twinActionsHandlerMock.Object,
-               _loggerMock.Object,
-               _checkSumServiceMock.Object,
+              _twinReportHandlerMock.Object,
+              _loggerMock.Object,
+              _checkSumServiceMock.Object,
               _signatureHandlerMock.Object,
-                 _mockStrictModeSettings.Object,
+              _mockStrictModeSettings.Object,
                mockDownloadSettings.Object);
         }
         private FileDownload initAction()
@@ -124,7 +124,7 @@ namespace CloudPillar.Agent.Tests
             action.Action.Sign = null;
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
             , It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -159,7 +159,7 @@ namespace CloudPillar.Agent.Tests
                     .ThrowsAsync(new Exception());
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
             , It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -171,7 +171,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
             , It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -194,7 +194,7 @@ namespace CloudPillar.Agent.Tests
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
 
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.InProgress && rep.TwinReport.Progress == 25))
             , It.IsAny<CancellationToken>()), Times.Once);
@@ -233,7 +233,7 @@ namespace CloudPillar.Agent.Tests
         public async Task HandleDownloadMessageAsync_SignVerifyFailed_UpdateReport()
         {
             await SetUpHandleDownloadMessageAsync_SignVerifyFailed();
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                           x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                           item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
                       , It.IsAny<CancellationToken>()), Times.Once);
@@ -248,7 +248,7 @@ namespace CloudPillar.Agent.Tests
             action.Report.Status = StatusType.InProgress;
             _fileStreamerWrapperMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(false);
             await InitFileDownloadAsync(action);
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                            x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                            item.Any(rep => rep.TwinReport.Status == StatusType.Pending && rep.TwinReport.Progress == 0))
                        , It.IsAny<CancellationToken>()), Times.Once);
@@ -321,7 +321,7 @@ namespace CloudPillar.Agent.Tests
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                     x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                     item.Any(rep => rep.TwinReport.CompletedRanges == "0-4,6,7"))
                 , It.IsAny<CancellationToken>()), Times.Once);
@@ -350,7 +350,7 @@ namespace CloudPillar.Agent.Tests
                 RangeEndPosition = 2
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                     x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                     item.Any(rep => rep.TwinReport.Status == StatusType.Success))
                 , It.IsAny<CancellationToken>()), Times.Once);
@@ -370,7 +370,7 @@ namespace CloudPillar.Agent.Tests
             };
 
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _twinActionsHandlerMock.Verify(x =>
+            _twinReportHandlerMock.Verify(x =>
                 x.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
@@ -388,7 +388,7 @@ namespace CloudPillar.Agent.Tests
                 FileSize = 2048
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
             , It.IsAny<CancellationToken>()), Times.Once);
@@ -401,7 +401,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             action.Action.DestinationPath = "";
             await InitFileDownloadAsync(action);
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
             , It.IsAny<CancellationToken>()), Times.Once);
@@ -417,7 +417,7 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".txt");
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
             , It.IsAny<CancellationToken>()), Times.Once);
@@ -432,7 +432,7 @@ namespace CloudPillar.Agent.Tests
 
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns("");
             await InitFileDownloadAsync(action);
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
             , It.IsAny<CancellationToken>()), Times.Once);
@@ -465,7 +465,7 @@ namespace CloudPillar.Agent.Tests
                 Error = errMsg
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Failed && rep.TwinReport.ResultText == $"Backend error: {errMsg}"))
             , It.IsAny<CancellationToken>()), Times.Once);
@@ -480,7 +480,7 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(item => item.FileExists(It.IsAny<string>())).Returns(true);
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);
@@ -496,7 +496,7 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(item => item.DirectoryExists(It.IsAny<string>())).Returns(true);
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);
@@ -510,7 +510,7 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(item => item.isSpaceOnDisk(It.IsAny<string>(), It.IsAny<long>())).Returns(false);
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);
