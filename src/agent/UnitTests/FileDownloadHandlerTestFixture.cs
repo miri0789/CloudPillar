@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using Shared.Entities.Services;
 using Shared.Entities.Messages;
 using Shared.Enums;
-using NUnit.Framework.Constraints;
 
 namespace CloudPillar.Agent.Tests
 {
