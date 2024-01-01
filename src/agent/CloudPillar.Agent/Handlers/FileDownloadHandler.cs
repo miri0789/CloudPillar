@@ -334,6 +334,10 @@ public class FileDownloadHandler : IFileDownloadHandler
                 Task.Run(async () => CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken));
             }
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            SetBlockedStatus(file, DownloadBlocked.AccessDenied, cancellationToken);
+        }
         catch (Exception ex)
         {
             HandleDownloadException(ex, file);

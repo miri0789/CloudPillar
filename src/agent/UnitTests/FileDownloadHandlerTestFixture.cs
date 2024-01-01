@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Shared.Entities.Services;
 using Shared.Entities.Messages;
 using Shared.Enums;
+using NUnit.Framework.Constraints;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -514,6 +515,20 @@ namespace CloudPillar.Agent.Tests
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+        [Test]
+        public async Task InitFileDownloadAsync_OnAccessDenied_ReportBlockedStatus()
+        {
+            var action = initAction();
+            _fileStreamerWrapperMock.Setup(item => item.FileExists(It.IsAny<string>())).Returns(false);
+            _fileStreamerWrapperMock.Setup(item => item.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>())).ThrowsAsync(new System.UnauthorizedAccessException());
+            await InitFileDownloadAsync(action);
+
+            _twinReportHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>()
+            , It.IsAny<CancellationToken>()), Times.Never);
         }
 
         private async Task InitFileDownloadAsync(FileDownload action)
