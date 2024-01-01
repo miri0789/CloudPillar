@@ -97,12 +97,12 @@ public class TwinHandlerTestFixture
             ChangeSpec = new TwinChangeSpec()
             {
                 Id = CHANGE_SPEC_ID,
-                Patch = new TwinPatch()
+                Patch = new Dictionary<string, TwinAction[]>()
                 {
-                    InstallSteps = new List<TwinAction>()
-                    {   new TwinAction(),
+                    { "InstallSteps", new List<TwinAction>()
+                        {   new TwinAction(),
                         new TwinAction()
-                    }.ToArray()
+                        }.ToArray() }
                 }
             }
         };
@@ -112,13 +112,13 @@ public class TwinHandlerTestFixture
             ChangeSpec = new TwinReportedChangeSpec()
             {
                 Id = CHANGE_SPEC_ID,
-                Patch = new TwinReportedPatch()
-                {
-                    InstallSteps = new List<TwinActionReported>()
-                    {   new TwinActionReported() {Status = StatusType.Failed },
+                Patch = new Dictionary<string, TwinActionReported[]>()
+                    {
+                        { "InstallSteps", new List<TwinActionReported>()
+                            {  new TwinActionReported() {Status = StatusType.Failed },
                         new TwinActionReported() {Status = StatusType.Success}
-                    }.ToArray()
-                }
+                            }.ToArray() }
+                    }
             }
         };
 
@@ -172,15 +172,15 @@ public class TwinHandlerTestFixture
             ChangeSpec = new TwinChangeSpec()
             {
                 Id = CHANGE_SPEC_ID,
-                Patch = new TwinPatch()
+                Patch = new Dictionary<string, TwinAction[]>()
                 {
-                    InstallSteps = new List<TwinAction>()
-                    {   new DownloadAction() {  DestinationPath = "123", Action = TwinActionType.SingularDownload},
-                        new DownloadAction() { DestinationPath = "456", Action = TwinActionType.SingularDownload},
-                        new DownloadAction() { DestinationPath = "789", Action = TwinActionType.SingularDownload},
-                        new DownloadAction() { DestinationPath = "1", Action = TwinActionType.SingularDownload},
-                        new DownloadAction() { DestinationPath = "12", Action = TwinActionType.SingularDownload},
-                    }.ToArray()
+                    { "InstallSteps", new List<TwinAction>()
+                        {   new DownloadAction() {  DestinationPath = "123", Action = TwinActionType.SingularDownload},
+                            new DownloadAction() { DestinationPath = "456", Action = TwinActionType.SingularDownload},
+                            new DownloadAction() { DestinationPath = "789", Action = TwinActionType.SingularDownload},
+                            new DownloadAction() { DestinationPath = "1", Action = TwinActionType.SingularDownload},
+                            new DownloadAction() { DestinationPath = "12", Action = TwinActionType.SingularDownload},
+                        }.ToArray() }
                 }
             }
         };
@@ -190,17 +190,16 @@ public class TwinHandlerTestFixture
             ChangeSpec = new TwinReportedChangeSpec()
             {
                 Id = reportId,
-                Patch = new TwinReportedPatch()
-                {
-                    InstallSteps = new List<TwinActionReported>()
+                Patch = new Dictionary<string, TwinActionReported[]>()
                     {
-                        new TwinActionReported() {Status = StatusType.Success},
-                        new TwinActionReported() {Status = StatusType.Pending},
-                        new TwinActionReported() {Status = StatusType.Pending},
-                        new TwinActionReported() {Status = StatusType.SentForSignature},
-                        new TwinActionReported() {Status = StatusType.InProgress}
-                    }.ToArray()
-                }
+                        { "InstallSteps", new List<TwinActionReported>()
+                            {  new TwinActionReported() {Status = StatusType.Success},
+                                new TwinActionReported() {Status = StatusType.Pending},
+                                new TwinActionReported() {Status = StatusType.Pending},
+                                new TwinActionReported() {Status = StatusType.SentForSignature},
+                                new TwinActionReported() {Status = StatusType.InProgress}
+                            }.ToArray() }
+                    }
             }
         };
 
@@ -214,23 +213,24 @@ public class TwinHandlerTestFixture
         var desired = new TwinChangeSpec()
         {
             Id = CHANGE_SPEC_ID,
-            Patch = new TwinPatch()
+            Patch = new Dictionary<string, TwinAction[]>()
             {
-                InstallSteps = new List<TwinAction>()
-                    {   new TwinAction() { Action = TwinActionType.SingularDownload},
-                    }.ToArray()
+                { "InstallSteps", new List<TwinAction>()
+                    {   new DownloadAction() { Action = TwinActionType.SingularDownload},
+                    }.ToArray() }
             }
         };
 
         var reported = new TwinReportedChangeSpec()
         {
             Id = CHANGE_SPEC_ID,
-            Patch = new TwinReportedPatch()
+            Patch = new Dictionary<string, TwinActionReported[]>()
             {
-                InstallSteps = new List<TwinActionReported>()
+                { "InstallSteps", new List<TwinActionReported>()
                     {   new TwinActionReported() {Status = StatusType.Success}
-                    }.ToArray()
+                    }.ToArray() }
             }
+
         };
 
         CreateTwinMock(desired, reported);
@@ -246,11 +246,11 @@ public class TwinHandlerTestFixture
         var desired = new TwinChangeSpec()
         {
             Id = CHANGE_SPEC_ID,
-            Patch = new TwinPatch()
+            Patch = new Dictionary<string, TwinAction[]>()
             {
-                InstallSteps = new List<TwinAction>()
+                { "InstallSteps", new List<TwinAction>()
                     {   new DownloadAction() { Action = TwinActionType.SingularDownload, DestinationPath="abc"},
-                    }.ToArray()
+                    }.ToArray() }
             }
         };
 
@@ -270,31 +270,31 @@ public class TwinHandlerTestFixture
         var desired = new TwinChangeSpec()
         {
             Id = CHANGE_SPEC_ID,
-            Patch = new TwinPatch()
+            Patch = new Dictionary<string, TwinAction[]>()
             {
-                InstallSteps = new List<TwinAction>()
+                { "InstallSteps", new List<TwinAction>()
                     {   new TwinAction() { Action=TwinActionType.SingularDownload},
                         new TwinAction() { Action=TwinActionType.SingularUpload}
-                    }.ToArray()
+                    }.ToArray() }
             }
         };
 
         var reported = new TwinReportedChangeSpec()
         {
             Id = "456",
-            Patch = new TwinReportedPatch()
+            Patch = new Dictionary<string, TwinActionReported[]>()
             {
-                InstallSteps = new List<TwinActionReported>()
+                { "InstallSteps", new List<TwinActionReported>()
                     {   new TwinActionReported() {Status = StatusType.Failed },
                         new TwinActionReported() {Status = StatusType.Success}
-                    }.ToArray()
+                    }.ToArray() }
             }
         };
 
         CreateTwinMock(desired, reported);
         _twinReportHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<CancellationToken>()));
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        _strictModeHandlerMock.Verify(x => x.ReplaceRootById(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch.InstallSteps.Count()));
+        _strictModeHandlerMock.Verify(x => x.ReplaceRootById(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch["InstallSteps"].Count()));
     }
 
     [Test]
@@ -303,11 +303,11 @@ public class TwinHandlerTestFixture
         var desired = new TwinChangeSpec()
         {
             Id = CHANGE_SPEC_ID,
-            Patch = new TwinPatch()
+            Patch = new Dictionary<string, TwinAction[]>()
             {
-                InstallSteps = new List<TwinAction>()
+                { "TransitPackage", new List<TwinAction>()
                     {   new DownloadAction() { Action = TwinActionType.SingularDownload, DestinationPath=""},
-                    }.ToArray()
+                    }.ToArray() }
             }
         };
 
@@ -363,9 +363,11 @@ public class TwinHandlerTestFixture
     {
         var desired = new TwinChangeSpec()
         {
-            Patch = new TwinPatch()
+            Patch = new Dictionary<string, TwinAction[]>()
             {
-                TransitPackage = new List<TwinAction>() { new UploadAction() }.ToArray()
+                { "TransitPackage", new List<TwinAction>()
+                    {   new UploadAction() {},
+                    }.ToArray() }
             }
         };
 
@@ -394,9 +396,9 @@ public class TwinHandlerTestFixture
     {
         var desired = new TwinChangeSpec()
         {
-            Patch = new TwinPatch()
+            Patch = new Dictionary<string, TwinAction[]>()
             {
-                TransitPackage = new List<TwinAction>() { new UploadAction() }.ToArray()
+                { "TransitPackage", new TwinAction[0] }
             },
             Id = CHANGE_SPEC_ID
         };
@@ -413,10 +415,12 @@ public class TwinHandlerTestFixture
     public async Task OnDesiredPropertiesUpdate_ReportChangeSpecIsNull_ExecActions()
     {
         var desired = new TwinChangeSpec()
-        {
-            Patch = new TwinPatch()
+        {            
+            Patch = new Dictionary<string, TwinAction[]>()
             {
-                TransitPackage = new List<TwinAction>() { new UploadAction() }.ToArray()
+                { "TransitPackage", new List<TwinAction>()
+                    {   new UploadAction() 
+                    }.ToArray() }
             },
             Id = CHANGE_SPEC_ID
         };
@@ -468,10 +472,12 @@ public class TwinHandlerTestFixture
     public async Task OnDesiredPropertiesUpdate_NoMethdUploadAction_MethodIsStream()
     {
         var desired = new TwinChangeSpec()
-        {
-            Patch = new TwinPatch()
+        {            
+            Patch = new Dictionary<string, TwinAction[]>()
             {
-                TransitPackage = new List<TwinAction>() { new UploadAction() }.ToArray()
+                { "TransitPackage", new List<TwinAction>()
+                    {   new UploadAction() 
+                    }.ToArray() }
             }
         };
 
@@ -481,7 +487,7 @@ public class TwinHandlerTestFixture
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()));
 
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        Assert.That((desired.Patch.TransitPackage[0] as UploadAction)?.Method, Is.EqualTo(FileUploadMethod.Stream));
+        Assert.That((desired.Patch["TransitPackage"][0] as UploadAction)?.Method, Is.EqualTo(FileUploadMethod.Stream));
     }
     private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, string? changeSign = "----")
     {

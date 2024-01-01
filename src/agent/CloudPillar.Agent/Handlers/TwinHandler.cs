@@ -261,8 +261,8 @@ public class TwinHandler : ITwinHandler
             twinReportedChangeSpec ??= new TwinReportedChangeSpec();
             if (twinReportedChangeSpec.Patch == null || twinReportedChangeSpec.Id != twinDesiredChangeSpec.Id)
             {
-                twinReportedChangeSpec.Patch = new TwinReportedPatch();
-                twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id;
+                twinReportedChangeSpec.Patch = new Dictionary<string, TwinActionReported[]>();
+                twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id!;
                 isReportedChanged = true;
                 if (changeSpecKey != TwinPatchChangeSpec.ChangeSpecDiagnostics)
                 {
@@ -270,42 +270,40 @@ public class TwinHandler : ITwinHandler
                 }
             }
 
-            PropertyInfo[] properties = typeof(TwinPatch).GetProperties();
-            foreach (PropertyInfo property in properties)
+            foreach (var desired in twinDesiredChangeSpec.Patch!)
             {
                 try
                 {
-                    var desiredValue = (TwinAction[]?)property.GetValue(twinDesiredChangeSpec.Patch);
-                    if (desiredValue?.Length > 0)
+                    if (!twinReportedChangeSpec.Patch.ContainsKey(desired.Key))
                     {
-                        var reportedProp = typeof(TwinReportedPatch).GetProperty(property.Name);
-                        var reportedValue = ((TwinActionReported[])(reportedProp?.GetValue(twinReportedChangeSpec.Patch) ?? new TwinActionReported[0])).ToList();
-
-                        while (reportedValue.Count < desiredValue.Length)
-                        {
-                            reportedValue.Add(
-                                new TwinActionReported() { Status = StatusType.Pending });
-                            isReportedChanged = true;
-                        }
-
-                        reportedProp?.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
-                        actions.AddRange(desiredValue
-                           .Select((item, index) => new ActionToReport(changeSpecKey, twinDesiredChangeSpec.Id)
-                           {
-                               ReportPartName = property.Name,
-                               ReportIndex = index,
-                               TwinAction = item,
-                               TwinReport = reportedValue[index]
-                           })
-                        .Where((item, index) => reportedValue[index].Status == StatusType.Pending || reportedValue[index].Status == StatusType.SentForSignature
-                            || (isInitial && reportedValue[index].Status != StatusType.Success && reportedValue[index].Status != StatusType.Failed)));
-
-
+                        twinReportedChangeSpec.Patch.Add(desired.Key, new TwinActionReported[0]);
+                        isReportedChanged = true;
                     }
+                    var itemReported = twinReportedChangeSpec.Patch[desired.Key].ToList();
+
+                    while (itemReported.Count() < desired.Value.Count())
+                    {
+                        itemReported.Add(new TwinActionReported() { Status = StatusType.Pending });
+                        isReportedChanged = true;
+                    }
+                    twinReportedChangeSpec.Patch[desired.Key] = itemReported.ToArray();
+
+                    actions.AddRange(desired.Value
+                       .Select((item, index) => new ActionToReport(changeSpecKey, twinDesiredChangeSpec.Id!)
+                       {
+                           ReportPartName = desired.Key,
+                           ReportIndex = index,
+                           TwinAction = item,
+                           TwinReport = itemReported[index]
+                       })
+                    .Where((item, index) => itemReported[index].Status == StatusType.Pending || itemReported[index].Status == StatusType.SentForSignature
+                        || (isInitial && itemReported[index].Status != StatusType.Success && itemReported[index].Status != StatusType.Failed)));
+
+
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"GetActionsToExec failed , desired part: {property.Name} exception: {ex.Message}");
+                    _logger.Error($"GetActionsToExec failed , desired part: {desired.Key} exception: {ex.Message}");
                     continue;
                 }
             }

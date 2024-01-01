@@ -34,17 +34,28 @@ public class TwinDesiredConverter : JsonConverter
         var changeSpec = new TwinChangeSpec()
         {
             Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>(),
-            Patch = new TwinPatch
-            {
-                PreTransitConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.preTransitConfig") ?? jsonObject.SelectToken($"{upperPropName}.Patch.PreTransitConfig"))?.ToObject<TwinAction[]>(serializer),
-                TransitPackage = (jsonObject.SelectToken($"{lowerPropName}.patch.transitPackage") ?? jsonObject.SelectToken($"{upperPropName}.Patch.TransitPackage"))?.ToObject<TwinAction[]>(serializer),
-                PreInstallConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.preInstallConfig") ?? jsonObject.SelectToken($"{upperPropName}.Patch.PreInstallConfig"))?.ToObject<TwinAction[]>(serializer),
-                InstallSteps = (jsonObject.SelectToken($"{lowerPropName}.patch.installSteps") ?? jsonObject.SelectToken($"{upperPropName}.Patch.InstallSteps"))?.ToObject<TwinAction[]>(serializer),
-                PostInstallConfig = (jsonObject.SelectToken($"{lowerPropName}.patch.postInstallConfig") ?? jsonObject.SelectToken($"{upperPropName}.Patch.PostInstallConfig"))?.ToObject<TwinAction[]>(serializer),
-            }
+            Patch = GetDynamicPatch(jsonObject, lowerPropName, upperPropName, serializer)
         };
         return changeSpec;
     }
+
+    private Dictionary<string, TwinAction[]> GetDynamicPatch(JObject jsonObject, string lowerPropName, string upperPropName, JsonSerializer serializer)
+    {
+        var dynamicPatch = new Dictionary<string, TwinAction[]>();
+
+        var patchToken = jsonObject.SelectToken($"{lowerPropName}.patch") ?? jsonObject.SelectToken($"{upperPropName}.Patch");
+
+        if (patchToken is JObject patchObject)
+        {
+            foreach (var property in patchObject.Properties())
+            {
+                dynamicPatch.Add(property.Name, property.Value.ToObject<TwinAction[]>(serializer));
+            }
+        }
+
+        return dynamicPatch;
+    }
+
     private string FirstLetterToLowerCase(string input)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(input);
