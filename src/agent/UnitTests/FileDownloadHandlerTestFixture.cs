@@ -49,6 +49,7 @@ namespace CloudPillar.Agent.Tests
             _twinReportHandlerMock = new Mock<ITwinReportHandler>();
             _checkSumServiceMock = new Mock<ICheckSumService>();
             _loggerMock = new Mock<ILoggerHandler>();
+            _fileStreamerWrapperMock.Setup(item => item.isSpaceOnDisk(It.IsAny<string>(), It.IsAny<long>())).Returns(true);
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".zip");
             _fileStreamerWrapperMock.Setup(x => x.ReadStream(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                                     .Returns(new byte[0]);
@@ -496,6 +497,20 @@ namespace CloudPillar.Agent.Tests
             await InitFileDownloadAsync(action);
 
             _twinReportHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
+                item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
+            , It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task InitFileDownloadAsync_NoDiskSpace_ReportBlockedStatus()
+        {
+            var action = initAction();
+            _fileStreamerWrapperMock.Setup(item => item.FileExists(It.IsAny<string>())).Returns(false);
+            _fileStreamerWrapperMock.Setup(item => item.isSpaceOnDisk(It.IsAny<string>(), It.IsAny<long>())).Returns(false);
+            await InitFileDownloadAsync(action);
+
+            _twinActionsHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);

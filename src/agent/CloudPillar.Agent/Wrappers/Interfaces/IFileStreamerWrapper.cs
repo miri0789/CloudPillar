@@ -29,10 +29,12 @@ public interface IFileStreamerWrapper
 
     bool DirectoryExists(string fullFilePath);
 
+    public bool isSpaceOnDisk(string path, long size);
+
     string Combine(string baseDir, string path);
 
     string GetDirectoryName(string filePathPattern);
-    
+
     string GetPathRoot(string filePathPattern);
 
     string GetFileName(string filePathPattern);

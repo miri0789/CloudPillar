@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
@@ -137,6 +136,15 @@ public class TwinHandlerTestFixture
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
         Task.Delay(1000).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
+    }
+    
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_FirstTime_InitCancellatioToken()
+    {
+        InitDataForTestInprogressActions();
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
+        Task.Delay(1000).Wait();
+        _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.Is<CancellationToken>(x => x != null)), Times.Exactly(4));
     }
 
     [Test]

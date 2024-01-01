@@ -41,7 +41,7 @@ namespace CloudPillar.Agent.Handlers
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 0;
+                float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 100;
                 var twinReport = _twinReportHandler.GetActionToReport(actionToReport, fileName);
                 twinReport.Progress = progressPercent;
                 twinReport.CorrelationId = notification.CorrelationId;
