@@ -84,7 +84,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                     {
                         SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
                     }
-                    else if (!_fileStreamerWrapper.isPlaceOnDisk(destPath, file.TotalBytes))
+                    else if (!_fileStreamerWrapper.isSpaceOnDisk(destPath, file.TotalBytes))
                     {
                         SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
                     }

@@ -79,7 +79,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return Directory.Exists(fullFilePath);
     }
 
-    public bool isPlaceOnDisk(string path, long size)
+    public bool isSpaceOnDisk(string path, long size)
     {
         DriveInfo drive = new DriveInfo(path);
         return drive.AvailableFreeSpace > size;

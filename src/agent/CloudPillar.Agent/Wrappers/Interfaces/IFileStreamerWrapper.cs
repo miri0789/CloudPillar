@@ -29,7 +29,7 @@ public interface IFileStreamerWrapper
 
     bool DirectoryExists(string fullFilePath);
 
-    public bool isPlaceOnDisk(string path, long size);
+    public bool isSpaceOnDisk(string path, long size);
 
     string Combine(string baseDir, string path);
 
