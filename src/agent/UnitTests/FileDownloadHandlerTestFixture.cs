@@ -510,7 +510,7 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Setup(item => item.isSpaceOnDisk(It.IsAny<string>(), It.IsAny<long>())).Returns(false);
             await InitFileDownloadAsync(action);
 
-            _twinActionsHandlerMock.Verify(
+            _twinReportHandlerMock.Verify(
                 x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item =>
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);
