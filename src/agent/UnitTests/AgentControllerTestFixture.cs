@@ -66,7 +66,7 @@ namespace CloudPillar.Agent.Tests
         public async Task InitiateProvisioningAsync_HandleKnownIdentitiesFromCertificates_Success()
         {
             await _target.InitiateProvisioningAsync(default);
-            _serverIdentityHandlerMock.Verify(x => x.HandleKnownIdentitiesFromCertificates(It.IsAny<CancellationToken>()), Times.Once);
+            _serverIdentityHandlerMock.Verify(x => x.HandleKnownIdentitiesFromCertificatesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

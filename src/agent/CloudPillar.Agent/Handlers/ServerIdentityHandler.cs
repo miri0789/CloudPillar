@@ -10,28 +10,31 @@ namespace CloudPillar.Agent.Handlers;
 public class ServerIdentityHandler : IServerIdentityHandler
 {
     private readonly ILoggerHandler _logger;
+    private readonly IX509CertificateWrapper _x509CertificateWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IDeviceClientWrapper _deviceClient;
     private const string CERTFICATE_FILE_EXTENSION = "*.cer";
 
     public ServerIdentityHandler(
         ILoggerHandler loggerHandler,
+        IX509CertificateWrapper x509CertificateWrapper,
         IFileStreamerWrapper fileStreamerWrapper,
         IDeviceClientWrapper deviceClient
 )
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
+        _x509CertificateWrapper = x509CertificateWrapper ?? throw new ArgumentNullException(nameof(x509CertificateWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _deviceClient = deviceClient ?? throw new ArgumentNullException(nameof(deviceClient));
     }
 
-    public async Task HandleKnownIdentitiesFromCertificates(CancellationToken cancellationToken)
+    public async Task HandleKnownIdentitiesFromCertificatesAsync(CancellationToken cancellationToken)
     {
         string[] certificatesFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, CERTFICATE_FILE_EXTENSION);
-        await UpdateKnownIdentitiesByCertFiles(certificatesFiles, true, cancellationToken);
+        await UpdateKnownIdentitiesByCertFilesAsync(certificatesFiles, true, cancellationToken);
     }
 
-    public async Task UpdateKnownIdentitiesByCertFiles(string[] certificatesFiles, bool initList, CancellationToken cancellationToken)
+    public async Task UpdateKnownIdentitiesByCertFilesAsync(string[] certificatesFiles, bool initList, CancellationToken cancellationToken)
     {
         try
         {
@@ -44,21 +47,21 @@ public class ServerIdentityHandler : IServerIdentityHandler
                     _logger.Error($"UpdateKnownIdentitiesByCertFiles failed, certificate file not exist in path: {certificatePath}");
                     throw new FileNotFoundException($"{certificatePath} not found");
                 }
-                X509Certificate2 cert = new X509Certificate2(certificatePath);
+                X509Certificate2 cert = _x509CertificateWrapper.CreateFromFile(certificatePath);
                 var knownIdentity = new KnownIdentities(cert.Subject, cert.Thumbprint,
                  $"{cert.NotAfter.ToShortDateString()} {cert.NotAfter.ToShortTimeString()}");
 
                 knownIdentitiesList.Add(knownIdentity);
             }
-            await UpdateKnownIdentitiesInReported(knownIdentitiesList, initList, cancellationToken);
+            await UpdateKnownIdentitiesInReportedAsync(knownIdentitiesList, initList, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.Error($"UpdateKnownIdentitiesByCertFiles failed message: {ex.Message}");
         }
     }
-    
-    private async Task UpdateKnownIdentitiesInReported(List<KnownIdentities> knownIdentitiesList, bool initList, CancellationToken cancellationToken)
+
+    private async Task UpdateKnownIdentitiesInReportedAsync(List<KnownIdentities> knownIdentitiesList, bool initList, CancellationToken cancellationToken)
     {
         try
         {
@@ -80,7 +83,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
                 knownIdentitiesReported.AddRange(knownIdentitiesList);
 
                 var key = nameof(TwinReported.KnownIdentities);
-                await _deviceClient.UpdateReportedPropertiesAsync(key, knownIdentitiesList, cancellationToken);
+                await _deviceClient.UpdateReportedPropertiesAsync(key, knownIdentitiesReported, cancellationToken);
                 _logger.Info($"UpdateKnownIdentitiesInReported success");
             }
         }

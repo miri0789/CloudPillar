@@ -42,6 +42,12 @@ public class X509CertificateWrapper : IX509CertificateWrapper
         return new X509Certificate2(rawData, password, keyStorageFlags);
     }
 
+    public X509Certificate2 CreateFromFile(string certificatePath)
+    {
+        return new X509Certificate2(certificatePath);
+    }
+
+
     public DeviceAuthenticationWithX509Certificate GetDeviceAuthentication(string deviceId, X509Certificate2 certificate)
     {
         return new DeviceAuthenticationWithX509Certificate(deviceId, certificate);

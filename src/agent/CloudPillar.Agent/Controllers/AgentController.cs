@@ -105,7 +105,7 @@ public class AgentController : ControllerBase
     {
         try
         {
-            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificates(cancellationToken);
+            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
             await ProvisinigSymetricKeyAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
