@@ -194,7 +194,7 @@ public class TwinHandler : ITwinHandler
                         break;
 
                     case PeriodicUploadAction uploadAction:
-                        await _periodicUploaderHandler.UploadAsync(action, changeSpecId, cancellationToken);
+                        await _periodicUploaderHandler.UploadAsync(action, changeSpecId, _twinCancellationTokenSource!.Token);
                         break;
 
                     case UploadAction uploadAction:
