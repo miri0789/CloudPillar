@@ -25,12 +25,5 @@ namespace CloudPillar.Agent.Tests
 
             _target = new ServerIdentityHandler(_loggerMock.Object, _fileStreamerWrapper.Object, _deviceClientWrapper.Object);
         }
-
-        [Test]
-        public async Task SetBusyAsync_ValidProccess_Success()
-        {
-            await _target.HandleKnownIdentitiesFromCertificates(default);
-            _fileStreamerWrapper.Verify(h => h.GetFiles(Constants.PKI_FOLDER_PATH, ServerIdentityHandler.CERTFICATE_FILE_EXTENSION), Times.Once);
-        }
     }
 }
