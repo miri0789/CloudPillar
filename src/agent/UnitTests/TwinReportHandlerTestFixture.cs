@@ -217,16 +217,18 @@ public class TwinReportHandlerTestFixture
     {
         var actionsToReported = new List<ActionToReport> { new ActionToReport
         {
-            ReportPartName = "InstallSteps",
+            ReportPartName = "TransitPackage",
             ReportIndex = 0,
             TwinReport = new TwinActionReported { Status = StatusType.InProgress }
         } };
 
         CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec()
         {
-            Patch = new TwinReportedPatch()
+            Patch = new Dictionary<string, TwinActionReported[]>()
             {
-                InstallSteps = new List<TwinActionReported>() { new TwinActionReported() { } }.ToArray()
+                { "TransitPackage", new List<TwinActionReported>()
+                    {   new TwinActionReported() 
+                    }.ToArray() }
             }
         });
 

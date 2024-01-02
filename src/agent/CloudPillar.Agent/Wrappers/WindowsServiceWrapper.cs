@@ -3,6 +3,7 @@ using System.ServiceProcess;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using System.ComponentModel;
+using System.Text;
 
 namespace CloudPillar.Agent.Wrappers
 {
@@ -131,7 +132,13 @@ namespace CloudPillar.Agent.Wrappers
             string userName = string.IsNullOrWhiteSpace(_authenticationSettings.UserName)
                             ? null
                             : $"{(string.IsNullOrWhiteSpace(_authenticationSettings.Domain) ? "." : _authenticationSettings.Domain)}\\{_authenticationSettings.UserName}";
-            IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, userName, _authenticationSettings.UserPassword);
+            string password = _authenticationSettings.UserPassword;
+            if (string.IsNullOrWhiteSpace(password) && !string.IsNullOrWhiteSpace(_authenticationSettings.UserName))
+            {
+                Console.WriteLine($"There is no user Password in appsettings, please enter password for user {_authenticationSettings.UserName}");
+                password = ReadPasswordFromConsole();
+            }
+            IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, userName, password);
 
             if (svc == IntPtr.Zero)
             {
@@ -189,6 +196,33 @@ namespace CloudPillar.Agent.Wrappers
                 _logger.Info($"Error stopping service: {ex.Message}");
                 return false;
             }
+        }
+
+        private string ReadPasswordFromConsole()
+        {
+            StringBuilder passwordBuilder = new StringBuilder();
+
+                while (true)
+                {
+                    ConsoleKeyInfo key = Console.ReadKey(true);
+
+                    if (key.Key == ConsoleKey.Enter)
+                    {
+                        break;
+                    }
+                    else if (key.Key == ConsoleKey.Backspace && passwordBuilder.Length > 0)
+                    {
+                        passwordBuilder.Length -= 1;
+                        Console.Write("\b \b");
+                    }
+                    else
+                    {
+                        passwordBuilder.Append(key.KeyChar);
+                        Console.Write("*");
+                    }
+                }
+                Console.WriteLine();
+                return passwordBuilder.ToString();
         }
     }
 }

@@ -20,7 +20,7 @@ public class LoggerHandler : ILoggerHandler
         ArgumentNullException.ThrowIfNull(configuration);
 
         // Add Console Appender if not configured
-        if (_loggerHandlerFactory.FindAppender<ConsoleAppender>() == null)
+        if (_loggerHandlerFactory.FindAppender<AppenderSkeleton>() == null)
         {
             var hierarchy = _logger.Logger.Repository as log4net.Repository.Hierarchy.Hierarchy;
             if (hierarchy != null)

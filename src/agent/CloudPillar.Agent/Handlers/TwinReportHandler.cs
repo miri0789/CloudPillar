@@ -89,14 +89,10 @@ public class TwinReportHandler : ITwinReportHandler
                 TwinPatchChangeSpec changeSpecKey = actionForDetails.ChangeSpecKey;
                 TwinReportedChangeSpec twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
 
-
                 actionsToReported.ToList().ForEach(actionToReport =>
                 {
                     if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;
-                    var reportedProp = typeof(TwinReportedPatch).GetProperty(actionToReport.ReportPartName);
-                    var reportedValue = (TwinActionReported[])reportedProp?.GetValue(twinReportedChangeSpec.Patch)!;
-                    reportedValue[actionToReport.ReportIndex] = actionToReport.TwinReport;
-                    reportedProp?.SetValue(twinReportedChangeSpec.Patch, reportedValue);
+                    twinReportedChangeSpec.Patch[actionToReport.ReportPartName][actionToReport.ReportIndex] = actionToReport.TwinReport;
                 });
                 await UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey, cancellationToken);
             }

@@ -13,6 +13,8 @@ namespace Backend.Infra.Common.Services;
 
 public class TwinDiseredService : ITwinDiseredService
 {
+
+    private const string DIAGNOSTICS_TRANSACTIONS_KEY = "diagnosticsActions";
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
     private readonly ILoggerHandler _logger;
 
@@ -35,12 +37,18 @@ public class TwinDiseredService : ITwinDiseredService
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
-                TwinAction[] changeSpecData = twinDesiredChangeSpec.Patch?.TransitPackage ?? new TwinAction[0];
+                if (twinDesiredChangeSpec.Patch is null || twinDesiredChangeSpec.Patch.Values.Count() == 0)
+                {
+                    twinDesiredChangeSpec.Patch = new Dictionary<string, TwinAction[]>
+                    {
+                        { DIAGNOSTICS_TRANSACTIONS_KEY, new TwinAction[0] }
+                    };
+                }
 
-                var updatedArray = new List<TwinAction>(changeSpecData);
+                var updatedArray = twinDesiredChangeSpec.Patch[DIAGNOSTICS_TRANSACTIONS_KEY].ToList();
                 updatedArray.Add(downloadAction);
 
-                twinDesiredChangeSpec.Patch.TransitPackage = updatedArray.ToArray();
+                twinDesiredChangeSpec.Patch[DIAGNOSTICS_TRANSACTIONS_KEY] = updatedArray.ToArray();
                 var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
                 twin.Properties.Desired = new TwinCollection(twinDesiredJson);
 

@@ -155,10 +155,10 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
         var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
 
-        var desiredList = twinDesired?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
-        var reportedList = twinReported?.ChangeSpecDiagnostics?.Patch?.TransitPackage?.ToList();
+        var desiredList = twinDesired?.ChangeSpecDiagnostics?.Patch?.FirstOrDefault().Value;
+        var reportedList = twinReported?.ChangeSpecDiagnostics?.Patch?.FirstOrDefault().Value;
 
-        var indexDesired = desiredList?.FindIndex(x => x is DownloadAction && Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
+        var indexDesired = desiredList?.ToList().FindIndex(x => x is DownloadAction && Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
         if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())
         {
             _logger.Info($"No report with fileName {fileName}");
