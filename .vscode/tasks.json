@@ -188,6 +188,22 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "buildCloudPillarAgentcopy",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/agent/CloudPillar.Agent copy/CloudPillar.Agent.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
