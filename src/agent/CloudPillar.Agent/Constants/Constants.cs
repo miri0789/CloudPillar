@@ -7,5 +7,5 @@ public class Constants
     public const string CONFIG_PORT = "Port";
     public const string HTTPS_CONFIG_PORT = "HTTPSPort";
     public const string AGENT_SERVICE_DEFAULT_NAME = "CARTO v8 CloudPillar";
-
+    public const string PKI_FOLDER_PATH = "pki";
 }

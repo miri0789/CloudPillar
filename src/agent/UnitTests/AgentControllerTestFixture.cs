@@ -22,6 +22,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IStateMachineHandler> _stateMachineHandler;
         private Mock<ILoggerHandler> _loggerMock;
         private Mock<IRunDiagnosticsHandler> _runDiagnosticsHandler;
+        private Mock<IServerIdentityHandler> _serverIdentityHandlerMock;
         private AgentController _target;
         public AgentControllerTestFixture()
         {
@@ -37,10 +38,11 @@ namespace CloudPillar.Agent.Tests
             _stateMachineChangedEventMock = new Mock<IStateMachineChangedEvent>();
             _reprovisioningHandlerMock = new Mock<IReprovisioningHandler>();
             _twinReportHandlerMock = new Mock<ITwinReportHandler>();
+            _serverIdentityHandlerMock = new Mock<IServerIdentityHandler>();
 
             _target = new AgentController(_twinHandler.Object, _twinReportHandlerMock.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
                         _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _runDiagnosticsHandler.Object,
-                         _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object);
+                         _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object, _serverIdentityHandlerMock.Object);
         }
 
         [Test]
@@ -58,6 +60,13 @@ namespace CloudPillar.Agent.Tests
             _runDiagnosticsHandler.Verify(x => x.HandleRunDiagnosticsProcess(It.IsAny<CancellationToken>()), Times.Never);
             RunDiagnosticsHandler.IsDiagnosticsProcessRunning = false;
 
+        }
+
+        [Test]
+        public async Task InitiateProvisioningAsync_HandleKnownIdentitiesFromCertificates_Success()
+        {
+            await _target.InitiateProvisioningAsync(default);
+            _serverIdentityHandlerMock.Verify(x => x.HandleKnownIdentitiesFromCertificates(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }
