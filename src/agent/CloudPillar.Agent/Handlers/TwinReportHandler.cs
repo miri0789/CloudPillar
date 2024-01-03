@@ -59,9 +59,9 @@ public class TwinReportHandler : ITwinReportHandler
 
     }
 
-    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
+    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
     {
-        var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
+        var changeSpecJson = changeSpec is null ? null : JObject.Parse(JsonConvert.SerializeObject(changeSpec,
           Formatting.None,
           new JsonSerializerSettings
           {

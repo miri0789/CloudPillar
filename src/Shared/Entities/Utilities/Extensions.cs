@@ -34,7 +34,7 @@ public static class TwinJsonConvertExtensions
 
     }
 
-    public static TwinReportedChangeSpec GetReportedChangeSpecByKey(this TwinReported twinReported, TwinPatchChangeSpec changeSpecKey)
+    public static TwinReportedChangeSpec? GetReportedChangeSpecByKey(this TwinReported twinReported, TwinPatchChangeSpec changeSpecKey)
     {
         switch (changeSpecKey)
         {
@@ -46,7 +46,7 @@ public static class TwinJsonConvertExtensions
                 return twinReported.ChangeSpec;
         }
     }
-    public static TwinChangeSpec GetDesiredChangeSpecByKey(this TwinDesired twinDesired, TwinPatchChangeSpec changeSpecKey)
+    public static TwinChangeSpec? GetDesiredChangeSpecByKey(this TwinDesired twinDesired, TwinPatchChangeSpec changeSpecKey)
     {
         switch (changeSpecKey)
         {
