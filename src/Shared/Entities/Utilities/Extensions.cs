@@ -34,7 +34,7 @@ public static class TwinJsonConvertExtensions
 
     }
 
-    public static TwinReportedChangeSpec GetReportedChangeSpecByKey(this TwinReported twinReported, TwinPatchChangeSpec changeSpecKey)
+    public static TwinReportedChangeSpec? GetReportedChangeSpecByKey(this TwinReported twinReported, TwinPatchChangeSpec changeSpecKey)
     {
         switch (changeSpecKey)
         {
@@ -46,7 +46,7 @@ public static class TwinJsonConvertExtensions
                 return twinReported.ChangeSpec;
         }
     }
-    public static TwinChangeSpec GetDesiredChangeSpecByKey(this TwinDesired twinDesired, TwinPatchChangeSpec changeSpecKey)
+    public static TwinChangeSpec? GetDesiredChangeSpecByKey(this TwinDesired twinDesired, TwinPatchChangeSpec changeSpecKey)
     {
         switch (changeSpecKey)
         {
@@ -55,6 +55,17 @@ public static class TwinJsonConvertExtensions
             case TwinPatchChangeSpec.ChangeSpec:
             default:
                 return twinDesired.ChangeSpec;
+        }
+    }
+
+    public static void SetReportedChangeSpecByKey(this TwinReported twinReported, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey)
+    {
+        switch (changeSpecKey)
+        {
+            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
+                twinReported.ChangeSpecDiagnostics = twinReportedChangeSpec; break;
+            case TwinPatchChangeSpec.ChangeSpec:
+                twinReported.ChangeSpec = twinReportedChangeSpec; break;
         }
     }
 
