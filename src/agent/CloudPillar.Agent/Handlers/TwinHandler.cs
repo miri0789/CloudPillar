@@ -298,6 +298,11 @@ public class TwinHandler : ITwinHandler
             {
                 try
                 {
+                    if (!twinReportedChangeSpec.Patch.ContainsKey(desired.Key))
+                    {
+                        twinReportedChangeSpec.Patch.Add(desired.Key, new TwinActionReported[0]);
+                        isReportedChanged = true;
+                    }
                     var itemReported = twinReportedChangeSpec.Patch![desired.Key].ToList();
 
                     while (itemReported.Count() < desired.Value.Count())
