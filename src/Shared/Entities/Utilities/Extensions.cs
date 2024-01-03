@@ -58,5 +58,16 @@ public static class TwinJsonConvertExtensions
         }
     }
 
+    public static void SetReportedChangeSpecByKey(this TwinReported twinReported, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey)
+    {
+        switch (changeSpecKey)
+        {
+            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
+                twinReported.ChangeSpecDiagnostics = twinReportedChangeSpec; break;
+            case TwinPatchChangeSpec.ChangeSpec:
+                twinReported.ChangeSpec = twinReportedChangeSpec; break;
+        }
+    }
+
 
 }

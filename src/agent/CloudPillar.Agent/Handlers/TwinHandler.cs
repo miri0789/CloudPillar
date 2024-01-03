@@ -73,7 +73,7 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    private async Task ResetReportedWhenDesiredChange(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpec, bool isInitial, CancellationToken cancellationToken)
+    private async Task<TwinReportedChangeSpec> ResetReportedWhenDesiredChange(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpec, bool isInitial, CancellationToken cancellationToken)
     {
         if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id || isInitial)
         {
@@ -104,6 +104,7 @@ public class TwinHandler : ITwinHandler
             }
             await _twinReportHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpec, cancellationToken);
         }
+        return twinReportedChangeSpec;
     }
 
     public async Task OnDesiredPropertiesUpdateAsync(CancellationToken cancellationToken, bool isInitial = false)
@@ -118,7 +119,8 @@ public class TwinHandler : ITwinHandler
             {
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpec);
                 var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpec);
-                await ResetReportedWhenDesiredChange(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpec, isInitial, cancellationToken);
+                twinReportedChangeSpec = await ResetReportedWhenDesiredChange(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpec, isInitial, cancellationToken);
+                twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpec);
             }
 
             if (await ChangeSpecIdEmpty(twinDesired?.ChangeSpec?.Id, cancellationToken))
