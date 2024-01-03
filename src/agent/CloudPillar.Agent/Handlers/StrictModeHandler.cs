@@ -158,8 +158,7 @@ public class StrictModeHandler : IStrictModeHandler
 
         if (restrictions.Count() > 1)
         {
-            _logger.Error($"Multiple items for Id: {id}");
-            throw new InvalidOperationException(ResultCode.StrictModeMultipleRestrictionSameId.ToString());
+            _logger.Warn($"Multiple restrictions with the same Id: {id}, only first will be used");
         }
         var restriction = restrictions.FirstOrDefault();
         if (string.IsNullOrWhiteSpace(restriction?.Root))

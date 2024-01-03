@@ -46,19 +46,6 @@ namespace CloudPillar.Agent.Handlers.Tests
         }
 
         [Test]
-        public void ReplaceRootById_MultiplSameId_ThrowException()
-        {
-
-            var fileName = $"${{{StrictModeMockHelper.UPLOAD_KEY}}}test.txt";
-            var uploadItem = mockStrictModeSettingsValue.FilesRestrictions.FirstOrDefault(x => x.Type == StrictModeMockHelper.UPLOAD);
-            mockStrictModeSettingsValue.FilesRestrictions.Add(uploadItem);
-            Assert.Throws<InvalidOperationException>(() =>
-              {
-                  _target.ReplaceRootById(UPLAOD_ACTION, fileName);
-              }, ResultCode.StrictModeMultipleRestrictionSameId.ToString());
-        }
-
-        [Test]
         public void ReplaceRootById_NoRootValue_ThrowException()
         {
 

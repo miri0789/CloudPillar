@@ -8,6 +8,5 @@ public enum ResultCode
     StrictModeSize,
     StrictModePattern,
     StrictModeBashPowerShell,
-    StrictModeRootNotFound,
-    StrictModeMultipleRestrictionSameId,
+    StrictModeRootNotFound
 }
