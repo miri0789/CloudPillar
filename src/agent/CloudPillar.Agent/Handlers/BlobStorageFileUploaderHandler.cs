@@ -11,17 +11,17 @@ namespace CloudPillar.Agent.Handlers
     public class BlobStorageFileUploaderHandler : IBlobStorageFileUploaderHandler
     {
         private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
-        private readonly ITwinReportHandler _twinActionsHandler;
+        private readonly ITwinReportHandler _twinReportHandler;
         private readonly ILoggerHandler _logger;
 
-        public BlobStorageFileUploaderHandler(ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinReportHandler twinActionsHandler, ILoggerHandler logger)
+        public BlobStorageFileUploaderHandler(ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinReportHandler twinReportHandler, ILoggerHandler logger)
         {
             _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
-            _twinActionsHandler = twinActionsHandler ?? throw new ArgumentNullException(nameof(twinActionsHandler));
+            _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task UploadFromStreamAsync(FileUploadCompletionNotification notification, Uri storageUri, Stream readStream, ActionToReport actionToReport, CancellationToken cancellationToken)
+        public async Task UploadFromStreamAsync(FileUploadCompletionNotification notification, Uri storageUri, Stream readStream, ActionToReport actionToReport, string fileName, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -31,24 +31,24 @@ namespace CloudPillar.Agent.Handlers
 
                 IProgress<StorageProgress> progressHandler = new Progress<StorageProgress>(
                     async progress =>
-                                await SetReportProggress(progress.BytesTransferred, readStream.Length, actionToReport, notification, cancellationToken)
+                                await SetReportProggress(progress.BytesTransferred, readStream.Length, actionToReport, notification, fileName, cancellationToken)
                    );
                 await _cloudBlockBlobWrapper.UploadFromStreamAsync(cloudBlockBlob, readStream, progressHandler, cancellationToken);
             }
         }
 
-        private async Task SetReportProggress(long bytesTransferred, long totalSize, ActionToReport actionToReport, FileUploadCompletionNotification notification, CancellationToken cancellationToken)
+        private async Task SetReportProggress(long bytesTransferred, long totalSize, ActionToReport actionToReport, FileUploadCompletionNotification notification, string fileName, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 0;
-
-                actionToReport.TwinReport.Progress = progressPercent;
-                actionToReport.TwinReport.CorrelationId = notification.CorrelationId;
-                actionToReport.TwinReport.Status = StatusType.InProgress;
+                float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 100;
+                var twinReport = _twinReportHandler.GetActionToReport(actionToReport, fileName);
+                twinReport.Progress = progressPercent;
+                twinReport.CorrelationId = notification.CorrelationId;
+                twinReport.Status = StatusType.InProgress;
 
                 _logger.Info($"Percentage uploaded: {progressPercent}%");
-                await _twinActionsHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
+                await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
             }
         }
     }

@@ -151,16 +151,15 @@ public class RunDiagnosticsHandlerTestFixture
             ChangeSpecDiagnostics = new TwinChangeSpec()
             {
                 Id = "123",
-                Patch = new TwinPatch()
-                {
-                    TransitPackage = new List<TwinAction>()
+                Patch = new Dictionary<string, TwinAction[]>{
+                    {"TransitPackage", new List<TwinAction>()
                     {
                         new DownloadAction() {
                             Action = TwinActionType.SingularDownload,
                             DestinationPath =  guid,
                             Source = guid
                          }
-                    }.ToArray()
+                    }.ToArray() }
                 }
             }
         };
@@ -170,12 +169,8 @@ public class RunDiagnosticsHandlerTestFixture
             ChangeSpecDiagnostics = new TwinReportedChangeSpec()
             {
                 Id = "123",
-                Patch = new TwinReportedPatch()
-                {
-                    TransitPackage = new List<TwinActionReported>()
-                    {
-                        new TwinActionReported() { Status = statusType}
-                    }.ToArray()
+                Patch = new Dictionary<string, TwinActionReported[]>{
+                    {"TransitPackage", new TwinActionReported[]{ new TwinActionReported() { Status = statusType} } }
                 }
             }
         };

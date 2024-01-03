@@ -143,7 +143,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         return twin;
     }
 
-    public async Task UpdateReportedPropertiesAsync(string key, object value, CancellationToken cancellationToken)
+    public async Task UpdateReportedPropertiesAsync(string key, object? value, CancellationToken cancellationToken)
     {
         var updatedReportedProperties = new TwinCollection();
         updatedReportedProperties[char.ToLower(key[0]) + key.Substring(1)] = value;

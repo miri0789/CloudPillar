@@ -24,6 +24,7 @@ public class TwinHandler : ITwinHandler
     private readonly StrictModeSettings _strictModeSettings;
     private readonly ISignatureHandler _signatureHandler;
     private readonly ILoggerHandler _logger;
+    private readonly IPeriodicUploaderHandler _periodicUploaderHandler;
     private static Twin? _latestTwin { get; set; }
     private static CancellationTokenSource? _twinCancellationTokenSource;
 
@@ -34,7 +35,8 @@ public class TwinHandler : ITwinHandler
                        ILoggerHandler loggerHandler,
                        IStrictModeHandler strictModeHandler,
                        IOptions<StrictModeSettings> strictModeSettings,
-                       ISignatureHandler signatureHandler)
+                       ISignatureHandler signatureHandler,
+                       IPeriodicUploaderHandler periodicUploaderHandler)
     {
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _fileDownloadHandler = fileDownloadHandler ?? throw new ArgumentNullException(nameof(fileDownloadHandler));
@@ -43,6 +45,7 @@ public class TwinHandler : ITwinHandler
         _strictModeHandler = strictModeHandler ?? throw new ArgumentNullException(nameof(strictModeHandler));
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
         _signatureHandler = signatureHandler ?? throw new ArgumentNullException(nameof(signatureHandler));
+        _periodicUploaderHandler = periodicUploaderHandler ?? throw new ArgumentNullException(nameof(periodicUploaderHandler));
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
@@ -83,7 +86,7 @@ public class TwinHandler : ITwinHandler
             {
                 _logger.Info($"There is no twin change spec id");
                 return;
-            }          
+            }
             if (await ChangeSignExists(twinDesired, cancellationToken))
             {
                 byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
@@ -115,19 +118,33 @@ public class TwinHandler : ITwinHandler
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
-        if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id)
+        if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id || isInitial)
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
         }
 
 
-        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
-        _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
+        var actions = await GetActionsToExecAsync(twinDesiredChangeSpec!, twinReportedChangeSpec!, changeSpecKey, isInitial, cancellationToken);
 
-        if (actions?.Count() > 0)
+        if (actions is not null)
         {
-            Task.Run(async () => HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken));
+            foreach (var action in actions)
+            {
+                await SetReplaceFilePathByAction(action, cancellationToken);
+                if (action.TwinAction is DownloadAction downloadAction)
+                {
+                    _fileDownloadHandler.AddFileDownload(action);
+                }
+            }
+
+
+            _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
+
+            if (actions?.Count() > 0)
+            {
+                Task.Run(async () => HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken));
+            }
         }
     }
 
@@ -168,24 +185,20 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            foreach (var action in actions)
+            foreach (var action in actions.Where(action => action.TwinReport.Status != StatusType.Failed))
             {
-                var isReplacedSuccess = await SetReplaceFilePathByAction(action, cancellationToken);
-                if (!isReplacedSuccess)
-                {
-                    continue;
-                }
                 switch (action.TwinAction)
                 {
                     case DownloadAction downloadAction:
-                        await _fileDownloadHandler.InitFileDownloadAsync(action, cancellationToken);
+                        await _fileDownloadHandler.InitFileDownloadAsync(action, _twinCancellationTokenSource!.Token);
                         break;
 
                     case PeriodicUploadAction uploadAction:
+                        await _periodicUploaderHandler.UploadAsync(action, changeSpecId, cancellationToken);
                         break;
 
                     case UploadAction uploadAction:
-                        await _fileUploaderHandler.FileUploadAsync(action, uploadAction.Method, uploadAction.FileName, changeSpecId, _twinCancellationTokenSource.Token);
+                        await _fileUploaderHandler.FileUploadAsync(action, uploadAction.Method, uploadAction.FileName, changeSpecId, _twinCancellationTokenSource!.Token);
                         break;
 
                     case ExecuteAction execOnce when _strictModeSettings.StrictMode:
@@ -248,8 +261,8 @@ public class TwinHandler : ITwinHandler
             twinReportedChangeSpec ??= new TwinReportedChangeSpec();
             if (twinReportedChangeSpec.Patch == null || twinReportedChangeSpec.Id != twinDesiredChangeSpec.Id)
             {
-                twinReportedChangeSpec.Patch = new TwinReportedPatch();
-                twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id;
+                twinReportedChangeSpec.Patch = new Dictionary<string, TwinActionReported[]>();
+                twinReportedChangeSpec.Id = twinDesiredChangeSpec.Id!;
                 isReportedChanged = true;
                 if (changeSpecKey != TwinPatchChangeSpec.ChangeSpecDiagnostics)
                 {
@@ -257,42 +270,40 @@ public class TwinHandler : ITwinHandler
                 }
             }
 
-            PropertyInfo[] properties = typeof(TwinPatch).GetProperties();
-            foreach (PropertyInfo property in properties)
+            foreach (var desired in twinDesiredChangeSpec.Patch!)
             {
                 try
                 {
-                    var desiredValue = (TwinAction[]?)property.GetValue(twinDesiredChangeSpec.Patch);
-                    if (desiredValue?.Length > 0)
+                    if (!twinReportedChangeSpec.Patch.ContainsKey(desired.Key))
                     {
-                        var reportedProp = typeof(TwinReportedPatch).GetProperty(property.Name);
-                        var reportedValue = ((TwinActionReported[])(reportedProp?.GetValue(twinReportedChangeSpec.Patch) ?? new TwinActionReported[0])).ToList();
-
-                        while (reportedValue.Count < desiredValue.Length)
-                        {
-                            reportedValue.Add(
-                                new TwinActionReported() { Status = StatusType.Pending });
-                            isReportedChanged = true;
-                        }
-
-                        reportedProp?.SetValue(twinReportedChangeSpec.Patch, reportedValue.ToArray());
-                        actions.AddRange(desiredValue
-                           .Select((item, index) => new ActionToReport(changeSpecKey, twinDesiredChangeSpec.Id)
-                           {
-                               ReportPartName = property.Name,
-                               ReportIndex = index,
-                               TwinAction = item,
-                               TwinReport = reportedValue[index]
-                           })
-                        .Where((item, index) => reportedValue[index].Status == StatusType.Pending || reportedValue[index].Status == StatusType.SentForSignature
-                            || (isInitial && reportedValue[index].Status != StatusType.Success && reportedValue[index].Status != StatusType.Failed)));
-
-
+                        twinReportedChangeSpec.Patch.Add(desired.Key, new TwinActionReported[0]);
+                        isReportedChanged = true;
                     }
+                    var itemReported = twinReportedChangeSpec.Patch[desired.Key].ToList();
+
+                    while (itemReported.Count() < desired.Value.Count())
+                    {
+                        itemReported.Add(new TwinActionReported() { Status = StatusType.Pending });
+                        isReportedChanged = true;
+                    }
+                    twinReportedChangeSpec.Patch[desired.Key] = itemReported.ToArray();
+
+                    actions.AddRange(desired.Value
+                       .Select((item, index) => new ActionToReport(changeSpecKey, twinDesiredChangeSpec.Id!)
+                       {
+                           ReportPartName = desired.Key,
+                           ReportIndex = index,
+                           TwinAction = item,
+                           TwinReport = itemReported[index]
+                       })
+                    .Where((item, index) => itemReported[index].Status == StatusType.Pending || itemReported[index].Status == StatusType.SentForSignature
+                        || (isInitial && itemReported[index].Status != StatusType.Success && itemReported[index].Status != StatusType.Failed)));
+
+
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"GetActionsToExec failed , desired part: {property.Name} exception: {ex.Message}");
+                    _logger.Error($"GetActionsToExec failed , desired part: {desired.Key} exception: {ex.Message}");
                     continue;
                 }
             }

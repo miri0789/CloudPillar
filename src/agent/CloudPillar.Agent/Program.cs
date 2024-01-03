@@ -80,6 +80,7 @@ builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
 builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
+builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 
 var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
 builder.Services.Configure<DownloadSettings>(DownloadSettings);
@@ -110,7 +111,6 @@ builder.Services.AddCors(options =>
                                .AllowAnyMethod();
             });
         });
-
 
 var servcieProvider = builder.Services.BuildServiceProvider();
 var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
