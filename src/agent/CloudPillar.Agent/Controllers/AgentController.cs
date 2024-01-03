@@ -185,7 +185,7 @@ public class AgentController : ControllerBase
         _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
         _reprovisioningHandler.RemoveX509CertificatesFromStore();
-        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken);
+        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken, true);
         await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
         await _twinReportHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }

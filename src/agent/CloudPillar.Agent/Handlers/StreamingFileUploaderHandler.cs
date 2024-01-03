@@ -90,6 +90,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, currentPosition, checkSum, cancellationToken, isRunDiagnostics);
             if (!actionToReport.UploadCompleted)
             {
+                await Task.Delay(1000);
                 await CompleteFileUploadAsync(notification, actionToReport, cancellationToken);
             }
             var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, buffer.Length);
@@ -158,7 +159,6 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     {
         bytesToUpload += currentPosition;
         float progressPercent = (float)Math.Floor((bytesToUpload / (double)streamLength) * 100 * 100) / 100;
-        Console.WriteLine($"Upload Progress: {progressPercent:F2}%");
         return progressPercent;
     }
 
@@ -170,7 +170,6 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         }
         int currentPosition = (int)Math.Floor(progressPercent * (float)streamLength / 100);
 
-        Console.WriteLine($"Current Position: {currentPosition} bytes");
         return currentPosition;
     }
 

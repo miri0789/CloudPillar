@@ -3,6 +3,7 @@ using System.ServiceProcess;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using System.ComponentModel;
+using System.Text;
 
 namespace CloudPillar.Agent.Wrappers
 {
@@ -31,6 +32,14 @@ namespace CloudPillar.Agent.Wrappers
         [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern bool StartService(IntPtr hService, int dwNumServiceArgs, string lpServiceArgVectors);
 
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool ChangeServiceConfig2(IntPtr hService, uint dwInfoLevel, [MarshalAs(UnmanagedType.Struct)] ref SERVICE_DESCRIPTION lpInfo);
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        struct SERVICE_DESCRIPTION
+        {
+            public string lpDescription;
+        }
+
         // Constants
         private const uint SC_MANAGER_CREATE_SERVICE = 0x0002;
         private const uint SC_MANAGER_ALL_ACCESS = 0xF003F;
@@ -39,6 +48,7 @@ namespace CloudPillar.Agent.Wrappers
         private const uint SERVICE_ERROR_NORMAL = 0x00000001;
         private const int SERVICE_ALL_ACCESS = 0xF01FF;
         private const int DELETE = 0x10000;
+        const int SERVICE_CONFIG_DESCRIPTION = 1;
         
 
         public WindowsServiceWrapper(ILoggerHandler logger, IOptions<AuthenticationSettings> authenticationSettings)
@@ -47,7 +57,7 @@ namespace CloudPillar.Agent.Wrappers
         _authenticationSettings = authenticationSettings.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));
     }
 
-        public void InstallWindowsService(string serviceName, string workingDirectory)
+        public void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
         {
             try
                 {
@@ -77,7 +87,7 @@ namespace CloudPillar.Agent.Wrappers
                 }
                 
                 // Service doesn't exist, so create and start it
-                if (CreateAndStartService(serviceName, workingDirectory))
+                if (CreateAndStartService(serviceName, workingDirectory, serviceDescription, userPassword))
                 {
                     _logger.Info("Service created and started successfully.");
                 }
@@ -119,7 +129,7 @@ namespace CloudPillar.Agent.Wrappers
 
             return success;
         }
-        private bool CreateAndStartService(string serviceName, string workingDirectory)
+        private bool CreateAndStartService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
         {
             IntPtr scm = OpenSCManager(_authenticationSettings.Domain, null, SC_MANAGER_CREATE_SERVICE);
             if (scm == IntPtr.Zero)
@@ -131,13 +141,34 @@ namespace CloudPillar.Agent.Wrappers
             string userName = string.IsNullOrWhiteSpace(_authenticationSettings.UserName)
                             ? null
                             : $"{(string.IsNullOrWhiteSpace(_authenticationSettings.Domain) ? "." : _authenticationSettings.Domain)}\\{_authenticationSettings.UserName}";
-            IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, userName, _authenticationSettings.UserPassword);
+            string password = _authenticationSettings.UserPassword ?? userPassword;
+            if (string.IsNullOrWhiteSpace(password) && !string.IsNullOrWhiteSpace(_authenticationSettings.UserName))
+            {
+                Console.WriteLine($"There is no user Password in appsettings, please enter password for user {_authenticationSettings.UserName}");
+                password = ReadPasswordFromConsole();
+            }
+            IntPtr svc = CreateService(scm, serviceName, serviceName, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, exePath, null, IntPtr.Zero, null, userName, password);
 
             if (svc == IntPtr.Zero)
             {
                 int error = Marshal.GetLastWin32Error();
                 CloseServiceHandle(scm);
                 throw new Win32Exception(error);
+            }
+
+            // Add a description to the service
+            var description = new SERVICE_DESCRIPTION
+            {
+                lpDescription = serviceDescription
+            };
+
+            if (!ChangeServiceConfig2(svc, SERVICE_CONFIG_DESCRIPTION, ref description))
+            {
+                Console.WriteLine("ChangeServiceConfig2 failed. Error code: " + Marshal.GetLastWin32Error());
+            }
+            else
+            {
+                Console.WriteLine("Service description added successfully.");
             }
 
             bool success = StartService(svc, 0, null);
@@ -189,6 +220,33 @@ namespace CloudPillar.Agent.Wrappers
                 _logger.Info($"Error stopping service: {ex.Message}");
                 return false;
             }
+        }
+
+        private string ReadPasswordFromConsole()
+        {
+            StringBuilder passwordBuilder = new StringBuilder();
+
+                while (true)
+                {
+                    ConsoleKeyInfo key = Console.ReadKey(true);
+
+                    if (key.Key == ConsoleKey.Enter)
+                    {
+                        break;
+                    }
+                    else if (key.Key == ConsoleKey.Backspace && passwordBuilder.Length > 0)
+                    {
+                        passwordBuilder.Length -= 1;
+                        Console.Write("\b \b");
+                    }
+                    else
+                    {
+                        passwordBuilder.Append(key.KeyChar);
+                        Console.Write("*");
+                    }
+                }
+                Console.WriteLine();
+                return passwordBuilder.ToString();
         }
     }
 }

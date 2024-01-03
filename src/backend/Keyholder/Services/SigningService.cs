@@ -175,10 +175,7 @@ public class SigningService : ISigningService
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-                var desiredProp = typeof(TwinPatch).GetProperty(propName);
-                var desiredValue = (TwinAction[])desiredProp?.GetValue(twinDesiredChangeSpec.Patch)!;
-                ((DownloadAction)desiredValue[actionIndex]).Sign = fileSign;
-                desiredProp?.SetValue(twinDesiredChangeSpec.Patch, desiredValue);
+                ((DownloadAction)twinDesiredChangeSpec.Patch[propName][actionIndex]).Sign = fileSign;
 
                 var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
                 twinDesired.ChangeSign = await SignData(dataToSign);                

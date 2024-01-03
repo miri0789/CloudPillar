@@ -12,7 +12,7 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.5" />
     <PackageReference Include="Microsoft.Azure.Devices" Version="1.39.0" />
     <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
-    <PackageReference Include="SharedEntities" Version="1.0.180" />
+    <PackageReference Include="SharedEntities" Version="1.0.186" />
     <PackageReference Include="SharedLogger" Version="1.0.10" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" /> 
     <!-- 05/2023: This package has no known vulnerabilities. https://nuget.qite.be/feeds/Default/Swashbuckle.AspNetCore.SwaggerUI/versions/vulnerabilities -->
