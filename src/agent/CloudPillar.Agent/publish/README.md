@@ -38,12 +38,18 @@ startagent.bat win-x64 c:\env\dev
 
 ### Windows - windows service
 ```
-./startagent.bat <ARCHITECTURE_DIR> --winsrv
+./startagent.bat <ARCHITECTURE_DIR> --winsrv <USER_PASSWORD>
 ```
+
+The <USER_PASSWORD> is optional if `UserPassword` not set in appsettings.json and not want to use interactive input.
 
 For example
 ````
 startagent.bat win-x64 --winsrv
+````
+
+````
+startagent.bat win-x64 --winsrv abcABC123!
 ````
 
 ### Windows service user permissions
@@ -66,7 +72,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `Authentication.StoreLocation`       | location to store the certificate - LocalMachine\CurrentUser.  |  if this value not configure - the default is LocalMachine |
 | `Authentication.Domain`       | machine domain name  |  if this value not configure - the default is `.` |
 | `Authentication.UserName`       | the user name log on as a service  |  if this value not configure - the default is Admin |
-| `Authentication.UserPassword`       | the user password log on as a service  |   |
+| `Authentication.UserPassword`       | the user password log on as a service  | if this value not configure - try to get the password from command line argument, if it is also not send it waiting to user interactive input.  |
 | `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
 | `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
 | `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
