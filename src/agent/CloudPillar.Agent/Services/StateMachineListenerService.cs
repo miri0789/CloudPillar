@@ -115,6 +115,7 @@ public class StateMachineListenerService : BackgroundService
     private async Task SetReadyAsync()
     {
         _cts?.Cancel();
+        _twinHandler?.CancelCancellationToken();
         _cts = new CancellationTokenSource();
         if (_c2DEventSubscriptionSession != null && _twinHandler != null)
         {

@@ -8,6 +8,7 @@ using Newtonsoft.Json.Serialization;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Utilities;
 using System.Runtime.InteropServices;
+using System.Web;
 
 namespace CloudPillar.Agent.Handlers;
 public class TwinReportHandler : ITwinReportHandler
@@ -41,10 +42,8 @@ public class TwinReportHandler : ITwinReportHandler
         var subLength = periodicUploadAction.DirName.EndsWith(FileConstants.SEPARATOR) ||
         periodicUploadAction.DirName.EndsWith(FileConstants.DOUBLE_SEPARATOR)
         ? 0 : 1;
-        return periodicFileName.Substring(periodicUploadAction.DirName.Length + subLength)
-                   .Replace(FileConstants.SEPARATOR, FileConstants.DOUBLE_SEPARATOR)
-                   .Replace(FileConstants.DOT, "_")
-                   .Replace(" ", "_");
+        var key = periodicFileName.Substring(periodicUploadAction.DirName.Length + subLength);
+        return Uri.EscapeDataString(key).Replace(".", "_");
 
     }
 
@@ -60,9 +59,9 @@ public class TwinReportHandler : ITwinReportHandler
 
     }
 
-    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
+    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
     {
-        var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
+        var changeSpecJson = changeSpec is null ? null : JObject.Parse(JsonConvert.SerializeObject(changeSpec,
           Formatting.None,
           new JsonSerializerSettings
           {

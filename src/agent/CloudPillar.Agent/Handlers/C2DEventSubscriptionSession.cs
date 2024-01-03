@@ -51,11 +51,11 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                 if (parseMessage)
                 {
                     _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]}");
-                    if (!isProvisioning)
+                    var isHandleMsg = !isProvisioning && await HandleMessage(receivedMessage, cancellationToken, messageType);
+                    if (!isHandleMsg)
                     {
-                        await HandleMessage(receivedMessage, cancellationToken, messageType);
+                        await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
                     }
-                    await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
                 }
                 else
                 {
@@ -93,7 +93,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             case C2DMessageType.Reprovisioning:
                 var reprovisioningMessage = _messageFactory.CreateC2DMessageFromMessage<ReprovisioningMessage>(receivedMessage);
                 await _messageSubscriber.HandleReprovisioningMessageAsync(receivedMessage, reprovisioningMessage, cancellationToken);
-                await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready, cancellationToken);
+                await _stateMachineHandler.SetStateAsync(DeviceStateType.Ready, cancellationToken, true);
                 break;
             case C2DMessageType.RequestDeviceCertificate:
                 var requestDeviceCertificateMessage = _messageFactory.CreateC2DMessageFromMessage<RequestDeviceCertificateMessage>(receivedMessage);
@@ -106,17 +106,18 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
 
     }
 
-    private async Task HandleMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
+    private async Task<bool> HandleMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
     {
         switch (messageType)
         {
             case C2DMessageType.DownloadChunk:
                 var message = _messageFactory.CreateC2DMessageFromMessage<DownloadBlobChunkMessage>(receivedMessage);
                 await _messageSubscriber.HandleDownloadMessageAsync(message, cancellationToken);
-                break;
+                return true;
             default:
-                _logger.Warn($"Receive  message was not processed type: {messageType?.ToString()}");
+                _logger.Warn($"Receive message was not processed type: {messageType?.ToString()}");
                 break;
         }
+        return false;
     }
 }
