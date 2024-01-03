@@ -33,9 +33,10 @@ builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
+    var serviceDescription = builder.Configuration.GetValue("ServiceDescription", Constants.AGENT_SERVICE_DEFAULT_DESCRIPTION);
     builder.Services.AddScoped<IWindowsServiceWrapper, WindowsServiceWrapper>();
     var windowsServiceWrapper = builder.Services.BuildServiceProvider().GetRequiredService<IWindowsServiceWrapper>();
-    windowsServiceWrapper?.InstallWindowsService(serviceName, Environment.CurrentDirectory);
+    windowsServiceWrapper?.InstallWindowsService(serviceName, Environment.CurrentDirectory, serviceDescription);
     Environment.Exit(0);
 }
 
