@@ -43,6 +43,83 @@ public class TwinReportHandlerTestFixture
     }
 
     [Test]
+    public async Task GetPeriodicReportedKey_OnExec_ReturnKeys()
+    {
+        PeriodicUploadAction periodicUploadAction = new PeriodicUploadAction()
+        {
+            DirName = "agent"
+        };
+        var key = _target.GetPeriodicReportedKey(periodicUploadAction, "agent\\Cloud Pillar.Agent");
+        Assert.AreEqual("Cloud_Pillar_Agent", key);
+    }
+
+    [Test]
+    public async Task GetPeriodicReportedKey_OnExecWithEnd_ReturnKeys()
+    {
+        PeriodicUploadAction periodicUploadAction = new PeriodicUploadAction()
+        {
+            DirName = "agent\\"
+        };
+        var key = _target.GetPeriodicReportedKey(periodicUploadAction, "agent\\Cloud Pillar.Agent");
+        Assert.AreEqual("Cloud_Pillar_Agent", key);
+    }
+
+    [Test]
+    public async Task GetActionToReport_OnExec_ReturnActionToReport()
+    {
+        var key = "Cloud_Pillar_Agent";
+        var actionToReport = new ActionToReport()
+        {
+            TwinAction = new PeriodicUploadAction()
+            {
+                DirName = "agent"
+            },
+            TwinReport = new TwinActionReported()
+            {
+                PeriodicReported = new Dictionary<string, TwinActionReported>()
+                {
+                    { key, new TwinActionReported() { Status = StatusType.InProgress } }
+                }
+            }
+        };
+        var actionToReported = _target.GetActionToReport(actionToReport, "agent\\Cloud Pillar.Agent");
+        Assert.AreEqual(StatusType.InProgress, actionToReported.Status);
+    }
+
+    [Test]
+    public async Task GetActionToReport_OnTwinActionNotPeriodic_ReturnActionToReport()
+    {
+        var key = "Cloud_Pillar_Agent";
+        var actionToReport = new ActionToReport()
+        {
+            TwinAction = new TwinAction()
+        };
+        var actionToReported = _target.GetActionToReport(actionToReport, "agent\\Cloud Pillar.Agent");
+        Assert.AreEqual(null, actionToReported.Status);
+    }
+
+    [Test]
+    public async Task SetReportProperties_OnExec_UpdateReport()
+    {
+        var actionToReport = new ActionToReport()
+        {
+            TwinAction = new PeriodicUploadAction()
+            {
+                DirName = "agent"
+            },
+            TwinReport = new TwinActionReported()
+            {
+                PeriodicReported = new Dictionary<string, TwinActionReported>()
+                {
+                    { "Cloud_Pillar_Agent", new TwinActionReported() { Status = StatusType.InProgress } }
+                }
+            }
+        };
+        _target.SetReportProperties(actionToReport, StatusType.Success);
+        Assert.AreEqual(StatusType.InProgress, actionToReport.TwinReport.PeriodicReported["Cloud_Pillar_Agent"].Status);
+    }
+
+    [Test]
     public async Task UpdateReportActionAsync_ValidReport_CallToUpdateReport()
     {
         var actionsToReported = CreateReportForUpdating();
@@ -52,7 +129,6 @@ public class TwinReportHandlerTestFixture
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
             nameof(TwinReported.ChangeSpec), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
     }
-
 
     [Test]
     public async Task UpdateDeviceCustomPropsAsync_ExistingProps_OverrideProps()
@@ -227,7 +303,7 @@ public class TwinReportHandlerTestFixture
             Patch = new Dictionary<string, TwinActionReported[]>()
             {
                 { "TransitPackage", new List<TwinActionReported>()
-                    {   new TwinActionReported() 
+                    {   new TwinActionReported()
                     }.ToArray() }
             }
         });
