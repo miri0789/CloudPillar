@@ -2,17 +2,18 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using CloudPillar.Agent.Utilities;
 
 namespace CloudPillar.Agent.Handlers
 {
     public class WindowsServiceHandler : IWindowsServiceHandler
     {
-        private readonly IWindowsServiceWrapper _windowsServiceWrapper;
+        private readonly IWindowsServiceUtils _windowsServiceUtils;
         private readonly ILoggerHandler _logger;
 
-        public WindowsServiceHandler(IWindowsServiceWrapper windowsServiceWrapper, ILoggerHandler logger)
+        public WindowsServiceHandler(IWindowsServiceUtils windowsServiceUtils, ILoggerHandler logger)
         {
-            _windowsServiceWrapper = windowsServiceWrapper ?? throw new ArgumentNullException(nameof(windowsServiceWrapper));
+            _windowsServiceUtils = windowsServiceUtils ?? throw new ArgumentNullException(nameof(windowsServiceUtils));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -20,11 +21,11 @@ namespace CloudPillar.Agent.Handlers
         {
             try
                 {
-                if (_windowsServiceWrapper.ServiceExists(serviceName))
+                if (_windowsServiceUtils.ServiceExists(serviceName))
                 {
-                    if (_windowsServiceWrapper.IsServiceRunning(serviceName))
+                    if (_windowsServiceUtils.IsServiceRunning(serviceName))
                     {
-                        if (_windowsServiceWrapper.StopService(serviceName))
+                        if (_windowsServiceUtils.StopService(serviceName))
                         {
                             _logger.Info("Service stopped successfully.");
                         }
@@ -34,7 +35,7 @@ namespace CloudPillar.Agent.Handlers
                         }
                     }
                     // delete existing service
-                    if (_windowsServiceWrapper.DeleteExistingService(serviceName))
+                    if (_windowsServiceUtils.DeleteExistingService(serviceName))
                     {
                         _logger.Info("Service deleted successfully.");
                     }
@@ -46,7 +47,7 @@ namespace CloudPillar.Agent.Handlers
                 }
                 
                 // Service doesn't exist, so create and start it
-                if (_windowsServiceWrapper.CreateAndStartService(serviceName, workingDirectory))
+                if (_windowsServiceUtils.CreateAndStartService(serviceName, workingDirectory))
                 {
                     _logger.Info("Service created and started successfully.");
                 }

@@ -5,9 +5,9 @@ using Microsoft.Extensions.Options;
 using System.ComponentModel;
 using System.Text;
 
-namespace CloudPillar.Agent.Wrappers
+namespace CloudPillar.Agent.Utilities
 {
-    public class WindowsServiceWrapper: IWindowsServiceWrapper
+    public class WindowsServiceUtils: IWindowsServiceUtils
     {
         private readonly ILoggerHandler _logger;
         AuthenticationSettings _authenticationSettings;
@@ -42,7 +42,7 @@ namespace CloudPillar.Agent.Wrappers
         private const int DELETE = 0x10000;
         
 
-        public WindowsServiceWrapper(ILoggerHandler logger, IOptions<AuthenticationSettings> authenticationSettings)
+        public WindowsServiceUtils(ILoggerHandler logger, IOptions<AuthenticationSettings> authenticationSettings)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _authenticationSettings = authenticationSettings.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));

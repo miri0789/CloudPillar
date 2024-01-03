@@ -1,7 +1,7 @@
 
-namespace CloudPillar.Agent.Wrappers
+namespace CloudPillar.Agent.Utilities
 {
-    public interface IWindowsServiceWrapper
+    public interface IWindowsServiceUtils
     {
         bool StopService(string serviceName);
         bool ServiceExists(string serviceName);
