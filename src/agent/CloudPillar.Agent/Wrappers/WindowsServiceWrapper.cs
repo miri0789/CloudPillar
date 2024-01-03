@@ -57,7 +57,7 @@ namespace CloudPillar.Agent.Wrappers
         _authenticationSettings = authenticationSettings.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));
     }
 
-        public void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription)
+        public void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
         {
             try
                 {
@@ -87,7 +87,7 @@ namespace CloudPillar.Agent.Wrappers
                 }
                 
                 // Service doesn't exist, so create and start it
-                if (CreateAndStartService(serviceName, workingDirectory, serviceDescription))
+                if (CreateAndStartService(serviceName, workingDirectory, serviceDescription, userPassword))
                 {
                     _logger.Info("Service created and started successfully.");
                 }
@@ -129,7 +129,7 @@ namespace CloudPillar.Agent.Wrappers
 
             return success;
         }
-        private bool CreateAndStartService(string serviceName, string workingDirectory, string serviceDescription)
+        private bool CreateAndStartService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
         {
             IntPtr scm = OpenSCManager(_authenticationSettings.Domain, null, SC_MANAGER_CREATE_SERVICE);
             if (scm == IntPtr.Zero)
@@ -141,7 +141,7 @@ namespace CloudPillar.Agent.Wrappers
             string userName = string.IsNullOrWhiteSpace(_authenticationSettings.UserName)
                             ? null
                             : $"{(string.IsNullOrWhiteSpace(_authenticationSettings.Domain) ? "." : _authenticationSettings.Domain)}\\{_authenticationSettings.UserName}";
-            string password = _authenticationSettings.UserPassword;
+            string password = _authenticationSettings.UserPassword ?? userPassword;
             if (string.IsNullOrWhiteSpace(password) && !string.IsNullOrWhiteSpace(_authenticationSettings.UserName))
             {
                 Console.WriteLine($"There is no user Password in appsettings, please enter password for user {_authenticationSettings.UserName}");
