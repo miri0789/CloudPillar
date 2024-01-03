@@ -128,4 +128,14 @@ public class StateMachineHandlerTestFixture
         _twinReportHandlerMock.Verify(th => th.GetDeviceStateAfterServiceRestartAsync(It.IsAny<CancellationToken>()), Times.Once);
         Assert.AreEqual(DeviceStateType.Ready, state);
     }
+
+    [Test]
+    public async Task GetStateAsync_SameStateInitDevice_SetStateChanged()
+    {
+        _twinReportHandlerMock.Setup(h => h.GetDeviceStateAsync(default)).ReturnsAsync(DeviceStateType.Ready);
+
+         await _target.SetStateAsync(DeviceStateType.Ready,CancellationToken.None, true);
+
+        _stateMachineChangedEventMock.Verify(h => h.SetStateChanged(It.IsAny<StateMachineEventArgs>()), Times.Once);
+    }
 }

@@ -134,7 +134,7 @@ public class TwinHandlerTestFixture
     {
         InitDataForTestInprogressActions();
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
-        Task.Delay(1000).Wait();
+        Task.Delay(10).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
     }
     
@@ -143,7 +143,7 @@ public class TwinHandlerTestFixture
     {
         InitDataForTestInprogressActions();
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
-        Task.Delay(1000).Wait();
+        Task.Delay(10).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.Is<CancellationToken>(x => x != null)), Times.Exactly(4));
     }
 
@@ -152,7 +152,7 @@ public class TwinHandlerTestFixture
     {
         InitDataForTestInprogressActions();
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
-        Task.Delay(1000).Wait();
+        Task.Delay(10).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
 
@@ -430,7 +430,7 @@ public class TwinHandlerTestFixture
         CreateTwinMock(desired, reported);
 
         _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
-        Task.Delay(1000).Wait();
+        Task.Delay(10).Wait();
         _fileUploaderHandlerMock.Verify(x => x.FileUploadAsync(It.IsAny<ActionToReport>(), It.IsAny<FileUploadMethod>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
