@@ -50,7 +50,7 @@ public class TwinReportHandlerTestFixture
             DirName = "agent"
         };
         var key = _target.GetPeriodicReportedKey(periodicUploadAction, "agent\\Cloud Pillar.Agent");
-        Assert.AreEqual("Cloud%20Pillar_Agent", key);
+        Assert.AreEqual("cloud%20pillar_agent", key);
     }
 
     [Test]
@@ -61,13 +61,13 @@ public class TwinReportHandlerTestFixture
             DirName = "agent\\"
         };
         var key = _target.GetPeriodicReportedKey(periodicUploadAction, "agent\\Cloud Pillar.Agent");
-        Assert.AreEqual("Cloud%20Pillar_Agent", key);
+        Assert.AreEqual("cloud%20pillar_agent", key);
     }
 
     [Test]
     public async Task GetActionToReport_OnExec_ReturnActionToReport()
     {
-        var key = "Cloud%20Pillar_Agent";
+        var key = "cloud%20pillar_agent";
         var actionToReport = new ActionToReport()
         {
             TwinAction = new PeriodicUploadAction()
@@ -89,7 +89,7 @@ public class TwinReportHandlerTestFixture
     [Test]
     public async Task GetActionToReport_OnTwinActionNotPeriodic_ReturnActionToReport()
     {
-        var key = "Cloud%20Pillar_Agent";
+        var key = "cloud%20pillar_agent";
         var actionToReport = new ActionToReport()
         {
             TwinAction = new TwinAction()
@@ -111,12 +111,12 @@ public class TwinReportHandlerTestFixture
             {
                 PeriodicReported = new Dictionary<string, TwinActionReported>()
                 {
-                    { "Cloud%20Pillar_Agent", new TwinActionReported() { Status = StatusType.InProgress } }
+                    { "cloud%20pillar_agent", new TwinActionReported() { Status = StatusType.InProgress } }
                 }
             }
         };
         _target.SetReportProperties(actionToReport, StatusType.Success);
-        Assert.AreEqual(StatusType.InProgress, actionToReport.TwinReport.PeriodicReported["Cloud%20Pillar_Agent"].Status);
+        Assert.AreEqual(StatusType.InProgress, actionToReport.TwinReport.PeriodicReported["cloud%20pillar_agent"].Status);
     }
 
     [Test]
