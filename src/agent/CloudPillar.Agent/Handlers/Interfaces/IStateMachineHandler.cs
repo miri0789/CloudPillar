@@ -5,7 +5,7 @@ namespace CloudPillar.Agent.Handlers
 {
     public interface IStateMachineHandler
     {
-        Task SetStateAsync(DeviceStateType state, CancellationToken cancellationToken);
+        Task SetStateAsync(DeviceStateType state, CancellationToken cancellationToken, bool isInitDevice = false);
 
         Task InitStateMachineHandlerAsync(CancellationToken cancellationToken);
 

@@ -261,7 +261,6 @@ public class FileDownloadHandler : IFileDownloadHandler
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
             file.Report.Status = StatusType.Success;
-            file.Report.ResultCode = file.Report.ResultText = "";
             file.Report.Progress = 100;
         }
         else
@@ -302,6 +301,11 @@ public class FileDownloadHandler : IFileDownloadHandler
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
             return;
         }
+        if (file.Report.Status == StatusType.Blocked)
+        {
+            _logger.Info($"File {file.Action.DestinationPath} is blocked, message {message.GetMessageId()}");
+            return;
+        }
         var filePath = GetDestinationPath(file);
         try
         {
@@ -331,6 +335,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 file.Report.Progress = CalculateBytesDownloadedPercent(file, message.Data.Length, message.Offset);
                 file.Report.Status = StatusType.InProgress;
+                file.Report.ResultCode = file.Report.ResultText = null;
                 Task.Run(async () => CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken));
             }
         }
