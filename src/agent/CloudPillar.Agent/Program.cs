@@ -34,11 +34,10 @@ builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     var serviceDescription = builder.Configuration.GetValue("ServiceDescription", Constants.AGENT_SERVICE_DEFAULT_DESCRIPTION);
-        var password = args.Length > 1 ? args[1] : null;
     builder.Services.AddScoped<IWindowsServiceUtils, WindowsServiceUtils>();
     builder.Services.AddScoped<IWindowsServiceHandler, WindowsServiceHandler>();
     var windowsServiceHandler = builder.Services.BuildServiceProvider().GetRequiredService<IWindowsServiceHandler>();
-    windowsServiceHandler?.InstallWindowsService(serviceName, Environment.CurrentDirectory, serviceDescription, password);
+    windowsServiceHandler?.InstallWindowsService(serviceName, Environment.CurrentDirectory, serviceDescription);
     Environment.Exit(0);
 }
 

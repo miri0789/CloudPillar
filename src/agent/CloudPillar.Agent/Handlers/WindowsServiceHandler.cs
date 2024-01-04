@@ -17,7 +17,7 @@ namespace CloudPillar.Agent.Handlers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public void InstallWindowsService(string serviceName, string workingDirectory)
+        public void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription)
         {
             try
                 {
