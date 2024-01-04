@@ -17,7 +17,7 @@ namespace CloudPillar.Agent.Handlers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription)
+        public void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
         {
             try
                 {
@@ -47,7 +47,7 @@ namespace CloudPillar.Agent.Handlers
                 }
                 
                 // Service doesn't exist, so create and start it
-                if (_windowsServiceUtils.CreateAndStartService(serviceName, workingDirectory))
+                if (_windowsServiceUtils.CreateAndStartService(serviceName, workingDirectory, serviceDescription, userPassword))
                 {
                     _logger.Info("Service created and started successfully.");
                 }

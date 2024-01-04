@@ -5,5 +5,5 @@ namespace CloudPillar.Agent.Handlers;
 
 public interface IWindowsServiceHandler
 {
-        void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription);
+        void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword);
 }

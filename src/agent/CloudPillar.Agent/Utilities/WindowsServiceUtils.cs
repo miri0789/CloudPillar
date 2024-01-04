@@ -32,6 +32,14 @@ namespace CloudPillar.Agent.Utilities
         [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern bool StartService(IntPtr hService, int dwNumServiceArgs, string lpServiceArgVectors);
 
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool ChangeServiceConfig2(IntPtr hService, uint dwInfoLevel, [MarshalAs(UnmanagedType.Struct)] ref SERVICE_DESCRIPTION lpInfo);
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        struct SERVICE_DESCRIPTION
+        {
+            public string lpDescription;
+        }
+
         // Constants
         private const uint SC_MANAGER_CREATE_SERVICE = 0x0002;
         private const uint SC_MANAGER_ALL_ACCESS = 0xF003F;
@@ -40,6 +48,7 @@ namespace CloudPillar.Agent.Utilities
         private const uint SERVICE_ERROR_NORMAL = 0x00000001;
         private const int SERVICE_ALL_ACCESS = 0xF01FF;
         private const int DELETE = 0x10000;
+        const int SERVICE_CONFIG_DESCRIPTION = 1;
         
 
         public WindowsServiceUtils(ILoggerHandler logger, IOptions<AuthenticationSettings> authenticationSettings)
@@ -75,7 +84,7 @@ namespace CloudPillar.Agent.Utilities
 
             return success;
         }
-        public bool CreateAndStartService(string serviceName, string workingDirectory)
+        public bool CreateAndStartService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
         {
             IntPtr scm = OpenSCManager(_authenticationSettings.Domain, null, SC_MANAGER_CREATE_SERVICE);
             if (scm == IntPtr.Zero)
@@ -87,7 +96,7 @@ namespace CloudPillar.Agent.Utilities
             string userName = string.IsNullOrWhiteSpace(_authenticationSettings.UserName)
                             ? null
                             : $"{(string.IsNullOrWhiteSpace(_authenticationSettings.Domain) ? "." : _authenticationSettings.Domain)}\\{_authenticationSettings.UserName}";
-            string password = _authenticationSettings.UserPassword;
+            string password = _authenticationSettings.UserPassword ?? userPassword;
             if (string.IsNullOrWhiteSpace(password) && !string.IsNullOrWhiteSpace(_authenticationSettings.UserName))
             {
                 Console.WriteLine($"There is no user Password in appsettings, please enter password for user {_authenticationSettings.UserName}");
