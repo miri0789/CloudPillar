@@ -118,11 +118,11 @@ namespace CloudPillar.Agent.Utilities
 
             if (!ChangeServiceConfig2(svc, SERVICE_CONFIG_DESCRIPTION, ref description))
             {
-                Console.WriteLine("ChangeServiceConfig2 failed. Error code: " + Marshal.GetLastWin32Error());
+                _logger.Info("ChangeServiceConfig2 failed. Error code: " + Marshal.GetLastWin32Error());
             }
             else
             {
-                Console.WriteLine("Service description added successfully.");
+                _logger.Info("Service description added successfully.");
             }
 
             bool success = StartService(svc, 0, null);
