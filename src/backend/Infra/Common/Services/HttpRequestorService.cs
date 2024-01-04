@@ -35,6 +35,7 @@ public class HttpRequestorService : IHttpRequestorService
         if (requestData != null)
         {
             string serializedData = JsonConvert.SerializeObject(requestData);
+            // Error: The free-quota limit of 1000 schema validations per hour has been reached. Please visit http://www.newtonsoft.com/jsonschema to upgrade to a commercial license. - Ignoring
             // var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
             // if (!isRequestValid)
             // {
@@ -54,15 +55,16 @@ public class HttpRequestorService : IHttpRequestorService
         string responseContent = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
         {
-            if (!string.IsNullOrWhiteSpace(responseContent))
-            {
+            // if (!string.IsNullOrWhiteSpace(responseContent))
+            // {
+                // Error: The free-quota limit of 1000 schema validations per hour has been reached. Please visit http://www.newtonsoft.com/jsonschema to upgrade to a commercial license. - Ignoring
                 // var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
                 // if (!isResponseValid)
                 // {
                 //     _logger.Error($"The reponse data is not fit the schema. url: {url}");
                 //     throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
                 // }
-            }
+            // }
             TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent)!;
             return result;
         }
