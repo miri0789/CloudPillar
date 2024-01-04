@@ -209,7 +209,6 @@ public class DeviceStateClient
         - `action`: SingularDownload
         - `description`: Download Carto 7.2 SPU Patch.
         - `source`: The source of the firmware package (e.g., "SPU.zip").
-        - `protocol`: Supported protocols for communication (e.g., "https|iotamqp|iotmqtt").
         - `sign`: Signature of file content.
         - `destinationPath`: The destination path for storing the downloaded firmware (e.g., "./SPU.zip").
         - `unzip`: Do unzip to download (The file must be a ZIP).
