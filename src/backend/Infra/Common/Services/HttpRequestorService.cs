@@ -35,11 +35,11 @@ public class HttpRequestorService : IHttpRequestorService
         if (requestData != null)
         {
             string serializedData = JsonConvert.SerializeObject(requestData);
-            var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
-            if (!isRequestValid)
-            {
-                throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
-            }
+            // var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
+            // if (!isRequestValid)
+            // {
+            //     throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
+            // }
             request.Content = new StringContent(serializedData, Encoding.UTF8, "application/json");
         }
 
@@ -56,12 +56,12 @@ public class HttpRequestorService : IHttpRequestorService
         {
             if (!string.IsNullOrWhiteSpace(responseContent))
             {
-                var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
-                if (!isResponseValid)
-                {
-                    _logger.Error($"The reponse data is not fit the schema. url: {url}");
-                    throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
-                }
+                // var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
+                // if (!isResponseValid)
+                // {
+                //     _logger.Error($"The reponse data is not fit the schema. url: {url}");
+                //     throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
+                // }
             }
             TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent)!;
             return result;
