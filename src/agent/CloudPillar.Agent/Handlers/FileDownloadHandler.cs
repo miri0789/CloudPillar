@@ -163,6 +163,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var fileDownload = GetDownloadFile(file.ActionReported.ReportIndex, file.Action.Source, file.ActionReported.ChangeSpecId);
         if (!cancellationToken.IsCancellationRequested && fileDownload is not null)
         {
+            fileDownload.Report.Status = StatusType.Pending;
             await InitFileDownloadAsync(file.ActionReported, cancellationToken);
         }
     }
