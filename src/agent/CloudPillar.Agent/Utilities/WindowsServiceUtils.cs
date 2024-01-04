@@ -48,6 +48,7 @@ namespace CloudPillar.Agent.Utilities
         private const uint SERVICE_ERROR_NORMAL = 0x00000001;
         private const int SERVICE_ALL_ACCESS = 0xF01FF;
         private const int DELETE = 0x10000;
+        private const int SERVICE_START = 0x0010;	
         const int SERVICE_CONFIG_DESCRIPTION = 1;
         
 
@@ -140,7 +141,7 @@ namespace CloudPillar.Agent.Utilities
             }
 
             // Open the existing service
-            IntPtr serviceHandle = OpenService(scmHandle, serviceName, DELETE);
+            IntPtr serviceHandle = OpenService(scmHandle, serviceName, SERVICE_START);
             if (serviceHandle == IntPtr.Zero)
             {
                 CloseServiceHandle(scmHandle);
