@@ -84,7 +84,7 @@ namespace CloudPillar.Agent.Utilities
 
             return success;
         }
-        public bool CreateAndStartService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
+        public void CreateService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
         {
             IntPtr scm = OpenSCManager(_authenticationSettings.Domain, null, SC_MANAGER_CREATE_SERVICE);
             if (scm == IntPtr.Zero)
@@ -125,20 +125,42 @@ namespace CloudPillar.Agent.Utilities
                 _logger.Info("Service description added successfully.");
             }
 
-            bool success = StartService(svc, 0, null);
-            if(success == false)
-            {
-                int error = Marshal.GetLastWin32Error();
-                CloseServiceHandle(svc);
-                CloseServiceHandle(scm);
-                throw new Win32Exception(error);
-            }
-
             CloseServiceHandle(svc);
             
             CloseServiceHandle(scm);
+        }
+
+        public bool StartService(string serviceName)
+        {
+            // Open the service control manager
+            IntPtr scmHandle = OpenSCManager(_authenticationSettings.Domain, null, SC_MANAGER_ALL_ACCESS);
+            if (scmHandle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            // Open the existing service
+            IntPtr serviceHandle = OpenService(scmHandle, serviceName, DELETE);
+            if (serviceHandle == IntPtr.Zero)
+            {
+                CloseServiceHandle(scmHandle);
+                return false;
+            }
+            bool success = StartService(serviceHandle, 0, null);
+            if(success == false)
+            {
+                int error = Marshal.GetLastWin32Error();
+                CloseServiceHandle(serviceHandle);
+                CloseServiceHandle(scmHandle);
+                throw new Win32Exception(error);
+            }
+
+            CloseServiceHandle(serviceHandle);
+            
+            CloseServiceHandle(scmHandle);
             return success;
         }
+
 
         public bool ServiceExists(string serviceName)
         {

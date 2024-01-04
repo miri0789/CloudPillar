@@ -6,7 +6,8 @@ namespace CloudPillar.Agent.Utilities
         bool StopService(string serviceName);
         bool ServiceExists(string serviceName);
         bool DeleteExistingService(string serviceName);
-        bool CreateAndStartService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword);
+        void CreateService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword);
+        bool StartService(string serviceName);
         string ReadPasswordFromConsole();
         bool IsServiceRunning(string serviceName);
 

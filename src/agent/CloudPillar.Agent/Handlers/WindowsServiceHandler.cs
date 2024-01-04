@@ -20,7 +20,7 @@ namespace CloudPillar.Agent.Handlers
         public void InstallWindowsService(string serviceName, string workingDirectory, string serviceDescription, string? userPassword)
         {
             try
-                {
+            {
                 if (_windowsServiceUtils.ServiceExists(serviceName))
                 {
                     if (_windowsServiceUtils.IsServiceRunning(serviceName))
@@ -47,18 +47,21 @@ namespace CloudPillar.Agent.Handlers
                 }
                 
                 // Service doesn't exist, so create and start it
-                if (_windowsServiceUtils.CreateAndStartService(serviceName, workingDirectory, serviceDescription, userPassword))
+                _windowsServiceUtils.CreateService(serviceName, workingDirectory, serviceDescription, userPassword);
+                _logger.Info("Service created successfully.");
+
+                if (_windowsServiceUtils.StartService(serviceName))
                 {
-                    _logger.Info("Service created and started successfully.");
+                    _logger.Info("Service started successfully.");
                 }
                 else
                 {
-                    _logger.Error("Failed to create and start service.");
+                    _logger.Error("Failed to start service.");
                 }
             }
             catch(Win32Exception ex)
             {
-                throw new Exception($"Failed to start service {ex}");
+                throw new Exception($"InstallWindowsService failed: {ex}");
             }
         }
     }
