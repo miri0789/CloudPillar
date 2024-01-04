@@ -29,7 +29,8 @@ namespace UnitTests
             _windowsServiceUtils.Setup(x => x.IsServiceRunning(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.StopService(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.DeleteExistingService(SERVICE_NAME)).Returns(true);
-            _windowsServiceUtils.Setup(x => x.CreateAndStartService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            _windowsServiceUtils.Setup(x => x.CreateService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+            _windowsServiceUtils.Setup(x => x.StartService(SERVICE_NAME)).Returns(true);
 
             // Act
             _target.InstallWindowsService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
@@ -46,7 +47,8 @@ namespace UnitTests
             _windowsServiceUtils.Setup(x => x.IsServiceRunning(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.StopService(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.DeleteExistingService(SERVICE_NAME)).Returns(true);
-            _windowsServiceUtils.Setup(x => x.CreateAndStartService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            _windowsServiceUtils.Setup(x => x.CreateService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+            _windowsServiceUtils.Setup(x => x.StartService(SERVICE_NAME)).Returns(true);
 
             // Act
             _target.InstallWindowsService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
@@ -63,13 +65,32 @@ namespace UnitTests
             _windowsServiceUtils.Setup(x => x.IsServiceRunning(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.StopService(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.DeleteExistingService(SERVICE_NAME)).Returns(true);
-            _windowsServiceUtils.Setup(x => x.CreateAndStartService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            _windowsServiceUtils.Setup(x => x.CreateService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+            _windowsServiceUtils.Setup(x => x.StartService(SERVICE_NAME)).Returns(true);
 
             // Act
             _target.InstallWindowsService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
 
             // Assert
-            _windowsServiceUtils.Verify(x => x.CreateAndStartService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            _windowsServiceUtils.Verify(x => x.CreateService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public void InstallWindowsService_ServiceExistsAndRunning_StartService()
+        {
+            // Arrange
+            _windowsServiceUtils.Setup(x => x.ServiceExists(SERVICE_NAME)).Returns(true);
+            _windowsServiceUtils.Setup(x => x.IsServiceRunning(SERVICE_NAME)).Returns(true);
+            _windowsServiceUtils.Setup(x => x.StopService(SERVICE_NAME)).Returns(true);
+            _windowsServiceUtils.Setup(x => x.DeleteExistingService(SERVICE_NAME)).Returns(true);
+            _windowsServiceUtils.Setup(x => x.CreateService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+            _windowsServiceUtils.Setup(x => x.StartService(SERVICE_NAME)).Returns(true);
+
+            // Act
+            _target.InstallWindowsService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
+
+            // Assert
+            _windowsServiceUtils.Verify(x => x.StartService(SERVICE_NAME), Times.Once);
         }
 
 
@@ -81,7 +102,8 @@ namespace UnitTests
             _windowsServiceUtils.Setup(x => x.IsServiceRunning(SERVICE_NAME)).Returns(false);
             _windowsServiceUtils.Setup(x => x.StopService(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.DeleteExistingService(SERVICE_NAME)).Returns(true);
-            _windowsServiceUtils.Setup(x => x.CreateAndStartService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            _windowsServiceUtils.Setup(x => x.CreateService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+            _windowsServiceUtils.Setup(x => x.StartService(SERVICE_NAME)).Returns(true);
 
             // Act
             _target.InstallWindowsService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
@@ -98,7 +120,8 @@ namespace UnitTests
             _windowsServiceUtils.Setup(x => x.IsServiceRunning(SERVICE_NAME)).Returns(false);
             _windowsServiceUtils.Setup(x => x.StopService(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.DeleteExistingService(SERVICE_NAME)).Returns(true);
-            _windowsServiceUtils.Setup(x => x.CreateAndStartService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            _windowsServiceUtils.Setup(x => x.CreateService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+            _windowsServiceUtils.Setup(x => x.StartService(SERVICE_NAME)).Returns(true);
 
             // Act
             _target.InstallWindowsService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
@@ -114,7 +137,8 @@ namespace UnitTests
             _windowsServiceUtils.Setup(x => x.ServiceExists(SERVICE_NAME)).Returns(true);
             _windowsServiceUtils.Setup(x => x.IsServiceRunning(SERVICE_NAME)).Returns(false);
             _windowsServiceUtils.Setup(x => x.DeleteExistingService(SERVICE_NAME)).Returns(false);
-            _windowsServiceUtils.Setup(x => x.CreateAndStartService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            _windowsServiceUtils.Setup(x => x.CreateService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+            _windowsServiceUtils.Setup(x => x.StartService(SERVICE_NAME)).Returns(true);
 
             Assert.ThrowsAsync<Exception>(async () => _target.InstallWindowsService(SERVICE_NAME, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
         }
