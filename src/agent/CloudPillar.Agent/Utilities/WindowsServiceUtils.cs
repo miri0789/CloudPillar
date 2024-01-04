@@ -101,6 +101,20 @@ namespace CloudPillar.Agent.Utilities
                 CloseServiceHandle(scm);
                 throw new Win32Exception(error);
             }
+            // Add a description to the service
+            var description = new SERVICE_DESCRIPTION
+            {
+                lpDescription = serviceDescription
+            };
+
+            if (!ChangeServiceConfig2(svc, SERVICE_CONFIG_DESCRIPTION, ref description))
+            {
+                Console.WriteLine("ChangeServiceConfig2 failed. Error code: " + Marshal.GetLastWin32Error());
+            }
+            else
+            {
+                Console.WriteLine("Service description added successfully.");
+            }
 
             bool success = StartService(svc, 0, null);
             if(success == false)
