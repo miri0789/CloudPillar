@@ -12,6 +12,7 @@ using Shared.Entities.Twin;
 using System.Runtime.InteropServices;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
+using System.Security.Cryptography.X509Certificates;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
@@ -29,7 +30,26 @@ var httpsUrl = $"https://localhost:{httpsPort}";
 
 var serviceName = string.IsNullOrWhiteSpace(builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME)) ? Constants.AGENT_SERVICE_DEFAULT_NAME : builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
-builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
+builder.Services.Configure<AuthenticationSettings>(options =>
+        {
+            authenticationSettings.Bind(options);
+
+            var storeLocation = authenticationSettings.GetValue("StoreLocation", "");
+            var userName = authenticationSettings.GetValue("UserName", "");
+
+            if (!string.IsNullOrWhiteSpace(userName) && string.IsNullOrWhiteSpace(storeLocation))
+            {
+                options.StoreLocation = StoreLocation.CurrentUser;
+            }
+            else if (string.IsNullOrWhiteSpace(userName) && string.IsNullOrWhiteSpace(storeLocation))
+            {
+                options.StoreLocation = StoreLocation.LocalMachine;
+            }
+            else
+            {
+                options.StoreLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocation);
+            }
+        });
 
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
