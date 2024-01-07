@@ -90,10 +90,6 @@ public class FileDownloadHandler : IFileDownloadHandler
                             }
                             else
                             {
-                                if (file.Report.Status == StatusType.Blocked)
-                                {
-                                    file.Report.Status = StatusType.Pending;
-                                }
                                 if (isFileExist && file.TotalBytesDownloaded == 0)
                                 {
                                     file.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
@@ -131,20 +127,24 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private async Task<bool> HandleBlockedStatusAsync(FileDownload file, bool isFileExist, string destPath, bool isCreatedDownloadDirectory, CancellationToken cancellationToken)
     {
+        if (file.Report.Status == StatusType.Blocked)
+        {
+            file.Report.Status = StatusType.Pending;
+        }
         if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
                      && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
         {
-            return SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
+            SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
         }
         else if (!_fileStreamerWrapper.isSpaceOnDisk(destPath, file.TotalBytes))
         {
-            return SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
+            SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
         }
         else if (!HasWritePermissionOnDir(Path.GetDirectoryName(file.Action.DestinationPath)))
         {
-            return SetBlockedStatus(file, DownloadBlocked.AccessDenied, cancellationToken);
+            SetBlockedStatus(file, DownloadBlocked.AccessDenied, cancellationToken);
         }
-        return false;
+        return file.Report.Status == StatusType.Blocked;
     }
 
     private async Task<bool> ChangeSignExists(FileDownload file, CancellationToken cancellationToken)
@@ -165,7 +165,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
     }
 
-    private bool SetBlockedStatus(FileDownload file, DownloadBlocked resultCode, CancellationToken cancellationToken)
+    private void SetBlockedStatus(FileDownload file, DownloadBlocked resultCode, CancellationToken cancellationToken)
     {
         file.Report.Status = StatusType.Blocked;
         file.Report.ResultCode = resultCode.ToString();
@@ -174,7 +174,6 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             Task.Run(async () => WaitInBlockedBeforeDownload(file, cancellationToken));
         }
-        return true;
     }
 
     private async Task WaitInBlockedBeforeDownload(FileDownload file, CancellationToken cancellationToken)
@@ -337,7 +336,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             return;
         }
         var filePath = GetDestinationPath(file);
-        if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, file.TotalBytes))
+        if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, _fileStreamerWrapper.GetFileLength(filePath)))
         {
             SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
             _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
