@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
@@ -56,5 +57,15 @@ public class X509CertificateWrapper : IX509CertificateWrapper
     public SecurityProviderX509Certificate GetSecurityProvider(X509Certificate2 certificate)
     {
         return new SecurityProviderX509Certificate(certificate);
+    }
+
+    public RSA GetRSAPublicKey(X509Certificate2 certificate)
+    {
+        return certificate.GetRSAPublicKey();
+    }
+
+    public string ExportSubjectPublicKeyInfo(RSA publicKey)
+    {
+        return Convert.ToBase64String(publicKey.ExportSubjectPublicKeyInfo());
     }
 }

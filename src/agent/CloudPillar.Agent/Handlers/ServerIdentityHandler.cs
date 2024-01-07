@@ -4,6 +4,8 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
 using Newtonsoft.Json;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -14,6 +16,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IDeviceClientWrapper _deviceClient;
     private const string CERTFICATE_FILE_EXTENSION = "*.cer";
+    private const string PUBLIC_KEY_FILE_EXTENSION = ".pem";
 
     public ServerIdentityHandler(
         ILoggerHandler loggerHandler,
@@ -27,6 +30,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _deviceClient = deviceClient ?? throw new ArgumentNullException(nameof(deviceClient));
     }
+
 
     public async Task HandleKnownIdentitiesFromCertificatesAsync(CancellationToken cancellationToken)
     {
@@ -47,6 +51,31 @@ public class ServerIdentityHandler : IServerIdentityHandler
             throw new Exception(ex.Message);
         }
 
+    }
+
+    public async Task<string> GetPublicKeyFromCertificate(X509Certificate2 certificate)
+    {
+        RSA publicKey = _x509CertificateWrapper.GetRSAPublicKey(certificate);
+        string pemPublicKey = ConvertToPem(publicKey);
+        return pemPublicKey;
+    }
+
+    private string ConvertToPem(RSA publicKey)
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.AppendLine("-----BEGIN PUBLIC KEY-----");
+
+        string base64Key = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(publicKey);
+        int offset = 0;
+        while (offset < base64Key.Length)
+        {
+            int lineLength = Math.Min(64, base64Key.Length - offset);
+            builder.AppendLine(base64Key.Substring(offset, lineLength));
+            offset += lineLength;
+        }
+
+        builder.AppendLine("-----END PUBLIC KEY-----");
+        return builder.ToString();
     }
 
     private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles, CancellationToken cancellationToken)
