@@ -6,6 +6,7 @@ using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Services;
 using Microsoft.Extensions.Options;
+using System.Security.AccessControl;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -78,35 +79,35 @@ public class FileDownloadHandler : IFileDownloadHandler
                         file.Report.Status = StatusType.Pending;
                         file.Report.CompletedRanges = "";
                     }
-
-                    if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
-                     && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
-                    {
-                        SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
-                    }
-                    else if (!_fileStreamerWrapper.isSpaceOnDisk(destPath, file.TotalBytes))
-                    {
-                        SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
-                    }
-                    else if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
-                    {
-                        await HandleCompletedDownloadAsync(file, cancellationToken);
-                    }
                     else
                     {
-                        if (isFileExist && file.TotalBytesDownloaded == 0)
+                        var isBlocked = await HandleBlockedStatusAsync(file, isFileExist, destPath, isCreatedDownloadDirectory, cancellationToken);
+                        if (!isBlocked)
                         {
-                            file.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                            if (file.Report.Status == StatusType.Unzip)
+                            {
+                                await HandleCompletedDownloadAsync(file, cancellationToken);
+                            }
+                            else
+                            {
+                                if (file.Report.Status == StatusType.Blocked)
+                                {
+                                    file.Report.Status = StatusType.Pending;
+                                }
+                                if (isFileExist && file.TotalBytesDownloaded == 0)
+                                {
+                                    file.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                                }
+                                if (file.Report.Status != StatusType.InProgress)
+                                {
+                                    await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex);
+                                }
+                                else
+                                {
+                                    await CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken);
+                                }
+                            }
                         }
-                        if (file.Report.Status != StatusType.InProgress)
-                        {
-                            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex);
-                        }
-                        else
-                        {
-                            await CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken);
-                        }
-
                     }
                 }
             }
@@ -128,6 +129,24 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
     }
 
+    private async Task<bool> HandleBlockedStatusAsync(FileDownload file, bool isFileExist, string destPath, bool isCreatedDownloadDirectory, CancellationToken cancellationToken)
+    {
+        if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
+                     && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
+        {
+            return SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
+        }
+        else if (!_fileStreamerWrapper.isSpaceOnDisk(destPath, file.TotalBytes))
+        {
+            return SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
+        }
+        else if (!HasWritePermissionOnDir(Path.GetDirectoryName(file.Action.DestinationPath)))
+        {
+            return SetBlockedStatus(file, DownloadBlocked.AccessDenied, cancellationToken);
+        }
+        return false;
+    }
+
     private async Task<bool> ChangeSignExists(FileDownload file, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(file?.Action?.Sign))
@@ -146,7 +165,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
     }
 
-    private void SetBlockedStatus(FileDownload file, DownloadBlocked resultCode, CancellationToken cancellationToken)
+    private bool SetBlockedStatus(FileDownload file, DownloadBlocked resultCode, CancellationToken cancellationToken)
     {
         file.Report.Status = StatusType.Blocked;
         file.Report.ResultCode = resultCode.ToString();
@@ -155,6 +174,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             Task.Run(async () => WaitInBlockedBeforeDownload(file, cancellationToken));
         }
+        return true;
     }
 
     private async Task WaitInBlockedBeforeDownload(FileDownload file, CancellationToken cancellationToken)
@@ -238,6 +258,19 @@ public class FileDownloadHandler : IFileDownloadHandler
         return false;
     }
 
+    public bool HasWritePermissionOnDir(string directoryPath)
+    {
+        DirectoryInfo directoryInfo = _fileStreamerWrapper.CreateDirectoryInfo(directoryPath);
+        DirectorySecurity directorySecurity = _fileStreamerWrapper.GetAccessControl(directoryInfo);
+        AuthorizationRuleCollection accessRules = _fileStreamerWrapper.GetAccessRules(directorySecurity);
+        var rules = accessRules?.Cast<FileSystemAccessRule>();
+        if (rules.Any(x => x.AccessControlType == AccessControlType.Deny))
+        {
+            return false;
+        }
+        return true;
+    }
+
     private void HandleFirstMessageAsync(FileDownload file, DownloadBlobChunkMessage message)
     {
         file.TotalBytes = message.FileSize;
@@ -261,6 +294,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
             file.Report.Status = StatusType.Success;
+            file.Report.ResultCode = null;
             file.Report.Progress = 100;
         }
         else
@@ -301,12 +335,17 @@ public class FileDownloadHandler : IFileDownloadHandler
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
             return;
         }
+        var filePath = GetDestinationPath(file);
+        if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, file.TotalBytes))
+        {
+            SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
+            _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
+        }
         if (file.Report.Status == StatusType.Blocked)
         {
             _logger.Info($"File {file.Action.DestinationPath} is blocked, message {message.GetMessageId()}");
             return;
         }
-        var filePath = GetDestinationPath(file);
         try
         {
             if (!string.IsNullOrWhiteSpace(message.Error))
@@ -338,10 +377,6 @@ public class FileDownloadHandler : IFileDownloadHandler
                 file.Report.ResultCode = file.Report.ResultText = null;
                 Task.Run(async () => CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken));
             }
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            SetBlockedStatus(file, DownloadBlocked.AccessDenied, cancellationToken);
         }
         catch (Exception ex)
         {
