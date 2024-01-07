@@ -182,7 +182,6 @@ public class FileDownloadHandler : IFileDownloadHandler
         var fileDownload = GetDownloadFile(file.ActionReported.ReportIndex, file.Action.Source, file.ActionReported.ChangeSpecId);
         if (!cancellationToken.IsCancellationRequested && fileDownload is not null)
         {
-            fileDownload.Report.Status = StatusType.Pending;
             await InitFileDownloadAsync(file.ActionReported, cancellationToken);
         }
     }
@@ -285,6 +284,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isVerify = await _signatureHandler.VerifyFileSignatureAsync(destPath, file.Action.Sign);
         if (isVerify)
         {
+            file.Report.ResultCode = file.Report.ResultText = null;
             if (file.Action.Unzip)
             {
                 file.Report.Status = StatusType.Unzip;
@@ -294,7 +294,6 @@ public class FileDownloadHandler : IFileDownloadHandler
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
             file.Report.Status = StatusType.Success;
-            file.Report.ResultCode = null;
             file.Report.Progress = 100;
         }
         else
@@ -335,16 +334,18 @@ public class FileDownloadHandler : IFileDownloadHandler
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
             return;
         }
-        var filePath = GetDestinationPath(file);
-        if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, _fileStreamerWrapper.GetFileLength(filePath)))
-        {
-            SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
-            _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
-        }
         if (file.Report.Status == StatusType.Blocked)
         {
             _logger.Info($"File {file.Action.DestinationPath} is blocked, message {message.GetMessageId()}");
             return;
+        }
+        var filePath = GetDestinationPath(file);
+
+        var fileLength = Math.Max(_fileStreamerWrapper.GetFileLength(filePath), message.Offset + message.Data?.Length ?? 0);
+        if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, fileLength))
+        {
+            SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
+            _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
         }
         try
         {

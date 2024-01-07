@@ -202,7 +202,8 @@ public class DeviceStateClient
     1. **Periodic Upload Action**:
         - `action`: PeriodicUpload
         - `description`: Periodically (once in 10 minutes) upload installation logging.
-        - `dirName`: The file or pattern to be uploaded (e.g., "I:\\ExportedData_2023.05.*").
+        - `dirName`: The directory to upload (e.g., "I:\\ExportedData_2023.05\\"). OR
+        - `fileName`: The file to upload (e.g., "I:\\ExportedData_2023.05\\aaa.txt").
         - `interval`: The time interval between uploads in seconds (e.g., 120 seconds).
 
     2. **Singular Upload Action**:

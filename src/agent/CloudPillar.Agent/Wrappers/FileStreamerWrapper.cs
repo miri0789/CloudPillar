@@ -188,7 +188,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     public long GetFileLength(string path)
     {
         FileInfo fileInfo = new FileInfo(path);
-        return fileInfo.Length;
+        return fileInfo.Exists ? fileInfo.Length : 0;
     }
 
 
