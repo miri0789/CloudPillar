@@ -30,66 +30,44 @@ public class ServerIdentityHandler : IServerIdentityHandler
 
     public async Task HandleKnownIdentitiesFromCertificatesAsync(CancellationToken cancellationToken)
     {
-        string[] certificatesFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, CERTFICATE_FILE_EXTENSION);
-        await UpdateKnownIdentitiesByCertFilesAsync(certificatesFiles, true, cancellationToken);
-    }
-
-    public async Task UpdateKnownIdentitiesByCertFilesAsync(string[] certificatesFiles, bool initList, CancellationToken cancellationToken)
-    {
         try
         {
-            var knownIdentitiesList = new List<KnownIdentities>();
-
-            foreach (string certificatePath in certificatesFiles)
+            string[] certificatesFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, CERTFICATE_FILE_EXTENSION);
+            if (certificatesFiles.Length == 0)
             {
-                if (!_fileStreamerWrapper.FileExists(certificatePath))
-                {
-                    _logger.Error($"UpdateKnownIdentitiesByCertFiles failed, certificate file not exist in path: {certificatePath}");
-                    throw new FileNotFoundException($"{certificatePath} not found");
-                }
-                X509Certificate2 cert = _x509CertificateWrapper.CreateFromFile(certificatePath);
-                var knownIdentity = new KnownIdentities(cert.Subject, cert.Thumbprint,
-                 $"{cert.NotAfter.ToShortDateString()} {cert.NotAfter.ToShortTimeString()}");
-
-                knownIdentitiesList.Add(knownIdentity);
+                _logger.Info($"No certificates found in {Constants.PKI_FOLDER_PATH}");
+                return;
             }
-            await UpdateKnownIdentitiesInReportedAsync(knownIdentitiesList, initList, cancellationToken);
+            var knownIdentitiesList = GetKnownIdentitiesByCertFiles(certificatesFiles, cancellationToken);
+            await UpdateKnownIdentitiesInReportedAsync(knownIdentitiesList, cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.Error($"UpdateKnownIdentitiesByCertFiles failed message: {ex.Message}");
+            _logger.Error($"HandleKnownIdentitiesFromCertificatesAsync failed message: {ex.Message}");
+            throw new Exception(ex.Message);
         }
+
     }
 
-    private async Task UpdateKnownIdentitiesInReportedAsync(List<KnownIdentities> knownIdentitiesList, bool initList, CancellationToken cancellationToken)
+    private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles, CancellationToken cancellationToken)
     {
-        try
-        {
-            List<KnownIdentities> knownIdentitiesReported = null;
-            if (knownIdentitiesList?.Count > 0)
-            {
-                if (initList)
-                {
-                    knownIdentitiesReported = new List<KnownIdentities>();
-                }
-                else
-                {
-                    var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-                    string reportedJson = twin.Properties.Reported.ToJson();
-                    var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
-                    knownIdentitiesReported = twinReported?.KnownIdentities ?? new List<KnownIdentities>();
-                }
+        var knownIdentitiesList = certificatesFiles
+                        .Select(certificatePath =>
+                        {
+                            X509Certificate2 cert = _x509CertificateWrapper.CreateFromFile(certificatePath);
+                            return new KnownIdentities(
+                            cert.Subject,
+                            cert.Thumbprint,
+                            $"{cert.NotAfter.ToString("yyyy-MM-dd HH:mm:ss")}"
+                            );
+                        }).ToList();
+        return knownIdentitiesList;
+    }
 
-                knownIdentitiesReported.AddRange(knownIdentitiesList);
-
-                var key = nameof(TwinReported.KnownIdentities);
-                await _deviceClient.UpdateReportedPropertiesAsync(key, knownIdentitiesReported, cancellationToken);
-                _logger.Info($"UpdateKnownIdentitiesInReported success");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"UpdateDeviceCustomPropsAsync failed message: {ex.Message}");
-        }
+    private async Task UpdateKnownIdentitiesInReportedAsync(List<KnownIdentities> knownIdentitiesList, CancellationToken cancellationToken)
+    {
+        var key = nameof(TwinReported.KnownIdentities);
+        await _deviceClient.UpdateReportedPropertiesAsync(key, knownIdentitiesList, cancellationToken);
+        _logger.Info($"UpdateKnownIdentitiesInReported success");
     }
 }
