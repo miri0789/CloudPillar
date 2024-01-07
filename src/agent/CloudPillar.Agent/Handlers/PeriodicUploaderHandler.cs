@@ -55,10 +55,10 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
                 if (isDirectory && !actionToReport.TwinReport.PeriodicReported.ContainsKey(key))
                 {
                     actionToReport.TwinReport.PeriodicReported.Add(key, new TwinActionReported() { Status = StatusType.Pending });
-                }
+                }                
 
                 var currentCheckSum = await GetFileCheckSumAsync(file);
-                if (currentCheckSum !=  _twinReportHandler.GetActionToReport(actionToReport, file).CheckSum)
+                if (currentCheckSum != _twinReportHandler.GetActionToReport(actionToReport, file).CheckSum)
                 {
                     await _fileUploaderHandler.FileUploadAsync(actionToReport, uploadAction.Method, file, changeSpecId, cancellationToken);
                 }
