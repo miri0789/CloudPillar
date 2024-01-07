@@ -37,7 +37,7 @@ builder.Services.Configure<AuthenticationSettings>(options =>
             var storeLocation = authenticationSettings.GetValue("StoreLocation", "");
             var userName = authenticationSettings.GetValue("UserName", "");
 
-            if(!string.IsNullOrWhiteSpace(storeLocation))
+            if(storeLocation != null)
             {
                 options.StoreLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocation);
             } 
