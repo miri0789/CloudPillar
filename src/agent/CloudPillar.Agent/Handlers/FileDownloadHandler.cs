@@ -284,6 +284,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isVerify = await _signatureHandler.VerifyFileSignatureAsync(destPath, file.Action.Sign);
         if (isVerify)
         {
+            file.Report.ResultCode = file.Report.ResultText = null;
             if (file.Action.Unzip)
             {
                 file.Report.Status = StatusType.Unzip;
@@ -339,7 +340,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             return;
         }
         var filePath = GetDestinationPath(file);
-    
+
         var fileLength = Math.Max(_fileStreamerWrapper.GetFileLength(filePath), message.Offset + message.Data?.Length ?? 0);
         if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, fileLength))
         {
