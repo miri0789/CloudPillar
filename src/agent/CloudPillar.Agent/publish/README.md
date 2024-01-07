@@ -69,7 +69,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `Authentication.CertificateExpiredDays`       | Certificate expired days  |  `365` |
 | `Authentication.DpsScopeId`       | DPS scope id  |  `true` |
 | `Authentication.GroupEnrollmentKey`       | DPS enrollment group key  |   |
-| `Authentication.StoreLocation`       | location to store the certificate - LocalMachine\CurrentUser.  |  if this value not configure - the default is LocalMachine |
+| `Authentication.StoreLocation`       | location to store the certificate - LocalMachine\CurrentUser.  |  if this value not configure - the default is: `CurrentUser` - if `Authentication.UserName` is defined, if not - `LocalMachine` |
 | `Authentication.Domain`       | machine domain name  |  if this value not configure - the default is `.` |
 | `Authentication.UserName`       | the user name log on as a service  |  if this value not configure - the default is Admin |
 | `Authentication.UserPassword`       | the user password log on as a service  | if this value not configure - try to get the password from command line argument, if it is also not send it waiting to user interactive input.  |

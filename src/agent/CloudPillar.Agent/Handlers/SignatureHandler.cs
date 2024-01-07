@@ -15,7 +15,6 @@ public class SignatureHandler : ISignatureHandler
     private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IECDsaWrapper _ecdsaWrapper;
     private readonly DownloadSettings _downloadSettings;
-    private const string PKI_FOLDER_PATH = "pki";
     private const string FILE_EXTENSION = "*.pem";
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
@@ -59,7 +58,7 @@ public class SignatureHandler : ISignatureHandler
 
     public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)
     {
-        string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(PKI_FOLDER_PATH, FILE_EXTENSION);
+        string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, FILE_EXTENSION);
         foreach (string publicKeyFile in publicKeyFiles)
         {
             using (var ecdsa = await InitPublicKeyAsync(publicKeyFile))
