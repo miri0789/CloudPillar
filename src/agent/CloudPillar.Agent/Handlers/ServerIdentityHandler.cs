@@ -53,15 +53,20 @@ public class ServerIdentityHandler : IServerIdentityHandler
 
     }
 
-    public async Task<string> GetPublicKeyFromCertificate(X509Certificate2 certificate)
+    public async Task<string> GetPublicKeyFromCertificateFileAsync(string certificatePath)
     {
-        RSA publicKey = _x509CertificateWrapper.GetRSAPublicKey(certificate);
+        X509Certificate2 certificate = _x509CertificateWrapper.CreateFromFile(certificatePath);
+        ECDsa publicKey = _x509CertificateWrapper.GetECDsaPublicKey(certificate);
         string pemPublicKey = ConvertToPem(publicKey);
         return pemPublicKey;
     }
 
-    private string ConvertToPem(RSA publicKey)
+
+
+    private string ConvertToPem(ECDsa publicKey)
     {
+        // string publicKeyPem = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(publicKey);
+        // return publicKeyPem;      
         StringBuilder builder = new StringBuilder();
         builder.AppendLine("-----BEGIN PUBLIC KEY-----");
 
@@ -76,6 +81,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
 
         builder.AppendLine("-----END PUBLIC KEY-----");
         return builder.ToString();
+
     }
 
     private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles, CancellationToken cancellationToken)

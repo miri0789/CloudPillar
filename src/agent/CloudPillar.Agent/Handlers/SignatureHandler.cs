@@ -14,23 +14,25 @@ public class SignatureHandler : ISignatureHandler
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IECDsaWrapper _ecdsaWrapper;
+    private readonly IServerIdentityHandler _serverIdentityHandler;
     private readonly DownloadSettings _downloadSettings;
-    private const string FILE_EXTENSION = "*.pem";
+    private const string FILE_EXTENSION = "*.cer";
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
-    ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IOptions<DownloadSettings> options)
+    ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IServerIdentityHandler serverIdentityHandler, IOptions<DownloadSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _d2CMessengerHandler = d2CMessengerHandler ?? throw new ArgumentNullException(nameof(d2CMessengerHandler));
         _sha256Wrapper = sha256Wrapper ?? throw new ArgumentNullException(nameof(sha256Wrapper));
         _ecdsaWrapper = ecdsaWrapper ?? throw new ArgumentNullException(nameof(ecdsaWrapper));
+        _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    private async Task<ECDsa> InitPublicKeyAsync(string publicKeyFile)
+    private async Task<ECDsa> InitPublicKeyAsync(string publicKeyPem)
     {
-        string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync(publicKeyFile);
+        // string publicKeyPem = await _fileStreamerWrapper.ReadAllTextAsync(publicKeyFile);
         if (publicKeyPem == null)
         {
             _logger.Error("sign pubkey not exist");
@@ -61,7 +63,8 @@ public class SignatureHandler : ISignatureHandler
         string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, FILE_EXTENSION);
         foreach (string publicKeyFile in publicKeyFiles)
         {
-            using (var ecdsa = await InitPublicKeyAsync(publicKeyFile))
+            var publicKey = await _serverIdentityHandler.GetPublicKeyFromCertificateFileAsync(publicKeyFile);
+            using (var ecdsa = await InitPublicKeyAsync(publicKey))
             {
                 byte[] signature = Convert.FromBase64String(signatureString);
                 if (_ecdsaWrapper.VerifyData(ecdsa, dataToVerify, signature, HashAlgorithmName.SHA512))

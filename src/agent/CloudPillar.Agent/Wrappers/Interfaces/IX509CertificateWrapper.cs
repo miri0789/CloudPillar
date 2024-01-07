@@ -26,6 +26,6 @@ public interface IX509CertificateWrapper
     SecurityProviderX509Certificate GetSecurityProvider(X509Certificate2 certificate);
 
     DeviceAuthenticationWithX509Certificate GetDeviceAuthentication(string deviceId, X509Certificate2 certificate);
-    RSA GetRSAPublicKey(X509Certificate2 certificate);
-    string ExportSubjectPublicKeyInfo(RSA publicKey);
+    ECDsa GetECDsaPublicKey(X509Certificate2 certificate);
+    string ExportSubjectPublicKeyInfo(ECDsa publicKey);
 }

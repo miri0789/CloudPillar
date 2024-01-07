@@ -59,12 +59,12 @@ public class X509CertificateWrapper : IX509CertificateWrapper
         return new SecurityProviderX509Certificate(certificate);
     }
 
-    public RSA GetRSAPublicKey(X509Certificate2 certificate)
+    public ECDsa GetECDsaPublicKey(X509Certificate2 certificate)
     {
-        return certificate.GetRSAPublicKey();
+        return certificate.GetRSAPublicKey.GetECDsaPublicKey();
     }
 
-    public string ExportSubjectPublicKeyInfo(RSA publicKey)
+    public string ExportSubjectPublicKeyInfo(ECDsa publicKey)
     {
         return Convert.ToBase64String(publicKey.ExportSubjectPublicKeyInfo());
     }
