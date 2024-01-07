@@ -516,6 +516,20 @@ namespace CloudPillar.Agent.Tests
             , It.IsAny<CancellationToken>()), Times.Once);
         }
 
+
+        [Test]
+        public async Task InitFileDownloadAsync_OnAccessDenied_ReportBlockedStatus()
+        {
+            var action = initAction();
+            _fileStreamerWrapperMock.Setup(item => item.FileExists(It.IsAny<string>())).Returns(false);
+            _fileStreamerWrapperMock.Setup(item => item.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>())).ThrowsAsync(new System.UnauthorizedAccessException());
+            await InitFileDownloadAsync(action);
+
+            _twinReportHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>()
+            , It.IsAny<CancellationToken>()), Times.Never);
+        }
+
         private async Task InitFileDownloadAsync(FileDownload action)
         {
             _target.AddFileDownload(action.ActionReported);
