@@ -55,8 +55,8 @@ public class PeriodicUploaderHandlerTestFixture
         await _target.UploadAsync(_actionToReport, "testChangeSpecId", CancellationToken.None);
         // Assert        
         _twinReportHandlerMock.Verify(
-            x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
-        , It.IsAny<CancellationToken>()), Times.Once);
+            x => x.SetReportProperties(It.IsAny<ActionToReport>(), It.Is<StatusType>(item => item == StatusType.Success),
+             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
 
     [Test]
