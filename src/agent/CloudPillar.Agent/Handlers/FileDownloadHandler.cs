@@ -339,7 +339,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             return;
         }
         var filePath = GetDestinationPath(file);
-        var fileLength = Math.Max(_fileStreamerWrapper.GetFileLength(filePath), message.Offset + message.Data.Length);
+        var fileLength = Math.Max(_fileStreamerWrapper.GetFileLength(filePath), message.Offset + message.Data?.Length ?? 0);
         if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, fileLength))
         {
             SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
