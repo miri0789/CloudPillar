@@ -37,17 +37,13 @@ builder.Services.Configure<AuthenticationSettings>(options =>
             var storeLocation = authenticationSettings.GetValue("StoreLocation", "");
             var userName = authenticationSettings.GetValue("UserName", "");
 
-            if (!string.IsNullOrWhiteSpace(userName) && string.IsNullOrWhiteSpace(storeLocation))
-            {
-                options.StoreLocation = StoreLocation.CurrentUser;
-            }
-            else if (string.IsNullOrWhiteSpace(userName) && string.IsNullOrWhiteSpace(storeLocation))
-            {
-                options.StoreLocation = StoreLocation.LocalMachine;
-            }
-            else
+            if(!string.IsNullOrWhiteSpace(storeLocation))
             {
                 options.StoreLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocation);
+            } 
+            else
+            {
+                options.StoreLocation =string.IsNullOrWhiteSpace(userName)? StoreLocation.LocalMachine:StoreLocation.CurrentUser;
             }
         });
 
