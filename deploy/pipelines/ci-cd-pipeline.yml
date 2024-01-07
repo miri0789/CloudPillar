@@ -73,7 +73,7 @@ stages:
         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
         docker rm $CONTAINER_ID
         mv ./cloudpillar.zip ./cloudpillar-agent-$(imagetag).zip
-        ls -al ./cloudpillar-agent-publish$(imagetag).zip
+        ls -al ./cloudpillar-agent-publish-$(imagetag).zip
       displayName: 'Extract cloudpillar.zip from Image'
 
     - task: PublishBuildArtifacts@1
