@@ -265,7 +265,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         DirectorySecurity directorySecurity = _fileStreamerWrapper.GetAccessControl(directoryInfo);
         AuthorizationRuleCollection accessRules = _fileStreamerWrapper.GetAccessRules(directorySecurity);
         var rules = accessRules?.Cast<FileSystemAccessRule>();
-        if (rules.Any(x => x.AccessControlType == AccessControlType.Deny))
+        if (rules is not null && rules.Any(x => x.AccessControlType == AccessControlType.Deny))
         {
             return false;
         }
