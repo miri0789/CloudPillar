@@ -65,12 +65,9 @@ public class ServerIdentityHandler : IServerIdentityHandler
         }
     }
 
-    public async Task<string> GetPublicKeyFromCertificate(string certificatePath)
+    public async Task<string> GetPublicKeyFromCertificate(X509Certificate2 certificate)
     {
-        X509Certificate2 certificate = new X509Certificate2(certificatePath);
-
-        RSA publicKey = certificate.GetRSAPublicKey();
-        var a = publicKey.ExportRSAPublicKey;
+        RSA publicKey = _x509CertificateWrapper.GetRSAPublicKey(certificate);
         string pemPublicKey = ConvertToPem(publicKey);
         return pemPublicKey;
     }
@@ -80,7 +77,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         StringBuilder builder = new StringBuilder();
         builder.AppendLine("-----BEGIN PUBLIC KEY-----");
 
-        string base64Key = Convert.ToBase64String(publicKey.ExportSubjectPublicKeyInfo());
+        string base64Key = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(publicKey);
         int offset = 0;
         while (offset < base64Key.Length)
         {
@@ -92,7 +89,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         builder.AppendLine("-----END PUBLIC KEY-----");
         return builder.ToString();
     }
-    
+
     private async Task UpdateKnownIdentitiesInReportedAsync(List<KnownIdentities> knownIdentitiesList, bool initList, CancellationToken cancellationToken)
     {
         try

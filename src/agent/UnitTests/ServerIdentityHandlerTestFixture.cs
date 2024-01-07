@@ -4,6 +4,7 @@ using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -86,6 +87,19 @@ namespace CloudPillar.Agent.Tests
 
             _deviceClientWrapper.Verify(d => d.UpdateReportedPropertiesAsync(It.Is<string>(x => x == reportedKey),
              It.Is<List<KnownIdentities>>(y => EqualDetails(y, expected)), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetPublicKeyFromCertificate_GetRSAPublicKey_Success()
+        {
+            RSA rsa = RSA.Create();
+            _x509CertificateWrapper.Setup(x => x.GetRSAPublicKey(x509Certificate1)).Returns(rsa);
+            _x509CertificateWrapper.Setup(x => x.ExportSubjectPublicKeyInfo(It.IsAny<RSA>())).Returns("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzpIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr24Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMRgsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67JrN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3wMQIDAQAB");
+            var publicKey = await _target.GetPublicKeyFromCertificate(x509Certificate1);
+
+            var excepted = "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzp\r\nIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr2\r\n4Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMR\r\ngsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs\r\n0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67Jr\r\nN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3w\r\nMQIDAQAB\r\n-----END PUBLIC KEY-----\r\n";
+
+            Assert.AreEqual(excepted, publicKey);
         }
 
         private void SetTwinMock()
