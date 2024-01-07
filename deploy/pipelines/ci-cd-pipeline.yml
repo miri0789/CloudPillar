@@ -81,7 +81,6 @@ stages:
       inputs:
         pathtoPublish: ./cloudpillar-agent-publish-$(imagetag).zip
         artifactName: 'cloudpillar'
-        publishLocation: 'Container'  
     
     - task: ArchiveFiles@2
       inputs:
@@ -95,7 +94,6 @@ stages:
       inputs:
         pathtoPublish: '$(Build.ArtifactStagingDirectory)'
         artifactName: 'cloudpillar'
-        publishLocation: 'Container'
 
   - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
