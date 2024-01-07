@@ -100,6 +100,7 @@ builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
 builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
+builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
 
 var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
 builder.Services.Configure<DownloadSettings>(DownloadSettings);

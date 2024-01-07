@@ -28,21 +28,22 @@ public static class MockHelper
 
         
 
-    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, TwinChangeSpec? changeSpecDiagnosticsDesired = null, TwinReportedChangeSpec? changeSpecDiagnosticsReported = null, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "----")
+    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, TwinChangeSpec? changeSpecDiagnosticsDesired = null, TwinReportedChangeSpec? changeSpecDiagnosticsReported = null, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "----", List<KnownIdentities>? knownIdentities = null)
     {
         var desiredJson = JObject.Parse(_baseDesierd);
         desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinDesired()
         {
             ChangeSpec = changeSpecDesired,
             ChangeSpecDiagnostics = changeSpecDiagnosticsDesired,
-            ChangeSign = changeSign
+            ChangeSign = changeSign,
         })));
         var reportedJson = JObject.Parse(_baseReported);
         reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinReported()
         {
             ChangeSpec = changeSpecReported,
             ChangeSpecDiagnostics = changeSpecDiagnosticsReported,
-            Custom = twinReportedCustomProps
+            Custom = twinReportedCustomProps,
+            KnownIdentities = knownIdentities
         })));
         var settings = new JsonSerializerSettings
         {

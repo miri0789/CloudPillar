@@ -28,6 +28,7 @@ public class AgentController : ControllerBase
     private readonly IRunDiagnosticsHandler _runDiagnosticsHandler;
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IReprovisioningHandler _reprovisioningHandler;
+    private readonly IServerIdentityHandler _serverIdentityHandler;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -40,7 +41,8 @@ public class AgentController : ControllerBase
      IRunDiagnosticsHandler runDiagnosticsHandler,
      ILoggerHandler logger,
      IStateMachineChangedEvent stateMachineChangedEvent,
-     IReprovisioningHandler reprovisioningHandler)
+     IReprovisioningHandler reprovisioningHandler,
+    IServerIdentityHandler serverIdentityHandler)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
@@ -53,6 +55,7 @@ public class AgentController : ControllerBase
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
         _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
+        _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
     }
 
     [HttpPost("AddRecipe")]
@@ -102,6 +105,7 @@ public class AgentController : ControllerBase
     {
         try
         {
+            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
             await ProvisinigSymetricKeyAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
