@@ -23,15 +23,16 @@ namespace CloudPillar.Agent.Handlers.Tests
         [SetUp]
         public void Setup()
         {
-            mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
-            mockFileStreamer = new Mock<FileStreamerWrapper>();
             mockStrictModeSettings = new Mock<IOptions<StrictModeSettings>>();
+            mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock();
             mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
+            mockFileStreamer = new Mock<FileStreamerWrapper>();
             mockMatchWrapper = new Mock<IMatcherWrapper>();
             mockLogger = new Mock<ILoggerHandler>();
             SetMatchResult("test.txt", "");
             _target = new StrictModeHandler(mockStrictModeSettings.Object, mockMatchWrapper.Object, mockFileStreamer.Object, mockLogger.Object);
+
         }
         [Test]
         public void ReplaceRootById_ValidData_ReturnReplacedString()

@@ -35,11 +35,12 @@ public class HttpRequestorService : IHttpRequestorService
         if (requestData != null)
         {
             string serializedData = JsonConvert.SerializeObject(requestData);
-            var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
-            if (!isRequestValid)
-            {
-                throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
-            }
+            // Error: The free-quota limit of 1000 schema validations per hour has been reached. Please visit http://www.newtonsoft.com/jsonschema to upgrade to a commercial license. - Ignoring
+            // var isRequestValid = _schemaValidator.ValidatePayloadSchema(serializedData, schemaPath, true);
+            // if (!isRequestValid)
+            // {
+            //     throw new HttpRequestException("The request data is not fit the schema", null, System.Net.HttpStatusCode.BadRequest);
+            // }
             request.Content = new StringContent(serializedData, Encoding.UTF8, "application/json");
         }
 
@@ -54,15 +55,16 @@ public class HttpRequestorService : IHttpRequestorService
         string responseContent = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
         {
-            if (!string.IsNullOrWhiteSpace(responseContent))
-            {
-                var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
-                if (!isResponseValid)
-                {
-                    _logger.Error($"The reponse data is not fit the schema. url: {url}");
-                    throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
-                }
-            }
+            // if (!string.IsNullOrWhiteSpace(responseContent))
+            // {
+                // Error: The free-quota limit of 1000 schema validations per hour has been reached. Please visit http://www.newtonsoft.com/jsonschema to upgrade to a commercial license. - Ignoring
+                // var isResponseValid = _schemaValidator.ValidatePayloadSchema(responseContent, schemaPath, false);
+                // if (!isResponseValid)
+                // {
+                //     _logger.Error($"The reponse data is not fit the schema. url: {url}");
+                //     throw new HttpRequestException("The reponse data is not fit the schema", null, System.Net.HttpStatusCode.Unauthorized);
+                // }
+            // }
             TResponse result = JsonConvert.DeserializeObject<TResponse>(responseContent)!;
             return result;
         }

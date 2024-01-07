@@ -27,15 +27,18 @@ var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Cons
 var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
-var serviceName = builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
+var serviceName = string.IsNullOrWhiteSpace(builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME)) ? Constants.AGENT_SERVICE_DEFAULT_NAME : builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
 builder.Services.Configure<AuthenticationSettings>(authenticationSettings);
 
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
-    builder.Services.AddScoped<IWindowsServiceWrapper, WindowsServiceWrapper>();
-    var windowsServiceWrapper = builder.Services.BuildServiceProvider().GetRequiredService<IWindowsServiceWrapper>();
-    windowsServiceWrapper?.InstallWindowsService(serviceName, Environment.CurrentDirectory);
+    var serviceDescription = builder.Configuration.GetValue("ServiceDescription", Constants.AGENT_SERVICE_DEFAULT_DESCRIPTION);
+    var password = args.Length > 1 ? args[1] : null;
+    builder.Services.AddScoped<IWindowsServiceUtils, WindowsServiceUtils>();
+    builder.Services.AddScoped<IWindowsServiceHandler, WindowsServiceHandler>();
+    var windowsServiceHandler = builder.Services.BuildServiceProvider().GetRequiredService<IWindowsServiceHandler>();
+    windowsServiceHandler?.InstallWindowsService(serviceName, Environment.CurrentDirectory, string.IsNullOrWhiteSpace(serviceDescription) ? Constants.AGENT_SERVICE_DEFAULT_DESCRIPTION : serviceDescription, password);
     Environment.Exit(0);
 }
 

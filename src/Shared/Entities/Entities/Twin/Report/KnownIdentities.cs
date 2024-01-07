@@ -1,6 +1,6 @@
 namespace Shared.Entities.Twin;
 
-public class KnownIdentities
+public record KnownIdentities
 {
     public string Subject { get; set; }
     public string Thumbprint { get; set; }

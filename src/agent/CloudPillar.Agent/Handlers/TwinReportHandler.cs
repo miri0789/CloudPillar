@@ -8,6 +8,7 @@ using Newtonsoft.Json.Serialization;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Utilities;
 using System.Runtime.InteropServices;
+using Microsoft.Azure.Devices.Shared;
 
 namespace CloudPillar.Agent.Handlers;
 public class TwinReportHandler : ITwinReportHandler
@@ -16,6 +17,7 @@ public class TwinReportHandler : ITwinReportHandler
     private readonly ILoggerHandler _logger;
     private readonly IRuntimeInformationWrapper _runtimeInformationWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
+    private static TwinReported? _twinReported;
 
     public TwinReportHandler(IDeviceClientWrapper deviceClientWrapper,
      ILoggerHandler loggerHandler,
@@ -41,10 +43,8 @@ public class TwinReportHandler : ITwinReportHandler
         var subLength = periodicUploadAction.DirName.EndsWith(FileConstants.SEPARATOR) ||
         periodicUploadAction.DirName.EndsWith(FileConstants.DOUBLE_SEPARATOR)
         ? 0 : 1;
-        return periodicFileName.Substring(periodicUploadAction.DirName.Length + subLength)
-                   .Replace(FileConstants.SEPARATOR, FileConstants.DOUBLE_SEPARATOR)
-                   .Replace(FileConstants.DOT, "_")
-                   .Replace(" ", "_");
+        var key = periodicFileName.Substring(periodicUploadAction.DirName.Length + subLength);
+        return Uri.EscapeDataString(key).Replace(".", "_").ToLower();
 
     }
 
@@ -60,9 +60,9 @@ public class TwinReportHandler : ITwinReportHandler
 
     }
 
-    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
+    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
     {
-        var changeSpecJson = JObject.Parse(JsonConvert.SerializeObject(changeSpec,
+        var changeSpecJson = changeSpec is null ? null : JObject.Parse(JsonConvert.SerializeObject(changeSpec,
           Formatting.None,
           new JsonSerializerSettings
           {
@@ -71,7 +71,15 @@ public class TwinReportHandler : ITwinReportHandler
               Formatting = Formatting.Indented,
               NullValueHandling = NullValueHandling.Ignore
           }));
+        _twinReported?.SetReportedChangeSpecByKey(changeSpec, changeSpecKey);
         await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey.ToString(), changeSpecJson, cancellationToken);
+    }
+
+    public async Task<Twin> SetTwinReported(CancellationToken cancellationToken)
+    {
+        var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+        _twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+        return twin;
     }
 
     public async Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported, CancellationToken cancellationToken)
@@ -80,14 +88,16 @@ public class TwinReportHandler : ITwinReportHandler
         {
             try
             {
-                var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-                string reportedJson = twin.Properties.Reported.ToJson();
-                var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
+                if (_twinReported is null)
+                {
+                    await SetTwinReported(cancellationToken);
+                }
+
 
                 var actionForDetails = actionsToReported.FirstOrDefault(x => !string.IsNullOrEmpty(x.ReportPartName));
                 if (actionForDetails == null) return;
                 TwinPatchChangeSpec changeSpecKey = actionForDetails.ChangeSpecKey;
-                TwinReportedChangeSpec twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+                TwinReportedChangeSpec twinReportedChangeSpec = _twinReported.GetReportedChangeSpecByKey(changeSpecKey);
 
                 actionsToReported.ToList().ForEach(actionToReport =>
                 {

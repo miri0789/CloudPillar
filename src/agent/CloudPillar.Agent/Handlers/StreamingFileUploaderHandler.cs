@@ -56,8 +56,8 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     {
         if (!cancellationToken.IsCancellationRequested)
         {
-            long streamLength = readStream.Length;
-            string checkSum = await CalcAndUpdateCheckSumAsync(actionToReport, readStream, fileName, cancellationToken);
+            var streamLength = readStream.Length;
+            var checkSum = string.Empty;
 
             var twinReport = _twinReportHandler.GetActionToReport(actionToReport, fileName);
             int calculatedPosition = CalculateCurrentPosition(readStream.Length, twinReport.Progress ?? 0);
@@ -72,7 +72,11 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
                     _logger.Debug($"Agent: Start send chunk Index: {chunkIndex}, with position: {currentPosition}");
 
                     var isLastMessage = IsLastMessage(currentPosition, chunkSize, streamLength);
-                    await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, buffer, currentPosition, isLastMessage ? checkSum : string.Empty, isRunDiagnostics, fileName, cancellationToken);
+                    if (isLastMessage)
+                    {
+                        checkSum = await CalcAndUpdateCheckSumAsync(actionToReport, readStream, fileName, cancellationToken);
+                    }
+                    await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, buffer, currentPosition, checkSum, isRunDiagnostics, fileName, cancellationToken);
                 }
             }
             _logger.Debug($"All bytes sent successfuly");
@@ -159,7 +163,6 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
     {
         bytesToUpload += currentPosition;
         float progressPercent = (float)Math.Floor((bytesToUpload / (double)streamLength) * 100 * 100) / 100;
-        Console.WriteLine($"Upload Progress: {progressPercent:F2}%");
         return progressPercent;
     }
 
@@ -171,7 +174,6 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         }
         int currentPosition = (int)Math.Floor(progressPercent * (float)streamLength / 100);
 
-        Console.WriteLine($"Current Position: {currentPosition} bytes");
         return currentPosition;
     }
 

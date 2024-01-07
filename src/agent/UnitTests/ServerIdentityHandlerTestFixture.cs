@@ -21,9 +21,6 @@ namespace CloudPillar.Agent.Tests
 
         X509Certificate2 x509Certificate1;
         X509Certificate2 x509Certificate2;
-        List<KnownIdentities> expected = new List<KnownIdentities>();
-        List<KnownIdentities> reportedKnownIdentities = new List<KnownIdentities>();
-
         string[] files = new string[] { "certificate1.cer", "certificate2.cer" };
 
         public ServerIdentityHandlerTestFixture()
@@ -33,62 +30,49 @@ namespace CloudPillar.Agent.Tests
             _x509CertificateWrapper = new Mock<IX509CertificateWrapper>();
             _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
             _deviceClientWrapper = new Mock<IDeviceClientWrapper>();
-
             x509Certificate1 = MockHelper.GenerateCertificate("1", "", 60, CERTIFICATE_PREFIX);
             x509Certificate2 = MockHelper.GenerateCertificate("2", "", 60, CERTIFICATE_PREFIX);
-            expected = new List<KnownIdentities>()
-                    {
-                        new KnownIdentities("CN=UT_PREFIX1", x509Certificate1.Thumbprint, x509Certificate1.NotAfter.ToString("dd/MM/yyyy HH:mm")),
-                        new KnownIdentities("CN=UT_PREFIX2", x509Certificate2.Thumbprint, x509Certificate2.NotAfter.ToString("dd/MM/yyyy HH:mm"))
-                    };
-            reportedKnownIdentities = new List<KnownIdentities>()
-                    {
-                        new KnownIdentities("CN=UT_PREFIX1", x509Certificate1.Thumbprint, x509Certificate1.NotAfter.ToString("dd/MM/yyyy HH:mm")),
-                    };
 
-            _fileStreamerWrapper.Setup(x => x.FileExists(It.IsAny<string>())).Returns(true);
-            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
-            _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
-            _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate2.cer")).Returns(x509Certificate2);
             _target = new ServerIdentityHandler(_loggerMock.Object, _x509CertificateWrapper.Object, _fileStreamerWrapper.Object, _deviceClientWrapper.Object);
         }
 
-        [Test]
-        public async Task UpdateKnownIdentitiesByCertFiles_FileNotExists_FileNotFoundException()
-        {
-            _fileStreamerWrapper.Setup(x => x.FileExists(It.IsAny<string>())).Returns(false);
-            await _target.UpdateKnownIdentitiesByCertFilesAsync(files, true, CancellationToken.None);
-            _deviceClientWrapper.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<List<KnownIdentities>>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
 
         [Test]
-        public async Task UpdateKnownIdentitiesByCertFiles_KnownIdentitiesExistsInReported_InitExistsList()
+        public async Task HandleKnownIdentitiesFromCertificatesAsync_ValidCertificates_ReturnsKnownIdentities()
         {
-            SetTwinMock();
+            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
+            var expected = new List<KnownIdentities>()
+                    {
+                        new KnownIdentities("CN=UT_PREFIX1", x509Certificate1.Thumbprint, x509Certificate1.NotAfter.ToString("yyyy-MM-dd HH:mm:ss")),
+                        new KnownIdentities("CN=UT_PREFIX2", x509Certificate2.Thumbprint, x509Certificate2.NotAfter.ToString("yyyy-MM-dd HH:mm:ss"))
+                    };
+
+            _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
+            _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate2.cer")).Returns(x509Certificate2);
+
             await _target.HandleKnownIdentitiesFromCertificatesAsync(CancellationToken.None);
-            _deviceClientWrapper.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.Is<List<KnownIdentities>>(x => x.Count == expected.Count), It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-        [Test]
-        public async Task UpdateKnownIdentitiesByCertFiles_KnownIdentitiesExistsInReported_AddItem()
-        {
-            SetTwinMock();
-            await _target.UpdateKnownIdentitiesByCertFilesAsync(files, false, CancellationToken.None);
-            _deviceClientWrapper.Verify(x => x.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.Is<List<KnownIdentities>>(x => x.Count == (expected.Count + reportedKnownIdentities.Count)), It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-
-        [Test]
-        public async Task UpdateKnownIdentitiesByCertFiles_ValidCertificates_ReturnsKnownIdentities()
-        {
-            _fileStreamerWrapper.Setup(x => x.FileExists(It.IsAny<string>())).Returns(true);
-
-            await _target.UpdateKnownIdentitiesByCertFilesAsync(files, true, CancellationToken.None);
 
             _deviceClientWrapper.Verify(d => d.UpdateReportedPropertiesAsync(It.Is<string>(x => x == reportedKey),
              It.Is<List<KnownIdentities>>(y => EqualDetails(y, expected)), It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        [Test]
+        public async Task HandleKnownIdentitiesFromCertificatesAsync_NoCertificates_ExistFromFunction()
+        {
+            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { });
+            await _target.HandleKnownIdentitiesFromCertificatesAsync(CancellationToken.None);
+
+            _deviceClientWrapper.Verify(d => d.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<List<KnownIdentities>>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Test]
+        public async Task HandleKnownIdentitiesFromCertificatesAsync_CreateCrertificateFromFileException_ThrowException()
+        {
+            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
+            _x509CertificateWrapper.Setup(x => x.CreateFromFile(It.IsAny<string>())).Throws(new Exception());
+            Assert.ThrowsAsync<Exception>(async () => await _target.HandleKnownIdentitiesFromCertificatesAsync(CancellationToken.None));
+        }
+        
         [Test]
         public async Task GetPublicKeyFromCertificate_GetRSAPublicKey_Success()
         {
@@ -102,16 +86,6 @@ namespace CloudPillar.Agent.Tests
             Assert.AreEqual(excepted, publicKey);
         }
 
-        private void SetTwinMock()
-        {
-            var desired = new TwinChangeSpec();
-            var reported = new TwinReportedChangeSpec();
-
-            var twin = MockHelper.CreateTwinMock(desired, reported, knownIdentities: reportedKnownIdentities);
-            _deviceClientWrapper.Setup(x => x.GetTwinAsync(It.IsAny<CancellationToken>())).ReturnsAsync(twin);
-
-            _fileStreamerWrapper.Setup(x => x.FileExists(It.IsAny<string>())).Returns(true);
-        }
 
         private bool EqualDetails(List<KnownIdentities> current, List<KnownIdentities> expected)
         {
