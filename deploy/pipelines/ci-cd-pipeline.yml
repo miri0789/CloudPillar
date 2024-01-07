@@ -79,7 +79,7 @@ stages:
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cloudpillar.zip to Artifacts'
       inputs:
-        pathtoPublish: ./cloudpillar-agent-$(imagetag).zip
+        pathtoPublish: ./cloudpillar-agent-publish-$(imagetag).zip
         artifactName: 'cloudpillar'
         publishLocation: 'Container'  
     
@@ -88,7 +88,7 @@ stages:
         rootFolderOrFile: '$(Build.SourcesDirectory)/src/agent/CloudPillar.Agent'
         includeRootFolder: false
         archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.DefinitionName).zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(imagetag).zip'
         replaceExistingArchive: true
 
     - task: PublishBuildArtifacts@1
