@@ -46,9 +46,24 @@ public class PeriodicUploaderHandlerTestFixture
     }
 
     [Test]
+    public async Task UploadAsync_WhenDirectoryAndFileNotExist_ShouldReportFailed()
+    {
+        _fileStreamerWrapperMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(false);
+        _fileStreamerWrapperMock.Setup(x => x.FileExists(It.IsAny<string>())).Returns(false);
+
+        // Act
+        await _target.UploadAsync(_actionToReport, "testChangeSpecId", CancellationToken.None);
+        // Assert        
+        _twinReportHandlerMock.Verify(
+            x => x.UpdateReportActionAsync(It.Is<IEnumerable<ActionToReport>>(item => item.Any(rep => rep.TwinReport.Status == StatusType.Failed))
+        , It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
     public async Task UploadAsync_WhenDirectoryNotExist_ShouldSetReportProperties()
     {
         _fileStreamerWrapperMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(false);
+        _fileStreamerWrapperMock.Setup(x => x.FileExists(It.IsAny<string>())).Returns(true);
 
         // Act
         await _target.UploadAsync(_actionToReport, "testChangeSpecId", CancellationToken.None);

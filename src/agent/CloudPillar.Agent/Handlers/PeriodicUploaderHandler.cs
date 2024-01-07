@@ -32,12 +32,12 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
     {
         var uploadAction = (PeriodicUploadAction)actionToReport.TwinAction;
         _logger.Info($"UploadPeriodicAsync: start dir: {uploadAction.DirName}");
-        if (!_fileStreamerWrapper.DirectoryExists(uploadAction.DirName) && !_fileStreamerWrapper.FileExists(uploadAction.FileName))
-        {
-            throw new ArgumentException($"Directory or file {uploadAction.DirName} does not exist");
-        }
         try
         {
+            if (!_fileStreamerWrapper.DirectoryExists(uploadAction.DirName) && !_fileStreamerWrapper.FileExists(uploadAction.FileName))
+            {
+                throw new ArgumentException($"Directory or file {uploadAction.DirName} does not exist");
+            }
             var isDirectory = _fileStreamerWrapper.DirectoryExists(uploadAction.DirName);
             if (isDirectory)
             {
