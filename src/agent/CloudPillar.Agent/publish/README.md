@@ -38,12 +38,18 @@ startagent.bat win-x64 c:\env\dev
 
 ### Windows - windows service
 ```
-./startagent.bat <ARCHITECTURE_DIR> --winsrv
+./startagent.bat <ARCHITECTURE_DIR> --winsrv <USER_PASSWORD>
 ```
+
+The <USER_PASSWORD> is optional if `UserPassword` not set in appsettings.json and not want to use interactive input.
 
 For example
 ````
 startagent.bat win-x64 --winsrv
+````
+
+````
+startagent.bat win-x64 --winsrv abcABC123!
 ````
 
 ### Windows service user permissions
@@ -66,7 +72,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `Authentication.StoreLocation`       | location to store the certificate - LocalMachine\CurrentUser.  |  if this value not configure - the default is LocalMachine |
 | `Authentication.Domain`       | machine domain name  |  if this value not configure - the default is `.` |
 | `Authentication.UserName`       | the user name log on as a service  |  if this value not configure - the default is Admin |
-| `Authentication.UserPassword`       | the user password log on as a service  |   |
+| `Authentication.UserPassword`       | the user password log on as a service  | if this value not configure - try to get the password from command line argument, if it is also not send it waiting to user interactive input.  |
 | `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
 | `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
 | `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
@@ -80,6 +86,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `StrictModeSettings.FilesRestrictions.DenyPatterns`    |  array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
 | `DownloadSettings.SignFileBufferSize`    | sing documents buffer size | `16384`         |
 | `DownloadSettings.CommunicationDelaySeconds`    | download delay seconds for check less communication | `30`         |
+| `DownloadSettings.BlockedDelayMinutes`    | file blocked delay minutes | `10`         |
 | `CommunicationLess`    | API returns mocks and not connect to IOT hub | `false`         |
 | `RunDiagnosticsSettings.FileSizeBytes`    | The size of the file to be created for diagnostics  |131072         |
 | `RunDiagnosticsSettings.PeriodicResponseWaitSeconds`    | Defines the time in seconds that the diagnostics process should check the download status | 10         |
@@ -194,31 +201,26 @@ public class DeviceStateClient
     Details of each action:
     1. **Periodic Upload Action**:
         - `action`: PeriodicUpload
-        - `actionId`: Action id
         - `description`: Periodically (once in 10 minutes) upload installation logging.
-        - `filename`: The file or pattern to be uploaded (e.g., "I:\\ExportedData_2023.05.*").
-        - `interval`: The time interval between uploads in minutes (e.g., 120 minutes).
-        - `enabled`: Whether this action is enabled (true/false).
+        - `dirName`: The file or pattern to be uploaded (e.g., "I:\\ExportedData_2023.05.*").
+        - `interval`: The time interval between uploads in seconds (e.g., 120 seconds).
 
     2. **Singular Upload Action**:
         - `action`: SingularUpload
-        - `actionId`: Action id
         - `description`: upload data.
-        - `filename`: The file or pattern to be uploaded (e.g., "I:\\ExportedData_2023.05.*").
+        - `fileName`: The file or pattern to be uploaded (e.g., "I:\\ExportedData_2023.05.*").
         - `method`: Method for upload, Blob or Stream.
 
     3. **Singular Download Action**:
         - `action`: SingularDownload
-        - `actionId`: Action id
         - `description`: Download Carto 7.2 SPU Patch.
         - `source`: The source of the firmware package (e.g., "SPU.zip").
-        - `protocol`: Supported protocols for communication (e.g., "https|iotamqp|iotmqtt").
         - `sign`: Signature of file content.
         - `destinationPath`: The destination path for storing the downloaded firmware (e.g., "./SPU.zip").
+        - `unzip`: Do unzip to download (The file must be a ZIP).
     
     4. **Execute Once Action**:
         - `action`: ExecuteOnce
-        - `actionId`: Action id
         - `description`: Extraction of security update McAfee.
         - `shell`: The shell or scripting language used to execute the command (e.g., "powershell").
         - `command`: The command to extract an archive (e.g., "Expand-Archive -LiteralPath '.\\mcaffeeV3_5150dat.zip' -DestinationPath 'I:\\' -Force").

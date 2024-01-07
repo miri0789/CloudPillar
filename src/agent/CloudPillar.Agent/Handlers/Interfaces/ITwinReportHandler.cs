@@ -1,4 +1,5 @@
 using CloudPillar.Agent.Entities;
+using Microsoft.Azure.Devices.Shared;
 using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
@@ -9,8 +10,8 @@ public interface ITwinReportHandler
     string GetPeriodicReportedKey(PeriodicUploadAction periodicUploadAction, string periodicFileName = "");
     TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "");
 
-    Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken);
-
+    Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken);
+    Task<Twin> SetTwinReported(CancellationToken cancellationToken);
     Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported, CancellationToken cancellationToken);
 
     Task UpdateDeviceStateAsync(DeviceStateType deviceState, CancellationToken cancellationToken);
