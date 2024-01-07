@@ -82,6 +82,20 @@ stages:
         pathtoPublish: ./cloudpillar-agent-$(imagetag).zip
         artifactName: 'cloudpillar'
         publishLocation: 'Container'  
+    
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(Build.SourcesDirectory)/src/agent/CloudPillar.Agent'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.DefinitionName).zip'
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'cloudpillar'
+        publishLocation: 'Container'
 
   - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
