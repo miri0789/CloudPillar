@@ -16,7 +16,7 @@
     <PackageReference Include="Microsoft.Azure.Devices" Version="1.39.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="SharedLogger" Version="1.0.10" />
-    <PackageReference Include="SharedEntities" Version="1.0.188" />
+    <PackageReference Include="SharedEntities" Version="1.0.190" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Infra\Common\Common.csproj" />
