@@ -111,7 +111,7 @@ public class TwinHandler : ITwinHandler
     {
         try
         {
-            var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var twin = await _twinReportHandler.SetTwinReported(cancellationToken);
             var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson())!;
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
