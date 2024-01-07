@@ -72,7 +72,7 @@ stages:
         CONTAINER_ID=$(docker create agent:aux-build)
         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
         docker rm $CONTAINER_ID
-        mv ./cloudpillar.zip ./cloudpillar-agent-$(imagetag).zip
+        mv ./cloudpillar.zip ./cloudpillar-agent-publish-$(imagetag).zip
         ls -al ./cloudpillar-agent-publish-$(imagetag).zip
       displayName: 'Extract cloudpillar.zip from Image'
 
