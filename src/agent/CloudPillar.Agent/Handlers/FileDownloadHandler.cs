@@ -18,6 +18,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly ISignatureHandler _signatureHandler;
     private readonly StrictModeSettings _strictModeSettings;
     private static ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
+    private readonly IServerIdentityHandler _serverIdentityHandler;
 
 
     private readonly ILoggerHandler _logger;
@@ -31,6 +32,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                                ILoggerHandler loggerHandler,
                                ICheckSumService checkSumService,
                                ISignatureHandler signatureHandler,
+                               IServerIdentityHandler serverIdentityHandler,
                                IOptions<StrictModeSettings> strictModeSettings,
                                IOptions<DownloadSettings> options)
     {
@@ -43,6 +45,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
+        _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
     }
 
     public void AddFileDownload(ActionToReport actionToReport)
@@ -463,5 +466,30 @@ public class FileDownloadHandler : IFileDownloadHandler
     public void InitDownloadsList()
     {
         _filesDownloads = new ConcurrentBag<FileDownload>();
+    }
+
+    public async Task ReloadKnownIdentitiesFromCertificates(CancellationToken cancellationToken)
+    {
+        var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        try
+        {
+
+            while (await timer.WaitForNextTickAsync() && !cancellationToken.IsCancellationRequested)
+            {
+                if (_filesDownloads.Count == 0)
+                {
+                    await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"ReloadKnownIdentitiesFromCertificates failed message: {ex.Message}");
+        }
+        finally
+        {
+            _logger.Info($"ReloadKnownIdentitiesFromCertificates stopped");
+            timer.Dispose();
+        }
     }
 }
