@@ -74,17 +74,12 @@
             "cwd": "${workspaceFolder}/src/backend/BEApi",
             "console": "internalConsole",
             "env": {
-                // "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
-                // "DPSConnectionString": "HostName=cp-nechama-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=zh9gSAqFvin2Esh1kXZMVP2IPPOOhDuAfv+TXAZnHho=",
-                // "DPSIdScope": "0ne00B889E4",
-                // "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
+                "DPSConnectionString": "HostName=cp-nechama-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=zh9gSAqFvin2Esh1kXZMVP2IPPOOhDuAfv+TXAZnHho=",
+                "DPSIdScope": "0ne00B889E4",
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "ExpirationCertificatePercent": "0.6",
                 "maxCountDevices": "100",
-                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
-            "IothubConnectionString": "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE=",
-               
-                "DPSConnectionString": "HostName=cp-tst-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=z4ZY+yWfPMSQBVDxLqszzI4Z2vsvsEVR7QYkwi8E1Fc=",
-                "DPSIdScope": "0ne00B56E85",
             }
         },
         {
