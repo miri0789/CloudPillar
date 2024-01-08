@@ -372,6 +372,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
             {
                 RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
+                await UpdateKnownIdentities(cancellationToken);
             }
         }
         catch (Exception ex)
@@ -468,28 +469,12 @@ public class FileDownloadHandler : IFileDownloadHandler
         _filesDownloads = new ConcurrentBag<FileDownload>();
     }
 
-    public async Task ReloadKnownIdentitiesFromCertificates(CancellationToken cancellationToken)
+    private async Task UpdateKnownIdentities(CancellationToken cancellationToken)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
-        try
+        //check if update when blobked download exists in array
+        if (_filesDownloads.Count == 0 && !cancellationToken.IsCancellationRequested)
         {
-
-            while (await timer.WaitForNextTickAsync() && !cancellationToken.IsCancellationRequested)
-            {
-                if (_filesDownloads.Count == 0)
-                {
-                    await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"ReloadKnownIdentitiesFromCertificates failed message: {ex.Message}");
-        }
-        finally
-        {
-            _logger.Info($"ReloadKnownIdentitiesFromCertificates stopped");
-            timer.Dispose();
+            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
         }
     }
 }

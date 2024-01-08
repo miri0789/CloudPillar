@@ -171,11 +171,8 @@ public class TwinHandler : ITwinHandler
                 if (action.TwinAction is DownloadAction downloadAction)
                 {
                     _fileDownloadHandler.AddFileDownload(action);
-                    Task.Run(async () => await _fileDownloadHandler.ReloadKnownIdentitiesFromCertificates(cancellationToken));
                 }
             }
-
-            Task.Run(async () => await _fileDownloadHandler.ReloadKnownIdentitiesFromCertificates(cancellationToken));
 
             _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
 

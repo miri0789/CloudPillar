@@ -9,6 +9,4 @@ public interface IFileDownloadHandler
     Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken);
     Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken);
     void InitDownloadsList();
-    Task ReloadKnownIdentitiesFromCertificates(CancellationToken cancellationToken);
-
 }
