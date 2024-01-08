@@ -27,6 +27,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IOptions<StrictModeSettings>> _mockStrictModeSettings;
         private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
         private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
+        private Mock<IServerIdentityHandler> _serverIdentityHandlerMock;
 
         private int actionIndex = 0;
 
@@ -49,6 +50,8 @@ namespace CloudPillar.Agent.Tests
             _twinReportHandlerMock = new Mock<ITwinReportHandler>();
             _checkSumServiceMock = new Mock<ICheckSumService>();
             _loggerMock = new Mock<ILoggerHandler>();
+            _serverIdentityHandlerMock = new Mock<IServerIdentityHandler>();
+
             _fileStreamerWrapperMock.Setup(item => item.isSpaceOnDisk(It.IsAny<string>(), It.IsAny<long>())).Returns(true);
             _fileStreamerWrapperMock.Setup(f => f.GetExtension(It.IsAny<string>())).Returns(".zip");
             _fileStreamerWrapperMock.Setup(x => x.ReadStream(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
@@ -66,6 +69,7 @@ namespace CloudPillar.Agent.Tests
               _loggerMock.Object,
               _checkSumServiceMock.Object,
               _signatureHandlerMock.Object,
+              _serverIdentityHandlerMock.Object,
               _mockStrictModeSettings.Object,
                mockDownloadSettings.Object);
         }
@@ -271,7 +275,6 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapperMock.Verify(x => x.UnzipFileAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
 
-
         [Test]
         public async Task HandleDownloadMessageAsync_CompleteRangeCheckCheckSumInvalid_SendRangeFirmwareEvent()
         {
@@ -471,8 +474,6 @@ namespace CloudPillar.Agent.Tests
             , It.IsAny<CancellationToken>()), Times.Once);
         }
 
-
-
         [Test]
         public async Task InitFileDownloadAsync_FileExist_ReportBlockedStatus()
         {
@@ -516,6 +517,63 @@ namespace CloudPillar.Agent.Tests
             , It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        [Test]
+        public async Task SaveReportAsync_EndAllDownloads_UpdateKnownIdentities()
+        {
+            _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
+
+            var action1 = await initActionForUpdateKnownIdentities("test.txt");
+            var action2 = await initActionForUpdateKnownIdentities("test2.txt");
+
+            var message = new DownloadBlobChunkMessage
+            {
+                ActionIndex = action1.ActionReported.ReportIndex,
+                FileName = action1.Action.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 1024,
+                RangesCount = 2
+            };
+
+            await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
+
+             var message2 = new DownloadBlobChunkMessage
+            {
+                ActionIndex = action2.ActionReported.ReportIndex,
+                FileName = action2.Action.Source,
+                Offset = 0,
+                Data = new byte[1024],
+                FileSize = 1024,
+                RangesCount = 2
+            };
+            await _target.HandleDownloadMessageAsync(message2, CancellationToken.None);
+            
+            _serverIdentityHandlerMock.Verify(x => x.HandleKnownIdentitiesFromCertificatesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+        private async Task<FileDownload> initActionForUpdateKnownIdentities(string source)
+        {
+
+            var action = new FileDownload()
+            {
+                ActionReported = new ActionToReport()
+                {
+                    ReportIndex = actionIndex++,
+                    TwinReport = new TwinActionReported(),
+                    TwinAction = new DownloadAction()
+                    {
+                        Source = source,
+                        DestinationPath = "C:\\Downloads",
+                        Sign = "aaaaaa"
+                    }
+                }
+            };
+            action.Report.Status = StatusType.Success;
+            action.Report.CompletedRanges = "0,1";
+            _target.AddFileDownload(action.ActionReported);
+            return action;
+        }
         private async Task InitFileDownloadAsync(FileDownload action)
         {
             _target.AddFileDownload(action.ActionReported);
