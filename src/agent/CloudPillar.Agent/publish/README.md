@@ -66,7 +66,7 @@ To configure the application settings, please refer to the appsettings.json file
 | Setting Name   | Description                    | Default Value   |
 | ---------------| ------------------------------ | --------------- |
 | `Authentication.GlobalDeviceEndpoint`       | The global device endpoint  |  `global.azure-devices-provisioning.net` |
-| `Authentication.CertificateExpiredDays`       | The number of days the certificate expires after it was created  |  `365` |
+| `Authentication.CertificateExpiredDays`       | The number of days from when the certificate was created, that it expires  |  `730` |
 | `Authentication.DpsScopeId`       | DPS Scope ID  |  `true` |
 | `Authentication.GroupEnrollmentKey`       | DPS enrollment group key  |   |
 | `Authentication.StoreLocation`       | Location for storing the certificate - LocalMachine\CurrentUser.  |  `CurrentUser` - if `Authentication.UserName` is defined, `LocalMachine` if `Authentication.UserName` is not defined |
