@@ -34,9 +34,13 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
         _logger.Info($"UploadPeriodicAsync: start dir: {uploadAction.DirName}");
         try
         {
-            if (!_fileStreamerWrapper.DirectoryExists(uploadAction.DirName) && !_fileStreamerWrapper.FileExists(uploadAction.FileName))
+            if (!_fileStreamerWrapper.DirectoryExists(uploadAction.DirName) && !string.IsNullOrWhiteSpace(uploadAction.DirName))
             {
-                throw new ArgumentException($"Directory or file {uploadAction.DirName} does not exist");
+                throw new ArgumentException($"Directory {uploadAction.DirName} does not exist");
+            }
+            if (!_fileStreamerWrapper.FileExists(uploadAction.FileName) && !string.IsNullOrWhiteSpace(uploadAction.FileName))
+            {
+                throw new ArgumentException($"File {uploadAction.FileName} does not exist");
             }
             var isDirectory = _fileStreamerWrapper.DirectoryExists(uploadAction.DirName);
             if (isDirectory)
@@ -75,24 +79,18 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
                 }
             }
 
-
+            _twinReportHandler.SetReportProperties(actionToReport, uploadAction.Interval > 0 ? StatusType.Idle : StatusType.Success);
         }
         catch (Exception ex)
         {
             _logger.Error($"Periodic upload error DirName: '{uploadAction.DirName}', FileName: '{uploadAction.FileName}': {ex.Message}");
-            _twinReportHandler.SetReportProperties(actionToReport, StatusType.Failed, ex.Message, ex.GetType().Name);
+            _twinReportHandler.SetReportProperties(actionToReport, uploadAction.Interval > 0 ? StatusType.Idle : StatusType.Failed, ex.Message, ex.GetType().Name);
         }
         finally
         {
             if (uploadAction.Interval > 0)
             {
-                _twinReportHandler.SetReportProperties(actionToReport, StatusType.Idle);
                 Task.Run(async () => IdlePeriodicAsync(actionToReport, changeSpecId, cancellationToken));
-            }
-            else
-            {
-                _logger.Info($"Upload periodic of directory {uploadAction.DirName} is success because interval is empty");
-                _twinReportHandler.SetReportProperties(actionToReport, StatusType.Success, null, "Interval is empty");
             }
             await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         }
