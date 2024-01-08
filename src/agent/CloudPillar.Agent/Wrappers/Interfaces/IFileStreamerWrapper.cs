@@ -63,4 +63,6 @@ public interface IFileStreamerWrapper
     long GetFileLength(string path);
 
     bool HasExtension(string fullFilePath);
+
+    string GetFullPath(string fullFilePath);
 }
