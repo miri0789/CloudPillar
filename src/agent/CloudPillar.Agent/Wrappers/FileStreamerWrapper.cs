@@ -85,6 +85,12 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return Path.HasExtension(fullFilePath);
     }
 
+    public string GetFullPath(string fullFilePath)
+    {
+        return Path.GetFullPath(fullFilePath);
+    }
+
+
     public DirectoryInfo CreateDirectoryInfo(string directoryPath)
     {
         return new DirectoryInfo(directoryPath);

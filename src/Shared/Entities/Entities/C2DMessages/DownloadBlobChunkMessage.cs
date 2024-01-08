@@ -11,6 +11,7 @@ public class DownloadBlobChunkMessage : C2DMessages
     public long? RangeEndPosition { get; set; }
     public string RangeCheckSum { get; set; }
     public int? RangesCount { get; set; }
+    public string? ChangeSpecId { get; set; }
     public override string GetMessageId()
     {
         return $"{this.FileName}_{this.RangeIndex}_{this.ChunkIndex}_{this.ActionIndex}";
