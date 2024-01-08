@@ -175,6 +175,7 @@ public class TwinHandler : ITwinHandler
                 }
             }
 
+            Task.Run(async () => await _fileDownloadHandler.ReloadKnownIdentitiesFromCertificates(cancellationToken));
 
             _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
 
