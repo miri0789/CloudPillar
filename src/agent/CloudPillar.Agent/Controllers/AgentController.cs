@@ -31,7 +31,6 @@ public class AgentController : ControllerBase
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IReprovisioningHandler _reprovisioningHandler;
     private readonly IServerIdentityHandler _serverIdentityHandler;
-    private readonly IX509Provider _x509Provider;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -45,7 +44,6 @@ public class AgentController : ControllerBase
      ILoggerHandler logger,
      IStateMachineChangedEvent stateMachineChangedEvent,
      IReprovisioningHandler reprovisioningHandler,
-     IX509Provider x509Provider,
     IServerIdentityHandler serverIdentityHandler)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
@@ -66,36 +64,10 @@ public class AgentController : ControllerBase
     [DeviceStateFilter]
     public async Task<ActionResult<string>> AddRecipeAsync([FromBody] TwinDesired recipe)
     {
-
         _twinDesiredPropsValidator.ValidateAndThrow(recipe);
         return await _twinHandler.GetTwinJsonAsync();
     }
-    [AllowAnonymous]
-    [HttpPost("GenerateSelfSignedECDsaCertificate")]
-    public async Task<ActionResult<string>> GenerateSelfSignedECDsaCertificate()
-    {
-
-        using (ECDsa ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256))
-        {
-            // Generate a certificate request.
-            CertificateRequest request = new CertificateRequest($"CN=EDCSA-CER", ecdsa, HashAlgorithmName.SHA256);
-
-            // Add certificate extensions if needed (e.g., for specifying usage, subject alternative names, etc.).
-            // For this example, let's create a self-signed certificate.
-            DateTimeOffset startDate = DateTime.UtcNow.AddDays(-1);
-            DateTimeOffset endDate = DateTime.UtcNow.AddYears(1);
-            X509Certificate2 certificate = request.CreateSelfSigned(startDate, endDate);
-
-
-
-            using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine, OpenFlags.ReadWrite))
-            {
-                store.Add(certificate);
-            }
-            return certificate.ToString();
-        }
-    }
-
+  
     [AllowAnonymous]
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
