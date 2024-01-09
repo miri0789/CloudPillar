@@ -534,10 +534,15 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task SaveReportAsync_EndAllDownloads_UpdateKnownIdentities()
         {
+            _target.InitDownloadsList();
             _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
+           
+            _fileStreamerWrapperMock.Setup(x => x.GetFullPath("C:\\Downloads")).Returns("C:\\Downloads");
+            _fileStreamerWrapperMock.Setup(x => x.GetFullPath("C:\\Downloads\\test.txt")).Returns("C:\\Downloads\\test.txt");
 
-            var action1 = await initActionForUpdateKnownIdentities("test.txt");
-            var action2 = await initActionForUpdateKnownIdentities("test2.txt");
+            var action1 = await initActionForUpdateKnownIdentities("test.txt", "C:\\Downloads", StatusType.Success);
+            var action2 = await initActionForUpdateKnownIdentities("test2.txt", "C:\\Downloads\\test", StatusType.Failed);
+
 
             var message = new DownloadBlobChunkMessage
             {
@@ -559,7 +564,7 @@ namespace CloudPillar.Agent.Tests
         }
 
 
-        private async Task<FileDownload> initActionForUpdateKnownIdentities(string source)
+        private async Task<FileDownload> initActionForUpdateKnownIdentities(string source, string destinationPath, StatusType status)
         {
 
             var action = new FileDownload()
@@ -571,12 +576,12 @@ namespace CloudPillar.Agent.Tests
                     TwinAction = new DownloadAction()
                     {
                         Source = source,
-                        DestinationPath = "C:\\Downloads",
+                        DestinationPath = destinationPath,
                         Sign = "aaaaaa"
                     }
                 }
             };
-            action.Report.Status = StatusType.Success;
+            action.Report.Status = status;
             action.Report.CompletedRanges = "0,1";
             _target.AddFileDownload(action.ActionReported);
             return action;
