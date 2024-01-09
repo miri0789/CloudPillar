@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 
 namespace CloudPillar.Agent.Controllers;
 
