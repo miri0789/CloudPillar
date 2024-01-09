@@ -95,7 +95,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(),It.IsAny<string>(),  action.Action.Source, action.ActionReported.ReportIndex, It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
         }
 
@@ -294,7 +294,7 @@ namespace CloudPillar.Agent.Tests
                 RangeEndPosition = rangeEndPosition
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(),It.IsAny<string>(),  action.Action.Source, action.ActionReported.ReportIndex, "6", rangeStartPosition, rangeEndPosition), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "6", rangeStartPosition, rangeEndPosition), Times.Once);
 
         }
 
@@ -532,8 +532,21 @@ namespace CloudPillar.Agent.Tests
 
         private async Task InitFileDownloadAsync(FileDownload action)
         {
+            _target.InitDownloadsList();
             _target.AddFileDownload(action.ActionReported);
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task AddFileDownload_ExistFile_ReturnFalse()
+        {
+            var action = initAction();
+            _target.AddFileDownload(action.ActionReported);
+            action = initAction();
+            _target.AddFileDownload(action.ActionReported);
+            var res = _target.AddFileDownload(action.ActionReported);
+
+            Assert.IsFalse(res);
         }
 
         private async Task SetUpHandleDownloadMessageAsync_SignVerifyFailed()

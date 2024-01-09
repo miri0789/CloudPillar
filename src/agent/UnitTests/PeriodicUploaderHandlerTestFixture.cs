@@ -55,8 +55,8 @@ public class PeriodicUploaderHandlerTestFixture
         await _target.UploadAsync(_actionToReport, "testChangeSpecId", CancellationToken.None);
         // Assert        
         _twinReportHandlerMock.Verify(
-            x => x.SetReportProperties(It.IsAny<ActionToReport>(), It.Is<StatusType>(item => item == StatusType.Success),
-             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            x => x.SetReportProperties(It.IsAny<ActionToReport>(), It.Is<StatusType>(item => item == StatusType.Failed),
+             It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string>()), Times.Once);
     }
 
     [Test]
@@ -116,7 +116,7 @@ public class PeriodicUploaderHandlerTestFixture
         // Act
         await _target.UploadAsync(_actionToReport, "testChangeSpecId", CancellationToken.None);
         // Assert
-        _twinReportHandlerMock.Verify(x => x.SetReportProperties(It.IsAny<ActionToReport>(), It.Is<StatusType>(item => item == StatusType.Success), null, "Interval is empty", ""), Times.Once);
+        _twinReportHandlerMock.Verify(x => x.SetReportProperties(It.IsAny<ActionToReport>(), It.Is<StatusType>(item => item == StatusType.Success), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string>()), Times.Once);
     }
 
 
