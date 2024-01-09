@@ -6,6 +6,7 @@ using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Services;
 using Microsoft.Extensions.Options;
+using System.Security.AccessControl;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -81,35 +82,31 @@ public class FileDownloadHandler : IFileDownloadHandler
                         file.Report.Status = StatusType.Pending;
                         file.Report.CompletedRanges = "";
                     }
-
-                    if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
-                     && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
-                    {
-                        SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
-                    }
-                    else if (!_fileStreamerWrapper.isSpaceOnDisk(destPath, file.TotalBytes))
-                    {
-                        SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
-                    }
-                    else if (file.Report.Status == StatusType.Unzip) // file download complete , only need to unzip it
-                    {
-                        await HandleCompletedDownloadAsync(file, cancellationToken);
-                    }
                     else
                     {
-                        if (isFileExist && file.TotalBytesDownloaded == 0)
+                        var isBlocked = await HandleBlockedStatusAsync(file, isFileExist, destPath, isCreatedDownloadDirectory, cancellationToken);
+                        if (!isBlocked)
                         {
-                            file.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                            if (file.Report.Status == StatusType.Unzip)
+                            {
+                                await HandleCompletedDownloadAsync(file, cancellationToken);
+                            }
+                            else
+                            {
+                                if (isFileExist && file.TotalBytesDownloaded == 0)
+                                {
+                                    file.TotalBytesDownloaded = _fileStreamerWrapper.GetFileLength(destPath);
+                                }
+                                if (file.Report.Status != StatusType.InProgress)
+                                {
+                                    await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex);
+                                }
+                                else
+                                {
+                                    await CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken);
+                                }
+                            }
                         }
-                        if (file.Report.Status != StatusType.InProgress)
-                        {
-                            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex);
-                        }
-                        else
-                        {
-                            await CheckIfNotRecivedDownloadMsgToFile(file, cancellationToken);
-                        }
-
                     }
                 }
             }
@@ -129,6 +126,28 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             _logger.Error($"InitFileDownloadAsync, There is no active download for message {actionToReport.ReportIndex}");
         }
+    }
+
+    private async Task<bool> HandleBlockedStatusAsync(FileDownload file, bool isFileExist, string destPath, bool isCreatedDownloadDirectory, CancellationToken cancellationToken)
+    {
+        if (file.Report.Status == StatusType.Blocked)
+        {
+            file.Report.Status = StatusType.Pending;
+        }
+        if ((isFileExist || (!isCreatedDownloadDirectory && file.Action.Unzip))
+                     && file.Report.Status is not StatusType.InProgress && file.Report.Status is not StatusType.Unzip)
+        {
+            SetBlockedStatus(file, DownloadBlocked.FileAlreadyExist, cancellationToken);
+        }
+        else if (!_fileStreamerWrapper.isSpaceOnDisk(destPath, file.TotalBytes))
+        {
+            SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
+        }
+        else if (!HasWritePermissionOnDir(Path.GetDirectoryName(file.Action.DestinationPath)))
+        {
+            SetBlockedStatus(file, DownloadBlocked.AccessDenied, cancellationToken);
+        }
+        return file.Report.Status == StatusType.Blocked;
     }
 
     private async Task<bool> ChangeSignExists(FileDownload file, CancellationToken cancellationToken)
@@ -166,7 +185,6 @@ public class FileDownloadHandler : IFileDownloadHandler
         var fileDownload = GetDownloadFile(file.ActionReported.ReportIndex, file.Action.Source, file.ActionReported.ChangeSpecId);
         if (!cancellationToken.IsCancellationRequested && fileDownload is not null)
         {
-            fileDownload.Report.Status = StatusType.Pending;
             await InitFileDownloadAsync(file.ActionReported, cancellationToken);
         }
     }
@@ -242,6 +260,19 @@ public class FileDownloadHandler : IFileDownloadHandler
         return false;
     }
 
+    public bool HasWritePermissionOnDir(string directoryPath)
+    {
+        DirectoryInfo directoryInfo = _fileStreamerWrapper.CreateDirectoryInfo(directoryPath);
+        DirectorySecurity directorySecurity = _fileStreamerWrapper.GetAccessControl(directoryInfo);
+        AuthorizationRuleCollection accessRules = _fileStreamerWrapper.GetAccessRules(directorySecurity);
+        var rules = accessRules?.Cast<FileSystemAccessRule>();
+        if (rules is not null && rules.Any(x => x.AccessControlType == AccessControlType.Deny))
+        {
+            return false;
+        }
+        return true;
+    }
+
     private void HandleFirstMessageAsync(FileDownload file, DownloadBlobChunkMessage message)
     {
         file.TotalBytes = message.FileSize;
@@ -256,6 +287,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isVerify = await _signatureHandler.VerifyFileSignatureAsync(destPath, file.Action.Sign);
         if (isVerify)
         {
+            file.Report.ResultCode = file.Report.ResultText = null;
             if (file.Action.Unzip)
             {
                 file.Report.Status = StatusType.Unzip;
@@ -311,6 +343,13 @@ public class FileDownloadHandler : IFileDownloadHandler
             return;
         }
         var filePath = GetDestinationPath(file);
+
+        var fileLength = Math.Max(_fileStreamerWrapper.GetFileLength(filePath), message.Offset + message.Data?.Length ?? 0);
+        if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, fileLength))
+        {
+            SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
+            _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
+        }
         try
         {
             if (!string.IsNullOrWhiteSpace(message.Error))

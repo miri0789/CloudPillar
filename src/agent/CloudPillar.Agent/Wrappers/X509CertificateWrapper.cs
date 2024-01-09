@@ -6,7 +6,7 @@ using Microsoft.Azure.Devices.Shared;
 namespace CloudPillar.Agent.Wrappers;
 public class X509CertificateWrapper : IX509CertificateWrapper
 {
-    public X509Store Open(OpenFlags flags, StoreName storeName = StoreName.My, StoreLocation storeLocation = StoreLocation.LocalMachine)
+    public X509Store Open(OpenFlags flags, StoreLocation storeLocation, StoreName storeName = StoreName.My)
     {
         var store = new X509Store(storeName, storeLocation);
         store.Open(flags);

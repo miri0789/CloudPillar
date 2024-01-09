@@ -1,5 +1,5 @@
-﻿
-using System.IO.Compression;
+﻿using System.IO.Compression;
+using System.Security.AccessControl;
 using System.Text;
 
 namespace CloudPillar.Agent.Wrappers;
@@ -74,9 +74,25 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return File.Exists(filePath);
     }
+
     public bool DirectoryExists(string fullFilePath)
     {
         return Directory.Exists(fullFilePath);
+    }
+
+    public DirectoryInfo CreateDirectoryInfo(string directoryPath)
+    {
+        return new DirectoryInfo(directoryPath);
+    }
+
+    public DirectorySecurity GetAccessControl(DirectoryInfo directoryInfo)
+    {
+        return directoryInfo.GetAccessControl();
+    }
+
+    public AuthorizationRuleCollection GetAccessRules(DirectorySecurity directorySecurity)
+    {
+        return directorySecurity.GetAccessRules(true, true, typeof(System.Security.Principal.SecurityIdentifier));
     }
 
     public bool isSpaceOnDisk(string path, long size)
@@ -172,7 +188,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     public long GetFileLength(string path)
     {
         FileInfo fileInfo = new FileInfo(path);
-        return fileInfo.Length;
+        return fileInfo.Exists ? fileInfo.Length : 0;
     }
 
 

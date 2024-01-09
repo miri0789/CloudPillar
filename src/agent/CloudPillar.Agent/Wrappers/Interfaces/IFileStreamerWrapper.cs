@@ -1,4 +1,6 @@
-﻿namespace CloudPillar.Agent.Wrappers;
+﻿using System.Security.AccessControl;
+
+namespace CloudPillar.Agent.Wrappers;
 
 public interface IFileStreamerWrapper
 {
@@ -12,6 +14,12 @@ public interface IFileStreamerWrapper
     byte[] ReadStream(string fullFilePath, long startPosition, long lengthToRead);
 
     void CreateDirectory(string destinationPath);
+
+    DirectoryInfo CreateDirectoryInfo(string directoryPath);
+
+    DirectorySecurity GetAccessControl(DirectoryInfo directoryInfo);
+
+    AuthorizationRuleCollection GetAccessRules(DirectorySecurity directorySecurity);
 
     Task WriteChunkToFileAsync(string filePath, long writePosition, byte[] bytes);
 

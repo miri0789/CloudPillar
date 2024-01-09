@@ -57,7 +57,7 @@ public class X509Provider : IX509Provider
 
     public X509Certificate2 GetHttpsCertificate()
     {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly, StoreName.My, storeLocation: _authenticationSettings.StoreLocation))
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadOnly, storeLocation: _authenticationSettings.StoreLocation, StoreName.My))
         {
             var certificates = _x509CertificateWrapper.GetCertificates(store);
             var filteredCertificate = GetCPCertificate(certificates);
@@ -105,7 +105,7 @@ public class X509Provider : IX509Provider
         {
             FriendlyName = "cloud pillar agent anonymous"
         };
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, StoreName.My, storeLocation: _authenticationSettings.StoreLocation))
+        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation, StoreName.My))
         {
             store.Add(privateCertificate);
         }

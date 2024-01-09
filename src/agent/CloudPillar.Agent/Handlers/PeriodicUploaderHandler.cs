@@ -34,16 +34,20 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
         _logger.Info($"UploadPeriodicAsync: start dir: {uploadAction.DirName}");
         try
         {
-            var isDirectory = _fileStreamerWrapper.DirectoryExists(uploadAction.DirName);
-            if (isDirectory && actionToReport.TwinReport.PeriodicReported is null)
+            if (!_fileStreamerWrapper.DirectoryExists(uploadAction.DirName) && !_fileStreamerWrapper.FileExists(uploadAction.FileName))
             {
-                actionToReport.TwinReport.PeriodicReported = new Dictionary<string, TwinActionReported>();
+                throw new ArgumentException($"Directory or file {uploadAction.DirName} does not exist");
+            }
+            var isDirectory = _fileStreamerWrapper.DirectoryExists(uploadAction.DirName);
+            if (isDirectory)
+            {
+                actionToReport.TwinReport.PeriodicReported ??= new Dictionary<string, TwinActionReported>();
             }
             _twinReportHandler.SetReportProperties(actionToReport, StatusType.InProgress);
             await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
 
             string[] files = isDirectory ? _fileStreamerWrapper.GetFiles(uploadAction.DirName, "*", SearchOption.AllDirectories) :
-                new string[] { uploadAction.DirName };
+                new string[] { uploadAction.FileName };
 
             if (files.Count() == 0)
             {
@@ -51,11 +55,14 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
             }
             foreach (var file in files)
             {
-                var key = isDirectory ? _twinReportHandler.GetPeriodicReportedKey(uploadAction, file) : "";
-                if (isDirectory && !actionToReport.TwinReport.PeriodicReported.ContainsKey(key))
+                if (isDirectory)
                 {
-                    actionToReport.TwinReport.PeriodicReported.Add(key, new TwinActionReported() { Status = StatusType.Pending });
-                }                
+                    var key = _twinReportHandler.GetPeriodicReportedKey(uploadAction, file);
+                    if (!actionToReport.TwinReport.PeriodicReported.ContainsKey(key))
+                    {
+                        actionToReport.TwinReport.PeriodicReported.Add(key, new TwinActionReported() { Status = StatusType.Pending });
+                    }
+                }
 
                 var currentCheckSum = await GetFileCheckSumAsync(file);
                 if (currentCheckSum != _twinReportHandler.GetActionToReport(actionToReport, file).CheckSum)
@@ -68,6 +75,15 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
                 }
             }
 
+
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Periodic upload error DirName: '{uploadAction.DirName}', FileName: '{uploadAction.FileName}': {ex.Message}");
+            _twinReportHandler.SetReportProperties(actionToReport, StatusType.Failed, ex.Message, ex.GetType().Name);
+        }
+        finally
+        {
             if (uploadAction.Interval > 0)
             {
                 _twinReportHandler.SetReportProperties(actionToReport, StatusType.Idle);
@@ -78,14 +94,6 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
                 _logger.Info($"Upload periodic of directory {uploadAction.DirName} is success because interval is empty");
                 _twinReportHandler.SetReportProperties(actionToReport, StatusType.Success, null, "Interval is empty");
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Periodic upload error '{uploadAction.DirName}': {ex.Message}");
-            _twinReportHandler.SetReportProperties(actionToReport, StatusType.Failed, ex.Message, ex.GetType().Name);
-        }
-        finally
-        {
             await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);
         }
     }

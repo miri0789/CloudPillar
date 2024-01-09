@@ -516,6 +516,20 @@ namespace CloudPillar.Agent.Tests
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);
         }
+        
+        [Test]
+        public async Task InitFileDownloadAsync_OnAccessDenied_ReportBlockedStatus()
+        {
+            var action = initAction();
+            _fileStreamerWrapperMock.Setup(item => item.FileExists(It.IsAny<string>())).Returns(false);
+            _fileStreamerWrapperMock.Setup(item => item.WriteChunkToFileAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<byte[]>())).ThrowsAsync(new System.UnauthorizedAccessException());
+            await InitFileDownloadAsync(action);
+
+            _twinReportHandlerMock.Verify(
+                x => x.UpdateReportActionAsync(It.IsAny<IEnumerable<ActionToReport>>()
+            , It.IsAny<CancellationToken>()), Times.Never);
+        }
+
 
         [Test]
         public async Task SaveReportAsync_EndAllDownloads_UpdateKnownIdentities()
@@ -537,7 +551,7 @@ namespace CloudPillar.Agent.Tests
 
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
 
-             var message2 = new DownloadBlobChunkMessage
+            var message2 = new DownloadBlobChunkMessage
             {
                 ActionIndex = action2.ActionReported.ReportIndex,
                 FileName = action2.Action.Source,
@@ -547,7 +561,7 @@ namespace CloudPillar.Agent.Tests
                 RangesCount = 2
             };
             await _target.HandleDownloadMessageAsync(message2, CancellationToken.None);
-            
+
             _serverIdentityHandlerMock.Verify(x => x.HandleKnownIdentitiesFromCertificatesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -574,6 +588,7 @@ namespace CloudPillar.Agent.Tests
             _target.AddFileDownload(action.ActionReported);
             return action;
         }
+
         private async Task InitFileDownloadAsync(FileDownload action)
         {
             _target.AddFileDownload(action.ActionReported);
