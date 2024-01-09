@@ -37,13 +37,13 @@ builder.Services.Configure<AuthenticationSettings>(options =>
             var storeLocation = authenticationSettings.GetValue("StoreLocation", "");
             var userName = authenticationSettings.GetValue("UserName", "");
 
-            if(!string.IsNullOrWhiteSpace(storeLocation))
+            if (!string.IsNullOrWhiteSpace(storeLocation))
             {
                 options.StoreLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocation);
-            } 
+            }
             else
             {
-                options.StoreLocation =string.IsNullOrWhiteSpace(userName)? StoreLocation.LocalMachine:StoreLocation.CurrentUser;
+                options.StoreLocation = string.IsNullOrWhiteSpace(userName) ? StoreLocation.LocalMachine : StoreLocation.CurrentUser;
             }
         });
 
@@ -101,6 +101,9 @@ builder.Services.AddScoped<IX509Provider, X509Provider>();
 builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
+
+var AppSettings = builder.Configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(AppSettings);
 
 var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
 builder.Services.Configure<DownloadSettings>(DownloadSettings);

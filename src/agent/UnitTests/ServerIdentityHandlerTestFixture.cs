@@ -5,6 +5,8 @@ using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
+using CloudPillar.Agent.Entities;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -16,6 +18,9 @@ namespace CloudPillar.Agent.Tests
         private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
         private Mock<IDeviceClientWrapper> _deviceClientWrapper;
         private IServerIdentityHandler _target;
+        private AppSettings appSettings = new AppSettings() { DefaultPublicKeyName = "UT-PublicKey" };
+        private Mock<IOptions<AppSettings>> mockAppSettings;
+
         private const string CERTIFICATE_PREFIX = "UT_PREFIX";
         private string reportedKey = nameof(TwinReported.KnownIdentities);
 
@@ -30,13 +35,19 @@ namespace CloudPillar.Agent.Tests
             _x509CertificateWrapper = new Mock<IX509CertificateWrapper>();
             _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
             _deviceClientWrapper = new Mock<IDeviceClientWrapper>();
+            mockAppSettings = new Mock<IOptions<AppSettings>>();
+            mockAppSettings.Setup(ap => ap.Value).Returns(appSettings);
+
             x509Certificate1 = MockHelper.GenerateCertificate("1", "", 60, CERTIFICATE_PREFIX);
             x509Certificate2 = MockHelper.GenerateCertificate("2", "", 60, CERTIFICATE_PREFIX);
 
-            _target = new ServerIdentityHandler(_loggerMock.Object, _x509CertificateWrapper.Object, _fileStreamerWrapper.Object, _deviceClientWrapper.Object);
+            CreateTrarget();
         }
 
-
+        private void CreateTrarget()
+        {
+            _target = new ServerIdentityHandler(_loggerMock.Object, _x509CertificateWrapper.Object, _fileStreamerWrapper.Object, _deviceClientWrapper.Object, mockAppSettings.Object);
+        }
         [Test]
         public async Task HandleKnownIdentitiesFromCertificatesAsync_ValidCertificates_ReturnsKnownIdentities()
         {
@@ -72,7 +83,7 @@ namespace CloudPillar.Agent.Tests
             _x509CertificateWrapper.Setup(x => x.CreateFromFile(It.IsAny<string>())).Throws(new Exception());
             Assert.ThrowsAsync<Exception>(async () => await _target.HandleKnownIdentitiesFromCertificatesAsync(CancellationToken.None));
         }
-        
+
         [Test]
         public async Task GetPublicKeyFromCertificate_GetRSAPublicKey_Success()
         {
@@ -84,6 +95,34 @@ namespace CloudPillar.Agent.Tests
             var excepted = "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzp\r\nIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr2\r\n4Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMR\r\ngsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs\r\n0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67Jr\r\nN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3w\r\nMQIDAQAB\r\n-----END PUBLIC KEY-----\r\n";
 
             Assert.AreEqual(excepted, publicKey);
+        }
+
+        [Test]
+        public async Task RemoveNonDefaultCertificates_ValidProcess_RemoveAllNonDefaultCertificate()
+        {
+            files = new string[] { "certificate1.cer", "certificate2.cer", "UT-PublicKey.cer" };
+            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
+            CreateTrarget();
+
+            foreach (var file in files)
+            {
+                _fileStreamerWrapper.Setup(f => f.GetFileNameWithoutExtension(file)).Returns(Path.GetFileNameWithoutExtension(file));
+            }
+
+            await _target.RemoveNonDefaultCertificates("pki");
+            _fileStreamerWrapper.Verify(f => f.DeleteFile(It.IsAny<string>()), Times.Exactly(2));
+        }
+
+        [Test]
+        public async Task RemoveNonDefaultCertificates_Exception_ReturnFAlse()
+        {
+            files = new string[] { "certificate1.cer", "certificate2.cer", "UT-PublicKey.cer" };
+            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
+
+            _fileStreamerWrapper.Setup(f => f.DeleteFile(It.IsAny<string>())).Throws(new Exception());
+
+            var res = await _target.RemoveNonDefaultCertificates("pki");
+            Assert.AreEqual(false, res);
         }
 
 

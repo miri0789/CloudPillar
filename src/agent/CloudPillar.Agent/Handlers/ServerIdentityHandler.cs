@@ -3,9 +3,10 @@ using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
-using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Options;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -15,6 +16,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
     private readonly IX509CertificateWrapper _x509CertificateWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IDeviceClientWrapper _deviceClient;
+    private AppSettings _appSettings;
     private const string CERTFICATE_FILE_EXTENSION = "*.cer";
     private const string PUBLIC_KEY_FILE_EXTENSION = ".pem";
 
@@ -22,13 +24,15 @@ public class ServerIdentityHandler : IServerIdentityHandler
         ILoggerHandler loggerHandler,
         IX509CertificateWrapper x509CertificateWrapper,
         IFileStreamerWrapper fileStreamerWrapper,
-        IDeviceClientWrapper deviceClient
+        IDeviceClientWrapper deviceClient,
+        IOptions<AppSettings> appSettings
 )
     {
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
         _x509CertificateWrapper = x509CertificateWrapper ?? throw new ArgumentNullException(nameof(x509CertificateWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
         _deviceClient = deviceClient ?? throw new ArgumentNullException(nameof(deviceClient));
+        _appSettings = appSettings?.Value ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
 
@@ -53,6 +57,28 @@ public class ServerIdentityHandler : IServerIdentityHandler
         RSA publicKey = _x509CertificateWrapper.GetRSAPublicKey(certificate);
         string pemPublicKey = ConvertToPem(publicKey);
         return pemPublicKey;
+    }
+
+    public async Task<bool> RemoveNonDefaultCertificates(string path)
+    {
+        try
+        {
+            List<string> certificatesFiles = _fileStreamerWrapper.GetFiles(path, CERTFICATE_FILE_EXTENSION).ToList();
+            certificatesFiles.ForEach(certificateFile =>
+            {
+                if (_fileStreamerWrapper.GetFileNameWithoutExtension(certificateFile).ToLower() != _appSettings.DefaultPublicKeyName.ToLower())
+                {
+                    _fileStreamerWrapper.DeleteFile(certificateFile);
+                    _logger.Info($"RemoveNonDefaultCertificates success for file: {certificateFile}");
+                }
+            });
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"RemoveNonDefaultCertificates failed message: {ex.Message}");
+            return false;
+        }
     }
 
     private string ConvertToPem(RSA publicKey)

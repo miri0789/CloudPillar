@@ -5,5 +5,5 @@ public interface IServerIdentityHandler
 {
     Task HandleKnownIdentitiesFromCertificatesAsync(CancellationToken cancellationToken);
     Task<string> GetPublicKeyFromCertificate(X509Certificate2 x509Certificate2);
-
+    Task<bool> RemoveNonDefaultCertificates(string path);
 }
