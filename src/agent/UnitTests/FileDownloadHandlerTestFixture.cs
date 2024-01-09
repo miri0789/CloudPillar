@@ -516,7 +516,7 @@ namespace CloudPillar.Agent.Tests
                 item.Any(rep => rep.TwinReport.Status == StatusType.Blocked))
             , It.IsAny<CancellationToken>()), Times.Once);
         }
-        
+
         [Test]
         public async Task InitFileDownloadAsync_OnAccessDenied_ReportBlockedStatus()
         {
@@ -551,16 +551,9 @@ namespace CloudPillar.Agent.Tests
 
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
 
-            var message2 = new DownloadBlobChunkMessage
-            {
-                ActionIndex = action2.ActionReported.ReportIndex,
-                FileName = action2.Action.Source,
-                Offset = 0,
-                Data = new byte[1024],
-                FileSize = 1024,
-                RangesCount = 2
-            };
-            await _target.HandleDownloadMessageAsync(message2, CancellationToken.None);
+            message.ActionIndex = action2.ActionReported.ReportIndex;
+            message.FileName = action2.Action.Source;
+            await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
 
             _serverIdentityHandlerMock.Verify(x => x.HandleKnownIdentitiesFromCertificatesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
