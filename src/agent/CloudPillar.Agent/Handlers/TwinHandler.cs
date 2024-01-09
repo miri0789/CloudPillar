@@ -171,8 +171,8 @@ public class TwinHandler : ITwinHandler
                 await SetReplaceFilePathByAction(action, cancellationToken);
                 if (action.TwinAction is DownloadAction downloadAction)
                 {
-                    var isExist = _fileDownloadHandler.AddFileDownload(action);
-                    if (isExist)
+                    var isDuplicate = !_fileDownloadHandler.AddFileDownload(action);
+                    if (isDuplicate)
                     {
                         action.TwinReport.Status = StatusType.Duplicate;
                     }
@@ -278,7 +278,7 @@ public class TwinHandler : ITwinHandler
             {
                 DownloadAction downloadAction => downloadAction.DestinationPath,
                 UploadAction uploadAction => uploadAction.FileName,
-                PeriodicUploadAction uploadAction => uploadAction.DirName,
+                PeriodicUploadAction uploadAction => uploadAction.DirName ?? uploadAction.FileName,
                 _ => string.Empty
             };
             var filePath = _strictModeHandler.ReplaceRootById(action.TwinAction.Action!.Value, actionFileName) ?? actionFileName;
@@ -286,7 +286,16 @@ public class TwinHandler : ITwinHandler
             {
                 case DownloadAction downloadAction: downloadAction.DestinationPath = filePath; break;
                 case UploadAction uploadAction: uploadAction.FileName = filePath; break;
-                case PeriodicUploadAction uploadAction: uploadAction.DirName = filePath; break;
+                case PeriodicUploadAction uploadAction:
+                    if (!string.IsNullOrWhiteSpace(uploadAction.DirName))
+                    {
+                        uploadAction.DirName = filePath;
+                    }
+                    else
+                    {
+                        uploadAction.FileName = filePath;
+                    }
+                    break;
             }
             return true;
         }
