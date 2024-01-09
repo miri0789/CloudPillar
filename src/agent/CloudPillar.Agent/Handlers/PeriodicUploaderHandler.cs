@@ -69,7 +69,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
                 }
 
                 var report = _twinReportHandler.GetActionToReport(actionToReport, file);
-                if (string.IsNullOrEmpty(report.CheckSum) || await GetFileCheckSumAsync(file) != report.CheckSum)
+                if (string.IsNullOrWhiteSpace(report.CheckSum) || await GetFileCheckSumAsync(file) != report.CheckSum)
                 {
                     report.Progress = null;
                     report.CorrelationId = report.CheckSum = null;
