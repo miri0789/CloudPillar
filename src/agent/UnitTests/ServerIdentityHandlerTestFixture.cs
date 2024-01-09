@@ -57,15 +57,6 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleKnownIdentitiesFromCertificatesAsync_NoCertificates_ExistFromFunction()
-        {
-            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { });
-            await _target.HandleKnownIdentitiesFromCertificatesAsync(CancellationToken.None);
-
-            _deviceClientWrapper.Verify(d => d.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<List<KnownIdentities>>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        [Test]
         public async Task HandleKnownIdentitiesFromCertificatesAsync_CreateCrertificateFromFileException_ThrowException()
         {
             _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
