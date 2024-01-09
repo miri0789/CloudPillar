@@ -99,7 +99,7 @@ namespace CloudPillar.Agent.Tests
             var action = initAction();
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
         }
 
@@ -140,7 +140,7 @@ namespace CloudPillar.Agent.Tests
             action.Action.Sign = null;
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, "0", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "0", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
         }
 
         [Test]
@@ -150,7 +150,7 @@ namespace CloudPillar.Agent.Tests
             action.Report.CompletedRanges = "0-5,8,10";
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, "6", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "6", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
 
         }
 
@@ -159,7 +159,7 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             _d2CMessengerHandlerMock.Setup(dc =>
-                    dc.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()))
+                    dc.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()))
                     .ThrowsAsync(new Exception());
             await InitFileDownloadAsync(action);
 
@@ -297,7 +297,7 @@ namespace CloudPillar.Agent.Tests
                 RangeEndPosition = rangeEndPosition
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), action.Action.Source, action.ActionReported.ReportIndex, "6", rangeStartPosition, rangeEndPosition), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "6", rangeStartPosition, rangeEndPosition), Times.Once);
 
         }
 
@@ -591,8 +591,21 @@ namespace CloudPillar.Agent.Tests
 
         private async Task InitFileDownloadAsync(FileDownload action)
         {
+            _target.InitDownloadsList();
             _target.AddFileDownload(action.ActionReported);
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task AddFileDownload_ExistFile_ReturnFalse()
+        {
+            var action = initAction();
+            _target.AddFileDownload(action.ActionReported);
+            action = initAction();
+            _target.AddFileDownload(action.ActionReported);
+            var res = _target.AddFileDownload(action.ActionReported);
+
+            Assert.IsFalse(res);
         }
 
         private async Task SetUpHandleDownloadMessageAsync_SignVerifyFailed()
