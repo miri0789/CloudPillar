@@ -32,6 +32,7 @@ namespace Backend.BlobStreamer.Tests
 
         private const string _deviceId = "test-device";
         private const string _fileName = "test-file.txt";
+        private const string _changeSpecId = "1.2.3";
         private const int _chunkSize = 1024;
         private const int _rangeSize = 4096;
         private const int _rangeIndex = 0;
@@ -67,7 +68,7 @@ namespace Backend.BlobStreamer.Tests
             _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
 
             _mockDeviceConnectService.Setup(s => s.SendDeviceMessageAsync(It.IsAny<ServiceClient>(), It.IsAny<Message>(), _deviceId)).Returns(Task.CompletedTask);
-            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
+            await _target.SendRangeByChunksAsync(_deviceId, _changeSpecId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
             _mockDeviceConnectService.Verify(s => s.SendDeviceMessageAsync(
                                                 It.IsAny<ServiceClient>(),
                                                 It.IsAny<Message>(),
@@ -81,7 +82,7 @@ namespace Backend.BlobStreamer.Tests
             _mockCheckSumService.Setup(b => b.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>()));
             _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
 
-            await _target.SendRangeByChunksAsync(_deviceId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
+            await _target.SendRangeByChunksAsync(_deviceId, _changeSpecId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
             _mockCheckSumService.Verify(s => s.CalculateCheckSumAsync(It.Is<byte[]>(b => b.Length == _rangeSize), It.IsAny<CheckSumType>()), Times.Once);
         }
 
