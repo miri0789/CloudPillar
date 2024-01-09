@@ -68,9 +68,11 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
                     }
                 }
 
-                var currentCheckSum = await GetFileCheckSumAsync(file);
-                if (currentCheckSum != _twinReportHandler.GetActionToReport(actionToReport, file).CheckSum)
+                var report = _twinReportHandler.GetActionToReport(actionToReport, file);
+                if (string.IsNullOrEmpty(report.CheckSum) || await GetFileCheckSumAsync(file) != report.CheckSum)
                 {
+                    report.Progress = null;
+                    report.CorrelationId = report.CheckSum = null;
                     await _fileUploaderHandler.FileUploadAsync(actionToReport, uploadAction.Method, file, changeSpecId, cancellationToken);
                 }
                 else
