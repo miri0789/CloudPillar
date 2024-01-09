@@ -18,8 +18,8 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly ITwinReportHandler _twinReportHandler;
     private readonly ISignatureHandler _signatureHandler;
     private readonly StrictModeSettings _strictModeSettings;
-    private static ConcurrentBag<FileDownload> _filesDownloads = new ConcurrentBag<FileDownload>();
     private readonly IServerIdentityHandler _serverIdentityHandler;
+    private static List<FileDownload> _filesDownloads = new List<FileDownload>();
 
 
     private readonly ILoggerHandler _logger;
@@ -49,15 +49,26 @@ public class FileDownloadHandler : IFileDownloadHandler
         _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
     }
 
-    public void AddFileDownload(ActionToReport actionToReport)
+    public bool AddFileDownload(ActionToReport actionToReport)
     {
         var fileDownload = GetDownloadFile(actionToReport.ReportIndex, ((DownloadAction)actionToReport.TwinAction).Source, actionToReport.ChangeSpecId);
         if (fileDownload == null)
         {
+            var destPath = ((DownloadAction)actionToReport.TwinAction).DestinationPath;
+            var existFile = _filesDownloads.Any(item =>
+                string.IsNullOrWhiteSpace(destPath) ||
+                _fileStreamerWrapper.GetFullPath(item.Action.DestinationPath) ==
+                _fileStreamerWrapper.GetFullPath(destPath));
+            if (existFile)
+            {
+                _logger.Warn($"File {destPath} is already exist in download list");
+                return false;
+            }
             fileDownload = new FileDownload { ActionReported = actionToReport };
             _filesDownloads.Add(fileDownload);
         }
         fileDownload.Action.Sign = ((DownloadAction)actionToReport.TwinAction).Sign;
+        return true;
     }
 
     public async Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken)
@@ -99,7 +110,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                                 }
                                 if (file.Report.Status != StatusType.InProgress)
                                 {
-                                    await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex);
+                                    await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.ActionReported.ChangeSpecId, file.Action.Source, file.ActionReported.ReportIndex);
                                 }
                                 else
                                 {
@@ -201,7 +212,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 _logger.Info($"CheckIfNotRecivedDownloadMsgToFile no change in download bytes, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
                 var ranges = string.Join(",", GetExistRangesList(existRanges));
-                await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.Action.Source, file.ActionReported.ReportIndex, ranges);
+                await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, file.ActionReported.ChangeSpecId, file.Action.Source, file.ActionReported.ReportIndex, ranges);
             }
         }
     }
@@ -312,7 +323,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         var isRangeValid = await VerifyRangeCheckSumAsync(filePath, message.RangeStartPosition.GetValueOrDefault(), message.RangeEndPosition.GetValueOrDefault(), message.RangeCheckSum);
         if (!isRangeValid)
         {
-            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, message.FileName, file.ActionReported.ReportIndex, message.RangeIndex.ToString(), message.RangeStartPosition, message.RangeEndPosition);
+            await _d2CMessengerHandler.SendFirmwareUpdateEventAsync(cancellationToken, message.ChangeSpecId, message.FileName, file.ActionReported.ReportIndex, message.RangeIndex.ToString(), message.RangeStartPosition, message.RangeEndPosition);
             file.TotalBytesDownloaded -= (long)(message.RangeEndPosition - message.RangeStartPosition).GetValueOrDefault();
             if (file.TotalBytesDownloaded < 0) { file.TotalBytesDownloaded = 0; }
         }
@@ -321,7 +332,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             file.Report.CompletedRanges = AddRange(file.Report.CompletedRanges, message.RangeIndex);
         }
     }
-    private FileDownload? GetDownloadFile(int actionIndex, string fileName, string changeSpecId = "")
+    private FileDownload? GetDownloadFile(int actionIndex, string fileName, string changeSpecId)
     {
         var file = _filesDownloads.FirstOrDefault(item => item.ActionReported.ReportIndex == actionIndex &&
                                     item.Action.Source == fileName &&
@@ -331,7 +342,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public async Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken)
     {
-        var file = GetDownloadFile(message.ActionIndex, message.FileName);
+        var file = GetDownloadFile(message.ActionIndex, message.FileName, message.ChangeSpecId);
         if (file == null)
         {
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
@@ -344,7 +355,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         }
         var filePath = GetDestinationPath(file);
 
-        var fileLength = Math.Max(_fileStreamerWrapper.GetFileLength(filePath), message.Offset + message.Data?.Length ?? 0);
+        var fileLength = Math.Max(file.TotalBytes - _fileStreamerWrapper.GetFileLength(filePath), message.Offset + message.Data?.Length ?? 0);
         if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, fileLength))
         {
             SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
@@ -493,19 +504,12 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private void RemoveFileFromList(int actionIndex, string fileName)
     {
-        var itemsToRemove = _filesDownloads
-        .Where(item => item.Action.Source == fileName || item.ActionReported.ReportIndex == actionIndex)
-        .ToList();
-
-        foreach (var removedItem in itemsToRemove)
-        {
-            _filesDownloads.TryTake(out _);
-        }
+        _filesDownloads.RemoveAll(item => item.Action.Source == fileName || item.ActionReported.ReportIndex == actionIndex);
     }
 
     public void InitDownloadsList()
     {
-        _filesDownloads = new ConcurrentBag<FileDownload>();
+        _filesDownloads = new List<FileDownload>();
     }
 
     private async Task UpdateKnownIdentities(CancellationToken cancellationToken)

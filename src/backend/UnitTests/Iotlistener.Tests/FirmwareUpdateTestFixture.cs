@@ -18,6 +18,7 @@ public class FirmwareUpdateTestFixture
     private const string _deviceId = "testDevice";
     private const int _actionIndexd = 123;
     private const string _fileName = "testFile.bin";
+    private const string _changeSpecId = "1.2.3";
     private const string _rangesCount = "2";
     private const int _chunkSize = 1024;
     private const long _startPosition = 0L;
@@ -54,7 +55,8 @@ public class FirmwareUpdateTestFixture
             FileName = _fileName,
             ChunkSize = _chunkSize,
             StartPosition = 0,
-            ActionIndex = _actionIndexd
+            ActionIndex = _actionIndexd,
+            ChangeSpecId = _changeSpecId
         });
 
         for (long offset = _startPosition, rangeIndex = 0; offset < _blobSize; offset += _rangeSize, rangeIndex++)
@@ -75,7 +77,8 @@ public class FirmwareUpdateTestFixture
             ChunkSize = _chunkSize,
             StartPosition = 0,
             ActionIndex = _actionIndexd,
-            EndPosition = 123
+            EndPosition = 123,
+            ChangeSpecId = _changeSpecId
         });
 
         _httpRequestorServiceMock.Verify(service =>
@@ -95,7 +98,8 @@ public class FirmwareUpdateTestFixture
             ChunkSize = _chunkSize,
             StartPosition = 0,
             ActionIndex = _actionIndexd,
-            CompletedRanges = "0"
+            CompletedRanges = "0",
+            ChangeSpecId = _changeSpecId
         });
 
         string blobRangeUrl = BuildBlobRangeUrl(0, 0);
@@ -121,7 +125,8 @@ public class FirmwareUpdateTestFixture
             FileName = _fileName,
             ChunkSize = _chunkSize,
             StartPosition = 0,
-            ActionIndex = _actionIndexd
+            ActionIndex = _actionIndexd,
+            ChangeSpecId = _changeSpecId
         });
 
         _httpRequestorServiceMock.Verify(service =>
@@ -132,7 +137,7 @@ public class FirmwareUpdateTestFixture
 
     private string BuildBlobRangeUrl(long rangeIndex = 0, long startPosition = 0)
     {
-        return $"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex={rangeIndex}&startPosition={startPosition}&actionIndex={_actionIndexd}&rangesCount={_rangesCount}";
+        return $"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex={rangeIndex}&startPosition={startPosition}&actionIndex={_actionIndexd}&rangesCount={_rangesCount}&changeSpecId={_changeSpecId}";
     }
 
 
@@ -150,9 +155,10 @@ public class FirmwareUpdateTestFixture
             FileName = _fileName,
             ChunkSize = _chunkSize,
             StartPosition = 0,
-            ActionIndex = _actionIndexd
+            ActionIndex = _actionIndexd,
+            ChangeSpecId = _changeSpecId
         });
-        var errUrl = $"{_blobStreamerUrl.AbsoluteUri}blob/rangeError?deviceId={_deviceId}&fileName={_fileName}&actionIndex={_actionIndexd}&error={errMsg}";
+        var errUrl = $"{_blobStreamerUrl.AbsoluteUri}blob/rangeError?deviceId={_deviceId}&fileName={_fileName}&actionIndex={_actionIndexd}&error={errMsg}&changeSpecId={_changeSpecId}";
         _httpRequestorServiceMock.Verify(service =>
                service.SendRequest(errUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
                Times.Once);

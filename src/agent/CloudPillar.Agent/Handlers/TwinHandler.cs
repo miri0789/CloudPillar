@@ -165,13 +165,24 @@ public class TwinHandler : ITwinHandler
 
         if (actions is not null)
         {
+
             foreach (var action in actions)
             {
                 await SetReplaceFilePathByAction(action, cancellationToken);
                 if (action.TwinAction is DownloadAction downloadAction)
                 {
-                    _fileDownloadHandler.AddFileDownload(action);
+                    var isExist = _fileDownloadHandler.AddFileDownload(action);
+                    if (isExist)
+                    {
+                        action.TwinReport.Status = StatusType.Duplicate;
+                    }
                 }
+            }
+
+            var duplicateActions = actions.Where(action => action.TwinReport.Status == StatusType.Duplicate);
+            foreach (var action in duplicateActions)
+            {
+                await UpdateTwinReportedAsync(action, StatusType.Duplicate, null, cancellationToken);
             }
 
             _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
@@ -216,11 +227,16 @@ public class TwinHandler : ITwinHandler
         }
     }
 
+    private bool IsActiveAction(TwinActionReported action)
+    {
+        return action.Status != StatusType.Failed && action.Status != StatusType.Success && action.Status != StatusType.Duplicate;
+    }
+
     private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, string changeSpecId, CancellationToken cancellationToken)
     {
         try
         {
-            foreach (var action in actions.Where(action => action.TwinReport.Status != StatusType.Failed))
+            foreach (var action in actions.Where(action => IsActiveAction(action.TwinReport)))
             {
                 switch (action.TwinAction)
                 {
@@ -280,7 +296,7 @@ public class TwinHandler : ITwinHandler
             return false;
         }
     }
-    private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string resultCode, CancellationToken cancellationToken)
+    private async Task UpdateTwinReportedAsync(ActionToReport action, StatusType statusType, string? resultCode, CancellationToken cancellationToken)
     {
         action.TwinReport.Status = statusType;
         action.TwinReport.ResultCode = resultCode;
@@ -322,7 +338,7 @@ public class TwinHandler : ITwinHandler
                            TwinReport = itemReported[index]
                        })
                     .Where((item, index) => itemReported[index].Status == StatusType.Pending || itemReported[index].Status == StatusType.SentForSignature
-                        || (isInitial && itemReported[index].Status != StatusType.Success && itemReported[index].Status != StatusType.Failed)));
+                        || (isInitial && IsActiveAction(itemReported[index]))));
 
 
                 }
