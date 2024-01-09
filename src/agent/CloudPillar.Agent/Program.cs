@@ -29,24 +29,26 @@ var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
 var serviceName = string.IsNullOrWhiteSpace(builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME)) ? Constants.AGENT_SERVICE_DEFAULT_NAME : builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
-var authenticationSettings = builder.Configuration.GetSection("Authentication");
-builder.Services.Configure<AuthenticationSettings>(options =>
-        {
-            authenticationSettings.Bind(options);
-
-            var storeLocation = authenticationSettings.GetValue("StoreLocation", "");
-            var userName = authenticationSettings.GetValue("UserName", "");
-
-            if(storeLocation != null)
+if (runAsService)
+{
+    var authenticationSettings = builder.Configuration.GetSection("Authentication");
+    builder.Services.Configure<AuthenticationSettings>(options =>
             {
-                options.StoreLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocation);
-            } 
-            else
-            {
-                options.StoreLocation =string.IsNullOrWhiteSpace(userName)? StoreLocation.LocalMachine:StoreLocation.CurrentUser;
-            }
-        });
+                authenticationSettings.Bind(options);
 
+                var storeLocation = authenticationSettings.GetValue<string?>("StoreLocation", null);
+                var userName = authenticationSettings.GetValue("UserName", "");
+
+                if (storeLocation != null)
+                {
+                    options.StoreLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocation);
+                }
+                else
+                {
+                    options.StoreLocation = string.IsNullOrWhiteSpace(userName) ? StoreLocation.LocalMachine : StoreLocation.CurrentUser;
+                }
+            });
+}
 if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     var serviceDescription = builder.Configuration.GetValue("ServiceDescription", Constants.AGENT_SERVICE_DEFAULT_DESCRIPTION);
