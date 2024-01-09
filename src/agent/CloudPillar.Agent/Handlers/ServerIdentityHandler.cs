@@ -53,29 +53,25 @@ public class ServerIdentityHandler : IServerIdentityHandler
 
     }
 
-    public async Task<string> GetPublicKeyFromCertificate(X509Certificate2 certificate)
+    public async Task<string> GetPublicKeyFromCertificateFileAsync(string certificatePath)
     {
-        RSA publicKey = _x509CertificateWrapper.GetRSAPublicKey(certificate);
+        X509Certificate2 certificate = _x509CertificateWrapper.CreateFromFile(certificatePath);
+        ECDsa publicKey = _x509CertificateWrapper.GetECDsaPublicKey(certificate);
+        if (publicKey == null)
+        {
+            throw new Exception($"GetPublicKeyFromCertificateFileAsync failed to get public key from certificate {certificatePath}");
+        }
         string pemPublicKey = ConvertToPem(publicKey);
         return pemPublicKey;
     }
 
-    private string ConvertToPem(RSA publicKey)
+    private string ConvertToPem(ECDsa publicKey)
     {
-        StringBuilder builder = new StringBuilder();
-        builder.AppendLine("-----BEGIN PUBLIC KEY-----");
-
-        string base64Key = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(publicKey);
-        int offset = 0;
-        while (offset < base64Key.Length)
-        {
-            int lineLength = Math.Min(64, base64Key.Length - offset);
-            builder.AppendLine(base64Key.Substring(offset, lineLength));
-            offset += lineLength;
-        }
-
-        builder.AppendLine("-----END PUBLIC KEY-----");
-        return builder.ToString();
+        byte[] base64Key = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(publicKey);
+        string pem = $"-----BEGIN PUBLIC KEY-----\n";
+        pem += Convert.ToBase64String(base64Key, Base64FormattingOptions.InsertLineBreaks);
+        pem += $"\n-----END PUBLIC KEY-----\n";
+        return pem;
     }
 
     private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles, CancellationToken cancellationToken)
