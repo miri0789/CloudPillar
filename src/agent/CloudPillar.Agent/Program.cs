@@ -29,7 +29,7 @@ var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
 var serviceName = string.IsNullOrWhiteSpace(builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME)) ? Constants.AGENT_SERVICE_DEFAULT_NAME : builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
-if (runAsService)
+if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     var authenticationSettings = builder.Configuration.GetSection("Authentication");
     builder.Services.Configure<AuthenticationSettings>(options =>
@@ -48,9 +48,8 @@ if (runAsService)
                     options.StoreLocation = string.IsNullOrWhiteSpace(userName) ? StoreLocation.LocalMachine : StoreLocation.CurrentUser;
                 }
             });
-}
-if (runAsService && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-{
+
+
     var serviceDescription = builder.Configuration.GetValue("ServiceDescription", Constants.AGENT_SERVICE_DEFAULT_DESCRIPTION);
     var password = args.Length > 1 ? args[1] : null;
     builder.Services.AddScoped<IWindowsServiceUtils, WindowsServiceUtils>();
