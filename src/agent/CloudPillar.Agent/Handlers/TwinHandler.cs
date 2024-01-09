@@ -174,15 +174,15 @@ public class TwinHandler : ITwinHandler
                     var isExist = _fileDownloadHandler.AddFileDownload(action);
                     if (isExist)
                     {
-                        action.TwinReport.Status = StatusType.Dupplicate;
+                        action.TwinReport.Status = StatusType.Duplicate;
                     }
                 }
             }
 
-            var dupplicateActions = actions.Where(action => action.TwinReport.Status == StatusType.Dupplicate);
-            foreach (var action in dupplicateActions)
+            var duplicateActions = actions.Where(action => action.TwinReport.Status == StatusType.Duplicate);
+            foreach (var action in duplicateActions)
             {
-                await UpdateTwinReportedAsync(action, StatusType.Dupplicate, null, cancellationToken);
+                await UpdateTwinReportedAsync(action, StatusType.Duplicate, null, cancellationToken);
             }
 
             _logger.Info($"HandleTwinUpdatesAsync: {actions?.Count()} actions to execute for {changeSpecKey}");
@@ -229,7 +229,7 @@ public class TwinHandler : ITwinHandler
 
     private bool IsActiveAction(TwinActionReported action)
     {
-        return action.Status != StatusType.Failed && action.Status != StatusType.Success && action.Status != StatusType.Dupplicate;
+        return action.Status != StatusType.Failed && action.Status != StatusType.Success && action.Status != StatusType.Duplicate;
     }
 
     private async Task HandleTwinActionsAsync(IEnumerable<ActionToReport> actions, string changeSpecId, CancellationToken cancellationToken)

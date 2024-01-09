@@ -10,6 +10,6 @@ public enum StatusType
     Success,
     Blocked,
     Idle,
-    Dupplicate,
+    Duplicate,
     
 }
