@@ -510,7 +510,6 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private async Task UpdateKnownIdentities(CancellationToken cancellationToken)
     {
-        //check if update when blobked download exists in array
         if (_filesDownloads.Count == 0 && !cancellationToken.IsCancellationRequested)
         {
             await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
