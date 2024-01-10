@@ -37,11 +37,6 @@ public class ServerIdentityHandler : IServerIdentityHandler
         try
         {
             string[] certificatesFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, CERTFICATE_FILE_EXTENSION);
-            if (certificatesFiles.Length == 0)
-            {
-                _logger.Info($"No certificates found in {Constants.PKI_FOLDER_PATH}");
-                return;
-            }
             var knownIdentitiesList = GetKnownIdentitiesByCertFiles(certificatesFiles, cancellationToken);
             await UpdateKnownIdentitiesInReportedAsync(knownIdentitiesList, cancellationToken);
         }
