@@ -5,6 +5,8 @@ using FluentValidation;
 using Moq;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
+using Microsoft.AspNetCore.Http;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -23,6 +25,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<ILoggerHandler> _loggerMock;
         private Mock<IRunDiagnosticsHandler> _runDiagnosticsHandler;
         private Mock<IServerIdentityHandler> _serverIdentityHandlerMock;
+        private Mock<IRequestWrapper> _requestWrapper;
         private AgentController _target;
         public AgentControllerTestFixture()
         {
@@ -39,10 +42,11 @@ namespace CloudPillar.Agent.Tests
             _reprovisioningHandlerMock = new Mock<IReprovisioningHandler>();
             _twinReportHandlerMock = new Mock<ITwinReportHandler>();
             _serverIdentityHandlerMock = new Mock<IServerIdentityHandler>();
+            _requestWrapper = new Mock<IRequestWrapper>();
 
             _target = new AgentController(_twinHandler.Object, _twinReportHandlerMock.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
                         _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _runDiagnosticsHandler.Object,
-                         _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object, _serverIdentityHandlerMock.Object);
+                         _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object, _serverIdentityHandlerMock.Object, _requestWrapper.Object);
         }
 
         [Test]
@@ -65,7 +69,10 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task InitiateProvisioningAsync_HandleKnownIdentitiesFromCertificates_Success()
         {
-            await _target.InitiateProvisioningAsync(default);
+            var mockHeaders = new HeaderDictionary();
+            var mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+            mockHttpContextAccessor.Setup(x => x.HttpContext.Request.Headers).Returns(mockHeaders);
+            await _target.InitiateProvisioningAsync(CancellationToken.None);
             _serverIdentityHandlerMock.Verify(x => x.UpdateKnownIdentitiesFromCertificatesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
