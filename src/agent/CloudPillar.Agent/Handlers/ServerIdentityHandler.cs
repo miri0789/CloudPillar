@@ -59,7 +59,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         return pemPublicKey;
     }
 
-    public async Task<bool> RemoveNonDefaultCertificates(string path)
+    public async Task RemoveNonDefaultCertificates(string path)
     {
         try
         {
@@ -74,12 +74,10 @@ public class ServerIdentityHandler : IServerIdentityHandler
                     _logger.Info($"RemoveNonDefaultCertificates success for file: {certificateFile}");
                 }
             });
-            return true;
         }
         catch (Exception ex)
         {
             _logger.Error($"RemoveNonDefaultCertificates failed message: {ex.Message}");
-            return false;
         }
     }
 

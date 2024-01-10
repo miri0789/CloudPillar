@@ -105,10 +105,8 @@ public class AgentController : ControllerBase
     {
         try
         {
-            await _serverIdentityHandler.RemoveNonDefaultCertificates(Constants.PKI_FOLDER_PATH);
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
             await ProvisinigSymetricKeyAsync(cancellationToken);
-            await _serverIdentityHandler.UpdateKnownIdentitiesFromCertificatesAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)
@@ -184,6 +182,7 @@ public class AgentController : ControllerBase
 
     private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
     {
+        await _serverIdentityHandler.RemoveNonDefaultCertificates(Constants.PKI_FOLDER_PATH);
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
@@ -193,6 +192,7 @@ public class AgentController : ControllerBase
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken, true);
         await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
         await _twinReportHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
+        await _serverIdentityHandler.UpdateKnownIdentitiesFromCertificatesAsync(cancellationToken);
     }
 }
 
