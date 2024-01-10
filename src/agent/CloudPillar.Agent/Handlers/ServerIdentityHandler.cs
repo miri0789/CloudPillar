@@ -53,13 +53,12 @@ public class ServerIdentityHandler : IServerIdentityHandler
 
     }
 
-    public async Task<string> GetPublicKeyFromCertificateFileAsync(string certificatePath)
+    public async Task<string> GetPublicKeyFromCertificate(X509Certificate2 certificate)
     {
-        X509Certificate2 certificate = _x509CertificateWrapper.CreateFromFile(certificatePath);
         ECDsa publicKey = _x509CertificateWrapper.GetECDsaPublicKey(certificate);
         if (publicKey == null)
         {
-            throw new Exception($"GetPublicKeyFromCertificateFileAsync failed to get public key from certificate {certificatePath}");
+            throw new Exception($"GetPublicKeyFromCertificate failed to get public key from certificate {certificate.FriendlyName}");
         }
         string pemPublicKey = ConvertToPem(publicKey);
         return pemPublicKey;

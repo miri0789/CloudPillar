@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 using System.Text;
 using System.Security.Cryptography;
 using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers.Interfaces;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace CloudPillar.Agent.Tests;
@@ -22,10 +22,15 @@ public class SignatureHandlerTestFixture
     private Mock<IECDsaWrapper> _ecdsaWrapperMock;
     private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
     private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
+    private Mock<IX509CertificateWrapper> _x509CertificateWrapperMock;
+    private Mock<IServerIdentityHandler> _serverIdentityHandlerMock;
+    X509Certificate2 x509Certificate1;
 
     [SetUp]
     public void Setup()
     {
+        x509Certificate1 = MockHelper.GenerateCertificate("1", "", 60, "UT_PREFIX");
+
         _fileStreamerWrapperMock = new Mock<IFileStreamerWrapper>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
@@ -34,8 +39,10 @@ public class SignatureHandlerTestFixture
         mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
         mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
         mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
-
-        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, _sha256WrapperMock.Object, _ecdsaWrapperMock.Object, mockDownloadSettings.Object);
+        _x509CertificateWrapperMock = new Mock<IX509CertificateWrapper>();
+        _serverIdentityHandlerMock = new Mock<IServerIdentityHandler>();
+        _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object,
+        _sha256WrapperMock.Object, _ecdsaWrapperMock.Object, _serverIdentityHandlerMock.Object, _x509CertificateWrapperMock.Object, mockDownloadSettings.Object);
         _fileStreamerWrapperMock.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { "pathfile.txt", "pathfile2.txt" });
         string publicKeyPem1 = @"-----BEGIN PUBLIC KEY-----
                                 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESi/IRJco4/1xj3dD+G52BslMo0ZFK
@@ -47,8 +54,21 @@ public class SignatureHandlerTestFixture
                                 6MkyyYgPk0BXZq3mq4zImTRNuaU9slj9TVJ3ScT3L1bXwVuPJDzpr5GOFpaj+WwM
                                 Al8G7CqwoJOsW7Kddns=
                                 -----END PUBLIC KEY-----";
+
+        string ecdsaPublicKeyPem = "-----BEGIN PUBLIC KEY-----\nTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF2emdhOHgraUl5ckxm\r\nZXJBblB6cEl5dUNPNVBFS1Yzd2dGYWFrOTRrRHNtNlcxcWM3ZHhYNE5yRFpVVDdjTHFDSWl2N3Fh\r\nc3pkK3ZRRHprUUxKcjI0RmQxTkFuT3lsblkxQ0lBTWVTTDdCV09odWJCYVdlTWJWWlQzajFpdkZB\r\nVDI3RGdrVW5SSDg3S0piQi9BVU1SZ3NLYkRzQzZjS1ptb2FPUmZEdjBzbzlOVjdURG5hUmNENkky\r\nUWlWUmxGRzNRTVZGWVoyV3lWQndiYkVsa0FSczBpTHp2NStGVTRWWXc3SHQ0TFB4eFpheG01cjZ4\r\naFBqcjlBUHNGR2FsRW9MTTBFSCtSd3pGcHlMdWFUSTY3SnJOMHBrWDc1MiszYTI3WEh1VE1QRnJW\r\nRnlCTlRzdEZaYUF5VzUzRTBlSGVnTy9vTkxwd3pXRkRseFFXUkU2TDN3TVFJREFRQUI=\n-----END PUBLIC KEY-----\n";
         _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync("pathfile.txt")).ReturnsAsync(() => publicKeyPem1);
         _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync("pathfile2.txt")).ReturnsAsync(() => publicKeyPem2);
+        _x509CertificateWrapperMock.Setup(x => x.CreateFromFile(It.IsAny<string>())).Returns(x509Certificate1);
+        _x509CertificateWrapperMock.Setup(x => x.GetECDsaPublicKey(x509Certificate1)).Returns(ECDsa.Create());
+        _x509CertificateWrapperMock.Setup(x => x.ExportSubjectPublicKeyInfo(It.IsAny<ECDsa>()))
+                    .Returns(Encoding.UTF8.GetBytes("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzpIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr24Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMRgsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67JrN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3wMQIDAQAB"));
+        _serverIdentityHandlerMock.Setup(x => x.GetPublicKeyFromCertificate(It.IsAny<X509Certificate2>()))
+                    .ReturnsAsync(ecdsaPublicKeyPem);
+        _ecdsaWrapperMock.Setup(x => x.Create()).Returns(ECDsa.Create());
+        var publicKeyBytes = Convert.FromBase64String(ecdsaPublicKeyPem);
+        var keyReader = new ReadOnlySpan<byte>(publicKeyBytes);
+        byte[] byteArray = keyReader.ToArray();
+        _ecdsaWrapperMock.Setup(x => x.ImportSubjectPublicKeyInfo(It.IsAny<ECDsa>(), byteArray));
     }
 
 

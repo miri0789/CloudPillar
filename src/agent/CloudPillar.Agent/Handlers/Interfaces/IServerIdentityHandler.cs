@@ -4,6 +4,6 @@ namespace CloudPillar.Agent.Handlers;
 public interface IServerIdentityHandler
 {
     Task HandleKnownIdentitiesFromCertificatesAsync(CancellationToken cancellationToken);
-    Task<string> GetPublicKeyFromCertificateFileAsync(string certificatePath);
+    Task<string> GetPublicKeyFromCertificate(X509Certificate2 certificate);
 
 }

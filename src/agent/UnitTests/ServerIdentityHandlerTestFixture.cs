@@ -5,6 +5,7 @@ using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -16,7 +17,8 @@ namespace CloudPillar.Agent.Tests
         private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
         private Mock<IDeviceClientWrapper> _deviceClientWrapper;
         private IServerIdentityHandler _target;
-        private const string CERTIFICATE_PREFIX = "UT_PREFIX";
+
+        private const string CERTIFICATE_PREFIX = "";
         private string reportedKey = nameof(TwinReported.KnownIdentities);
 
         X509Certificate2 x509Certificate1;
@@ -32,7 +34,7 @@ namespace CloudPillar.Agent.Tests
             _deviceClientWrapper = new Mock<IDeviceClientWrapper>();
             x509Certificate1 = MockHelper.GenerateCertificate("1", "", 60, CERTIFICATE_PREFIX);
             x509Certificate2 = MockHelper.GenerateCertificate("2", "", 60, CERTIFICATE_PREFIX);
-
+            
             _target = new ServerIdentityHandler(_loggerMock.Object, _x509CertificateWrapper.Object, _fileStreamerWrapper.Object, _deviceClientWrapper.Object);
         }
 
@@ -72,17 +74,17 @@ namespace CloudPillar.Agent.Tests
             _x509CertificateWrapper.Setup(x => x.CreateFromFile(It.IsAny<string>())).Throws(new Exception());
             Assert.ThrowsAsync<Exception>(async () => await _target.HandleKnownIdentitiesFromCertificatesAsync(CancellationToken.None));
         }
-        
+
         [Test]
         public async Task GetPublicKeyFromCertificate_GetRSAPublicKey_Success()
         {
-            RSA rsa = RSA.Create();
-            _x509CertificateWrapper.Setup(x => x.GetRSAPublicKey(x509Certificate1)).Returns(rsa);
-            _x509CertificateWrapper.Setup(x => x.ExportSubjectPublicKeyInfo(It.IsAny<RSA>())).Returns("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzpIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr24Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMRgsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67JrN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3wMQIDAQAB");
+            _x509CertificateWrapper.Setup(x => x.GetECDsaPublicKey(x509Certificate1)).Returns(ECDsa.Create());
+            _x509CertificateWrapper.Setup(x => x.ExportSubjectPublicKeyInfo(It.IsAny<ECDsa>()))
+                        .Returns(Encoding.UTF8.GetBytes("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzpIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr24Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMRgsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67JrN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3wMQIDAQAB"));
+
             var publicKey = await _target.GetPublicKeyFromCertificate(x509Certificate1);
 
-            var excepted = "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzp\r\nIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr2\r\n4Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMR\r\ngsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs\r\n0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67Jr\r\nN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3w\r\nMQIDAQAB\r\n-----END PUBLIC KEY-----\r\n";
-
+            var excepted = "-----BEGIN PUBLIC KEY-----\nTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF2emdhOHgraUl5ckxm\r\nZXJBblB6cEl5dUNPNVBFS1Yzd2dGYWFrOTRrRHNtNlcxcWM3ZHhYNE5yRFpVVDdjTHFDSWl2N3Fh\r\nc3pkK3ZRRHprUUxKcjI0RmQxTkFuT3lsblkxQ0lBTWVTTDdCV09odWJCYVdlTWJWWlQzajFpdkZB\r\nVDI3RGdrVW5SSDg3S0piQi9BVU1SZ3NLYkRzQzZjS1ptb2FPUmZEdjBzbzlOVjdURG5hUmNENkky\r\nUWlWUmxGRzNRTVZGWVoyV3lWQndiYkVsa0FSczBpTHp2NStGVTRWWXc3SHQ0TFB4eFpheG01cjZ4\r\naFBqcjlBUHNGR2FsRW9MTTBFSCtSd3pGcHlMdWFUSTY3SnJOMHBrWDc1MiszYTI3WEh1VE1QRnJW\r\nRnlCTlRzdEZaYUF5VzUzRTBlSGVnTy9vTkxwd3pXRkRseFFXUkU2TDN3TVFJREFRQUI=\n-----END PUBLIC KEY-----\n";
             Assert.AreEqual(excepted, publicKey);
         }
 
