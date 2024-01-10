@@ -103,8 +103,8 @@ builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
 
-var AppSettings = builder.Configuration.GetSection("AppSettings");
-builder.Services.Configure<AppSettings>(AppSettings);
+var appSettings = builder.Configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(appSettings);
 
 var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
 builder.Services.Configure<DownloadSettings>(DownloadSettings);

@@ -36,7 +36,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
     }
 
 
-    public async Task HandleKnownIdentitiesFromCertificatesAsync(CancellationToken cancellationToken)
+    public async Task UpdateKnownIdentitiesFromCertificatesAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -46,7 +46,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"HandleKnownIdentitiesFromCertificatesAsync failed message: {ex.Message}");
+            _logger.Error($"UpdateKnownIdentitiesFromCertificatesAsync failed message: {ex.Message}");
             throw new Exception(ex.Message);
         }
 

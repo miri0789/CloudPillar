@@ -108,7 +108,7 @@ public class AgentController : ControllerBase
             await _serverIdentityHandler.RemoveNonDefaultCertificates(Constants.PKI_FOLDER_PATH);
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
             await ProvisinigSymetricKeyAsync(cancellationToken);
-            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
+            await _serverIdentityHandler.UpdateKnownIdentitiesFromCertificatesAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)

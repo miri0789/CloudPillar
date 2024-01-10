@@ -61,7 +61,7 @@ namespace CloudPillar.Agent.Tests
             _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
             _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate2.cer")).Returns(x509Certificate2);
 
-            await _target.HandleKnownIdentitiesFromCertificatesAsync(CancellationToken.None);
+            await _target.UpdateKnownIdentitiesFromCertificatesAsync(CancellationToken.None);
 
             _deviceClientWrapper.Verify(d => d.UpdateReportedPropertiesAsync(It.Is<string>(x => x == reportedKey),
              It.Is<List<KnownIdentities>>(y => EqualDetails(y, expected)), It.IsAny<CancellationToken>()), Times.Once);
@@ -72,7 +72,7 @@ namespace CloudPillar.Agent.Tests
         {
             _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
             _x509CertificateWrapper.Setup(x => x.CreateFromFile(It.IsAny<string>())).Throws(new Exception());
-            Assert.ThrowsAsync<Exception>(async () => await _target.HandleKnownIdentitiesFromCertificatesAsync(CancellationToken.None));
+            Assert.ThrowsAsync<Exception>(async () => await _target.UpdateKnownIdentitiesFromCertificatesAsync(CancellationToken.None));
         }
 
         [Test]
