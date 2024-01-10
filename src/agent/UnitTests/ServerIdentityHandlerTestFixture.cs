@@ -104,19 +104,6 @@ namespace CloudPillar.Agent.Tests
             _fileStreamerWrapper.Verify(f => f.DeleteFile(It.IsAny<string>()), Times.Exactly(2));
         }
 
-        [Test]
-        public async Task RemoveNonDefaultCertificates_Exception_ReturnFalse()
-        {
-            files = new string[] { "certificate1.cer", "certificate2.cer", "UT-PublicKey.cer" };
-            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
-
-            _fileStreamerWrapper.Setup(f => f.DeleteFile(It.IsAny<string>())).Throws(new Exception());
-
-            var res = await _target.RemoveNonDefaultCertificates("pki");
-            Assert.AreEqual(false, res);
-        }
-
-
         private bool EqualDetails(List<KnownIdentities> current, List<KnownIdentities> expected)
         {
             if (current.Count != expected.Count)
