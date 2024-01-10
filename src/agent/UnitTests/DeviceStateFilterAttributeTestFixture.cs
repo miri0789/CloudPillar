@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Routing;
 using Moq;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
-using CloudPillar.Agent.Wrappers;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -35,7 +35,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IReprovisioningHandler> _reprovisioningHandlerMock;
         private Mock<ITwinReportHandler> _twinReportHandlerMock;
         private Mock<IServerIdentityHandler> _serverIdentityHandlerMock;
-        private Mock<RequestWrapper> _requestWrapper;
+        private Mock<IRequestWrapper> _requestWrapper;
 
         public DeviceStateFilterAttributeTestFixture()
         {
@@ -53,7 +53,7 @@ namespace CloudPillar.Agent.Tests
             _reprovisioningHandlerMock = new Mock<IReprovisioningHandler>();
             _twinReportHandlerMock = new Mock<ITwinReportHandler>();
             _serverIdentityHandlerMock = new Mock<IServerIdentityHandler>();
-            _requestWrapper = new Mock<RequestWrapper>();
+            _requestWrapper = new Mock<IRequestWrapper>();
 
             _target = new DeviceStateFilterAttribute();
 
