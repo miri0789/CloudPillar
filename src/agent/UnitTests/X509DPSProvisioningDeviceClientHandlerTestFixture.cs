@@ -47,7 +47,7 @@ public class X509DPSProvisioningDeviceClientHandlerTestFixture
         _authenticationSettingsMock = new Mock<IOptions<AuthenticationSettings>>();
         _authenticationSettingsMock.Setup(x => x.Value).Returns(new AuthenticationSettings() { CertificatePrefix = CERTIFICATE_PREFIX, Environment = ENVITOMENT, StoreLocation = StoreLocation.LocalMachine});
 
-        _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadOnly, StoreName.My, StoreLocation.LocalMachine));
+        _x509CertificateWrapperMock.Setup(x => x.Open(OpenFlags.ReadOnly, StoreLocation.LocalMachine, StoreName.My));
         _x509CertificateWrapperMock.Setup(x => x.GetCertificates(It.IsAny<X509Store>())).Returns(Mock.Of<X509Certificate2Collection>());
         _deviceClientWrapperMock.Setup(x => x.DeviceInitializationAsync(It.IsAny<string>(), It.IsAny<DeviceAuthenticationWithX509Certificate>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);

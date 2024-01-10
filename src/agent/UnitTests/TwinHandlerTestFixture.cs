@@ -44,6 +44,7 @@ public class TwinHandlerTestFixture
         _strictModeHandlerMock = new Mock<IStrictModeHandler>();
         _signatureHandlerMock = new Mock<ISignatureHandler>();
         _periodicUploaderHandlerMock = new Mock<IPeriodicUploaderHandler>();
+        _fileDownloadHandlerMock.Setup(dc => dc.AddFileDownload(It.IsAny<ActionToReport>())).Returns(true);
         CreateTarget();
     }
 

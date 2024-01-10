@@ -18,7 +18,6 @@ public class SignatureHandlerTestFixture
     private Mock<ILoggerHandler> _loggerHandlerMock;
     private Mock<ID2CMessengerHandler> _d2CMessengerHandlerMock;
     private ISignatureHandler _target;
-    private Mock<FileStream> _fileStreamMock;
     private Mock<ISHA256Wrapper> _sha256WrapperMock;
     private Mock<IECDsaWrapper> _ecdsaWrapperMock;
     private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
@@ -32,7 +31,6 @@ public class SignatureHandlerTestFixture
         _d2CMessengerHandlerMock = new Mock<ID2CMessengerHandler>();
         _sha256WrapperMock = new Mock<ISHA256Wrapper>();
         _ecdsaWrapperMock = new Mock<IECDsaWrapper>();
-        _fileStreamMock = new Mock<FileStream>(MockBehavior.Default, new object[] { "filePath", FileMode.Create });
         mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
         mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
         mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);

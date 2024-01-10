@@ -2,5 +2,6 @@
 public enum DownloadBlocked
 {
     FileAlreadyExist,
-    NotEnoughSpace
+    NotEnoughSpace,
+    AccessDenied
 }
