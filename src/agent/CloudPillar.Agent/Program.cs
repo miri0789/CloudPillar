@@ -29,15 +29,16 @@ var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
 var serviceName = string.IsNullOrWhiteSpace(builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME)) ? Constants.AGENT_SERVICE_DEFAULT_NAME : builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
+
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
 builder.Services.Configure<AuthenticationSettings>(options =>
         {
             authenticationSettings.Bind(options);
 
-            var storeLocation = authenticationSettings.GetValue("StoreLocation", "");
+            var storeLocation = authenticationSettings.GetValue<string?>("StoreLocation", null);
             var userName = authenticationSettings.GetValue("UserName", "");
 
-            if (!string.IsNullOrWhiteSpace(storeLocation))
+            if (storeLocation != null)
             {
                 options.StoreLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocation);
             }
