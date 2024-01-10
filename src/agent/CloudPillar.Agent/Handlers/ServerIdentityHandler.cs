@@ -63,6 +63,8 @@ public class ServerIdentityHandler : IServerIdentityHandler
     {
         try
         {
+            _logger.Info($"Start removing non default certificates from path: {path}");
+
             List<string> certificatesFiles = _fileStreamerWrapper.GetFiles(path, CERTFICATE_FILE_EXTENSION).ToList();
             certificatesFiles.ForEach(certificateFile =>
             {

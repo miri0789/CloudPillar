@@ -105,9 +105,10 @@ public class AgentController : ControllerBase
     {
         try
         {
-            await HandleServerIdentitiesForInitate(cancellationToken);
+            await _serverIdentityHandler.RemoveNonDefaultCertificates(Constants.PKI_FOLDER_PATH);
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
             await ProvisinigSymetricKeyAsync(cancellationToken);
+            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)
@@ -115,12 +116,6 @@ public class AgentController : ControllerBase
             _logger.Error("InitiateProvisioning failed ", ex);
             return BadRequest($"An error occurred while processing the request: {ex.Message}");
         }
-    }
-
-    private async Task HandleServerIdentitiesForInitate(CancellationToken cancellationToken)
-    {
-        await _serverIdentityHandler.RemoveNonDefaultCertificates(Constants.PKI_FOLDER_PATH);
-        await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
     }
 
     [HttpPost("SetBusy")]
