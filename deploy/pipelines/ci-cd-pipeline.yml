@@ -133,7 +133,7 @@ stages:
           fi
         displayName: '${{ item }} Security Scan'
 
-      - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+      - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev1')) }}:
         - task: Docker@2
           displayName: '${{ item }} Docker Push'
           inputs:
@@ -143,7 +143,7 @@ stages:
             tags: '$(imagetag)'
 
 
-- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev1')) }}:
   - ${{ if eq(parameters.env, 'dev') }}:
     - stage: CD_Stage
       jobs:              
