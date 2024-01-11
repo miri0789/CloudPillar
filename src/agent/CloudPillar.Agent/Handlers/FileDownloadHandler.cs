@@ -518,7 +518,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     {
         if (_filesDownloads.Count == 0 && !cancellationToken.IsCancellationRequested)
         {
-            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
+            await _serverIdentityHandler.UpdateKnownIdentitiesFromCertificatesAsync(cancellationToken);
         }
     }
 }

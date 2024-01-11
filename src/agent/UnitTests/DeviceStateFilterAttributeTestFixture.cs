@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Routing;
 using Moq;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -34,6 +35,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IReprovisioningHandler> _reprovisioningHandlerMock;
         private Mock<ITwinReportHandler> _twinReportHandlerMock;
         private Mock<IServerIdentityHandler> _serverIdentityHandlerMock;
+        private Mock<IRequestWrapper> _requestWrapper;
 
         public DeviceStateFilterAttributeTestFixture()
         {
@@ -51,12 +53,13 @@ namespace CloudPillar.Agent.Tests
             _reprovisioningHandlerMock = new Mock<IReprovisioningHandler>();
             _twinReportHandlerMock = new Mock<ITwinReportHandler>();
             _serverIdentityHandlerMock = new Mock<IServerIdentityHandler>();
+            _requestWrapper = new Mock<IRequestWrapper>();
 
             _target = new DeviceStateFilterAttribute();
 
             agentController = new AgentController(_twinHandler.Object, _twinReportHandlerMock.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
             _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, runDiagnosticsHandler.Object,
-            _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object, _serverIdentityHandlerMock.Object);
+            _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object, _serverIdentityHandlerMock.Object,_requestWrapper.Object);
 
 
             var actionContext = new ActionContext

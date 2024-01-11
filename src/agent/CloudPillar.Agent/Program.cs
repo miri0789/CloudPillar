@@ -64,6 +64,7 @@ builder.Services.AddWindowsService(options =>
     options.ServiceName = serviceName;
 });
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
@@ -96,12 +97,16 @@ builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServic
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
 builder.Services.AddScoped<IGuidWrapper, GuidWrapper>();
+builder.Services.AddScoped<IRequestWrapper, RequestWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
 builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
+
+var appSettings = builder.Configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(appSettings);
 
 var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
 builder.Services.Configure<DownloadSettings>(DownloadSettings);
