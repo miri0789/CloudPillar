@@ -11,7 +11,10 @@
             "cwd": "${workspaceFolder}/src/backend/BlobStreamer",
             "console": "internalConsole",
             "env": {
-                "BlobContainerName": "iotcontainer",
+                "IothubEventHubCompatibleEndpoint": "",
+                "StorageConnectionString": "",
+                "BlobContainerName": "",
+                "IothubConnectionString": "",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
                 "RetryPolicyExponent": "3"
@@ -27,8 +30,10 @@
             "cwd": "${workspaceFolder}/src/backend/Iotlistener",
             "console": "internalConsole",
             "env": {
-                "IothubEventHubCompatiblePath": "cp-nechama-iothub",
-                "BlobContainerName": "iotcontainer",
+                "IothubEventHubCompatibleEndpoint": "",
+                "IothubEventHubCompatiblePath": "",
+                "StorageConnectionString": "",
+                "BlobContainerName": "",
                 "BlobStreamerUrl": "http://localhost:5019/",
                 "KeyHolderUrl": "http://localhost:5164/",
                 "MessageTimeoutMinutes": "10",
@@ -50,8 +55,13 @@
             "console": "internalConsole",
             "env": {
                 "KubernetesServiceHost": "",
+                "SigningPem": "=",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
+                "IothubConnectionString": "",
+                "DPSConnectionString": "",
+                "DPSIdScope": "",
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
             }
         },
         {
@@ -64,6 +74,10 @@
             "cwd": "${workspaceFolder}/src/backend/BEApi",
             "console": "internalConsole",
             "env": {
+                "IothubConnectionString": "",
+                "DPSConnectionString": "",
+                "DPSIdScope": "0ne00B889E4",
+                "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "ExpirationCertificatePercent": "0.6",
                 "maxCountDevices": "100",
             }

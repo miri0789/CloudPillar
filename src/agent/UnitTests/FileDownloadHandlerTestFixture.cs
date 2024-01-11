@@ -560,7 +560,7 @@ namespace CloudPillar.Agent.Tests
             message.FileName = action2.Action.Source;
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
 
-            _serverIdentityHandlerMock.Verify(x => x.HandleKnownIdentitiesFromCertificatesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _serverIdentityHandlerMock.Verify(x => x.UpdateKnownIdentitiesFromCertificatesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
