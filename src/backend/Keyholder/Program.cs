@@ -26,12 +26,16 @@ builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
 
+var signService = builder.Services.BuildServiceProvider().GetRequiredService<ISigningService>();
+await signService.CreateTwinKeySignature("sh-0");
+
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -40,5 +44,4 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
-
 app.Run();
