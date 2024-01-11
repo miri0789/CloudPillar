@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Sevices;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -22,7 +23,7 @@ public class ReprovisioningHandlerTestFixture
     private Mock<ISHA256Wrapper> _sHA256WrapperMock;
     private Mock<IProvisioningServiceClientWrapper> _provisioningServiceClientWrapperMock;
     private Mock<IOptions<AuthenticationSettings>> _authenticationSettingsMock;
-
+    private Mock<RemoveX509Certificates> _removeX509CertificatesMock;
     private Mock<IX509Provider> _x509ProviderMock;
     private IReprovisioningHandler _target;
     private const string DEVICE_ID = "UnitTest";
@@ -47,6 +48,7 @@ public class ReprovisioningHandlerTestFixture
         _sHA256WrapperMock = new Mock<ISHA256Wrapper>();
         _provisioningServiceClientWrapperMock = new Mock<IProvisioningServiceClientWrapper>();
         _x509ProviderMock = new Mock<IX509Provider>();
+        _removeX509CertificatesMock = new Mock<RemoveX509Certificates>();
 
         _provisioningServiceClientWrapperMock.Setup(p => p.GetIndividualEnrollmentAsync(It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None))
         .ReturnsAsync(() =>
@@ -77,6 +79,7 @@ public class ReprovisioningHandlerTestFixture
         _provisioningServiceClientWrapperMock.Object,
         _authenticationSettingsMock.Object,
         _x509ProviderMock.Object,
+        _removeX509CertificatesMock.Object,
         _loggerMock.Object);
 
         temporaryCertificateName = $"{GetCertificatePrefix()}{ProvisioningConstants.TEMPORARY_CERTIFICATE_NAME}";

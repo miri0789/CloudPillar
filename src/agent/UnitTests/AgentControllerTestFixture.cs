@@ -5,6 +5,7 @@ using FluentValidation;
 using Moq;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Sevices.interfaces;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -23,6 +24,8 @@ namespace CloudPillar.Agent.Tests
         private Mock<ILoggerHandler> _loggerMock;
         private Mock<IRunDiagnosticsHandler> _runDiagnosticsHandler;
         private Mock<IServerIdentityHandler> _serverIdentityHandlerMock;
+        private Mock<IInitiateProvisioningService> _initiateProvisioningService;
+        private Mock<IRemoveX509Certificates> _removeX509Certificates;
         private AgentController _target;
         public AgentControllerTestFixture()
         {
@@ -39,10 +42,13 @@ namespace CloudPillar.Agent.Tests
             _reprovisioningHandlerMock = new Mock<IReprovisioningHandler>();
             _twinReportHandlerMock = new Mock<ITwinReportHandler>();
             _serverIdentityHandlerMock = new Mock<IServerIdentityHandler>();
+            _initiateProvisioningService = new Mock<IInitiateProvisioningService>();
+            _removeX509Certificates = new Mock<IRemoveX509Certificates>();
 
             _target = new AgentController(_twinHandler.Object, _twinReportHandlerMock.Object, _updateReportedPropsValidator.Object, _dPSProvisioningDeviceClientHandler.Object,
                         _symmetricKeyProvisioningHandler.Object, _twinDesiredPropsValidator.Object, _stateMachineHandler.Object, _runDiagnosticsHandler.Object,
-                         _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object, _serverIdentityHandlerMock.Object);
+                         _loggerMock.Object, _stateMachineChangedEventMock.Object, _reprovisioningHandlerMock.Object, _serverIdentityHandlerMock.Object,
+                         _initiateProvisioningService.Object, _removeX509Certificates.Object);
         }
 
         [Test]
