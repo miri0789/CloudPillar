@@ -7,19 +7,20 @@ using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Sevices.interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 public class ReprovisioningHandler : IReprovisioningHandler
 {
 
     private readonly IX509CertificateWrapper _x509CertificateWrapper;
-
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ISHA256Wrapper _sHA256Wrapper;
     private readonly IProvisioningServiceClientWrapper _provisioningServiceClientWrapper;
     private readonly IX509Provider _x509Provider;
     private readonly AuthenticationSettings _authenticationSettings;
+    private readonly IRemoveX509Certificates _removeX509Certificates;
     private readonly ILoggerHandler _logger;
 
 
@@ -31,6 +32,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         IProvisioningServiceClientWrapper provisioningServiceClientWrapper,
         IOptions<AuthenticationSettings> options,
         IX509Provider x509Provider,
+        IRemoveX509Certificates removeX509Certificates,
         ILoggerHandler logger)
     {
         _x509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
@@ -40,6 +42,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _provisioningServiceClientWrapper = provisioningServiceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningServiceClientWrapper));
         _x509Provider = x509Provider ?? throw new ArgumentNullException(nameof(x509Provider));
         _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _removeX509Certificates = removeX509Certificates ?? throw new ArgumentNullException(nameof(removeX509Certificates));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
@@ -112,7 +115,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
             throw new ArgumentNullException("certificates", "Certificates collection cannot be null.");
         }
 
-        RemoveCertificatesFromStore(store, certificate.Thumbprint);
+        _removeX509Certificates.RemoveCertificatesFromStore(store, certificate.Thumbprint);
 
         X509Certificate2Collection collection = _x509CertificateWrapper.Find(store, X509FindType.FindByThumbprint, certificate.Thumbprint, false);
         if (collection.Count == 0)
@@ -139,7 +142,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
 
         using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation))
         {
-            RemoveCertificatesFromStore(store, string.Empty);
+            _removeX509Certificates.RemoveCertificatesFromStore(store, string.Empty);
             _x509CertificateWrapper.Add(store, privateCertificate);
         }
     }
@@ -159,31 +162,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
                 _logger.Info("GetTempCertificate not find certificate");
             }
             return filteredCertificate;
-        }
-    }
-
-    public void RemoveX509CertificatesFromStore()
-    {
-        using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation))
-        {
-            RemoveCertificatesFromStore(store, string.Empty);
-        }
-    }
-
-    private void RemoveCertificatesFromStore(X509Store store, string thumbprint)
-    {
-        var certificates = _x509CertificateWrapper.GetCertificates(store);
-
-        var filteredCertificates = certificates?.Cast<X509Certificate2>()
-           .Where(cert => string.IsNullOrEmpty(thumbprint) && cert.FriendlyName == _authenticationSettings.GetTemporaryCertificate() ||
-            (cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix())
-           && cert.Thumbprint != thumbprint))
-           .ToArray();
-
-        if (filteredCertificates?.Length > 0)
-        {
-            var certificateCollection = _x509CertificateWrapper.CreateCertificateCollecation(filteredCertificates);
-            _x509CertificateWrapper.RemoveRange(store, certificateCollection);
         }
     }
 }

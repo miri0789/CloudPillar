@@ -5,10 +5,8 @@ using Shared.Logger;
 
 namespace Backend.Iotlistener.Services;
 
-
 public class ProvisionDeviceCertificateService : IProvisionDeviceCertificateService
 {
-
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
@@ -34,4 +32,17 @@ public class ProvisionDeviceCertificateService : IProvisionDeviceCertificateServ
         }
     }
 
+    public async Task RemoveDeviceAsync(string deviceId)
+    {
+        ArgumentNullException.ThrowIfNull(deviceId);
+        try
+        {
+            string requestUrl = $"{_environmentsWrapper.beApiUrl}ValidateCertificate/RemoveDevice/{deviceId}";
+            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Delete);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"RemoveDevice failed.", ex);
+        }
+    }
 }

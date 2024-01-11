@@ -1,6 +1,8 @@
 
+using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Sevices.interfaces;
 using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Twin;
 
@@ -16,6 +18,7 @@ public class StateMachineListenerService : BackgroundService
     private IC2DEventSubscriptionSession? _c2DEventSubscriptionSession;
     private IStateMachineHandler? _stateMachineHandlerService;
     private readonly ILoggerHandler _logger;
+    private IInitiateProvisioningService? _initiateProvisioningService;
 
     public StateMachineListenerService(
         IStateMachineChangedEvent stateMachineChangedEvent,
@@ -40,7 +43,25 @@ public class StateMachineListenerService : BackgroundService
             ArgumentNullException.ThrowIfNull(dpsProvisioningDeviceClientHandler);
             _stateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
             ArgumentNullException.ThrowIfNull(_stateMachineHandlerService);
+            _initiateProvisioningService = scope.ServiceProvider.GetService<IInitiateProvisioningService>();
+            ArgumentNullException.ThrowIfNull(_initiateProvisioningService);
+
             await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
+
+            X509Certificate2? userCertificate = dpsProvisioningDeviceClientHandler.GetCertificate();
+
+            if (userCertificate == null)
+            {
+                _logger.Error("No certificate found in the store");
+                return;
+            }
+            if (userCertificate.NotAfter <= DateTime.UtcNow.AddDays(5))
+            {
+                _logger.Info("The certificate is expired");
+                var certificateDetails = dpsProvisioningDeviceClientHandler.GetCertificateDetailes(userCertificate);
+                await _initiateProvisioningService.InitiateProvisioningAsync(certificateDetails.DeviceId, certificateDetails.OneMd, stoppingToken);
+                return;
+            }
             await _stateMachineHandlerService.InitStateMachineHandlerAsync(stoppingToken);
         }
     }
@@ -51,14 +72,14 @@ public class StateMachineListenerService : BackgroundService
         {
             var state = _stateMachineHandlerService.GetCurrentDeviceState();
 
-            if(state == DeviceStateType.Provisioning)
+            if (state == DeviceStateType.Provisioning)
             {
                 _logger.Info("StopAsync: set device state to Uninitialized");
                 await _stateMachineHandlerService.SetStateAsync(DeviceStateType.Uninitialized, _cts.Token);
             }
             else
             {
-                if(state != DeviceStateType.Busy && state != DeviceStateType.Uninitialized)
+                if (state != DeviceStateType.Busy && state != DeviceStateType.Uninitialized)
                 {
                     _logger.Info("StopAsync: set device state to Busy");
                     if (_twinReportHandler == null)

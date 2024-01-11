@@ -20,6 +20,11 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    public async Task SendRemoveDeviceEvent(string deviceId, CancellationToken cancellationToken)
+    {
+        await SendMessageAsync(new RemoveDeviceEvent(), cancellationToken);
+    }
+
     public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string fileName, int actionIndex, string CompletedRanges = "", long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used

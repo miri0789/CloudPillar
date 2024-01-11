@@ -26,4 +26,17 @@ public class ValidateCertificateController : ControllerBase
             throw new Exception("Error validating certificates.", ex);
         }
     }
+
+    [HttpDelete("RemoveDevice/{deviceId}")]
+    public async Task RemoveDevice(string deviceId)
+    {
+        try
+        {
+            await _validateCertificateService.RemoveDeviceAsync(deviceId);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error deleting device {deviceId}.", ex);
+        }
+    }
 }

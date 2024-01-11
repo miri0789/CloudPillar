@@ -146,6 +146,9 @@ public class AgentEventProcessor : IEventProcessor
                         var provisionDeviceCertificateEvent = JsonSerializer.Deserialize<ProvisionDeviceCertificateEvent>(data)!;
                         await _provisionDeviceCertificateService.ProvisionDeviceCertificateAsync(deviceId, provisionDeviceCertificateEvent);
                         break;
+                    case D2CMessageType.RemoveDevice:
+                        await _provisionDeviceCertificateService.RemoveDeviceAsync(deviceId);
+                        break;
                 }
 
             }

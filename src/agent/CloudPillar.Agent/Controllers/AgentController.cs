@@ -1,4 +1,3 @@
-
 using System.Diagnostics;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Sevices.interfaces;
 
 namespace CloudPillar.Agent.Controllers;
 
@@ -15,13 +15,10 @@ namespace CloudPillar.Agent.Controllers;
 public class AgentController : ControllerBase
 {
     private readonly ILoggerHandler _logger;
-
     private readonly ITwinHandler _twinHandler;
     private readonly ITwinReportHandler _twinReportHandler;
-
     private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
     private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
-
     public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
@@ -29,6 +26,8 @@ public class AgentController : ControllerBase
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IReprovisioningHandler _reprovisioningHandler;
     private readonly IServerIdentityHandler _serverIdentityHandler;
+    private readonly IInitiateProvisioningService _initiateProvisioningService;
+    private readonly IRemoveX509Certificates _removeX509Certificates;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -42,7 +41,9 @@ public class AgentController : ControllerBase
      ILoggerHandler logger,
      IStateMachineChangedEvent stateMachineChangedEvent,
      IReprovisioningHandler reprovisioningHandler,
-    IServerIdentityHandler serverIdentityHandler)
+    IServerIdentityHandler serverIdentityHandler,
+    IInitiateProvisioningService initiateProvisioningService,
+    IRemoveX509Certificates removeX509Certificates)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
@@ -56,6 +57,8 @@ public class AgentController : ControllerBase
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
         _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
         _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
+        _initiateProvisioningService = initiateProvisioningService ?? throw new ArgumentNullException(nameof(initiateProvisioningService));
+        _removeX509Certificates = removeX509Certificates ?? throw new ArgumentNullException(nameof(removeX509Certificates));
     }
 
     [HttpPost("AddRecipe")]
@@ -105,10 +108,10 @@ public class AgentController : ControllerBase
     {
         try
         {
-            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
-            await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
-            await ProvisinigSymetricKeyAsync(cancellationToken);
-            return await _twinHandler.GetTwinJsonAsync();
+
+            var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
+            var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
+            return await _initiateProvisioningService.InitiateProvisioningAsync(deviceId, secretKey, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -188,10 +191,9 @@ public class AgentController : ControllerBase
         var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
         _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
-        _reprovisioningHandler.RemoveX509CertificatesFromStore();
+        _removeX509Certificates.RemoveX509CertificatesFromStore();
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken, true);
         await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
         await _twinReportHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }
 }
-

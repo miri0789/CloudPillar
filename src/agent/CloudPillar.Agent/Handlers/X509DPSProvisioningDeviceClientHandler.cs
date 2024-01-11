@@ -8,13 +8,13 @@ using Shared.Entities.Authentication;
 using DeviceMessage = Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Handlers;
 
 public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
 {
     private readonly ILoggerHandler _logger;
-
     private IDeviceClientWrapper _deviceClientWrapper;
     private readonly IX509CertificateWrapper _X509CertificateWrapper;
     private readonly IProvisioningDeviceClientWrapper _provisioningDeviceClientWrapper;
@@ -72,28 +72,20 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             return false;
         }
 
-        var friendlyName = userCertificate?.FriendlyName ?? throw new ArgumentNullException(nameof(userCertificate.FriendlyName));
-        var parts = friendlyName.Split(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR);
-
-        if (parts.Length != 2)
+        var certificateDetails = GetCertificateDetailes(userCertificate);
+        if (certificateDetails == null)
         {
-            var error = "The FriendlyName is not in the expected format.";
-            _logger.Error(error);
             return false;
         }
 
-        var deviceId = parts[0];
-        var iotHubHostName = parts[1];
-        var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENTION_KEY).RawData);
-
-        if ((!IsInitializedLoad || checkAuthorization) && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
+        if ((!IsInitializedLoad || checkAuthorization) && !(XdeviceId.Equals(certificateDetails.DeviceId) && XSecretKey.Equals(certificateDetails.OneMd)))
         {
             var error = "The deviceId or the SecretKey are incorrect.";
             _logger.Error(error);
             return false;
         }
 
-        if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(iotHubHostName))
+        if (string.IsNullOrEmpty(certificateDetails.DeviceId) || string.IsNullOrEmpty(certificateDetails.IotHubHostName))
         {
             var error = "The deviceId or the iotHubHostName cant be null.";
             _logger.Error(error);
@@ -102,12 +94,36 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         if (IsInitializedLoad)
         {
-            _logger.Info($"Try load with the following deviceId: {deviceId}");
+            _logger.Info($"Try load with the following deviceId: {certificateDetails.DeviceId}");
         }
 
-        iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
+        certificateDetails.IotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
 
-        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad || checkAuthorization, cancellationToken);
+        return await InitializeDeviceAsync(certificateDetails.DeviceId, certificateDetails.IotHubHostName, userCertificate, IsInitializedLoad || checkAuthorization, cancellationToken);
+    }
+
+    public CertificateDetails GetCertificateDetailes(X509Certificate2? userCertificate)
+    {
+        var friendlyName = userCertificate?.FriendlyName ?? throw new ArgumentNullException(nameof(userCertificate.FriendlyName));
+        var parts = friendlyName.Split(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR);
+
+        if (parts.Length != 2)
+        {
+            var error = "The FriendlyName is not in the expected format.";
+            _logger.Error(error);
+            return null;
+        }
+
+        var deviceId = parts[0];
+        var iotHubHostName = parts[1];
+        var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENTION_KEY).RawData);
+
+        return new CertificateDetails
+        {
+            DeviceId = deviceId,
+            IotHubHostName = iotHubHostName,
+            OneMd = oneMd
+        };
     }
 
     public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)

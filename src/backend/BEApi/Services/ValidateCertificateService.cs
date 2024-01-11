@@ -54,4 +54,14 @@ public class ValidateCertificateService : IValidateCertificateService
             await Task.WhenAll(tasks);
         }
     }
+
+    public async Task RemoveDeviceAsync(string deviceId)
+    {
+        _logger.Info($"Deleting device {deviceId}...");
+        using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+        {
+            await _registryManagerWrapper.RemoveDeviceAsync(registryManager, deviceId);
+        }
+        _logger.Info($"Device {deviceId} deleted.");
+    }
 }
