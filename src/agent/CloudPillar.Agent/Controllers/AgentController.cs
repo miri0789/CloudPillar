@@ -66,15 +66,9 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
   
-    [AllowAnonymous]
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
-        var currentState = _stateMachineHandler.GetCurrentDeviceState();
-        if (currentState == DeviceStateType.Busy)
-        {
-            return _twinHandler.GetLatestTwin();
-        }
 
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
@@ -95,6 +89,11 @@ public class AgentController : ControllerBase
                 _logger.Info("GetDeviceStateAsync, the device is symmetric key unAuthorized, start provisinig proccess");
                 await ProvisinigSymetricKeyAsync(cancellationToken);
             }
+        }
+        var currentState = _stateMachineHandler.GetCurrentDeviceState();
+        if (currentState == DeviceStateType.Busy)
+        {
+            return _twinHandler.GetLatestTwin();
         }
         return await _twinHandler.GetTwinJsonAsync();
     }
