@@ -80,6 +80,17 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return Directory.Exists(fullFilePath);
     }
 
+    public bool HasExtension(string fullFilePath)
+    {
+        return Path.HasExtension(fullFilePath);
+    }
+
+    public string GetFullPath(string fullFilePath)
+    {
+        return Path.GetFullPath(fullFilePath);
+    }
+
+
     public DirectoryInfo CreateDirectoryInfo(string directoryPath)
     {
         return new DirectoryInfo(directoryPath);
@@ -120,6 +131,12 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetFileName(filePathPattern);
     }
+    
+    public string GetFileNameWithoutExtension(string filePath)
+    {
+        return Path.GetFileNameWithoutExtension(filePath);
+    }
+
     public string GetTempPath()
     {
         return Path.GetTempPath();

@@ -3,7 +3,7 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers.Interfaces;
+using System.Security.Cryptography.X509Certificates;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -15,11 +15,12 @@ public class SignatureHandler : ISignatureHandler
     private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IECDsaWrapper _ecdsaWrapper;
     private readonly IServerIdentityHandler _serverIdentityHandler;
+    private readonly IX509CertificateWrapper _x509CertificateWrapper;
     private readonly DownloadSettings _downloadSettings;
     private const string FILE_EXTENSION = "*.cer";
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
-    ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IServerIdentityHandler serverIdentityHandler, IOptions<DownloadSettings> options)
+    ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IServerIdentityHandler serverIdentityHandler, IX509CertificateWrapper x509CertificateWrapper, IOptions<DownloadSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
@@ -28,6 +29,7 @@ public class SignatureHandler : ISignatureHandler
         _ecdsaWrapper = ecdsaWrapper ?? throw new ArgumentNullException(nameof(ecdsaWrapper));
         _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _x509CertificateWrapper = x509CertificateWrapper ?? throw new ArgumentNullException(nameof(x509CertificateWrapper));
     }
 
     private async Task<ECDsa> InitPublicKeyAsync(string publicKeyPem)
@@ -51,9 +53,8 @@ public class SignatureHandler : ISignatureHandler
         var publicKeyBytes = Convert.FromBase64String(publicKeyContent);
         var keyReader = new ReadOnlySpan<byte>(publicKeyBytes);
 
-        ECDsa ecdsa = ECDsa.Create();
-        ecdsa.ImportSubjectPublicKeyInfo(keyReader, out _);
-
+        ECDsa ecdsa = _ecdsaWrapper.Create();
+        _ecdsaWrapper.ImportSubjectPublicKeyInfo(ecdsa, keyReader);
         return ecdsa;
     }
 
@@ -62,7 +63,13 @@ public class SignatureHandler : ISignatureHandler
         string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, FILE_EXTENSION);
         foreach (string publicKeyFile in publicKeyFiles)
         {
-            var publicKey = await _serverIdentityHandler.GetPublicKeyFromCertificateFileAsync(publicKeyFile);
+            X509Certificate2 certificate = _x509CertificateWrapper.CreateFromFile(publicKeyFile);
+            if (certificate.NotAfter < DateTime.Now)
+            {
+                throw new Exception($"GetPublicKeyFromCertificateFileAsync certificate {publicKeyFile} is expired");
+            }
+
+            var publicKey = await _serverIdentityHandler.GetPublicKeyFromCertificate(certificate);
             using (var ecdsa = await InitPublicKeyAsync(publicKey))
             {
                 byte[] signature = Convert.FromBase64String(signatureString);

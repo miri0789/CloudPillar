@@ -81,7 +81,7 @@ public class BlobService : IBlobService
         }
     }
 
-    public async Task SendDownloadErrorAsync(string deviceId, string fileName, int actionIndex, string error)
+    public async Task SendDownloadErrorAsync(string deviceId, string changeSpecId, string fileName, int actionIndex, string error)
     {
         using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString())
         {
@@ -90,6 +90,7 @@ public class BlobService : IBlobService
                 FileName = fileName,
                 ActionIndex = actionIndex,
                 Error = error,
+                ChangeSpecId = changeSpecId,
                 Data = new byte[0]
             };
             try
@@ -104,7 +105,7 @@ public class BlobService : IBlobService
         }
     }
 
-    public async Task<bool> SendRangeByChunksAsync(string deviceId, string fileName, int chunkSize, int rangeSize,
+    public async Task<bool> SendRangeByChunksAsync(string deviceId, string changeSpecId, string fileName, int chunkSize, int rangeSize,
     int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
         var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
@@ -129,6 +130,7 @@ public class BlobService : IBlobService
                     FileName = fileName,
                     ActionIndex = actionIndex,
                     FileSize = fileSize,
+                    ChangeSpecId = changeSpecId,
                     Data = data
                 };
                 if (offset + chunkSize >= rangeEndPosition)

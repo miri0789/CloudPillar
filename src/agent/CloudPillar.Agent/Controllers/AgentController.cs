@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Controllers;
 
@@ -29,6 +30,7 @@ public class AgentController : ControllerBase
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IReprovisioningHandler _reprovisioningHandler;
     private readonly IServerIdentityHandler _serverIdentityHandler;
+    private readonly IRequestWrapper _requestWrapper;
 
 
     public AgentController(ITwinHandler twinHandler,
@@ -42,7 +44,8 @@ public class AgentController : ControllerBase
      ILoggerHandler logger,
      IStateMachineChangedEvent stateMachineChangedEvent,
      IReprovisioningHandler reprovisioningHandler,
-    IServerIdentityHandler serverIdentityHandler)
+    IServerIdentityHandler serverIdentityHandler,
+    IRequestWrapper requestWrapper)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
@@ -56,6 +59,7 @@ public class AgentController : ControllerBase
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
         _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
         _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
+        _requestWrapper = requestWrapper ?? throw new ArgumentNullException(nameof(requestWrapper));
     }
 
     [HttpPost("AddRecipe")]
@@ -66,15 +70,9 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
   
-    [AllowAnonymous]
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
-        var currentState = _stateMachineHandler.GetCurrentDeviceState();
-        if (currentState == DeviceStateType.Busy)
-        {
-            return _twinHandler.GetLatestTwin();
-        }
 
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
@@ -96,6 +94,11 @@ public class AgentController : ControllerBase
                 await ProvisinigSymetricKeyAsync(cancellationToken);
             }
         }
+        var currentState = _stateMachineHandler.GetCurrentDeviceState();
+        if (currentState == DeviceStateType.Busy)
+        {
+            return _twinHandler.GetLatestTwin();
+        }
         return await _twinHandler.GetTwinJsonAsync();
     }
 
@@ -105,7 +108,6 @@ public class AgentController : ControllerBase
     {
         try
         {
-            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
             await ProvisinigSymetricKeyAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
@@ -183,15 +185,17 @@ public class AgentController : ControllerBase
 
     private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
     {
+        await _serverIdentityHandler.RemoveNonDefaultCertificates(Constants.PKI_FOLDER_PATH);
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
-        var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
-        var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
+        var deviceId = _requestWrapper.GetHeaderValue(Constants.X_DEVICE_ID);
+        var secretKey = _requestWrapper.GetHeaderValue(Constants.X_SECRET_KEY);
         _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
         await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
         _reprovisioningHandler.RemoveX509CertificatesFromStore();
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken, true);
         await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
         await _twinReportHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
+        await _serverIdentityHandler.UpdateKnownIdentitiesFromCertificatesAsync(cancellationToken);
     }
 }
 

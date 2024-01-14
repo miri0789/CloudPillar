@@ -63,6 +63,7 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             int calculatedPosition = CalculateCurrentPosition(readStream.Length, twinReport.Progress ?? 0);
             var calculatedChunkIndex = (int)Math.Round(calculatedPosition / (double)chunkSize) + 1;
             byte[] buffer = new byte[chunkSize];
+            var isComplete = false;
             for (int currentPosition = calculatedPosition, chunkIndex = calculatedChunkIndex; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
             {
                 if (!cancellationToken.IsCancellationRequested)
@@ -77,6 +78,11 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
                         checkSum = await CalcAndUpdateCheckSumAsync(actionToReport, readStream, fileName, cancellationToken);
                     }
                     await ProcessChunkAsync(notification, actionToReport, readStream, storageUri, buffer, currentPosition, checkSum, isRunDiagnostics, fileName, cancellationToken);
+                    if (!isComplete)
+                    {
+                        await CompleteFileUploadAsync(notification, actionToReport, cancellationToken);
+                        isComplete = true;
+                    }
                 }
             }
             _logger.Debug($"All bytes sent successfuly");
@@ -92,11 +98,6 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             await readStream.ReadAsync(buffer, 0, buffer.Length);
 
             await _d2CMessengerHandler.SendStreamingUploadChunkEventAsync(buffer, storageUri, currentPosition, checkSum, cancellationToken, isRunDiagnostics);
-            if (!actionToReport.UploadCompleted)
-            {
-                await Task.Delay(1000);
-                await CompleteFileUploadAsync(notification, actionToReport, cancellationToken);
-            }
             var percents = CalculateByteUploadedPercent(readStream.Length, currentPosition, buffer.Length);
             await UpdateReportedDetailsAsync(actionToReport, percents, notification.CorrelationId, fileName, cancellationToken);
         }
@@ -107,12 +108,12 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
         {
             try
             {
+                await Task.Delay(1000, cancellationToken);
                 var retryPolicy = Policy.Handle<Exception>()
                     .WaitAndRetryAsync(_uploadCompleteRetrySettings.MaxRetries, retryAttempt => TimeSpan.FromSeconds(_uploadCompleteRetrySettings.DelaySeconds),
                     (ex, time) => _logger.Warn($"Failed to complete file upload. Retrying in {time.TotalSeconds} seconds... Error details: {ex.Message}"));
                 await retryPolicy.ExecuteAsync(async () => await _deviceClientWrapper.CompleteFileUploadAsync(notification, cancellationToken));
                 _logger.Info($"CompleteFileUploadAsync ended successfully");
-                actionToReport.UploadCompleted = true;
             }
             catch (Exception ex)
             {

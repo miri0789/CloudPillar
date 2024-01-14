@@ -29,21 +29,22 @@ var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
 var serviceName = string.IsNullOrWhiteSpace(builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME)) ? Constants.AGENT_SERVICE_DEFAULT_NAME : builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
+
 var authenticationSettings = builder.Configuration.GetSection("Authentication");
 builder.Services.Configure<AuthenticationSettings>(options =>
         {
             authenticationSettings.Bind(options);
 
-            var storeLocation = authenticationSettings.GetValue("StoreLocation", "");
+            var storeLocation = authenticationSettings.GetValue<string?>("StoreLocation", null);
             var userName = authenticationSettings.GetValue("UserName", "");
 
-            if(!string.IsNullOrWhiteSpace(storeLocation))
+            if (storeLocation != null)
             {
                 options.StoreLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), storeLocation);
-            } 
+            }
             else
             {
-                options.StoreLocation =string.IsNullOrWhiteSpace(userName)? StoreLocation.LocalMachine:StoreLocation.CurrentUser;
+                options.StoreLocation = string.IsNullOrWhiteSpace(userName) ? StoreLocation.LocalMachine : StoreLocation.CurrentUser;
             }
         });
 
@@ -63,6 +64,7 @@ builder.Services.AddWindowsService(options =>
     options.ServiceName = serviceName;
 });
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
@@ -95,12 +97,16 @@ builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServic
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
 builder.Services.AddScoped<IGuidWrapper, GuidWrapper>();
+builder.Services.AddScoped<IRequestWrapper, RequestWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
 builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
+
+var appSettings = builder.Configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(appSettings);
 
 var DownloadSettings = builder.Configuration.GetSection("DownloadSettings");
 builder.Services.Configure<DownloadSettings>(DownloadSettings);
