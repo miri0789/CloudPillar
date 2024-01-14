@@ -78,8 +78,6 @@
                 "DPSConnectionString": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "DPSIdScope": "0ne00B889E4",
-                // "IothubConnectionString": "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE=",
-                // "DPSConnectionString": "HostName=cp-tst-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=z4ZY+yWfPMSQBVDxLqszzI4Z2vsvsEVR7QYkwi8E1Fc=",
                 "ExpirationCertificatePercent": "0.6",
                 "maxCountDevices": "100",
                 "StorageConnectionString": "",
