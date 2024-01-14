@@ -6,6 +6,7 @@ using static Microsoft.Azure.EventHubs.EventData;
 using Backend.Iotlistener.Interfaces;
 using Shared.Logger;
 using Backend.Iotlistener.Processors;
+using Shared.Entities.Messages;
 
 namespace Backend.Iotlistener.Tests;
 
