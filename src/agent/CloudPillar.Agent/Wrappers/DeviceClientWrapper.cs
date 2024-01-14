@@ -4,6 +4,8 @@ using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
@@ -42,6 +44,22 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             {
                 _logger.Info($"Device does not exist in {hostname}.");
             }
+        }
+    }
+
+    public async Task<bool> IsNewDeviceAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Check if the device is already initialized
+            var twin = await GetTwinAsync(cancellationToken);
+            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reported?.SupportedShells is null && reported?.AgentPlatform is null;
+        }
+        catch (Exception ex)
+        {
+            _logger.Debug($"IsNewDeviceAsync, Device is not initialized. {ex.Message}");
+            return true;
         }
     }
 

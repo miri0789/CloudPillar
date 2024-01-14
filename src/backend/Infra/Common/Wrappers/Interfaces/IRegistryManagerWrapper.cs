@@ -8,4 +8,5 @@ public interface IRegistryManagerWrapper
     Task<Twin> GetTwinAsync(RegistryManager registryManager, string deviceId);
     Task<Twin> UpdateTwinAsync(RegistryManager registryManager, string deviceId, Twin twinPatch, string etag);
     Task<IEnumerable<Device>> GetIotDevicesAsync(RegistryManager registryManager, int maxCountDevices);
+    Task RemoveDeviceAsync(RegistryManager registryManager, string deviceId);
 }

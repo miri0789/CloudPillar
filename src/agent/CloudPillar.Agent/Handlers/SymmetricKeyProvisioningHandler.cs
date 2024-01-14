@@ -33,7 +33,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
     }
 
-    public async Task ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
+    public async Task<bool> ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.DpsScopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.GlobalDeviceEndpoint);
@@ -74,6 +74,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                 }
             }
         }
+        return await _deviceClientWrapper.IsNewDeviceAsync(cancellationToken);
     }
 
     private async Task InitializeDeviceAsync(string deviceId, string iotHubHostName, string deviceKey, CancellationToken cancellationToken)

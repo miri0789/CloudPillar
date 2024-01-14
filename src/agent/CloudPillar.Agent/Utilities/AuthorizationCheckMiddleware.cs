@@ -5,14 +5,18 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
+using CloudPillar.Agent.Sevices.Interfaces;
+using System.Security.Cryptography.X509Certificates;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
 {
     private readonly RequestDelegate _requestDelegate;
-
     private ILoggerHandler _logger;
     private readonly IConfiguration _configuration;
+    private IDPSProvisioningDeviceClientHandler? _dPSProvisioningDeviceClientHandler;
+    private ISymmetricKeyProvisioningHandler? _symmetricKeyProvisioningHandler;
+    private IProvisioningService? _provisioningService;
 
     public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfiguration configuration)
     {
@@ -24,6 +28,13 @@ public class AuthorizationCheckMiddleware
 
     public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler, IX509Provider x509Provider)
     {
+        _provisioningService = context.RequestServices.GetRequiredService<IProvisioningService>();
+        ArgumentNullException.ThrowIfNull(_provisioningService);
+        _dPSProvisioningDeviceClientHandler = context.RequestServices.GetRequiredService<IDPSProvisioningDeviceClientHandler>();
+        ArgumentNullException.ThrowIfNull(_dPSProvisioningDeviceClientHandler);
+        _symmetricKeyProvisioningHandler = context.RequestServices.GetRequiredService<ISymmetricKeyProvisioningHandler>();
+        ArgumentNullException.ThrowIfNull(_symmetricKeyProvisioningHandler);
+
         if (!context.Request.IsHttps)
         {
             NextWithRedirectAsync(context, x509Provider);
@@ -71,11 +82,30 @@ public class AuthorizationCheckMiddleware
             }
             var action = context.Request.Path.Value?.ToLower() ?? "";
             var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
-            bool isAuthorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
-            if (!isAuthorized)
+            X509Certificate2? x509Certificate;
+            bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
+            if (!isX509Authorized)
             {
-                var error = "User is not authorized.";
-                await UnauthorizedResponseAsync(context, error);
+                x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
+                if (x509Certificate is not null)
+                {
+                    await UnauthorizedResponseAsync(context, "The deviceId or the SecretKey are incorrect.");
+                    return;
+                }
+                _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");
+
+                var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
+                if (!isSymetricKeyAuthorized)
+                {
+                    _logger.Info("GetDeviceStateAsync, the device is symmetric key unAuthorized, start provisinig proccess");
+                    await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
+                }
+            }
+            x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
+            if (x509Certificate?.NotAfter <= DateTime.UtcNow)
+            {
+                _logger.Info("The certificate is expired.");
+                await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
                 return;
             }
 
