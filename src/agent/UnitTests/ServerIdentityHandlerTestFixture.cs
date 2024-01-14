@@ -19,7 +19,6 @@ namespace CloudPillar.Agent.Tests
         private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
         private Mock<IDeviceClientWrapper> _deviceClientWrapper;
         private IServerIdentityHandler _target;
-
         private AppSettings appSettings = new AppSettings() { DefaultPublicKeyName = "UT-PublicKey" };
         private Mock<IOptions<AppSettings>> mockAppSettings;
 
