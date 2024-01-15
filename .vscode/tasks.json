@@ -188,6 +188,22 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "buildPriorityQueue",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/PriorityQueue/PriorityQueue.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
