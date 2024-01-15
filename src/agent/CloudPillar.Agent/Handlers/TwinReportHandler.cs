@@ -51,7 +51,7 @@ public class TwinReportHandler : ITwinReportHandler
     public TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "")
     {
         if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction &&
-        !string.IsNullOrWhiteSpace(periodicFileName) && !string.IsNullOrWhiteSpace(periodicUploadAction.DirName) && 
+        !string.IsNullOrWhiteSpace(periodicFileName) && !string.IsNullOrWhiteSpace(periodicUploadAction.DirName) &&
          periodicFileName.IndexOf(periodicUploadAction.DirName) != -1 &&
          periodicUploadAction.DirName != periodicFileName)
         {
@@ -135,6 +135,12 @@ public class TwinReportHandler : ITwinReportHandler
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
+            var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(twin.ToJson(),
+                new JsonSerializerSettings
+                {
+                    Converters = new List<JsonConverter> {
+                                        new TwinDesiredConverter(), new TwinActionConverter() }
+                });
             var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
             return reported?.DeviceState;
         }

@@ -79,7 +79,7 @@ public class TwinHandler : ITwinHandler
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
-            if (changeSpec != TwinPatchChangeSpec.ChangeSpecDiagnostics)
+            if (changeSpec != TwinPatchChangeSpec.Diagnostics)
             {
                 _logger.Info($"TwinDesired spec id not equal to TwinReported spec id, reset all reported actions");
                 _fileDownloadHandler.InitDownloadsList();
@@ -123,7 +123,7 @@ public class TwinHandler : ITwinHandler
                 twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpec);
             }
 
-            if (await ChangeSpecIdEmpty(twinDesired?.ChangeSpec?.Id, cancellationToken))
+            if (await ChangeSpecIdEmpty(twinDesired?.ChangeSpec[0]?.Id, cancellationToken))
             {
                 _logger.Info($"There is no twin change spec id");
                 return;
