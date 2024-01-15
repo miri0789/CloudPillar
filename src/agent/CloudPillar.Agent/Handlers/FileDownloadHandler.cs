@@ -18,6 +18,7 @@ public class FileDownloadHandler : IFileDownloadHandler
     private readonly ITwinReportHandler _twinReportHandler;
     private readonly ISignatureHandler _signatureHandler;
     private readonly StrictModeSettings _strictModeSettings;
+    private readonly IServerIdentityHandler _serverIdentityHandler;
     private static List<FileDownload> _filesDownloads = new List<FileDownload>();
 
 
@@ -32,6 +33,7 @@ public class FileDownloadHandler : IFileDownloadHandler
                                ILoggerHandler loggerHandler,
                                ICheckSumService checkSumService,
                                ISignatureHandler signatureHandler,
+                               IServerIdentityHandler serverIdentityHandler,
                                IOptions<StrictModeSettings> strictModeSettings,
                                IOptions<DownloadSettings> options)
     {
@@ -44,6 +46,7 @@ public class FileDownloadHandler : IFileDownloadHandler
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
+        _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
     }
 
     public bool AddFileDownload(ActionToReport actionToReport)
@@ -421,6 +424,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
             {
                 RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
+                await UpdateKnownIdentities(cancellationToken);
             }
         }
         catch (Exception ex)
@@ -508,5 +512,13 @@ public class FileDownloadHandler : IFileDownloadHandler
     public void InitDownloadsList()
     {
         _filesDownloads = new List<FileDownload>();
+    }
+
+    private async Task UpdateKnownIdentities(CancellationToken cancellationToken)
+    {
+        if (_filesDownloads.Count == 0 && !cancellationToken.IsCancellationRequested)
+        {
+            await _serverIdentityHandler.UpdateKnownIdentitiesFromCertificatesAsync(cancellationToken);
+        }
     }
 }

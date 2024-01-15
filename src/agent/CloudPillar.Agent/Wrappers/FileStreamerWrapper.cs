@@ -131,6 +131,12 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetFileName(filePathPattern);
     }
+    
+    public string GetFileNameWithoutExtension(string filePath)
+    {
+        return Path.GetFileNameWithoutExtension(filePath);
+    }
+
     public string GetTempPath()
     {
         return Path.GetTempPath();

@@ -24,8 +24,8 @@ For example
 startagent.bat win-x64 
 ````
 
-### working directory arg
-startagent.bat can run from any local location with get the working dir in argument(path to env\dev or env\prod)
+### Working Directory Argument
+startagent.bat can run from any local location. The working dir should be added to the argument (path to env\dev or env\prod)
 ````
 ./startagent.bat <ARCHITECTURE_DIR> <WORKINGDIR>
 ````
@@ -34,14 +34,14 @@ For example:
 ````
 startagent.bat win-x64 c:\env\dev
 ````
-**Note: this option enable only when running from cmd (not with --winsrv option)**
+**Note: This option to run the Agent from any local location is enabled only when running from cmd (not with --winsrv option)**
 
-### Windows - windows service
+### Windows - Windows Service
 ```
 ./startagent.bat <ARCHITECTURE_DIR> --winsrv <USER_PASSWORD>
 ```
 
-The <USER_PASSWORD> is optional if `UserPassword` not set in appsettings.json and not want to use interactive input.
+The <USER_PASSWORD> is optional and should be added if `UserPassword` is not configured in appsettings.json or interactive input is not desired.
 
 For example
 ````
@@ -53,47 +53,47 @@ startagent.bat win-x64 --winsrv abcABC123!
 ````
 
 ### Windows service user permissions
-#### **Admin** privileges are needed to **create** windows service, and generate certificate at **LocalMachine** store
-#### The folowing permissions are needed to **use** windowes service:
+#### **Admin** privileges are required for **creating** the windows service, and for generating a certificate to the **LocalMachine** store
+#### The following permissions are required for **using** the windows service:
 * Read and Write permission to folders that are used in recipes for download & upload
-* User should be logged on as service (`Local Security Policy -> Local Policy -> User Rights Assignment -> Log on as a service -> Add User or Group`)
+* User should be added to 'Log on as a service' (`Local Security Policy -> Local Policy -> User Rights Assignment -> Log on as a service -> Add User or Group`)
 
-If user detailes not configure in appsettings (`StoreLocation`, `Domain`, `UserName`, `UserPassword`) the service will be instaled with Admin rights, and certificate in LocalMachine.
+If user details are not configured in appsettings (`StoreLocation`, `Domain`, `UserName`, `UserPassword`) the service will be installed with Admin rights, and the certificate will be stored in the LocalMachine.
 
 ## appsettings.json Configuration
 
 To configure the application settings, please refer to the appsettings.json file and customize the following parameters as needed.
 | Setting Name   | Description                    | Default Value   |
 | ---------------| ------------------------------ | --------------- |
-| `Authentication.GlobalDeviceEndpoint`       | the global device endpoint  |  `global.azure-devices-provisioning.net` |
-| `Authentication.CertificateExpiredDays`       | Certificate expired days  |  `365` |
-| `Authentication.DpsScopeId`       | DPS scope id  |  `true` |
+| `Authentication.GlobalDeviceEndpoint`       | The global device endpoint  |  `global.azure-devices-provisioning.net` |
+| `Authentication.CertificateExpiredDays`       | The number of days from when the certificate was created, that it expires  |  `730` |
+| `Authentication.DpsScopeId`       | DPS Scope ID  |  `true` |
 | `Authentication.GroupEnrollmentKey`       | DPS enrollment group key  |   |
-| `Authentication.StoreLocation`       | location to store the certificate - LocalMachine\CurrentUser.  |  if this value not configure - the default is: `CurrentUser` - if `Authentication.UserName` is defined, if not - `LocalMachine` |
-| `Authentication.Domain`       | machine domain name  |  if this value not configure - the default is `.` |
-| `Authentication.UserName`       | the user name log on as a service  |  if this value not configure - the default is Admin |
-| `Authentication.UserPassword`       | the user password log on as a service  | if this value not configure - try to get the password from command line argument, if it is also not send it waiting to user interactive input.  |
+| `Authentication.StoreLocation`       | Location for storing the certificate - LocalMachine\CurrentUser.  |  `CurrentUser` - if `Authentication.UserName` is defined, `LocalMachine` if `Authentication.UserName` is not defined |
+| `Authentication.Domain`       | Machine domain name  |  `.` |
+| `Authentication.UserName`       | The user's name when logged on as a service  |  Admin |
+| `Authentication.UserPassword`       | The user's password when logged on as a service  | From command line argument, or waits for user interactive input.  |
 | `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
 | `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
 | `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
-| `StrictModeSettings.GlobalPatterns`    | general file access permissions or restrictions across the application | `[]` |
-| `StrictModeSettings.FilesRestrictions`    | collection of restrictions or rules that apply specifically to file operations within the application | `{}` |
-| `StrictModeSettings.FilesRestrictions.Id`    |  unique identifier for the specific restriction set | `LogUpload` |
-| `StrictModeSettings.FilesRestrictions.Type`    |  specifies the type of action that the restrictions apply to | `Upload` or  `Download` |
-| `StrictModeSettings.FilesRestrictions.Root`    |  represents the root directory or location where the specified file restrictions apply | `c:/` |
-| `StrictModeSettings.FilesRestrictions.MaxSize`    |  maximum size limit for file downloads | `1` |
-| `StrictModeSettings.FilesRestrictions.AllowPatterns`    |  array that contains patterns specifying the types of files that are allowed for the defined action | `[]`       |
-| `StrictModeSettings.FilesRestrictions.DenyPatterns`    |  array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
-| `DownloadSettings.SignFileBufferSize`    | sing documents buffer size | `16384`         |
-| `DownloadSettings.CommunicationDelaySeconds`    | download delay seconds for check less communication | `30`         |
-| `DownloadSettings.BlockedDelayMinutes`    | file blocked delay minutes | `10`         |
+| `StrictModeSettings.GlobalPatterns`    | General file access permissions or restrictions across the application | `[]` |
+| `StrictModeSettings.FilesRestrictions`    | A collection of restrictions or rules that apply specifically to file operations within the application | `{}` |
+| `StrictModeSettings.FilesRestrictions.Id`    |  A unique identifier for the specific restriction set | `LogUpload` |
+| `StrictModeSettings.FilesRestrictions.Type`    |  Specifies the type of action that the restrictions apply to | `Upload` or  `Download` |
+| `StrictModeSettings.FilesRestrictions.Root`    |  Represents the root directory or location where the specified file restrictions apply | `c:/` |
+| `StrictModeSettings.FilesRestrictions.MaxSize`    |  Specifies the size limit for file downloads in bytes | `1` |
+| `StrictModeSettings.FilesRestrictions.AllowPatterns`    |  Array that contains patterns specifying the types of files that are allowed for the defined action | `[]`       |
+| `StrictModeSettings.FilesRestrictions.DenyPatterns`    |  Array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
+| `DownloadSettings.SignFileBufferSize`    | Sign documents buffer size | `16384`         |
+| `DownloadSettings.CommunicationDelaySeconds`    | Download delay seconds for check less communication | `30`         |
+| `DownloadSettings.BlockedDelayMinutes`    | Specifies the delay duration in minutes for download retry after blocked | `10`         |
 | `CommunicationLess`    | API returns mocks and not connect to IOT hub | `false`         |
-| `RunDiagnosticsSettings.FileSizeBytes`    | The size of the file to be created for diagnostics  |131072         |
+| `RunDiagnosticsSettings.FileSizeBytes`    | Defines the size of the file to be created for diagnostics  |131072         |
 | `RunDiagnosticsSettings.PeriodicResponseWaitSeconds`    | Defines the time in seconds that the diagnostics process should check the download status | 10         |
 | `RunDiagnosticsSettings.ResponseTimeoutMinutes`    | Sets the maximum time duration in minutes for which the diagnostics process should wait for a response before timing out | 5         |
 | `UploadCompleteRetrySettings.MaxRetries`    | Specifies the maximum number of retry attempts that will be made in case of a failed upload or completion task | 3         |
 | `UploadCompleteRetrySettings.DelaySeconds`    | Defines the delay duration in seconds between successive retry attempts | 30         |
-| `AgentServiceName`    | Windows service agent name to install and start | `CARTO v8 CloudPillar`         |
+| `AgentServiceName`    | Describes the name of the Agent when installed as a Windows Service | `CARTO v8 CloudPillar`         |
 
 
 ## Call GetDeviceState in C# Example
@@ -195,7 +195,7 @@ public class DeviceStateClient
 
     - `action`: Describes the type of operation to be performed (e.g., SingularDownload, SingularUpload, PeriodicUpload, ExecuteOnce).
     - `description`: Provides a brief explanation of the action's purpose or objective.
-    - Additional properties specific to each action may be presesented, depending on the array.
+    - Additional properties specific to each action may be presented, depending on the array.
 
     
     Details of each action:
@@ -218,7 +218,7 @@ public class DeviceStateClient
         - `source`: The source of the firmware package (e.g., "SPU.zip").
         - `sign`: Signature of file content.
         - `destinationPath`: The destination path for storing the downloaded firmware (e.g., "./SPU.zip").
-        - `unzip`: Do unzip to download (The file must be a ZIP).
+        - `unzip`: Extract files from the compressed file when downloading (The file must be a ZIP).
     
     4. **Execute Once Action**:
         - `action`: ExecuteOnce
