@@ -27,8 +27,6 @@ public class CertificateIdentityService : ICertificateIdentityService
     {
         try
         {
-            certificate = new X509Certificate2("C:\\git.dev\\CloudPillar\\CloudPillar\\src\\agent\\CloudPillar.Agent\\pki\\pk-certificate.pfx");
-
             // Save the public key to a CER file
             byte[] certData = certificate.Export(X509ContentType.Cert);
 
