@@ -17,12 +17,13 @@ public class TwinDiseredService : ITwinDiseredService
     private const string DIAGNOSTICS_TRANSACTIONS_KEY = "diagnosticsActions";
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
     private readonly ILoggerHandler _logger;
+    private readonly IGuidWrapper _guidWrapper;
 
-    public TwinDiseredService(ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper)
+    public TwinDiseredService(ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper, IGuidWrapper guidWrapper)
     {
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
+        _guidWrapper = guidWrapper ?? throw new ArgumentNullException(nameof(guidWrapper));
     }
 
     public async Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
@@ -37,6 +38,10 @@ public class TwinDiseredService : ITwinDiseredService
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
+                if (string.IsNullOrEmpty(twinDesiredChangeSpec.Id))
+                {
+                    twinDesiredChangeSpec.Id = _guidWrapper.NewGuid();
+                }
                 if (twinDesiredChangeSpec.Patch is null || twinDesiredChangeSpec.Patch.Values.Count() == 0)
                 {
                     twinDesiredChangeSpec.Patch = new Dictionary<string, TwinAction[]>
