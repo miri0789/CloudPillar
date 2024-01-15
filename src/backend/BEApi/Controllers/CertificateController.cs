@@ -28,17 +28,4 @@ public class CertificateController : ControllerBase
             throw new Exception("Error validating certificates.", ex);
         }
     }
-
-    [HttpGet("HandleCertificateIdentity")]
-    public async Task HandleCertificateIdentity()
-    {
-        try
-        {
-            await _certificateIdentityService.UploadCertificateToBlob(default);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception("Error validating certificates.", ex);
-        }
-    }
 }

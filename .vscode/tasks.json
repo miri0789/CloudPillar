@@ -131,7 +131,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/backend/beapi/BEApi.csproj",
+                "${workspaceFolder}/src/backend/BEApi/BEApi.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],

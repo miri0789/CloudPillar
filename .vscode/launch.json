@@ -69,9 +69,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "buildBEApi",
-            "program": "${workspaceFolder}/src/backend/beapi/bin/Debug/net7.0/beapi.dll",
+            "program": "${workspaceFolder}/src/backend/BEApi/bin/Debug/net7.0/BEApi.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/backend/beapi",
+            "cwd": "${workspaceFolder}/src/backend/BEApi",
             "console": "internalConsole",
             "env": {
                 "DPSConnectionString": "",
