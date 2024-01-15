@@ -77,6 +77,10 @@ controllers:
       value: "0ne00B51BC7"
     - name: GlobalDeviceEndpoint
       value: "global.azure-devices-provisioning.net"
+    volumeMounts:
+    - name: devbe-cert
+      mountPath: "/mnt/devbe-cert"
+      readOnly: true
   - title: "beapi"
     replicaCount: 3
     path: /beapi-service

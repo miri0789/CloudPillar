@@ -43,6 +43,18 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "1"
+        {{ if .volumeMounts }}
+        volumeMounts:
+        {{- toYaml .volumeMounts | nindent 8 }}
+        {{- end }}
+      {{ if .volumeMounts }}
+      volumes:
+      {{- range .volumeMounts }}
+      - name: {{ .name }}
+        secret:
+          secretName: {{ .name }}      
+      {{- end }}
+      {{- end }}
       imagePullSecrets:
       - name: acr-secret
 {{- if .port }}
