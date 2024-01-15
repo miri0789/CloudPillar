@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using PriorityQueue.Services.Interfaces;
+using PriorityQueue.Wrappers.Interfaces;
 using Shared.Logger;
 
 namespace PriorityQueue.Services;
@@ -7,45 +8,56 @@ public class MessageProcessor : IMessageProcessor
 {
     private readonly HttpClient _httpClient;
     private readonly ILoggerHandler _logger;
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
 
     public MessageProcessor(HttpClient httpClient,
-                            ILoggerHandler logger)
+                            ILoggerHandler logger,
+                            IEnvironmentsWrapper environmentsWrapper)
     {
-        _httpClient = httpClient;
-        _logger = logger;
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
     }
 
     public async Task<bool> ProcessMessageAsync(string message, IDictionary<string, string> properties)
     {
-        _logger.Debug($"{DateTime.Now} Processing message: {message}");
-        await Task.Delay(7000);
-        // var backendUrl = Environment.GetEnvironmentVariable("SVC_BACKEND_URL") ?? "http://localhost:5000/api/ProcessMessage";
-        // var request = new HttpRequestMessage(HttpMethod.Post, backendUrl)
-        // {
-        //     Content = new StringContent(message, Encoding.UTF8, "application/json")
-        // };
+        var request = new HttpRequestMessage(HttpMethod.Post, _environmentsWrapper.svcBackendUrl)
+        {
+            Content = new StringContent(message, Encoding.UTF8, "application/json")
+        };
 
-        // foreach (var property in properties)
-        // {
-        //     request.Headers.Add(property.Key, property.Value);
-        // }
-        // try
-        // {
-        //     var response = await _httpClient.SendAsync(request);
+        foreach (var property in properties)
+        {
+            request.Headers.Add(property.Key, property.Value);
+        }
+        try
+        {
+            var response = await _httpClient.SendAsync(request);
 
-        //     if (!response.IsSuccessStatusCode)
-        //     {
-        //         return ((int)response.StatusCode) / 100 == 4; // Processed if 4xx the request is bad
-        //     }
-        //     else
-        //     {
-        //         return true; // Processed
-        //     }
-        // }
-        // catch (Exception ex)
-        // {
+            if (!response.IsSuccessStatusCode)
+            {
+                var isBadRequest = ((int)response.StatusCode) / 100 == 4;
+                if (isBadRequest)
+                {
+                    _logger.Warn($"ProcessMessageAsync Bad request: {message}");
+                }
+                else
+                {
+                    _logger.Error($"ProcessMessageAsync Failed to process message: {message} with status code: {response.StatusCode}");
+                }
+                return isBadRequest;
+            }
+            else
+            {
+                return true; // Processed
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"ProcessMessageAsync Failed to process message: {message} with exception: {ex.Message}");
             return true;
-        // }
+        }
 
     }
 }
