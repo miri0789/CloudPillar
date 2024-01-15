@@ -27,8 +27,11 @@ builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServic
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
+builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
+builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<IValidateCertificateService, ValidateCertificateService>();
+builder.Services.AddScoped<ICertificateIdentityService, CertificateIdentityService>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
