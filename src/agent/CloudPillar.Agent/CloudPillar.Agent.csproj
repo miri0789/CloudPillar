@@ -21,6 +21,8 @@
     <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageReference Include="SharedEntities" Version="1.0.194" />
+
+    <ProjectReference Include="./../../Shared/Entities/Entities.csproj" />
   </ItemGroup>
 
 </Project>

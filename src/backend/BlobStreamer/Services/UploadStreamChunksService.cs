@@ -108,7 +108,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
             DestinationPath = GetFilePathFromBlobName(Uri.UnescapeDataString(storageUri.Segments.Last())),
         };
-        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.ChangeSpecDiagnostics, downloadAction);
+        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.Diagnostics, downloadAction);
     }
 
     private string GetFilePathFromBlobName(string blobName)

@@ -16,8 +16,9 @@ public class TwinDesiredConverter : JsonConverter
         var changeSpec = new TwinDesired()
         {
             ChangeSign = (jsonObject["changeSign"] ?? jsonObject["ChangeSign"])?.Value<string>(),
-            ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
-            ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpecDiagnostics)
+            // ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
+            // ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.Diagnostics)
+            ChangeSpec = GetTwinChangeSpecList(jsonObject, serializer)
         };
         return changeSpec;
     }
@@ -27,7 +28,32 @@ public class TwinDesiredConverter : JsonConverter
         throw new NotImplementedException();
     }
 
-    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, TwinPatchChangeSpec changeSpecKey)
+    private List<TwinChangeSpec> GetTwinChangeSpecList(JObject jsonObject, JsonSerializer serializer)
+    {
+        var changeSpecList = new List<TwinChangeSpec>();
+
+        var changeSpecToken = jsonObject.SelectToken(FirstLetterToLowerCase($"changeSpec"))
+        ?? jsonObject.SelectToken(FirstLetterToUpperCase($"changeSpec"));
+
+        if (changeSpecToken is JArray changeSpecArray)
+        {
+            foreach (var changeSpecObject in changeSpecArray)
+            {
+                var changeSpecKey = changeSpecObject[FirstLetterToLowerCase("id")]?.Value<string>() ??
+                changeSpecObject[FirstLetterToUpperCase("id")]?.Value<string>();
+                var changeSpecKeyPrefix = changeSpecKey.Split('-').FirstOrDefault();
+
+                if (Enum.TryParse<TwinPatchChangeSpec>(changeSpecKeyPrefix, out var enumValue))
+                {
+                    var twinChangeSpec = CreateTwinChangeSpec(changeSpecObject, serializer, enumValue);
+                    changeSpecList.Add(twinChangeSpec);
+                }
+            }
+        }
+
+        return changeSpecList;
+    }
+    private TwinChangeSpec CreateTwinChangeSpec(JToken jsonObject, JsonSerializer serializer, TwinPatchChangeSpec changeSpecKey)
     {
         var lowerPropName = FirstLetterToLowerCase($"{changeSpecKey}");
         var upperPropName = FirstLetterToUpperCase($"{changeSpecKey}");
@@ -39,7 +65,8 @@ public class TwinDesiredConverter : JsonConverter
         return changeSpec;
     }
 
-    private Dictionary<string, TwinAction[]> GetDynamicPatch(JObject jsonObject, string lowerPropName, string upperPropName, JsonSerializer serializer)
+
+    private Dictionary<string, TwinAction[]> GetDynamicPatch(JToken jsonObject, string lowerPropName, string upperPropName, JsonSerializer serializer)
     {
         var dynamicPatch = new Dictionary<string, TwinAction[]>();
 
