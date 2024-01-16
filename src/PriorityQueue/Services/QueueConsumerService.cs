@@ -27,18 +27,18 @@ public class QueueConsumerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await InitializeProcessors(_environmentsWrapper.serviceBusUrls);
-        await ProcessInPriorityOrder(stoppingToken);
+        await InitializeProcessorsAsync(_environmentsWrapper.serviceBusUrls);
+        await ProcessInPriorityOrderAsync(stoppingToken);
     }
 
-    private async Task InitializeProcessors(string[] serviceBusUrls)
+    private async Task InitializeProcessorsAsync(string[] serviceBusUrls)
     {
         var client = new ServiceBusClient(_environmentsWrapper.serviceBusConnectionString);
         ServiceBusAdministrationClient? adminClient = TryCreateAdminClient();
 
         foreach (var url in serviceBusUrls)
         {
-            ServiceBusProcessor processor = await CreateProcessor(client, adminClient, url);
+            ServiceBusProcessor processor = await CreateProcessorAsync(client, adminClient, url);
             SubscribeToProcessorEvents(processor);
             _processors.Add(processor);
         }
@@ -57,26 +57,26 @@ public class QueueConsumerService : BackgroundService
         }
     }
 
-    private async Task<ServiceBusProcessor> CreateProcessor(ServiceBusClient client, ServiceBusAdministrationClient? adminClient, string url)
+    private async Task<ServiceBusProcessor> CreateProcessorAsync(ServiceBusClient client, ServiceBusAdministrationClient? adminClient, string url)
     {
         ServiceBusProcessor processor;
 
         if (IsQueueUrl(url))
         {
-            await EnsureQueueExists(adminClient, url);
+            await EnsureQueueExistsAsync(adminClient, url);
             processor = client.CreateProcessor(url, CreateProcessorOptions());
         }
         else
         {
             var (topicName, subscriptionName) = ParseTopicSubscription(url);
-            await EnsureTopicAndSubscriptionExist(adminClient, topicName, subscriptionName);
+            await EnsureTopicAndSubscriptionExistAsync(adminClient, topicName, subscriptionName);
             processor = client.CreateProcessor(topicName, subscriptionName, CreateProcessorOptions());
         }
 
         return processor;
     }
 
-    private async Task EnsureQueueExists(ServiceBusAdministrationClient? adminClient, string queueUrl)
+    private async Task EnsureQueueExistsAsync(ServiceBusAdministrationClient? adminClient, string queueUrl)
     {
         if (adminClient != null && !await adminClient.QueueExistsAsync(queueUrl))
         {
@@ -84,7 +84,7 @@ public class QueueConsumerService : BackgroundService
         }
     }
 
-    private async Task EnsureTopicAndSubscriptionExist(ServiceBusAdministrationClient? adminClient, string topicName, string subscriptionName)
+    private async Task EnsureTopicAndSubscriptionExistAsync(ServiceBusAdministrationClient? adminClient, string topicName, string subscriptionName)
     {
         if (adminClient != null && !await adminClient.TopicExistsAsync(topicName))
         {
@@ -112,7 +112,7 @@ public class QueueConsumerService : BackgroundService
     private void SubscribeToProcessorEvents(ServiceBusProcessor processor)
     {
         int processorIndex = _processors.Count - 1;
-        Func<ProcessMessageEventArgs, Task> messageHandler = async (args) => await OnMessageReceived(args, processorIndex);
+        Func<ProcessMessageEventArgs, Task> messageHandler = async (args) => await OnMessageReceivedAsync(args, processorIndex);
         processor.ProcessMessageAsync += messageHandler;
         processor.ProcessErrorAsync += OnProcessError;
     }
@@ -136,7 +136,7 @@ public class QueueConsumerService : BackgroundService
 
 
 
-    private async Task ProcessInPriorityOrder(CancellationToken stoppingToken)
+    private async Task ProcessInPriorityOrderAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -173,10 +173,10 @@ public class QueueConsumerService : BackgroundService
             }
         }
 
-        await DisposeProcessors();
+        await DisposeProcessorsAsync();
     }
 
-    private async Task DisposeProcessors()
+    private async Task DisposeProcessorsAsync()
     {
         foreach (var processor in _processors)
         {
@@ -185,7 +185,7 @@ public class QueueConsumerService : BackgroundService
     }
 
 
-    private async Task OnMessageReceived(ProcessMessageEventArgs args, int processorIndex)
+    private async Task OnMessageReceivedAsync(ProcessMessageEventArgs args, int processorIndex)
     {
         await StopLowerPriorityProcessorsAsync(processorIndex);
 
@@ -193,7 +193,7 @@ public class QueueConsumerService : BackgroundService
         {
             Interlocked.Decrement(ref _currentParallelCount);
             await args.AbandonMessageAsync(args.Message);
-            _logger.Info($"OnMessageReceived AbandonMessageAsync _currentParallelCount > parallelCount , queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
+            _logger.Info($"OnMessageReceivedAsync AbandonMessageAsync _currentParallelCount > parallelCount , queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
             return;
         }
 
@@ -206,12 +206,12 @@ public class QueueConsumerService : BackgroundService
                 // Distinguish failure types: is the service is the problem, abandon to let another service to process;
                 // If its the message problem (HTTP 4xx) - no recovery, fatal failure, do not abandon, just fail
                 await args.CompleteMessageAsync(args.Message);
-                _logger.Info($"OnMessageReceived ProcessMessageAsync CompleteMessageAsync, queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
+                _logger.Info($"OnMessageReceivedAsync ProcessMessageAsync CompleteMessageAsync, queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
             }
         }
         catch (Exception ex)
         {
-            _logger.Error($"OnMessageReceived ProcessMessageAsync failed: {ex.Message}");
+            _logger.Error($"OnMessageReceivedAsync ProcessMessageAsync failed: {ex.Message}");
             await args.AbandonMessageAsync(args.Message);
         }
         finally
