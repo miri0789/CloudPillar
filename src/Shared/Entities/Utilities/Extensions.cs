@@ -53,12 +53,21 @@ public static class TwinJsonConvertExtensions
         switch (changeSpecKey)
         {
             case TwinPatchChangeSpec.Diagnostics:
+<<<<<<< HEAD
                 return twinDesired.ChangeSpecList[1];
             case TwinPatchChangeSpec.ServerIdentity:
                 return twinDesired.ChangeSpecList[2];
             case TwinPatchChangeSpec.ChangeSpec:
             default:
                 return twinDesired.ChangeSpecList[0];
+=======
+                return twinDesired.ChangeSpec[1];
+            case TwinPatchChangeSpec.ServerIdentity:
+                return twinDesired.ChangeSpec[2];
+            case TwinPatchChangeSpec.ChangeSpec:
+            default:
+                return twinDesired.ChangeSpec[0];
+>>>>>>> 0d8c1071b86a75ab4b6c53f2731e952b7a56d812
         }
     }
 
@@ -67,11 +76,19 @@ public static class TwinJsonConvertExtensions
         switch (changeSpecKey)
         {
             case TwinPatchChangeSpec.ChangeSpec:
+<<<<<<< HEAD
                 twinReported.ChangeSpecList[0] = twinReportedChangeSpec; break;
             case TwinPatchChangeSpec.Diagnostics:
                 twinReported.ChangeSpecList[1] = twinReportedChangeSpec; break;
             case TwinPatchChangeSpec.ServerIdentity:
                 twinReported.ChangeSpecList[2] = twinReportedChangeSpec; break;
+=======
+                twinReported.ChangeSpec[0] = twinReportedChangeSpec; break;
+            case TwinPatchChangeSpec.Diagnostics:
+                twinReported.ChangeSpec[1] = twinReportedChangeSpec; break;
+            case TwinPatchChangeSpec.ServerIdentity:
+                twinReported.ChangeSpec[2] = twinReportedChangeSpec; break;
+>>>>>>> 0d8c1071b86a75ab4b6c53f2731e952b7a56d812
 
         }
     }

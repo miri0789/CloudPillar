@@ -123,7 +123,7 @@ public class TwinHandler : ITwinHandler
                 twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpec);
             }
 
-            if (await ChangeSpecIdEmpty(twinDesired?.ChangeSpec?.Id, cancellationToken))
+            if (await ChangeSpecIdEmpty(twinDesired?.ChangeSpec[0]?.Id, cancellationToken))
             {
                 _logger.Info($"There is no twin change spec id");
                 return;

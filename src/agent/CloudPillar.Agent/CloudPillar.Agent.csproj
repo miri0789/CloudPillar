@@ -20,9 +20,14 @@
     <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
     <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+<<<<<<< HEAD
     <!-- <PackageReference Include="SharedEntities" Version="1.0.194" /> -->
   </ItemGroup>
   <ItemGroup>
+=======
+    <PackageReference Include="SharedEntities" Version="1.0.194" />
+
+>>>>>>> 0d8c1071b86a75ab4b6c53f2731e952b7a56d812
     <ProjectReference Include="./../../Shared/Entities/Entities.csproj" />
   </ItemGroup>
 
