@@ -45,16 +45,16 @@ public class SigningService : ISigningService
         else
         {
             _logger.Info("In kube run-time - loading crypto from the secret in the local namespace.");
-            string secretName = _environmentsWrapper.secretName;
-            string secretKey = _environmentsWrapper.secretKey;
+            string SecretVolumeMountPath = _environmentsWrapper.SecretVolumeMountPath;
 
-            if (string.IsNullOrWhiteSpace(secretName) || string.IsNullOrWhiteSpace(secretKey))
+            if (string.IsNullOrWhiteSpace(SecretVolumeMountPath))
             {
-                var message = "Private key secret name and secret key must be set.";
+                var message = "cert secret path must be set.";
                 _logger.Error(message);
                 throw new InvalidOperationException(message);
             }
-            privateKeyPem = await GetPrivateKeyFromK8sSecretAsync(secretName, secretKey);
+            privateKeyPem = await File.ReadAllTextAsync(Path.Combine(SecretVolumeMountPath, "tls.key"));
+            _logger.Info($"Key Base64 decoded layer 2 {privateKeyPem}");
         }
 
         return LoadPrivateKeyFromPem(privateKeyPem);

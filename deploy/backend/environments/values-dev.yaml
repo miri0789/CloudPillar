@@ -63,12 +63,8 @@ controllers:
     env:
     - name: KubernetesServiceHost
       value: ""
-    - name: SigningPem
-      value: "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSHVBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFqQklIV01JSFRBZ0VCQkVJQml5QWE3YVJIRkRDaDJxZ2EKOXNUVUdJTkU1akhBRm5tTTh4V2VUL3VuaTVJNHROcWhWNVh4MHBEcm1DVjltYnJvRnRmRWEwWFZmS3VNQXh4ZgpaNkxNL3lLaGdZa0RnWVlBQkFHQnpnZG5QNzk4RnNMdVdZVEREUUE3YzByM0JWazhOblJVU2V4cFFVc1JpbFBOCnYzU2NoTzBsUnc5UnU4Nngxa2huVkR4K2R1cTRCaURGY3ZsU0FjeWpMQUNKdmp2b3lUTEppQStUUUZkbXJlYXIKak1pWk5FMjVwVDJ5V1AxTlVuZEp4UGN2VnRmQlc0OGtQT212a1k0V2xxUDViQXdDWHdic0tyQ2drNnhic3AxMgpldz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0="
-    - name: SecretName
-      value: "IoTTwinSecret"
-    - name: SecretKey
-      value: "signKey"
+    - name: SecretVolumeMountPath
+      value: "/certs/devbe"
     - name: IothubConnectionString
       value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
     - name: DPSConnectionString
@@ -79,7 +75,7 @@ controllers:
       value: "global.azure-devices-provisioning.net"
     volumeMounts:
     - name: devbe-cert
-      mountPath: "/mnt/devbe-cert"
+      mountPath: "/certs/devbe"
       readOnly: true
   - title: "beapi"
     replicaCount: 3
