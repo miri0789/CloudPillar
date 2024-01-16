@@ -54,47 +54,10 @@ public class SigningService : ISigningService
                 throw new InvalidOperationException(message);
             }
             privateKeyPem = await File.ReadAllTextAsync(Path.Combine(SecretVolumeMountPath, "tls.key"));
-            _logger.Info($"Key Base64 decoded layer 2 {privateKeyPem}");
+            _logger.Info($"Key Base64 decoded layer 1");
         }
 
         return LoadPrivateKeyFromPem(privateKeyPem);
-    }
-
-    private async Task<string> GetPrivateKeyFromK8sSecretAsync(string secretName, string secretKey, string? secretNamespace = null)
-    {
-        _logger.Debug($"GetPrivateKeyFromK8sSecretAsync {secretName}, {secretKey}, {secretNamespace}");
-
-        var config = KubernetesClientConfiguration.BuildDefaultConfig();
-
-        using (var k8sClient = new Kubernetes(config))
-        {
-            _logger.Debug($"Got k8s client in namespace {config.Namespace}");
-
-            var ns = String.IsNullOrWhiteSpace(secretNamespace) ? config.Namespace : secretNamespace;
-            if (String.IsNullOrWhiteSpace(ns))
-            {
-                throw new Exception("k8s namespace not found.");
-            }
-
-            var secrets = await k8sClient.ListNamespacedSecretAsync(ns);
-
-            _logger.Debug($"Secrets in namespace '{ns}':");
-            foreach (var secret in secrets.Items)
-            {
-                _logger.Debug($"- {secret.Metadata.Name}");
-            }
-
-            var targetSecret = await k8sClient.ReadNamespacedSecretAsync(secretName, ns);
-            _logger.Debug($"Got k8s secret");
-
-            if (targetSecret.Data.TryGetValue(secretKey, out var privateKeyBytes))
-            {
-                _logger.Debug($"Got k8s secret bytes");
-                return Encoding.UTF8.GetString(privateKeyBytes);
-            }
-
-            throw new Exception("Private key not found in the Kubernetes secret.");
-        }
     }
 
     private ECDsa LoadPrivateKeyFromPem(string pemContent)
