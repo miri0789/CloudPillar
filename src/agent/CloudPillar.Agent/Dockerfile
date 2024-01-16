@@ -27,5 +27,13 @@ WORKDIR /app
 COPY --from=build /app .
 COPY --from=build ./src/agent/CloudPillar.Agent/publish/cloudpillar.zip .
 
+WORKDIR /app/export
+COPY . .
+RUN dotnet restore
+RUN cp -r /src/agent/CloudPillar.Agent/* .
+RUN cp -r /root/.nuget/packages .
+RUN zip -r export.zip .
+RUN rm -rf *
+
 # Set the entrypoint for the application
-ENTRYPOINT ["dotnet", "jnjiotagent.dll"]
+ENTRYPOINT ["dotnet", "CloudPillar.Agent.dll"]
