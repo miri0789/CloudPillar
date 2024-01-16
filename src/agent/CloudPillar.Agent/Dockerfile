@@ -7,6 +7,7 @@ WORKDIR /src
 
 
 COPY agent/CloudPillar.Agent/*.csproj agent/CloudPillar.Agent/
+COPY agent/CloudPillar.Agent/* /app/export/CloudPillar.Agent
 COPY nuget.config agent/CloudPillar.Agent/
 
 COPY . .
@@ -18,8 +19,7 @@ ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":
 
 RUN dotnet restore
 # RUN cp -r * export
-RUN cp -r /root/.nuget/packages export
-RUN zip -r export.zip .
+COPY --from=build /root/.nuget/packages /app/export/.nuget/packages
 RUN dotnet build -c Release -o /app
 RUN pwsh ./publish.ps1
 
@@ -29,7 +29,8 @@ FROM mcr.microsoft.com/dotnet/runtime:7.0
 WORKDIR /app
 COPY --from=build /app .
 COPY --from=build ./src/agent/CloudPillar.Agent/publish/cloudpillar.zip .
-COPY --from=build ./src/export.zip .
-
+COPY --from=build ./src/agent/CloudPillar.Agent/export ./export
+WORKDIR /app/export
+RUN zip -r export.zip .
 # Set the entrypoint for the application
 ENTRYPOINT ["dotnet", "CloudPillar.Agent.dll"]
