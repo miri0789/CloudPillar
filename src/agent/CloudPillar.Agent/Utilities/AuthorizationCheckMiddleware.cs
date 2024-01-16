@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Sevices.Interfaces;
-using System.Security.Cryptography.X509Certificates;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
@@ -14,7 +13,6 @@ public class AuthorizationCheckMiddleware
     private readonly RequestDelegate _requestDelegate;
     private ILoggerHandler _logger;
     private readonly IConfiguration _configuration;
-    private IDPSProvisioningDeviceClientHandler? _dPSProvisioningDeviceClientHandler;
     private ISymmetricKeyProvisioningHandler? _symmetricKeyProvisioningHandler;
     private IProvisioningService? _provisioningService;
 
@@ -30,8 +28,6 @@ public class AuthorizationCheckMiddleware
     {
         _provisioningService = context.RequestServices.GetRequiredService<IProvisioningService>();
         ArgumentNullException.ThrowIfNull(_provisioningService);
-        _dPSProvisioningDeviceClientHandler = context.RequestServices.GetRequiredService<IDPSProvisioningDeviceClientHandler>();
-        ArgumentNullException.ThrowIfNull(_dPSProvisioningDeviceClientHandler);
         _symmetricKeyProvisioningHandler = context.RequestServices.GetRequiredService<ISymmetricKeyProvisioningHandler>();
         ArgumentNullException.ThrowIfNull(_symmetricKeyProvisioningHandler);
 
@@ -81,37 +77,37 @@ public class AuthorizationCheckMiddleware
                 return;
             }
             var action = context.Request.Path.Value?.ToLower() ?? "";
+            var actionName = context.Request.Path.Value?.Split("/").LastOrDefault();
             var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
-            X509Certificate2? x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
-            bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
+            var x509Certificate = dPSProvisioningDeviceClientHandler.GetCertificate();
+            bool isX509Authorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
             if (!isX509Authorized)
             {
                 if (x509Certificate is not null)
                 {
-                    await UnauthorizedResponseAsync(context, $"{action}: The deviceId or the SecretKey are incorrect.");
+                    await UnauthorizedResponseAsync(context, $"{actionName}, The deviceId or the SecretKey are incorrect.");
                     return;
                 }
-                _logger.Info($"{action}: The device is X509 unAuthorized, check symmetric key authorized");
 
+                _logger.Info($"{actionName}, The device is X509 unAuthorized, check symmetric key authorized");
                 var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
                 if (!isSymetricKeyAuthorized)
                 {
-                    _logger.Info($"{action}: The device is symmetric key unAuthorized, start provisinig proccess");
+                    _logger.Info($"{actionName}, The device is symmetric key unAuthorized, start provisinig proccess");
                     await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
-                    if (!(action.Contains("initiateprovisioning") == true || action.Contains("getdevicestate") == true))
-                    {
-                        await UnauthorizedResponseAsync(context, $"{action}: Symmetric key is Unauthorized.");
-                        return;
-                    }
+                }
+                if (!action.Contains("getdevicestate"))
+                {
+                    await UnauthorizedResponseAsync(context, $"{actionName}, Symmetric key is Unauthorized.");
+                    return;
                 }
             }
             if (x509Certificate?.NotAfter <= DateTime.UtcNow)
             {
-                _logger.Info("The certificate is expired.");
                 await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
-                if (!(action.Contains("initiateprovisioning") == true || action.Contains("getdevicestate") == true))
+                if (!action.Contains("getdevicestate"))
                 {
-                    await UnauthorizedResponseAsync(context, $"{action}: Device certificate is expired.");
+                    await UnauthorizedResponseAsync(context, $"{actionName}, The certificate is expired.");
                     return;
                 }
             }
