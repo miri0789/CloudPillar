@@ -39,22 +39,26 @@ public static class TwinJsonConvertExtensions
         switch (changeSpecKey)
         {
 
-            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
-                return twinReported.ChangeSpecDiagnostics;
+            case TwinPatchChangeSpec.Diagnostics:
+                return twinReported.ChangeSpecList[1];
+            case TwinPatchChangeSpec.ServerIdentity:
+                return twinReported.ChangeSpecList[2];
             case TwinPatchChangeSpec.ChangeSpec:
             default:
-                return twinReported.ChangeSpec;
+                return twinReported.ChangeSpecList[0];
         }
     }
     public static TwinChangeSpec? GetDesiredChangeSpecByKey(this TwinDesired twinDesired, TwinPatchChangeSpec changeSpecKey)
     {
         switch (changeSpecKey)
         {
-            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
-                return twinDesired.ChangeSpecDiagnostics;
+            case TwinPatchChangeSpec.Diagnostics:
+                return twinDesired.ChangeSpecList[1];
+            case TwinPatchChangeSpec.ServerIdentity:
+                return twinDesired.ChangeSpecList[2];
             case TwinPatchChangeSpec.ChangeSpec:
             default:
-                return twinDesired.ChangeSpec;
+                return twinDesired.ChangeSpecList[0];
         }
     }
 
@@ -62,10 +66,13 @@ public static class TwinJsonConvertExtensions
     {
         switch (changeSpecKey)
         {
-            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
-                twinReported.ChangeSpecDiagnostics = twinReportedChangeSpec; break;
             case TwinPatchChangeSpec.ChangeSpec:
-                twinReported.ChangeSpec = twinReportedChangeSpec; break;
+                twinReported.ChangeSpecList[0] = twinReportedChangeSpec; break;
+            case TwinPatchChangeSpec.Diagnostics:
+                twinReported.ChangeSpecList[1] = twinReportedChangeSpec; break;
+            case TwinPatchChangeSpec.ServerIdentity:
+                twinReported.ChangeSpecList[2] = twinReportedChangeSpec; break;
+
         }
     }
 
