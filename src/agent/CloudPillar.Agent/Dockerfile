@@ -7,8 +7,8 @@ WORKDIR /src
 
 
 COPY agent/CloudPillar.Agent/*.csproj agent/CloudPillar.Agent/
-COPY agent/CloudPillar.Agent/* export/CloudPillar.Agent
 COPY nuget.config agent/CloudPillar.Agent/
+COPY agent/CloudPillar.Agent export/CloudPillar.Agent
 
 COPY . .
 WORKDIR /src/agent/CloudPillar.Agent
@@ -29,7 +29,7 @@ FROM mcr.microsoft.com/dotnet/runtime:7.0
 WORKDIR /app
 COPY --from=build /app .
 COPY --from=build ./src/agent/CloudPillar.Agent/publish/cloudpillar.zip .
-COPY --from=build ./src/agent/CloudPillar.Agent/export ./export
+COPY --from=build ./src/export ./export
 WORKDIR /app/export
 RUN zip -r export.zip .
 # Set the entrypoint for the application
