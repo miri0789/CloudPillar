@@ -7,7 +7,7 @@ WORKDIR /src
 
 
 COPY agent/CloudPillar.Agent/*.csproj agent/CloudPillar.Agent/
-COPY agent/CloudPillar.Agent/* /app/export/CloudPillar.Agent
+COPY agent/CloudPillar.Agent/* export/CloudPillar.Agent
 COPY nuget.config agent/CloudPillar.Agent/
 
 COPY . .
@@ -19,7 +19,7 @@ ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":
 
 RUN dotnet restore
 # RUN cp -r * export
-COPY --from=build /root/.nuget/packages /app/export/.nuget/packages
+COPY --from=build /root/.nuget/packages /export/.nuget/packages
 RUN dotnet build -c Release -o /app
 RUN pwsh ./publish.ps1
 
