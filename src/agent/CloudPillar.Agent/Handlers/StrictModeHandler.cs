@@ -39,12 +39,14 @@ public class StrictModeHandler : IStrictModeHandler
 
     public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
-        if (!_strictModeSettings.StrictMode)
+        if (!_strictModeSettings.StrictMode && actionType != TwinActionType.SingularDownload)
         {
             return;
         }
-        FileRestrictionDetails? zoneRestrictions = GetRestrinctionsByZone(fileName, actionType);
-        if (zoneRestrictions == null || zoneRestrictions.Type == StrictModeAction.Upload.ToString() || !zoneRestrictions.MaxSize.HasValue || zoneRestrictions.MaxSize == 0)
+        
+        var fileRestrictions = GetRestrictionsByActionType(actionType);
+        FileRestrictionDetails? zoneRestrictions = GetRestrinctionsByZone(fileName, fileRestrictions);
+        if (zoneRestrictions == null || !zoneRestrictions.MaxSize.HasValue)
         {
             return;
         }
@@ -67,7 +69,7 @@ public class StrictModeHandler : IStrictModeHandler
         var zone = HandleRestictionWithGlobal(verbatimFileName, actionType);
         if (zone is null)
         {
-            return;
+            throw new FormatException(ResultCode.StrictModePattern.ToString());
         }
 
         bool isMatch = IsMatch(zone?.Root?.ToLower(), verbatimFileName.ToLower(), zone?.AllowPatterns?.ToArray());
@@ -83,12 +85,6 @@ public class StrictModeHandler : IStrictModeHandler
     {
         var restrictions = GetRestrictionsByActionType(actionType);
         var globalRestrictions = ConvertGlobalPatternsToRestrictions(verbatimFileName);
-
-        if (restrictions is null && globalRestrictions is null)
-        {
-            _logger.Info("No restrictions were found");
-            return null;
-        }
         var zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, restrictions);
         var globalZoneRestrictions = GetRestrinctionsByZone(verbatimFileName, globalRestrictions);
 
@@ -104,9 +100,11 @@ public class StrictModeHandler : IStrictModeHandler
             _logger.Info("No allow patterns were found");
             return null;
         }
-        var zone = new FileRestrictionDetails();
-        zone.Root = zoneRestrictions?.Root ?? globalZoneRestrictions?.Root;
-        zone.AllowPatterns = allowPatterns?.Concat(globalAllowPatterns).ToList();
+        var zone = new FileRestrictionDetails
+        {
+            Root = zoneRestrictions?.Root ?? globalZoneRestrictions?.Root,
+            AllowPatterns = allowPatterns?.Concat(globalAllowPatterns).ToList()
+        };
         return zone;
     }
     private List<FileRestrictionDetails>? GetRestrictionsByActionType(TwinActionType actionType)
@@ -123,15 +121,7 @@ public class StrictModeHandler : IStrictModeHandler
         }
     }
 
-    private FileRestrictionDetails? GetRestrinctionsByZone(string fileName, TwinActionType actionType)
-    {
-        var bestMatch = GetRestrictionsByActionType(actionType)?
-                                    .Where(x => fileName.ToLower().Contains((x.Root ?? "").ToLower()))
-                                    .OrderByDescending(f => fileName.ToLower().StartsWith((f.Root ?? "").ToLower()) ? f.Root?.Length : 0).ToList()
-                                    .FirstOrDefault();
-        return bestMatch;
-    }
-    private FileRestrictionDetails? GetRestrinctionsByZone(string fileName, List<FileRestrictionDetails> fileRestrictions)
+    private FileRestrictionDetails? GetRestrinctionsByZone(string fileName, List<FileRestrictionDetails>? fileRestrictions)
     {
         var bestMatch = fileRestrictions?
                                     .Where(x => fileName.ToLower().Contains((x.Root ?? "").ToLower()))
@@ -140,7 +130,7 @@ public class StrictModeHandler : IStrictModeHandler
         return bestMatch;
     }
 
-    private List<string> GetAllowRestrictions(FileRestrictionDetails zoneRestrictions)
+    private List<string> GetAllowRestrictions(FileRestrictionDetails? zoneRestrictions)
     {
         var allowPatterns = zoneRestrictions?.AllowPatterns ?? new List<string>();
 
