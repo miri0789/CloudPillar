@@ -82,33 +82,39 @@ public class AuthorizationCheckMiddleware
             }
             var action = context.Request.Path.Value?.ToLower() ?? "";
             var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
-            X509Certificate2? x509Certificate;
+            X509Certificate2? x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
             bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
             if (!isX509Authorized)
             {
-                x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
                 if (x509Certificate is not null)
                 {
-                    await UnauthorizedResponseAsync(context, "The deviceId or the SecretKey are incorrect.");
+                    await UnauthorizedResponseAsync(context, $"{action}: The deviceId or the SecretKey are incorrect.");
                     return;
                 }
-                _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");
+                _logger.Info($"{action}: The device is X509 unAuthorized, check symmetric key authorized");
 
                 var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
                 if (!isSymetricKeyAuthorized)
                 {
-                    _logger.Info("GetDeviceStateAsync, the device is symmetric key unAuthorized, start provisinig proccess");
+                    _logger.Info($"{action}: The device is symmetric key unAuthorized, start provisinig proccess");
                     await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
+                    if (!(action.Contains("initiateprovisioning") == true || action.Contains("getdevicestate") == true))
+                    {
+                        await UnauthorizedResponseAsync(context, $"{action}: Symmetric key is Unauthorized.");
+                        return;
+                    }
                 }
             }
-            x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
             if (x509Certificate?.NotAfter <= DateTime.UtcNow)
             {
                 _logger.Info("The certificate is expired.");
                 await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
-                return;
+                if (!(action.Contains("initiateprovisioning") == true || action.Contains("getdevicestate") == true))
+                {
+                    await UnauthorizedResponseAsync(context, $"{action}: Device certificate is expired.");
+                    return;
+                }
             }
-
             await _requestDelegate(context);
         }
         else

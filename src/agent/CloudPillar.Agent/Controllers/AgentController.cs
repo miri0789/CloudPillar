@@ -34,7 +34,6 @@ public class AgentController : ControllerBase
     private readonly IRequestWrapper _requestWrapper;
     private readonly IProvisioningService _provisioningService;
 
-
     public AgentController(ITwinHandler twinHandler,
      ITwinReportHandler twinReportHandler,
      IValidator<UpdateReportedProps> updateReportedPropsValidator,
@@ -74,7 +73,6 @@ public class AgentController : ControllerBase
         return await _twinHandler.GetTwinJsonAsync();
     }
 
-    [AllowAnonymous]
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
