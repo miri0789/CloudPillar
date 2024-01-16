@@ -17,8 +17,8 @@ ARG FEED_ACCESSTOKEN
 ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/BiosenseWebsterIs/CloudPillar/_packaging/CloudPillarFeed/nuget/v3/index.json\", \"username\":\"docker\", \"password\":\"${FEED_ACCESSTOKEN}\"}]}"
 
 RUN dotnet restore
-RUN cp -r /src/agent/CloudPillar.Agent/* ./export
-RUN cp -r /root/.nuget/packages ./export
+RUN cp -r * export
+RUN cp -r /root/.nuget/packages export
 RUN zip -r export.zip .
 RUN dotnet build -c Release -o /app
 RUN pwsh ./publish.ps1
