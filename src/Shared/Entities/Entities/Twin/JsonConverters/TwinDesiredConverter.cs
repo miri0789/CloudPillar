@@ -13,11 +13,17 @@ public class TwinDesiredConverter : JsonConverter
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
         JObject jsonObject = JObject.Load(reader);
+        var lowerPropName = FirstLetterToLowerCase(TwinPatchChangeSpec.ChangeSpec.ToString());
+        var upperPropName = FirstLetterToUpperCase(TwinPatchChangeSpec.ChangeSpec.ToString());
+
+        var lowerDiagnosticsPropName = FirstLetterToLowerCase(TwinPatchChangeSpec.Diagnostics.ToString());
+        var upperDiagnosticsPropName = FirstLetterToUpperCase(TwinPatchChangeSpec.Diagnostics.ToString());
+
         var changeSpec = new TwinDesired()
         {
             ChangeSign = (jsonObject["changeSign"] ?? jsonObject["ChangeSign"])?.Value<string>(),
-            ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
-            ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpecDiagnostics)
+
+            ChangeSpec = GetTwinChangeSpecList(jsonObject, serializer)
         };
         return changeSpec;
     }
@@ -27,23 +33,39 @@ public class TwinDesiredConverter : JsonConverter
         throw new NotImplementedException();
     }
 
-    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, TwinPatchChangeSpec changeSpecKey)
+    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer)
     {
-        var lowerPropName = FirstLetterToLowerCase($"{changeSpecKey}");
-        var upperPropName = FirstLetterToUpperCase($"{changeSpecKey}");
         var changeSpec = new TwinChangeSpec()
         {
-            Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>(),
-            Patch = GetDynamicPatch(jsonObject, lowerPropName, upperPropName, serializer)
+            Id = (jsonObject.SelectToken($"id") ?? jsonObject.SelectToken($"Id"))?.Value<string>(),
+            Patch = GetDynamicPatch(jsonObject, serializer)
         };
         return changeSpec;
     }
+    private List<TwinChangeSpec> GetTwinChangeSpecList(JObject jsonObject, JsonSerializer serializer)
+    {
+        var changeSpecList = new List<TwinChangeSpec>();
 
-    private Dictionary<string, TwinAction[]> GetDynamicPatch(JObject jsonObject, string lowerPropName, string upperPropName, JsonSerializer serializer)
+        var changeSpecToken = jsonObject.SelectToken(FirstLetterToLowerCase($"changeSpec"))
+        ?? jsonObject.SelectToken(FirstLetterToUpperCase($"changeSpec"));
+
+        if (changeSpecToken is JArray changeSpecArray)
+        {
+            foreach (var changeSpecObject in changeSpecArray)
+            {
+                var twinChangeSpec = CreateTwinChangeSpec((JObject)changeSpecObject, serializer);
+                changeSpecList.Add(twinChangeSpec);
+
+            }
+        }
+
+        return changeSpecList;
+    }  
+    private Dictionary<string, TwinAction[]> GetDynamicPatch(JObject jsonObject, JsonSerializer serializer)
     {
         var dynamicPatch = new Dictionary<string, TwinAction[]>();
 
-        var patchToken = jsonObject.SelectToken($"{lowerPropName}.patch") ?? jsonObject.SelectToken($"{upperPropName}.Patch");
+        var patchToken = jsonObject.SelectToken($"patch") ?? jsonObject.SelectToken($"Patch");
 
         if (patchToken is JObject patchObject)
         {

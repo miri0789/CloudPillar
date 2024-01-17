@@ -51,7 +51,7 @@ public class TwinReportHandler : ITwinReportHandler
     public TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "")
     {
         if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction &&
-        !string.IsNullOrWhiteSpace(periodicFileName) && !string.IsNullOrWhiteSpace(periodicUploadAction.DirName) && 
+        !string.IsNullOrWhiteSpace(periodicFileName) && !string.IsNullOrWhiteSpace(periodicUploadAction.DirName) &&
          periodicFileName.IndexOf(periodicUploadAction.DirName) != -1 &&
          periodicUploadAction.DirName != periodicFileName)
         {
@@ -64,7 +64,29 @@ public class TwinReportHandler : ITwinReportHandler
 
     public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
     {
-        var changeSpecJson = changeSpec is null ? null : JObject.Parse(JsonConvert.SerializeObject(changeSpec,
+        var list = _twinReported.ChangeSpec ?? new List<TwinReportedChangeSpec>();
+        _twinReported.SetReportedChangeSpecByKey(changeSpec, changeSpecKey);       
+        UpdateReportedChangeSpecAsync(list, cancellationToken);
+        _twinReported?.SetReportedChangeSpecByKey(changeSpec, changeSpecKey);
+    }
+
+    public async Task UpdateReportedChangeSpecAsync(List<TwinReportedChangeSpec> twinReportedChangeSpec, CancellationToken cancellationToken)
+    {
+
+        var jsonArray = JArray.FromObject(twinReportedChangeSpec, JsonSerializer.CreateDefault(new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            Converters = { new StringEnumConverter() },
+            Formatting = Formatting.Indented,
+            NullValueHandling = NullValueHandling.Ignore
+        }));
+
+        await _deviceClient.UpdateReportedPropertiesAsync(TwinPatchChangeSpec.ChangeSpec.ToString(), jsonArray, cancellationToken);
+    }
+
+    public async Task UpdateReportedAsyncItem(TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
+    {
+        var changeSpecJson = twinReportedChangeSpec is null ? null : JObject.Parse(JsonConvert.SerializeObject(twinReportedChangeSpec,
           Formatting.None,
           new JsonSerializerSettings
           {
@@ -73,8 +95,9 @@ public class TwinReportHandler : ITwinReportHandler
               Formatting = Formatting.Indented,
               NullValueHandling = NullValueHandling.Ignore
           }));
-        _twinReported?.SetReportedChangeSpecByKey(changeSpec, changeSpecKey);
-        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecKey.ToString(), changeSpecJson, cancellationToken);
+        _twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey);
+
+        await _deviceClient.UpdateReportedPropertiesAsync("changeSpec[0]", changeSpecJson, cancellationToken);
     }
 
     public async Task<Twin> SetTwinReported(CancellationToken cancellationToken)
@@ -106,7 +129,7 @@ public class TwinReportHandler : ITwinReportHandler
                     if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;
                     twinReportedChangeSpec.Patch[actionToReport.ReportPartName][actionToReport.ReportIndex] = actionToReport.TwinReport;
                 });
-                await UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey, cancellationToken);
+                await UpdateReportedChangeSpecAsync(_twinReported.ChangeSpec, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -135,7 +158,7 @@ public class TwinReportHandler : ITwinReportHandler
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            var reported = JsonConvert.DeserializeObject<TwinReported>(twin?.Properties?.Reported?.ToJson());
             return reported?.DeviceState;
         }
         catch (Exception ex)

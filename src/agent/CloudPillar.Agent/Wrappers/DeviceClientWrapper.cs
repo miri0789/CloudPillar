@@ -138,7 +138,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     }
 
     public async Task<Twin> GetTwinAsync(CancellationToken cancellationToken)
-    {
+    {       
         var twin = await _deviceClient.GetTwinAsync(cancellationToken);
         return twin;
     }

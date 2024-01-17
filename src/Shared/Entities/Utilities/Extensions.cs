@@ -36,38 +36,36 @@ public static class TwinJsonConvertExtensions
 
     public static TwinReportedChangeSpec? GetReportedChangeSpecByKey(this TwinReported twinReported, TwinPatchChangeSpec changeSpecKey)
     {
-        switch (changeSpecKey)
+        if (changeSpecKey == TwinPatchChangeSpec.ChangeSpec)
         {
-
-            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
-                return twinReported.ChangeSpecDiagnostics;
-            case TwinPatchChangeSpec.ChangeSpec:
-            default:
-                return twinReported.ChangeSpec;
+            return twinReported?.ChangeSpec?.FirstOrDefault();
         }
+        return twinReported?.ChangeSpec?.FirstOrDefault(x => x.Id.ToLower().Contains(changeSpecKey.ToString().ToLower()));
     }
     public static TwinChangeSpec? GetDesiredChangeSpecByKey(this TwinDesired twinDesired, TwinPatchChangeSpec changeSpecKey)
     {
-        switch (changeSpecKey)
+        if (changeSpecKey == TwinPatchChangeSpec.ChangeSpec)
         {
-            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
-                return twinDesired.ChangeSpecDiagnostics;
-            case TwinPatchChangeSpec.ChangeSpec:
-            default:
-                return twinDesired.ChangeSpec;
+            return twinDesired?.ChangeSpec?.FirstOrDefault();
         }
-    }
 
+        return twinDesired?.ChangeSpec?.FirstOrDefault(x => x.Id.ToLower().Contains(changeSpecKey.ToString().ToLower()));
+    }
     public static void SetReportedChangeSpecByKey(this TwinReported twinReported, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey)
     {
-        switch (changeSpecKey)
+        twinReported.ChangeSpec ??= new List<TwinReportedChangeSpec>();
+        var changeSpec = twinReported?.ChangeSpec.FirstOrDefault(x => x.Id.ToLower().Contains(changeSpecKey.ToString().ToLower()));
+        if (changeSpecKey == TwinPatchChangeSpec.ChangeSpec)
         {
-            case TwinPatchChangeSpec.ChangeSpecDiagnostics:
-                twinReported.ChangeSpecDiagnostics = twinReportedChangeSpec; break;
-            case TwinPatchChangeSpec.ChangeSpec:
-                twinReported.ChangeSpec = twinReportedChangeSpec; break;
+            changeSpec = twinReported?.ChangeSpec?.FirstOrDefault();
+        }
+        if (changeSpec is null)
+        {
+            twinReported.ChangeSpec.Add(twinReportedChangeSpec);
+        }
+        else
+        {
+            changeSpec = twinReportedChangeSpec;
         }
     }
-
-
 }
