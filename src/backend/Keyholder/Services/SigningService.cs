@@ -54,7 +54,11 @@ public class SigningService : ISigningService
                 throw new InvalidOperationException(message);
             }
             privateKeyPem = await File.ReadAllTextAsync(Path.Combine(SecretVolumeMountPath, "tls.key"));
-            _logger.Info($"Key Base64 decoded layer 1");
+            if (!string.IsNullOrWhiteSpace(privateKeyPem))
+            {
+                privateKeyPem = Encoding.UTF8.GetString(Convert.FromBase64String(privateKeyPem));
+                _logger.Info($"Key Base64 decoded layer 1");
+            }
         }
 
         return LoadPrivateKeyFromPem(privateKeyPem);
