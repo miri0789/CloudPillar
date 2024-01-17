@@ -53,10 +53,9 @@ public class SigningService : ISigningService
                 _logger.Error(message);
                 throw new InvalidOperationException(message);
             }
-            privateKeyPem = await File.ReadAllTextAsync(Path.Combine(SecretVolumeMountPath, "tls.key"));
             if (!string.IsNullOrWhiteSpace(privateKeyPem))
             {
-                privateKeyPem = Encoding.UTF8.GetString(Convert.FromBase64String(privateKeyPem));
+                privateKeyPem = await File.ReadAllTextAsync(Path.Combine(SecretVolumeMountPath, "tls.key"));
                 _logger.Info($"Key Base64 decoded layer 1");
             }
         }
@@ -71,6 +70,8 @@ public class SigningService : ISigningService
                                         .Replace("-----END EC PRIVATE KEY-----", "")
                                         .Replace("-----BEGIN PRIVATE KEY-----", "")
                                         .Replace("-----END PRIVATE KEY-----", "")
+                                        .Replace("-----BEGIN RSA PRIVATE KEY-----", "")
+                                        .Replace("-----END RSA PRIVATE KEY-----", "")
                                         .Replace("\n", "")
                                         .Replace("\r", "")
                                         .Trim();
