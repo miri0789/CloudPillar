@@ -39,7 +39,7 @@ public class StrictModeHandler : IStrictModeHandler
 
     public void CheckSizeStrictMode(TwinActionType actionType, long size, string fileName)
     {
-        if (!_strictModeSettings.StrictMode && actionType != TwinActionType.SingularDownload)
+        if (!_strictModeSettings.StrictMode || actionType != TwinActionType.SingularDownload)
         {
             return;
         }
