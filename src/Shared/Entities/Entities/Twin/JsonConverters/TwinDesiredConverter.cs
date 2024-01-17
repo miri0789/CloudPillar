@@ -15,10 +15,39 @@ public class TwinDesiredConverter : JsonConverter
         JObject jsonObject = JObject.Load(reader);
         var changeSpec = new TwinDesired()
         {
-            ChangeSign = (jsonObject["changeSign"] ?? jsonObject["ChangeSign"])?.Value<string>(),
-            ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
-            ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpecDiagnostics)
+            ChangeSign = GetChangeSign(jsonObject, serializer),
+            ChangeSpec = GetChangeSpec(jsonObject, serializer)
         };
+        return changeSpec;
+    }
+    private IDictionary<string, string>? GetChangeSign(JObject jsonObject, JsonSerializer serializer)
+    {
+        var changeSign = new Dictionary<string, string>();
+
+        foreach (var property in jsonObject.Properties())
+        {
+            if (property.Value.Type == JTokenType.String)
+            {
+                changeSign.Add(property.Name, property.Value.Value<string>());
+            }
+        }
+        return changeSign;
+    }
+
+    private IDictionary<string, TwinChangeSpec>? GetChangeSpec(JObject jsonObject, JsonSerializer serializer)
+    {
+        var changeSpec = new Dictionary<string, TwinChangeSpec>();
+
+        foreach (var property in jsonObject.Properties())
+        {
+            if (property.Value.Type == JTokenType.Object &&
+                property.Value["id"] != null && property.Value["patch"] != null)
+            {
+                var changeSpecKey = (TwinPatchChangeSpec)Enum.Parse(typeof(TwinPatchChangeSpec), property.Name, true);
+                changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, changeSpecKey));
+            }
+        }
+
         return changeSpec;
     }
 

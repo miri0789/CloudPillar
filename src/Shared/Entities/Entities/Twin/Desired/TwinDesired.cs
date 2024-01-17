@@ -3,9 +3,7 @@ namespace Shared.Entities.Twin;
 
 public class TwinDesired
 {
-   public string? ChangeSign { get; set; }
-
-   public TwinChangeSpec? ChangeSpec { get; set; }
+   public IDictionary<string, string>? ChangeSign { get; set; }
    
-   public TwinChangeSpec? ChangeSpecDiagnostics { get; set; }
+   public IDictionary<string, TwinChangeSpec>? ChangeSpec { get; set; }
 }

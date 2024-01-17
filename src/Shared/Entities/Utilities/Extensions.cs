@@ -43,7 +43,7 @@ public static class TwinJsonConvertExtensions
                 return twinReported.ChangeSpecDiagnostics;
             case TwinPatchChangeSpec.ChangeSpec:
             default:
-                return twinReported.ChangeSpec;
+                return twinReported.ChangeSpec.;
         }
     }
     public static TwinChangeSpec? GetDesiredChangeSpecByKey(this TwinDesired twinDesired, TwinPatchChangeSpec changeSpecKey)
