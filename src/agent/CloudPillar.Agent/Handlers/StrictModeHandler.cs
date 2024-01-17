@@ -43,7 +43,7 @@ public class StrictModeHandler : IStrictModeHandler
         {
             return;
         }
-        
+
         var fileRestrictions = GetRestrictionsByActionType(actionType);
         FileRestrictionDetails? zoneRestrictions = GetRestrinctionsByZone(fileName, fileRestrictions);
         if (zoneRestrictions == null || !zoneRestrictions.MaxSize.HasValue)
@@ -110,15 +110,20 @@ public class StrictModeHandler : IStrictModeHandler
     private List<FileRestrictionDetails>? GetRestrictionsByActionType(TwinActionType actionType)
     {
         _logger.Info($"Get restrictions for {actionType} action");
+        var strictActionType = actionType == TwinActionType.SingularDownload ? StrictModeAction.Download : StrictModeAction.Upload;
 
-        if (actionType == TwinActionType.SingularDownload)
+        return _strictModeSettings.FilesRestrictions?
+        .Where(x => x.Type?.ToLower() == strictActionType.ToString().ToLower())
+        .Select(x => new FileRestrictionDetails
         {
-            return _strictModeSettings.FilesRestrictions?.Where(x => x.Type?.ToLower() == StrictModeAction.Download.ToString().ToLower()).ToList();
-        }
-        else
-        {
-            return _strictModeSettings.FilesRestrictions?.Where(x => x.Type?.ToLower() == StrictModeAction.Upload.ToString().ToLower()).ToList();
-        }
+            Root = replaceSlashString(x.Root),
+            AllowPatterns = x.AllowPatterns,
+            MaxSize = x.MaxSize,
+            Id = x.Id,
+            Type = x.Type,
+            DenyPatterns = x.DenyPatterns
+        })
+        .ToList();
     }
 
     private FileRestrictionDetails? GetRestrinctionsByZone(string fileName, List<FileRestrictionDetails>? fileRestrictions)
@@ -166,7 +171,7 @@ public class StrictModeHandler : IStrictModeHandler
         var fileMatch = DoesFileMatchPattern(result, rootPath, filePath);
         return fileMatch;
     }
-    
+
     private bool DoesFileMatchPattern(PatternMatchingResult matchingResult, string rootPath, string filePath)
     {
         return matchingResult?.Files.Any(file => replaceSlashString(filePath)?.ToLower() ==
