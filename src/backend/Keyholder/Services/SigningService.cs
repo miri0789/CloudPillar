@@ -21,6 +21,9 @@ public class SigningService : ISigningService
     private readonly ILoggerHandler _logger;
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
 
+    private const string PRIVATE_KEY_FILE = "tls.key";
+
+
     public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
@@ -55,7 +58,7 @@ public class SigningService : ISigningService
             }
             if (!string.IsNullOrWhiteSpace(SecretVolumeMountPath))
             {
-                privateKeyPem = await File.ReadAllTextAsync(Path.Combine(SecretVolumeMountPath, "tls.key"));
+                privateKeyPem = await File.ReadAllTextAsync(Path.Combine(SecretVolumeMountPath, PRIVATE_KEY_FILE));
                 _logger.Info($"Key Base64 decoded layer 1");
             }
         }
