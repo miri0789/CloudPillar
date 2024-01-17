@@ -33,7 +33,7 @@ public class SigningService : ISigningService
     }
 
 
-    private async Task<RSA> GetSigningPrivateKeyAsync()
+    private async Task<AsymmetricAlgorithm> GetSigningPrivateKeyAsync()
     {
         _logger.Info("Loading signing crypto key...");
         string privateKeyPem = _environmentsWrapper.signingPem;
@@ -63,9 +63,10 @@ public class SigningService : ISigningService
         return LoadPrivateKeyFromPem(privateKeyPem);
     }
 
-    private RSA LoadPrivateKeyFromPem(string pemContent)
+    private AsymmetricAlgorithm LoadPrivateKeyFromPem(string pemContent)
     {
         _logger.Debug($"Loading key from PEM...");
+        bool isRSA = pemContent.Contains("RSA PRIVATE KEY");
         var privateKeyContent = pemContent.Replace("-----BEGIN EC PRIVATE KEY-----", "")
                                         .Replace("-----END EC PRIVATE KEY-----", "")
                                         .Replace("-----BEGIN PRIVATE KEY-----", "")
@@ -75,16 +76,21 @@ public class SigningService : ISigningService
                                         .Replace("\n", "")
                                         .Replace("\r", "")
                                         .Trim();
-                                        _logger.Debug($"Key Base64 decoded {privateKeyContent}");
         var privateKeyBytes = Convert.FromBase64String(privateKeyContent);
         _logger.Debug($"Key Base64 decoded");
         var keyReader = new ReadOnlySpan<byte>(privateKeyBytes);
-        RSA ecdsa = RSA.Create();
-        ecdsa.ImportRSAPrivateKey(keyReader, out _);
+        if(isRSA)
+        {
+            RSA rsa = RSA.Create();
+            rsa.ImportRSAPrivateKey(keyReader, out _);
+            _logger.Debug($"Imported private key");
+            return rsa;
+        }
+        ECDsa ecdsa  = ECDsa.Create();
+        ecdsa .ImportPkcs8PrivateKey(keyReader, out _);
         _logger.Debug($"Imported private key");
-        return ecdsa;
+        return ecdsa ;
     }
-
 
     public async Task CreateTwinKeySignature(string deviceId)
     {
@@ -114,7 +120,8 @@ public class SigningService : ISigningService
         {
             using (var signingPrivateKey = await GetSigningPrivateKeyAsync())
             {
-                var signature = signingPrivateKey!.SignData(data, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
+                var keyType = signingPrivateKey!.GetType();
+                var signature = keyType.BaseType == typeof(RSA) ? ((RSA)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1) : ((ECDsa)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512);
                 return Convert.ToBase64String(signature);
             }
         }
