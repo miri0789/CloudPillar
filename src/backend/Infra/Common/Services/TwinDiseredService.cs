@@ -17,13 +17,11 @@ public class TwinDiseredService : ITwinDiseredService
     private const string DIAGNOSTICS_TRANSACTIONS_KEY = "diagnosticsActions";
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
     private readonly ILoggerHandler _logger;
-    private readonly IGuidWrapper _guidWrapper;
 
-    public TwinDiseredService(ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper, IGuidWrapper guidWrapper)
+    public TwinDiseredService(ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper)
     {
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _guidWrapper = guidWrapper ?? throw new ArgumentNullException(nameof(guidWrapper));
     }
 
     public async Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
@@ -40,7 +38,7 @@ public class TwinDiseredService : ITwinDiseredService
 
                 if (string.IsNullOrEmpty(twinDesiredChangeSpec.Id))
                 {
-                    twinDesiredChangeSpec.Id = _guidWrapper.NewGuid();
+                    twinDesiredChangeSpec.Id = $"{TwinPatchChangeSpec.ChangeSpecDiagnostics.ToString()}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}";
                 }
                 if (twinDesiredChangeSpec.Patch is null || twinDesiredChangeSpec.Patch.Values.Count() == 0)
                 {

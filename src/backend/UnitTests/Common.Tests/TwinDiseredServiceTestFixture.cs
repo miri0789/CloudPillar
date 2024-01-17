@@ -5,24 +5,25 @@ using Backend.Infra.Common.Services;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Shared.Entities.Twin;
 using Microsoft.Azure.Devices;
+using Microsoft.Azure.Devices.Shared;
+using Shared.Entities.Utilities;
+
 
 namespace Backend.Infra.Common.tests;
 public class TwinDiseredServiceTestFixture
 {
     private ITwinDiseredService _target;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapperMock;
-    private Mock<IGuidWrapper> _guidWrapperMock;
     private Mock<ILoggerHandler> _loggerHandlerMock;
 
     [SetUp]
     public void SetUp()
     {
         _registryManagerWrapperMock = new Mock<IRegistryManagerWrapper>();
-        _guidWrapperMock = new Mock<IGuidWrapper>();
         _loggerHandlerMock = new Mock<ILoggerHandler>();
 
         _registryManagerWrapperMock.Setup(x => x.CreateFromConnectionString()).Returns(new RegistryManager());
-        _target = new TwinDiseredService(_loggerHandlerMock.Object, _registryManagerWrapperMock.Object, _guidWrapperMock.Object);
+        _target = new TwinDiseredService(_loggerHandlerMock.Object, _registryManagerWrapperMock.Object);
     }
 
     [Test]
@@ -42,7 +43,10 @@ public class TwinDiseredServiceTestFixture
         _registryManagerWrapperMock.Setup(x => x.GetTwinAsync(It.IsAny<RegistryManager>(), It.IsAny<string>())).ReturnsAsync(twin);
         _target.AddDesiredRecipeAsync("deviceId", TwinPatchChangeSpec.ChangeSpec, new DownloadAction());
 
-        _guidWrapperMock.Verify(x => x.NewGuid(), Times.Once);
+        TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+      
+        _registryManagerWrapperMock.Verify(x => x.UpdateTwinAsync(It.IsAny<RegistryManager>(), It.IsAny<string>(),
+         It.Is<Twin>(c => twinDesired.ChangeSpec.Id.Contains(TwinPatchChangeSpec.ChangeSpec.ToString())), It.IsAny<string>()), Times.Once);
     }
 }
 
