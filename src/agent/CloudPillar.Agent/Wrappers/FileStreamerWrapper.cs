@@ -62,6 +62,15 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         }
     }
 
+
+    public void DeleteFolder(string directoryPath)
+    {
+        if (Directory.Exists(directoryPath))
+        {
+            Directory.Delete(directoryPath, true);
+        }
+    }
+
     public async Task<string> ReadAllTextAsync(string filePath)
     {
         if (File.Exists(filePath))
@@ -131,7 +140,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return Path.GetFileName(filePathPattern);
     }
-    
+
     public string GetFileNameWithoutExtension(string filePath)
     {
         return Path.GetFileNameWithoutExtension(filePath);
@@ -178,19 +187,21 @@ public class FileStreamerWrapper : IFileStreamerWrapper
             {
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
-                    string entryFilePath = Path.Combine(destinationPath, entry.FullName);
+                    string entryFilePath = Path.Combine(destinationPath, string.Join('/', entry.FullName.Split('/').Skip(1)));
 
                     Directory.CreateDirectory(Path.GetDirectoryName(entryFilePath)!);
-
-                    using (Stream entryStream = entry.Open())
-                    using (FileStream fileStream = File.Create(entryFilePath))
+                    if (!entry.FullName.EndsWith("/"))
                     {
-                        byte[] buffer = new byte[4096];
-
-                        int bytesRead;
-                        while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        using (Stream entryStream = entry.Open())
+                        using (FileStream fileStream = File.Create(entryFilePath))
                         {
-                            await fileStream.WriteAsync(buffer, 0, bytesRead);
+                            byte[] buffer = new byte[4096];
+
+                            int bytesRead;
+                            while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                            {
+                                await fileStream.WriteAsync(buffer, 0, bytesRead);
+                            }
                         }
                     }
                 }

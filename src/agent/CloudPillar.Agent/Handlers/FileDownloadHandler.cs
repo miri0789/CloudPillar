@@ -241,7 +241,14 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.Report.ResultCode = ex.GetType().Name;
         file.Report.Progress = null;
         file.Report.CompletedRanges = null;
-        _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
+        if (file.Action.Unzip)
+        {
+            _fileStreamerWrapper.DeleteFolder(file.Action.DestinationPath);
+        }
+        else
+        {
+            _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
+        }
     }
 
     private string GetDestinationPath(FileDownload file)
