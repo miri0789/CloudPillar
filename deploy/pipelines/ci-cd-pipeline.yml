@@ -86,7 +86,7 @@ stages:
     - task: ArchiveFiles@2
       inputs:
         rootFolderOrFile: './export'
-        includeRootFolder: false
+        includeRootFolder: true
         archiveType: 'zip'
         archiveFile: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(imagetag).zip'
         replaceExistingArchive: true
