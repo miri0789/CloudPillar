@@ -34,19 +34,18 @@ public class ProvisioningService : IProvisioningService
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
         await _serverIdentityHandler.RemoveNonDefaultCertificates(Constants.PKI_FOLDER_PATH);
         _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
+        _reprovisioningHandler.RemoveX509CertificatesFromStore();
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = _requestWrapper.GetHeaderValue(Constants.X_DEVICE_ID);
         var secretKey = _requestWrapper.GetHeaderValue(Constants.X_SECRET_KEY);
         if (await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken))
         {
-            _reprovisioningHandler.RemoveX509CertificatesFromStore();
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken, true);
             await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
             await _twinReportHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
         }
         else
         {
-            _reprovisioningHandler.RemoveX509CertificatesFromStore();
             await d2CMessengerHandler.SendRemoveDeviceEvent(cancellationToken);
             await ProvisinigSymetricKeyAsync(cancellationToken);
         }

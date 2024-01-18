@@ -17,6 +17,7 @@ public class AuthorizationCheckMiddleware
     private ISymmetricKeyProvisioningHandler? _symmetricKeyProvisioningHandler;
     private IProvisioningService? _provisioningService;
     private IHttpContextWrapper? _httpContextWrapper;
+    private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
 
     public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfigurationWrapper configuration)
     {
@@ -34,6 +35,7 @@ public class AuthorizationCheckMiddleware
         _symmetricKeyProvisioningHandler = context.RequestServices.GetRequiredService<ISymmetricKeyProvisioningHandler>();
         ArgumentNullException.ThrowIfNull(_symmetricKeyProvisioningHandler);
         _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
+        _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
 
         if (!context.Request.IsHttps)
         {
@@ -53,7 +55,6 @@ public class AuthorizationCheckMiddleware
                 return;
             }
         }
-        ArgumentNullException.ThrowIfNull(dPSProvisioningDeviceClientHandler);
         CancellationToken cancellationToken = context.RequestAborted;
         if (IsActionMethod(endpoint))
         {
@@ -80,40 +81,12 @@ public class AuthorizationCheckMiddleware
                 await _requestDelegate(context);
                 return;
             }
-            var action = context.Request.Path.Value?.ToLower() ?? "";
             var actionName = context.Request.Path.Value?.Split("/").LastOrDefault();
-            var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
-            var x509Certificate = dPSProvisioningDeviceClientHandler.GetCertificate();
-            bool isX509Authorized = await dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
-            if (!isX509Authorized)
+            var isAuthorized = await IsAuthorized(context, deviceIsBusy, xDeviceId, xSecretKey, actionName, cancellationToken);
+            if (!isAuthorized)
             {
-                if (x509Certificate is not null)
-                {
-                    await UnauthorizedResponseAsync(context, $"{actionName}, The deviceId or the SecretKey are incorrect.");
-                    return;
-                }
-
-                _logger.Info($"{actionName}, The device is X509 unAuthorized, check symmetric key authorized");
-                var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
-                if (!isSymetricKeyAuthorized)
-                {
-                    _logger.Info($"{actionName}, The device is symmetric key unAuthorized, start provisinig proccess");
-                    await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
-                }
-                if (!action.Contains("getdevicestate"))
-                {
-                    await UnauthorizedResponseAsync(context, $"{actionName}, Symmetric key is Unauthorized.");
-                    return;
-                }
-            }
-            if (x509Certificate?.NotAfter <= DateTime.UtcNow)
-            {
-                await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
-                if (!action.Contains("getdevicestate"))
-                {
-                    await UnauthorizedResponseAsync(context, $"{actionName}, The certificate is expired.");
-                    return;
-                }
+                await UnauthorizedResponseAsync(context, $"{actionName}, The certificate is expired.");
+                return;
             }
             await _requestDelegate(context);
         }
@@ -121,6 +94,37 @@ public class AuthorizationCheckMiddleware
         {
             await _requestDelegate(context);
         }
+    }
+
+    private async Task<bool> IsAuthorized(HttpContext context, bool deviceIsBusy, string xDeviceId, string xSecretKey, string actionName, CancellationToken cancellationToken)
+    {
+        var action = context.Request.Path.Value?.ToLower() ?? "";
+        var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
+        var x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
+        bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
+        if (!isX509Authorized)
+        {
+            if (x509Certificate is not null)
+            {
+                return false;
+            }
+
+            _logger.Info($"{actionName}, The device is X509 unAuthorized, check symmetric key authorized");
+            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
+            if (!isSymetricKeyAuthorized)
+            {
+                _logger.Info($"{actionName}, The device is symmetric key unAuthorized, start provisinig proccess");
+                await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
+            }
+            return !action.Contains("getdevicestate");
+        }
+        if (x509Certificate?.NotAfter <= DateTime.UtcNow)
+        {
+
+            await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
+            return !action.Contains("getdevicestate");
+        }
+        return true;
     }
     private void NextWithRedirectAsync(HttpContext context, IX509Provider x509Provider)
     {
