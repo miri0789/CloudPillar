@@ -32,7 +32,7 @@ WORKDIR /app
 COPY --from=build /app .
 
 # Copy the source code and NuGet packages to the /export directory
-COPY --from=build /src /export
+COPY --from=build ./src ./export
 COPY --from=build ./src/agent/CloudPillar.Agent/publish/cloudpillar.zip .
 RUN zip -r export.zip .
 
