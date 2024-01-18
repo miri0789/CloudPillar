@@ -7,8 +7,7 @@ public class TwinReported
    public string AgentPlatform { get; set; }
    public ShellType[] SupportedShells { get; set; }
    public IDictionary<string, string>? ChangeSign { get; set; }   
-   public IDictionary<string, TwinChangeSpec>? ChangeSpec { get; set; }
-   public TwinReportedChangeSpec? ChangeSpecDiagnostics { get; set; }
+   public IDictionary<string, TwinReportedChangeSpec>? ChangeSpec { get; set; }
    public string SecretKey { get; set; }
    public List<TwinReportedCustomProp> Custom { get; set; }
    public string ChangeSpecId { get; set; }

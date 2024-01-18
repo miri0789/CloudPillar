@@ -153,10 +153,10 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var twin = await _deviceClientWrapper.GetTwinAsync(CancellationToken.None);
 
         var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-        var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+        var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
 
-        var desiredList = twinDesired?.ChangeSpecDiagnostics?.Patch?.FirstOrDefault().Value;
-        var reportedList = twinReported?.ChangeSpecDiagnostics?.Patch?.FirstOrDefault().Value;
+        var desiredList = twinDesired?.GetDesiredChangeSpecByKey(TwinPatchChangeSpec.ChangeSpecDiagnostics.ToString())?.Patch?.FirstOrDefault().Value;
+        var reportedList = twinReported?.GetReportedChangeSpecByKey(TwinPatchChangeSpec.ChangeSpecDiagnostics.ToString())?.Patch?.FirstOrDefault().Value;
 
         var indexDesired = desiredList?.ToList().FindIndex(x => x is DownloadAction && Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
         if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())

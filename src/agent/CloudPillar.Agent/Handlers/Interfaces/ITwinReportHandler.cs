@@ -10,7 +10,7 @@ public interface ITwinReportHandler
     string GetPeriodicReportedKey(PeriodicUploadAction periodicUploadAction, string periodicFileName = "");
     TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "");
 
-    Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken);
+    Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, string changeSpecKey, CancellationToken cancellationToken);
     Task<Twin> SetTwinReported(CancellationToken cancellationToken);
     Task UpdateReportActionAsync(IEnumerable<ActionToReport> actionsToReported, CancellationToken cancellationToken);
 
