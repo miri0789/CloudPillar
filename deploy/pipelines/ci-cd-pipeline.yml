@@ -71,10 +71,9 @@ stages:
     - script: |
         CONTAINER_ID=$(docker create agent:aux-build)
         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
-        docker cp $CONTAINER_ID:/app/export.zip .
+        docker cp $CONTAINER_ID:/app/export .
         docker rm $CONTAINER_ID
         mv ./cloudpillar.zip ./cloudpillar-agent-publish-$(imagetag).zip
-        mv ./export.zip ./cloudpillar-agent-$(imagetag).zip
         ls -al ./cloudpillar-agent-publish-$(imagetag).zip
         ls -al ./cloudpillar-agent-$(imagetag).zip
       displayName: 'Extract cloudpillar.zip from Image'
@@ -83,11 +82,19 @@ stages:
       displayName: 'Publish cloudpillar.zip to Artifacts'
       inputs:
         pathtoPublish: ./cloudpillar-agent-publish-$(imagetag).zip
-        artifactName: 'cloudpillar' 
+        artifactName: 'cloudpillar'
+    
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/export'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(imagetag).zip'
+        replaceExistingArchive: true
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: ./cloudpillar-agent-$(imagetag).zip
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
         artifactName: 'cloudpillar'
 
   - ${{each item in parameters.services}}:    
