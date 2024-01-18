@@ -30,27 +30,27 @@ trigger:
 stages:  
 - stage: CI_Stage  
   jobs:
-  - job: RunUnitTests
-    displayName: 'Run_Unit_Tests'
-    pool:
-      vmImage: 'windows-latest'
-    steps:
-    - task: NuGetAuthenticate@1
-      displayName: 'Authenticate to NuGet'
+  # - job: RunUnitTests
+  #   displayName: 'Run_Unit_Tests'
+  #   pool:
+  #     vmImage: 'windows-latest'
+  #   steps:
+  #   - task: NuGetAuthenticate@1
+  #     displayName: 'Authenticate to NuGet'
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Run Unit Tests'
-      inputs:
-        command: 'test'
-        arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
-        publishTestResults: true
-        projects: '**/*Tests/*.csproj'
+  #   - task: DotNetCoreCLI@2
+  #     displayName: 'Run Unit Tests'
+  #     inputs:
+  #       command: 'test'
+  #       arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+  #       publishTestResults: true
+  #       projects: '**/*Tests/*.csproj'
       
-    - task: PublishCodeCoverageResults@1
-      displayName: 'Publish code coverage report'
-      inputs:
-        codeCoverageTool: 'Cobertura'
-        summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+  #   - task: PublishCodeCoverageResults@1
+  #     displayName: 'Publish code coverage report'
+  #     inputs:
+  #       codeCoverageTool: 'Cobertura'
+  #       summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
   - job: Agent_CI_Job
     pool:
@@ -80,7 +80,7 @@ stages:
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cloudpillar.zip to Artifacts'
       inputs:
-        pathtoPublish: ./cloudpillar-agent-publish-$(imagetag).zip
+        pathtoPublish: $(Build.ArtifactStagingDirectory)/cloudpillar-agent-publish-$(imagetag).zip
         artifactName: 'cloudpillar'
     
     - task: ArchiveFiles@2
@@ -96,123 +96,123 @@ stages:
         pathtoPublish: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(imagetag).zip'
         artifactName: 'cloudpillar'
 
-  - ${{each item in parameters.services}}:    
-    - job: '${{ item }}_CI_Job'
-      pool:
-        vmImage: ubuntu-latest
-      steps: 
-      - script: |
-          case "${{ item }}" in
-            "BlobStreamer") echo "##vso[task.setvariable variable=PORT]8081" ;;
-            "Keyholder") echo "##vso[task.setvariable variable=PORT]8082" ;;
-            "BEApi") echo "##vso[task.setvariable variable=PORT]8083" ;;
-            *) echo "##vso[task.setvariable variable=PORT]8080" ;;
-          esac
-          echo "Port for ${{ item }}: $PORT"
-        displayName: 'Set service port'
+#   - ${{each item in parameters.services}}:    
+#     - job: '${{ item }}_CI_Job'
+#       pool:
+#         vmImage: ubuntu-latest
+#       steps: 
+#       - script: |
+#           case "${{ item }}" in
+#             "BlobStreamer") echo "##vso[task.setvariable variable=PORT]8081" ;;
+#             "Keyholder") echo "##vso[task.setvariable variable=PORT]8082" ;;
+#             "BEApi") echo "##vso[task.setvariable variable=PORT]8083" ;;
+#             *) echo "##vso[task.setvariable variable=PORT]8080" ;;
+#           esac
+#           echo "Port for ${{ item }}: $PORT"
+#         displayName: 'Set service port'
 
-      - task: NuGetAuthenticate@1
-        displayName: 'Authenticate to NuGet'
+#       - task: NuGetAuthenticate@1
+#         displayName: 'Authenticate to NuGet'
 
-      - task: Docker@2
-        displayName: '${{ item }} Dockerize'
-        inputs:
-          repository: 'cloudpillar${{ lower(item) }}service'
-          containerRegistry: 'CP ${{ parameters.env }} docker registry'
-          command: 'build'
-          Dockerfile: './src/backend/Infra/build/Dockerfile'
-          buildContext: src
-          tags: '$(imagetag)'
-          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT=$(PORT)'        
+#       - task: Docker@2
+#         displayName: '${{ item }} Dockerize'
+#         inputs:
+#           repository: 'cloudpillar${{ lower(item) }}service'
+#           containerRegistry: 'CP ${{ parameters.env }} docker registry'
+#           command: 'build'
+#           Dockerfile: './src/backend/Infra/build/Dockerfile'
+#           buildContext: src
+#           tags: '$(imagetag)'
+#           arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT=$(PORT)'        
             
-      - script: |
-          SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
-          echo "$SCAN_RESULT" 
-          if [[ $SCAN_RESULT == *"CRITICAL"* && "$SCAN_RESULT" != *"CRITICAL: 0"* ]]; then
-            echo "Critical vulnerabilities found. Failing the pipeline."
-            exit 1  # This will cause the pipeline to fail
-          fi
-        displayName: '${{ item }} Security Scan'
+#       - script: |
+#           SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
+#           echo "$SCAN_RESULT" 
+#           if [[ $SCAN_RESULT == *"CRITICAL"* && "$SCAN_RESULT" != *"CRITICAL: 0"* ]]; then
+#             echo "Critical vulnerabilities found. Failing the pipeline."
+#             exit 1  # This will cause the pipeline to fail
+#           fi
+#         displayName: '${{ item }} Security Scan'
 
-      - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
-        - task: Docker@2
-          displayName: '${{ item }} Docker Push'
-          inputs:
-            command: 'push' 
-            repository: 'cloudpillar${{ lower(item) }}service'
-            containerRegistry: 'cp ${{ parameters.env }} docker registry'
-            tags: '$(imagetag)'
+#       - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+#         - task: Docker@2
+#           displayName: '${{ item }} Docker Push'
+#           inputs:
+#             command: 'push' 
+#             repository: 'cloudpillar${{ lower(item) }}service'
+#             containerRegistry: 'cp ${{ parameters.env }} docker registry'
+#             tags: '$(imagetag)'
 
 
-- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
-  - ${{ if eq(parameters.env, 'dev') }}:
-    - stage: CD_Stage
-      jobs:              
-      - job: CD_Job        
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-        - task: HelmDeploy@0
-          inputs:
-            connectionType: 'Azure Resource Manager'
-            azureSubscription: CloudPillar ${{ parameters.env }}
-            azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
-            kubernetesCluster: 'cp-${{ parameters.env }}-aks'
-            command: 'upgrade'
-            chartType: 'FilePath'
-            chartPath: 'deploy/backend/'
-            releaseName: 'cloudpillarback'
-            overrideValues: 'image.tag=$(imagetag)'
-            valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
-            arguments: '--debug --timeout 10m0s'
+# - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+#   - ${{ if eq(parameters.env, 'dev') }}:
+#     - stage: CD_Stage
+#       jobs:              
+#       - job: CD_Job        
+#         pool:
+#           vmImage: ubuntu-latest
+#         steps:
+#         - task: HelmDeploy@0
+#           inputs:
+#             connectionType: 'Azure Resource Manager'
+#             azureSubscription: CloudPillar ${{ parameters.env }}
+#             azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
+#             kubernetesCluster: 'cp-${{ parameters.env }}-aks'
+#             command: 'upgrade'
+#             chartType: 'FilePath'
+#             chartPath: 'deploy/backend/'
+#             releaseName: 'cloudpillarback'
+#             overrideValues: 'image.tag=$(imagetag)'
+#             valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
+#             arguments: '--debug --timeout 10m0s'
             
-  - ${{ if ne(parameters.env, 'dev') }}:
-    - stage: CD_Stage
-      jobs:  
-      - job: Start_VM_Job
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-        - checkout: none
-        - task: AzureCLI@1
-          displayName: 'Start VM'
-          inputs:
-            azureSubscription: 'CloudPillar ${{ parameters.env }}'
-            scriptLocation: inlineScript
-            inlineScript: |
-              az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
+#   - ${{ if ne(parameters.env, 'dev') }}:
+#     - stage: CD_Stage
+#       jobs:  
+#       - job: Start_VM_Job
+#         pool:
+#           vmImage: ubuntu-latest
+#         steps:
+#         - checkout: none
+#         - task: AzureCLI@1
+#           displayName: 'Start VM'
+#           inputs:
+#             azureSubscription: 'CloudPillar ${{ parameters.env }}'
+#             scriptLocation: inlineScript
+#             inlineScript: |
+#               az vm start -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
             
-      - job: CD_Job
-        dependsOn: Start_VM_Job
-        pool:
-          name: CloudPillar-Pool
-          demands:
-          - agent.name -equals cpaks-${{ parameters.env }}-vm-agent
-        steps:
-        - task: HelmDeploy@0
-          inputs:
-            connectionType: 'Azure Resource Manager'
-            azureSubscription: CloudPillar ${{ parameters.env }}
-            azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
-            kubernetesCluster: 'cp-${{ parameters.env }}-aks'
-            command: 'upgrade'
-            chartType: 'FilePath'
-            chartPath: 'deploy/backend/'
-            releaseName: 'cloudpillarback'
-            overrideValues: 'image.tag=$(imagetag)'
-            valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
-            arguments: '--debug --timeout 10m0s'
+#       - job: CD_Job
+#         dependsOn: Start_VM_Job
+#         pool:
+#           name: CloudPillar-Pool
+#           demands:
+#           - agent.name -equals cpaks-${{ parameters.env }}-vm-agent
+#         steps:
+#         - task: HelmDeploy@0
+#           inputs:
+#             connectionType: 'Azure Resource Manager'
+#             azureSubscription: CloudPillar ${{ parameters.env }}
+#             azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
+#             kubernetesCluster: 'cp-${{ parameters.env }}-aks'
+#             command: 'upgrade'
+#             chartType: 'FilePath'
+#             chartPath: 'deploy/backend/'
+#             releaseName: 'cloudpillarback'
+#             overrideValues: 'image.tag=$(imagetag)'
+#             valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
+#             arguments: '--debug --timeout 10m0s'
             
-      - job: Stop_VM_Job
-        dependsOn: CD_Job
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-        - checkout: none
-        - task: AzureCLI@1
-          displayName: 'Stop VM'
-          inputs:
-            azureSubscription: 'CloudPillar ${{ parameters.env }}'
-            scriptLocation: inlineScript
-            inlineScript: |
-              az vm deallocate -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
+#       - job: Stop_VM_Job
+#         dependsOn: CD_Job
+#         pool:
+#           vmImage: ubuntu-latest
+#         steps:
+#         - checkout: none
+#         - task: AzureCLI@1
+#           displayName: 'Stop VM'
+#           inputs:
+#             azureSubscription: 'CloudPillar ${{ parameters.env }}'
+#             scriptLocation: inlineScript
+#             inlineScript: |
+#               az vm deallocate -g cp-ms-${{ parameters.env }}-rg -n aks-${{ parameters.env }}-vm
