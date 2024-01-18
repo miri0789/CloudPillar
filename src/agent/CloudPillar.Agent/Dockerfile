@@ -19,7 +19,7 @@ ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":
 
 RUN dotnet restore
 # RUN cp -r * export
-COPY --from=build /root/.nuget/packages /export/.nuget/packages
+COPY /root/.nuget/packages /export/.nuget/packages
 RUN dotnet build -c Release -o /app
 RUN pwsh ./publish.ps1
 
