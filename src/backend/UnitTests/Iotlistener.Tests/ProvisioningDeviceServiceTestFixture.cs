@@ -3,19 +3,18 @@ using Backend.Infra.Common.Services.Interfaces;
 using Backend.Iotlistener.Interfaces;
 using Backend.Iotlistener.Services;
 using Moq;
-using Shared.Entities.Messages;
 using Shared.Logger;
 
 namespace Backend.Iotlistener.Tests;
+
+[TestFixture]
 public class ProvisioningDeviceTestFixture
 {
 
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
     private Mock<IEnvironmentsWrapper> _environmentsWrapperMock;
     private Mock<ILoggerHandler> _loggerMock;
-    private Uri _provisioningUrl;
     private ProvisionDeviceService _target;
-
     private const string _deviceId = "testDevice";
 
     [SetUp]
@@ -23,7 +22,6 @@ public class ProvisioningDeviceTestFixture
     {
         _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
         _loggerMock = new Mock<ILoggerHandler>();
-        _provisioningUrl = new Uri("http://example.com/");
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
         _target = new ProvisionDeviceService(_httpRequestorServiceMock.Object, _environmentsWrapperMock.Object, _loggerMock.Object);
 

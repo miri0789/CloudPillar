@@ -6,17 +6,19 @@ using System.Text.RegularExpressions;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Sevices.Interfaces;
+using CloudPillar.Agent.Wrappers;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
 {
     private readonly RequestDelegate _requestDelegate;
     private ILoggerHandler _logger;
-    private readonly IConfiguration _configuration;
+    private readonly IConfigurationWrapper _configuration;
     private ISymmetricKeyProvisioningHandler? _symmetricKeyProvisioningHandler;
     private IProvisioningService? _provisioningService;
+    private IHttpContextWrapper? _httpContextWrapper;
 
-    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfiguration configuration)
+    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfigurationWrapper configuration)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -24,19 +26,21 @@ public class AuthorizationCheckMiddleware
 
     }
 
-    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler, IX509Provider x509Provider)
+    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler,
+    IX509Provider x509Provider, IHttpContextWrapper httpContextWrapper)
     {
         _provisioningService = context.RequestServices.GetRequiredService<IProvisioningService>();
         ArgumentNullException.ThrowIfNull(_provisioningService);
         _symmetricKeyProvisioningHandler = context.RequestServices.GetRequiredService<ISymmetricKeyProvisioningHandler>();
         ArgumentNullException.ThrowIfNull(_symmetricKeyProvisioningHandler);
+        _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
 
         if (!context.Request.IsHttps)
         {
             NextWithRedirectAsync(context, x509Provider);
             return;
         }
-        var endpoint = context.GetEndpoint();
+        var endpoint = _httpContextWrapper.GetEndpoint(context);
         //context
         var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
         if (deviceIsBusy)
@@ -55,8 +59,8 @@ public class AuthorizationCheckMiddleware
         {
             // check the headers for all the actions also for the AllowAnonymous.
             IHeaderDictionary requestHeaders = context.Request.Headers;
-            var xDeviceId = requestHeaders.TryGetValue(Constants.X_DEVICE_ID, out var deviceId) ? deviceId.ToString() : string.Empty;
-            var xSecretKey = requestHeaders.TryGetValue(Constants.X_SECRET_KEY, out var secretKey) ? secretKey.ToString() : string.Empty;
+            var xDeviceId = _httpContextWrapper.TryGetValue(requestHeaders, Constants.X_DEVICE_ID, out var deviceId) ? deviceId.ToString() : string.Empty;
+            var xSecretKey = _httpContextWrapper.TryGetValue(requestHeaders, Constants.X_SECRET_KEY, out var secretKey) ? secretKey.ToString() : string.Empty;
 
             if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
             {
@@ -123,7 +127,7 @@ public class AuthorizationCheckMiddleware
         context.Connection.ClientCertificate = x509Provider.GetHttpsCertificate();
 
         var sslPort = _configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
-        var uriBuilder = new UriBuilder(context.Request.GetDisplayUrl())
+        var uriBuilder = new UriBuilder(_httpContextWrapper.GetDisplayUrl(context))
         {
             Scheme = Uri.UriSchemeHttps,
             Port = sslPort,
