@@ -80,12 +80,12 @@ stages:
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cloudpillar.zip to Artifacts'
       inputs:
-        pathtoPublish: $(Build.ArtifactStagingDirectory)/cloudpillar-agent-publish-$(imagetag).zip
+        pathtoPublish: ./cloudpillar-agent-publish-$(imagetag).zip
         artifactName: 'cloudpillar'
     
     - task: ArchiveFiles@2
       inputs:
-        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/export'
+        rootFolderOrFile: './export'
         includeRootFolder: false
         archiveType: 'zip'
         archiveFile: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(imagetag).zip'
