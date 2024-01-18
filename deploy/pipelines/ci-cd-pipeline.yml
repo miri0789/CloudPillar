@@ -94,7 +94,7 @@ stages:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(imagetag).zip'
         artifactName: 'cloudpillar'
 
   - ${{each item in parameters.services}}:    
