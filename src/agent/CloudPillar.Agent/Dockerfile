@@ -8,7 +8,7 @@ WORKDIR /src
 
 COPY agent/CloudPillar.Agent/*.csproj agent/CloudPillar.Agent/
 COPY nuget.config agent/CloudPillar.Agent/
-COPY agent/CloudPillar.Agent export/CloudPillar.Agent
+# COPY agent/CloudPillar.Agent export/CloudPillar.Agent
 
 COPY . .
 WORKDIR /src/agent/CloudPillar.Agent
