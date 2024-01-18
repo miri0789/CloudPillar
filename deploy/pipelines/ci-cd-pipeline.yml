@@ -71,7 +71,7 @@ stages:
     - script: |
         CONTAINER_ID=$(docker create agent:aux-build)
         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
-        docker cp $CONTAINER_ID:/app/export .
+        docker cp $CONTAINER_ID:/app/export ./export
         docker rm $CONTAINER_ID
         mv ./cloudpillar.zip ./cloudpillar-agent-publish-$(imagetag).zip
         ls -al ./cloudpillar-agent-publish-$(imagetag).zip
