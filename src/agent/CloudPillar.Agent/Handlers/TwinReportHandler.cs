@@ -99,8 +99,8 @@ public class TwinReportHandler : ITwinReportHandler
 
                 var actionForDetails = actionsToReported.FirstOrDefault(x => !string.IsNullOrEmpty(x.ReportPartName));
                 if (actionForDetails == null) return;
-                TwinPatchChangeSpec changeSpecKey = actionForDetails.ChangeSpecKey;
-                TwinReportedChangeSpec twinReportedChangeSpec = _twinReported.GetReportedChangeSpecByKey(changeSpecKey.ToString());
+                string changeSpecKey = actionForDetails.ChangeSpecKey;
+                TwinReportedChangeSpec twinReportedChangeSpec = _twinReported.GetReportedChangeSpecByKey(changeSpecKey);
 
                 actionsToReported.ToList().ForEach(actionToReport =>
                 {

@@ -15,33 +15,98 @@ public class TwinReportedConverter : JsonConverter
         JObject jsonObject = JObject.Load(reader);
         var changeSpec = new TwinReported()
         {
-            ChangeSign = GetChangeSign(jsonObject, serializer),
+            ChangeSign = GetChangeSign(jsonObject),
             ChangeSpec = GetChangeSpec(jsonObject, serializer),
-            // DeviceState = GetValueOrDefault<DeviceStateType>(jsonObject, "deviceState") ?? GetValueOrDefault<DeviceStateType>(jsonObject, "DeviceState"),
+            DeviceState = GetDeviceState(jsonObject),
             // DeviceState = (jsonObject["deviceState"] ?? jsonObject["DeviceState"])?.Value<DeviceStateType>(),
-            // AgentPlatform = (jsonObject["agentPlatform"] ?? jsonObject["AgentPlatform"])?.Value<string>(),
-            // SupportedShells = (jsonObject["supportedShells"] ?? jsonObject["SupportedShells"])?.Value<ShellType[]>(),
-            // SecretKey = (jsonObject["secretKey"] ?? jsonObject["SecretKey"])?.Value<string>(),
-            // Custom = (jsonObject["custom"] ?? jsonObject["Custom"])?.Value<List<TwinReportedCustomProp>>(),
+            AgentPlatform = (jsonObject["agentPlatform"] ?? jsonObject["AgentPlatform"])?.Value<string>(),
+            SupportedShells = GetSupportShell(jsonObject),
+            SecretKey = (jsonObject["secretKey"] ?? jsonObject["SecretKey"])?.Value<string>(),
+            Custom = (jsonObject["custom"] ?? jsonObject["Custom"])?.Value<List<TwinReportedCustomProp>>(),
             ChangeSpecId = (jsonObject["changeSpecId"] ?? jsonObject["ChangeSpecId"])?.Value<string>(),
-            CertificateValidity = (jsonObject["certificateValidity"] ?? jsonObject["CertificateValidity"])?.Value<CertificateValidity>(),
+            CertificateValidity = jsonObject["certificateValidity"]?.ToObject<CertificateValidity>(),
             DeviceStateAfterServiceRestart = (jsonObject["deviceStateAfterServiceRestart"] ?? jsonObject["DeviceStateAfterServiceRestart"])?.Value<DeviceStateType>(),
-            KnownIdentities = (jsonObject["knownIdentities"] ?? jsonObject["KnownIdentities"])?.Value<List<KnownIdentities>>(),
+            KnownIdentities = GetKnownIdentities(jsonObject)// ConvertJArrayToList<KnownIdentities,>(jsonObject, "knownIdentities"),
         };
         return changeSpec;
+    }
+
+    private DeviceStateType GetDeviceState(JObject jsonObject)
+    {
+        if (jsonObject["deviceState"] is JValue deviceStateValue)
+        {
+            if (Enum.TryParse<DeviceStateType>(deviceStateValue.Value?.ToString(), true, out var deviceState))
+            {
+                return deviceState;
+            }
+        }
+        return default;
+    }
+    // private List<T> ConvertJArrayToList<T,K>(JObject jsonObject, string propertyName, bool isEnum = false)
+    // where K : struct, Enum
+    // {
+    //     var list = new List<T>();
+    //     var token = jsonObject[FirstLetterToLowerCase(propertyName)]
+    //     ?? jsonObject[FirstLetterToUpperCase(propertyName)];
+
+    //     if (token is JArray array)
+    //     {
+    //         foreach (var item in array)
+    //         {
+    //             if (isEnum && typeof(T).IsEnum)
+    //             {
+    //                 list.Add((T)Enum.Parse(typeof(T), item.Value<string>(), true));
+    //             }
+    //             else
+    //             {
+
+    //                 list.Add(item.Value<T>());
+    //             }
+
+    //         }
+    //     }
+    //     return list;
+    // }
+
+    private ShellType[] GetSupportShell(JObject jsonObject)
+    {
+        var supportShell = new List<ShellType>();
+        var supportShellToken = jsonObject["supportedShells"] ?? jsonObject["SupportedShells"];
+        if (supportShellToken is JArray supportShellArray)
+        {
+            foreach (var item in supportShellArray)
+            {
+                supportShell.Add(Enum.Parse<ShellType>(item.Value<string>(), true));
+            }
+        }
+        return supportShell.ToArray();
+    }
+
+    private List<KnownIdentities> GetKnownIdentities(JObject jsonObject)
+    {
+        var knownIdentities = new List<KnownIdentities>();
+        var knownIdentitiesToken = jsonObject["knownIdentities"] ?? jsonObject["KnownIdentities"];
+        if (knownIdentitiesToken is JArray supportShellArray)
+        {
+            foreach (var item in supportShellArray)
+            {
+                knownIdentities.Add(item.Value<KnownIdentities>());
+            }
+        }
+        return knownIdentities;
     }
     private T GetValueOrDefault<T>(JObject jsonObject, string propertyName)
     {
         JToken token = jsonObject[propertyName];
         return token != null ? token.Value<T>() : default(T);
     }
-    private IDictionary<string, string>? GetChangeSign(JObject jsonObject, JsonSerializer serializer)
+    private IDictionary<string, string>? GetChangeSign(JObject jsonObject)
     {
         var changeSign = new Dictionary<string, string>();
-
+        var changeSpecKeys = getChangeSpecKeys(jsonObject);
         foreach (var property in jsonObject.Properties())
         {
-            if (property.Value.Type == JTokenType.String)
+            if (property.Value.Type == JTokenType.String && changeSpecKeys.Contains(property.Name))
             {
                 changeSign.Add(property.Name, property.Value.Value<string>());
             }
@@ -58,12 +123,21 @@ public class TwinReportedConverter : JsonConverter
             if (property.Value.Type == JTokenType.Object &&
                 property.Value["id"] != null && property.Value["patch"] != null)
             {
-                var changeSpecKey = property.Name;
                 changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, property.Name));
             }
         }
 
         return changeSpec;
+    }
+
+    private List<string> getChangeSpecKeys(JObject jsonObject)
+    {
+
+        var changeSpecKeys = jsonObject.Properties().Where(property => property.Value.Type == JTokenType.Object &&
+                         property.Value["id"] != null && property.Value["patch"] != null)
+                         .Select(property => property.Name).ToList();
+
+        return changeSpecKeys;
     }
 
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

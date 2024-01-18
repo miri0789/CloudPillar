@@ -20,7 +20,7 @@ public static class TwinJsonConvertExtensions
 
     }
 
-     public static TwinReported ConvertToTwinReported(this string json)
+    public static TwinReported ConvertToTwinReported(this string json)
     {
         var twinReported = JsonConvert.DeserializeObject<TwinReported>(json,
             new JsonSerializerSettings
@@ -31,7 +31,7 @@ public static class TwinJsonConvertExtensions
         return twinReported;
 
     }
-    
+
     public static JObject ConvertToJObject(this TwinDesired twinDesired)
     {
         var twinDesiredJson = JObject.Parse(JsonConvert.SerializeObject(twinDesired,
@@ -49,34 +49,38 @@ public static class TwinJsonConvertExtensions
 
     public static TwinReportedChangeSpec? GetReportedChangeSpecByKey(this TwinReported twinReported, string changeSpecKey)
     {
-        return twinReported?.ChangeSpec?.FirstOrDefault(x => x.Key.ToLower().Contains(changeSpecKey?.ToLower())).Value;
+        return twinReported?.ChangeSpec?.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Value;
     }
-   
+
     public static TwinChangeSpec? GetDesiredChangeSpecByKey(this TwinDesired twinDesired, string changeSpecKey)
     {
-        return twinDesired?.ChangeSpec?.FirstOrDefault(x => x.Key.ToLower().Contains(changeSpecKey.ToString().ToLower())).Value;
+        return twinDesired?.ChangeSpec?.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Value;
     }
-   
+
     public static void SetReportedChangeSpecByKey(this TwinReported twinReported, TwinReportedChangeSpec twinReportedChangeSpec, string changeSpecKey)
     {
-
-        var matchingChangeSpecKey = twinReported?.ChangeSpec?.FirstOrDefault(x => x.Key.ToLower().Contains(changeSpecKey.ToString().ToLower())).Key;
-
-        if (matchingChangeSpecKey != null)
+        if (twinReported is not null && twinReported.ChangeSpec is not null)
         {
-            twinReported.ChangeSpec[matchingChangeSpecKey] = twinReportedChangeSpec;
+            if (twinReported?.ChangeSpec.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Key is not null)
+            {
+                twinReported.ChangeSpec[changeSpecKey] = twinReportedChangeSpec;
+                return;
+            }
+            else
+            {
+                twinReported.ChangeSpec.Add(changeSpecKey, twinReportedChangeSpec);
+                return;
+            }
         }
     }
 
-    public static string? GetReportedChangeSignByKey(this TwinReported twinReported, string changeSpecKey)
+    public static string? GetReportedChangeSignByKey(this TwinReported twinReported, string changeSignKey)
     {
-        return twinReported?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower().Contains(changeSpecKey.ToString().ToLower())).Value;
+        return twinReported?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Value;
     }
-   
-    public static string? GetDesiredChangeSignByKey(this TwinDesired twinDesired, string changeSpecKey)
-    {
-        return twinDesired?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower().Contains(changeSpecKey.ToString().ToLower())).Value;
-    }
-   
 
+    public static string? GetDesiredChangeSignByKey(this TwinDesired twinDesired, string changeSignKey)
+    {
+        return twinDesired?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Value;
+    }  
 }

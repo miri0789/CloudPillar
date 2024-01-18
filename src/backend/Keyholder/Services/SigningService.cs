@@ -119,6 +119,8 @@ public class SigningService : ISigningService
 
     public async Task CreateTwinKeySignature(string deviceId)
     {
+        //temporary
+        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
         try
         {
             using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
@@ -127,7 +129,8 @@ public class SigningService : ISigningService
                 var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
                 var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                twinDesired.ChangeSign = await SignData(dataToSign);
+                var changeSign = twinDesired.GetDesiredChangeSignByKey(changeSpecKey);
+                changeSign = await SignData(dataToSign);
 
                 twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
                 await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
@@ -156,14 +159,14 @@ public class SigningService : ISigningService
         }
     }
 
-    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash, TwinPatchChangeSpec changeSpecKey)
+    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash, string changeSpecKey)
     {
         var signature = await SignData(hash);
         await AddFileSignToDesired(deviceId, changeSpecKey, propName, actionIndex, signature);
 
     }
 
-    private async Task AddFileSignToDesired(string deviceId, TwinPatchChangeSpec changeSpecKey, string propName, int actionIndex, string fileSign)
+    private async Task AddFileSignToDesired(string deviceId, string changeSpecKey, string propName, int actionIndex, string fileSign)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 
@@ -178,7 +181,8 @@ public class SigningService : ISigningService
                 ((DownloadAction)twinDesiredChangeSpec.Patch[propName][actionIndex]).Sign = fileSign;
 
                 var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                twinDesired.ChangeSign = await SignData(dataToSign);                
+                var changeSign = twinDesired.GetDesiredChangeSignByKey(changeSpecKey);
+                changeSign = await SignData(dataToSign);
 
                 var twinDesiredJson = twinDesired.ConvertToJObject().ToString();
                 twin.Properties.Desired = new TwinCollection(twinDesiredJson);

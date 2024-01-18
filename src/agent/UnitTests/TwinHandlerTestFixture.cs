@@ -293,7 +293,7 @@ public class TwinHandlerTestFixture
         };
 
         CreateTwinMock(desired, reported);
-        _twinReportHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<TwinPatchChangeSpec>(), It.IsAny<CancellationToken>()));
+        _twinReportHandler.Setup(dc => dc.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.IsAny<string>(), It.IsAny<CancellationToken>()));
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _strictModeHandlerMock.Verify(x => x.ReplaceRootById(It.IsAny<TwinActionType>(), It.IsAny<string>()), Times.Exactly(desired.Patch["InstallSteps"].Count()));
     }

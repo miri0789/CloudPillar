@@ -24,6 +24,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\BlobStreamer\BlobStreamer.csproj" />
     <ProjectReference Include="..\..\Infra\Common\Common.csproj" />
+    <ProjectReference Include="./../../../Shared/Entities/Entities.csproj" />
+
   </ItemGroup>
 
 </Project>

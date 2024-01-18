@@ -25,7 +25,7 @@ public class TwinDiseredService : ITwinDiseredService
 
     }
 
-    public async Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
+    public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 
@@ -37,7 +37,14 @@ public class TwinDiseredService : ITwinDiseredService
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
-                if (twinDesiredChangeSpec.Patch is null || twinDesiredChangeSpec.Patch.Values.Count() == 0)
+                twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
+                if (twinDesiredChangeSpec is null)
+                {
+                    twinDesiredChangeSpec = new TwinChangeSpec() { Patch = new Dictionary<string, TwinAction[]>() };
+                    twinDesired.ChangeSpec.Add(changeSpecKey,twinDesiredChangeSpec);
+                }
+
+                if (twinDesiredChangeSpec?.Patch is null || twinDesiredChangeSpec?.Patch.Values.Count() == 0)
                 {
                     twinDesiredChangeSpec.Patch = new Dictionary<string, TwinAction[]>
                     {

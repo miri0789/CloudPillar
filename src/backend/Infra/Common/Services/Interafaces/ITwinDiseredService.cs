@@ -4,5 +4,5 @@ namespace Backend.Infra.Common.Services.Interfaces;
 
 public interface ITwinDiseredService
 {
-    Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction);
+    Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction);
 }
