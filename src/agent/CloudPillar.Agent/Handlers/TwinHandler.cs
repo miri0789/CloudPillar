@@ -122,32 +122,31 @@ public class TwinHandler : ITwinHandler
                 var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
                 twinReportedChangeSpec = await ResetReportedWhenDesiredChange(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
                 twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey);
-            }
 
-            if (await ChangeSpecIdEmpty(twinDesired?.GetDesiredChangeSpecByKey(TwinConstants.CHANGE_SPEC_NAME)?.Id, cancellationToken))
-            {
-                _logger.Info($"There is no twin change spec id");
-                return;
-            }
-
-            if (await ChangeSignExists(twinDesired, cancellationToken))
-            {
-                byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(TwinConstants.CHANGE_SPEC_NAME)!);
-                var message = isSignValid ? null : "Twin Change signature is invalid";
-                await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), message, cancellationToken);
-                if (isSignValid)
+                if (await ChangeSpecIdEmpty(twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey)?.Id, cancellationToken))
                 {
-                    foreach (string changeSpecKey in twinDesired.ChangeSpec.Keys)
+                    _logger.Info($"There is no twin change spec id");
+                    return;
+                }
+
+                if (await ChangeSignExists(twinDesired, changeSpecKey, cancellationToken))
+                {
+                    byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
+                    var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(TwinConstants.CHANGE_SPEC_NAME)!);
+                    var message = isSignValid ? null : "Twin Change signature is invalid";
+                    await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), message, cancellationToken);
+                    if (isSignValid)
                     {
                         await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpecKey, isInitial, cancellationToken);
+
+                    }
+                    else
+                    {
+                        _logger.Error(message);
                     }
                 }
-                else
-                {
-                    _logger.Error(message);
-                }
             }
+
         }
         catch (Exception ex)
         {
@@ -379,16 +378,16 @@ public class TwinHandler : ITwinHandler
         return emptyChangeSpecId;
     }
 
-    private async Task<bool> ChangeSignExists(TwinDesired twinDesired, CancellationToken cancellationToken)
+    private async Task<bool> ChangeSignExists(TwinDesired twinDesired, string changeSpecKey, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(twinDesired?.GetDesiredChangeSignByKey(TwinConstants.CHANGE_SPEC_NAME)?.ToString()))
+        if (!string.IsNullOrWhiteSpace(twinDesired?.GetDesiredChangeSignByKey(changeSpecKey)?.ToString()))
         {
             return true;
         }
         if (!_strictModeSettings.StrictMode)
         {
             _logger.Info($"There is no twin change sign, send sign event..");
-            await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign), cancellationToken);
+            await _signatureHandler.SendSignTwinKeyEventAsync(changeSpecKey, nameof(twinDesired.ChangeSign), cancellationToken);
             return false;
         }
         else
