@@ -124,4 +124,17 @@ public class AgentEventProcessorTestFixture
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
     }
 
+    [Test]
+    public async Task ProcessEventsAsync_RemoveDeviceMessage_CallRemoveDevice()
+    {
+        var messages = InitMessage("{\"MessageType\": 5, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"removedevice\"}");
+        var contextMock = new Mock<PartitionContext>(null, "5", "consumerGroupName", "eventHubPath", null)
+        {
+            CallBase = true
+        };
+
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
+
+        _provisionDeviceCertificateServiceMock.Verify(f => f.RemoveDeviceAsync("deviceId"), Times.Once);
+    }
 }

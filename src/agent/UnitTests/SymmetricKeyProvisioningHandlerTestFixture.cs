@@ -95,6 +95,21 @@ public class SymmetricKeyProvisioningHandlerTestFixture
 
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ProvisioningAsync_IsNewDevice_ReturnsIsNewDevice(bool isNewDevice)
+    {
+        _authenticationSettingsMock.Setup(x => x.Value).Returns(authenticationSettings);
+        _provisioningDeviceClientWrapperMock.Setup(x => x.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SecurityProvider>(), It.IsAny<ProvisioningTransportHandler>())).ReturnsAsync(() =>
+        {
+            return GetDeviceRegistrationResult(ProvisioningRegistrationStatusType.Assigned);
+        });
+        _deviceClientWrapperMock.Setup(x => x.IsNewDeviceAsync(It.IsAny<CancellationToken>())).ReturnsAsync(isNewDevice);
+
+        var result = await _target.ProvisioningAsync(DPS_SCOPE_ID, CancellationToken.None);
+        Assert.That(isNewDevice.Equals(result));
+    }
+
     private void CreateTarget()
     {
         _target = new SymmetricKeyProvisioningHandler(_loggerMock.Object, _deviceClientWrapperMock.Object, _symmetricKeyWrapperMock.Object, _provisioningDeviceClientWrapperMock.Object, _authenticationSettingsMock.Object);
