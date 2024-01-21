@@ -179,36 +179,10 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         Directory.CreateDirectory(destinationPath);
     }
 
-    public async Task UnzipFileAsync(string filePath, string destinationPath)
+    public ZipArchive OpenZipFile(string filePath)
     {
-        if (File.Exists(filePath))
-        {
-            using (ZipArchive archive = ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8))
-            {
-                foreach (ZipArchiveEntry entry in archive.Entries)
-                {
-                    string entryFilePath = Path.Combine(destinationPath, string.Join('/', entry.FullName.Split('/').Skip(1)));
-
-                    Directory.CreateDirectory(Path.GetDirectoryName(entryFilePath)!);
-                    if (!entry.FullName.EndsWith("/"))
-                    {
-                        using (Stream entryStream = entry.Open())
-                        using (FileStream fileStream = File.Create(entryFilePath))
-                        {
-                            byte[] buffer = new byte[4096];
-
-                            int bytesRead;
-                            while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                            {
-                                await fileStream.WriteAsync(buffer, 0, bytesRead);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        return ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8);
     }
-
     public string? GetExtension(string path)
     {
         return Path.GetExtension(path);
@@ -217,7 +191,31 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         FileInfo fileInfo = new FileInfo(path);
         return fileInfo.Exists ? fileInfo.Length : 0;
+    }    
+
+    public Stream ZipArchiveEntryOpen(ZipArchiveEntry zipArchiveEntry)
+    {
+        return zipArchiveEntry.Open();
     }
+    public ZipArchive ZipFileOpen(string filePath)
+    {
+        return ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8);
+    }
+
+    public void SetCreationTimeUtc(string filePath, DateTime creationTimeUtc)
+    {
+        File.SetCreationTimeUtc(filePath, creationTimeUtc);
+    }
+
+    public void SetLastWriteTimeUtc(string filePath, DateTime lastWriteTime)
+    {
+        File.SetLastWriteTimeUtc(filePath, lastWriteTime);
+    }
+    public FileStream FileCreate(string filePath)
+    {
+        return File.Create(filePath);
+    }
+
 
 
 }

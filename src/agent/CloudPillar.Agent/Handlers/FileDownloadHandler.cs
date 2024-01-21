@@ -7,6 +7,7 @@ using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Services;
 using Microsoft.Extensions.Options;
 using System.Security.AccessControl;
+using System.IO.Compression;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -312,7 +313,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 file.Report.Status = StatusType.Unzip;
                 await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-                await _fileStreamerWrapper.UnzipFileAsync(destPath, file.Action.DestinationPath);
+                await UnzipFileAsync(destPath, file.Action.DestinationPath);
                 _fileStreamerWrapper.DeleteFile(destPath);
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
@@ -526,6 +527,39 @@ public class FileDownloadHandler : IFileDownloadHandler
         if (_filesDownloads.Count == 0 && !cancellationToken.IsCancellationRequested)
         {
             await _serverIdentityHandler.UpdateKnownIdentitiesFromCertificatesAsync(cancellationToken);
+        }
+    }
+
+
+    private async Task UnzipFileAsync(string filePath, string destinationPath)
+    {
+        if (_fileStreamerWrapper.FileExists(filePath))
+        {
+            using (var archive = _fileStreamerWrapper.ZipFileOpen(filePath))
+            {
+                byte[] buffer = new byte[4096];
+                foreach (var entry in archive.Entries)
+                {
+                    string entryFilePath = Path.Combine(destinationPath, string.Join('/', entry.FullName.Split('/').Skip(1)));
+
+                    _fileStreamerWrapper.CreateDirectory(_fileStreamerWrapper.GetDirectoryName(entryFilePath)!);
+                    if (!entry.FullName.EndsWith("/"))
+                    {
+                        using (var entryStream = _fileStreamerWrapper.ZipArchiveEntryOpen(entry))
+                        using (var fileStream = _fileStreamerWrapper.FileCreate(entryFilePath))
+                        {
+
+                            int bytesRead;
+                            while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                            {
+                                await fileStream.WriteAsync(buffer, 0, bytesRead);
+                            }
+                        }
+                        _fileStreamerWrapper.SetCreationTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
+                        _fileStreamerWrapper.SetLastWriteTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
+                    }
+                }
+            }
         }
     }
 }

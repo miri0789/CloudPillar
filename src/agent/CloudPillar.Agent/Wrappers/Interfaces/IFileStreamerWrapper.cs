@@ -1,4 +1,5 @@
-﻿using System.Security.AccessControl;
+﻿using System.IO.Compression;
+using System.Security.AccessControl;
 
 namespace CloudPillar.Agent.Wrappers;
 
@@ -33,8 +34,6 @@ public interface IFileStreamerWrapper
 
     Task<string> ReadAllTextAsync(string filePath);
 
-    Task UnzipFileAsync(string filePath, string destinationPath);
-
     bool FileExists(string filePath);
 
     bool DirectoryExists(string fullFilePath);
@@ -68,4 +67,12 @@ public interface IFileStreamerWrapper
     bool HasExtension(string fullFilePath);
 
     string GetFullPath(string fullFilePath);
+
+    Stream ZipArchiveEntryOpen(ZipArchiveEntry zipArchiveEntry);
+    ZipArchive ZipFileOpen(string filePath);
+
+    void SetCreationTimeUtc(string filePath, DateTime creationTimeUtc);
+
+    void SetLastWriteTimeUtc(string filePath, DateTime lastWriteTime);
+    FileStream FileCreate(string filePath);
 }
