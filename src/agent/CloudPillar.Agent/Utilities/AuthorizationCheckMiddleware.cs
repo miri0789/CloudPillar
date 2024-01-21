@@ -112,7 +112,7 @@ public class AuthorizationCheckMiddleware
                 _logger.Info($"{actionName}, The device is symmetric key unAuthorized, start provisinig proccess");
                 await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
             }
-            return !action.Contains("getdevicestate");
+            return action.Contains("getdevicestate");
         }
         return true;
     }
