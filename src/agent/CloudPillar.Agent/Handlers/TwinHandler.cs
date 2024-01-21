@@ -79,7 +79,7 @@ public class TwinHandler : ITwinHandler
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
-            if (changeSpecKey != TwinPatchChangeSpec.ChangeSpecDiagnostics.ToString())
+            if (changeSpecKey != TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)
             {
                 _logger.Info($"TwinDesired spec id not equal to TwinReported spec id, reset all reported actions");
                 _fileDownloadHandler.InitDownloadsList();
@@ -124,7 +124,7 @@ public class TwinHandler : ITwinHandler
                 twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey);
             }
 
-            if (await ChangeSpecIdEmpty(twinDesired?.GetDesiredChangeSpecByKey(TwinPatchChangeSpec.ChangeSpec.ToString())?.Id, cancellationToken))
+            if (await ChangeSpecIdEmpty(twinDesired?.GetDesiredChangeSpecByKey(TwinConstants.CHANGE_SPEC_NAME)?.Id, cancellationToken))
             {
                 _logger.Info($"There is no twin change spec id");
                 return;
@@ -133,14 +133,14 @@ public class TwinHandler : ITwinHandler
             if (await ChangeSignExists(twinDesired, cancellationToken))
             {
                 byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(TwinPatchChangeSpec.ChangeSpec.ToString())!);
+                var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(TwinConstants.CHANGE_SPEC_NAME)!);
                 var message = isSignValid ? null : "Twin Change signature is invalid";
                 await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), message, cancellationToken);
                 if (isSignValid)
                 {
-                    foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
+                    foreach (string changeSpecKey in twinDesired.ChangeSpec.Keys)
                     {
-                        await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, isInitial, cancellationToken);
+                        await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpecKey, isInitial, cancellationToken);
                     }
                 }
                 else
@@ -157,7 +157,7 @@ public class TwinHandler : ITwinHandler
 
 
     private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
-    TwinReported twinReported, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    TwinReported twinReported, String changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey.ToString());
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey.ToString());
@@ -313,7 +313,7 @@ public class TwinHandler : ITwinHandler
         await _twinReportHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
     }
 
-    private async Task<IEnumerable<ActionToReport>?> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    private async Task<IEnumerable<ActionToReport>?> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, string changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         try
         {
@@ -381,7 +381,7 @@ public class TwinHandler : ITwinHandler
 
     private async Task<bool> ChangeSignExists(TwinDesired twinDesired, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(twinDesired?.GetDesiredChangeSignByKey(TwinPatchChangeSpec.ChangeSpec.ToString())?.ToString()))
+        if (!string.IsNullOrWhiteSpace(twinDesired?.GetDesiredChangeSignByKey(TwinConstants.CHANGE_SPEC_NAME)?.ToString()))
         {
             return true;
         }

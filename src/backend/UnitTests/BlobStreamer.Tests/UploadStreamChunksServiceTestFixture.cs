@@ -78,7 +78,7 @@ namespace Backend.BlobStreamer.Tests
 
             var destionationPath = "C:\\Users\\Test\\AppData\\Local\\Temp\\test.tmp";
 
-            _mockTwinDiseredService.Verify(b => b.AddDesiredRecipeAsync(It.IsAny<string>(), TwinPatchChangeSpec.ChangeSpecDiagnostics,
+            _mockTwinDiseredService.Verify(b => b.AddDesiredRecipeAsync(It.IsAny<string>(), TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME,
             It.Is<DownloadAction>(x => x.DestinationPath == destionationPath)), Times.Once);
         }
     }

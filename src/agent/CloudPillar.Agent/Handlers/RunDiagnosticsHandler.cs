@@ -92,7 +92,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                 FileName = diagnosticsFilePath
             };
 
-            var actionToReport = new ActionToReport(TwinPatchChangeSpec.ChangeSpecDiagnostics);
+            var actionToReport = new ActionToReport(TwinConstants.CHANGE_SPEC_NAME);
             const string DIAGNOSTICS_ID = "diagnostics";
             await _fileUploaderHandler.UploadFilesToBlobStorageAsync(actionToReport, uploadAction.Method, uploadAction.FileName, DIAGNOSTICS_ID, cancellationToken, true);
             var checkSum = await GetFileCheckSumAsync(diagnosticsFilePath);
@@ -155,8 +155,8 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
         var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
 
-        var desiredList = twinDesired?.GetDesiredChangeSpecByKey(TwinPatchChangeSpec.ChangeSpecDiagnostics.ToString())?.Patch?.FirstOrDefault().Value;
-        var reportedList = twinReported?.GetReportedChangeSpecByKey(TwinPatchChangeSpec.ChangeSpecDiagnostics.ToString())?.Patch?.FirstOrDefault().Value;
+        var desiredList = twinDesired?.GetDesiredChangeSpecByKey(TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)?.Patch?.FirstOrDefault().Value;
+        var reportedList = twinReported?.GetReportedChangeSpecByKey(TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)?.Patch?.FirstOrDefault().Value;
 
         var indexDesired = desiredList?.ToList().FindIndex(x => x is DownloadAction && Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
         if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())

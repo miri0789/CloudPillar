@@ -13,8 +13,6 @@ namespace Backend.Infra.Common.Services;
 
 public class TwinDiseredService : ITwinDiseredService
 {
-
-    private const string DIAGNOSTICS_TRANSACTIONS_KEY = "diagnosticsActions";
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
     private readonly ILoggerHandler _logger;
 
@@ -25,7 +23,7 @@ public class TwinDiseredService : ITwinDiseredService
 
     }
 
-    public async Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
+    public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction, string transactionsKey = TwinConstants.DEFAULT_TRANSACTIONS_KEY)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 
@@ -37,18 +35,31 @@ public class TwinDiseredService : ITwinDiseredService
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
-                if (twinDesiredChangeSpec.Patch is null || twinDesiredChangeSpec.Patch.Values.Count() == 0)
+
+                twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
+                if (twinDesiredChangeSpec is null)
+                {
+                    twinDesiredChangeSpec = new TwinChangeSpec() { Patch = new Dictionary<string, TwinAction[]>() };
+                    twinDesired.ChangeSpec.Add(changeSpecKey, twinDesiredChangeSpec);
+                }
+
+                if (string.IsNullOrEmpty(twinDesiredChangeSpec.Id))
+                {
+                    twinDesiredChangeSpec.Id = $"{changeSpecKey}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}";
+                }
+
+                if (twinDesiredChangeSpec?.Patch is null || twinDesiredChangeSpec?.Patch.Values.Count() == 0)
                 {
                     twinDesiredChangeSpec.Patch = new Dictionary<string, TwinAction[]>
                     {
-                        { DIAGNOSTICS_TRANSACTIONS_KEY, new TwinAction[0] }
+                        { transactionsKey, new TwinAction[0] }
                     };
                 }
 
-                var updatedArray = twinDesiredChangeSpec.Patch[DIAGNOSTICS_TRANSACTIONS_KEY].ToList();
+                var updatedArray = twinDesiredChangeSpec.Patch[transactionsKey].ToList();
                 updatedArray.Add(downloadAction);
 
-                twinDesiredChangeSpec.Patch[DIAGNOSTICS_TRANSACTIONS_KEY] = updatedArray.ToArray();
+                twinDesiredChangeSpec.Patch[transactionsKey] = updatedArray.ToArray();
                 var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
                 twin.Properties.Desired = new TwinCollection(twinDesiredJson);
 

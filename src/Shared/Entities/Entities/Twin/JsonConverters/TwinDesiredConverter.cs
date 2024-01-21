@@ -43,8 +43,7 @@ public class TwinDesiredConverter : JsonConverter
             if (property.Value.Type == JTokenType.Object &&
                 property.Value["id"] != null && property.Value["patch"] != null)
             {
-                var changeSpecKey = (TwinPatchChangeSpec)Enum.Parse(typeof(TwinPatchChangeSpec), property.Name, true);
-                changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, changeSpecKey));
+                changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, property.Name));
             }
         }
 
@@ -53,10 +52,26 @@ public class TwinDesiredConverter : JsonConverter
 
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
-        throw new NotImplementedException();
+        var changeSpec = (TwinDesired)value;
+
+        writer.WriteStartObject();
+
+        foreach (var changeSpecOption in changeSpec.ChangeSign)
+        {
+            writer.WritePropertyName(changeSpecOption.Key);
+            serializer.Serialize(writer, changeSpecOption.Value);
+        }
+
+        foreach (var changeSpecOption in changeSpec.ChangeSpec)
+        {
+            writer.WritePropertyName(changeSpecOption.Key);
+            serializer.Serialize(writer, changeSpecOption.Value);
+        }
+
+        writer.WriteEndObject();
     }
 
-    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, TwinPatchChangeSpec changeSpecKey)
+    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, string changeSpecKey)
     {
         var lowerPropName = FirstLetterToLowerCase($"{changeSpecKey}");
         var upperPropName = FirstLetterToUpperCase($"{changeSpecKey}");
