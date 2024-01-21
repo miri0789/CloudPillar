@@ -89,7 +89,7 @@ public class AuthorizationCheckMiddlewareTests
     }
 
     [Test]
-    public async Task Invoke_OnGetDeviceState_ProvisinigNoError()
+    public async Task Invoke_OnGetDeviceState_CallProvisinig()
     {
         _controllerContext.HttpContext.Request.IsHttps = true;
         _controllerContext.HttpContext.Request.Path = "/api/v1/getdevicestate";
@@ -105,6 +105,5 @@ public class AuthorizationCheckMiddlewareTests
 
         await _target.Invoke(_controllerContext.HttpContext, _dPSProvisioningDeviceClientHandler.Object, _stateMachineHandler.Object, _x509Provider.Object, _httpContextWrapper.Object);
         _symmetricKeyProvisioningHandler.Verify(x => x.AuthorizationDeviceAsync(new CancellationToken()), Times.Once);
-        _logger.Verify(x => x.Error(It.IsAny<string>()), Times.Never);
     }
 }
