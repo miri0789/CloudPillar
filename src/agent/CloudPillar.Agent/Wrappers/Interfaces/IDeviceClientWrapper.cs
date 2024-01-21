@@ -8,7 +8,6 @@ public interface IDeviceClientWrapper
 {
     Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken);
     Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken);
-    Task<bool> IsNewDeviceAsync(CancellationToken cancellationToken);
     TransportType GetTransportType();
     int GetChunkSizeByTransportType();
 

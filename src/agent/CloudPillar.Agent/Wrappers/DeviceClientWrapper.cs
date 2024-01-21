@@ -47,22 +47,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
     }
 
-    public async Task<bool> IsNewDeviceAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Check if the device is already initialized
-            var twin = await GetTwinAsync(cancellationToken);
-            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
-            return reported?.SupportedShells is null && reported?.AgentPlatform is null;
-        }
-        catch (Exception ex)
-        {
-            _logger.Debug($"IsNewDeviceAsync, Device is not initialized. {ex.Message}");
-            return true;
-        }
-    }
-
     public async Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken)
     {
         try
