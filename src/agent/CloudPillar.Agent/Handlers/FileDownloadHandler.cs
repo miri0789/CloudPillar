@@ -533,31 +533,28 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     private async Task UnzipFileAsync(string filePath, string destinationPath)
     {
-        if (_fileStreamerWrapper.FileExists(filePath))
+        using (var archive = _fileStreamerWrapper.ZipFileOpen(filePath))
         {
-            using (var archive = _fileStreamerWrapper.ZipFileOpen(filePath))
+            byte[] buffer = new byte[4096];
+            foreach (var entry in archive.Entries)
             {
-                byte[] buffer = new byte[4096];
-                foreach (var entry in archive.Entries)
+                string entryFilePath = Path.Combine(destinationPath, string.Join('/', entry.FullName.Split('/').Skip(1)));
+
+                _fileStreamerWrapper.CreateDirectory(_fileStreamerWrapper.GetDirectoryName(entryFilePath)!);
+                if (!entry.FullName.EndsWith("/"))
                 {
-                    string entryFilePath = Path.Combine(destinationPath, string.Join('/', entry.FullName.Split('/').Skip(1)));
-
-                    _fileStreamerWrapper.CreateDirectory(_fileStreamerWrapper.GetDirectoryName(entryFilePath)!);
-                    if (!entry.FullName.EndsWith("/"))
+                    using (var entryStream = _fileStreamerWrapper.ZipArchiveEntryOpen(entry))
+                    using (var fileStream = _fileStreamerWrapper.FileCreate(entryFilePath))
                     {
-                        using (var entryStream = _fileStreamerWrapper.ZipArchiveEntryOpen(entry))
-                        using (var fileStream = _fileStreamerWrapper.FileCreate(entryFilePath))
-                        {
 
-                            int bytesRead;
-                            while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                            {
-                                await fileStream.WriteAsync(buffer, 0, bytesRead);
-                            }
+                        int bytesRead;
+                        while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        {
+                            await fileStream.WriteAsync(buffer, 0, bytesRead);
                         }
-                        _fileStreamerWrapper.SetCreationTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
-                        _fileStreamerWrapper.SetLastWriteTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
                     }
+                    _fileStreamerWrapper.SetCreationTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
+                    _fileStreamerWrapper.SetLastWriteTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
                 }
             }
         }
