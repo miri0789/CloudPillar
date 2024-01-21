@@ -19,7 +19,6 @@ var builder = LoggerHostCreator.Configure("blobstreamer", WebApplication.CreateB
 
 builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
-builder.Services.AddScoped<IGuidWrapper, GuidWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();

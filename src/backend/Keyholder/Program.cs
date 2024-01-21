@@ -24,7 +24,6 @@ builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
 builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
-builder.Services.AddScoped<IGuidWrapper, GuidWrapper>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
 
 builder.Services.AddControllers();
