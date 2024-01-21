@@ -81,7 +81,7 @@ public class AuthorizationCheckMiddleware
             var isAuthorized = await IsAuthorized(context, deviceIsBusy, xDeviceId, xSecretKey, actionName, cancellationToken);
             if (!isAuthorized)
             {
-                await UnauthorizedResponseAsync(context, $"{actionName}, The certificate is expired.");
+                await UnauthorizedResponseAsync(context, $"{actionName}, Unauthorized device.");
                 return;
             }
             await _requestDelegate(context);
@@ -112,13 +112,13 @@ public class AuthorizationCheckMiddleware
                 _logger.Info($"{actionName}, The device is symmetric key unAuthorized, start provisinig proccess");
                 await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
             }
-            return !action.Contains("getdevicestate");
+            return action.Contains("getdevicestate");
         }
         if (x509Certificate?.NotAfter <= DateTime.UtcNow)
         {
-
+            _logger.Info($"{actionName}, The certificate is expired, start provisinig proccess");
             await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
-            return !action.Contains("getdevicestate");
+            return action.Contains("getdevicestate");
         }
         return true;
     }
