@@ -313,7 +313,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 file.Report.Status = StatusType.Unzip;
                 await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-                UnzipFileAsync(destPath, file.Action.DestinationPath, file.Action.Source);
+                UnzipFileAsync(destPath, file.Action.DestinationPath);
                 _fileStreamerWrapper.DeleteFile(destPath);
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
@@ -531,20 +531,20 @@ public class FileDownloadHandler : IFileDownloadHandler
     }
 
 
-    public void UnzipFileAsync(string zipPath, string destinationPath, string srcFileName)
+    public void UnzipFileAsync(string zipPath, string destinationPath)
     {
         using (ZipArchive archive = _fileStreamerWrapper.OpenZipFile(zipPath))
         {
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
-                srcFileName = srcFileName.Replace(_fileStreamerWrapper.GetExtension(srcFileName) ?? "", "");
-                var fileName = entry.FullName.StartsWith(srcFileName) ? entry.FullName.Substring(srcFileName.Length) + 1 : entry.FullName;
-                string completeFileName = Path.Combine(destinationPath, fileName);
+                string completeFileName = Path.Combine(destinationPath, entry.FullName);
 
                 _fileStreamerWrapper.CreateDirectory(Path.GetDirectoryName(completeFileName)!);
-
-                entry.ExtractToFile(completeFileName, overwrite: true);
-                _fileStreamerWrapper.SetLastWriteTimeUtc(completeFileName, entry.LastWriteTime.UtcDateTime);
+                if (!entry.FullName.EndsWith("/"))
+                {
+                    entry.ExtractToFile(completeFileName, overwrite: true);
+                    _fileStreamerWrapper.SetLastWriteTimeUtc(completeFileName, entry.LastWriteTime.UtcDateTime);
+                }
             }
         }
     }
