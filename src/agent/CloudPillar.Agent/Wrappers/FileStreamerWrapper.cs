@@ -197,11 +197,6 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return zipArchiveEntry.Open();
     }
-    public ZipArchive OpenZipFile(string filePath)
-    {
-        return ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8);
-    }
-
 
     public void SetLastWriteTime(string filePath, DateTime lastWriteTime)
     {
