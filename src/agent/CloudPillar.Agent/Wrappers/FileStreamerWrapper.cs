@@ -202,15 +202,16 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8);
     }
 
-    public void SetCreationTimeUtc(string filePath, DateTime creationTimeUtc)
+
+    public void SetLastWriteTime(string filePath, DateTime lastWriteTime)
     {
-        File.SetCreationTimeUtc(filePath, creationTimeUtc);
+        File.SetLastWriteTime(filePath, lastWriteTime);
+    }
+    public void DirectorySetLastWriteTime(string dirPath, DateTime lastWriteTime)
+    {
+        Directory.SetLastWriteTime(dirPath, lastWriteTime);
     }
 
-    public void SetLastWriteTimeUtc(string filePath, DateTime lastWriteTime)
-    {
-        File.SetLastWriteTimeUtc(filePath, lastWriteTime);
-    }
     public FileStream FileCreate(string filePath)
     {
         return File.Create(filePath);
