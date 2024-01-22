@@ -1,10 +1,10 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Client.Transport;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Storage.Core.Util;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using Microsoft.WindowsAzure.Storage.Core.Util;
 
 namespace CloudPillar.Agent.Handlers
 {

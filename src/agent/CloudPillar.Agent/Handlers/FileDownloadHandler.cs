@@ -532,7 +532,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
 
     private async Task UnzipFileAsync(string filePath, string destinationPath)
-    {
+    {        
         using (var archive = _fileStreamerWrapper.ZipFileOpen(filePath))
         {
             byte[] buffer = new byte[4096];
@@ -553,8 +553,11 @@ public class FileDownloadHandler : IFileDownloadHandler
                             await fileStream.WriteAsync(buffer, 0, bytesRead);
                         }
                     }
-                    _fileStreamerWrapper.SetCreationTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
                     _fileStreamerWrapper.SetLastWriteTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
+                }
+                else
+                {
+                    Directory.SetLastWriteTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
                 }
             }
         }
