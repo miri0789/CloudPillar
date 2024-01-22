@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
 using System.Security.Cryptography.X509Certificates;
+using CloudPillar.Agent.Sevices.Interfaces;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
@@ -99,6 +100,7 @@ builder.Services.AddScoped<IX509Provider, X509Provider>();
 builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
 builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
+builder.Services.AddScoped<IProvisioningService, ProvisioningService>();
 
 var appSettings = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettings);

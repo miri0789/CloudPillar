@@ -150,11 +150,11 @@ namespace CloudPillar.Agent.Handlers.Tests
             mockStrictModeSettingsValue.FilesRestrictions.First(x => x.Type == StrictModeMockHelper.UPLOAD).AllowPatterns = new List<string>();
             mockStrictModeSettingsValue.GlobalPatterns = new List<string>();
 
-             Assert.Throws<FormatException>(() =>
-                          {
-                              _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
+            Assert.Throws<FormatException>(() =>
+                         {
+                             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
-                          }, ResultCode.StrictModeSize.ToString());
+                         }, ResultCode.StrictModeSize.ToString());
         }
 
 
