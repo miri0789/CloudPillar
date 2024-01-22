@@ -193,24 +193,25 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return fileInfo.Exists ? fileInfo.Length : 0;
     }    
 
-    public Stream ZipArchiveEntryOpen(ZipArchiveEntry zipArchiveEntry)
+    public Stream OpenZipArchiveEntry(ZipArchiveEntry zipArchiveEntry)
     {
         return zipArchiveEntry.Open();
     }
-    public ZipArchive ZipFileOpen(string filePath)
+    public ZipArchive OpenZipFile(string filePath)
     {
         return ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8);
     }
 
-    public void SetCreationTimeUtc(string filePath, DateTime creationTimeUtc)
+
+    public void SetLastWriteTime(string filePath, DateTime lastWriteTime)
     {
-        File.SetCreationTimeUtc(filePath, creationTimeUtc);
+        File.SetLastWriteTime(filePath, lastWriteTime);
+    }
+    public void DirectorySetLastWriteTime(string dirPath, DateTime lastWriteTime)
+    {
+        Directory.SetLastWriteTime(dirPath, lastWriteTime);
     }
 
-    public void SetLastWriteTimeUtc(string filePath, DateTime lastWriteTime)
-    {
-        File.SetLastWriteTimeUtc(filePath, lastWriteTime);
-    }
     public FileStream FileCreate(string filePath)
     {
         return File.Create(filePath);

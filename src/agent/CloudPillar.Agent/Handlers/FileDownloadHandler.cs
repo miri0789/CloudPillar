@@ -313,7 +313,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 file.Report.Status = StatusType.Unzip;
                 await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-                await UnzipFileAsync(destPath, file.Action.DestinationPath);
+                UnzipFileAsync(destPath, file.Action.DestinationPath);
                 _fileStreamerWrapper.DeleteFile(destPath);
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
@@ -531,33 +531,26 @@ public class FileDownloadHandler : IFileDownloadHandler
     }
 
 
-    private async Task UnzipFileAsync(string filePath, string destinationPath)
-    {        
-        using (var archive = _fileStreamerWrapper.ZipFileOpen(filePath))
+    public void UnzipFileAsync(string zipPath, string destinationPath)
+    {
+        using (ZipArchive archive = _fileStreamerWrapper.OpenZipFile(zipPath))
         {
-            byte[] buffer = new byte[4096];
-            foreach (var entry in archive.Entries)
+            foreach (ZipArchiveEntry entry in archive.Entries)
             {
-                string entryFilePath = Path.Combine(destinationPath, string.Join('/', entry.FullName.Split('/').Skip(1)));
-
-                _fileStreamerWrapper.CreateDirectory(_fileStreamerWrapper.GetDirectoryName(entryFilePath)!);
+                string completeFileName = Path.Combine(destinationPath, string.Join('/', entry.FullName.Split('/').Skip(1)));
+                _fileStreamerWrapper.CreateDirectory(_fileStreamerWrapper.GetDirectoryName(completeFileName)!);
                 if (!entry.FullName.EndsWith("/"))
                 {
-                    using (var entryStream = _fileStreamerWrapper.ZipArchiveEntryOpen(entry))
-                    using (var fileStream = _fileStreamerWrapper.FileCreate(entryFilePath))
-                    {
-
-                        int bytesRead;
-                        while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                        {
-                            await fileStream.WriteAsync(buffer, 0, bytesRead);
-                        }
-                    }
-                    _fileStreamerWrapper.SetLastWriteTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
+                    entry.ExtractToFile(completeFileName, overwrite: true);
+                    _fileStreamerWrapper.SetLastWriteTime(completeFileName, entry.LastWriteTime.DateTime);
                 }
-                else
+            }
+            foreach (ZipArchiveEntry entry in archive.Entries)
+            {
+                string completeFileName = Path.Combine(destinationPath, string.Join('/', entry.FullName.Split('/').Skip(1)));
+                if (entry.FullName.EndsWith("/"))
                 {
-                    Directory.SetLastWriteTimeUtc(entryFilePath, entry.LastWriteTime.UtcDateTime);
+                    Directory.SetLastWriteTime(completeFileName, entry.LastWriteTime.DateTime);
                 }
             }
         }
