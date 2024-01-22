@@ -5,6 +5,8 @@ namespace Shared.Entities.Twin;
 
 public class TwinDesiredConverter : JsonConverter
 {
+    private const string SIGN_KEY = "Sign";
+
     public override bool CanConvert(Type objectType)
     {
         return objectType == typeof(TwinDesired);
@@ -20,7 +22,7 @@ public class TwinDesiredConverter : JsonConverter
         };
         return changeSpec;
     }
-    private IDictionary<string, string>? GetChangeSign(JObject jsonObject, JsonSerializer serializer)
+    private Dictionary<string, string>? GetChangeSign(JObject jsonObject, JsonSerializer serializer)
     {
         var changeSign = new Dictionary<string, string>();
 
@@ -34,14 +36,15 @@ public class TwinDesiredConverter : JsonConverter
         return changeSign;
     }
 
-    private IDictionary<string, TwinChangeSpec>? GetChangeSpec(JObject jsonObject, JsonSerializer serializer)
+    private Dictionary<string, TwinChangeSpec>? GetChangeSpec(JObject jsonObject, JsonSerializer serializer)
     {
         var changeSpec = new Dictionary<string, TwinChangeSpec>();
 
         foreach (var property in jsonObject.Properties())
         {
             if (property.Value.Type == JTokenType.Object &&
-                property.Value["id"] != null && property.Value["patch"] != null)
+                (property.Value["id"] ?? property.Value["Id"]) != null &&
+                (property.Value["patch"] ?? property.Value["Patch"]) != null)
             {
                 changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, property.Name));
             }
@@ -56,16 +59,21 @@ public class TwinDesiredConverter : JsonConverter
 
         writer.WriteStartObject();
 
-        foreach (var changeSpecOption in changeSpec.ChangeSign)
+        if (changeSpec?.ChangeSign is not null)
         {
-            writer.WritePropertyName(changeSpecOption.Key);
-            serializer.Serialize(writer, changeSpecOption.Value);
+            foreach (var changeSpecOption in changeSpec?.ChangeSign)
+            {
+                writer.WritePropertyName($"{changeSpecOption.Key}{SIGN_KEY}");
+                serializer.Serialize(writer, changeSpecOption.Value);
+            }
         }
-
-        foreach (var changeSpecOption in changeSpec.ChangeSpec)
+        if (changeSpec?.ChangeSpec is not null)
         {
-            writer.WritePropertyName(changeSpecOption.Key);
-            serializer.Serialize(writer, changeSpecOption.Value);
+            foreach (var changeSpecOption in changeSpec.ChangeSpec)
+            {
+                writer.WritePropertyName(changeSpecOption.Key);
+                serializer.Serialize(writer, changeSpecOption.Value);
+            }
         }
 
         writer.WriteEndObject();

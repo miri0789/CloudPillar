@@ -92,7 +92,7 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
                 FileName = diagnosticsFilePath
             };
 
-            var actionToReport = new ActionToReport(TwinConstants.CHANGE_SPEC_NAME);
+            var actionToReport = new ActionToReport();
             const string DIAGNOSTICS_ID = "diagnostics";
             await _fileUploaderHandler.UploadFilesToBlobStorageAsync(actionToReport, uploadAction.Method, uploadAction.FileName, DIAGNOSTICS_ID, cancellationToken, true);
             var checkSum = await GetFileCheckSumAsync(diagnosticsFilePath);

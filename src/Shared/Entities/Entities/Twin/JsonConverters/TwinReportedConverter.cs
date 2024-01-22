@@ -10,11 +10,6 @@ public class TwinReportedConverter : JsonConverter
         return objectType == typeof(TwinReported);
     }
 
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
         JObject jsonObject = JObject.Load(reader);
@@ -22,26 +17,51 @@ public class TwinReportedConverter : JsonConverter
         {
             ChangeSign = GetChangeSign(jsonObject),
             ChangeSpec = GetChangeSpec(jsonObject, serializer),
-            DeviceState = GetDeviceState(jsonObject),
+            DeviceState = GetDeviceState(jsonObject, "deviceState"),
             AgentPlatform = (jsonObject["agentPlatform"] ?? jsonObject["AgentPlatform"])?.Value<string>(),
             SupportedShells = GetSupportShell(jsonObject),
             SecretKey = (jsonObject["secretKey"] ?? jsonObject["SecretKey"])?.Value<string>(),
             Custom = (jsonObject["custom"] ?? jsonObject["Custom"])?.Value<List<TwinReportedCustomProp>>(),
             ChangeSpecId = (jsonObject["changeSpecId"] ?? jsonObject["ChangeSpecId"])?.Value<string>(),
-            CertificateValidity = jsonObject["certificateValidity"]?.ToObject<CertificateValidity>(),
-            DeviceStateAfterServiceRestart = (jsonObject["deviceStateAfterServiceRestart"] ?? jsonObject["DeviceStateAfterServiceRestart"])?.Value<DeviceStateType>(),
+            CertificateValidity = (jsonObject["certificateValidity"] ?? jsonObject["CertificateValidity"])?.ToObject<CertificateValidity>(),
+            DeviceStateAfterServiceRestart = GetDeviceState(jsonObject, "deviceStateAfterServiceRestart"),//(jsonObject["deviceStateAfterServiceRestart"] ?? jsonObject["DeviceStateAfterServiceRestart"])?.Value<DeviceStateType>(),
             KnownIdentities = GetKnownIdentities(jsonObject)
         };
         return changeSpec;
     }
-    private IDictionary<string, TwinReportedChangeSpec>? GetChangeSpec(JObject jsonObject, JsonSerializer serializer)
+
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        var changeSpec = (TwinReported)value;
+
+        writer.WriteStartObject();
+        if (changeSpec?.ChangeSign is not null)
+        {
+            foreach (var changeSpecOption in changeSpec?.ChangeSign)
+            {
+                writer.WritePropertyName($"{changeSpecOption.Key}Sign");
+                serializer.Serialize(writer, changeSpecOption.Value);
+            }
+        }
+        if (changeSpec?.ChangeSpec is not null)
+        {
+            foreach (var changeSpecOption in changeSpec.ChangeSpec)
+            {
+                writer.WritePropertyName(changeSpecOption.Key);
+                serializer.Serialize(writer, changeSpecOption.Value);
+            }
+        }
+        writer.WriteEndObject();
+    }
+    private Dictionary<string, TwinReportedChangeSpec>? GetChangeSpec(JObject jsonObject, JsonSerializer serializer)
     {
         var changeSpec = new Dictionary<string, TwinReportedChangeSpec>();
 
         foreach (var property in jsonObject.Properties())
         {
             if (property.Value.Type == JTokenType.Object &&
-                property.Value["id"] != null && property.Value["patch"] != null)
+                (property.Value["id"] ?? property.Value["Id"]) != null &&
+                (property.Value["patch"] ?? property.Value["Patch"]) != null)
             {
                 changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, property.Name));
             }
@@ -50,7 +70,7 @@ public class TwinReportedConverter : JsonConverter
         return changeSpec;
     }
 
-    private IDictionary<string, string>? GetChangeSign(JObject jsonObject)
+    private Dictionary<string, string>? GetChangeSign(JObject jsonObject)
     {
         var changeSign = new Dictionary<string, string>();
         var changeSpecKeys = getChangeSpecKeys(jsonObject);
@@ -64,9 +84,12 @@ public class TwinReportedConverter : JsonConverter
         return changeSign;
     }
 
-    private DeviceStateType GetDeviceState(JObject jsonObject)
+    private DeviceStateType GetDeviceState(JObject jsonObject, string propertyName)
     {
-        if (jsonObject["deviceState"] is JValue deviceStateValue)
+        var lowerPropName = FirstLetterToLowerCase(propertyName);
+        var upperPropName = FirstLetterToUpperCase(propertyName);
+
+        if ((jsonObject[lowerPropName] ?? jsonObject[upperPropName]) is JValue deviceStateValue)
         {
             if (Enum.TryParse<DeviceStateType>(deviceStateValue.Value?.ToString(), true, out var deviceState))
             {
@@ -75,6 +98,7 @@ public class TwinReportedConverter : JsonConverter
         }
         return default;
     }
+
 
     private ShellType[] GetSupportShell(JObject jsonObject)
     {

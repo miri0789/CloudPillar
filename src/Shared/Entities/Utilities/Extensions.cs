@@ -7,6 +7,8 @@ namespace Shared.Entities.Utilities;
 
 public static class TwinJsonConvertExtensions
 {
+
+    private const string SIGN_KEY = "Sign";
     public static TwinDesired ConvertToTwinDesired(this string json)
     {
         var twinDesired = JsonConvert.DeserializeObject<TwinDesired>(json,
@@ -44,9 +46,23 @@ public static class TwinJsonConvertExtensions
            NullValueHandling = NullValueHandling.Ignore
        }));
         return twinDesiredJson;
-
-
     }
+
+    public static JObject ConvertToJObject(this TwinReported twinReported)
+    {
+        var twinReportedJson = JObject.Parse(JsonConvert.SerializeObject(twinReported,
+       Formatting.None,
+       new JsonSerializerSettings
+       {
+           ContractResolver = new CamelCasePropertyNamesContractResolver(),
+           Converters = new List<JsonConverter> {
+                                        new TwinReportedConverter() },
+           Formatting = Formatting.Indented,
+           NullValueHandling = NullValueHandling.Ignore
+       }));
+        return twinReportedJson;
+    }
+
 
     public static TwinReportedChangeSpec? GetReportedChangeSpecByKey(this TwinReported twinReported, string changeSpecKey)
     {
@@ -77,11 +93,11 @@ public static class TwinJsonConvertExtensions
 
     public static string? GetReportedChangeSignByKey(this TwinReported twinReported, string changeSignKey)
     {
-        return twinReported?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Value;
+        return twinReported?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower() == $"{changeSignKey}{SIGN_KEY}".ToLower()).Value;
     }
 
     public static string? GetDesiredChangeSignByKey(this TwinDesired twinDesired, string changeSignKey)
     {
-        return twinDesired?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Value;
+        return twinDesired?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower() == $"{changeSignKey}{SIGN_KEY}".ToLower()).Value;
     }
 }

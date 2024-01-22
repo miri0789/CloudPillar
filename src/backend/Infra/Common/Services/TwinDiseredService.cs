@@ -20,7 +20,6 @@ public class TwinDiseredService : ITwinDiseredService
     {
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     }
 
     public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction, string transactionsKey = TwinConstants.DEFAULT_TRANSACTIONS_KEY)

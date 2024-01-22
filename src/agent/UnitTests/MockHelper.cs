@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Entities.Authentication;
 using Shared.Entities.Twin;
+using Shared.Entities.Utilities;
 
 public static class MockHelper
 {
@@ -26,25 +27,28 @@ public static class MockHelper
             '$version': 1,
         }";
 
-        
 
-    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, TwinChangeSpec? changeSpecDiagnosticsDesired = null, TwinReportedChangeSpec? changeSpecDiagnosticsReported = null, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "----", List<KnownIdentities>? knownIdentities = null)
+
+    public static Twin CreateTwinMock(Dictionary<string, TwinChangeSpec> changeSpecDesired, Dictionary<string, TwinReportedChangeSpec> changeSpecReported
+    , List<TwinReportedCustomProp>? twinReportedCustomProps = null, Dictionary<string, string>? changeSign = null, List<KnownIdentities>? knownIdentities = null)
     {
         var desiredJson = JObject.Parse(_baseDesierd);
-        desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinDesired()
+
+        var desired = new TwinDesired()
         {
             ChangeSpec = changeSpecDesired,
-            ChangeSpecDiagnostics = changeSpecDiagnosticsDesired,
             ChangeSign = changeSign,
-        })));
+        };
+        desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(desired.ConvertToJObject())));
+
         var reportedJson = JObject.Parse(_baseReported);
-        reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinReported()
+        var reported = new TwinReported()
         {
             ChangeSpec = changeSpecReported,
-            ChangeSpecDiagnostics = changeSpecDiagnosticsReported,
             Custom = twinReportedCustomProps,
             KnownIdentities = knownIdentities
-        })));
+        };
+        reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(reported.ConvertToJObject())));
         var settings = new JsonSerializerSettings
         {
             ContractResolver = new DefaultContractResolver
@@ -53,6 +57,8 @@ public static class MockHelper
             },
             Formatting = Formatting.Indented
         };
+
+
         var twinProp = new TwinProperties()
         {
             Desired = new TwinCollection(JsonConvert.SerializeObject(desiredJson, settings)),
