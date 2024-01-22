@@ -28,7 +28,7 @@ builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
-builder.Services.AddScoped<IValidateCertificateService, ValidateCertificateService>();
+builder.Services.AddScoped<IDeviceCertificateService, DeviceCertificateService>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();

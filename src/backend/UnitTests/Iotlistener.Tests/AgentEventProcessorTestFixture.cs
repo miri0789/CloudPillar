@@ -3,10 +3,10 @@ using System.Text;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using static Microsoft.Azure.EventHubs.EventData;
-using Shared.Entities.Messages;
 using Backend.Iotlistener.Interfaces;
 using Shared.Logger;
 using Backend.Iotlistener.Processors;
+using Shared.Entities.Messages;
 
 namespace Backend.Iotlistener.Tests;
 
@@ -18,7 +18,7 @@ public class AgentEventProcessorTestFixture
     private Mock<IFirmwareUpdateService> _firmwareUpdateServiceMock;
     private Mock<ISigningService> _signingServiceMock;
     private Mock<IStreamingUploadChunkService> _streamingUploadChunkServiceMock;
-    private Mock<IProvisionDeviceCertificateService> _provisionDeviceCertificateServiceMock;
+    private Mock<IProvisionDeviceService> _provisionDeviceCertificateServiceMock;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
     private Mock<ILoggerHandler> _mockLoggerHandler;
     private Mock<IStreamingUploadChunkService> _streamingUploadChunkService;
@@ -31,7 +31,7 @@ public class AgentEventProcessorTestFixture
         _iothubConnectionDeviceId = "abcd1234";
         _firmwareUpdateServiceMock = new Mock<IFirmwareUpdateService>();
         _signingServiceMock = new Mock<ISigningService>();
-        _provisionDeviceCertificateServiceMock = new Mock<IProvisionDeviceCertificateService>();
+        _provisionDeviceCertificateServiceMock = new Mock<IProvisionDeviceService>();
         _streamingUploadChunkServiceMock = new Mock<IStreamingUploadChunkService>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLoggerHandler = new Mock<ILoggerHandler>();
@@ -124,4 +124,17 @@ public class AgentEventProcessorTestFixture
         _signingServiceMock.Verify(f => f.CreateTwinKeySignature("deviceId", It.IsAny<SignEvent>()), Times.Never);
     }
 
+    [Test]
+    public async Task ProcessEventsAsync_RemoveDeviceMessage_CallRemoveDevice()
+    {
+        var messages = InitMessage("{\"MessageType\": 5, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"removedevice\"}");
+        var contextMock = new Mock<PartitionContext>(null, "5", "consumerGroupName", "eventHubPath", null)
+        {
+            CallBase = true
+        };
+
+        await _target.ProcessEventsAsync(contextMock.Object, messages);
+
+        _provisionDeviceCertificateServiceMock.Verify(f => f.RemoveDeviceAsync("deviceId"), Times.Once);
+    }
 }
