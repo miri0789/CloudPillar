@@ -82,17 +82,11 @@ public class StrictModeHandler : IStrictModeHandler
     private FileRestrictionDetails? HandleRestictionWithGlobal(string verbatimFileName, TwinActionType actionType)
     {
         var restrictions = GetRestrictionsByActionType(actionType);
-        var globalRestrictions = ConvertGlobalPatternsToRestrictions(verbatimFileName);
-
-        if (restrictions is null && globalRestrictions is null)
-        {
-            _logger.Info("No restrictions were found");
-            return null;
-        }
         var zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, restrictions);
+        var globalRestrictions = ConvertGlobalPatternsToRestrictions(verbatimFileName);
         var globalZoneRestrictions = GetRestrinctionsByZone(verbatimFileName, globalRestrictions);
 
-        if (zoneRestrictions is null && globalZoneRestrictions is null)
+        if (zoneRestrictions is null)
         {
             _logger.Info("No restrictions were found");
             return null;

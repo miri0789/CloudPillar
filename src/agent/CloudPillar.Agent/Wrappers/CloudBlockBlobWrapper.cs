@@ -1,6 +1,6 @@
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Storage.Core.Util;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage.Core.Util;
 
 namespace CloudPillar.Agent.Wrappers;
 public class CloudBlockBlobWrapper : ICloudBlockBlobWrapper

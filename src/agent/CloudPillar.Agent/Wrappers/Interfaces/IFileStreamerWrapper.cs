@@ -1,4 +1,5 @@
-﻿using System.Security.AccessControl;
+﻿using System.IO.Compression;
+using System.Security.AccessControl;
 
 namespace CloudPillar.Agent.Wrappers;
 
@@ -29,9 +30,9 @@ public interface IFileStreamerWrapper
 
     void DeleteFile(string filePath);
 
-    Task<string> ReadAllTextAsync(string filePath);
+    void DeleteFolder(string directoryPath);
 
-    Task UnzipFileAsync(string filePath, string destinationPath);
+    Task<string> ReadAllTextAsync(string filePath);
 
     bool FileExists(string filePath);
 
@@ -66,4 +67,11 @@ public interface IFileStreamerWrapper
     bool HasExtension(string fullFilePath);
 
     string GetFullPath(string fullFilePath);
+
+    Stream OpenZipArchiveEntry(ZipArchiveEntry zipArchiveEntry);
+    ZipArchive OpenZipFile(string filePath);
+
+    void SetLastWriteTime(string filePath, DateTime lastWriteTime);
+    void DirectorySetLastWriteTime(string dirPath, DateTime lastWriteTime);
+    FileStream FileCreate(string filePath);
 }
