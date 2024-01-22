@@ -96,6 +96,7 @@ builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
 builder.Services.AddScoped<IProvisioningDeviceClientWrapper, ProvisioningDeviceClientWrapper>();
 builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
+builder.Services.AddScoped<IGuidWrapper, GuidWrapper>();
 builder.Services.AddScoped<IRequestWrapper, RequestWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
