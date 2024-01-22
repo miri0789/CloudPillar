@@ -63,6 +63,10 @@ public class StreamingFileUploaderHandler : IStreamingFileUploaderHandler
             int calculatedPosition = CalculateCurrentPosition(readStream.Length, twinReport.Progress ?? 0);
             var calculatedChunkIndex = (int)Math.Round(calculatedPosition / (double)chunkSize) + 1;
             byte[] buffer = new byte[chunkSize];
+            if (readStream.Length == 0)
+            {
+
+            }
             for (int currentPosition = calculatedPosition, chunkIndex = calculatedChunkIndex; currentPosition < streamLength; currentPosition += chunkSize, chunkIndex++)
             {
                 if (!cancellationToken.IsCancellationRequested)

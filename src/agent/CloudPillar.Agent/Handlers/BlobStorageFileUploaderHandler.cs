@@ -41,11 +41,17 @@ namespace CloudPillar.Agent.Handlers
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 100;
                 var twinReport = _twinReportHandler.GetActionToReport(actionToReport, fileName);
+                float progressPercent = (totalSize > 0) ? (float)Math.Floor(bytesTransferred / (double)totalSize * 100 * 100) / 100 : 100;
                 twinReport.Progress = progressPercent;
                 twinReport.CorrelationId = notification.CorrelationId;
                 twinReport.Status = StatusType.InProgress;
+
+                if (totalSize == 0)
+                {
+                    twinReport.Status = StatusType.Failed;
+                    twinReport.ResultText = ResultCode.FileIsEmpty.ToString();
+                }
 
                 _logger.Info($"Percentage uploaded: {progressPercent}%");
                 await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(actionToReport, 1), cancellationToken);

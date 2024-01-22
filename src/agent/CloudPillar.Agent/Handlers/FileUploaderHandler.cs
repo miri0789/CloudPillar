@@ -86,9 +86,15 @@ public class FileUploaderHandler : IFileUploaderHandler
                 blobname = $"{changeSpecId}/{blobname}";
             }
 
-
+            //לראות מה אפשר לעשות בשביל לא לעדכן בהצלחה את הקובץ הריק
             using (Stream readStream = CreateStream(fullFilePath))
             {
+                if (readStream.Length == 0)
+                {
+                    _logger.Info($"The file: {fileName} is empty");
+                    _twinReportHandler.SetReportProperties(actionToReport, StatusType.Failed, ResultCode.FileIsEmpty.ToString(), null, fileName);
+                    return;
+                }
                 await UploadFileAsync(actionToReport, method, fileName, blobname, readStream, isRunDiagnostics, cancellationToken);
             }
         }
