@@ -69,7 +69,7 @@ public interface IFileStreamerWrapper
     string GetFullPath(string fullFilePath);
 
     Stream ZipArchiveEntryOpen(ZipArchiveEntry zipArchiveEntry);
-    ZipArchive ZipFileOpen(string filePath);
+    ZipArchive OpenZipFile(string filePath);
 
     void SetLastWriteTime(string filePath, DateTime lastWriteTime);
     void DirectorySetLastWriteTime(string dirPath, DateTime lastWriteTime);

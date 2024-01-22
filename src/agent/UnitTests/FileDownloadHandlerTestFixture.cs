@@ -272,7 +272,7 @@ namespace CloudPillar.Agent.Tests
             action.Report.Status = StatusType.Unzip;
             _fileStreamerWrapperMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(true);
             await InitFileDownloadAsync(action);
-            _fileStreamerWrapperMock.Verify(x => x.ZipFileOpen(It.IsAny<string>()), Times.Once);
+            _fileStreamerWrapperMock.Verify(x => x.OpenZipFile(It.IsAny<string>()), Times.Once);
         }
 
         [Test]

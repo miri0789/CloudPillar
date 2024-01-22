@@ -533,7 +533,7 @@ public class FileDownloadHandler : IFileDownloadHandler
 
     public void UnzipFileAsync(string zipPath, string destinationPath)
     {
-        using (ZipArchive archive = _fileStreamerWrapper.ZipFileOpen(zipPath))
+        using (ZipArchive archive = _fileStreamerWrapper.OpenZipFile(zipPath))
         {
             foreach (ZipArchiveEntry entry in archive.Entries)
             {

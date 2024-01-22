@@ -197,7 +197,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
     {
         return zipArchiveEntry.Open();
     }
-    public ZipArchive ZipFileOpen(string filePath)
+    public ZipArchive OpenZipFile(string filePath)
     {
         return ZipFile.Open(filePath, ZipArchiveMode.Read, Encoding.UTF8);
     }
