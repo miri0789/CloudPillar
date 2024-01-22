@@ -20,6 +20,6 @@
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.0" />
     <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="SharedEntities" Version="1.0.194" />
-  </ItemGroup>
+  </ItemGroup> 
 
 </Project>

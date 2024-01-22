@@ -22,7 +22,6 @@ public class TwinDiseredService : ITwinDiseredService
     {
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     }
 
     public async Task AddDesiredRecipeAsync(string deviceId, TwinPatchChangeSpec changeSpecKey, DownloadAction downloadAction)
@@ -37,6 +36,10 @@ public class TwinDiseredService : ITwinDiseredService
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
+                if (string.IsNullOrEmpty(twinDesiredChangeSpec.Id))
+                {
+                    twinDesiredChangeSpec.Id = $"{TwinPatchChangeSpec.ChangeSpecDiagnostics.ToString()}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}";
+                }
                 if (twinDesiredChangeSpec.Patch is null || twinDesiredChangeSpec.Patch.Values.Count() == 0)
                 {
                     twinDesiredChangeSpec.Patch = new Dictionary<string, TwinAction[]>
