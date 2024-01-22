@@ -84,7 +84,7 @@ public class TwinReportedConverter : JsonConverter
         return changeSign;
     }
 
-    private DeviceStateType GetDeviceState(JObject jsonObject, string propertyName)
+    private DeviceStateType? GetDeviceState(JObject jsonObject, string propertyName)
     {
         var lowerPropName = FirstLetterToLowerCase(propertyName);
         var upperPropName = FirstLetterToUpperCase(propertyName);
@@ -96,7 +96,7 @@ public class TwinReportedConverter : JsonConverter
                 return deviceState;
             }
         }
-        return default;
+        return null;
     }
 
 
