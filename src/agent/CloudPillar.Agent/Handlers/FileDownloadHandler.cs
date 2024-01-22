@@ -537,17 +537,14 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
+                srcFileName = srcFileName.Replace(_fileStreamerWrapper.GetExtension(srcFileName) ?? "", "");
                 var fileName = entry.FullName.StartsWith(srcFileName) ? entry.FullName.Substring(srcFileName.Length) + 1 : entry.FullName;
                 string completeFileName = Path.Combine(destinationPath, fileName);
-                if (fileName.EndsWith("/") && !_fileStreamerWrapper.DirectoryExists(completeFileName))
-                {
-                    _fileStreamerWrapper.CreateDirectory(completeFileName);
-                }
-                else
-                {
-                    entry.ExtractToFile(completeFileName, overwrite: true);
-                    _fileStreamerWrapper.SetLastWriteTimeUtc(completeFileName, entry.LastWriteTime.UtcDateTime);
-                }
+
+                _fileStreamerWrapper.CreateDirectory(Path.GetDirectoryName(completeFileName)!);
+
+                entry.ExtractToFile(completeFileName, overwrite: true);
+                _fileStreamerWrapper.SetLastWriteTimeUtc(completeFileName, entry.LastWriteTime.UtcDateTime);
             }
         }
     }
