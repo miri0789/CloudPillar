@@ -71,7 +71,6 @@ public interface IFileStreamerWrapper
     Stream OpenZipArchiveEntry(ZipArchiveEntry zipArchiveEntry);
     ZipArchive OpenZipFile(string filePath);
 
-    void SetLastWriteTime(string filePath, DateTime lastWriteTime);
-    void DirectorySetLastWriteTime(string dirPath, DateTime lastWriteTime);
+    void SetLastWriteTimeUtc(string filePath, DateTime lastWriteTime);
     FileStream FileCreate(string filePath);
 }

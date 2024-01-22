@@ -198,13 +198,9 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return zipArchiveEntry.Open();
     }
 
-    public void SetLastWriteTime(string filePath, DateTime lastWriteTime)
+    public void SetLastWriteTimeUtc(string filePath, DateTime lastWriteTime)
     {
-        File.SetLastWriteTime(filePath, lastWriteTime);
-    }
-    public void DirectorySetLastWriteTime(string dirPath, DateTime lastWriteTime)
-    {
-        Directory.SetLastWriteTime(dirPath, lastWriteTime);
+        File.SetLastWriteTimeUtc(filePath, lastWriteTime);
     }
 
     public FileStream FileCreate(string filePath)
