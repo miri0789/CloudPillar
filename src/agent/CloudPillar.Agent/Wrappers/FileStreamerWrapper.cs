@@ -193,7 +193,7 @@ public class FileStreamerWrapper : IFileStreamerWrapper
         return fileInfo.Exists ? fileInfo.Length : 0;
     }    
 
-    public Stream ZipArchiveEntryOpen(ZipArchiveEntry zipArchiveEntry)
+    public Stream OpenZipArchiveEntry(ZipArchiveEntry zipArchiveEntry)
     {
         return zipArchiveEntry.Open();
     }
