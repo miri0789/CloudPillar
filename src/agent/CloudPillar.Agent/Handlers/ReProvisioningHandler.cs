@@ -11,9 +11,7 @@ using CloudPillar.Agent.Handlers.Logger;
 namespace CloudPillar.Agent.Handlers;
 public class ReprovisioningHandler : IReprovisioningHandler
 {
-
     private readonly IX509CertificateWrapper _x509CertificateWrapper;
-
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ISHA256Wrapper _sHA256Wrapper;
@@ -43,6 +41,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     }
+
     public async Task HandleReprovisioningMessageAsync(Message recivedMessage, ReprovisioningMessage message, CancellationToken cancellationToken)
     {
         ValidateReprovisioningMessage(message);
@@ -70,7 +69,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
         await _d2CMessengerHandler.ProvisionDeviceCertificateEventAsync(_authenticationSettings.GetCertificatePrefix(), certificate, cancellationToken);
     }
 
-
     private void ValidateReprovisioningMessage(ReprovisioningMessage message)
     {
         if (message == null || message.Data == null)
@@ -84,7 +82,6 @@ public class ReprovisioningHandler : IReprovisioningHandler
         var enrollment = await _provisioningServiceClientWrapper.GetIndividualEnrollmentAsync(dpsConnectionString, Encoding.Unicode.GetString(data), cancellationToken);
         return enrollment.IotHubHostName;
     }
-
 
     private async Task ProvisionDeviceAndCleanupCertificatesAsync(Message recivedMessage, ReprovisioningMessage message, X509Certificate2 certificate, string deviceId, string iotHubHostName, CancellationToken cancellationToken)
     {
