@@ -537,9 +537,9 @@ public class FileDownloadHandler : IFileDownloadHandler
         {
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
-                string completeFileName = Path.Combine(destinationPath, entry.FullName);
+                string completeFileName = _fileStreamerWrapper.Combine(destinationPath, entry.FullName);
 
-                _fileStreamerWrapper.CreateDirectory(Path.GetDirectoryName(completeFileName)!);
+                _fileStreamerWrapper.CreateDirectory(_fileStreamerWrapper.GetDirectoryName(completeFileName)!);
                 if (!entry.FullName.EndsWith("/"))
                 {
                     entry.ExtractToFile(completeFileName, overwrite: true);
