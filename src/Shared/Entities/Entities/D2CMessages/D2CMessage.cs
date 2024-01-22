@@ -7,7 +7,7 @@ public enum D2CMessageType
     SignFileKey,
     StreamingUploadChunk,
     ProvisionDeviceCertificate,
-    RemoveDevice,
+    RemoveDevice
 }
 
 public class D2CMessage

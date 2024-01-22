@@ -27,6 +27,7 @@ public class TwinHandler : ITwinHandler
     private readonly IPeriodicUploaderHandler _periodicUploaderHandler;
     private static Twin? _latestTwin { get; set; }
     private static CancellationTokenSource? _twinCancellationTokenSource;
+    private const string SIGN_KEY = "Sign";
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
@@ -380,20 +381,21 @@ public class TwinHandler : ITwinHandler
 
     private async Task<bool> ChangeSignExists(TwinDesired twinDesired, string changeSpecKey, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(twinDesired?.GetDesiredChangeSignByKey(changeSpecKey)?.ToString()))
+        var changeSignKey = $"{changeSpecKey}{SIGN_KEY}";
+        if (!string.IsNullOrWhiteSpace(twinDesired?.GetDesiredChangeSignByKey(changeSignKey)?.ToString()))
         {
             return true;
         }
         if (!_strictModeSettings.StrictMode)
         {
             _logger.Info($"There is no twin change sign, send sign event..");
-            await _signatureHandler.SendSignTwinKeyEventAsync(changeSpecKey, nameof(twinDesired.ChangeSign), cancellationToken);
+            await _signatureHandler.SendSignTwinKeyEventAsync(changeSpecKey, changeSignKey, cancellationToken);
             return false;
         }
         else
         {
             _logger.Info($"There is no twin change sign, strict mode is active");
-            await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), "Change sign is required", cancellationToken);
+            await _deviceClient.UpdateReportedPropertiesAsync(changeSignKey, "Change sign is required", cancellationToken);
             return false;
         }
     }
