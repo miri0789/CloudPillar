@@ -313,7 +313,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 file.Report.Status = StatusType.Unzip;
                 await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-                UnzipFileAsync(destPath, file.Action.DestinationPath);
+                UnzipFileAsync(destPath, file.Action.DestinationPath, file.Action.Source);
                 _fileStreamerWrapper.DeleteFile(destPath);
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
@@ -531,15 +531,15 @@ public class FileDownloadHandler : IFileDownloadHandler
     }
 
 
-    public void UnzipFileAsync(string zipPath, string destinationPath)
+    public void UnzipFileAsync(string zipPath, string destinationPath, string srcFileName)
     {
         using (ZipArchive archive = _fileStreamerWrapper.OpenZipFile(zipPath))
         {
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
-
-                string completeFileName = Path.Combine(destinationPath, entry.FullName);
-                if (entry.FullName.EndsWith("/") && !_fileStreamerWrapper.DirectoryExists(completeFileName))
+                var fileName = entry.FullName.StartsWith(srcFileName) ? entry.FullName.Substring(srcFileName.Length) + 1 : entry.FullName;
+                string completeFileName = Path.Combine(destinationPath, fileName);
+                if (fileName.EndsWith("/") && !_fileStreamerWrapper.DirectoryExists(completeFileName))
                 {
                     _fileStreamerWrapper.CreateDirectory(completeFileName);
                 }
