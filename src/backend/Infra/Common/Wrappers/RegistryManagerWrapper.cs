@@ -32,4 +32,9 @@ public class RegistryManagerWrapper : IRegistryManagerWrapper
     {
         return await registryManager.GetDevicesAsync(maxCountDevices);
     }
+
+    public async Task RemoveDeviceAsync(RegistryManager registryManager, string deviceId)
+    {
+        await registryManager.RemoveDeviceAsync(deviceId);
+    }
 }

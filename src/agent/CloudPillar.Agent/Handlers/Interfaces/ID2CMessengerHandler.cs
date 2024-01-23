@@ -10,4 +10,5 @@ public interface ID2CMessengerHandler
     Task ProvisionDeviceCertificateEventAsync(string prefix, X509Certificate2 certificate, CancellationToken cancellationToken);
     Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken);
     Task SendSignFileEventAsync(SignFileEvent d2CMessage, CancellationToken cancellationToken);
+    Task SendRemoveDeviceEvent(CancellationToken cancellationToken);
 }
