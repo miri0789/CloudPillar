@@ -35,7 +35,7 @@ public class QueueConsumerService : BackgroundService
     {
         var client = new ServiceBusClient(_environmentsWrapper.serviceBusConnectionString);
         ServiceBusAdministrationClient? adminClient = TryCreateAdminClient();
-
+        
         foreach (var url in serviceBusUrls)
         {
             ServiceBusProcessor processor = await CreateProcessorAsync(client, adminClient, url);
