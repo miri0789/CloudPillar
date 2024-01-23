@@ -21,11 +21,11 @@ public class TwinReportedConverter : JsonConverter
             AgentPlatform = (jsonObject["agentPlatform"] ?? jsonObject["AgentPlatform"])?.Value<string>(),
             SupportedShells = GetSupportShell(jsonObject),
             SecretKey = (jsonObject["secretKey"] ?? jsonObject["SecretKey"])?.Value<string>(),
-            Custom = (jsonObject["custom"] ?? jsonObject["Custom"])?.Value<List<TwinReportedCustomProp>>(),
+            Custom = GetList<TwinReportedCustomProp>(jsonObject, "custom"),//(jsonObject["custom"] ?? jsonObject["Custom"])?.Value<List<TwinReportedCustomProp>>(),
             ChangeSpecId = (jsonObject["changeSpecId"] ?? jsonObject["ChangeSpecId"])?.Value<string>(),
             CertificateValidity = (jsonObject["certificateValidity"] ?? jsonObject["CertificateValidity"])?.ToObject<CertificateValidity>(),
             DeviceStateAfterServiceRestart = GetDeviceState(jsonObject, "deviceStateAfterServiceRestart"),//(jsonObject["deviceStateAfterServiceRestart"] ?? jsonObject["DeviceStateAfterServiceRestart"])?.Value<DeviceStateType>(),
-            KnownIdentities = GetKnownIdentities(jsonObject)
+            KnownIdentities = GetList<KnownIdentities>(jsonObject, "knownIdentities")//GetKnownIdentities(jsonObject)
         };
         return changeSpec;
     }
@@ -50,6 +50,12 @@ public class TwinReportedConverter : JsonConverter
                 writer.WritePropertyName(changeSpecOption.Key);
                 serializer.Serialize(writer, changeSpecOption.Value);
             }
+        }
+        if (changeSpec?.Custom is not null)
+        {
+            writer.WritePropertyName(nameof(changeSpec.Custom));
+            serializer.Serialize(writer, changeSpec.Custom);
+
         }
         writer.WriteEndObject();
     }
@@ -114,18 +120,35 @@ public class TwinReportedConverter : JsonConverter
         return supportShell.ToArray();
     }
 
-    private List<KnownIdentities> GetKnownIdentities(JObject jsonObject)
+    // private List<KnownIdentities> GetKnownIdentities(JObject jsonObject)
+    // {
+    //     var knownIdentities = new List<KnownIdentities>();
+    //     var knownIdentitiesToken = jsonObject["knownIdentities"] ?? jsonObject["KnownIdentities"];
+    //     if (knownIdentitiesToken is JArray supportShellArray)
+    //     {
+    //         foreach (var item in supportShellArray)
+    //         {
+    //             knownIdentities.Add(item.Value<KnownIdentities>());
+    //         }
+    //     }
+    //     return knownIdentities;
+    // }
+
+    private List<T> GetList<T>(JObject jsonObject, string propertyName)
     {
-        var knownIdentities = new List<KnownIdentities>();
-        var knownIdentitiesToken = jsonObject["knownIdentities"] ?? jsonObject["KnownIdentities"];
-        if (knownIdentitiesToken is JArray supportShellArray)
+        var lowerPropName = FirstLetterToLowerCase(propertyName);
+        var upperPropName = FirstLetterToUpperCase(propertyName);
+
+        var list = new List<T>();
+        var token = jsonObject[lowerPropName] ?? jsonObject[upperPropName];
+        if (token is JArray array)
         {
-            foreach (var item in supportShellArray)
+            foreach (var item in array)
             {
-                knownIdentities.Add(item.Value<KnownIdentities>());
+                list.Add(item.Value<T>());
             }
         }
-        return knownIdentities;
+        return list;
     }
 
     private List<string> getChangeSpecKeys(JObject jsonObject)
