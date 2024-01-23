@@ -83,7 +83,7 @@
                 "DPSConnectionString": "HostName=cp-nechama-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=zh9gSAqFvin2Esh1kXZMVP2IPPOOhDuAfv+TXAZnHho=",
                 "DPSIdScope": "0ne00B889E4",
                 "ExpirationCertificatePercent": "0.6",
-                "maxCountDevices": "100",
+                "maxCountDevices": "100"
             }
         },
         {
