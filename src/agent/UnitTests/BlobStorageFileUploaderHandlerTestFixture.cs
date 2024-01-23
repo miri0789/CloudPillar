@@ -1,11 +1,11 @@
 using Moq;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Entities;
-using Microsoft.Azure.Storage.Blob;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Storage.Core.Util;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Azure.Devices.Client.Transport;
+using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage.Core.Util;
 
 [TestFixture]
 public class BlobStorageFileUploaderHandlerTestFixture

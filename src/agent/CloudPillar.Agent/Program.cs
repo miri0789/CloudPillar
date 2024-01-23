@@ -3,12 +3,9 @@ using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Sevices;
 using CloudPillar.Agent.Utilities;
-using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
-using FluentValidation;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
-using Shared.Entities.Twin;
 using System.Runtime.InteropServices;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
@@ -89,10 +86,8 @@ builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderHandler>();
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
-builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
-builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
 builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
@@ -184,9 +179,6 @@ else
 {
     app.UseMiddleware<AuthorizationCheckMiddleware>();
 }
-
-
-app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
 

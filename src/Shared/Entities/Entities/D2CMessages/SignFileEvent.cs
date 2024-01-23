@@ -5,7 +5,7 @@ public class SignFileEvent : D2CMessage
     public int BufferSize { get; set; }
     public string PropName { get; set; }
     public string ChangeSpec { get; set; }
-
+    public string ChangeSpecId { get; set; }
 
     public SignFileEvent()
     {
