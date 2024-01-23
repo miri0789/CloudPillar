@@ -13,7 +13,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
     private readonly IStreamingUploadChunkService _streamingUploadChunkService;
-    private readonly IProvisionDeviceCertificateService _provisionDeviceCertificateService;
+    private readonly IProvisionDeviceService _provisionDeviceCertificateService;
     private readonly string _partitionId;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
@@ -21,7 +21,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService,
     ISigningService signingService,
     IStreamingUploadChunkService streamingUploadChunkService,
-    IProvisionDeviceCertificateService provisionDeviceCertificateService,
+    IProvisionDeviceService provisionDeviceCertificateService,
     IEnvironmentsWrapper environmentsWrapper,
     ILoggerHandler logger,
     string partitionId)
@@ -50,14 +50,14 @@ public class AgentEventProcessor : IEventProcessor
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ISigningService _signingService;
     private readonly IStreamingUploadChunkService _streamingUploadChunkService;
-    private readonly IProvisionDeviceCertificateService _provisionDeviceCertificateService;
+    private readonly IProvisionDeviceService _provisionDeviceCertificateService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
     public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService,
     ISigningService signingService,
     IStreamingUploadChunkService streamingUploadChunkService,
-    IProvisionDeviceCertificateService provisionDeviceCertificateService,
+    IProvisionDeviceService provisionDeviceCertificateService,
     IEnvironmentsWrapper environmentsWrapper,
     ILoggerHandler logger)
     {
@@ -145,6 +145,9 @@ public class AgentEventProcessor : IEventProcessor
                     case D2CMessageType.ProvisionDeviceCertificate:
                         var provisionDeviceCertificateEvent = JsonSerializer.Deserialize<ProvisionDeviceCertificateEvent>(data)!;
                         await _provisionDeviceCertificateService.ProvisionDeviceCertificateAsync(deviceId, provisionDeviceCertificateEvent);
+                        break;
+                    case D2CMessageType.RemoveDevice:
+                        await _provisionDeviceCertificateService.RemoveDeviceAsync(deviceId);
                         break;
                 }
 
