@@ -95,7 +95,7 @@ public class FileUploaderHandler : IFileUploaderHandler
                 }
                 else
                 {
-                    throw new Exception($"The file is empty");
+                    throw new IOException($"The file is empty");
                 }
             }
         }
