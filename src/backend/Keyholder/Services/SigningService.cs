@@ -117,20 +117,19 @@ public class SigningService : ISigningService
     }
 
 
-    public async Task CreateTwinKeySignature(string deviceId)
+    public async Task CreateTwinKeySignature(string deviceId, string changeSignKey)
     {
-        //temporary
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
         try
         {
+            var changeSpecKey = changeSignKey.GetSpecKeyBySignKey();
             using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
             {
                 var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
                 var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
-                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                var changeSign = twinDesired.GetDesiredChangeSignByKey(changeSpecKey);
-                changeSign = await SignData(dataToSign);
+                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.GetDesiredChangeSpecByKey(changeSpecKey)));
+                var signData = await SignData(dataToSign);
+                twinDesired.SetDesiredChangeSignByKey(changeSignKey, signData);
 
                 twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
                 await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);

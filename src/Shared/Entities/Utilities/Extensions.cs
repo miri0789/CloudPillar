@@ -99,4 +99,31 @@ public static class TwinJsonConvertExtensions
     {
         return twinDesired?.ChangeSign?.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Value;
     }
+
+    public static string GetSignKeyByChangeSpec(this string changeSpecKey)
+    {
+        return $"{changeSpecKey}{DeviceConstants.SIGN_KEY}";
+    }
+
+    public static string GetSpecKeyBySignKey(this string changeSignKey)
+    {
+        return changeSignKey.Replace(DeviceConstants.SIGN_KEY, "");
+    }
+    
+    public static void SetDesiredChangeSignByKey(this TwinDesired twinDesired, string changeSignKey, string signData)
+    {
+        if (twinDesired is not null && twinDesired.ChangeSign is not null)
+        {
+            if (twinDesired?.ChangeSign.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Key is not null)
+            {
+                twinDesired.ChangeSign[changeSignKey] = signData;
+                return;
+            }
+            else
+            {
+                twinDesired.ChangeSign.Add(changeSignKey, signData);
+                return;
+            }
+        }
+    }
 }

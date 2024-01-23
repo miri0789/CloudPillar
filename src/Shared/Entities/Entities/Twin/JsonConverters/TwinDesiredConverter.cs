@@ -5,7 +5,6 @@ namespace Shared.Entities.Twin;
 
 public class TwinDesiredConverter : JsonConverter
 {
-    private const string SIGN_KEY = "Sign";
 
     public override bool CanConvert(Type objectType)
     {
@@ -17,12 +16,12 @@ public class TwinDesiredConverter : JsonConverter
         JObject jsonObject = JObject.Load(reader);
         var changeSpec = new TwinDesired()
         {
-            ChangeSign = GetChangeSign(jsonObject, serializer),
+            ChangeSign = GetChangeSign(jsonObject),
             ChangeSpec = GetChangeSpec(jsonObject, serializer)
         };
         return changeSpec;
     }
-    private Dictionary<string, string>? GetChangeSign(JObject jsonObject, JsonSerializer serializer)
+    private Dictionary<string, string>? GetChangeSign(JObject jsonObject)
     {
         var changeSign = new Dictionary<string, string>();
 
@@ -63,7 +62,7 @@ public class TwinDesiredConverter : JsonConverter
         {
             foreach (var changeSpecOption in changeSpec?.ChangeSign)
             {
-                writer.WritePropertyName($"{changeSpecOption.Key}{SIGN_KEY}");
+                writer.WritePropertyName($"{changeSpecOption.Key}");
                 serializer.Serialize(writer, changeSpecOption.Value);
             }
         }

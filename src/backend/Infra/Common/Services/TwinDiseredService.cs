@@ -34,7 +34,6 @@ public class TwinDiseredService : ITwinDiseredService
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
 
-
                 twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
                 if (twinDesiredChangeSpec is null)
                 {

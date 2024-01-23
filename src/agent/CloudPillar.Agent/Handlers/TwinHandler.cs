@@ -27,7 +27,6 @@ public class TwinHandler : ITwinHandler
     private readonly IPeriodicUploaderHandler _periodicUploaderHandler;
     private static Twin? _latestTwin { get; set; }
     private static CancellationTokenSource? _twinCancellationTokenSource;
-    private const string SIGN_KEY = "Sign";
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
@@ -129,13 +128,14 @@ public class TwinHandler : ITwinHandler
                     _logger.Info($"There is no twin change spec id");
                     return;
                 }
+                var changeSignKey = changeSpecKey.GetSignKeyByChangeSpec();
 
-                if (await ChangeSignExists(twinDesired, changeSpecKey, cancellationToken))
+                if (await ChangeSignExists(twinDesired, changeSignKey, cancellationToken))
                 {
-                    byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                    var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(TwinConstants.CHANGE_SPEC_NAME)!);
+                    byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.GetDesiredChangeSpecByKey(changeSpecKey)));
+                    var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(changeSignKey)!);
                     var message = isSignValid ? null : "Twin Change signature is invalid";
-                    await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), message, cancellationToken);
+                    await _deviceClient.UpdateReportedPropertiesAsync(changeSignKey, message, cancellationToken);
                     if (isSignValid)
                     {
                         await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpecKey, isInitial, cancellationToken);
@@ -149,6 +149,7 @@ public class TwinHandler : ITwinHandler
             }
 
         }
+
         catch (Exception ex)
         {
             _logger.Error($"OnDesiredPropertiesUpdate failed message: {ex.Message}");
@@ -379,9 +380,8 @@ public class TwinHandler : ITwinHandler
         return emptyChangeSpecId;
     }
 
-    private async Task<bool> ChangeSignExists(TwinDesired twinDesired, string changeSpecKey, CancellationToken cancellationToken)
+    private async Task<bool> ChangeSignExists(TwinDesired twinDesired, string changeSignKey, CancellationToken cancellationToken)
     {
-        var changeSignKey = $"{changeSpecKey}{SIGN_KEY}";
         if (!string.IsNullOrWhiteSpace(twinDesired?.GetDesiredChangeSignByKey(changeSignKey)?.ToString()))
         {
             return true;
@@ -389,7 +389,7 @@ public class TwinHandler : ITwinHandler
         if (!_strictModeSettings.StrictMode)
         {
             _logger.Info($"There is no twin change sign, send sign event..");
-            await _signatureHandler.SendSignTwinKeyEventAsync(changeSpecKey, changeSignKey, cancellationToken);
+            await _signatureHandler.SendSignTwinKeyEventAsync(changeSignKey, cancellationToken);
             return false;
         }
         else

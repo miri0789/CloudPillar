@@ -16,9 +16,9 @@ public class SigningController : ControllerBase
     }
 
     [HttpGet("createTwinKeySignature")]
-    public async Task<IActionResult> CreateTwinKeySignature(string deviceId)
+    public async Task<IActionResult> CreateTwinKeySignature(string deviceId, string changeSignKey)
     {
-        await _signingService.CreateTwinKeySignature(deviceId);
+        await _signingService.CreateTwinKeySignature(deviceId, changeSignKey);
         return Ok();
     }
 
