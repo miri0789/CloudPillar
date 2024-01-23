@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Twin;
@@ -20,10 +19,6 @@ public class AgentController : ControllerBase
 
     private readonly ITwinHandler _twinHandler;
     private readonly ITwinReportHandler _twinReportHandler;
-
-    private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
-    private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
-
     public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
@@ -36,10 +31,8 @@ public class AgentController : ControllerBase
 
     public AgentController(ITwinHandler twinHandler,
      ITwinReportHandler twinReportHandler,
-     IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
-     IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
      IRunDiagnosticsHandler runDiagnosticsHandler,
      ILoggerHandler logger,
@@ -51,9 +44,7 @@ public class AgentController : ControllerBase
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
-        _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
-        _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
         _runDiagnosticsHandler = runDiagnosticsHandler ?? throw new ArgumentNullException(nameof(runDiagnosticsHandler));
@@ -69,7 +60,6 @@ public class AgentController : ControllerBase
     [DeviceStateFilter]
     public async Task<ActionResult<string>> AddRecipeAsync([FromBody] TwinDesired recipe)
     {
-        _twinDesiredPropsValidator.ValidateAndThrow(recipe);
         return await _twinHandler.GetTwinJsonAsync();
     }
 
@@ -118,7 +108,6 @@ public class AgentController : ControllerBase
     [DeviceStateFilter]
     public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps, CancellationToken cancellationToken)
     {
-        _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
         await _twinReportHandler.UpdateDeviceCustomPropsAsync(updateReportedProps.Properties, cancellationToken);
         return await _twinHandler.GetTwinJsonAsync(cancellationToken);
     }

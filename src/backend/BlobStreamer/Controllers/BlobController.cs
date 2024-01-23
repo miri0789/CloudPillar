@@ -31,10 +31,10 @@ public class BlobController : ControllerBase
         }
     }
 
-    [HttpGet("CalculateHash")]
-    public async Task<IActionResult> CalculateHashtAsync(string fileName, int bufferSize)
+    [HttpPost("CalculateHash")]
+    public async Task<IActionResult> CalculateHashtAsync(string deviceId, [FromBody] SignFileEvent signFileEvent)
     {
-        var result = await _blobService.CalculateHashAsync(fileName, bufferSize);
+        var result = await _blobService.CalculateHashAsync(deviceId, signFileEvent);
         return Ok(result);
     }
 

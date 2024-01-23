@@ -38,6 +38,7 @@ namespace Backend.BlobStreamer.Tests
         private const int _rangeIndex = 0;
         private const long _startPosition = 0;
         private const int _rangesCount = 0;
+        private SignFileEvent signFileEvent;
 
         [SetUp]
         public void Setup()
@@ -51,6 +52,12 @@ namespace Backend.BlobStreamer.Tests
             _mockCheckSumService = new Mock<ICheckSumService>();
             _mockDeviceClientWrapper = new Mock<IDeviceClientWrapper>();
             var mockDeviceClient = new Mock<ServiceClient>();
+
+            signFileEvent = new SignFileEvent
+            {
+                BufferSize = _chunkSize,
+                FileName = _fileName
+            };
 
             _mockBlockBlob = new Mock<CloudBlockBlob>(new Uri("http://storageaccount/container/blob"));
             _mockCloudStorageWrapper.Setup(c => c.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName)).ReturnsAsync(_mockBlockBlob.Object);
@@ -110,7 +117,7 @@ namespace Backend.BlobStreamer.Tests
         public async Task CalculateHashAsync_onCall_ShouldReardTheFile()
         {
             _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
-            var result = await _target.CalculateHashAsync(_fileName, _chunkSize);
+            var result = await _target.CalculateHashAsync(_fileName, signFileEvent);
             _mockCloudStorageWrapper.Verify(b => b.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName), Times.Once);
             _mockBlockBlob.Verify(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<long>()), Times.AtLeast(1));
         }
@@ -119,14 +126,14 @@ namespace Backend.BlobStreamer.Tests
         public async Task CalculateHashAsync_OnCall_ShouldReturnHash()
         {
             _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
-            var result = await _target.CalculateHashAsync(_fileName, _chunkSize);
+            var result = await _target.CalculateHashAsync(_fileName, signFileEvent);
             Assert.IsNotNull(result);
         }
 
         [Test]
         public async Task CalculateHashAsync_OnNoLength_ShouldnotDownloadRange()
         {
-            var result = await _target.CalculateHashAsync(_fileName, _chunkSize);
+            var result = await _target.CalculateHashAsync(_fileName, signFileEvent);
             _mockCloudStorageWrapper.Verify(b => b.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName), Times.Once);
             _mockBlockBlob.Verify(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<long>()), Times.Never());
         }
