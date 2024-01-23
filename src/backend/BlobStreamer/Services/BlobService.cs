@@ -54,10 +54,9 @@ public class BlobService : IBlobService
 
     public async Task<byte[]> CalculateHashAsync(string deviceId, SignFileEvent signFileEvent)
     {
-        CloudBlockBlob blockBlob;
         try
         {
-            blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, signFileEvent.FileName);
+            var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, signFileEvent.FileName);
             var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
 
             using (SHA256 sha256 = SHA256.Create())
