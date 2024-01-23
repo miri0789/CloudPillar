@@ -79,9 +79,7 @@
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "ExpirationCertificatePercent": "0.6",
                 "maxCountDevices": "100",
-                "StorageConnectionString": "",
-                "BlobContainerName": "",
-                "IothubConnectionString": ""
+                "StorageConnectionString": ""
             }
         },
         {

@@ -16,7 +16,7 @@ var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                .InformationalVersion;
 
-var builder = LoggerHostCreator.Configure("BEApi", WebApplication.CreateBuilder(args));
+var builder = LoggerHostCreator.Configure("beapi", WebApplication.CreateBuilder(args));
 
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
@@ -30,7 +30,6 @@ builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
-builder.Services.AddScoped<ICertificateIdentityService, CertificateIdentityService>();
 builder.Services.AddScoped<IValidateCertificateService, ValidateCertificateService>();
 
 builder.Services.AddControllers();

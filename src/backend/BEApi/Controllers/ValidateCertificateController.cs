@@ -5,15 +5,13 @@ namespace Backend.BEApi.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class CertificateController : ControllerBase
+public class ValidateCertificateController : ControllerBase
 {
     private readonly IValidateCertificateService _validateCertificateService;
-    private readonly ICertificateIdentityService _certificateIdentityService;
 
-    public CertificateController(IValidateCertificateService validateCertificateService, ICertificateIdentityService certificateIdentityService)
+    public ValidateCertificateController(IValidateCertificateService validateCertificateService)
     {
         _validateCertificateService = validateCertificateService ?? throw new ArgumentNullException(nameof(validateCertificateService));
-        _certificateIdentityService = certificateIdentityService ?? throw new ArgumentNullException(nameof(certificateIdentityService));
     }
 
     [HttpGet("IsCertificateExpired")]
