@@ -52,32 +52,41 @@ public class BlobService : IBlobService
         return data;
     }
 
-    public async Task<byte[]> CalculateHashAsync(string filePath, int bufferSize)
+    public async Task<byte[]> CalculateHashAsync(string deviceId, SignFileEvent signFileEvent)
     {
-        var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, filePath);
-        var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
-
-        using (SHA256 sha256 = SHA256.Create())
+        CloudBlockBlob blockBlob;
+        try
         {
-            try
+            blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, signFileEvent.FileName);
+            var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
+
+            using (SHA256 sha256 = SHA256.Create())
             {
-                long offset = 0;
-                var data = new byte[bufferSize];
-                while (offset < fileSize)
+                try
                 {
-                    var length = Math.Min(bufferSize, fileSize - offset);
-                    await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
-                    sha256.TransformBlock(data, 0, (int)length, null, 0);
-                    offset += bufferSize;
+                    long offset = 0;
+                    var data = new byte[signFileEvent.BufferSize];
+                    while (offset < fileSize)
+                    {
+                        var length = Math.Min(signFileEvent.BufferSize, fileSize - offset);
+                        await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
+                        sha256.TransformBlock(data, 0, (int)length, null, 0);
+                        offset += signFileEvent.BufferSize;
+                    }
+                    sha256.TransformFinalBlock(new byte[0], 0, 0);
+                    return sha256.Hash;
                 }
-                sha256.TransformFinalBlock(new byte[0], 0, 0);
-                return sha256.Hash;
+                catch (Exception ex)
+                {
+                    _logger.Error($"CalculateHashAsync failed.", ex);
+                    throw;
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.Error($"CalculateHashAsync failed.", ex);
-                throw;
-            }
+        }
+        catch (Exception ex)
+        {
+            await SendDownloadErrorAsync(deviceId, signFileEvent.ChangeSpecId, signFileEvent.FileName, signFileEvent.ActionIndex, ex.Message);
+            throw;
         }
     }
 

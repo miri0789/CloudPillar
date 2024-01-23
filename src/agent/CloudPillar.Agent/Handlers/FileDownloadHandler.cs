@@ -227,6 +227,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             FileName = ((DownloadAction)actionToReport.TwinAction).Source,
             BufferSize = _downloadSettings.SignFileBufferSize,
             PropName = actionToReport.ReportPartName,
+            ChangeSpecId = actionToReport.ChangeSpecId,
             ChangeSpec = actionToReport.ChangeSpecKey
 
         };
