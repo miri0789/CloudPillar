@@ -7,6 +7,7 @@ using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Services;
 using Microsoft.Extensions.Options;
 using System.Security.AccessControl;
+using System.IO.Compression;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -242,7 +243,14 @@ public class FileDownloadHandler : IFileDownloadHandler
         file.Report.ResultCode = ex.GetType().Name;
         file.Report.Progress = null;
         file.Report.CompletedRanges = null;
-        _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
+        if (file.Action.Unzip)
+        {
+            _fileStreamerWrapper.DeleteFolder(file.Action.DestinationPath);
+        }
+        else
+        {
+            _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
+        }
     }
 
     private string GetDestinationPath(FileDownload file)
@@ -306,7 +314,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             {
                 file.Report.Status = StatusType.Unzip;
                 await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
-                await _fileStreamerWrapper.UnzipFileAsync(destPath, file.Action.DestinationPath);
+                UnzipFileAsync(destPath, file.Action.DestinationPath);
                 _fileStreamerWrapper.DeleteFile(destPath);
                 _logger.Info($"Download complete, file {file.Action.Source}, report index {file.ActionReported.ReportIndex}");
             }
@@ -520,6 +528,25 @@ public class FileDownloadHandler : IFileDownloadHandler
         if (_filesDownloads.Count == 0 && !cancellationToken.IsCancellationRequested)
         {
             await _serverIdentityHandler.UpdateKnownIdentitiesFromCertificatesAsync(cancellationToken);
+        }
+    }
+
+
+    public void UnzipFileAsync(string zipPath, string destinationPath)
+    {
+        using (ZipArchive archive = _fileStreamerWrapper.OpenZipFile(zipPath))
+        {
+            foreach (ZipArchiveEntry entry in archive.Entries)
+            {
+                string completeFileName = _fileStreamerWrapper.Combine(destinationPath, entry.FullName);
+
+                _fileStreamerWrapper.CreateDirectory(_fileStreamerWrapper.GetDirectoryName(completeFileName)!);
+                if (!entry.FullName.EndsWith("/"))
+                {
+                    entry.ExtractToFile(completeFileName, overwrite: true);
+                    _fileStreamerWrapper.SetLastWriteTimeUtc(completeFileName, entry.LastWriteTime.UtcDateTime);
+                }
+            }
         }
     }
 }
