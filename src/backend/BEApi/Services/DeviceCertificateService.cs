@@ -7,14 +7,14 @@ using Shared.Logger;
 
 namespace Backend.BEApi.Services;
 
-public class ValidateCertificateService : IValidateCertificateService
+public class DeviceCertificateService : IDeviceCertificateService
 {
     private readonly IRegistrationService _registrationService;
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
-    public ValidateCertificateService(IRegistrationService registrationService, IRegistryManagerWrapper registryManagerWrapper, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
+    public DeviceCertificateService(IRegistrationService registrationService, IRegistryManagerWrapper registryManagerWrapper, IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger)
     {
         _registrationService = registrationService ?? throw new ArgumentNullException(nameof(registrationService));
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
@@ -53,5 +53,15 @@ public class ValidateCertificateService : IValidateCertificateService
             }
             await Task.WhenAll(tasks);
         }
+    }
+
+    public async Task RemoveDeviceAsync(string deviceId)
+    {
+        _logger.Info($"Deleting device {deviceId}...");
+        using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+        {
+            await _registryManagerWrapper.RemoveDeviceAsync(registryManager, deviceId);
+        }
+        _logger.Info($"Device {deviceId} deleted.");
     }
 }
