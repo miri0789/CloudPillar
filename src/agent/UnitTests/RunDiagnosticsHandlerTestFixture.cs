@@ -29,7 +29,7 @@ public class RunDiagnosticsHandlerTestFixture
     private const string DIAGNOSTICS_EXTENSION = ".tmp";
     private string guid = Guid.NewGuid().ToString();
     private string filePath = string.Empty;
-    private const string PATCH_KEY = "TransitPackage";
+    private const string PATCH_KEY = "transitPackage";
     private const string CHANGE_SPEC_ID = "123";
 
 

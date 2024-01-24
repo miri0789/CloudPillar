@@ -35,27 +35,34 @@ public class TwinReportedConverter : JsonConverter
         var changeSpec = (TwinReported)value;
 
         writer.WriteStartObject();
-        if (changeSpec?.ChangeSign is not null)
+        foreach (var changeSpecItem in changeSpec.GetType().GetProperties())
         {
-            foreach (var changeSpecOption in changeSpec?.ChangeSign)
+            switch (changeSpecItem.Name)
             {
-                writer.WritePropertyName($"{changeSpecOption.Key}Sign");
-                serializer.Serialize(writer, changeSpecOption.Value);
-            }
-        }
-        if (changeSpec?.ChangeSpec is not null)
-        {
-            foreach (var changeSpecOption in changeSpec.ChangeSpec)
-            {
-                writer.WritePropertyName(changeSpecOption.Key);
-                serializer.Serialize(writer, changeSpecOption.Value);
-            }
-        }
-        if (changeSpec?.Custom is not null)
-        {
-            writer.WritePropertyName(nameof(changeSpec.Custom));
-            serializer.Serialize(writer, changeSpec.Custom);
+                case "ChangeSign" when changeSpec.ChangeSign is not null:
+                    foreach (var changeSpecOption in changeSpec?.ChangeSign)
+                    {
+                        writer.WritePropertyName(changeSpecOption.Key);
+                        serializer.Serialize(writer, changeSpecOption.Value);
+                    }
+                    break;
+                case "ChangeSpec" when changeSpec.ChangeSpec is not null:
+                    foreach (var changeSpecOption in changeSpec?.ChangeSpec)
+                    {
+                        writer.WritePropertyName(changeSpecOption.Key);
+                        serializer.Serialize(writer, changeSpecOption.Value);
+                    }
+                    break;
+                default:
+                    if (changeSpecItem.GetValue(changeSpec) is not null)
+                    {
+                        writer.WritePropertyName(changeSpecItem.Name);
+                        serializer.Serialize(writer, changeSpecItem.GetValue(changeSpec));
+                        return;
+                    }
 
+                    break;
+            }
         }
         writer.WriteEndObject();
     }
@@ -66,7 +73,6 @@ public class TwinReportedConverter : JsonConverter
         foreach (var property in jsonObject.Properties())
         {
             if (property.Value.Type == JTokenType.Object &&
-                (property.Value["id"] ?? property.Value["Id"]) != null &&
                 (property.Value["patch"] ?? property.Value["Patch"]) != null)
             {
                 changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, property.Name));
@@ -82,7 +88,7 @@ public class TwinReportedConverter : JsonConverter
         var changeSpecKeys = getChangeSpecKeys(jsonObject);
         foreach (var property in jsonObject.Properties())
         {
-            if (property.Value.Type == JTokenType.String && changeSpecKeys.Contains(property.Name))
+            if (property.Value.Type == JTokenType.String && changeSpecKeys.Contains(property.Name) && property.Name.EndsWith("Sign"))
             {
                 changeSign.Add(property.Name, property.Value.Value<string>());
             }

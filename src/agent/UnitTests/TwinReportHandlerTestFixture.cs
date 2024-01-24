@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using System.Runtime.InteropServices;
+using Shared.Entities.Utilities;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -17,7 +18,8 @@ public class TwinReportHandlerTestFixture
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private ITwinReportHandler _target;
     private const string CHANGE_SPEC_ID = "123";
-    private const string PATCH_KEY = "TransitPackage";
+    private const string PATCH_KEY = "transitPackage";
+    private string changeSignKey;
 
     private CancellationToken cancellationToken = CancellationToken.None;
 
@@ -32,6 +34,8 @@ public class TwinReportHandlerTestFixture
         _target = new TwinReportHandler(_deviceClientMock.Object, _loggerHandlerMock.Object,
          _runtimeInformationWrapperMock.Object,
          _fileStreamerWrapperMock.Object);
+
+        changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
 
         CreateTarget();
     }
@@ -128,7 +132,7 @@ public class TwinReportHandlerTestFixture
         await _target.UpdateReportActionAsync(actionsToReported, cancellationToken);
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
-            nameof(TwinReported.ChangeSpec), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
+           It.Is<string>(x => x == changeSignKey), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -295,7 +299,7 @@ public class TwinReportHandlerTestFixture
     {
         var actionsToReported = new List<ActionToReport> { new ActionToReport()
         {
-            ReportPartName = "TransitPackage",
+            ReportPartName =PATCH_KEY,
             ReportIndex = 0,
             TwinReport = new TwinActionReported { Status = StatusType.InProgress }
         } };
