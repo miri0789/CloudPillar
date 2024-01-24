@@ -1,5 +1,6 @@
 
 using System.Reflection;
+using Shared.Logger;
 using Backend.BEApi.Services;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers;
@@ -10,7 +11,6 @@ using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Wrappers;
 using Shared.Entities.Factories;
-using Shared.Logger;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -28,6 +28,8 @@ builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
+builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
+builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IValidateCertificateService, ValidateCertificateService>();
 
 builder.Services.AddControllers();

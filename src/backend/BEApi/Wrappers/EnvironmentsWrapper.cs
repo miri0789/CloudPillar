@@ -40,7 +40,6 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
         get { return int.Parse(GetVariable(_maxCountDevices)); }
     }
 
-
     private string GetVariable(string name)
     {
         return Environment.GetEnvironmentVariable(name);

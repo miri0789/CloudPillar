@@ -4,6 +4,8 @@ using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Extensions.Options;
 using CloudPillar.Agent.Handlers.Logger;
+using Newtonsoft.Json;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -33,7 +35,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
     }
 
-    public async Task ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
+    public async Task<bool> ProvisioningAsync(string deviceId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.DpsScopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(_authenticationSettings.GlobalDeviceEndpoint);
@@ -74,6 +76,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                 }
             }
         }
+        return await IsNewDeviceAsync(cancellationToken);
     }
 
     private async Task InitializeDeviceAsync(string deviceId, string iotHubHostName, string deviceKey, CancellationToken cancellationToken)
@@ -99,6 +102,22 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
 
         var hmac = _symmetricKeyWrapper.CreateHMAC(primaryKey);
         return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registrationId)));
+    }
+
+    private async Task<bool> IsNewDeviceAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Check if the device is already initialized
+            var twin = await _deviceClientWrapper.GetTwinAsync(cancellationToken);
+            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            return reported?.CertificateValidity is null;
+        }
+        catch (Exception ex)
+        {
+            _logger.Debug($"IsNewDeviceAsync, Device is not initialized. {ex.Message}");
+            return true;
+        }
     }
 
     private void HandleError(string errorMsg)
