@@ -79,13 +79,11 @@ public static class TwinJsonConvertExtensions
         {
             if (twinReported?.ChangeSpec.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Key is not null)
             {
-                twinReported.ChangeSpec[changeSpecKey] = twinReportedChangeSpec;
-                return;
+                twinReported.ChangeSpec[changeSpecKey] = twinReportedChangeSpec;              
             }
             else
             {
-                twinReported.ChangeSpec.Add(changeSpecKey, twinReportedChangeSpec);
-                return;
+                twinReported.ChangeSpec.Add(changeSpecKey, twinReportedChangeSpec);               
             }
         }
     }

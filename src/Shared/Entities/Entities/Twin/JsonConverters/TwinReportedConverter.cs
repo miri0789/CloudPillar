@@ -82,7 +82,7 @@ public class TwinReportedConverter : JsonConverter
         var changeSpecKeys = getChangeSpecKeys(jsonObject);
         foreach (var property in jsonObject.Properties())
         {
-            if (property.Value.Type == JTokenType.String && changeSpecKeys.Contains(property.Name))
+            if (property.Value.Type == JTokenType.String && changeSpecKeys.Contains(property.Name) && property.Name.EndsWith("Sign"))
             {
                 changeSign.Add(property.Name, property.Value.Value<string>());
             }

@@ -27,7 +27,7 @@ public class TwinDesiredConverter : JsonConverter
 
         foreach (var property in jsonObject.Properties())
         {
-            if (property.Value.Type == JTokenType.String)
+            if (property.Value.Type == JTokenType.String && property.Name.EndsWith("Sign"))
             {
                 changeSign.Add(property.Name, property.Value.Value<string>());
             }
