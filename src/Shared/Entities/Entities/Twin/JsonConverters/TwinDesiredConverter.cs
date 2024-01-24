@@ -58,23 +58,35 @@ public class TwinDesiredConverter : JsonConverter
 
         writer.WriteStartObject();
 
-        if (changeSpec?.ChangeSign is not null)
+        foreach (var changeSpecItem in changeSpec.GetType().GetProperties())
         {
-            foreach (var changeSpecOption in changeSpec?.ChangeSign)
+            switch (changeSpecItem.Name)
             {
-                writer.WritePropertyName($"{changeSpecOption.Key}");
-                serializer.Serialize(writer, changeSpecOption.Value);
-            }
-        }
-        if (changeSpec?.ChangeSpec is not null)
-        {
-            foreach (var changeSpecOption in changeSpec.ChangeSpec)
-            {
-                writer.WritePropertyName(changeSpecOption.Key);
-                serializer.Serialize(writer, changeSpecOption.Value);
-            }
-        }
+                case "ChangeSign" when changeSpec.ChangeSign is not null:
+                    foreach (var changeSpecOption in changeSpec?.ChangeSign)
+                    {
+                        writer.WritePropertyName(changeSpecOption.Key);
+                        serializer.Serialize(writer, changeSpecOption.Value);
+                    }
+                    break;
+                case "ChangeSpec" when changeSpec.ChangeSpec is not null:
+                    foreach (var changeSpecOption in changeSpec?.ChangeSpec)
+                    {
+                        writer.WritePropertyName(changeSpecOption.Key);
+                        serializer.Serialize(writer, changeSpecOption.Value);
+                    }
+                    break;
+                default:
+                    if (changeSpecItem.GetValue(changeSpec) is not null)
+                    {
+                        writer.WritePropertyName(changeSpecItem.Name);
+                        serializer.Serialize(writer, changeSpecItem.GetValue(changeSpec));
+                        return;
+                    }
 
+                    break;
+            }
+        }
         writer.WriteEndObject();
     }
 

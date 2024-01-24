@@ -134,7 +134,7 @@ public class TwinHandler : ITwinHandler
                 {
                     byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.GetDesiredChangeSpecByKey(changeSpecKey)));
                     var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(changeSignKey)!);
-                    var message = isSignValid ? null : "Twin Change signature is invalid";
+                    var message = isSignValid ? null : $"Twin Change signature for {changeSignKey} is invalid";
                     await _deviceClient.UpdateReportedPropertiesAsync(changeSignKey, message, cancellationToken);
                     if (isSignValid)
                     {
