@@ -1,6 +1,8 @@
-﻿namespace PriorityQueue.Services.Interfaces;
+﻿using PriorityQueue.Entities.Enums;
+
+namespace PriorityQueue.Services.Interfaces;
 public interface IMessageProcessor
 {
-    // return true is the original message shall be consumed, and false if it shall retain
-    Task<bool> ProcessMessageAsync(string message, IDictionary<string, string> properties);
+    Task<(MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)>
+    ProcessMessageAsync(string message, IDictionary<string, string> properties, CancellationToken stoppingToken);
 }

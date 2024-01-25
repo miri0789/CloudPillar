@@ -3,6 +3,7 @@ using Azure.Messaging.ServiceBus.Administration;
 using PriorityQueue.Services.Interfaces;
 using PriorityQueue.Wrappers.Interfaces;
 using Shared.Logger;
+using PriorityQueue.Entities.Enums;
 
 namespace PriorityQueue.Services;
 public class QueueConsumerService : BackgroundService
@@ -27,19 +28,19 @@ public class QueueConsumerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await InitializeProcessorsAsync(_environmentsWrapper.serviceBusUrls);
+        await InitializeProcessorsAsync(_environmentsWrapper.serviceBusUrls, stoppingToken);
         await ProcessInPriorityOrderAsync(stoppingToken);
     }
 
-    private async Task InitializeProcessorsAsync(string[] serviceBusUrls)
+    private async Task InitializeProcessorsAsync(string[] serviceBusUrls, CancellationToken stoppingToken)
     {
         var client = new ServiceBusClient(_environmentsWrapper.serviceBusConnectionString);
         ServiceBusAdministrationClient? adminClient = TryCreateAdminClient();
-        
+
         foreach (var url in serviceBusUrls)
         {
             ServiceBusProcessor processor = await CreateProcessorAsync(client, adminClient, url);
-            SubscribeToProcessorEvents(processor);
+            SubscribeToProcessorEvents(processor, stoppingToken);
             _processors.Add(processor);
         }
     }
@@ -109,10 +110,11 @@ public class QueueConsumerService : BackgroundService
         };
     }
 
-    private void SubscribeToProcessorEvents(ServiceBusProcessor processor)
+    private void SubscribeToProcessorEvents(ServiceBusProcessor processor, CancellationToken stoppingToken)
     {
-        int processorIndex = _processors.Count - 1;
-        Func<ProcessMessageEventArgs, Task> messageHandler = async (args) => await OnMessageReceivedAsync(args, processorIndex);
+        int processorIndex = _processors.Count;
+
+        Func<ProcessMessageEventArgs, Task> messageHandler = async (args) => await OnMessageReceivedAsync(args, processorIndex, stoppingToken);
         processor.ProcessMessageAsync += messageHandler;
         processor.ProcessErrorAsync += OnProcessError;
     }
@@ -158,7 +160,7 @@ public class QueueConsumerService : BackgroundService
                     }
                 }
 
-                if (!isQueueProcessing)
+                if (!isQueueProcessing && !stoppingToken.IsCancellationRequested)
                 {
                     _logger.Info($"Starting processor for queue {processor.EntityPath}");
                     await processor.StartProcessingAsync();
@@ -166,7 +168,7 @@ public class QueueConsumerService : BackgroundService
             }
 
             // If no messages are being processed in any queue, wait longer before re-checking
-            if (_currentParallelCount == 0)
+            if (_currentParallelCount == 0 && !stoppingToken.IsCancellationRequested)
             {
                 _logger.Debug("No messages are being processed in any queue, wait longer before re-checking");
                 await Task.Delay(_environmentsWrapper.noMessagesDelayMS, stoppingToken);
@@ -185,7 +187,7 @@ public class QueueConsumerService : BackgroundService
     }
 
 
-    private async Task OnMessageReceivedAsync(ProcessMessageEventArgs args, int processorIndex)
+    private async Task OnMessageReceivedAsync(ProcessMessageEventArgs args, int processorIndex, CancellationToken stoppingToken)
     {
         await StopLowerPriorityProcessorsAsync(processorIndex);
 
@@ -200,7 +202,8 @@ public class QueueConsumerService : BackgroundService
         try
         {
             var headers = args.Message.ApplicationProperties.ToDictionary(kv => kv.Key, kv => kv.Value?.ToString() ?? string.Empty);
-            var result = await _messageProcessor.ProcessMessageAsync(args.Message.Body.ToString(), headers);
+            (MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)
+             = await _messageProcessor.ProcessMessageAsync(args.Message.Body.ToString(), headers,stoppingToken);
             if (result)
             {
                 // Distinguish failure types: is the service is the problem, abandon to let another service to process;

@@ -8,4 +8,5 @@ public interface IEnvironmentsWrapper
     string svcBackendUrl { get; }
     int higherPriorityGraceMS { get; }
     int noMessagesDelayMS { get; }
+    int requestTimeoutMS { get; }
 }

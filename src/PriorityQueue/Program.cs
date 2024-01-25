@@ -22,6 +22,5 @@ builder.Services.AddHostedService(sp => new QueueConsumerService(
     sp.GetRequiredService<ILoggerHandler>(),
     sp.GetRequiredService<IEnvironmentsWrapper>()));
 
-
 var app = builder.Build();
 await app.RunAsync();

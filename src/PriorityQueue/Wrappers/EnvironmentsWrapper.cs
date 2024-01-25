@@ -13,14 +13,15 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _svcBackendUrl = "SVC_BACKEND_URL";
     private const string _higherPriorityGraceMS = "HIGHER_PRIORITY_GRACE_MS";
     private const string _noMessagesDelayMS = "NO_MESSAGES_DELAY_MS";
+    private const string _requestTimeoutMS = "REQUEST_TIMEOUT_MS";
 
     public string serviceBusConnectionString
     {
-        get { return GetVariable(_serviceBusConnectionString); }
+        get { return GetVariable(_serviceBusConnectionString) ?? "Endpoint=sb://tryperiodicqueue.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=XuvbHsyCDS74pTiizel0GjPLTNo8w8ftl+ASbDLFCpE="; }
     }
     public string[] serviceBusUrls
     {
-        get { return GetVariable(_serviceBusUrls)?.Split(';') ?? Array.Empty<string>(); }
+        get { return GetVariable(_serviceBusUrls)?.Split(';') ?? "periority1;periority2;periority3".Split(';'); }
     }
     public int parallelCount
     {
@@ -41,6 +42,10 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public int noMessagesDelayMS
     {
         get { return int.TryParse(GetVariable(_noMessagesDelayMS), out int value) ? value : 5000; }
+    }
+    public int requestTimeoutMS
+    {
+        get { return int.TryParse(GetVariable(_requestTimeoutMS), out int value) ? value : 60000; }
     }
 
 
