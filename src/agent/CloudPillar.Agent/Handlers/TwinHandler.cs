@@ -158,7 +158,7 @@ public class TwinHandler : ITwinHandler
 
 
     private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
-    TwinReported twinReported, String changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    TwinReported twinReported, string changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey.ToString());
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey.ToString());

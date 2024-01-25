@@ -27,7 +27,9 @@ public class TwinHandlerTestFixture
     private Mock<IPeriodicUploaderHandler> _periodicUploaderHandlerMock;
     private CancellationToken cancellationToken = CancellationToken.None;
     private string changeSignKey;
+    private string changeSignDiagnosticsKey;
     private string changeSpecIdKey;
+    private string changeSpecIdDiagnosticsKey;
 
 
     [SetUp]
@@ -38,8 +40,9 @@ public class TwinHandlerTestFixture
         mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
 
         changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
+        changeSignDiagnosticsKey = TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME.GetSignKeyByChangeSpec();
         changeSpecIdKey = TwinConstants.CHANGE_SPEC_NAME.GetChangeSpecIdKeyByChangeSpecKey();
-
+        changeSpecIdDiagnosticsKey = TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME.GetChangeSpecIdKeyByChangeSpecKey();
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _fileDownloadHandlerMock = new Mock<IFileDownloadHandler>();
         _fileUploaderHandlerMock = new Mock<IFileUploaderHandler>();
@@ -66,7 +69,7 @@ public class TwinHandlerTestFixture
           _periodicUploaderHandlerMock.Object);
     }
 
-    private Dictionary<string, TwinChangeSpec> GetDefaultDesiredChangeSpec(Dictionary<string, TwinAction[]> patch = null, string id = "")
+    private Dictionary<string, TwinChangeSpec> GetDefaultDesiredChangeSpec(Dictionary<string, TwinAction[]> patch = null, string id = "", bool isMultiple = false)
     {
         var desiredChangeSpec = new Dictionary<string, TwinChangeSpec>()
             {
@@ -74,16 +77,32 @@ public class TwinHandlerTestFixture
                 TwinConstants.CHANGE_SPEC_NAME, new TwinChangeSpec() {
                         Patch = patch ?? new Dictionary<string, TwinAction[]>()
                         {
-                            { MockHelper.PATCH_KEY, new TwinAction[0] }
+                            { MockHelper.PATCH_KEY, new TwinAction[]{
+                                new TwinAction() { Action = TwinActionType.SingularDownload},
+                            } }
                         },
                         Id = string.IsNullOrWhiteSpace(id)?  MockHelper.CHANGE_SPEC_ID : id
                     }
                 }
             };
 
+        if (isMultiple)
+        {
+            desiredChangeSpec.Add(TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinChangeSpec()
+            {
+                Patch = patch ?? new Dictionary<string, TwinAction[]>()
+                        {
+                             { MockHelper.PATCH_KEY, new TwinAction[] {
+                                new TwinAction() { Action = TwinActionType.SingularUpload},
+                            }}
+                        },
+                Id = string.IsNullOrWhiteSpace(id) ? MockHelper.CHANGE_SPEC_ID : id
+            });
+        }
+
         return desiredChangeSpec;
     }
-    private Dictionary<string, TwinReportedChangeSpec> GetDefaultReportedChangeSpec(Dictionary<string, TwinActionReported[]> patch = null, string id = "")
+    private Dictionary<string, TwinReportedChangeSpec> GetDefaultReportedChangeSpec(Dictionary<string, TwinActionReported[]> patch = null, string id = "", bool isMultiple = false)
     {
 
         var reportedChangeSpec = new Dictionary<string, TwinReportedChangeSpec>
@@ -94,19 +113,40 @@ public class TwinHandlerTestFixture
                         Id = string.IsNullOrWhiteSpace(id)?  MockHelper.CHANGE_SPEC_ID : id,
                         Patch = patch ?? new Dictionary<string, TwinActionReported[]>()
                         {
-                            { MockHelper.PATCH_KEY, new TwinActionReported[0] }
+                            { MockHelper.PATCH_KEY, new TwinActionReported[]{
+                                new TwinActionReported() {Status = StatusType.Success }
+
+                            } }
                         }
                     }
                 }
             };
+        if (isMultiple)
+        {
+            reportedChangeSpec.Add(TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinReportedChangeSpec()
+            {
+                Id = string.IsNullOrWhiteSpace(id) ? MockHelper.CHANGE_SPEC_ID : id,
+                Patch = patch ?? new Dictionary<string, TwinActionReported[]>()
+                        {
+                            { MockHelper.PATCH_KEY, new TwinActionReported[]{
+                                new TwinActionReported() {Status = StatusType.Success }
+
+                            } }
+                        }
+            });
+        }
         return reportedChangeSpec;
     }
-    private Dictionary<string, string> GetDefaultChangeSign()
+    private Dictionary<string, string> GetDefaultChangeSign(bool isMultiple = false)
     {
         var changeSign = new Dictionary<string, string>()
             {
                 { changeSignKey, "changeSign" }
             };
+        if (isMultiple)
+        {
+            changeSign.Add(TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME.GetSignKeyByChangeSpec(), "changeSign");
+        }
         return changeSign;
     }
 
@@ -276,16 +316,6 @@ public class TwinHandlerTestFixture
         desired.First().Value.Patch[MockHelper.PATCH_KEY] = new TwinAction[]{
                         new DownloadAction() { Action = TwinActionType.SingularDownload, DestinationPath="abc"}
         };
-        //  new TwinChangeSpec()
-        // { 
-        //     Id = MockHelper.CHANGE_SPEC_ID,
-        //     Patch = new Dictionary<string, TwinAction[]>()
-        //     {
-        //         { "InstallSteps", new List<TwinAction>()
-        //             {   new DownloadAction() { Action = TwinActionType.SingularDownload, DestinationPath="abc"},
-        //             }.ToArray() }
-        //     }
-        // };
 
         var reported = new Dictionary<string, TwinReportedChangeSpec>();
 
@@ -419,6 +449,9 @@ public class TwinHandlerTestFixture
     {
         var desiredChangeSpec = GetDefaultDesiredChangeSpec();
         desiredChangeSpec.First().Value.Id = null;
+        desiredChangeSpec.First().Value.Patch[MockHelper.PATCH_KEY] = new TwinAction[]{
+                        new UploadAction() { Action = TwinActionType.SingularUpload},
+        };
 
         var reportedChangeSpec = new Dictionary<string, TwinReportedChangeSpec>();
 
@@ -512,11 +545,74 @@ public class TwinHandlerTestFixture
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         Assert.That((desired.First().Value.Patch[MockHelper.PATCH_KEY][0] as UploadAction)?.Method, Is.EqualTo(FileUploadMethod.Stream));
     }
-    private void CreateTwinMock(Dictionary<string, TwinChangeSpec> twinChangeSpec,
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_MultipleChangeSpecNotAllConatainId_ExceChangeSpecWithId()
+    {
+        var desired = GetDefaultDesiredChangeSpec(null, "", true);
+        desired.First().Value.Id = null;
+
+        var reported = new Dictionary<string, TwinReportedChangeSpec>();
+
+        CreateTwinMock(desired, reported, GetDefaultChangeSign(true));
+
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _fileUploaderHandlerMock.Verify(x => x.FileUploadAsync(It.IsAny<ActionToReport>(), It.IsAny<FileUploadMethod>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_MultipleChangeSpecNoChangeSpecID_UpdateMatchKey()
+    {
+        var desired = GetDefaultDesiredChangeSpec(null, "", true);
+        desired.FirstOrDefault(x => x.Key == TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME).Value.Id = null;
+
+        var reported = new Dictionary<string, TwinReportedChangeSpec>();
+
+        CreateTwinMock(desired, reported, GetDefaultChangeSign(true));
+
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == changeSpecIdDiagnosticsKey), It.Is<string>(x => x == $"There is no ID for {TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME}.."), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_MultipleChangeSpecNoChangeSign_UpdateMatchKey()
+    {
+        mockStrictModeSettingsValue = StrictModeMockHelper.SetStrictModeSettingsValueMock(true);
+        mockStrictModeSettings.Setup(x => x.Value).Returns(mockStrictModeSettingsValue);
+        CreateTarget();
+
+
+        var desired = GetDefaultDesiredChangeSpec(null, "", true);
+        var reported = new Dictionary<string, TwinReportedChangeSpec>();
+
+        CreateTwinMock(desired, reported, GetDefaultChangeSign());
+
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == changeSignDiagnosticsKey), It.Is<string>(x => x == $"Change sign is required"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_MultipleChangeSpec_UpdateMatchKeyReported()
+    {
+        var desired = GetDefaultDesiredChangeSpec(null, "", true);
+        var reported = GetDefaultReportedChangeSpec(null, "", true);
+        reported.Remove(TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME);
+
+        var twin = CreateTwinMock(desired, reported, GetDefaultChangeSign(true));
+
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
+        _twinReportHandler.Verify(x => x.UpdateReportedChangeSpecAsync(It.IsAny<TwinReportedChangeSpec>(), It.Is<string>(x => x == TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME),
+        It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    private Twin CreateTwinMock(Dictionary<string, TwinChangeSpec> twinChangeSpec,
     Dictionary<string, TwinReportedChangeSpec> twinReportedChangeSpec, Dictionary<string, string>? changeSign, List<TwinReportedCustomProp>? twinReportedCustomProps = null)
     {
         var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps, changeSign);
         _twinReportHandler.Setup(dc => dc.SetTwinReported(cancellationToken)).ReturnsAsync(twin);
         _signatureHandlerMock.Setup(dc => dc.VerifySignatureAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync(true);
+        return twin;
     }
 }
