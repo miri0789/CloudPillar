@@ -31,24 +31,24 @@ public class BlobController : ControllerBase
         }
     }
 
-    [HttpGet("CalculateHash")]
-    public async Task<IActionResult> CalculateHashtAsync(string fileName, int bufferSize)
+    [HttpPost("CalculateHash")]
+    public async Task<IActionResult> CalculateHashtAsync(string deviceId, [FromBody] SignFileEvent signFileEvent)
     {
-        var result = await _blobService.CalculateHashAsync(fileName, bufferSize);
+        var result = await _blobService.CalculateHashAsync(deviceId, signFileEvent);
         return Ok(result);
     }
 
     [HttpPost("range")]
-    public async Task<IActionResult> SendRange(string deviceId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, int actionIndex, int rangesCount)
+    public async Task<IActionResult> SendRange(string deviceId, string changeSpecId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
-        var isSendRangeComplete = await _blobService.SendRangeByChunksAsync(deviceId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionIndex, rangesCount);
+        var isSendRangeComplete = await _blobService.SendRangeByChunksAsync(deviceId, changeSpecId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionIndex, rangesCount);
         return Ok(isSendRangeComplete);
     }
 
     [HttpPost("rangeError")]
-    public async Task<IActionResult> SendRangeError(string deviceId, string fileName, int actionIndex, string error)
+    public async Task<IActionResult> SendRangeError(string deviceId, string changeSpecId, string fileName, int actionIndex, string error)
     {
-        await _blobService.SendDownloadErrorAsync(deviceId, fileName, actionIndex, error);
+        await _blobService.SendDownloadErrorAsync(deviceId, changeSpecId, fileName, actionIndex, error);
         return Ok();
     }
 

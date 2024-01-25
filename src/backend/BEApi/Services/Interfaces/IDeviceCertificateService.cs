@@ -1,6 +1,7 @@
 namespace Backend.BEApi.Services.Interfaces;
 
-public interface IValidateCertificateService
+public interface IDeviceCertificateService
 {
     Task IsDevicesCertificateExpiredAsync();
+    Task RemoveDeviceAsync(string deviceId);
 }

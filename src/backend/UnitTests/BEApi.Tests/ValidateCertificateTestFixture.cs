@@ -17,7 +17,7 @@ public class ValidateCertificateTestFixture
     private Mock<IRegistryManagerWrapper> _registryManagerWrapperMock;
     private Mock<IEnvironmentsWrapper> _environmentsWrapperMock;
     private Mock<ILoggerHandler> _loggerMock;
-    private IValidateCertificateService _target;
+    private IDeviceCertificateService _target;
     private const string DEVICE_ID = "deviceId";
     private const string SECRET_KEY = "secretKey";
     private const string CERTIFICATE_PREFIX = "UnitTest-CP-";
@@ -33,7 +33,7 @@ public class ValidateCertificateTestFixture
         _environmentsWrapperMock.Setup(c => c.iothubConnectionString).Returns("HostName=unitTest;SharedAccessKeyName=iothubowner;");
         _environmentsWrapperMock.Setup(c => c.expirationCertificatePercent).Returns(0.6);
 
-        _target = new ValidateCertificateService(_registrationServiceMock.Object,
+        _target = new DeviceCertificateService(_registrationServiceMock.Object,
          _registryManagerWrapperMock.Object,
           _environmentsWrapperMock.Object,
            _loggerMock.Object);

@@ -2,11 +2,12 @@
 using System.Diagnostics;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Wrappers.Interfaces;
+using CloudPillar.Agent.Sevices.Interfaces;
 
 namespace CloudPillar.Agent.Controllers;
 
@@ -18,10 +19,6 @@ public class AgentController : ControllerBase
 
     private readonly ITwinHandler _twinHandler;
     private readonly ITwinReportHandler _twinReportHandler;
-
-    private readonly IValidator<UpdateReportedProps> _updateReportedPropsValidator;
-    private readonly IValidator<TwinDesired> _twinDesiredPropsValidator;
-
     public readonly IStateMachineHandler _stateMachineHandler;
     private readonly IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
     private readonly ISymmetricKeyProvisioningHandler _symmetricKeyProvisioningHandler;
@@ -29,26 +26,25 @@ public class AgentController : ControllerBase
     private readonly IStateMachineChangedEvent _stateMachineChangedEvent;
     private readonly IReprovisioningHandler _reprovisioningHandler;
     private readonly IServerIdentityHandler _serverIdentityHandler;
-
+    private readonly IRequestWrapper _requestWrapper;
+    private readonly IProvisioningService _provisioningService;
 
     public AgentController(ITwinHandler twinHandler,
      ITwinReportHandler twinReportHandler,
-     IValidator<UpdateReportedProps> updateReportedPropsValidator,
      IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler,
      ISymmetricKeyProvisioningHandler symmetricKeyProvisioningHandler,
-     IValidator<TwinDesired> twinDesiredPropsValidator,
      IStateMachineHandler stateMachineHandler,
      IRunDiagnosticsHandler runDiagnosticsHandler,
      ILoggerHandler logger,
      IStateMachineChangedEvent stateMachineChangedEvent,
      IReprovisioningHandler reprovisioningHandler,
-    IServerIdentityHandler serverIdentityHandler)
+    IServerIdentityHandler serverIdentityHandler,
+    IRequestWrapper requestWrapper,
+    IProvisioningService provisioningService)
     {
         _twinHandler = twinHandler ?? throw new ArgumentNullException(nameof(twinHandler));
         _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
-        _updateReportedPropsValidator = updateReportedPropsValidator ?? throw new ArgumentNullException(nameof(updateReportedPropsValidator));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
-        _twinDesiredPropsValidator = twinDesiredPropsValidator ?? throw new ArgumentNullException(nameof(twinDesiredPropsValidator));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(StateMachineHandler));
         _symmetricKeyProvisioningHandler = symmetricKeyProvisioningHandler ?? throw new ArgumentNullException(nameof(symmetricKeyProvisioningHandler));
         _runDiagnosticsHandler = runDiagnosticsHandler ?? throw new ArgumentNullException(nameof(runDiagnosticsHandler));
@@ -56,17 +52,17 @@ public class AgentController : ControllerBase
         _stateMachineChangedEvent = stateMachineChangedEvent ?? throw new ArgumentNullException(nameof(stateMachineChangedEvent));
         _reprovisioningHandler = reprovisioningHandler ?? throw new ArgumentNullException(nameof(reprovisioningHandler));
         _serverIdentityHandler = serverIdentityHandler ?? throw new ArgumentNullException(nameof(serverIdentityHandler));
+        _requestWrapper = requestWrapper ?? throw new ArgumentNullException(nameof(requestWrapper));
+        _provisioningService = provisioningService ?? throw new ArgumentNullException(nameof(provisioningService));
     }
 
     [HttpPost("AddRecipe")]
     [DeviceStateFilter]
     public async Task<ActionResult<string>> AddRecipeAsync([FromBody] TwinDesired recipe)
     {
-        _twinDesiredPropsValidator.ValidateAndThrow(recipe);
         return await _twinHandler.GetTwinJsonAsync();
     }
   
-    [AllowAnonymous]
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
@@ -74,27 +70,6 @@ public class AgentController : ControllerBase
         if (currentState == DeviceStateType.Busy)
         {
             return _twinHandler.GetLatestTwin();
-        }
-
-        //don't need to explicitly check if the header exists; it's already verified in the middleware.
-        var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
-        var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
-        bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(deviceId, secretKey, cancellationToken);
-        if (!isX509Authorized)
-        {
-            var x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
-            if (x509Certificate is not null)
-            {
-                return Unauthorized("The deviceId or the SecretKey are incorrect.");
-            }
-            _logger.Info("GetDeviceStateAsync, the device is X509 unAuthorized, check  symmetric key authorized");
-
-            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
-            if (!isSymetricKeyAuthorized)
-            {
-                _logger.Info("GetDeviceStateAsync, the device is symmetric key unAuthorized, start provisinig proccess");
-                await ProvisinigSymetricKeyAsync(cancellationToken);
-            }
         }
         return await _twinHandler.GetTwinJsonAsync();
     }
@@ -105,9 +80,7 @@ public class AgentController : ControllerBase
     {
         try
         {
-            await _serverIdentityHandler.HandleKnownIdentitiesFromCertificatesAsync(cancellationToken);
-            await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
-            await ProvisinigSymetricKeyAsync(cancellationToken);
+            await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
             return await _twinHandler.GetTwinJsonAsync();
         }
         catch (Exception ex)
@@ -135,7 +108,6 @@ public class AgentController : ControllerBase
     [DeviceStateFilter]
     public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps, CancellationToken cancellationToken)
     {
-        _updateReportedPropsValidator.ValidateAndThrow(updateReportedProps);
         await _twinReportHandler.UpdateDeviceCustomPropsAsync(updateReportedProps.Properties, cancellationToken);
         return await _twinHandler.GetTwinJsonAsync(cancellationToken);
     }
@@ -179,19 +151,6 @@ public class AgentController : ControllerBase
         {
             RunDiagnosticsHandler.IsDiagnosticsProcessRunning = false;
         }
-    }
-
-    private async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
-    {
-        //don't need to explicitly check if the header exists; it's already verified in the middleware.
-        var deviceId = HttpContext.Request.Headers[Constants.X_DEVICE_ID].ToString();
-        var secretKey = HttpContext.Request.Headers[Constants.X_SECRET_KEY].ToString();
-        _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
-        await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken);
-        _reprovisioningHandler.RemoveX509CertificatesFromStore();
-        await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken, true);
-        await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
-        await _twinReportHandler.UpdateDeviceSecretKeyAsync(secretKey, cancellationToken);
     }
 }
 

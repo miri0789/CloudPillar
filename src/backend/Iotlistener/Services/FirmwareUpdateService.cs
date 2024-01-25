@@ -31,7 +31,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
             if (data.EndPosition != null)
             {
                 rangeSize = (long)data.EndPosition - data.StartPosition;
-                string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={data.CompletedRanges}&startPosition={data.StartPosition}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
+                string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={data.CompletedRanges}&startPosition={data.StartPosition}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}&changeSpecId={data.ChangeSpecId}";
                 await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
             }
             else
@@ -47,7 +47,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                     {
                         if (existRanges.IndexOf(rangeIndex.ToString()) == -1)
                         {
-                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}";
+                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}&changeSpecId={data.ChangeSpecId}";
                             requests.Add(_httpRequestorService.SendRequest<bool>(requestUrl, HttpMethod.Post));
                         }
                     }
@@ -63,15 +63,15 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         catch (Exception ex)
         {
             _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
-            await SendRangeError(deviceId, data.FileName, data.ActionIndex, ex.Message);
+            await SendRangeError(deviceId, data.ChangeSpecId, data.FileName, data.ActionIndex, ex.Message);
         }
     }
 
-    private async Task SendRangeError(string deviceId, string fileName, int actionIndex, string error)
+    private async Task SendRangeError(string deviceId, string changeSpecId, string fileName, int actionIndex, string error)
     {
         try
         {
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/rangeError?deviceId={deviceId}&fileName={fileName}&actionIndex={actionIndex}&error={error}";
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/rangeError?deviceId={deviceId}&fileName={fileName}&actionIndex={actionIndex}&error={error}&changeSpecId={changeSpecId}";
             await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
         }
         catch (Exception ex)

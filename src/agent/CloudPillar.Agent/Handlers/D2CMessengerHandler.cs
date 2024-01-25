@@ -20,7 +20,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string fileName, int actionIndex, string CompletedRanges = "", long? startPosition = null, long? endPosition = null)
+    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string changeSpecId, string fileName, int actionIndex, string CompletedRanges = "", long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
@@ -32,7 +32,8 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             CompletedRanges = CompletedRanges,
             StartPosition = startPosition ?? 0,
             EndPosition = endPosition,
-            ActionIndex = actionIndex
+            ActionIndex = actionIndex,
+            ChangeSpecId = changeSpecId
         };
 
         await SendMessageAsync(firmwareUpdateEvent, cancellationToken);
@@ -74,6 +75,11 @@ public class D2CMessengerHandler : ID2CMessengerHandler
     public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)
     {
         await SendMessageAsync(new SignEvent(), cancellationToken);
+    }
+
+    public async Task SendRemoveDeviceEvent(CancellationToken cancellationToken)
+    {
+        await SendMessageAsync(new RemoveDeviceEvent(), cancellationToken);
     }
 
     private async Task SendMessageAsync(D2CMessage d2CMessage, CancellationToken cancellationToken)
