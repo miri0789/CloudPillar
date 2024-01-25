@@ -17,8 +17,6 @@ public class TwinReportHandlerTestFixture
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapperMock;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private ITwinReportHandler _target;
-    private const string CHANGE_SPEC_ID = "123";
-    private const string PATCH_KEY = "transitPackage";
     private string changeSignKey;
 
     private CancellationToken cancellationToken = CancellationToken.None;
@@ -132,7 +130,7 @@ public class TwinReportHandlerTestFixture
         await _target.UpdateReportActionAsync(actionsToReported, cancellationToken);
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
-           It.Is<string>(x => x == changeSignKey), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
+           It.Is<string>(x => x == TwinConstants.CHANGE_SPEC_NAME), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -299,7 +297,7 @@ public class TwinReportHandlerTestFixture
     {
         var actionsToReported = new List<ActionToReport> { new ActionToReport()
         {
-            ReportPartName =PATCH_KEY,
+            ReportPartName =MockHelper.PATCH_KEY,
             ReportIndex = 0,
             TwinReport = new TwinActionReported { Status = StatusType.InProgress }
         } };
@@ -309,10 +307,10 @@ public class TwinReportHandlerTestFixture
                 {
                     TwinConstants.CHANGE_SPEC_NAME, new TwinReportedChangeSpec()
                     {
-                        Id =  CHANGE_SPEC_ID,
+                        Id =  MockHelper.CHANGE_SPEC_ID,
                         Patch = new Dictionary<string, TwinActionReported[]>()
                         {
-                            { PATCH_KEY, new TwinActionReported[0] }
+                            { MockHelper.PATCH_KEY, new TwinActionReported[] { new TwinActionReported()  } }
                         }
                     }
                 }

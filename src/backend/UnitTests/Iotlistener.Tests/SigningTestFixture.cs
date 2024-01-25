@@ -4,6 +4,7 @@ using Backend.Iotlistener.Interfaces;
 using Moq;
 using Shared.Entities.Messages;
 using Shared.Logger;
+using Shared.Entities.Utilities;
 
 namespace Backend.Iotlistener.Tests;
 public class SigningTestFixture
@@ -15,10 +16,12 @@ public class SigningTestFixture
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
 
     const string deviceId = "testDeviceId";
+    string changeSignKey;
 
     [SetUp]
     public void Setup()
     {
+        changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLoggerHandler = new Mock<ILoggerHandler>();
         _keyHolderUrl = new Uri("http://example.com/");
@@ -31,9 +34,9 @@ public class SigningTestFixture
     public async Task CreateTwinKeySignature_ValidParameters_SendsRequest()
     {
         
-        SignEvent signEvent = new SignEvent();
+        SignEvent signEvent = new SignEvent(changeSignKey);
 
-        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}";
+        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}&changeSignKey={signEvent.ChangeSignKey}";
         await _target.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
@@ -45,9 +48,9 @@ public class SigningTestFixture
     [Test]
     public async Task CreateTwinKeySignature_ExceptionThrown_WrapsAndThrowsException()
     {
-        SignEvent signEvent = new SignEvent();
+        SignEvent signEvent = new SignEvent(changeSignKey);
 
-        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}";
+        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}&changeSignKey={signEvent.ChangeSignKey}";
 
         _httpRequestorServiceMock
             .Setup(service => service.SendRequest(requestUrl, HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
