@@ -59,13 +59,8 @@ public class X509CertificateWrapper : IX509CertificateWrapper
         return new SecurityProviderX509Certificate(certificate);
     }
 
-    public ECDsa GetECDsaPublicKey(X509Certificate2 certificate)
+    public byte[] ExportSubjectPublicKeyInfo(X509Certificate2 certificate)
     {
-        return certificate.GetECDsaPublicKey();
-    }
-
-    public byte[] ExportSubjectPublicKeyInfo(ECDsa publicKey)
-    {
-        return publicKey.ExportSubjectPublicKeyInfo();
+        return certificate.PublicKey.ExportSubjectPublicKeyInfo();
     }
 }

@@ -13,13 +13,13 @@ public class SignatureHandler : ISignatureHandler
     private readonly ILoggerHandler _logger;
     private readonly ID2CMessengerHandler _d2CMessengerHandler;
     private readonly ISHA256Wrapper _sha256Wrapper;
-    private readonly IECDsaWrapper _ecdsaWrapper;
+    private readonly IAsymmetricAlgorithmWrapper _ecdsaWrapper;
     private readonly IServerIdentityHandler _serverIdentityHandler;
     private readonly DownloadSettings _downloadSettings;
     private const string FILE_EXTENSION = "*.cer";
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
-    ISHA256Wrapper sha256Wrapper, IECDsaWrapper ecdsaWrapper, IServerIdentityHandler serverIdentityHandler, IOptions<DownloadSettings> options)
+    ISHA256Wrapper sha256Wrapper, IAsymmetricAlgorithmWrapper ecdsaWrapper, IServerIdentityHandler serverIdentityHandler, IOptions<DownloadSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
@@ -30,20 +30,23 @@ public class SignatureHandler : ISignatureHandler
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    private async Task<ECDsa> InitPublicKeyAsync(string publicKeyPem)
+    private async Task<AsymmetricAlgorithm> InitPublicKeyAsync(string publicKeyPem)
     {
         if (publicKeyPem == null)
         {
             _logger.Error("sign pubkey not exist");
             throw new ArgumentNullException();
         }
-        return (ECDsa)LoadPublicKeyFromPem(publicKeyPem);
+        return LoadPublicKeyFromPem(publicKeyPem);
     }
 
     private AsymmetricAlgorithm LoadPublicKeyFromPem(string pemContent)
     {
+        bool isRSA = pemContent.Contains("RSA PUBLIC KEY");
         var publicKeyContent = pemContent.Replace("-----BEGIN PUBLIC KEY-----", "")
                                         .Replace("-----END PUBLIC KEY-----", "")
+                                        .Replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                                        .Replace("-----END RSA PUBLIC KEY-----", "")
                                         .Replace("\n", "")
                                         .Replace("\r", "")
                                         .Trim();
@@ -51,10 +54,17 @@ public class SignatureHandler : ISignatureHandler
         var publicKeyBytes = Convert.FromBase64String(publicKeyContent);
         var keyReader = new ReadOnlySpan<byte>(publicKeyBytes);
 
-        ECDsa ecdsa = ECDsa.Create();
-        ecdsa.ImportSubjectPublicKeyInfo(keyReader, out _);
-
-        return ecdsa;
+        if(isRSA)
+        {
+            RSA rsa = RSA.Create();
+            rsa.ImportSubjectPublicKeyInfo(keyReader, out _);
+            _logger.Debug($"Imported public key");
+            return rsa;
+        }
+        ECDsa ecdsa  = ECDsa.Create();
+        ecdsa .ImportSubjectPublicKeyInfo(keyReader, out _);
+        _logger.Debug($"Imported public key");
+        return ecdsa ;
     }
 
     public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)
@@ -63,10 +73,10 @@ public class SignatureHandler : ISignatureHandler
         foreach (string publicKeyFile in publicKeyFiles)
         {
             var publicKey = await _serverIdentityHandler.GetPublicKeyFromCertificateFileAsync(publicKeyFile);
-            using (var ecdsa = await InitPublicKeyAsync(publicKey))
+            using (var signingPublicKey = await InitPublicKeyAsync(publicKey))
             {
                 byte[] signature = Convert.FromBase64String(signatureString);
-                if (_ecdsaWrapper.VerifyData(ecdsa, dataToVerify, signature, HashAlgorithmName.SHA512))
+                if (_ecdsaWrapper.VerifyData(signingPublicKey, dataToVerify, signature, HashAlgorithmName.SHA512))
                 {
                     return true;
                 }
