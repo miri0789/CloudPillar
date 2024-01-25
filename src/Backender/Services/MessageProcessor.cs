@@ -58,12 +58,12 @@ public class MessageProcessor : IMessageProcessor
         }
         catch (TaskCanceledException ex)
         {
-            _logger.Error($"ProcessMessageAsync task cancel: {ex.Message}");
+            _logger.Error($"ProcessMessageAsync task cancel to process message: {message} with exception: {ex.Message}");
             return (MessageProcessType.ConsumeErrorFatal, null, null);
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error($"ProcessMessageAsync Connection error: {ex.Message}");
+            _logger.Error($"ProcessMessageAsync Connection error to process message: {message} with exception: {ex.Message}");
             return (MessageProcessType.Retain, null, null);
         }
         catch (Exception ex)
