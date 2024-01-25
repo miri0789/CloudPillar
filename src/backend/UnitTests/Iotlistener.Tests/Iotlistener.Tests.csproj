@@ -22,8 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Iotlistener\Iotlistener.csproj" />
-    <ProjectReference Include="./../../../Shared/Entities/Entities.csproj" />
-
   </ItemGroup>
 
 </Project>
