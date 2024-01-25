@@ -1,5 +1,5 @@
 
-namespace PriorityQueue.Entities.Enums;
+namespace Backender.Entities.Enums;
 public enum MessageProcessType
 {
     Retain, 

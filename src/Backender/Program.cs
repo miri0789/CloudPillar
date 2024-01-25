@@ -1,16 +1,16 @@
 ﻿using System.Reflection;
-using PriorityQueue.Services.Interfaces;
-using PriorityQueue.Services;
+using Backender.Services.Interfaces;
+using Backender.Services;
 using Shared.Logger;
-using PriorityQueue.Wrappers.Interfaces;
-using PriorityQueue.Wrappers;
+using Backender.Wrappers.Interfaces;
+using Backender.Wrappers;
 
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                .InformationalVersion;
 
-var builder = LoggerHostCreator.Configure("PriorityQueue", WebApplication.CreateBuilder(args));
+var builder = LoggerHostCreator.Configure("Backender", WebApplication.CreateBuilder(args));
 
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IMessageProcessor, MessageProcessor>();

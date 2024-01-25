@@ -190,12 +190,12 @@
             }
         },
         {
-            "label": "buildPriorityQueue",
+            "label": "buildBackender",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/PriorityQueue/PriorityQueue.csproj",
+                "${workspaceFolder}/src/Backender/Backender.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],

@@ -1,10 +1,10 @@
 ﻿using System.Text;
-using PriorityQueue.Services.Interfaces;
-using PriorityQueue.Wrappers.Interfaces;
+using Backender.Services.Interfaces;
+using Backender.Wrappers.Interfaces;
 using Shared.Logger;
-using PriorityQueue.Entities.Enums;
+using Backender.Entities.Enums;
 
-namespace PriorityQueue.Services;
+namespace Backender.Services;
 public class MessageProcessor : IMessageProcessor
 {
     private readonly HttpClient _httpClient;
@@ -40,23 +40,30 @@ public class MessageProcessor : IMessageProcessor
         try
         {
             _logger.Info($"ProcessMessageAsync Sending message: {message} to url: {url}");
-            var response = await _httpClient.SendAsync(request, stoppingToken);
-            var timeout = _environmentsWrapper.requestTimeoutMS;
-
-            string responseContent = await response.Content.ReadAsStringAsync();
-            var responseHeaers = response.Headers.ToDictionary(h => h.Key, h => h.Value.FirstOrDefault());
-            var returnProcessType = MessageProcessType.ConsumeSuccess;
-            if (!response.IsSuccessStatusCode)
+            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken,
+                new CancellationTokenSource(new TimeSpan(0, 0, _environmentsWrapper.requestTimeoutSeconds)).Token))
             {
-                _logger.Warn($"ProcessMessageAsync not success status code: {response.StatusCode} with content: {responseContent} and headers: {responseHeaers}");
-                var isBadRequest = ((int)response.StatusCode) / 100 == 4;
-                returnProcessType = isBadRequest ? MessageProcessType.ConsumeErrorFatal : MessageProcessType.ConsumeErrorRecoverable;
+                var response = await _httpClient.SendAsync(request, stoppingToken);
+                string responseContent = await response.Content.ReadAsStringAsync();
+                var responseHeaers = response.Headers.ToDictionary(h => h.Key, h => h.Value.FirstOrDefault());
+                var returnProcessType = MessageProcessType.ConsumeSuccess;
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Warn($"ProcessMessageAsync not success status code: {response.StatusCode} with content: {responseContent} and headers: {responseHeaers}");
+                    var isBadRequest = ((int)response.StatusCode) / 100 == 4;
+                    returnProcessType = isBadRequest ? MessageProcessType.ConsumeErrorFatal : MessageProcessType.ConsumeErrorRecoverable;
+                }
+                return (returnProcessType, responseContent, responseHeaers);
             }
-            return (returnProcessType, responseContent, responseHeaers);
         }
-        catch (HttpRequestException httpEx)
+        catch (TaskCanceledException ex)
         {
-            _logger.Error($"ProcessMessageAsync Connection error: {httpEx.Message}");
+            _logger.Error($"ProcessMessageAsync task cancel: {ex.Message}");
+            return (MessageProcessType.ConsumeErrorFatal, null, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error($"ProcessMessageAsync Connection error: {ex.Message}");
             return (MessageProcessType.Retain, null, null);
         }
         catch (Exception ex)

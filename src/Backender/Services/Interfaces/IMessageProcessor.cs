@@ -1,6 +1,6 @@
-﻿using PriorityQueue.Entities.Enums;
+﻿using Backender.Entities.Enums;
 
-namespace PriorityQueue.Services.Interfaces;
+namespace Backender.Services.Interfaces;
 public interface IMessageProcessor
 {
     Task<(MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)>

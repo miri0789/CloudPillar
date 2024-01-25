@@ -97,10 +97,10 @@
             "name": "Priority Queue",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "buildPriorityQueue",
-            "program": "${workspaceFolder}/src/PriorityQueue/bin/Debug/net7.0/PriorityQueue.dll",
+            "preLaunchTask": "buildBackender",
+            "program": "${workspaceFolder}/src/Backender/bin/Debug/net7.0/Backender.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/PriorityQueue",
+            "cwd": "${workspaceFolder}/src/Backender",
             "console": "internalConsole",
             "env": {},
             "stopAtEntry": false

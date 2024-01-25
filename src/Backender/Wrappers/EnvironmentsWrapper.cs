@@ -1,8 +1,8 @@
 ﻿
 
-using PriorityQueue.Wrappers.Interfaces;
+using Backender.Wrappers.Interfaces;
 
-namespace PriorityQueue.Wrappers;
+namespace Backender.Wrappers;
 public class EnvironmentsWrapper : IEnvironmentsWrapper
 {
 
@@ -13,7 +13,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _svcBackendUrl = "SVC_BACKEND_URL";
     private const string _higherPriorityGraceMS = "HIGHER_PRIORITY_GRACE_MS";
     private const string _noMessagesDelayMS = "NO_MESSAGES_DELAY_MS";
-    private const string _requestTimeoutMS = "REQUEST_TIMEOUT_MS";
+    private const string _requestTimeoutSeconds = "REQUEST_TIMEOUT_SECONDS";
 
     public string serviceBusConnectionString
     {
@@ -43,15 +43,15 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return int.TryParse(GetVariable(_noMessagesDelayMS), out int value) ? value : 5000; }
     }
-    public int requestTimeoutMS
+    public int requestTimeoutSeconds
     {
-        get { return int.TryParse(GetVariable(_requestTimeoutMS), out int value) ? value : 60000; }
+        get { return int.TryParse(GetVariable(_requestTimeoutSeconds), out int value) ? value : 60; }
     }
 
 
     private string GetVariable(string name)
     {
-        return Environment.GetEnvironmentVariable(name);
+        return Environment.GetEnvironmentVariable(name)!;
     }
 
 }

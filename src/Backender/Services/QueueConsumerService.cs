@@ -1,11 +1,11 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
-using PriorityQueue.Services.Interfaces;
-using PriorityQueue.Wrappers.Interfaces;
+using Backender.Services.Interfaces;
+using Backender.Wrappers.Interfaces;
 using Shared.Logger;
-using PriorityQueue.Entities.Enums;
+using Backender.Entities.Enums;
 
-namespace PriorityQueue.Services;
+namespace Backender.Services;
 public class QueueConsumerService : BackgroundService
 {
     private readonly IMessageProcessor _messageProcessor;
@@ -204,13 +204,13 @@ public class QueueConsumerService : BackgroundService
             var headers = args.Message.ApplicationProperties.ToDictionary(kv => kv.Key, kv => kv.Value?.ToString() ?? string.Empty);
             (MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)
              = await _messageProcessor.ProcessMessageAsync(args.Message.Body.ToString(), headers,stoppingToken);
-            if (result)
-            {
-                // Distinguish failure types: is the service is the problem, abandon to let another service to process;
-                // If its the message problem (HTTP 4xx) - no recovery, fatal failure, do not abandon, just fail
-                await args.CompleteMessageAsync(args.Message);
-                _logger.Info($"OnMessageReceivedAsync ProcessMessageAsync CompleteMessageAsync, queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
-            }
+            // if (result)
+            // {
+            //     // Distinguish failure types: is the service is the problem, abandon to let another service to process;
+            //     // If its the message problem (HTTP 4xx) - no recovery, fatal failure, do not abandon, just fail
+            //     await args.CompleteMessageAsync(args.Message);
+            //     _logger.Info($"OnMessageReceivedAsync ProcessMessageAsync CompleteMessageAsync, queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
+            // }
         }
         catch (Exception ex)
         {

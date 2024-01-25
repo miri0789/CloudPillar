@@ -1,4 +1,4 @@
-﻿namespace PriorityQueue.Wrappers.Interfaces;
+﻿namespace Backender.Wrappers.Interfaces;
 public interface IEnvironmentsWrapper
 {
     string serviceBusConnectionString { get; }
@@ -8,5 +8,5 @@ public interface IEnvironmentsWrapper
     string svcBackendUrl { get; }
     int higherPriorityGraceMS { get; }
     int noMessagesDelayMS { get; }
-    int requestTimeoutMS { get; }
+    int requestTimeoutSeconds { get; }
 }
