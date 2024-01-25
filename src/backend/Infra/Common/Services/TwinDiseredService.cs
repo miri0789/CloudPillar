@@ -1,13 +1,12 @@
 using Microsoft.Azure.Devices.Shared;
-
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers.Interfaces;
-
 using Newtonsoft.Json;
-
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
 using Shared.Logger;
+using Microsoft.Azure.Devices;
+using System.Text;
 
 namespace Backend.Infra.Common.Services;
 
@@ -70,5 +69,78 @@ public class TwinDiseredService : ITwinDiseredService
             _logger.Error($"An error occurred while attempting to update ChangeSpecDiagnostics: {ex.Message}");
         }
 
+    }
+
+    public async Task<TwinDesired> AddChangeSpec(string deviceId, AssignChangeSpec assignChangeSpec)
+    {
+        ArgumentNullException.ThrowIfNull(deviceId);
+
+        try
+        {
+            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+            {
+                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
+                TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+                twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
+                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(assignChangeSpec.ChangeSpecKey);
+                if (twinDesiredChangeSpec is not null)
+                {
+                    twinDesired.ChangeSpec[assignChangeSpec.ChangeSpecKey] = null;
+                    await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
+                    twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
+                    twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+                    twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
+                }
+
+                twinDesired.ChangeSpec.Add(assignChangeSpec.ChangeSpecKey, assignChangeSpec.ChangeSpec);
+                return twinDesired;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while attempting to add new changeSpec {assignChangeSpec.ChangeSpecKey}: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<Byte[]> GetTwinDesiredDataToSign(string deviceId, string changeSpecKey)
+    {
+        ArgumentNullException.ThrowIfNull(deviceId);
+
+        try
+        {
+            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+            {
+                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
+                var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
+                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
+                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesiredChangeSpec));
+                return dataToSign;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while attempting to get data to sign: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task SignTwinDesiredAsync(TwinDesired twinDesired, string deviceId, string changeSpecKey, string signData)
+    {
+        using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+        {
+            var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
+            twinDesired.SetDesiredChangeSignByKey(changeSpecKey, signData);
+
+            twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
+            await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
+        }
+    }
+
+    private async Task UpdateTwinAsync(TwinDesired twinDesired, RegistryManager registryManager, string deviceId, Twin twin, string etag)
+    {
+        var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
+        twin.Properties.Desired = new TwinCollection(twinDesiredJson);
+        await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
     }
 }

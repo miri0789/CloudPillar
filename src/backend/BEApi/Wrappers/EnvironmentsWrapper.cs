@@ -9,6 +9,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _globalDeviceEndpoint = "GlobalDeviceEndpoint";
     private const string _expirationCertificatePercent = "ExpirationCertificatePercent";
     private const string _maxCountDevices = "MaxCountDevices";
+    private const string _keyHolderUrl = "KeyHolderUrl";
 
     public string iothubConnectionString
     {
@@ -38,6 +39,11 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public int maxCountDevices
     {
         get { return int.Parse(GetVariable(_maxCountDevices)); }
+    }
+
+    public string keyHolderUrl
+    {
+        get { return GetVariable(_keyHolderUrl); }
     }
 
     private string GetVariable(string name)

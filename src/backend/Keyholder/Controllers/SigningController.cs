@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Backend.Keyholder.Interfaces;
-using System.Runtime.ConstrainedExecution;
 
 namespace Backend.Keyholder;
-
 
 [ApiController]
 [Route("[controller]")]
@@ -15,19 +13,17 @@ public class SigningController : ControllerBase
         _signingService = signingService;
     }
 
-    [HttpGet("createTwinKeySignature")]
-    public async Task<IActionResult> CreateTwinKeySignature(string deviceId, string changeSignKey)
+    [HttpPost("SignData")]
+    public async Task<IActionResult> CreateTwinKeySignature(byte[] dataToSign)
     {
-        await _signingService.CreateTwinKeySignature(deviceId, changeSignKey);
-        return Ok();
+        var signature = await _signingService.SignData(dataToSign);
+        return Ok(signature);
     }
 
-    [HttpPost("createFileSign")]
+    [HttpPost("CreateFileSign")]
     public async Task<IActionResult> GetMeatadataFile(string deviceId, string propName, int actionIndex, byte[] data, string changeSpecKey)
     {
         await _signingService.CreateFileKeySignature(deviceId, propName, actionIndex, data, changeSpecKey);
         return Ok();
     }
 }
-
-
