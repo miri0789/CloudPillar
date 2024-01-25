@@ -5,4 +5,6 @@ public interface IMessageProcessor
 {
     Task<(MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)>
     ProcessMessageAsync(string message, IDictionary<string, string> properties, CancellationToken stoppingToken);
+
+    Task<HttpResponseMessage> SendPostRequestAsync(string relativeUri, string body, IDictionary<string, string> headers, CancellationToken cts);
 }

@@ -22,29 +22,35 @@ public class MessageProcessor : IMessageProcessor
 
     }
 
+    public async Task<HttpResponseMessage > SendPostRequestAsync(string relativeUri, string body, IDictionary<string, string> headers, CancellationToken cts)
+    {
+        using (var client = new HttpClient())
+        {
+            client.BaseAddress = new Uri(_environmentsWrapper.svcBackendUrl);
+            foreach (var property in headers.Where(p => p.Key != RELATIVE_URI_PROP))
+            {
+                client.DefaultRequestHeaders.Add(property.Key, property.Value);
+            }
+            var content = new StringContent(body, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(relativeUri, content, cts);
+            return response;
+
+        }
+    }
+
     public async Task<(MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)>
     ProcessMessageAsync(string message, IDictionary<string, string> properties, CancellationToken stoppingToken)
     {
-        var url = _environmentsWrapper.svcBackendUrl + (properties.TryGetValue(RELATIVE_URI_PROP, out var relativeUri) ? relativeUri : "");
-
-        var request = new HttpRequestMessage(HttpMethod.Post, url)
-        {
-            Content = new StringContent(message, Encoding.UTF8, "application/json")
-        };
-
-        foreach (var property in properties.Where(p => p.Key != RELATIVE_URI_PROP))
-        {
-            request.Headers.Add(property.Key, property.Value);
-        }
-
         try
         {
-            _logger.Info($"ProcessMessageAsync Sending message: {message} to url: {url}");
             using (var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken,
                 new CancellationTokenSource(new TimeSpan(0, 0, _environmentsWrapper.requestTimeoutSeconds)).Token))
             {
-                var response = await _httpClient.SendAsync(request, stoppingToken);
-                string responseContent = await response.Content.ReadAsStringAsync();
+                var relativeUri = properties.TryGetValue(RELATIVE_URI_PROP, out var uri) ? uri : "";
+                _logger.Info($"ProcessMessageAsync Sending message: {message} to url: {relativeUri}");
+                var response = await SendPostRequestAsync(relativeUri, message, properties, cts.Token);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
                 var responseHeaers = response.Headers.ToDictionary(h => h.Key, h => h.Value.FirstOrDefault());
                 var returnProcessType = MessageProcessType.ConsumeSuccess;
                 if (!response.IsSuccessStatusCode)
@@ -54,6 +60,7 @@ public class MessageProcessor : IMessageProcessor
                     returnProcessType = isBadRequest ? MessageProcessType.ConsumeErrorFatal : MessageProcessType.ConsumeErrorRecoverable;
                 }
                 return (returnProcessType, responseContent, responseHeaers);
+
             }
         }
         catch (TaskCanceledException ex)
