@@ -79,11 +79,11 @@ public static class TwinJsonConvertExtensions
         {
             if (twinReported?.ChangeSpec.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Key is not null)
             {
-                twinReported.ChangeSpec[changeSpecKey] = twinReportedChangeSpec;              
+                twinReported.ChangeSpec[changeSpecKey] = twinReportedChangeSpec;
             }
             else
             {
-                twinReported.ChangeSpec.Add(changeSpecKey, twinReportedChangeSpec);               
+                twinReported.ChangeSpec.Add(changeSpecKey, twinReportedChangeSpec);
             }
         }
     }
@@ -107,7 +107,12 @@ public static class TwinJsonConvertExtensions
     {
         return changeSignKey.Replace(DeviceConstants.SIGN_KEY, "");
     }
-    
+
+    public static string GetChangeSpecIdKeyByChangeSpecKey(this string changeSpecKey)
+    {
+        return $"{changeSpecKey}{DeviceConstants.ID_KEY}";
+    }
+
     public static void SetDesiredChangeSignByKey(this TwinDesired twinDesired, string changeSignKey, string signData)
     {
         if (twinDesired is not null && twinDesired.ChangeSign is not null)

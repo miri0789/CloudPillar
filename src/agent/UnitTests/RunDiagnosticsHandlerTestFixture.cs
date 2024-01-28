@@ -29,8 +29,7 @@ public class RunDiagnosticsHandlerTestFixture
     private const string DIAGNOSTICS_EXTENSION = ".tmp";
     private string guid = Guid.NewGuid().ToString();
     private string filePath = string.Empty;
-    private const string PATCH_KEY = "TransitPackage";
-    private const string CHANGE_SPEC_ID = "123";
+    private const string PATCH_KEY = "transitPackage";
 
 
     private CancellationToken cancellationToken = CancellationToken.None;
@@ -169,7 +168,7 @@ public class RunDiagnosticsHandlerTestFixture
                                 }
                             }
                         },
-                        Id = CHANGE_SPEC_ID
+                        Id = MockHelper.CHANGE_SPEC_ID
                     }
                 }
             };
@@ -179,7 +178,7 @@ public class RunDiagnosticsHandlerTestFixture
                 {
                     TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinReportedChangeSpec()
                     {
-                        Id = CHANGE_SPEC_ID,
+                        Id = MockHelper.CHANGE_SPEC_ID,
                         Patch =  new Dictionary<string, TwinActionReported[]>()
                         {
                             { PATCH_KEY, new TwinActionReported[]{new TwinActionReported() { Status = statusType } } }

@@ -118,15 +118,15 @@ public class TwinHandler : ITwinHandler
 
             foreach (string changeSpecKey in twinDesired.ChangeSpec.Keys)
             {
-                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-                var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+                var twinDesiredChangeSpec = twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey);
+                var twinReportedChangeSpec = twinReported?.GetReportedChangeSpecByKey(changeSpecKey);
                 twinReportedChangeSpec = await ResetReportedWhenDesiredChange(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
                 twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey);
 
-                if (await ChangeSpecIdEmpty(twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey)?.Id, cancellationToken))
+                if (await ChangeSpecIdEmpty(twinDesired, changeSpecKey, cancellationToken))
                 {
                     _logger.Info($"There is no twin change spec id");
-                    return;
+                    continue;
                 }
                 var changeSignKey = changeSpecKey.GetSignKeyByChangeSpec();
 
@@ -134,7 +134,7 @@ public class TwinHandler : ITwinHandler
                 {
                     byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.GetDesiredChangeSpecByKey(changeSpecKey)));
                     var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(changeSignKey)!);
-                    var message = isSignValid ? null : "Twin Change signature is invalid";
+                    var message = isSignValid ? null : $"Twin Change signature for {changeSignKey} is invalid";
                     await _deviceClient.UpdateReportedPropertiesAsync(changeSignKey, message, cancellationToken);
                     if (isSignValid)
                     {
@@ -158,7 +158,7 @@ public class TwinHandler : ITwinHandler
 
 
     private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
-    TwinReported twinReported, String changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    TwinReported twinReported, string changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey.ToString());
         var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey.ToString());
@@ -372,11 +372,13 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    private async Task<bool> ChangeSpecIdEmpty(string? changeSpecId, CancellationToken cancellationToken)
+    private async Task<bool> ChangeSpecIdEmpty(TwinDesired twinDesired, string? changeSpecKey, CancellationToken cancellationToken)
     {
-        var emptyChangeSpecId = string.IsNullOrWhiteSpace(changeSpecId);
-        var message = emptyChangeSpecId ? "There is no ID for changeSpec.." : null;
-        await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSpecId), message, cancellationToken);
+        var changeSpecIdKey = changeSpecKey.GetChangeSpecIdKeyByChangeSpecKey();
+        var changeSpec = twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey);
+        var emptyChangeSpecId = string.IsNullOrWhiteSpace(changeSpec.Id);
+        var message = emptyChangeSpecId ? $"There is no ID for {changeSpecKey}.." : null;
+        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecIdKey, message, cancellationToken);
         return emptyChangeSpecId;
     }
 
