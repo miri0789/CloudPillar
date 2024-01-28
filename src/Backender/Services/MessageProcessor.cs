@@ -3,6 +3,7 @@ using Backender.Services.Interfaces;
 using Backender.Wrappers.Interfaces;
 using Shared.Logger;
 using Backender.Entities.Enums;
+using Backender.Entities;
 
 namespace Backender.Services;
 public class MessageProcessor : IMessageProcessor
@@ -10,8 +11,6 @@ public class MessageProcessor : IMessageProcessor
     private readonly HttpClient _httpClient;
     private readonly ILoggerHandler _logger;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
-
-    private const string RELATIVE_URI_PROP = "RelativeURI";
     public MessageProcessor(HttpClient httpClient,
                             ILoggerHandler logger,
                             IEnvironmentsWrapper environmentsWrapper)
@@ -22,14 +21,17 @@ public class MessageProcessor : IMessageProcessor
 
     }
 
-    public async Task<HttpResponseMessage> SendPostRequestAsync(string relativeUri, string body, IDictionary<string, string> headers, CancellationToken cancellationToken)
+    public async Task<HttpResponseMessage> SendPostRequestAsync(string relativeUri, string body, IDictionary<string, string>? headers, CancellationToken cancellationToken)
     {
         using (var client = new HttpClient())
         {
             client.BaseAddress = new Uri(_environmentsWrapper.svcBackendUrl);
-            foreach (var property in headers.Where(p => p.Key != RELATIVE_URI_PROP))
+            if (headers != null)
             {
-                client.DefaultRequestHeaders.Add(property.Key, property.Value);
+                foreach (var property in headers)
+                {
+                    client.DefaultRequestHeaders.Add(property.Key, property.Value);
+                }
             }
             var content = new StringContent(body, Encoding.UTF8, "application/json");
             var response = await client.PostAsync(relativeUri, content, cancellationToken);
@@ -38,7 +40,7 @@ public class MessageProcessor : IMessageProcessor
         }
     }
 
-    public async Task<(MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)>
+    public async Task<(MessageProcessType type, string response, IDictionary<string, string>? responseHeaers)>
     ProcessMessageAsync(string message, IDictionary<string, string> properties, CancellationToken cancellationToken)
     {
         try
@@ -46,13 +48,14 @@ public class MessageProcessor : IMessageProcessor
             using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
                 new CancellationTokenSource(new TimeSpan(0, 0, _environmentsWrapper.requestTimeoutSeconds)).Token))
             {
-                var relativeUri = properties.TryGetValue(RELATIVE_URI_PROP, out var uri) ? uri : "";
+                var relativeUri = properties.TryGetValue(Constants.RELATIVE_URI_PROP, out var uri) ? uri : "";
                 _logger.Info($"ProcessMessageAsync Sending message: {message} to url: {relativeUri}");
                 var response = await SendPostRequestAsync(relativeUri, message, properties, cts.Token);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 var responseHeaers = response.Headers.ToDictionary(h => h.Key, h => h.Value.FirstOrDefault());
                 var returnProcessType = MessageProcessType.ConsumeSuccess;
+
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.Warn($"ProcessMessageAsync not success status code: {response.StatusCode} with content: {responseContent} and headers: {responseHeaers}");
@@ -66,17 +69,17 @@ public class MessageProcessor : IMessageProcessor
         catch (TaskCanceledException ex)
         {
             _logger.Error($"ProcessMessageAsync task cancel to process message: {message} with exception: {ex.Message}");
-            return (MessageProcessType.ConsumeErrorFatal, null, null);
+            return (MessageProcessType.ConsumeErrorFatal, string.Empty, null);
         }
         catch (HttpRequestException ex)
         {
             _logger.Error($"ProcessMessageAsync Connection error to process message: {message} with exception: {ex.Message}");
-            return (MessageProcessType.Retain, null, null);
+            return (MessageProcessType.Retain, string.Empty, null);
         }
         catch (Exception ex)
         {
             _logger.Error($"ProcessMessageAsync Failed to process message: {message} with exception: {ex.Message}");
-            return (MessageProcessType.ConsumeErrorRecoverable, null, null);
+            return (MessageProcessType.ConsumeErrorRecoverable, string.Empty, null);
         }
 
     }

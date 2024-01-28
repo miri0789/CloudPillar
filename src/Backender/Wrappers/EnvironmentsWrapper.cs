@@ -49,11 +49,11 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return int.TryParse(GetVariable(_requestTimeoutSeconds), out int value) ? value : 60; }
     }
-    public string requestTimeoutSeconds
+    public string completionTopic
     {
         get { return GetVariable(_completionTopic); }
     }
-    public string requestTimeoutSeconds
+    public string completionUrlBase
     {
         get { return GetVariable(_completionUrlBase); }
     }

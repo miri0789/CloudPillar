@@ -4,6 +4,8 @@ using Backender.Services.Interfaces;
 using Backender.Wrappers.Interfaces;
 using Shared.Logger;
 using Backender.Entities.Enums;
+using Backender.Entities;
+using System.Text;
 
 namespace Backender.Services;
 public class QueueConsumerService : BackgroundService
@@ -13,6 +15,7 @@ public class QueueConsumerService : BackgroundService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly List<ServiceBusProcessor> _processors = new List<ServiceBusProcessor>();
     private static int _currentParallelCount = 0;
+    private ServiceBusClient _client;
 
 
     public QueueConsumerService(IMessageProcessor messageProcessor,
@@ -22,25 +25,28 @@ public class QueueConsumerService : BackgroundService
         _messageProcessor = messageProcessor ?? throw new ArgumentNullException(nameof(messageProcessor));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
+        if (string.IsNullOrWhiteSpace(_environmentsWrapper.serviceBusConnectionString))
+        {
+            throw new ArgumentNullException(nameof(_environmentsWrapper.serviceBusConnectionString));
+        }
+        _client = new ServiceBusClient(_environmentsWrapper.serviceBusConnectionString);
     }
 
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await InitializeProcessorsAsync(_environmentsWrapper.serviceBusUrls, stoppingToken);
-        await ProcessInPriorityOrderAsync(stoppingToken);
+        await InitializeProcessorsAsync(_environmentsWrapper.serviceBusUrls, cancellationToken);
+        await ProcessInPriorityOrderAsync(cancellationToken);
     }
 
-    private async Task InitializeProcessorsAsync(string[] serviceBusUrls, CancellationToken stoppingToken)
+    private async Task InitializeProcessorsAsync(string[] serviceBusUrls, CancellationToken cancellationToken)
     {
-        var client = new ServiceBusClient(_environmentsWrapper.serviceBusConnectionString);
         ServiceBusAdministrationClient? adminClient = TryCreateAdminClient();
 
         foreach (var url in serviceBusUrls)
         {
-            ServiceBusProcessor processor = await CreateProcessorAsync(client, adminClient, url);
-            SubscribeToProcessorEvents(processor, stoppingToken);
+            ServiceBusProcessor processor = await CreateProcessorAsync(_client, adminClient, url);
+            SubscribeToProcessorEvents(processor, cancellationToken);
             _processors.Add(processor);
         }
     }
@@ -110,11 +116,11 @@ public class QueueConsumerService : BackgroundService
         };
     }
 
-    private void SubscribeToProcessorEvents(ServiceBusProcessor processor, CancellationToken stoppingToken)
+    private void SubscribeToProcessorEvents(ServiceBusProcessor processor, CancellationToken cancellationToken)
     {
         int processorIndex = _processors.Count;
 
-        Func<ProcessMessageEventArgs, Task> messageHandler = async (args) => await OnMessageReceivedAsync(args, processorIndex, stoppingToken);
+        Func<ProcessMessageEventArgs, Task> messageHandler = async (args) => await OnMessageReceivedAsync(args, processorIndex, cancellationToken);
         processor.ProcessMessageAsync += messageHandler;
         processor.ProcessErrorAsync += OnProcessError;
     }
@@ -138,9 +144,9 @@ public class QueueConsumerService : BackgroundService
 
 
 
-    private async Task ProcessInPriorityOrderAsync(CancellationToken stoppingToken)
+    private async Task ProcessInPriorityOrderAsync(CancellationToken cancellationToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             for (int i = 0; i < _processors.Count && _currentParallelCount < _environmentsWrapper.parallelCount; i++)
             {
@@ -150,7 +156,7 @@ public class QueueConsumerService : BackgroundService
                 if (!isQueueProcessing && i != 0)
                 {
                     _logger.Info($"Grace period for higher priority queues to receive messages, queue index {i}");
-                    await Task.Delay(_environmentsWrapper.higherPriorityGraceMS, stoppingToken);
+                    await Task.Delay(_environmentsWrapper.higherPriorityGraceMS, cancellationToken);
 
                     // If any messages are received and being processed, don't advance to lower priority
                     if (_currentParallelCount >= _environmentsWrapper.parallelCount)
@@ -160,7 +166,7 @@ public class QueueConsumerService : BackgroundService
                     }
                 }
 
-                if (!isQueueProcessing && !stoppingToken.IsCancellationRequested)
+                if (!isQueueProcessing && !cancellationToken.IsCancellationRequested)
                 {
                     _logger.Info($"Starting processor for queue {processor.EntityPath}");
                     await processor.StartProcessingAsync();
@@ -168,10 +174,10 @@ public class QueueConsumerService : BackgroundService
             }
 
             // If no messages are being processed in any queue, wait longer before re-checking
-            if (_currentParallelCount == 0 && !stoppingToken.IsCancellationRequested)
+            if (_currentParallelCount == 0 && !cancellationToken.IsCancellationRequested)
             {
                 _logger.Debug("No messages are being processed in any queue, wait longer before re-checking");
-                await Task.Delay(_environmentsWrapper.noMessagesDelayMS, stoppingToken);
+                await Task.Delay(_environmentsWrapper.noMessagesDelayMS, cancellationToken);
             }
         }
 
@@ -187,7 +193,7 @@ public class QueueConsumerService : BackgroundService
     }
 
 
-    private async Task OnMessageReceivedAsync(ProcessMessageEventArgs args, int processorIndex, CancellationToken stoppingToken)
+    private async Task OnMessageReceivedAsync(ProcessMessageEventArgs args, int processorIndex, CancellationToken cancellationToken)
     {
         await StopLowerPriorityProcessorsAsync(processorIndex);
 
@@ -201,25 +207,90 @@ public class QueueConsumerService : BackgroundService
 
         try
         {
-            var headers = args.Message.ApplicationProperties.ToDictionary(kv => kv.Key, kv => kv.Value?.ToString() ?? string.Empty);
-            (MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)
-             = await _messageProcessor.ProcessMessageAsync(args.Message.Body.ToString(), headers,stoppingToken);
-            // if (result)
-            // {
-            //     // Distinguish failure types: is the service is the problem, abandon to let another service to process;
-            //     // If its the message problem (HTTP 4xx) - no recovery, fatal failure, do not abandon, just fail
-            //     await args.CompleteMessageAsync(args.Message);
-            //     _logger.Info($"OnMessageReceivedAsync ProcessMessageAsync CompleteMessageAsync, queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
-            // }
+            var properties = args.Message.ApplicationProperties.ToDictionary(kv => kv.Key, kv => kv.Value?.ToString() ?? string.Empty);
+            (MessageProcessType type, string response, IDictionary<string, string>? responseHeaers)
+             = await _messageProcessor.ProcessMessageAsync(args.Message.Body.ToString(), properties, cancellationToken);
+            if (type == MessageProcessType.Retain)
+            {
+                await args.AbandonMessageAsync(args.Message);
+                _logger.Info($"OnMessageReceivedAsync ProcessMessageAsync Retain AbandonMessageAsync, queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
+            }
+            else
+            {
+                var relativeUri = GetCompleteRelatevieUri(type, properties);
+
+                await SendCompleteTopic(response, relativeUri, responseHeaers, cancellationToken);
+                await SendCompleteRequest(response, relativeUri, responseHeaers, cancellationToken);
+
+                await args.CompleteMessageAsync(args.Message);
+            }
         }
         catch (Exception ex)
         {
             _logger.Error($"OnMessageReceivedAsync ProcessMessageAsync failed: {ex.Message}");
-            await args.AbandonMessageAsync(args.Message);
+            await args.CompleteMessageAsync(args.Message);
         }
         finally
         {
             Interlocked.Decrement(ref _currentParallelCount);
+        }
+    }
+
+
+    private string GetCompleteRelatevieUri(MessageProcessType type, IDictionary<string, string> properties)
+    {
+        var relativeUri = properties.TryGetValue(Constants.COMPLETION_RELATIVR_URI, out var uri) ? uri : "";
+
+        if (!string.IsNullOrWhiteSpace(relativeUri))
+        {
+            return $"{relativeUri}&resultCode={type}";
+        }
+        else
+        {
+            return $"?resultCode={type}";
+        }
+    }
+
+    private async Task SendCompleteRequest(string response, string relativeUri, IDictionary<string, string>? responseHeaers, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(_environmentsWrapper.completionUrlBase))
+        {
+            try
+            {
+                await _messageProcessor.SendPostRequestAsync($"{_environmentsWrapper.completionUrlBase}{relativeUri}", response, responseHeaers, cancellationToken);
+                _logger.Info($"SendCompleteRequest for uri {relativeUri} success");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"OnMessageReceivedAsync ProcessMessageAsync SendPostRequestAsync failed: {ex.Message}");
+            }
+        }
+    }
+    private async Task SendCompleteTopic(string response, string relativeUri, IDictionary<string, string>? responseHeaers, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(_environmentsWrapper.completionTopic))
+        {
+            try
+            {
+                var completionTopicSender = _client.CreateSender(_environmentsWrapper.completionTopic);
+                var completionMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(response));
+                if (responseHeaers != null)
+                {
+                    foreach (var header in responseHeaers)
+                    {
+                        completionMessage.ApplicationProperties.Add(header.Key, header.Value);
+                    }
+                }
+                completionMessage.ApplicationProperties.Add(Constants.RELATIVE_URI_PROP, relativeUri);
+
+                await completionTopicSender.SendMessageAsync(completionMessage, cancellationToken);
+                _logger.Info($"SendCompleteTopic for uri {relativeUri} succeeded");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"SendCompleteTopic for uri {relativeUri} failed: {ex.Message}");
+            }
         }
     }
 
