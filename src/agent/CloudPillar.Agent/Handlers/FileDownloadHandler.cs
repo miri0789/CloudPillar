@@ -518,9 +518,10 @@ public class FileDownloadHandler : IFileDownloadHandler
         _filesDownloads.RemoveAll(item => item.Action.Source == fileName || item.ActionReported.ReportIndex == actionIndex);
     }
 
-    public void InitDownloadsList()
+    public void InitDownloadsList(List<ActionToReport> actions)
     {
-        _filesDownloads = new List<FileDownload>();
+        _filesDownloads.RemoveAll(fileDownload =>
+         !actions.Any(action => GetDownloadFile(action.ReportIndex, ((DownloadAction)action.TwinAction).Source, action.ChangeSpecId) != null));
     }
 
     private async Task UpdateKnownIdentities(CancellationToken cancellationToken)

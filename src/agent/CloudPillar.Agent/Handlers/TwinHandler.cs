@@ -79,11 +79,7 @@ public class TwinHandler : ITwinHandler
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
-            if (changeSpecKey != TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)
-            {
-                _logger.Info($"TwinDesired spec id not equal to TwinReported spec id, reset all reported actions");
-                _fileDownloadHandler.InitDownloadsList();
-            }
+        
         }
         var isReportedExist = twinDesiredChangeSpec is null && twinReportedChangeSpec is not null;
         if (isReportedExist ||
@@ -116,6 +112,7 @@ public class TwinHandler : ITwinHandler
 
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
+            ResetInActiveDownloads(twinDesired, twinReported);
             foreach (string changeSpecKey in twinDesired.ChangeSpec.Keys)
             {
                 var twinDesiredChangeSpec = twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey);
@@ -125,7 +122,7 @@ public class TwinHandler : ITwinHandler
 
                 if (await ChangeSpecIdEmpty(twinDesired, changeSpecKey, cancellationToken))
                 {
-                    _logger.Info($"There is no twin change spec id");
+                    _logger.Info($"There is no twin change spec id for {changeSpecKey}");
                     continue;
                 }
                 var changeSignKey = changeSpecKey.GetSignKeyByChangeSpec();
@@ -156,6 +153,19 @@ public class TwinHandler : ITwinHandler
         }
     }
 
+
+    private void ResetInActiveDownloads(TwinDesired twinDesired, TwinReported twinReported)
+    {
+        var actions = twinDesired?.ChangeSpec?
+            .SelectMany(desiredChangeSpec =>
+                GetActionsToExecAsync(desiredChangeSpec.Value, twinReported?.GetReportedChangeSpecByKey(desiredChangeSpec.Key),
+                    desiredChangeSpec.Key, false, CancellationToken.None).Result)
+            .ToList();
+        if (actions.Count() > 0)
+        {
+            _fileDownloadHandler.InitDownloadsList(actions);
+        }
+    }
 
     private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
     TwinReported twinReported, string changeSpecKey, bool isInitial, CancellationToken cancellationToken)
