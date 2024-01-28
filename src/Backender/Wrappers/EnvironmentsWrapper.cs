@@ -17,11 +17,11 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
 
     public string serviceBusConnectionString
     {
-        get { return GetVariable(_serviceBusConnectionString) ?? "Endpoint=sb://tryperiodicqueue.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=XuvbHsyCDS74pTiizel0GjPLTNo8w8ftl+ASbDLFCpE="; }
+        get { return GetVariable(_serviceBusConnectionString); }
     }
     public string[] serviceBusUrls
     {
-        get { return GetVariable(_serviceBusUrls)?.Split(';') ?? "periority1;periority2;periority3".Split(';'); }
+        get { return GetVariable(_serviceBusUrls)?.Split(';') ?? Array.Empty<string>(); }
     }
     public int parallelCount
     {
