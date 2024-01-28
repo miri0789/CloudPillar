@@ -63,4 +63,9 @@ public class X509CertificateWrapper : IX509CertificateWrapper
     {
         return certificate.PublicKey.ExportSubjectPublicKeyInfo();
     }
+
+    public string GetAlgorithmFriendlyName(X509Certificate2 certificate)
+    {
+        return certificate.SignatureAlgorithm.FriendlyName;
+    }
 }

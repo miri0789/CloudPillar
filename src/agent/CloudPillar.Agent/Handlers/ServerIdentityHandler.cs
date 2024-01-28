@@ -60,7 +60,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         {
             throw new Exception($"GetPublicKeyFromCertificateFileAsync failed to get public key from certificate {certificatePath}");
         }
-        string pemPublicKey = ConvertToPem(publicKey, certificate.SignatureAlgorithm.FriendlyName?.ToUpper());
+        string pemPublicKey = ConvertToPem(publicKey, _x509CertificateWrapper.GetAlgorithmFriendlyName(certificate)?.ToUpper());
         return pemPublicKey;
     }
 

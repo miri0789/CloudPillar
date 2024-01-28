@@ -27,4 +27,5 @@ public interface IX509CertificateWrapper
 
     DeviceAuthenticationWithX509Certificate GetDeviceAuthentication(string deviceId, X509Certificate2 certificate);
     byte[] ExportSubjectPublicKeyInfo(X509Certificate2 certificate);
+    string GetAlgorithmFriendlyName(X509Certificate2 certificate);
 }
