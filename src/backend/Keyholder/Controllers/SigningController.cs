@@ -14,7 +14,7 @@ public class SigningController : ControllerBase
     }
 
     [HttpPost("SignData")]
-    public async Task<IActionResult> CreateTwinKeySignature(byte[] dataToSign)
+    public async Task<IActionResult> SignData(byte[] dataToSign)
     {
         var signature = await _signingService.SignData(dataToSign);
         return Ok(signature);

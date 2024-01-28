@@ -23,7 +23,6 @@ public class SigningService : ISigningService
     {
         try
         {
-            vv
             string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createTwinKeySignature?deviceId={deviceId}&changeSignKey={signEvent.ChangeSignKey}";
             await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Get);
         }
