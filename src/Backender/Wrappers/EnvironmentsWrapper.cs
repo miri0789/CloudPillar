@@ -14,6 +14,8 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _higherPriorityGraceMS = "HIGHER_PRIORITY_GRACE_MS";
     private const string _noMessagesDelayMS = "NO_MESSAGES_DELAY_MS";
     private const string _requestTimeoutSeconds = "REQUEST_TIMEOUT_SECONDS";
+    private const string _completionTopic = "COMPLETION_TOPIC";
+    private const string _completionUrlBase = "COMPLETION_URL_BASE";
 
     public string serviceBusConnectionString
     {
@@ -46,6 +48,14 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public int requestTimeoutSeconds
     {
         get { return int.TryParse(GetVariable(_requestTimeoutSeconds), out int value) ? value : 60; }
+    }
+    public string requestTimeoutSeconds
+    {
+        get { return GetVariable(_completionTopic); }
+    }
+    public string requestTimeoutSeconds
+    {
+        get { return GetVariable(_completionUrlBase); }
     }
 
 

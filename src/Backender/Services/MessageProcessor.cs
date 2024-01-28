@@ -22,7 +22,7 @@ public class MessageProcessor : IMessageProcessor
 
     }
 
-    public async Task<HttpResponseMessage > SendPostRequestAsync(string relativeUri, string body, IDictionary<string, string> headers, CancellationToken cts)
+    public async Task<HttpResponseMessage> SendPostRequestAsync(string relativeUri, string body, IDictionary<string, string> headers, CancellationToken cancellationToken)
     {
         using (var client = new HttpClient())
         {
@@ -32,18 +32,18 @@ public class MessageProcessor : IMessageProcessor
                 client.DefaultRequestHeaders.Add(property.Key, property.Value);
             }
             var content = new StringContent(body, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(relativeUri, content, cts);
+            var response = await client.PostAsync(relativeUri, content, cancellationToken);
             return response;
 
         }
     }
 
     public async Task<(MessageProcessType type, string? response, IDictionary<string, string>? responseHeaers)>
-    ProcessMessageAsync(string message, IDictionary<string, string> properties, CancellationToken stoppingToken)
+    ProcessMessageAsync(string message, IDictionary<string, string> properties, CancellationToken cancellationToken)
     {
         try
         {
-            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken,
+            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
                 new CancellationTokenSource(new TimeSpan(0, 0, _environmentsWrapper.requestTimeoutSeconds)).Token))
             {
                 var relativeUri = properties.TryGetValue(RELATIVE_URI_PROP, out var uri) ? uri : "";

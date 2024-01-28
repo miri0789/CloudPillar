@@ -9,4 +9,6 @@ public interface IEnvironmentsWrapper
     int higherPriorityGraceMS { get; }
     int noMessagesDelayMS { get; }
     int requestTimeoutSeconds { get; }
+    string completionTopic { get; }
+    string completionUrlBase { get; }
 }
