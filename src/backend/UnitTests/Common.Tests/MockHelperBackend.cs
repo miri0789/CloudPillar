@@ -60,4 +60,8 @@ public static class MockHelperBackend
         };
         return new Twin(twinProp);
     }
+    public static bool EqualObjects(object expectedResult, object result)
+    {
+        return JsonConvert.SerializeObject(expectedResult) == JsonConvert.SerializeObject(result);
+    }
 }
