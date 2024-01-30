@@ -534,7 +534,7 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task SaveReportAsync_EndAllDownloads_UpdateKnownIdentities()
         {
-            _target.InitDownloadsList();
+            _target.InitDownloadsList(new List<ActionToReport>());
             _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
            
             _fileStreamerWrapperMock.Setup(x => x.GetFullPath("C:\\Downloads")).Returns("C:\\Downloads");
@@ -589,7 +589,7 @@ namespace CloudPillar.Agent.Tests
 
         private async Task InitFileDownloadAsync(FileDownload action)
         {
-            _target.InitDownloadsList();
+            _target.InitDownloadsList(new List<ActionToReport>());
             _target.AddFileDownload(action.ActionReported);
             await _target.InitFileDownloadAsync(action.ActionReported, CancellationToken.None);
         }

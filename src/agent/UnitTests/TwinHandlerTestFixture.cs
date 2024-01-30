@@ -233,9 +233,31 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task OnDesiredPropertiesUpdate_NewSpecId_InitDownloadFiles()
     {
+        var desiredPatch = new Dictionary<string, TwinAction[]>(){
+            {
+                MockHelper.PATCH_KEY, new TwinAction[]{
+                       new TwinAction() { Action=TwinActionType.SingularDownload},
+                        new TwinAction() { Action=TwinActionType.SingularUpload}
+                }
+            }
+        };
+        var reportedPatch = new Dictionary<string, TwinActionReported[]>(){
+            {
+                MockHelper.PATCH_KEY, new TwinActionReported[]{
+                        new TwinActionReported() {Status = StatusType.InProgress },
+                        new TwinActionReported() {Status = StatusType.InProgress}
+                }
+            }
+        };
+
+        var desired = GetDefaultDesiredChangeSpec(desiredPatch);
+        var reported = GetDefaultReportedChangeSpec(reportedPatch);
+
+        CreateTwinMock(desired, reported, GetDefaultChangeSign());
+
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
 
-        _fileDownloadHandlerMock.Verify(dc => dc.InitDownloadsList(new List<ActionToReport>()), Times.Once);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitDownloadsList(It.IsAny<List<ActionToReport>>()), Times.Once);
     }
 
     private void InitDataForTestInprogressActions(string reportId = MockHelper.CHANGE_SPEC_ID)
