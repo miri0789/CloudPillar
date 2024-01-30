@@ -3,8 +3,8 @@ public interface IEnvironmentsWrapper
 {
     string kubernetesServiceHost { get; }
     string signingPem { get; }
-    string secretName { get; }
-    string secretKey { get; }
+    string SecretVolumeMountPath { get; }
+    string DefaultSecretVolumeMountPath { get; }
     string iothubConnectionString { get; }
     string dpsConnectionString { get; }
     string dpsIdScope { get; }
