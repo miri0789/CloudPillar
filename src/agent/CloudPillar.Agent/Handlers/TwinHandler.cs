@@ -111,7 +111,7 @@ public class TwinHandler : ITwinHandler
 
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
-            ResetInActiveDownloads(twinDesired, twinReported);
+            ResetNotActualDownloads(twinDesired, twinReported);
             foreach (string changeSpecKey in twinDesired.ChangeSpec.Keys)
             {
                 var twinDesiredChangeSpec = twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey);
@@ -153,12 +153,12 @@ public class TwinHandler : ITwinHandler
     }
 
 
-    private void ResetInActiveDownloads(TwinDesired twinDesired, TwinReported twinReported)
+    private void ResetNotActualDownloads(TwinDesired twinDesired, TwinReported twinReported)
     {
         var actions = twinDesired?.ChangeSpec?
             .SelectMany(desiredChangeSpec =>
                 GetActiveDownloads(desiredChangeSpec.Value, twinReported?.GetReportedChangeSpecByKey(desiredChangeSpec.Key),
-                    desiredChangeSpec.Key, CancellationToken.None).Result).ToList();
+                    desiredChangeSpec.Key)).ToList();
         if (actions.Count() > 0)
         {
             _fileDownloadHandler.InitDownloadsList(actions);
@@ -380,8 +380,8 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    private async Task<IEnumerable<ActionToReport>?> GetActiveDownloads(TwinChangeSpec twinDesiredChangeSpec,
-    TwinReportedChangeSpec twinReportedChangeSpec, string changeSpecKey, CancellationToken cancellationToken)
+    private IEnumerable<ActionToReport> GetActiveDownloads(TwinChangeSpec twinDesiredChangeSpec,
+    TwinReportedChangeSpec twinReportedChangeSpec, string changeSpecKey)
     {
         try
         {

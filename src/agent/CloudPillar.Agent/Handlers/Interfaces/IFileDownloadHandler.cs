@@ -8,5 +8,5 @@ public interface IFileDownloadHandler
     bool AddFileDownload(ActionToReport actionToReport);
     Task InitFileDownloadAsync(ActionToReport actionToReport, CancellationToken cancellationToken);
     Task HandleDownloadMessageAsync(DownloadBlobChunkMessage message, CancellationToken cancellationToken);
-    void InitDownloadsList(List<ActionToReport> actions);
+    void InitDownloadsList(List<ActionToReport> actions = null);
 }
