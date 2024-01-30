@@ -146,7 +146,7 @@ stages:
             tags: '$(imagetag)'
 
 
-- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev1')) }}:
   - ${{ if eq(parameters.env, 'dev') }}:
     - stage: CD_Stage
       jobs:              
