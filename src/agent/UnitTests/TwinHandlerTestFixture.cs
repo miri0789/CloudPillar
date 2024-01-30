@@ -233,10 +233,9 @@ public class TwinHandlerTestFixture
     [Test]
     public async Task OnDesiredPropertiesUpdate_NewSpecId_InitDownloadFiles()
     {
-        InitDataForTestInprogressActions($"{MockHelper.CHANGE_SPEC_ID}1");
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, false);
 
-        _fileDownloadHandlerMock.Verify(dc => dc.InitDownloadsList(), Times.Once);
+        _fileDownloadHandlerMock.Verify(dc => dc.InitDownloadsList(new List<ActionToReport>()), Times.Once);
     }
 
     private void InitDataForTestInprogressActions(string reportId = MockHelper.CHANGE_SPEC_ID)
@@ -287,7 +286,6 @@ public class TwinHandlerTestFixture
 
         CreateTwinMock(desired.ChangeSpec, reported.ChangeSpec, GetDefaultChangeSign());
         _fileDownloadHandlerMock.Setup(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()));
-
     }
     [Test]
     public async Task OnDesiredPropertiesUpdate_SuccessDownloadAction_NotExecuteDownload()

@@ -79,7 +79,6 @@ public class TwinHandler : ITwinHandler
         {
             CancelCancellationToken();
             _twinCancellationTokenSource = new CancellationTokenSource();
-        
         }
         var isReportedExist = twinDesiredChangeSpec is null && twinReportedChangeSpec is not null;
         if (isReportedExist ||
@@ -158,9 +157,8 @@ public class TwinHandler : ITwinHandler
     {
         var actions = twinDesired?.ChangeSpec?
             .SelectMany(desiredChangeSpec =>
-                GetActionsToExecAsync(desiredChangeSpec.Value, twinReported?.GetReportedChangeSpecByKey(desiredChangeSpec.Key),
-                    desiredChangeSpec.Key, false, CancellationToken.None).Result)
-            .ToList();
+                GetActiveDownloads(desiredChangeSpec.Value, twinReported?.GetReportedChangeSpecByKey(desiredChangeSpec.Key),
+                    desiredChangeSpec.Key, CancellationToken.None).Result).ToList();
         if (actions.Count() > 0)
         {
             _fileDownloadHandler.InitDownloadsList(actions);
@@ -372,6 +370,44 @@ public class TwinHandler : ITwinHandler
             if (isReportedChanged)
             {
                 await _twinReportHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey.ToString(), cancellationToken);
+            }
+            return actions;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetActionsToExec failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task<IEnumerable<ActionToReport>?> GetActiveDownloads(TwinChangeSpec twinDesiredChangeSpec,
+    TwinReportedChangeSpec twinReportedChangeSpec, string changeSpecKey, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actions = new List<ActionToReport>();
+            twinReportedChangeSpec ??= new TwinReportedChangeSpec();
+
+            foreach (var desired in twinDesiredChangeSpec.Patch!)
+            {
+                try
+                {
+                    actions.AddRange(desired.Value
+                       .Select((item, index) => new ActionToReport(changeSpecKey, twinDesiredChangeSpec.Id!)
+                       {
+                           ReportPartName = desired.Key,
+                           ReportIndex = index,
+                           TwinAction = item
+                       })
+                    .Where((item, index) => twinReportedChangeSpec.Patch is null || (twinReportedChangeSpec.Patch?[desired.Key].Length <= index)
+                    || IsActiveAction(twinReportedChangeSpec.Patch![desired.Key][index])));
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"GetActionsToExec failed , desired part: {desired.Key} exception: {ex.Message}");
+                    continue;
+                }
             }
             return actions;
         }
