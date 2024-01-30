@@ -5,6 +5,7 @@ namespace Shared.Entities.Twin;
 
 public class TwinDesiredConverter : JsonConverter
 {
+
     public override bool CanConvert(Type objectType)
     {
         return objectType == typeof(TwinDesired);
@@ -15,19 +16,80 @@ public class TwinDesiredConverter : JsonConverter
         JObject jsonObject = JObject.Load(reader);
         var changeSpec = new TwinDesired()
         {
-            ChangeSign = (jsonObject["changeSign"] ?? jsonObject["ChangeSign"])?.Value<string>(),
-            ChangeSpec = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpec),
-            ChangeSpecDiagnostics = CreateTwinChangeSpec(jsonObject, serializer, TwinPatchChangeSpec.ChangeSpecDiagnostics)
+            ChangeSign = GetChangeSign(jsonObject),
+            ChangeSpec = GetChangeSpec(jsonObject, serializer)
         };
+        return changeSpec;
+    }
+    private Dictionary<string, string>? GetChangeSign(JObject jsonObject)
+    {
+        var changeSign = new Dictionary<string, string>();
+
+        foreach (var property in jsonObject.Properties())
+        {
+            if (property.Value.Type == JTokenType.String && property.Name.EndsWith("Sign"))
+            {
+                changeSign.Add(property.Name, property.Value.Value<string>());
+            }
+        }
+        return changeSign;
+    }
+
+    private Dictionary<string, TwinChangeSpec>? GetChangeSpec(JObject jsonObject, JsonSerializer serializer)
+    {
+        var changeSpec = new Dictionary<string, TwinChangeSpec>();
+
+        foreach (var property in jsonObject.Properties())
+        {
+            if (property.Value.Type == JTokenType.Object &&
+                (property.Value["patch"] ?? property.Value["Patch"]) != null)
+            {
+                changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, property.Name));
+            }
+        }
+
         return changeSpec;
     }
 
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
-        throw new NotImplementedException();
+        var changeSpec = (TwinDesired)value;
+
+        writer.WriteStartObject();
+
+        foreach (var changeSpecItem in changeSpec.GetType().GetProperties())
+        {
+            switch (changeSpecItem.Name)
+            {
+                case "ChangeSign" when changeSpec.ChangeSign is not null:
+                    foreach (var changeSpecOption in changeSpec?.ChangeSign)
+                    {
+                        writer.WritePropertyName(changeSpecOption.Key);
+                        serializer.Serialize(writer, changeSpecOption.Value);
+                    }
+                    break;
+                case "ChangeSpec" when changeSpec.ChangeSpec is not null:
+                    foreach (var changeSpecOption in changeSpec?.ChangeSpec)
+                    {
+                        writer.WritePropertyName(changeSpecOption.Key);
+                        serializer.Serialize(writer, changeSpecOption.Value);
+                    }
+                    break;
+                default:
+                    if (changeSpecItem.GetValue(changeSpec) is not null)
+                    {
+                        writer.WritePropertyName(changeSpecItem.Name);
+                        serializer.Serialize(writer, changeSpecItem.GetValue(changeSpec));
+                        return;
+                    }
+
+                    break;
+            }
+        }
+        writer.WriteEndObject();
     }
 
-    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, TwinPatchChangeSpec changeSpecKey)
+    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, string changeSpecKey)
     {
         var lowerPropName = FirstLetterToLowerCase($"{changeSpecKey}");
         var upperPropName = FirstLetterToUpperCase($"{changeSpecKey}");

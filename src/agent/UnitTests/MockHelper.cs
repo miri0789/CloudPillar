@@ -7,12 +7,16 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Entities.Authentication;
 using Shared.Entities.Twin;
+using Shared.Entities.Utilities;
 
 public static class MockHelper
 {
 
     private const int KEY_SIZE_IN_BITS = 4096;
     private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
+    public const string CHANGE_SPEC_ID = "123";
+    public const string PATCH_KEY = "transitPackage";
+
     public static string _baseDesierd { get; } = @"{
             '$metadata': {
                 '$lastUpdated': '2023-08-29T12:30:36.4167057Z'
@@ -26,25 +30,28 @@ public static class MockHelper
             '$version': 1,
         }";
 
-        
 
-    public static Twin CreateTwinMock(TwinChangeSpec changeSpecDesired, TwinReportedChangeSpec changeSpecReported, TwinChangeSpec? changeSpecDiagnosticsDesired = null, TwinReportedChangeSpec? changeSpecDiagnosticsReported = null, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "----", List<KnownIdentities>? knownIdentities = null)
+
+    public static Twin CreateTwinMock(Dictionary<string, TwinChangeSpec> changeSpecDesired, Dictionary<string, TwinReportedChangeSpec> changeSpecReported
+    , List<TwinReportedCustomProp>? twinReportedCustomProps = null, Dictionary<string, string>? changeSign = null, List<KnownIdentities>? knownIdentities = null)
     {
         var desiredJson = JObject.Parse(_baseDesierd);
-        desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinDesired()
+
+        var desired = new TwinDesired()
         {
             ChangeSpec = changeSpecDesired,
-            ChangeSpecDiagnostics = changeSpecDiagnosticsDesired,
             ChangeSign = changeSign,
-        })));
+        };
+        desiredJson.Merge(JObject.Parse(JsonConvert.SerializeObject(desired.ConvertToJObject())));
+
         var reportedJson = JObject.Parse(_baseReported);
-        reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(new TwinReported()
+        var reported = new TwinReported()
         {
             ChangeSpec = changeSpecReported,
-            ChangeSpecDiagnostics = changeSpecDiagnosticsReported,
             Custom = twinReportedCustomProps,
             KnownIdentities = knownIdentities
-        })));
+        };
+        reportedJson.Merge(JObject.Parse(JsonConvert.SerializeObject(reported.ConvertToJObject())));
         var settings = new JsonSerializerSettings
         {
             ContractResolver = new DefaultContractResolver
@@ -53,6 +60,8 @@ public static class MockHelper
             },
             Formatting = Formatting.Indented
         };
+
+
         var twinProp = new TwinProperties()
         {
             Desired = new TwinCollection(JsonConvert.SerializeObject(desiredJson, settings)),

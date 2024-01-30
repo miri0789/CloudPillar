@@ -29,6 +29,8 @@ public class RunDiagnosticsHandlerTestFixture
     private const string DIAGNOSTICS_EXTENSION = ".tmp";
     private string guid = Guid.NewGuid().ToString();
     private string filePath = string.Empty;
+    private const string PATCH_KEY = "transitPackage";
+
 
     private CancellationToken cancellationToken = CancellationToken.None;
 
@@ -145,36 +147,47 @@ public class RunDiagnosticsHandlerTestFixture
 
     private void InitTwin(StatusType statusType)
     {
-        var changeSign = "changeSign";
-        var desired = new TwinDesired()
-        {
-            ChangeSpecDiagnostics = new TwinChangeSpec()
+        var changeSign = new Dictionary<string, string>()
             {
-                Id = "123",
-                Patch = new Dictionary<string, TwinAction[]>{
-                    {"TransitPackage", new List<TwinAction>()
-                    {
-                        new DownloadAction() {
-                            Action = TwinActionType.SingularDownload,
-                            DestinationPath =  guid,
-                            Source = guid
-                         }
-                    }.ToArray() }
-                }
-            }
-        };
+                { TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, "changeSign" }
+            };
 
-        var reported = new TwinReported()
-        {
-            ChangeSpecDiagnostics = new TwinReportedChangeSpec()
+        var desired = new Dictionary<string, TwinChangeSpec>()
             {
-                Id = "123",
-                Patch = new Dictionary<string, TwinActionReported[]>{
-                    {"TransitPackage", new TwinActionReported[]{ new TwinActionReported() { Status = statusType} } }
+                {
+                TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinChangeSpec() {
+                        Patch = new Dictionary<string, TwinAction[]>()
+                        {
+                            { 
+                                PATCH_KEY, new TwinAction[]{
+                                    new DownloadAction() {
+                                        Action = TwinActionType.SingularDownload,
+                                        DestinationPath =  guid,
+                                        Source = guid
+                                    } 
+                                }
+                            }
+                        },
+                        Id = MockHelper.CHANGE_SPEC_ID
+                    }
                 }
-            }
-        };
-        var twin = MockHelper.CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), desired.ChangeSpecDiagnostics, reported.ChangeSpecDiagnostics, null, changeSign);
+            };
+
+        var reported = new Dictionary<string, TwinReportedChangeSpec>
+            {
+                {
+                    TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinReportedChangeSpec()
+                    {
+                        Id = MockHelper.CHANGE_SPEC_ID,
+                        Patch =  new Dictionary<string, TwinActionReported[]>()
+                        {
+                            { PATCH_KEY, new TwinActionReported[]{new TwinActionReported() { Status = statusType } } }
+                        }
+                    }
+                }
+            };
+
+        var twin = MockHelper.CreateTwinMock(desired, reported, null, changeSign);
         _deviceClientWrapperMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
 
     }
