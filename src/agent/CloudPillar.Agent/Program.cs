@@ -98,7 +98,7 @@ builder.Services.AddScoped<IRequestWrapper, RequestWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
-builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
+builder.Services.AddScoped<IAsymmetricAlgorithmWrapper, AsymmetricAlgorithmWrapper>();
 builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
 builder.Services.AddScoped<IProvisioningService, ProvisioningService>();
