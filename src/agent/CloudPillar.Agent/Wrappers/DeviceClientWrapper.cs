@@ -4,6 +4,8 @@ using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper

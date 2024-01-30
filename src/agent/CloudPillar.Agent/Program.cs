@@ -3,16 +3,14 @@ using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Sevices;
 using CloudPillar.Agent.Utilities;
-using CloudPillar.Agent.Validators;
 using CloudPillar.Agent.Wrappers;
-using FluentValidation;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
-using Shared.Entities.Twin;
 using System.Runtime.InteropServices;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
 using System.Security.Cryptography.X509Certificates;
+using CloudPillar.Agent.Sevices.Interfaces;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
@@ -68,6 +66,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
+builder.Services.AddSingleton<IConfigurationWrapper, ConfigurationWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
@@ -87,10 +86,8 @@ builder.Services.AddScoped<ID2CMessengerHandler, D2CMessengerHandler>();
 builder.Services.AddScoped<IStreamingFileUploaderHandler, StreamingFileUploaderHandler>();
 builder.Services.AddScoped<IBlobStorageFileUploaderHandler, BlobStorageFileUploaderHandler>();
 builder.Services.AddScoped<IFileUploaderHandler, FileUploaderHandler>();
-builder.Services.AddScoped<IValidator<UpdateReportedProps>, UpdateReportedPropsValidator>();
 builder.Services.AddScoped<IRuntimeInformationWrapper, RuntimeInformationWrapper>();
 builder.Services.AddScoped<ISymmetricKeyWrapper, SymmetricKeyWrapper>();
-builder.Services.AddScoped<IValidator<TwinDesired>, TwinDesiredValidator>();
 builder.Services.AddScoped<IReprovisioningHandler, ReprovisioningHandler>();
 builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 builder.Services.AddScoped<IProvisioningServiceClientWrapper, ProvisioningServiceClientWrapper>();
@@ -101,9 +98,11 @@ builder.Services.AddScoped<IRequestWrapper, RequestWrapper>();
 builder.Services.AddScoped<IStateMachineHandler, StateMachineHandler>();
 builder.Services.AddScoped<IRunDiagnosticsHandler, RunDiagnosticsHandler>();
 builder.Services.AddScoped<IX509Provider, X509Provider>();
-builder.Services.AddScoped<IECDsaWrapper, ECDsaWrapper>();
+builder.Services.AddScoped<IAsymmetricAlgorithmWrapper, AsymmetricAlgorithmWrapper>();
 builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
+builder.Services.AddScoped<IProvisioningService, ProvisioningService>();
+builder.Services.AddScoped<IHttpContextWrapper, HttpContextWrapper>();
 
 var appSettings = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettings);
@@ -180,9 +179,6 @@ else
 {
     app.UseMiddleware<AuthorizationCheckMiddleware>();
 }
-
-
-app.UseMiddleware<ValidationExceptionHandlerMiddleware>();
 
 app.MapControllers();
 

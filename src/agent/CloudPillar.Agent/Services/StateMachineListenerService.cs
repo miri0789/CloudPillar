@@ -1,6 +1,8 @@
 
+using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Sevices.Interfaces;
 using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Twin;
 
@@ -15,6 +17,7 @@ public class StateMachineListenerService : BackgroundService
     private ITwinReportHandler? _twinReportHandler;
     private IC2DEventSubscriptionSession? _c2DEventSubscriptionSession;
     private IStateMachineHandler? _stateMachineHandlerService;
+    private IProvisioningService? provisioningService;
     private readonly ILoggerHandler _logger;
 
     public StateMachineListenerService(
@@ -40,6 +43,15 @@ public class StateMachineListenerService : BackgroundService
             ArgumentNullException.ThrowIfNull(dpsProvisioningDeviceClientHandler);
             _stateMachineHandlerService = scope.ServiceProvider.GetService<IStateMachineHandler>();
             ArgumentNullException.ThrowIfNull(_stateMachineHandlerService);
+            provisioningService = scope.ServiceProvider.GetService<IProvisioningService>();
+            ArgumentNullException.ThrowIfNull(provisioningService);
+
+            X509Certificate2? userCertificate = dpsProvisioningDeviceClientHandler.GetCertificate();
+            if (userCertificate?.NotAfter <= DateTime.UtcNow)
+            {
+                await provisioningService.ProvisinigSymetricKeyAsync(stoppingToken);
+                return;
+            }
             await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
             await _stateMachineHandlerService.InitStateMachineHandlerAsync(stoppingToken);
         }
@@ -51,14 +63,14 @@ public class StateMachineListenerService : BackgroundService
         {
             var state = _stateMachineHandlerService.GetCurrentDeviceState();
 
-            if(state == DeviceStateType.Provisioning)
+            if (state == DeviceStateType.Provisioning)
             {
                 _logger.Info("StopAsync: set device state to Uninitialized");
                 await _stateMachineHandlerService.SetStateAsync(DeviceStateType.Uninitialized, _cts.Token);
             }
             else
             {
-                if(state != DeviceStateType.Busy && state != DeviceStateType.Uninitialized)
+                if (state != DeviceStateType.Busy && state != DeviceStateType.Uninitialized)
                 {
                     _logger.Info("StopAsync: set device state to Busy");
                     if (_twinReportHandler == null)

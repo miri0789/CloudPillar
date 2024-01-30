@@ -119,7 +119,7 @@ public class SigningService : ISigningService
         ECDsa ecdsa = ECDsa.Create();
         ecdsa.ImportPkcs8PrivateKey(keyReader, out _);
         _logger.Debug($"Imported private key");
-        return ecdsa;
+        return ecdsa ;
     }
 
     public async Task CreateTwinKeySignature(string deviceId, string changeSignKey)

@@ -77,6 +77,11 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(new SignEvent(), cancellationToken);
     }
 
+    public async Task SendRemoveDeviceEvent(CancellationToken cancellationToken)
+    {
+        await SendMessageAsync(new RemoveDeviceEvent(), cancellationToken);
+    }
+
     private async Task SendMessageAsync(D2CMessage d2CMessage, CancellationToken cancellationToken)
     {
         if (!cancellationToken.IsCancellationRequested)
