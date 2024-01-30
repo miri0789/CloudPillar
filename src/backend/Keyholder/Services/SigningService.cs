@@ -34,6 +34,31 @@ public class SigningService : ISigningService
         }
     }
 
+    public async Task<string> GetSigningPublicKeyAsync()
+    {
+        string DefaultSecretVolumeMountPath = _environmentsWrapper.DefaultSecretVolumeMountPath;
+
+        if (string.IsNullOrWhiteSpace(DefaultSecretVolumeMountPath))
+        {
+            var message = "default cert secret path must be set.";
+            _logger.Error(message);
+            throw new InvalidOperationException(message);
+        }
+        var publicKeyPem = await File.ReadAllTextAsync(Path.Combine(DefaultSecretVolumeMountPath, PUBLIC_KEY_FILE));
+        if (string.IsNullOrWhiteSpace(publicKeyPem))
+        {
+            var message = "public key is empty.";
+            _logger.Error(message);
+            throw new InvalidOperationException(message);
+        }
+        var sectionsCount = publicKeyPem.Split(BEGIN_CERTIFICATE).Count();
+        if (sectionsCount > 1)
+        {
+            publicKeyPem = GetLastCertificateSection(publicKeyPem);
+        }
+
+        return publicKeyPem;
+    }
 
     private async Task<AsymmetricAlgorithm> GetSigningPrivateKeyAsync(string deviceId)
     {
@@ -67,78 +92,6 @@ public class SigningService : ISigningService
         }
         return LoadPrivateKeyFromPem(privateKeyPem);
     }
-    private async Task<bool> CheckValidCertificate(string deviceId)
-    {
-        _logger.Debug($"Checking certificate validity...");
-        var publicKeyPem = await GetSigningPublicKeyAsync();
-
-        var knownIdentitiesList = await GetKnownIdentitiesFromTwin(deviceId);
-        if (knownIdentitiesList == null)
-        {
-            _logger.Error($"knownIdentitiesList is null");
-            return false;
-        }
-
-        var certificate = new X509Certificate2(Encoding.UTF8.GetBytes(publicKeyPem));
-        var knownCertificate = await IsCeritficateIsknown(knownIdentitiesList, certificate);
-        if (!knownCertificate)
-        {
-            _logger.Error($"certificate is not exists in knownIdentitiesList");
-            return false;
-        }
-        return true;
-    }
-
-    private async Task<bool> IsCeritficateIsknown(List<KnownIdentities> knownIdentities, X509Certificate2 certificate)
-    {
-        var knownCertificate = knownIdentities.Any(x => x.Subject == certificate.Subject
-                     && x.Thumbprint == certificate.Thumbprint &&
-                   string.Format(x.ValidThru, "yyyy-MM-dd HH:mm:ss") == certificate.NotAfter.ToString("yyyy-MM-dd HH:mm:ss"));
-        return knownCertificate;
-    }
-    private async Task<List<KnownIdentities>> GetKnownIdentitiesFromTwin(string deviceId)
-    {
-        using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
-        {
-            var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
-            var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
-            return twinReported.KnownIdentities;
-        }
-    }
-
-    public async Task<string> GetSigningPublicKeyAsync()
-    {
-        string DefaultSecretVolumeMountPath = _environmentsWrapper.DefaultSecretVolumeMountPath;
-
-        if (string.IsNullOrWhiteSpace(DefaultSecretVolumeMountPath))
-        {
-            var message = "default cert secret path must be set.";
-            _logger.Error(message);
-            throw new InvalidOperationException(message);
-        }
-        var publicKeyPem = await File.ReadAllTextAsync(Path.Combine(DefaultSecretVolumeMountPath, PUBLIC_KEY_FILE));
-        if (string.IsNullOrWhiteSpace(publicKeyPem))
-        {
-            var message = "public key is empty.";
-            _logger.Error(message);
-            throw new InvalidOperationException(message);
-        }
-        var sectionsCount = publicKeyPem.Split(BEGIN_CERTIFICATE).Count();
-        if (sectionsCount > 1)
-        {
-            publicKeyPem = GetLastCertificateSection(publicKeyPem);
-        }
-
-        return publicKeyPem;
-    }
-
-    private string GetLastCertificateSection(string publicKeyPem)
-    {
-        _logger.Debug($"Getting last certificate section...");
-        var lastIndexOfCertificateSection = publicKeyPem.LastIndexOf(BEGIN_CERTIFICATE);
-        var lastSection = publicKeyPem.Substring(lastIndexOfCertificateSection);
-        return lastSection;
-    }
 
     private AsymmetricAlgorithm LoadPrivateKeyFromPem(string pemContent)
     {
@@ -168,7 +121,6 @@ public class SigningService : ISigningService
         _logger.Debug($"Imported private key");
         return ecdsa;
     }
-
 
     public async Task CreateTwinKeySignature(string deviceId, string changeSignKey)
     {
@@ -248,5 +200,54 @@ public class SigningService : ISigningService
         {
             _logger.Error($"An error occurred while attempting to update ChangeSpec: {ex.Message}");
         }
-    }s
+    }
+
+    private async Task<bool> CheckValidCertificate(string deviceId)
+    {
+        _logger.Debug($"Checking certificate validity...");
+        var publicKeyPem = await GetSigningPublicKeyAsync();
+
+        var knownIdentitiesList = await GetKnownIdentitiesFromTwin(deviceId);
+        if (knownIdentitiesList == null)
+        {
+            _logger.Error($"knownIdentitiesList is null");
+            return false;
+        }
+
+        var certificate = new X509Certificate2(Encoding.UTF8.GetBytes(publicKeyPem));
+        var knownCertificate = await ceritficateIsknown(knownIdentitiesList, certificate);
+        if (!knownCertificate)
+        {
+            _logger.Error($"certificate is not exists in knownIdentitiesList");
+            return false;
+        }
+        return true;
+    }
+
+    private async Task<bool> ceritficateIsknown(List<KnownIdentities> knownIdentities, X509Certificate2 certificate)
+    {
+        var knownCertificate = knownIdentities.Any(x => x.Subject == certificate.Subject
+                     && x.Thumbprint == certificate.Thumbprint &&
+                   string.Format(x.ValidThru, "yyyy-MM-dd HH:mm:ss") == certificate.NotAfter.ToString("yyyy-MM-dd HH:mm:ss"));
+        return knownCertificate;
+    }
+
+    private async Task<List<KnownIdentities>> GetKnownIdentitiesFromTwin(string deviceId)
+    {
+        using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
+        {
+            var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
+            var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
+            return twinReported.KnownIdentities;
+        }
+    }
+
+    private string GetLastCertificateSection(string publicKeyPem)
+    {
+        _logger.Debug($"Getting last certificate section...");
+        var lastIndexOfCertificateSection = publicKeyPem.LastIndexOf(BEGIN_CERTIFICATE);
+        var lastSection = publicKeyPem.Substring(lastIndexOfCertificateSection);
+        return lastSection;
+    }
+
 }
