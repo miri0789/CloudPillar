@@ -22,7 +22,6 @@ public class SigningService : ISigningService
     private const string PUBLIC_KEY_FILE = "tls.crt";
     private const string BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
 
-
     public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
@@ -34,17 +33,17 @@ public class SigningService : ISigningService
         }
     }
 
-    public async Task<string> GetSigningPublicKeyAsync()
+    public async Task<byte[]> GetSigningPublicKeyAsync()
     {
-        string DefaultSecretVolumeMountPath = _environmentsWrapper.DefaultSecretVolumeMountPath;
+        string secretVolumeMountPath = _environmentsWrapper.SecretVolumeMountPath;
 
-        if (string.IsNullOrWhiteSpace(DefaultSecretVolumeMountPath))
+        if (string.IsNullOrWhiteSpace(secretVolumeMountPath))
         {
             var message = "default cert secret path must be set.";
             _logger.Error(message);
             throw new InvalidOperationException(message);
         }
-        var publicKeyPem = await File.ReadAllTextAsync(Path.Combine(DefaultSecretVolumeMountPath, PUBLIC_KEY_FILE));
+        var publicKeyPem = await File.ReadAllTextAsync(Path.Combine(secretVolumeMountPath, PUBLIC_KEY_FILE));
         if (string.IsNullOrWhiteSpace(publicKeyPem))
         {
             var message = "public key is empty.";
@@ -57,7 +56,7 @@ public class SigningService : ISigningService
             publicKeyPem = GetLastCertificateSection(publicKeyPem);
         }
 
-        return publicKeyPem;
+        return Encoding.UTF8.GetBytes(publicKeyPem);
     }
 
     private async Task<AsymmetricAlgorithm> GetSigningPrivateKeyAsync(string deviceId)
@@ -119,7 +118,7 @@ public class SigningService : ISigningService
         ECDsa ecdsa = ECDsa.Create();
         ecdsa.ImportPkcs8PrivateKey(keyReader, out _);
         _logger.Debug($"Imported private key");
-        return ecdsa ;
+        return ecdsa;
     }
 
     public async Task CreateTwinKeySignature(string deviceId, string changeSignKey)
@@ -214,7 +213,7 @@ public class SigningService : ISigningService
             return false;
         }
 
-        var certificate = new X509Certificate2(Encoding.UTF8.GetBytes(publicKeyPem));
+        var certificate = new X509Certificate2(publicKeyPem);
         var knownCertificate = await ceritficateIsknown(knownIdentitiesList, certificate);
         if (!knownCertificate)
         {

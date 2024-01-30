@@ -1,5 +1,6 @@
 using Backend.BEApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Logger;
 
 namespace Backend.BEApi.Controllers;
 
@@ -7,11 +8,14 @@ namespace Backend.BEApi.Controllers;
 [Route("[controller]")]
 public class DeviceCertificateController : ControllerBase
 {
+    private readonly ILoggerHandler _logger;
     private readonly IDeviceCertificateService _certificateService;
-
-    public DeviceCertificateController(IDeviceCertificateService CertificateService)
+    private readonly ICertificateIdentityService _certificateIdentityService;
+    public DeviceCertificateController(IDeviceCertificateService CertificateService, ICertificateIdentityService certificateIdentityService, ILoggerHandler _logger)
     {
         _certificateService = CertificateService ?? throw new ArgumentNullException(nameof(CertificateService));
+        _certificateIdentityService = certificateIdentityService ?? throw new ArgumentNullException(nameof(certificateIdentityService));
+        _logger = _logger ?? throw new ArgumentNullException(nameof(_logger));
     }
 
     [HttpGet("IsDevicesCertificateExpired")]
@@ -37,6 +41,22 @@ public class DeviceCertificateController : ControllerBase
         catch (Exception ex)
         {
             throw new Exception($"Error deleting device {deviceId}.", ex);
+        }
+    }
+
+    [HttpGet("HandleCertificate")]
+    public async Task<IActionResult> HandleCertificate(string deviceId)
+    {
+        try
+        {
+            await _certificateIdentityService.HandleCertificate(deviceId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.Info($"Error handling certificate: {ex.Message}");
+            return BadRequest(ex.Message);
+
         }
     }
 }

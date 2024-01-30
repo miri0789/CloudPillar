@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Backend.Keyholder.Interfaces;
-using System.Runtime.ConstrainedExecution;
 
 namespace Backend.Keyholder;
 
@@ -27,6 +26,13 @@ public class SigningController : ControllerBase
     {
         await _signingService.CreateFileKeySignature(deviceId, propName, actionIndex, data, changeSpecKey);
         return Ok();
+    }
+
+    [HttpGet("GetPublicKey")]
+    public async Task<IActionResult> GetPublicKey()
+    {
+        var publicKey = await _signingService.GetSigningPublicKeyAsync();
+        return Ok(publicKey);
     }
 }
 

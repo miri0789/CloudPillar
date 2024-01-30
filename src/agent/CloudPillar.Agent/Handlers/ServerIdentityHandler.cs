@@ -17,8 +17,6 @@ public class ServerIdentityHandler : IServerIdentityHandler
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
     private readonly IDeviceClientWrapper _deviceClient;
     private AppSettings _appSettings;
-    private const string CERTFICATE_FILE_EXTENSION = "*.cer";
-    private const string PUBLIC_KEY_FILE_EXTENSION = ".pem";
 
     public ServerIdentityHandler(
         ILoggerHandler loggerHandler,
@@ -40,7 +38,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
     {
         try
         {
-            string[] certificatesFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, CERTFICATE_FILE_EXTENSION);
+            string[] certificatesFiles = _fileStreamerWrapper.GetFiles(SharedConstants.PKI_FOLDER_PATH, $"*{SharedConstants.CERTIFICATE_FILE_EXTENSION}");
             var knownIdentitiesList = GetKnownIdentitiesByCertFiles(certificatesFiles, cancellationToken);
             await UpdateKnownIdentitiesInReportedAsync(knownIdentitiesList, cancellationToken);
         }
@@ -70,7 +68,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         {
             _logger.Info($"Start removing non default certificates from path: {path}");
 
-            List<string> certificatesFiles = _fileStreamerWrapper.GetFiles(path, CERTFICATE_FILE_EXTENSION).ToList();
+            List<string> certificatesFiles = _fileStreamerWrapper.GetFiles(path, $"*{SharedConstants.CERTIFICATE_FILE_EXTENSION}").ToList();
             certificatesFiles.ForEach(certificateFile =>
             {
                 if (_fileStreamerWrapper.GetFileNameWithoutExtension(certificateFile).ToLower() != _appSettings.DefaultPublicKeyName.ToLower())
