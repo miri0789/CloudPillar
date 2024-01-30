@@ -32,8 +32,7 @@ public class SigningTestFixture
         _mockEnvironmentsWrapper.Setup(c => c.iothubConnectionString).Returns("HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=");
         _mockEnvironmentsWrapper.Setup(c => c.signingPem).Returns("");
         _mockEnvironmentsWrapper.Setup(c => c.kubernetesServiceHost).Returns("your-kubernetes-service-host");
-        _mockEnvironmentsWrapper.Setup(c => c.secretName).Returns("");
-        _mockEnvironmentsWrapper.Setup(c => c.secretKey).Returns("your-secret-key");
+        _mockEnvironmentsWrapper.Setup(c => c.SecretVolumeMountPath).Returns("");
         var registryManagerMock = new Mock<RegistryManager>();
         _registryManagerWrapper.Setup(mock => mock.CreateFromConnectionString())
                         .Returns(registryManagerMock.Object);

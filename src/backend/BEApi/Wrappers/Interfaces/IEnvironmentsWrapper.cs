@@ -7,6 +7,4 @@ public interface IEnvironmentsWrapper
     string globalDeviceEndpoint { get; }
     double expirationCertificatePercent { get; }
     int maxCountDevices { get; }
-    string storageConnectionString { get; }
-    string blobContainerName { get; }
 }

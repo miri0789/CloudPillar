@@ -1,5 +1,6 @@
 public static class StrictModeMockHelper
 {
+    public static string ROOT = "c:/";
     public static string ROOT_UPLOAD_UPPERCASE = "C:/demoUpload";
     public static string ROOT_GLOBAL = "c:/globalUpload";
     public static string ROOT_UPLOAD = "c:/demoUpload";

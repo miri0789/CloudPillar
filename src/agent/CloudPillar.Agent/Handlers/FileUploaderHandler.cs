@@ -89,7 +89,14 @@ public class FileUploaderHandler : IFileUploaderHandler
 
             using (Stream readStream = CreateStream(fullFilePath))
             {
-                await UploadFileAsync(actionToReport, method, fileName, blobname, readStream, isRunDiagnostics, cancellationToken);
+                if (readStream.Length > 0)
+                {
+                    await UploadFileAsync(actionToReport, method, fileName, blobname, readStream, isRunDiagnostics, cancellationToken);
+                }
+                else
+                {
+                    throw new IOException($"The file is empty");
+                }
             }
         }
     }

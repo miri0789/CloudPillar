@@ -52,10 +52,15 @@ public class ServerIdentityHandler : IServerIdentityHandler
 
     }
 
-    public async Task<string> GetPublicKeyFromCertificate(X509Certificate2 certificate)
+    public async Task<string> GetPublicKeyFromCertificateFileAsync(string certificatePath)
     {
-        RSA publicKey = _x509CertificateWrapper.GetRSAPublicKey(certificate);
-        string pemPublicKey = ConvertToPem(publicKey);
+        X509Certificate2 certificate = _x509CertificateWrapper.CreateFromFile(certificatePath);
+        byte[] publicKey = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(certificate);
+        if (publicKey == null)
+        {
+            throw new Exception($"GetPublicKeyFromCertificateFileAsync failed to get public key from certificate {certificatePath}");
+        }
+        string pemPublicKey = ConvertToPem(publicKey, _x509CertificateWrapper.GetAlgorithmFriendlyName(certificate)?.ToUpper());
         return pemPublicKey;
     }
 
@@ -81,22 +86,14 @@ public class ServerIdentityHandler : IServerIdentityHandler
         }
     }
 
-    private string ConvertToPem(RSA publicKey)
+    private string ConvertToPem(byte[] base64Key, string? keyAlgorithm)
     {
-        StringBuilder builder = new StringBuilder();
-        builder.AppendLine("-----BEGIN PUBLIC KEY-----");
-
-        string base64Key = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(publicKey);
-        int offset = 0;
-        while (offset < base64Key.Length)
-        {
-            int lineLength = Math.Min(64, base64Key.Length - offset);
-            builder.AppendLine(base64Key.Substring(offset, lineLength));
-            offset += lineLength;
-        }
-
-        builder.AppendLine("-----END PUBLIC KEY-----");
-        return builder.ToString();
+        string algo = keyAlgorithm!.Contains("RSA") ? "RSA" : "";
+        StringBuilder pemBuilder = new StringBuilder();
+        pemBuilder.AppendLine($"-----BEGIN {algo} PUBLIC KEY-----");
+        pemBuilder.AppendLine(Convert.ToBase64String(base64Key, Base64FormattingOptions.InsertLineBreaks));
+        pemBuilder.AppendLine($"-----END {algo} PUBLIC KEY-----");
+        return pemBuilder.ToString();
     }
 
     private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles, CancellationToken cancellationToken)

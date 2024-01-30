@@ -74,6 +74,10 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
                     report.Progress = null;
                     report.CorrelationId = report.CheckSum = null;
                     await _fileUploaderHandler.FileUploadAsync(actionToReport, uploadAction.Method, file, changeSpecId, cancellationToken);
+                    if (!isDirectory && report.Status == StatusType.Failed)
+                    {
+                        throw new Exception(report.ResultText);
+                    }
                 }
                 else
                 {
@@ -86,7 +90,7 @@ public class PeriodicUploaderHandler : IPeriodicUploaderHandler
         catch (Exception ex)
         {
             _logger.Error($"Periodic upload error DirName: '{uploadAction.DirName}', FileName: '{uploadAction.FileName}': {ex.Message}");
-            _twinReportHandler.SetReportProperties(actionToReport, uploadAction.Interval > 0 ? StatusType.Idle : StatusType.Failed, ex.Message, ex.GetType().Name);
+            _twinReportHandler.SetReportProperties(actionToReport, uploadAction.Interval > 0 ? StatusType.Idle : StatusType.Failed, ex.GetType().Name, ex.Message);
         }
         finally
         {
