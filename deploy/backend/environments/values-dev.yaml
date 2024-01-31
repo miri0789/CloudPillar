@@ -64,7 +64,7 @@ controllers:
     - name: KubernetesServiceHost
       value: ""
     - name: SecretVolumeMountPath
-      value: "/certs/devbe"
+      value: "/certs/devbe/certificate"
     - name: DefaultSecretVolumeMountPath
       value: "/certs/devbe/default"
     - name: IothubConnectionString
@@ -77,7 +77,7 @@ controllers:
       value: "global.azure-devices-provisioning.net"
     volumeMounts:
     - name: devbe-cert
-      mountPath: "/certs/devbe"
+      mountPath: "/certs/devbe/certificate"
       readOnly: true
     volumeMounts:
     - name: devbe-default-cert
