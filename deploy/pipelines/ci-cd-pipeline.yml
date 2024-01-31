@@ -136,7 +136,7 @@ stages:
           fi
         displayName: '${{ item }} Security Scan'
 
-      - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+      - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev1')) }}:
         - task: Docker@2
           displayName: '${{ item }} Docker Push'
           inputs:
