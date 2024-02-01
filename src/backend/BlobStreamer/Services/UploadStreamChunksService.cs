@@ -6,7 +6,6 @@ using Shared.Entities.Twin;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
 using System.Text.RegularExpressions;
-using Microsoft.Azure.Storage;
 
 
 
@@ -14,6 +13,7 @@ namespace Backend.BlobStreamer.Services;
 
 public class UploadStreamChunksService : IUploadStreamChunksService
 {
+    private readonly CloudBlobContainer _container;
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
@@ -21,35 +21,34 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
 
     public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper,
-     ITwinDiseredService twinDiseredHandler, IEnvironmentsWrapper environmentsWrapper)
+      ICloudStorageWrapper cloudStorageWrapper, ITwinDiseredService twinDiseredHandler, IEnvironmentsWrapper environmentsWrapper)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
     }
 
-    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool isRunDiagnostics = false)
+    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string fileName, string deviceId, bool isRunDiagnostics = false)
     {
         try
         {
-            // ArgumentNullException.ThrowIfNull(storageUri);
+            CloudBlockBlob blob;
+
             if (storageUri == null)
             {
-                _logger.Info($"BlobStreamer: storageUri is null, get storageUri from storage connectionstring from enviroments");
-
-                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_environmentsWrapper.storageConnectionString);
-                CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-                CloudBlobContainer blobContainer = blobClient.GetContainerReference(_environmentsWrapper.blobContainerName);
-                storageUri = blobContainer.StorageUri.PrimaryUri;
+                _logger.Info($"BlobStreamer: storageUri is null, get storageUri from storage connectionstring");
+                blob = _container.GetBlockBlobReference(fileName);
             }
-
+            else
+            {
+                blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
+            }
             long chunkIndex = (startPosition / readStream.Length) + 1;
 
-            _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex}, startPosition: {startPosition}, to {storageUri.AbsolutePath}");
-
-            CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
+            _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex}, startPosition: {startPosition}, to {blob.Uri.AbsolutePath}");
 
             using (Stream inputStream = new MemoryStream(readStream))
             {

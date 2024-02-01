@@ -15,7 +15,7 @@ public class SignatureHandler : ISignatureHandler
     private readonly IAsymmetricAlgorithmWrapper _asymmetricAlgorithmWrapper;
     private readonly IServerIdentityHandler _serverIdentityHandler;
     private readonly DownloadSettings _downloadSettings;
-    private const string FILE_EXTENSION = "*.cer";
+    private const string FILE_EXTENSION = "*.crt";
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
     ISHA256Wrapper sha256Wrapper, IAsymmetricAlgorithmWrapper asymmetricAlgorithmWrapper, IServerIdentityHandler serverIdentityHandler, IOptions<DownloadSettings> options)

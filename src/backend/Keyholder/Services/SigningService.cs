@@ -71,27 +71,37 @@ public class SigningService : ISigningService
         else
         {
             _logger.Info("In kube run-time - loading crypto from the secret in the local namespace.");
-            string SecretVolumeMountPath = _environmentsWrapper.SecretVolumeMountPath;
+            string secretVolumeMountPath = _environmentsWrapper.SecretVolumeMountPath;
+            string defaultSecretVolumeMountPath = _environmentsWrapper.DefaultSecretVolumeMountPath;
 
-            if (string.IsNullOrWhiteSpace(SecretVolumeMountPath))
+            if (string.IsNullOrWhiteSpace(secretVolumeMountPath))
             {
                 var message = "cert secret path must be set.";
                 _logger.Error(message);
                 throw new InvalidOperationException(message);
             }
-            privateKeyPem = await File.ReadAllTextAsync(Path.Combine(SecretVolumeMountPath, PRIVATE_KEY_FILE));
+            privateKeyPem = await ReadPrivateKeyFromMount(Path.Combine(secretVolumeMountPath, PRIVATE_KEY_FILE));
             _logger.Info($"Key Base64 decoded layer 1");
             var certificateIsValid = await CheckValidCertificate(deviceId);
             if (!certificateIsValid)
             {
-                var message = "certificate is not valid.";
-                _logger.Error(message);
-                throw new InvalidOperationException(message);
+                _logger.Info("certificate is not valid. go to default certificate");
+                privateKeyPem = await ReadPrivateKeyFromMount(Path.Combine(defaultSecretVolumeMountPath, PRIVATE_KEY_FILE));
+                return LoadPrivateKeyFromPem(privateKeyPem);
             }
         }
         return LoadPrivateKeyFromPem(privateKeyPem);
     }
 
+    private async Task<string> ReadPrivateKeyFromMount(string volumeMountPath)
+    {
+        using (FileStream fileStream = File.OpenRead(volumeMountPath))
+        {
+            var key = await File.ReadAllTextAsync(Path.Combine(volumeMountPath, PRIVATE_KEY_FILE));
+            return key;
+        }
+    }
+    
     private AsymmetricAlgorithm LoadPrivateKeyFromPem(string pemContent)
     {
         _logger.Debug($"Loading key from PEM...");

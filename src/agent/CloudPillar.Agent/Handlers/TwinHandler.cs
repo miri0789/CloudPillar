@@ -292,6 +292,11 @@ public class TwinHandler : ITwinHandler
                 _ => string.Empty
             };
             var filePath = _strictModeHandler.ReplaceRootById(action.TwinAction.Action!.Value, actionFileName) ?? actionFileName;
+            if (filePath.StartsWith("."))
+            {
+                filePath = filePath[2..].Replace("/", "\\");
+                filePath = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+            }
             switch (action.TwinAction)
             {
                 case DownloadAction downloadAction: downloadAction.DestinationPath = filePath; break;

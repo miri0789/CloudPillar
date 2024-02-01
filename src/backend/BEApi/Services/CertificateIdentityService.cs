@@ -4,6 +4,7 @@ using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
+using Shared.Entities.Utilities;
 using Shared.Logger;
 
 namespace Backend.BEApi.Services;
@@ -26,11 +27,12 @@ public class CertificateIdentityService : ICertificateIdentityService
 
     public async Task HandleCertificate(string deviceId)
     {
-        var certificateName = $"{DateTime.Now.ToString("yyyy_MM_dd")}{SharedConstants.CERTIFICATE_FILE_EXTENSION}";
-       
+        var certificateName = $"{DateTime.Now.ToString("yyyy_MM_dd_HHmmdd")}";
+
         var publicKey = await GetPublicKey();
         await UploadCertificateToBlob(publicKey, certificateName, deviceId);
         await AddRecipeFordownloadCertificate(publicKey, certificateName, deviceId);
+        await UpdateChangeSpecSign(deviceId);
     }
 
     private async Task<byte[]> GetPublicKey()
@@ -49,7 +51,7 @@ public class CertificateIdentityService : ICertificateIdentityService
             var data = new StreamingUploadChunkEvent()
             {
                 Data = publicKey,
-                FileName = certificateName,
+                FileName = $"{certificateName}{SharedConstants.CERTIFICATE_FILE_EXTENSION}",
                 StartPosition = 0
             };
 
@@ -69,14 +71,30 @@ public class CertificateIdentityService : ICertificateIdentityService
     {
         _logger.Info($"preparing download action to add device twin");
 
+        var cerSign = await SignRecipe(publicKey, deviceId);
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
             Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
             Source = certificateName,
-            DestinationPath = $"./{SharedConstants.PKI_FOLDER_PATH}/{deviceId}.crt",
+            Sign =  Encoding.UTF8.GetString(cerSign), 
+            DestinationPath = $"./{SharedConstants.PKI_FOLDER_PATH}/{certificateName}.crt",
         };
         await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME, downloadAction);
     }
 
+    private async Task<byte[]> SignRecipe(byte[] publicKey, string deviceId)
+    {
+        _logger.Info($"SignRecipe from keyHolder");
+        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/signData?deviceId={deviceId}";
+        var cerSign = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, publicKey);
+        _logger.Info($"SignRecipe from keyHolder: {cerSign}");
+        return cerSign;
+    }
+    private async Task UpdateChangeSpecSign(string deviceId)
+    {
+        var changeSignKey = SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME.GetSignKeyByChangeSpec();
+        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createTwinKeySignature?deviceId={deviceId}&changeSignKey={changeSignKey}";
+        await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Get);
+    }
 }
