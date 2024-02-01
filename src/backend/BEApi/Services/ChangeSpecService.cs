@@ -26,7 +26,6 @@ public class ChangeSpecService : IChangeSpecService
         foreach (var deviceId in devices.Split(','))
         {
             await _twinDiseredService.AddChangeSpec(deviceId, changeSpecKey, changeSpec);
-            await CreateChangeSpecKeySignatureAsync(deviceId, changeSpecKey);
         }
     }
 

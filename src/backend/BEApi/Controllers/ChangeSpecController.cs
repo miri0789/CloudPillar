@@ -1,6 +1,5 @@
 using Backend.BEApi.Services.interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Entities.Twin;
 
 namespace BEApi.Controllers
 {
@@ -16,10 +15,10 @@ namespace BEApi.Controllers
         }
 
         [HttpPost("AssignChangeSpec")]
-        public async Task<IActionResult> AssignChangeSpec(string devices, string changeSpecKey, [FromBody] object assignChangeSpec)
+        public async Task<IActionResult> AssignChangeSpec(string devices, string changeSpecKey, [FromBody] dynamic assignChangeSpec)
         {
             await _changeSpecService.AssignChangeSpecAsync(assignChangeSpec, devices, changeSpecKey);
-            return Ok(assignChangeSpec);
+            return Ok();
         }
 
         [HttpPost("CreateChangeSpecKeySignature")]

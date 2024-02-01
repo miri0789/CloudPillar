@@ -1,58 +1,42 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Shared.Entities.Twin;
 
-public class AssignTwinDesiredConverter : JsonConverter
+public class TwinChangeSpecConverter : JsonConverter
 {
 
     public override bool CanConvert(Type objectType)
     {
-        return objectType == typeof(AssignChangeSpec);
+        return objectType == typeof(TwinDesired);
     }
 
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
         JObject jsonObject = JObject.Load(reader);
-
-        var ChangeSpecKey = (jsonObject["ChangeSpecKey"] ?? jsonObject["changeSpecKey"])?.Value<string>();
-        var changeSpec = new AssignChangeSpec()
-        {
-            ChangeSpecKey = ChangeSpecKey,
-            Devices = (jsonObject["Devices"] ?? jsonObject["devices"])?.Value<string>(),
-            // ChangeSpec = GetChangeSpec(jsonObject, serializer, ChangeSpecKey)
-        };
-        return changeSpec;
-    }
-
-    private AssignTwinChangeSpec? GetChangeSpec(JObject jsonObject, JsonSerializer serializer, string ChangeSpecKey)
-    {
-        var changeSpec = new AssignTwinChangeSpec();
+        var changeSpec = new TwinChangeSpec();
 
         if (jsonObject.Type == JTokenType.Object &&
-            (jsonObject["ChangeSpec"] ?? jsonObject["changeSpec"]) != null)
+            (jsonObject["patch"] ?? jsonObject["Patch"]) != null)
         {
-            changeSpec = CreateTwinChangeSpec(jsonObject, serializer, "changeSpec");
+            changeSpec = CreateTwinChangeSpec(jsonObject, serializer, "property.Name");
         }
-
         return changeSpec;
     }
 
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
-        throw new Exception();
+        throw new NotImplementedException();
     }
 
-    private AssignTwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, string changeSpecKey)
+    private TwinChangeSpec CreateTwinChangeSpec(JObject jsonObject, JsonSerializer serializer, string changeSpecKey)
     {
         var lowerPropName = FirstLetterToLowerCase($"{changeSpecKey}");
         var upperPropName = FirstLetterToUpperCase($"{changeSpecKey}");
-        var r = (jsonObject.SelectToken($"{lowerPropName}") ?? jsonObject.SelectToken($"{upperPropName}"))?.Value<JProperty>();
-
-        var changeSpec = new AssignTwinChangeSpec()
+        var changeSpec = new TwinChangeSpec()
         {
-            Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>(),
-            // Patch = GetDynamicPatch(jsonObject, lowerPropName, upperPropName, serializer)
+            Id = (jsonObject.SelectToken("id") ?? jsonObject.SelectToken("Id"))?.Value<string>(),
+            Patch = GetDynamicPatch(jsonObject, lowerPropName, upperPropName, serializer)
         };
         return changeSpec;
     }
@@ -61,7 +45,7 @@ public class AssignTwinDesiredConverter : JsonConverter
     {
         var dynamicPatch = new Dictionary<string, TwinAction[]>();
 
-        var patchToken = jsonObject.SelectToken($"{lowerPropName}.patch") ?? jsonObject.SelectToken($"{upperPropName}.Patch");
+        var patchToken = jsonObject.SelectToken($"patch") ?? jsonObject.SelectToken($"Patch");
 
         if (patchToken is JObject patchObject)
         {
@@ -85,5 +69,4 @@ public class AssignTwinDesiredConverter : JsonConverter
         ArgumentNullException.ThrowIfNullOrEmpty(input);
         return string.Join(".", input.Split('.').Select(s => char.ToUpper(s.FirstOrDefault()) + s.Substring(1)));
     }
-
 }

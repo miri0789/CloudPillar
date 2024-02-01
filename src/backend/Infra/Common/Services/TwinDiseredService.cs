@@ -87,12 +87,13 @@ public class TwinDiseredService : ITwinDiseredService
                 if (twinDesiredChangeSpec is not null)
                 {
                     twinDesired.ChangeSpec[changeSpecKey] = null;
+                    twinDesired.ChangeSign[changeSpecKey.GetSignKeyByChangeSpec()] = "";
                     await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
                     twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
                     twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                     twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
                 }
-                var changeSpec = JsonConvert.SerializeObject(assignChangeSpec).ConvertToTwinDesired().ChangeSpec[changeSpecKey];
+                var changeSpec = assignChangeSpec.ToString().ConvertToTwinChangeSpec();
                 twinDesired.ChangeSpec.Add(changeSpecKey, changeSpec);
                 await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
                 return twinDesired;

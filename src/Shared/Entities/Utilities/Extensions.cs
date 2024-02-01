@@ -32,6 +32,17 @@ public static class TwinJsonConvertExtensions
 
     }
 
+    public static TwinChangeSpec ConvertToTwinChangeSpec(this string json)
+    {
+        var twinChangeSpec = JsonConvert.DeserializeObject<TwinChangeSpec>(json,
+            new JsonSerializerSettings
+            {
+                Converters = new List<JsonConverter> {
+                                        new TwinChangeSpecConverter(), new TwinActionConverter() }
+            });
+        return twinChangeSpec;
+    }
+
     public static JObject ConvertToJObject(this TwinDesired twinDesired)
     {
         var twinDesiredJson = JObject.Parse(JsonConvert.SerializeObject(twinDesired,
