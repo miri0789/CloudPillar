@@ -7,7 +7,7 @@ resource "null_resource" "copy-templates" {
   provisioner "local-exec" {
     command = <<-EOT
         Copy-Item -Path "..\..\backend\yamls\AzureKeyVaultSecret.yaml" -Destination "." -Recurse
-        Copy-Item -Path "..\..\backend\templates\generatecertificate.ps1" -Destination "." -Recurse
+        Copy-Item -Path "..\..\backend\generatecertificate.ps1" -Destination "." -Recurse
     EOT
     interpreter = ["PowerShell", "-Command"]
     working_dir = "${path.module}"

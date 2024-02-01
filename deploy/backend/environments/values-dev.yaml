@@ -79,7 +79,6 @@ controllers:
     - name: devbe-cert
       mountPath: "/certs/devbe"
       readOnly: true
-    volumeMounts:
     - name: devbe-default-cert
       mountPath: "/certs/devbe/default"
       readOnly: true
