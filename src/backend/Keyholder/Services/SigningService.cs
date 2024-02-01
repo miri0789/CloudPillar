@@ -1,14 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-using k8s;
 using Backend.Keyholder.Interfaces;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
-using Newtonsoft.Json;
-using Shared.Entities.Twin;
-using Shared.Entities.Utilities;
 using Backend.Infra.Common.Wrappers.Interfaces;
-using Microsoft.Azure.Devices.Shared;
 
 namespace Backend.Keyholder.Services;
 
@@ -76,17 +71,17 @@ public class SigningService : ISigningService
         var privateKeyBytes = Convert.FromBase64String(privateKeyContent);
         _logger.Debug($"Key Base64 decoded");
         var keyReader = new ReadOnlySpan<byte>(privateKeyBytes);
-        if(isRSA)
+        if (isRSA)
         {
             RSA rsa = RSA.Create();
             rsa.ImportRSAPrivateKey(keyReader, out _);
             _logger.Debug($"Imported private key");
             return rsa;
         }
-        ECDsa ecdsa  = ECDsa.Create();
-        ecdsa .ImportPkcs8PrivateKey(keyReader, out _);
+        ECDsa ecdsa = ECDsa.Create();
+        ecdsa.ImportPkcs8PrivateKey(keyReader, out _);
         _logger.Debug($"Imported private key");
-        return ecdsa ;
+        return ecdsa;
     }
 
     public async Task<byte[]> SignData(byte[] data)
@@ -97,6 +92,7 @@ public class SigningService : ISigningService
             {
                 var keyType = signingPrivateKey!.GetType();
                 var signature = keyType.BaseType == typeof(RSA) ? ((RSA)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1) : ((ECDsa)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512);
+                var r = Convert.ToBase64String(signature);
                 return signature;
             }
         }
@@ -106,43 +102,4 @@ public class SigningService : ISigningService
             return new byte[0];
         }
     }
-
-    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash, string changeSpecKey)
-    {
-        var signature = await SignData(hash);
-        await AddFileSignToDesired(deviceId, changeSpecKey, propName, actionIndex, Convert.ToBase64String(signature));
-    }
-
-    private async Task AddFileSignToDesired(string deviceId, string changeSpecKey, string propName, int actionIndex, string fileSign)
-    {
-        ArgumentNullException.ThrowIfNull(deviceId);
-
-        try
-        {
-            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
-            {
-                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
-                TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-
-                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-                ((DownloadAction)twinDesiredChangeSpec.Patch[propName][actionIndex]).Sign = fileSign;
-
-                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                var changeSign = twinDesired.GetDesiredChangeSignByKey(changeSpecKey);
-                var bytesSignature = await SignData(dataToSign);
-                changeSign = Convert.ToBase64String(bytesSignature);
-
-                var twinDesiredJson = twinDesired.ConvertToJObject().ToString();
-                twin.Properties.Desired = new TwinCollection(twinDesiredJson);
-
-                await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
-                _logger.Info($"Recipe: {actionIndex} has been successfully changed. DeviceId: {deviceId} ");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"An error occurred while attempting to update ChangeSpec: {ex.Message}");
-        }
-    }
-
 }

@@ -19,11 +19,4 @@ public class SigningController : ControllerBase
         var signature = await _signingService.SignData(dataToSign);
         return Ok(signature);
     }
-
-    [HttpPost("CreateFileSign")]
-    public async Task<IActionResult> GetMeatadataFile(string deviceId, string propName, int actionIndex, byte[] data, string changeSpecKey)
-    {
-        await _signingService.CreateFileKeySignature(deviceId, propName, actionIndex, data, changeSpecKey);
-        return Ok();
-    }
 }

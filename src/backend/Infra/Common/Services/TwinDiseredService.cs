@@ -91,8 +91,9 @@ public class TwinDiseredService : ITwinDiseredService
                     twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                     twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
                 }
-
+                var changeSpec = JsonConvert.SerializeObject(assignChangeSpec).ConvertAssignToTwinChangeSpec();
                 twinDesired.ChangeSpec.Add(assignChangeSpec.ChangeSpecKey, assignChangeSpec.ChangeSpec);
+                await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
                 return twinDesired;
             }
         }
@@ -103,7 +104,14 @@ public class TwinDiseredService : ITwinDiseredService
         }
     }
 
-    public async Task<Byte[]> GetTwinDesiredDataToSign(string deviceId, string changeSpecKey)
+    public Byte[] GetTwinDesiredDataToSign(TwinDesired twinDesired, string changeSpecKey)
+    {
+        var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
+        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesiredChangeSpec));
+        return dataToSign;
+    }
+
+    public async Task<TwinDesired> GetTwinDesiredAsync(string deviceId)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 
@@ -112,25 +120,22 @@ public class TwinDiseredService : ITwinDiseredService
             using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
             {
                 var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
-                var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesiredChangeSpec));
-                return dataToSign;
+                return twin.Properties.Desired.ToJson().ConvertToTwinDesired();
             }
         }
         catch (Exception ex)
         {
-            _logger.Error($"An error occurred while attempting to get data to sign: {ex.Message}");
+            _logger.Error($"An error occurred while attempting to get twin desired: {ex.Message}");
             return null;
         }
     }
 
-    public async Task SignTwinDesiredAsync(TwinDesired twinDesired, string deviceId, string changeSpecKey, string signData)
+    public async Task SignTwinDesiredAsync(TwinDesired twinDesired, string deviceId, string changeSignKey, string signData)
     {
         using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
         {
             var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
-            twinDesired.SetDesiredChangeSignByKey(changeSpecKey, signData);
+            twinDesired.SetDesiredChangeSignByKey(changeSignKey, signData);
 
             twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
             await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
