@@ -19,14 +19,14 @@ public class ChangeSpecService : IChangeSpecService
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
     }
 
-    public async Task AssignChangeSpecAsync(AssignChangeSpec changeSpec)
+    public async Task AssignChangeSpecAsync(object changeSpec, string devices, string changeSpecKey)
     {
         ArgumentNullException.ThrowIfNull(changeSpec);
 
-        foreach (var deviceId in changeSpec.Devices.Split(','))
+        foreach (var deviceId in devices.Split(','))
         {
-            await _twinDiseredService.AddChangeSpec(deviceId, changeSpec);
-            await CreateChangeSpecKeySignatureAsync(deviceId, changeSpec.ChangeSpecKey);
+            await _twinDiseredService.AddChangeSpec(deviceId, changeSpecKey, changeSpec);
+            await CreateChangeSpecKeySignatureAsync(deviceId, changeSpecKey);
         }
     }
 

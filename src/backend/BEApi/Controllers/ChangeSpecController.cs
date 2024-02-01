@@ -16,10 +16,10 @@ namespace BEApi.Controllers
         }
 
         [HttpPost("AssignChangeSpec")]
-        public async Task<IActionResult> AssignChangeSpec([FromBody] AssignChangeSpec assignChangeSpec)
+        public async Task<IActionResult> AssignChangeSpec(string devices, string changeSpecKey, [FromBody] object assignChangeSpec)
         {
-            await _changeSpecService.AssignChangeSpecAsync(assignChangeSpec);
-            return Ok();
+            await _changeSpecService.AssignChangeSpecAsync(assignChangeSpec, devices, changeSpecKey);
+            return Ok(assignChangeSpec);
         }
 
         [HttpPost("CreateChangeSpecKeySignature")]
