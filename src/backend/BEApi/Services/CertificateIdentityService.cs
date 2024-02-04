@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
@@ -27,7 +28,7 @@ public class CertificateIdentityService : ICertificateIdentityService
 
     public async Task HandleCertificate(string deviceId)
     {
-        var certificateName = $"{DateTime.Now.ToString("yyyy_MM_dd_HHmmdd")}";
+        var certificateName = $"{DateTime.Now.ToString("yyyy_MM_dd_HHmmdd")}{SharedConstants.CERTIFICATE_FILE_EXTENSION}";
 
         var publicKey = await GetPublicKey();
         await UploadCertificateToBlob(publicKey, certificateName, deviceId);
@@ -51,7 +52,7 @@ public class CertificateIdentityService : ICertificateIdentityService
             var data = new StreamingUploadChunkEvent()
             {
                 Data = publicKey,
-                FileName = $"{certificateName}{SharedConstants.CERTIFICATE_FILE_EXTENSION}",
+                FileName = certificateName,
                 StartPosition = 0
             };
 
@@ -77,17 +78,18 @@ public class CertificateIdentityService : ICertificateIdentityService
             Action = TwinActionType.SingularDownload,
             Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
             Source = certificateName,
-            Sign =  Encoding.UTF8.GetString(cerSign), 
-            DestinationPath = $"./{SharedConstants.PKI_FOLDER_PATH}/{certificateName}.crt",
+            Sign = Encoding.UTF8.GetString(cerSign),
+            DestinationPath = $"./{SharedConstants.PKI_FOLDER_PATH}/{certificateName}",
         };
         await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME, downloadAction);
     }
 
     private async Task<byte[]> SignRecipe(byte[] publicKey, string deviceId)
     {
-        _logger.Info($"SignRecipe from keyHolder");
+        var signatureFileBytes = await GetCalculateHash(publicKey);
+
         string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/signData?deviceId={deviceId}";
-        var cerSign = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, publicKey);
+        var cerSign = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, signatureFileBytes);
         _logger.Info($"SignRecipe from keyHolder: {cerSign}");
         return cerSign;
     }
@@ -96,5 +98,23 @@ public class CertificateIdentityService : ICertificateIdentityService
         var changeSignKey = SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME.GetSignKeyByChangeSpec();
         string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createTwinKeySignature?deviceId={deviceId}&changeSignKey={changeSignKey}";
         await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Get);
+    }
+
+    private async Task<byte[]> GetCalculateHash(byte[] data)
+    {
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            try
+            {
+                sha256.TransformBlock(data, 0, (int)data.Length, null, 0);
+                sha256.TransformFinalBlock(new byte[0], 0, 0);
+                return sha256.Hash;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"CalculateHashAsync failed.", ex);
+                throw;
+            }
+        }
     }
 }

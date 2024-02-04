@@ -53,17 +53,17 @@ public class SignatureHandler : ISignatureHandler
         var publicKeyBytes = Convert.FromBase64String(publicKeyContent);
         var keyReader = new ReadOnlySpan<byte>(publicKeyBytes);
 
-        if(isRSA)
+        if (isRSA)
         {
             RSA rsa = RSA.Create();
             rsa.ImportSubjectPublicKeyInfo(keyReader, out _);
-            _logger.Debug($"Imported public key");
+            _logger.Debug($"Imported RSA public key");
             return rsa;
         }
-        ECDsa ecdsa  = ECDsa.Create();
-        ecdsa .ImportSubjectPublicKeyInfo(keyReader, out _);
-        _logger.Debug($"Imported public key");
-        return ecdsa ;
+        ECDsa ecdsa = ECDsa.Create();
+        ecdsa.ImportSubjectPublicKeyInfo(keyReader, out _);
+        _logger.Debug($"Imported ECDsa public key");
+        return ecdsa;
     }
 
     public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)
@@ -106,7 +106,6 @@ public class SignatureHandler : ISignatureHandler
             {
                 byte[] buffer = new byte[_downloadSettings.SignFileBufferSize];
                 int bytesRead;
-
                 while ((bytesRead = _fileStreamerWrapper.Read(fileStream, buffer, 0, buffer.Length)) > 0)
                 {
                     _sha256Wrapper.TransformBlock(sha256, buffer, 0, bytesRead, null, 0);

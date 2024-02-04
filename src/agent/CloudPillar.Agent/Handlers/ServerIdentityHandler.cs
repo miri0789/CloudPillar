@@ -71,7 +71,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
             List<string> certificatesFiles = _fileStreamerWrapper.GetFiles(path, $"*{SharedConstants.CERTIFICATE_FILE_EXTENSION}").ToList();
             certificatesFiles.ForEach(certificateFile =>
             {
-                if (_fileStreamerWrapper.GetFileNameWithoutExtension(certificateFile).ToLower() != _appSettings.DefaultPublicKeyName.ToLower())
+                if (_fileStreamerWrapper.GetFileNameWithoutExtension(certificateFile).ToLower() != _appSettings.DefaultSignCertificateName.ToLower())
                 {
                     _fileStreamerWrapper.DeleteFile(certificateFile);
                     _logger.Info($"RemoveNonDefaultCertificates success for file: {certificateFile}");
@@ -86,11 +86,11 @@ public class ServerIdentityHandler : IServerIdentityHandler
 
     private string ConvertToPem(byte[] base64Key, string? keyAlgorithm)
     {
-        string algo = keyAlgorithm!.Contains("RSA") ? "RSA" : "";
+        string algo = keyAlgorithm!.Contains("RSA") ? " RSA" : "";
         StringBuilder pemBuilder = new StringBuilder();
-        pemBuilder.AppendLine($"-----BEGIN {algo} PUBLIC KEY-----");
+        pemBuilder.AppendLine($"-----BEGIN{algo} PUBLIC KEY-----");
         pemBuilder.AppendLine(Convert.ToBase64String(base64Key, Base64FormattingOptions.InsertLineBreaks));
-        pemBuilder.AppendLine($"-----END {algo} PUBLIC KEY-----");
+        pemBuilder.AppendLine($"-----END{algo} PUBLIC KEY-----");
         return pemBuilder.ToString();
     }
 

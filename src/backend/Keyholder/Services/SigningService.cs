@@ -126,7 +126,7 @@ public class SigningService : ISigningService
             return rsa;
         }
         ECDsa ecdsa = ECDsa.Create();
-        ecdsa.ImportPkcs8PrivateKey(keyReader, out _);
+        ecdsa.ImportECPrivateKey(keyReader, out _);
         _logger.Debug($"Imported private key");
         return ecdsa;
     }
