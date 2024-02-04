@@ -8,6 +8,7 @@ namespace BEApi.Controllers
     public class ChangeSpecController : ControllerBase
     {
         private readonly IChangeSpecService _changeSpecService;
+        private const string CHANGE_SPEC_KEY = "changeSpec";
 
         public ChangeSpecController(IChangeSpecService changeSpecService)
         {
@@ -15,7 +16,7 @@ namespace BEApi.Controllers
         }
 
         [HttpPost("AssignChangeSpec")]
-        public async Task<IActionResult> AssignChangeSpec(string devices, string changeSpecKey, [FromBody] dynamic assignChangeSpec)
+        public async Task<IActionResult> AssignChangeSpec([FromBody] dynamic assignChangeSpec, string devices, string changeSpecKey = CHANGE_SPEC_KEY)
         {
             await _changeSpecService.AssignChangeSpecAsync(assignChangeSpec, devices, changeSpecKey);
             return Ok();
