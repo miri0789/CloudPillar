@@ -51,7 +51,7 @@ public class TwinReportHandler : ITwinReportHandler
     public TwinActionReported GetActionToReport(ActionToReport actionToReport, string periodicFileName = "")
     {
         if (actionToReport.TwinAction is PeriodicUploadAction periodicUploadAction &&
-        !string.IsNullOrWhiteSpace(periodicFileName) && !string.IsNullOrWhiteSpace(periodicUploadAction.DirName) && 
+        !string.IsNullOrWhiteSpace(periodicFileName) && !string.IsNullOrWhiteSpace(periodicUploadAction.DirName) &&
          periodicFileName.IndexOf(periodicUploadAction.DirName) != -1 &&
          periodicUploadAction.DirName != periodicFileName)
         {
@@ -62,7 +62,7 @@ public class TwinReportHandler : ITwinReportHandler
 
     }
 
-    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, TwinPatchChangeSpec changeSpecKey, CancellationToken cancellationToken)
+    public async Task UpdateReportedChangeSpecAsync(TwinReportedChangeSpec? changeSpec, string changeSpecKey, CancellationToken cancellationToken)
     {
         var changeSpecJson = changeSpec is null ? null : JObject.Parse(JsonConvert.SerializeObject(changeSpec,
           Formatting.None,
@@ -80,7 +80,8 @@ public class TwinReportHandler : ITwinReportHandler
     public async Task<Twin> SetTwinReported(CancellationToken cancellationToken)
     {
         var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-        _twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+        _twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
+
         return twin;
     }
 
@@ -98,7 +99,7 @@ public class TwinReportHandler : ITwinReportHandler
 
                 var actionForDetails = actionsToReported.FirstOrDefault(x => !string.IsNullOrEmpty(x.ReportPartName));
                 if (actionForDetails == null) return;
-                TwinPatchChangeSpec changeSpecKey = actionForDetails.ChangeSpecKey;
+                string changeSpecKey = actionForDetails.ChangeSpecKey;
                 TwinReportedChangeSpec twinReportedChangeSpec = _twinReported.GetReportedChangeSpecByKey(changeSpecKey);
 
                 actionsToReported.ToList().ForEach(actionToReport =>
@@ -106,7 +107,7 @@ public class TwinReportHandler : ITwinReportHandler
                     if (string.IsNullOrEmpty(actionToReport.ReportPartName)) return;
                     twinReportedChangeSpec.Patch[actionToReport.ReportPartName][actionToReport.ReportIndex] = actionToReport.TwinReport;
                 });
-                await UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey, cancellationToken);
+                await UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey.ToString(), cancellationToken);
             }
             catch (Exception ex)
             {
@@ -135,7 +136,7 @@ public class TwinReportHandler : ITwinReportHandler
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            var reported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
             return reported?.DeviceState;
         }
         catch (Exception ex)
@@ -164,7 +165,7 @@ public class TwinReportHandler : ITwinReportHandler
         try
         {
             var twin = await _deviceClient.GetTwinAsync(cancellationToken);
-            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            var reported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
             return reported?.DeviceStateAfterServiceRestart;
         }
         catch (Exception ex)
@@ -261,7 +262,7 @@ public class TwinReportHandler : ITwinReportHandler
             {
                 var twin = await _deviceClient.GetTwinAsync(cancellationToken);
                 string reportedJson = twin.Properties.Reported.ToJson();
-                var twinReported = JsonConvert.DeserializeObject<TwinReported>(reportedJson);
+                var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
                 var twinReportedCustom = twinReported?.Custom ?? new List<TwinReportedCustomProp>();
                 foreach (var item in customProps)
                 {

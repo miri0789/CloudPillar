@@ -1,12 +1,12 @@
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Wrappers;
-using Microsoft.Azure.Devices.Shared;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Handlers.Logger;
 using System.Runtime.InteropServices;
+using Shared.Entities.Utilities;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -17,6 +17,7 @@ public class TwinReportHandlerTestFixture
     private Mock<IRuntimeInformationWrapper> _runtimeInformationWrapperMock;
     private Mock<IFileStreamerWrapper> _fileStreamerWrapperMock;
     private ITwinReportHandler _target;
+    private string changeSignKey;
 
     private CancellationToken cancellationToken = CancellationToken.None;
 
@@ -31,6 +32,8 @@ public class TwinReportHandlerTestFixture
         _target = new TwinReportHandler(_deviceClientMock.Object, _loggerHandlerMock.Object,
          _runtimeInformationWrapperMock.Object,
          _fileStreamerWrapperMock.Object);
+
+        changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
 
         CreateTarget();
     }
@@ -127,7 +130,7 @@ public class TwinReportHandlerTestFixture
         await _target.UpdateReportActionAsync(actionsToReported, cancellationToken);
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
-            nameof(TwinReported.ChangeSpec), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
+           It.Is<string>(x => x == TwinConstants.CHANGE_SPEC_NAME), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -138,7 +141,7 @@ public class TwinReportHandlerTestFixture
             new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
             new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
         };
-        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), existingCustomProps);
+        CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), new Dictionary<string, TwinReportedChangeSpec>(), existingCustomProps);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
         var newCustomProps = new List<TwinReportedCustomProp>
@@ -166,9 +169,9 @@ public class TwinReportHandlerTestFixture
     }
 
 
-    private void CreateTwinMock(TwinChangeSpec twinChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null, string? changeSign = "----")
+    private void CreateTwinMock(Dictionary<string, TwinChangeSpec> twinChangeSpec, Dictionary<string, TwinReportedChangeSpec> twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null, Dictionary<string, string>? changeSign = null)
     {
-        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, null, null, twinReportedCustomProps, changeSign);
+        var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps, changeSign);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
 
     }
@@ -187,7 +190,7 @@ public class TwinReportHandlerTestFixture
     [Test]
     public async Task UpdateDeviceCustomPropsAsync_CustomPropsNull_UpdateNotExecute()
     {
-        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec());
+        CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), new Dictionary<string, TwinReportedChangeSpec>());
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
 
@@ -204,7 +207,8 @@ public class TwinReportHandlerTestFixture
             new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
             new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
         };
-        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec(), existingCustomProps);
+        CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), new Dictionary<string, TwinReportedChangeSpec>(), existingCustomProps);
+
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
         var newCustomProps = new List<TwinReportedCustomProp>
@@ -291,22 +295,28 @@ public class TwinReportHandlerTestFixture
 
     private List<ActionToReport> CreateReportForUpdating()
     {
-        var actionsToReported = new List<ActionToReport> { new ActionToReport
+        var actionsToReported = new List<ActionToReport> { new ActionToReport()
         {
-            ReportPartName = "TransitPackage",
+            ReportPartName =MockHelper.PATCH_KEY,
             ReportIndex = 0,
             TwinReport = new TwinActionReported { Status = StatusType.InProgress }
         } };
 
-        CreateTwinMock(new TwinChangeSpec(), new TwinReportedChangeSpec()
-        {
-            Patch = new Dictionary<string, TwinActionReported[]>()
+        var reported = new Dictionary<string, TwinReportedChangeSpec>
             {
-                { "TransitPackage", new List<TwinActionReported>()
-                    {   new TwinActionReported()
-                    }.ToArray() }
-            }
-        });
+                {
+                    TwinConstants.CHANGE_SPEC_NAME, new TwinReportedChangeSpec()
+                    {
+                        Id =  MockHelper.CHANGE_SPEC_ID,
+                        Patch = new Dictionary<string, TwinActionReported[]>()
+                        {
+                            { MockHelper.PATCH_KEY, new TwinActionReported[] { new TwinActionReported()  } }
+                        }
+                    }
+                }
+            };
+
+        CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), reported);
 
         return actionsToReported;
     }

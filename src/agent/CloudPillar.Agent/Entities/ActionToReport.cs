@@ -10,9 +10,9 @@ public class ActionToReport
     public int ReportIndex { get; set; }
     public string ReportPartName { get; set; }
     public string ChangeSpecId { get; set; }
-    public TwinPatchChangeSpec ChangeSpecKey { get; }
+    public string ChangeSpecKey { get; }
 
-    public ActionToReport(TwinPatchChangeSpec changeSpecKey = TwinPatchChangeSpec.ChangeSpec, string changeSpecId = "")
+    public ActionToReport(string changeSpecKey = TwinConstants.CHANGE_SPEC_NAME, string changeSpecId = "")
     {
         TwinReport = new TwinActionReported();
         TwinAction = new TwinAction();

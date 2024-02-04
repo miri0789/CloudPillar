@@ -3,7 +3,6 @@ using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -119,8 +118,8 @@ public class SignatureHandler : ISignatureHandler
         }
     }
 
-    public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)
+    public async Task SendSignTwinKeyEventAsync(string changeSignKey, CancellationToken cancellationToken)
     {
-        await _d2CMessengerHandler.SendSignTwinKeyEventAsync(keyPath, signatureKey, cancellationToken);
+        await _d2CMessengerHandler.SendSignTwinKeyEventAsync(changeSignKey, cancellationToken);
     }
 }

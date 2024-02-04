@@ -536,7 +536,7 @@ namespace CloudPillar.Agent.Tests
         {
             _target.InitDownloadsList();
             _signatureHandlerMock.Setup(sign => sign.VerifyFileSignatureAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
-           
+
             _fileStreamerWrapperMock.Setup(x => x.GetFullPath("C:\\Downloads")).Returns("C:\\Downloads");
             _fileStreamerWrapperMock.Setup(x => x.GetFullPath("C:\\Downloads\\test.txt")).Returns("C:\\Downloads\\test.txt");
 
@@ -561,6 +561,12 @@ namespace CloudPillar.Agent.Tests
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
 
             _serverIdentityHandlerMock.Verify(x => x.UpdateKnownIdentitiesFromCertificatesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task InitDownloadsList_GetActionsNull_ReturnNull()
+        {
+            Assert.DoesNotThrow(() => _target.InitDownloadsList(), It.IsAny<string>());
         }
 
 

@@ -10,6 +10,7 @@ using Shared.Logger;
 using Backend.Keyholder.Services;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Backend.Infra.Common.Wrappers.Interfaces;
+using Shared.Entities.Utilities;
 
 namespace Backend.Keyholder.Tests;
 
@@ -21,10 +22,12 @@ public class SigningTestFixture
     private Mock<ILoggerHandler> _mockLogger;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapper;
     private Mock<ECDsa> _ecdsaMock;
+    string changeSignKey;
 
     [SetUp]
     public void Setup()
     {
+        changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
         _ecdsaMock = new Mock<ECDsa>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLogger = new Mock<ILoggerHandler>();
@@ -51,7 +54,6 @@ public class SigningTestFixture
     {
         var deviceId = "testDevice";
         var keyPath = "path";
-        var signatureKey = "changeSign";
 
         var twin = new Twin();
         twin.Properties.Desired = new TwinCollection();
@@ -70,7 +72,7 @@ public class SigningTestFixture
                         .ReturnsAsync(twin)
                         .Verifiable();
 
-        await _target.CreateTwinKeySignature(deviceId);
+        await _target.CreateTwinKeySignature(deviceId, changeSignKey);
     }
 
     [Test]
@@ -84,7 +86,7 @@ public class SigningTestFixture
         _registryManagerWrapper.Setup(mock => mock.UpdateTwinAsync(It.IsAny<RegistryManager>(), deviceId, It.IsAny<Twin>(), twin.ETag))
                         .ReturnsAsync(twin)
                         .Verifiable();
-        await _target.CreateFileKeySignature(deviceId, propName, actionIndex, hash, TwinPatchChangeSpec.ChangeSpec);
+        await _target.CreateFileKeySignature(deviceId, propName, actionIndex, hash, TwinConstants.CHANGE_SPEC_NAME);
         _registryManagerWrapper.Verify(r => r.GetTwinAsync(It.IsAny<RegistryManager>(), deviceId), Times.Once);
     }
 }

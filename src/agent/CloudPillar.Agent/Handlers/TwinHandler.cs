@@ -1,8 +1,6 @@
-using System.Runtime.InteropServices;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Wrappers;
 using Newtonsoft.Json;
-using System.Reflection;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Azure.Devices.Client;
@@ -26,7 +24,7 @@ public class TwinHandler : ITwinHandler
     private readonly ILoggerHandler _logger;
     private readonly IPeriodicUploaderHandler _periodicUploaderHandler;
     private static Twin? _latestTwin { get; set; }
-    private static CancellationTokenSource? _twinCancellationTokenSource;
+    private Dictionary<string, CancellationTokenSource> _twinCancellationTokenDictionary = new Dictionary<string, CancellationTokenSource>();
 
     public TwinHandler(IDeviceClientWrapper deviceClientWrapper,
                        IFileDownloadHandler fileDownloadHandler,
@@ -49,10 +47,14 @@ public class TwinHandler : ITwinHandler
         _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
     }
 
-    public void CancelCancellationToken()
+    public void CancelCancellationToken(string changeSpecKey)
     {
-        _twinCancellationTokenSource?.Cancel();
+        if (_twinCancellationTokenDictionary.ContainsKey(changeSpecKey))
+        {
+            _twinCancellationTokenDictionary[changeSpecKey].Cancel();
+        }
     }
+
     public async Task HandleTwinActionsAsync(CancellationToken cancellationToken)
     {
         try
@@ -73,17 +75,12 @@ public class TwinHandler : ITwinHandler
 
     }
 
-    private async Task<TwinReportedChangeSpec> ResetReportedWhenDesiredChange(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpec, bool isInitial, CancellationToken cancellationToken)
+    private async Task<TwinReportedChangeSpec> ResetReportedWhenDesiredChange(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, string changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         if (twinDesiredChangeSpec?.Id != twinReportedChangeSpec?.Id || isInitial)
         {
-            CancelCancellationToken();
-            _twinCancellationTokenSource = new CancellationTokenSource();
-            if (changeSpec != TwinPatchChangeSpec.ChangeSpecDiagnostics)
-            {
-                _logger.Info($"TwinDesired spec id not equal to TwinReported spec id, reset all reported actions");
-                _fileDownloadHandler.InitDownloadsList();
-            }
+            CancelCancellationToken(changeSpecKey);
+            InitCancellationTokenForChangeSpec(changeSpecKey, cancellationToken);
         }
         var isReportedExist = twinDesiredChangeSpec is null && twinReportedChangeSpec is not null;
         if (isReportedExist ||
@@ -102,7 +99,7 @@ public class TwinHandler : ITwinHandler
                     Id = twinDesiredChangeSpec.Id
                 };
             }
-            await _twinReportHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpec, cancellationToken);
+            await _twinReportHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey, cancellationToken);
         }
         return twinReportedChangeSpec;
     }
@@ -112,42 +109,44 @@ public class TwinHandler : ITwinHandler
         try
         {
             var twin = await _twinReportHandler.SetTwinReported(cancellationToken);
-            var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson())!;
+            var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
+
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
-            foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
+            ResetNotActualDownloads(twinDesired, twinReported);
+            foreach (string changeSpecKey in twinDesired.ChangeSpec.Keys)
             {
-                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpec);
-                var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpec);
-                twinReportedChangeSpec = await ResetReportedWhenDesiredChange(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpec, isInitial, cancellationToken);
-                twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpec);
-            }
+                var twinDesiredChangeSpec = twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey);
+                var twinReportedChangeSpec = twinReported?.GetReportedChangeSpecByKey(changeSpecKey);
+                twinReportedChangeSpec = await ResetReportedWhenDesiredChange(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
+                twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey);
 
-            if (await ChangeSpecIdEmpty(twinDesired?.ChangeSpec?.Id, cancellationToken))
-            {
-                _logger.Info($"There is no twin change spec id");
-                return;
-            }
-
-            if (await ChangeSignExists(twinDesired, cancellationToken))
-            {
-                byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired.ChangeSign!);
-                var message = isSignValid ? null : "Twin Change signature is invalid";
-                await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), message, cancellationToken);
-                if (isSignValid)
+                if (await ChangeSpecIdEmpty(twinDesired, changeSpecKey, cancellationToken))
                 {
-                    foreach (TwinPatchChangeSpec changeSpec in Enum.GetValues(typeof(TwinPatchChangeSpec)))
+                    _logger.Info($"There is no twin change spec id for {changeSpecKey}");
+                    continue;
+                }
+                var changeSignKey = changeSpecKey.GetSignKeyByChangeSpec();
+
+                if (await ChangeSignExists(twinDesired, changeSignKey, cancellationToken))
+                {
+                    byte[] dataToVerify = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.GetDesiredChangeSpecByKey(changeSpecKey)));
+                    var isSignValid = await _signatureHandler.VerifySignatureAsync(dataToVerify, twinDesired?.GetDesiredChangeSignByKey(changeSignKey)!);
+                    var message = isSignValid ? null : $"Twin Change signature for {changeSignKey} is invalid";
+                    await _deviceClient.UpdateReportedPropertiesAsync(changeSignKey, message, cancellationToken);
+                    if (isSignValid)
                     {
-                        await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpec, isInitial, cancellationToken);
+                        await HandleTwinUpdatesAsync(twinDesired, twinReported, changeSpecKey, isInitial, cancellationToken);
+                    }
+                    else
+                    {
+                        _logger.Error(message);
                     }
                 }
-                else
-                {
-                    _logger.Error(message);
-                }
             }
+
         }
+
         catch (Exception ex)
         {
             _logger.Error($"OnDesiredPropertiesUpdate failed message: {ex.Message}");
@@ -155,11 +154,45 @@ public class TwinHandler : ITwinHandler
     }
 
 
-    private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
-    TwinReported twinReported, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    private void ResetNotActualDownloads(TwinDesired twinDesired, TwinReported twinReported)
     {
-        var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-        var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey);
+        var actions = twinDesired?.ChangeSpec?
+            .SelectMany(desiredChangeSpec =>
+                GetActiveDownloads(desiredChangeSpec.Value, twinReported?.GetReportedChangeSpecByKey(desiredChangeSpec.Key),
+                    desiredChangeSpec.Key)).ToList();
+        if (actions.Count() > 0)
+        {
+            _fileDownloadHandler.InitDownloadsList(actions);
+        }
+    }
+
+    private CancellationTokenSource GetCancellationTokenForChangeSpec(string changeSpecKey, CancellationToken baseCancellationToken)
+    {
+        if (!_twinCancellationTokenDictionary.ContainsKey(changeSpecKey))
+        {
+            InitCancellationTokenForChangeSpec(changeSpecKey, baseCancellationToken);
+        }
+        return _twinCancellationTokenDictionary[changeSpecKey];
+    }
+
+    private void InitCancellationTokenForChangeSpec(string changeSpecKey, CancellationToken baseCancellationToken)
+    {
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(baseCancellationToken, new CancellationToken());
+        if (!_twinCancellationTokenDictionary.ContainsKey(changeSpecKey))
+        {
+            _twinCancellationTokenDictionary.Add(changeSpecKey, cts);
+        }
+        else
+        {
+            _twinCancellationTokenDictionary[changeSpecKey] = cts;
+        }
+    }
+
+    private async Task HandleTwinUpdatesAsync(TwinDesired twinDesired,
+    TwinReported twinReported, string changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    {
+        var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey.ToString());
+        var twinReportedChangeSpec = twinReported.GetReportedChangeSpecByKey(changeSpecKey.ToString());
 
         var actions = await GetActionsToExecAsync(twinDesiredChangeSpec!, twinReportedChangeSpec!, changeSpecKey, isInitial, cancellationToken);
 
@@ -189,7 +222,8 @@ public class TwinHandler : ITwinHandler
 
             if (actions?.Count() > 0)
             {
-                Task.Run(async () => HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationToken));
+                var cancellationTokenForChangeSpec = GetCancellationTokenForChangeSpec(changeSpecKey, cancellationToken).Token;
+                Task.Run(async () => HandleTwinActionsAsync(actions, twinDesiredChangeSpec.Id, cancellationTokenForChangeSpec));
             }
         }
     }
@@ -241,15 +275,15 @@ public class TwinHandler : ITwinHandler
                 switch (action.TwinAction)
                 {
                     case DownloadAction downloadAction:
-                        await _fileDownloadHandler.InitFileDownloadAsync(action, _twinCancellationTokenSource!.Token);
+                        await _fileDownloadHandler.InitFileDownloadAsync(action, cancellationToken);
                         break;
 
                     case PeriodicUploadAction uploadAction:
-                        await _periodicUploaderHandler.UploadAsync(action, changeSpecId, _twinCancellationTokenSource!.Token);
+                        await _periodicUploaderHandler.UploadAsync(action, changeSpecId, cancellationToken);
                         break;
 
                     case UploadAction uploadAction:
-                        await _fileUploaderHandler.FileUploadAsync(action, uploadAction.Method, uploadAction.FileName, changeSpecId, _twinCancellationTokenSource!.Token);
+                        await _fileUploaderHandler.FileUploadAsync(action, uploadAction.Method, uploadAction.FileName, changeSpecId, cancellationToken);
                         break;
 
                     case ExecuteAction execOnce when _strictModeSettings.StrictMode:
@@ -312,7 +346,7 @@ public class TwinHandler : ITwinHandler
         await _twinReportHandler.UpdateReportActionAsync(new List<ActionToReport>() { action }, cancellationToken);
     }
 
-    private async Task<IEnumerable<ActionToReport>?> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, TwinPatchChangeSpec changeSpecKey, bool isInitial, CancellationToken cancellationToken)
+    private async Task<IEnumerable<ActionToReport>?> GetActionsToExecAsync(TwinChangeSpec twinDesiredChangeSpec, TwinReportedChangeSpec twinReportedChangeSpec, string changeSpecKey, bool isInitial, CancellationToken cancellationToken)
     {
         try
         {
@@ -359,7 +393,7 @@ public class TwinHandler : ITwinHandler
             }
             if (isReportedChanged)
             {
-                await _twinReportHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey, cancellationToken);
+                await _twinReportHandler.UpdateReportedChangeSpecAsync(twinReportedChangeSpec, changeSpecKey.ToString(), cancellationToken);
             }
             return actions;
         }
@@ -370,30 +404,70 @@ public class TwinHandler : ITwinHandler
         }
     }
 
-    private async Task<bool> ChangeSpecIdEmpty(string? changeSpecId, CancellationToken cancellationToken)
+    private IEnumerable<ActionToReport> GetActiveDownloads(TwinChangeSpec twinDesiredChangeSpec,
+    TwinReportedChangeSpec twinReportedChangeSpec, string changeSpecKey)
     {
-        var emptyChangeSpecId = string.IsNullOrWhiteSpace(changeSpecId);
-        var message = emptyChangeSpecId ? "There is no ID for changeSpec.." : null;
-        await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSpecId), message, cancellationToken);
+        try
+        {
+            var actions = new List<ActionToReport>();
+            twinReportedChangeSpec ??= new TwinReportedChangeSpec();
+
+            foreach (var desired in twinDesiredChangeSpec.Patch!)
+            {
+                try
+                {
+                    actions.AddRange(desired.Value
+                       .Select((item, index) => new ActionToReport(changeSpecKey, twinDesiredChangeSpec.Id!)
+                       {
+                           ReportPartName = desired.Key,
+                           ReportIndex = index,
+                           TwinAction = item
+                       })
+                    .Where((item, index) => twinReportedChangeSpec.Patch is null || (twinReportedChangeSpec.Patch?[desired.Key].Length <= index)
+                    || IsActiveAction(twinReportedChangeSpec.Patch![desired.Key][index])));
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"GetActionsToExec failed , desired part: {desired.Key} exception: {ex.Message}");
+                    continue;
+                }
+            }
+            return actions;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"GetActionsToExec failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task<bool> ChangeSpecIdEmpty(TwinDesired twinDesired, string? changeSpecKey, CancellationToken cancellationToken)
+    {
+        var changeSpecIdKey = changeSpecKey.GetChangeSpecIdKeyByChangeSpecKey();
+        var changeSpec = twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey);
+        var emptyChangeSpecId = string.IsNullOrWhiteSpace(changeSpec.Id);
+        var message = emptyChangeSpecId ? $"There is no ID for {changeSpecKey}.." : null;
+        await _deviceClient.UpdateReportedPropertiesAsync(changeSpecIdKey, message, cancellationToken);
         return emptyChangeSpecId;
     }
 
-    private async Task<bool> ChangeSignExists(TwinDesired twinDesired, CancellationToken cancellationToken)
+    private async Task<bool> ChangeSignExists(TwinDesired twinDesired, string changeSignKey, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(twinDesired?.ChangeSign))
+        if (!string.IsNullOrWhiteSpace(twinDesired?.GetDesiredChangeSignByKey(changeSignKey)?.ToString()))
         {
             return true;
         }
         if (!_strictModeSettings.StrictMode)
         {
             _logger.Info($"There is no twin change sign, send sign event..");
-            await _signatureHandler.SendSignTwinKeyEventAsync(nameof(twinDesired.ChangeSpec), nameof(twinDesired.ChangeSign), cancellationToken);
+            await _signatureHandler.SendSignTwinKeyEventAsync(changeSignKey, cancellationToken);
             return false;
         }
         else
         {
             _logger.Info($"There is no twin change sign, strict mode is active");
-            await _deviceClient.UpdateReportedPropertiesAsync(nameof(TwinReported.ChangeSign), "Change sign is required", cancellationToken);
+            await _deviceClient.UpdateReportedPropertiesAsync(changeSignKey, "Change sign is required", cancellationToken);
             return false;
         }
     }

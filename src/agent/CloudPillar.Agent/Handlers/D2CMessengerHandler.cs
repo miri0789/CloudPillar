@@ -72,9 +72,9 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(d2CMessage, cancellationToken);
     }
 
-    public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)
+    public async Task SendSignTwinKeyEventAsync(string changeSignKey, CancellationToken cancellationToken)
     {
-        await SendMessageAsync(new SignEvent(), cancellationToken);
+        await SendMessageAsync(new SignEvent(changeSignKey), cancellationToken);
     }
 
     public async Task SendRemoveDeviceEvent(CancellationToken cancellationToken)

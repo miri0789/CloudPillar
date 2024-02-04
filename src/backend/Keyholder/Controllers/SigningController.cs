@@ -16,14 +16,14 @@ public class SigningController : ControllerBase
     }
 
     [HttpGet("createTwinKeySignature")]
-    public async Task<IActionResult> CreateTwinKeySignature(string deviceId)
+    public async Task<IActionResult> CreateTwinKeySignature(string deviceId, string changeSignKey)
     {
-        await _signingService.CreateTwinKeySignature(deviceId);
+        await _signingService.CreateTwinKeySignature(deviceId, changeSignKey);
         return Ok();
     }
 
     [HttpPost("createFileSign")]
-    public async Task<IActionResult> GetMeatadataFile(string deviceId, string propName, int actionIndex, byte[] data, TwinPatchChangeSpec changeSpecKey)
+    public async Task<IActionResult> GetMeatadataFile(string deviceId, string propName, int actionIndex, byte[] data, string changeSpecKey)
     {
         await _signingService.CreateFileKeySignature(deviceId, propName, actionIndex, data, changeSpecKey);
         return Ok();
