@@ -9,8 +9,6 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _globalDeviceEndpoint = "GlobalDeviceEndpoint";
     private const string _expirationCertificatePercent = "ExpirationCertificatePercent";
     private const string _maxCountDevices = "MaxCountDevices";
-    private const string _storageConnectionString = "StorageConnectionString";
-    private const string _blobContainerName = "BlobContainerName";
     private const string _keyHolderUrl = "KeyHolderUrl";
     private const string _blobStreamerUrl = "BlobStreamerUrl";
     public string iothubConnectionString
@@ -42,15 +40,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return int.Parse(GetVariable(_maxCountDevices)); }
     }
-    public string storageConnectionString
-    {
-        get { return GetVariable(_storageConnectionString); }
-    }
-
-    public string blobContainerName
-    {
-        get { return GetVariable(_blobContainerName); }
-    }
+    
     public string keyHolderUrl
     {
         get { return GetVariable(_keyHolderUrl); }

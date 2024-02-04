@@ -28,12 +28,20 @@ public class CertificateIdentityService : ICertificateIdentityService
 
     public async Task HandleCertificate(string deviceId)
     {
-        var certificateName = $"{DateTime.Now.ToString("yyyy_MM_dd_HHmmdd")}{SharedConstants.CERTIFICATE_FILE_EXTENSION}";
+        try
+        {
+            var certificateName = $"{DateTime.Now.ToString("yyyy_MM_dd_HHmmdd")}{SharedConstants.CERTIFICATE_FILE_EXTENSION}";
 
-        var publicKey = await GetPublicKey();
-        await UploadCertificateToBlob(publicKey, certificateName, deviceId);
-        await AddRecipeFordownloadCertificate(publicKey, certificateName, deviceId);
-        await UpdateChangeSpecSign(deviceId);
+            var publicKey = await GetPublicKey();
+            await UploadCertificateToBlob(publicKey, certificateName, deviceId);
+            await AddRecipeFordownloadCertificate(publicKey, certificateName, deviceId);
+            await UpdateChangeSpecSign(deviceId);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"HandleCertificate failed.", ex);
+            throw;
+        }
     }
 
     private async Task<byte[]> GetPublicKey()
