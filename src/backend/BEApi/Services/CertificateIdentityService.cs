@@ -26,13 +26,13 @@ public class CertificateIdentityService : ICertificateIdentityService
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
     }
 
-    public async Task HandleCertificate(string deviceId)
+    public async Task ProcessUpdatingAgentInNewCertificate(string deviceId)
     {
         try
         {
             var certificateName = $"{DateTime.Now.ToString("yyyy_MM_dd_HHmmdd")}{SharedConstants.CERTIFICATE_FILE_EXTENSION}";
 
-            var publicKey = await GetPublicKey();
+            var publicKey = await GetSigningPublicKeyAsync();
             await UploadCertificateToBlob(publicKey, certificateName, deviceId);
             await AddRecipeFordownloadCertificate(publicKey, certificateName, deviceId);
             await UpdateChangeSpecSign(deviceId);
@@ -44,10 +44,10 @@ public class CertificateIdentityService : ICertificateIdentityService
         }
     }
 
-    private async Task<byte[]> GetPublicKey()
+    private async Task<byte[]> GetSigningPublicKeyAsync()
     {
         _logger.Info($"GetPublicKey from keyHolder");
-        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/GetPublicKey";
+        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/GetSigningPublicKeyAsync";
         var publicKey = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Get);
         _logger.Info($"GetPublicKey from keyHolder: {publicKey}");
         return publicKey;

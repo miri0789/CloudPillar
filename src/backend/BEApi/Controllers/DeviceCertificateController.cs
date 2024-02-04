@@ -44,12 +44,12 @@ public class DeviceCertificateController : ControllerBase
         }
     }
 
-    [HttpGet("HandleCertificate")]
-    public async Task<IActionResult> HandleCertificate(string deviceId)
+    [HttpGet("ProcessUpdatingAgentInNewCertificate")]
+    public async Task<IActionResult> ProcessUpdatingAgentInNewCertificate(string deviceId)
     {
         try
         {
-            await _certificateIdentityService.HandleCertificate(deviceId);
+            await _certificateIdentityService.ProcessUpdatingAgentInNewCertificate(deviceId);
             return Ok();
         }
         catch (Exception ex)

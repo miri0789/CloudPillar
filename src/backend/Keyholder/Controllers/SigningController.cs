@@ -38,8 +38,8 @@ public class SigningController : ControllerBase
     }
 
 
-    [HttpGet("GetPublicKey")]
-    public async Task<IActionResult> GetPublicKey()
+    [HttpGet("GetSigningPublicKeyAsync")]
+    public async Task<IActionResult> GetSigningPublicKeyAsync()
     {
         var publicKey = await _signingService.GetSigningPublicKeyAsync();
         return Ok(publicKey);

@@ -3,5 +3,5 @@ namespace Backend.BEApi.Services.Interfaces;
 
 public interface ICertificateIdentityService
 {
-    Task HandleCertificate(string deviceId);
+    Task ProcessUpdatingAgentInNewCertificate(string deviceId);
 }
