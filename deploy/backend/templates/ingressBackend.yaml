@@ -1,0 +1,20 @@
+apiVersion: policy.openservicemesh.io/v1alpha1
+kind: IngressBackend
+metadata:
+  name: cloudpillar-services-ingress-backend
+spec:
+  backends:
+    {{- range .Values.deployments }}
+    - name: cloudpillar{{ .service }}-service
+      port:
+        number: 8080
+        protocol: http
+      tls:
+        skipClientCertValidation: false
+    {{- end }}
+  sources:
+    - kind: IPRange
+      name: 10.22.0.0/15
+    - kind: Service
+      name: traefik
+      namespace: traefik

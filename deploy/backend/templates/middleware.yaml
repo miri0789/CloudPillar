@@ -1,0 +1,11 @@
+{{- range .Values.deployments }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .service }}-headers
+spec:
+  headers:
+    customRequestHeaders:
+      Host: cloudpillar{{ .service }}-service.cp-be-ns.svc
+{{- end }}   

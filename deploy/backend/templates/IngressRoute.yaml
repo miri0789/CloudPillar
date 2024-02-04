@@ -1,0 +1,19 @@
+{{- range .Values.deployments }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cloudpillar{{ .service }}-service
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`{{ .path }}`)
+    kind: Rule
+    middlewares:
+    - name: {{ .service }}-headers
+    services:
+    - name: cloudpillar{{ .service }}-service
+      port: 8080
+      scheme: http
+{{- end }}   
