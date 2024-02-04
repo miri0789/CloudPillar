@@ -92,7 +92,6 @@ public class SigningService : ISigningService
             {
                 var keyType = signingPrivateKey!.GetType();
                 var signature = keyType.BaseType == typeof(RSA) ? ((RSA)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1) : ((ECDsa)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512);
-                var r = Convert.ToBase64String(signature);
                 return signature;
             }
         }

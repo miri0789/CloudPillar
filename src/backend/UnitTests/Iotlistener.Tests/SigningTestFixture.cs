@@ -12,7 +12,7 @@ public class SigningTestFixture
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
     private Mock<ILoggerHandler> _mockLoggerHandler;
     private ISigningService _target;
-    private Uri _keyHolderUrl;
+    private Uri _beApiUrl;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
 
     const string deviceId = "testDeviceId";
@@ -24,8 +24,8 @@ public class SigningTestFixture
         changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLoggerHandler = new Mock<ILoggerHandler>();
-        _keyHolderUrl = new Uri("http://example.com/");
-        _mockEnvironmentsWrapper.Setup(f => f.keyHolderUrl).Returns(_keyHolderUrl.AbsoluteUri);
+        _beApiUrl = new Uri("http://example.com/");
+        _mockEnvironmentsWrapper.Setup(f => f.keyHolderUrl).Returns(_beApiUrl.AbsoluteUri);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
         _target = new SigningService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
     }
@@ -33,14 +33,14 @@ public class SigningTestFixture
     [Test]
     public async Task CreateTwinKeySignature_ValidParameters_SendsRequest()
     {
-        
+
         SignEvent signEvent = new SignEvent(changeSignKey);
 
-        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}&changeSignKey={signEvent.ChangeSignKey}";
+        string requestUrl = $"ChangeSpec/CreateChangeSpecKeySignature?deviceId={deviceId}&changeSignKey={signEvent.ChangeSignKey}";
         await _target.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
-            service => service.SendRequest(requestUrl, HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+            service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
@@ -50,16 +50,16 @@ public class SigningTestFixture
     {
         SignEvent signEvent = new SignEvent(changeSignKey);
 
-        string requestUrl = $"{_keyHolderUrl.AbsoluteUri}Signing/createTwinKeySignature?deviceId={deviceId}&changeSignKey={signEvent.ChangeSignKey}";
+        string requestUrl = $"ChangeSpec/CreateChangeSpecKeySignature?deviceId={deviceId}&changeSignKey={signEvent.ChangeSignKey}";
 
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest(requestUrl, HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception());
 
         await _target.CreateTwinKeySignature(deviceId, signEvent);
 
         _httpRequestorServiceMock.Verify(
-            service => service.SendRequest(requestUrl, HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()),
+            service => service.SendRequest(requestUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
