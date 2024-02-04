@@ -19,6 +19,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   sku_tier                = "Free"
   kubernetes_version      = "1.25.6"
   private_cluster_enabled = var.env != "dev" && var.env != "tst"
+  open_service_mesh_enabled = true
   
   default_node_pool {
     name                  = "agentpool"

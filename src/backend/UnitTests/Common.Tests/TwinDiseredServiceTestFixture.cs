@@ -15,9 +15,7 @@ public class TwinDiseredServiceTestFixture
     private ITwinDiseredService _target;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapperMock;
     private Mock<ILoggerHandler> _loggerHandlerMock;
-    private const string CHANGE_SPEC_ID = "123";
-    private const string PATCH_KEY = "transitPackage";
-
+    
     [SetUp]
     public void SetUp()
     {

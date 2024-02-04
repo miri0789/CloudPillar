@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Shared.Entities.Twin;
@@ -50,8 +51,11 @@ public static class TwinJsonConvertExtensions
        new JsonSerializerSettings
        {
            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+
            Converters = new List<JsonConverter> {
-                                        new TwinDesiredConverter() },
+                                        new TwinDesiredConverter(),
+                                        new StringEnumConverter()},
+
            Formatting = Formatting.Indented,
            NullValueHandling = NullValueHandling.Ignore
        }));
@@ -66,7 +70,7 @@ public static class TwinJsonConvertExtensions
        {
            ContractResolver = new CamelCasePropertyNamesContractResolver(),
            Converters = new List<JsonConverter> {
-                                        new TwinReportedConverter() },
+                                        new TwinReportedConverter(), new StringEnumConverter() },
            Formatting = Formatting.Indented,
            NullValueHandling = NullValueHandling.Ignore
        }));
@@ -88,9 +92,10 @@ public static class TwinJsonConvertExtensions
     {
         if (twinReported is not null && twinReported.ChangeSpec is not null)
         {
-            if (twinReported?.ChangeSpec.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Key is not null)
+            var key = twinReported?.ChangeSpec.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Key;
+            if (key is not null)
             {
-                twinReported.ChangeSpec[changeSpecKey] = twinReportedChangeSpec;
+                twinReported.ChangeSpec[key] = twinReportedChangeSpec;
             }
             else
             {
@@ -128,9 +133,10 @@ public static class TwinJsonConvertExtensions
     {
         if (twinDesired is not null && twinDesired.ChangeSign is not null)
         {
-            if (twinDesired?.ChangeSign.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Key is not null)
+            var key = twinDesired?.ChangeSign.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Key;
+            if (key is not null)
             {
-                twinDesired.ChangeSign[changeSignKey] = signData;
+                twinDesired.ChangeSign[key] = signData;
                 return;
             }
             else

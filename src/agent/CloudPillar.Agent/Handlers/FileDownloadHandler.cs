@@ -432,7 +432,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             await _twinReportHandler.UpdateReportActionAsync(Enumerable.Repeat(file.ActionReported, 1), cancellationToken);
             if (file.Report.Status == StatusType.Failed || file.Report.Status == StatusType.Success)
             {
-                RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source);
+                RemoveFileFromList(file.ActionReported.ReportIndex, file.Action.Source, file.ActionReported.ChangeSpecId);
                 await UpdateKnownIdentities(cancellationToken);
             }
         }
@@ -513,14 +513,23 @@ public class FileDownloadHandler : IFileDownloadHandler
         return ranges;
     }
 
-    private void RemoveFileFromList(int actionIndex, string fileName)
+    private void RemoveFileFromList(int actionIndex, string fileName, string changeSpecId)
     {
-        _filesDownloads.RemoveAll(item => item.Action.Source == fileName || item.ActionReported.ReportIndex == actionIndex);
+        _filesDownloads.RemoveAll(item => (item.Action.Source == fileName || item.ActionReported.ReportIndex == actionIndex)
+        && item.ActionReported.ChangeSpecId == changeSpecId);
     }
 
-    public void InitDownloadsList()
+    public void InitDownloadsList(List<ActionToReport> actions = null)
     {
-        _filesDownloads = new List<FileDownload>();
+        _filesDownloads.RemoveAll(item => GetFileFromAction(actions, item) == null);
+    }
+
+    private ActionToReport? GetFileFromAction(List<ActionToReport> actions, FileDownload fileDownload)
+    {
+        var file = actions?.FirstOrDefault(item => item.ReportIndex == fileDownload.ActionReported.ReportIndex &&
+                                    ((DownloadAction)item.TwinAction).Source == fileDownload.Action.Source &&
+                                    (string.IsNullOrWhiteSpace(fileDownload.ActionReported.ChangeSpecId) || item.ChangeSpecId == fileDownload.ActionReported.ChangeSpecId));
+        return file;
     }
 
     private async Task UpdateKnownIdentities(CancellationToken cancellationToken)
