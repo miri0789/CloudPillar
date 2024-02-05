@@ -26,7 +26,7 @@ public class CertificateIdentityService : ICertificateIdentityService
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
     }
 
-    public async Task ProcessUpdatingAgentInNewCertificate(string deviceId)
+    public async Task ProcessNewSigningCertificate(string deviceId)
     {
         try
         {
