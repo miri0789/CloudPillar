@@ -13,7 +13,7 @@ public static class MockHelper
 {
 
     private const int KEY_SIZE_IN_BITS = 4096;
-    private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
+    private const string DEVICE_SECRET_NAME = "DeviceSecret";
     public const string CHANGE_SPEC_ID = "123";
     public const string PATCH_KEY = "transitPackage";
 
@@ -80,7 +80,7 @@ public static class MockHelper
 
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(secretKey);
             var OneMDKeyExtension = new X509Extension(
-                new Oid(ProvisioningConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
+                new Oid(ProvisioningConstants.ONE_MD_EXTENSION_KEY, DEVICE_SECRET_NAME),
                 oneMDKeyValue, false
                );
 

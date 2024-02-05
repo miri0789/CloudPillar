@@ -84,7 +84,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         var deviceId = parts[0];
         var iotHubHostName = parts[1];
-        var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENTION_KEY).RawData);
+        var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENSION_KEY).RawData);
 
         if ((!IsInitializedLoad || checkAuthorization) && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
         {
@@ -180,7 +180,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         catch (Exception ex)
         {
-            _logger.Error("ProvisioningAsync, Complete message failed message: {ex.Message}");
+            _logger.Error($"ProvisioningAsync, Complete message failed message: {ex.Message}");
         }
     }
 }

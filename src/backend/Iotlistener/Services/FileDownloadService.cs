@@ -7,12 +7,12 @@ using Backend.Infra.Common.Services.Interfaces;
 
 namespace Backend.Iotlistener.Services;
 
-public class FirmwareUpdateService : IFirmwareUpdateService
+public class FileDownloadService : IFileDownloadService
 {
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
-    public FirmwareUpdateService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper,
+    public FileDownloadService(IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper,
      ILoggerHandler logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -20,7 +20,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
     }
 
-    public async Task SendFirmwareUpdateAsync(string deviceId, FirmwareUpdateEvent data)
+    public async Task SendFileDownloadAsync(string deviceId, FileUpdateEvent data)
     {
         try
         {
@@ -41,7 +41,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                 var rangeIndex = 0;
                 while (offset < blobSize)
                 {
-                    _logger.Info($"FirmwareUpdateService Send ranges to blob streamer, range index: {rangeIndex}");
+                    _logger.Info($"FileDownloadService Send ranges to blob streamer, range index: {rangeIndex}");
                     var requests = new List<Task<bool>>();
                     for (var i = 0; requests.Count < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                     {
@@ -54,7 +54,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
                     await Task.WhenAll(requests);
                     if (requests.Any(task => !task.Result))
                     {
-                        _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed to send range.");
+                        _logger.Error($"FileDownloadService SendFileDownloadAsync failed to send range.");
                         break;
                     }
                 }
@@ -62,7 +62,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         }
         catch (Exception ex)
         {
-            _logger.Error($"FirmwareUpdateService SendFirmwareUpdateAsync failed. Message: {ex.Message}");
+            _logger.Error($"FileDownloadService SendFileDownloadAsync failed. Message: {ex.Message}");
             await SendRangeError(deviceId, data.ChangeSpecId, data.FileName, data.ActionIndex, ex.Message);
         }
     }
@@ -76,7 +76,7 @@ public class FirmwareUpdateService : IFirmwareUpdateService
         }
         catch (Exception ex)
         {
-            _logger.Error($"FirmwareUpdateService SendRangeError failed. Message: {ex.Message}");
+            _logger.Error($"FileDownloadService SendRangeError failed. Message: {ex.Message}");
         }
     }
 

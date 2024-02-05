@@ -15,7 +15,7 @@ namespace Backend.Iotlistener.Tests;
 public class AgentEventProcessorTestFixture
 {
     private AgentEventProcessor _target;
-    private Mock<IFirmwareUpdateService> _firmwareUpdateServiceMock;
+    private Mock<IFileDownloadService> _FileDownloadServiceMock;
     private Mock<ISigningService> _signingServiceMock;
     private Mock<IStreamingUploadChunkService> _streamingUploadChunkServiceMock;
     private Mock<IProvisionDeviceService> _provisionDeviceCertificateServiceMock;
@@ -29,7 +29,7 @@ public class AgentEventProcessorTestFixture
     public void Setup()
     {
         _iothubConnectionDeviceId = "abcd1234";
-        _firmwareUpdateServiceMock = new Mock<IFirmwareUpdateService>();
+        _FileDownloadServiceMock = new Mock<IFileDownloadService>();
         _signingServiceMock = new Mock<ISigningService>();
         _provisionDeviceCertificateServiceMock = new Mock<IProvisionDeviceService>();
         _streamingUploadChunkServiceMock = new Mock<IStreamingUploadChunkService>();
@@ -38,7 +38,7 @@ public class AgentEventProcessorTestFixture
         _streamingUploadChunkService = new Mock<IStreamingUploadChunkService>();
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(30);
         _mockEnvironmentsWrapper.Setup(f => f.iothubConnectionDeviceId).Returns(_iothubConnectionDeviceId);
-        _target = new AgentEventProcessor(_firmwareUpdateServiceMock.Object,
+        _target = new AgentEventProcessor(_FileDownloadServiceMock.Object,
         _signingServiceMock.Object,
         _streamingUploadChunkServiceMock.Object,
         _provisionDeviceCertificateServiceMock.Object,
@@ -59,7 +59,7 @@ public class AgentEventProcessorTestFixture
     }
 
     [Test]
-    public async Task ProcessEventsAsync_FirmwareUpdateMessage_CallFirmwareUpdate()
+    public async Task ProcessEventsAsync_DownloadMessage_CallDownloadUpdate()
     {
         var messages = InitMessage("{\"MessageType\": 0, \"FileName\": \"fileName1\",\"ChunkSize\": 1234, \"ActionIndex\":0}");
 
@@ -70,7 +70,7 @@ public class AgentEventProcessorTestFixture
 
         await _target.ProcessEventsAsync(contextMock.Object, messages);
 
-        _firmwareUpdateServiceMock.Verify(f => f.SendFirmwareUpdateAsync("deviceId", It.IsAny<FirmwareUpdateEvent>()), Times.Once);
+        _FileDownloadServiceMock.Verify(f => f.SendFileDownloadAsync("deviceId", It.IsAny<FileUpdateEvent>()), Times.Once);
     }
 
     [Test]
@@ -108,7 +108,7 @@ public class AgentEventProcessorTestFixture
         var messages = InitMessage("{\"MessageType\": 1, \"KeyPath\": \"keyPath1\",\"SignatureKey\": \"signatureKey\"}");
         _mockEnvironmentsWrapper.Setup(f => f.messageTimeoutMinutes).Returns(1);
         _target = new AgentEventProcessor(
-        _firmwareUpdateServiceMock.Object,
+        _FileDownloadServiceMock.Object,
         _signingServiceMock.Object,
         _streamingUploadChunkServiceMock.Object,
         _provisionDeviceCertificateServiceMock.Object,

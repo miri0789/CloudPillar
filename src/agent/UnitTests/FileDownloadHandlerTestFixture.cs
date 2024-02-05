@@ -94,12 +94,12 @@ namespace CloudPillar.Agent.Tests
 
 
         [Test]
-        public async Task InitFileDownloadAsync_NewDownload_SendFirmwareUpdateEvent()
+        public async Task InitFileDownloadAsync_NewDownload_SendFileUpdateEvent()
         {
             var action = initAction();
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFileUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()), Times.Once);
 
         }
 
@@ -134,23 +134,23 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task InitFileDownloadAsync_NewDownloadWithoutSign_NotSendFirmwareUpdate()
+        public async Task InitFileDownloadAsync_NewDownloadWithoutSign_NotSendDownload()
         {
             var action = initAction();
             action.Action.Sign = null;
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "0", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFileUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "0", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
         }
 
         [Test]
-        public async Task InitFileDownloadAsync_ActiveDownload_SendFirmwareUpdateEventWithRange()
+        public async Task InitFileDownloadAsync_ActiveDownload_SendFileUpdateEventWithRange()
         {
             var action = initAction();
             action.Report.CompletedRanges = "0-5,8,10";
             await InitFileDownloadAsync(action);
 
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "6", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFileUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "6", It.IsAny<long?>(), It.IsAny<long?>()), Times.Never);
 
         }
 
@@ -159,7 +159,7 @@ namespace CloudPillar.Agent.Tests
         {
             var action = initAction();
             _d2CMessengerHandlerMock.Setup(dc =>
-                    dc.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()))
+                    dc.SendFileUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<long?>(), It.IsAny<long?>()))
                     .ThrowsAsync(new Exception());
             await InitFileDownloadAsync(action);
 
@@ -276,7 +276,7 @@ namespace CloudPillar.Agent.Tests
         }
 
         [Test]
-        public async Task HandleDownloadMessageAsync_CompleteRangeCheckCheckSumInvalid_SendRangeFirmwareEvent()
+        public async Task HandleDownloadMessageAsync_CompleteRangeCheckCheckSumInvalid_SendRangeDownloadEvent()
         {
             var action = initAction();
             _checkSumServiceMock.Setup(check => check.CalculateCheckSumAsync(It.IsAny<byte[]>(), It.IsAny<CheckSumType>())).ReturnsAsync("abcd");
@@ -297,7 +297,7 @@ namespace CloudPillar.Agent.Tests
                 RangeEndPosition = rangeEndPosition
             };
             await _target.HandleDownloadMessageAsync(message, CancellationToken.None);
-            _d2CMessengerHandlerMock.Verify(mf => mf.SendFirmwareUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "6", rangeStartPosition, rangeEndPosition), Times.Once);
+            _d2CMessengerHandlerMock.Verify(mf => mf.SendFileUpdateEventAsync(It.IsAny<CancellationToken>(), It.IsAny<string>(), action.Action.Source, action.ActionReported.ReportIndex, "6", rangeStartPosition, rangeEndPosition), Times.Once);
 
         }
 

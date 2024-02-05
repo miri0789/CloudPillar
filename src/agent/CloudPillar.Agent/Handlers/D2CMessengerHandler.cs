@@ -20,12 +20,12 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string changeSpecId, string fileName, int actionIndex, string CompletedRanges = "", long? startPosition = null, long? endPosition = null)
+    public async Task SendFileUpdateEventAsync(CancellationToken cancellationToken, string changeSpecId, string fileName, int actionIndex, string CompletedRanges = "", long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
 
-        var firmwareUpdateEvent = new FirmwareUpdateEvent()
+        var FileUpdateEvent = new FileUpdateEvent()
         {
             FileName = fileName,
             ChunkSize = chunkSize,
@@ -36,7 +36,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             ChangeSpecId = changeSpecId
         };
 
-        await SendMessageAsync(firmwareUpdateEvent, cancellationToken);
+        await SendMessageAsync(FileUpdateEvent, cancellationToken);
     }
 
     public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, long currentPosition, string checkSum, CancellationToken cancellationToken, bool isRunDiagnostic = false)

@@ -5,7 +5,7 @@
     "properties": {
         "EventType": {
             "type": "string",
-            "enum": ["FirmwareUpdateReady", "SignTwinKey", "StreamingUploadChunk"]
+            "enum": ["FileUpdateReady", "SignTwinKey", "StreamingUploadChunk"]
         },
         "ActionId": {
             "type": "string"

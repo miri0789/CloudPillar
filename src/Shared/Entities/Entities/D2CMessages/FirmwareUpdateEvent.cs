@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 
 namespace Shared.Entities.Messages;
-public class FirmwareUpdateEvent : D2CMessage
+public class FileUpdateEvent : D2CMessage
 {
     public string FileName { get; set; }
 
@@ -18,8 +18,8 @@ public class FirmwareUpdateEvent : D2CMessage
     public string? ChangeSpecId { get; set; }
 
     [JsonConstructor]
-    public FirmwareUpdateEvent()
+    public FileUpdateEvent()
     {
-        this.MessageType = D2CMessageType.FirmwareUpdateReady;
+        this.MessageType = D2CMessageType.FileUpdateReady;
     }
 }

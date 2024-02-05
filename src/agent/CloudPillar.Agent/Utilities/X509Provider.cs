@@ -10,7 +10,7 @@ namespace CloudPillar.Agent.Utilities;
 public class X509Provider : IX509Provider
 {
     private const int KEY_SIZE_IN_BITS = 4096;
-    private const string ONE_MD_EXTENTION_NAME = "OneMDKey";
+    private const string DEVICE_SECRET_NAME = "DeviceSecret";
     private const string DNS_NAME = "localhost";
     private readonly IX509CertificateWrapper _x509CertificateWrapper;
     private readonly AuthenticationSettings _authenticationSettings;
@@ -36,7 +36,7 @@ public class X509Provider : IX509Provider
 
             byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(secretKey);
             var OneMDKeyExtension = new X509Extension(
-                new Oid(ProvisioningConstants.ONE_MD_EXTENTION_KEY, ONE_MD_EXTENTION_NAME),
+                new Oid(ProvisioningConstants.ONE_MD_EXTENSION_KEY, DEVICE_SECRET_NAME),
                 oneMDKeyValue, false
                );
 
@@ -64,8 +64,7 @@ public class X509Provider : IX509Provider
 
             if (filteredCertificate == null)
             {
-                var temporaryAnonymousCertificate = certificates?.Cast<X509Certificate2>()
-                            .FirstOrDefault(cert => cert.Subject == ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetAnonymousCertificate());
+                var temporaryAnonymousCertificate = GetTempCertificate(store);
 
                 if (temporaryAnonymousCertificate != null)
                 {
@@ -75,6 +74,17 @@ public class X509Provider : IX509Provider
             else return filteredCertificate;
         }
         return GenerateTemporaryAnonymousCertificate();
+    }
+
+
+    private X509Certificate2 GetTempCertificate(X509Store store)
+    {
+        X509Certificate2Collection certificates = _x509CertificateWrapper.GetCertificates(store);
+
+        var temporaryAnonymousCertificate = certificates?.Cast<X509Certificate2>()
+                            .FirstOrDefault(cert => cert.Subject == ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetAnonymousCertificate());
+
+        return temporaryAnonymousCertificate;
     }
 
     private X509Certificate2? GetCPCertificate(X509Certificate2Collection certificates)
@@ -96,8 +106,7 @@ public class X509Provider : IX509Provider
             subjectAlternativeNameBuilder.AddDnsName(DNS_NAME);
             request.CertificateExtensions.Add(subjectAlternativeNameBuilder.Build());
             certificate = request.CreateSelfSigned(
-               DateTimeOffset.Now.AddDays(-1),
-               DateTimeOffset.Now.AddDays(_authenticationSettings.CertificateExpiredDays));
+               DateTimeOffset.Now.AddDays(-1), DateTimeOffset.MaxValue);
         }
         var password = Guid.NewGuid().ToString();
         var pfxBytes = certificate.Export(X509ContentType.Pkcs12, password);
@@ -105,8 +114,14 @@ public class X509Provider : IX509Provider
         {
             FriendlyName = "cloud pillar agent anonymous"
         };
+
         using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation, StoreName.My))
         {
+            var existingCertificate = GetTempCertificate(store);
+            if (existingCertificate != null)
+            {
+                return existingCertificate;
+            }
             store.Add(privateCertificate);
         }
         return privateCertificate;
