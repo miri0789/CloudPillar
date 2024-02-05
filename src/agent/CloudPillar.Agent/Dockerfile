@@ -32,8 +32,10 @@ WORKDIR /app
 COPY --from=build /app .
 
 # Copy the source code and NuGet packages to the /export directory
-COPY --from=build ./src/agent/CloudPillar.Agent/ ./export/
+COPY --from=build ./src/agent/CloudPillar.Agent/ ./export/CloudPillar.Agent/
+COPY --from=build ./src/Shared/Entities/ ./export/Entities/
 COPY --from=build /root/.nuget/packages/sharedentities ./export/.nuget/packages/sharedentities
 COPY --from=build ./src/agent/CloudPillar.Agent/publish/cloudpillar.zip .
+RUN rm /export/nuget.config
 # Set the entrypoint for the application
 ENTRYPOINT ["dotnet", "CloudPillar.Agent.dll"]
