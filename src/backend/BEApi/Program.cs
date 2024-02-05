@@ -11,6 +11,7 @@ using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Wrappers;
 using Shared.Entities.Factories;
+using CloudPillar.Agent.Wrappers;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -36,6 +37,7 @@ builder.Services.AddScoped<ICertificateIdentityService, CertificateIdentityServi
 builder.Services.AddScoped<IDeviceCertificateService, DeviceCertificateService>();
 builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
+builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();

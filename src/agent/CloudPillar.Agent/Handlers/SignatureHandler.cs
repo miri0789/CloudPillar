@@ -71,6 +71,7 @@ public class SignatureHandler : ISignatureHandler
         string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(SharedConstants.PKI_FOLDER_PATH, FILE_EXTENSION);
         foreach (string publicKeyFile in publicKeyFiles)
         {
+            _logger.Debug($"VerifySignatureAsync: publicKeyFile: {publicKeyFile}");
             var publicKey = await _serverIdentityHandler.GetPublicKeyFromCertificateFileAsync(publicKeyFile);
             using (var signingPublicKey = await InitPublicKeyAsync(publicKey))
             {
