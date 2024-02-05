@@ -11,11 +11,11 @@ public class DeviceCertificateController : ControllerBase
     private readonly ILoggerHandler _logger;
     private readonly IDeviceCertificateService _certificateService;
     private readonly ICertificateIdentityService _certificateIdentityService;
-    public DeviceCertificateController(IDeviceCertificateService CertificateService, ICertificateIdentityService certificateIdentityService, ILoggerHandler _logger)
+    public DeviceCertificateController(IDeviceCertificateService CertificateService, ICertificateIdentityService certificateIdentityService, ILoggerHandler logger)
     {
         _certificateService = CertificateService ?? throw new ArgumentNullException(nameof(CertificateService));
         _certificateIdentityService = certificateIdentityService ?? throw new ArgumentNullException(nameof(certificateIdentityService));
-        _logger = _logger ?? throw new ArgumentNullException(nameof(_logger));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpGet("IsDevicesCertificateExpired")]
