@@ -27,7 +27,7 @@ public class SigningTestFixture
     [SetUp]
     public void Setup()
     {
-        changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
+        changeSignKey = SharedConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
         _ecdsaMock = new Mock<ECDsa>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLogger = new Mock<ILoggerHandler>();
@@ -86,7 +86,7 @@ public class SigningTestFixture
         _registryManagerWrapper.Setup(mock => mock.UpdateTwinAsync(It.IsAny<RegistryManager>(), deviceId, It.IsAny<Twin>(), twin.ETag))
                         .ReturnsAsync(twin)
                         .Verifiable();
-        await _target.CreateFileKeySignature(deviceId, propName, actionIndex, hash, TwinConstants.CHANGE_SPEC_NAME);
+        await _target.CreateFileKeySignature(deviceId, propName, actionIndex, hash, SharedConstants.CHANGE_SPEC_NAME);
         _registryManagerWrapper.Verify(r => r.GetTwinAsync(It.IsAny<RegistryManager>(), deviceId), Times.Once);
     }
 }

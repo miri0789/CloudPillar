@@ -34,7 +34,7 @@ public class TwinDiseredServiceTestFixture
             ChangeSpec = new Dictionary<string, TwinChangeSpec>()
             {
                 {
-                TwinConstants.CHANGE_SPEC_NAME, new TwinChangeSpec() {
+                SharedConstants.CHANGE_SPEC_NAME, new TwinChangeSpec() {
                         Id =   null
                     }
                 }
@@ -45,12 +45,12 @@ public class TwinDiseredServiceTestFixture
         var reported = new TwinReported();
         var twin = MockHelperBackend.CreateTwinMock(desired.ChangeSpec, reported.ChangeSpec);
         _registryManagerWrapperMock.Setup(x => x.GetTwinAsync(It.IsAny<RegistryManager>(), It.IsAny<string>())).ReturnsAsync(twin);
-        _target.AddDesiredRecipeAsync("deviceId", TwinConstants.CHANGE_SPEC_NAME, new DownloadAction());
+        _target.AddDesiredRecipeAsync("deviceId", SharedConstants.CHANGE_SPEC_NAME, new DownloadAction());
 
         TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
         _registryManagerWrapperMock.Verify(x => x.UpdateTwinAsync(It.IsAny<RegistryManager>(), It.IsAny<string>(),
-         It.Is<Twin>(c => twinDesired.GetDesiredChangeSpecByKey(TwinConstants.CHANGE_SPEC_NAME).Id.Contains(TwinConstants.CHANGE_SPEC_NAME.ToString())), It.IsAny<string>()), Times.Once);
+         It.Is<Twin>(c => twinDesired.GetDesiredChangeSpecByKey(SharedConstants.CHANGE_SPEC_NAME).Id.Contains(SharedConstants.CHANGE_SPEC_NAME.ToString())), It.IsAny<string>()), Times.Once);
     }
 }
 

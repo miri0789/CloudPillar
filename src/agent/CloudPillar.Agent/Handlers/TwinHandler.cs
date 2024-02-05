@@ -292,7 +292,7 @@ public class TwinHandler : ITwinHandler
                 _ => string.Empty
             };
             var filePath = _strictModeHandler.ReplaceRootById(action.TwinAction.Action!.Value, actionFileName) ?? actionFileName;
-            if (filePath.StartsWith("."))
+            if (filePath is not null && filePath.StartsWith("."))
             {
                 filePath = filePath[2..].Replace("/", "\\");
                 filePath = Path.Combine(Directory.GetCurrentDirectory(), filePath);

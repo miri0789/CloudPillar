@@ -33,7 +33,7 @@ public class TwinReportHandlerTestFixture
          _runtimeInformationWrapperMock.Object,
          _fileStreamerWrapperMock.Object);
 
-        changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
+        changeSignKey = SharedConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
 
         CreateTarget();
     }
@@ -130,7 +130,7 @@ public class TwinReportHandlerTestFixture
         await _target.UpdateReportActionAsync(actionsToReported, cancellationToken);
 
         _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(
-           It.Is<string>(x => x == TwinConstants.CHANGE_SPEC_NAME), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
+           It.Is<string>(x => x == SharedConstants.CHANGE_SPEC_NAME), It.IsAny<JObject>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -305,7 +305,7 @@ public class TwinReportHandlerTestFixture
         var reported = new Dictionary<string, TwinReportedChangeSpec>
             {
                 {
-                    TwinConstants.CHANGE_SPEC_NAME, new TwinReportedChangeSpec()
+                    SharedConstants.CHANGE_SPEC_NAME, new TwinReportedChangeSpec()
                     {
                         Id =  MockHelper.CHANGE_SPEC_ID,
                         Patch = new Dictionary<string, TwinActionReported[]>()

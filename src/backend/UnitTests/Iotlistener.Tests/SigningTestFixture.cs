@@ -21,7 +21,7 @@ public class SigningTestFixture
     [SetUp]
     public void Setup()
     {
-        changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
+        changeSignKey = SharedConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLoggerHandler = new Mock<ILoggerHandler>();
         _keyHolderUrl = new Uri("http://example.com/");
