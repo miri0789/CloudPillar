@@ -36,6 +36,6 @@ COPY --from=build ./src/agent/CloudPillar.Agent/ ./export/CloudPillar.Agent/
 COPY --from=build ./src/Shared/Entities/ ./export/Entities/
 COPY --from=build /root/.nuget/packages/sharedentities ./export/.nuget/packages/sharedentities
 COPY --from=build ./src/agent/CloudPillar.Agent/publish/cloudpillar.zip .
-RUN rm /export/CloudPillar.Agent/nuget.config
+RUN rm ./export/CloudPillar.Agent/nuget.config
 # Set the entrypoint for the application
 ENTRYPOINT ["dotnet", "CloudPillar.Agent.dll"]
