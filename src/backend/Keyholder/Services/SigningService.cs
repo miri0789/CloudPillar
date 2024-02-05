@@ -17,16 +17,19 @@ public class SigningService : ISigningService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
+    private readonly IFileStreamerWrapper _fileStreamerWrapper;
 
     private const string PRIVATE_KEY_FILE = "tls.key";
     private const string PUBLIC_KEY_FILE = "tls.crt";
     private const string BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
 
-    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper)
+    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper, IFileStreamerWrapper fileStreamerWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
+        _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
+
         if (string.IsNullOrEmpty(_environmentsWrapper.iothubConnectionString))
         {
             throw new ArgumentNullException(nameof(_environmentsWrapper.iothubConnectionString));
@@ -43,7 +46,8 @@ public class SigningService : ISigningService
             _logger.Error(message);
             throw new InvalidOperationException(message);
         }
-        var publicKeyPem = await File.ReadAllTextAsync(Path.Combine(secretVolumeMountPath, PUBLIC_KEY_FILE));
+
+        var publicKeyPem = await ReadKeyFromMount(Path.Combine(secretVolumeMountPath, PUBLIC_KEY_FILE));
         if (string.IsNullOrWhiteSpace(publicKeyPem))
         {
             var message = "public key is empty.";
@@ -61,47 +65,45 @@ public class SigningService : ISigningService
 
     private async Task<AsymmetricAlgorithm> GetSigningPrivateKeyAsync(string deviceId)
     {
-        _logger.Info("Loading signing crypto key...");
-        string privateKeyPem = _environmentsWrapper.signingPem;
-        if (!string.IsNullOrWhiteSpace(privateKeyPem))
-        {
-            privateKeyPem = Encoding.UTF8.GetString(Convert.FromBase64String(privateKeyPem));
-            _logger.Info($"Key Base64 decoded layer 1");
-        }
-        else
-        {
-            _logger.Info("In kube run-time - loading crypto from the secret in the local namespace.");
-            string secretVolumeMountPath = _environmentsWrapper.SecretVolumeMountPath;
-            string defaultSecretVolumeMountPath = _environmentsWrapper.DefaultSecretVolumeMountPath;
+        _logger.Info("In kube run-time - loading crypto from the secret in the local namespace");
 
-            if (string.IsNullOrWhiteSpace(secretVolumeMountPath))
+        string secretVolumeMountPath = _environmentsWrapper.SecretVolumeMountPath;
+        string defaultSecretVolumeMountPath = _environmentsWrapper.DefaultSecretVolumeMountPath;
+
+        if (string.IsNullOrWhiteSpace(secretVolumeMountPath))
+        {
+            var message = "cert secret path must be set.";
+            _logger.Error(message);
+            throw new InvalidOperationException(message);
+        }
+        string privateKeyPem = await ReadKeyFromMount(Path.Combine(secretVolumeMountPath, PRIVATE_KEY_FILE));
+        _logger.Info($"Key Base64 decoded layer 1");
+        var certificateIsValid = await CheckValidCertificate(deviceId);
+        if (!certificateIsValid)
+        {
+            if (string.IsNullOrWhiteSpace(defaultSecretVolumeMountPath))
             {
-                var message = "cert secret path must be set.";
+                var message = "default cert secret path must be set.";
                 _logger.Error(message);
                 throw new InvalidOperationException(message);
             }
-            privateKeyPem = await ReadPrivateKeyFromMount(Path.Combine(secretVolumeMountPath, PRIVATE_KEY_FILE));
-            _logger.Info($"Key Base64 decoded layer 1");
-            var certificateIsValid = await CheckValidCertificate(deviceId);
-            if (!certificateIsValid)
-            {
-                _logger.Info("certificate is not valid. go to default certificate");
-                privateKeyPem = await ReadPrivateKeyFromMount(Path.Combine(defaultSecretVolumeMountPath, PRIVATE_KEY_FILE));
-                return LoadPrivateKeyFromPem(privateKeyPem);
-            }
+            _logger.Info("certificate is not valid. go to default certificate");
+            privateKeyPem = await ReadKeyFromMount(Path.Combine(defaultSecretVolumeMountPath, PRIVATE_KEY_FILE));
+            return LoadPrivateKeyFromPem(privateKeyPem);
         }
+
         return LoadPrivateKeyFromPem(privateKeyPem);
     }
 
-    private async Task<string> ReadPrivateKeyFromMount(string volumeMountPath)
+    private async Task<string> ReadKeyFromMount(string volumeMountPath)
     {
-        using (FileStream fileStream = File.OpenRead(volumeMountPath))
+        using (FileStream fileStream = _fileStreamerWrapper.OpenRead(volumeMountPath))
         {
-            var key = await File.ReadAllTextAsync(Path.Combine(volumeMountPath, PRIVATE_KEY_FILE));
+            var key = await _fileStreamerWrapper.ReadAllTextAsync(volumeMountPath);
             return key;
         }
     }
-    
+
     private AsymmetricAlgorithm LoadPrivateKeyFromPem(string pemContent)
     {
         _logger.Debug($"Loading key from PEM...");
@@ -217,9 +219,9 @@ public class SigningService : ISigningService
         var publicKeyPem = await GetSigningPublicKeyAsync();
 
         var knownIdentitiesList = await GetKnownIdentitiesFromTwin(deviceId);
-        if (knownIdentitiesList == null)
+        if (knownIdentitiesList == null || knownIdentitiesList.Count == 0)
         {
-            _logger.Error($"knownIdentitiesList is null");
+            _logger.Error($"knownIdentitiesList is empty");
             return false;
         }
 

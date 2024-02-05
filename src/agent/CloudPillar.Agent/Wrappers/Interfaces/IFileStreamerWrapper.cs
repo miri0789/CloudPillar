@@ -32,8 +32,6 @@ public interface IFileStreamerWrapper
 
     void DeleteFolder(string directoryPath);
 
-    Task<string> ReadAllTextAsync(string filePath);
-
     bool FileExists(string filePath);
 
     bool DirectoryExists(string fullFilePath);

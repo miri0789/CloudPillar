@@ -78,6 +78,7 @@ public class SignatureHandler : ISignatureHandler
                 byte[] signature = Convert.FromBase64String(signatureString);
                 if (_asymmetricAlgorithmWrapper.VerifyData(signingPublicKey, dataToVerify, signature, HashAlgorithmName.SHA512))
                 {
+                    _logger.Info($"Signature from file: {publicKeyFile} verified successfully");
                     return true;
                 }
             }
