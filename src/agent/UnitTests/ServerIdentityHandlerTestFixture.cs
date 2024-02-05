@@ -105,7 +105,7 @@ namespace CloudPillar.Agent.Tests
                 _fileStreamerWrapper.Setup(f => f.GetFileNameWithoutExtension(file)).Returns(Path.GetFileNameWithoutExtension(file));
             }
 
-            await _target.RemoveNonDefaultCertificates("pki");
+            await _target.RemoveNonDefaultCertificatesAsync("pki");
             _fileStreamerWrapper.Verify(f => f.DeleteFile(It.IsAny<string>()), Times.Exactly(2));
         }
 
