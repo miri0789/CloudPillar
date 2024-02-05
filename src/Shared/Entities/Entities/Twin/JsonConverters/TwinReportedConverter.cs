@@ -18,11 +18,11 @@ public class TwinReportedConverter : JsonConverter
             ChangeSign = GetChangeSign(jsonObject),
             ChangeSpec = GetChangeSpec(jsonObject, serializer),
             DeviceState = GetDeviceState(jsonObject, "deviceState"),
-            AgentPlatform = (jsonObject["agentPlatform"] ?? jsonObject["AgentPlatform"])?.Value<string>(),
+            AgentPlatform = (jsonObject["agentPlatform"] ?? jsonObject["AgentPlatform"])?.Value<string>() ?? string.Empty,
             SupportedShells = GetSupportShell(jsonObject),
-            SecretKey = (jsonObject["secretKey"] ?? jsonObject["SecretKey"])?.Value<string>(),
+            SecretKey = (jsonObject["secretKey"] ?? jsonObject["SecretKey"])?.Value<string>() ?? string.Empty,
             Custom = GetTwinReportedCustomProp(jsonObject),
-            ChangeSpecId = (jsonObject["changeSpecId"] ?? jsonObject["ChangeSpecId"])?.Value<string>(),
+            ChangeSpecId = (jsonObject["changeSpecId"] ?? jsonObject["ChangeSpecId"])?.Value<string>() ?? string.Empty,
             CertificateValidity = (jsonObject["certificateValidity"] ?? jsonObject["CertificateValidity"])?.ToObject<CertificateValidity>(),
             DeviceStateAfterServiceRestart = GetDeviceState(jsonObject, "deviceStateAfterServiceRestart"),
             KnownIdentities = GetKnownIdentities(jsonObject)
@@ -39,15 +39,15 @@ public class TwinReportedConverter : JsonConverter
         {
             switch (changeSpecItem.Name)
             {
-                case "ChangeSign" when changeSpec.ChangeSign is not null:
-                    foreach (var changeSpecOption in changeSpec?.ChangeSign)
+                case "ChangeSign" when changeSpec?.ChangeSign is not null:
+                    foreach (var changeSpecOption in changeSpec.ChangeSign)
                     {
                         writer.WritePropertyName(changeSpecOption.Key);
                         serializer.Serialize(writer, changeSpecOption.Value);
                     }
                     break;
-                case "ChangeSpec" when changeSpec.ChangeSpec is not null:
-                    foreach (var changeSpecOption in changeSpec?.ChangeSpec)
+                case "ChangeSpec" when changeSpec?.ChangeSpec is not null:
+                    foreach (var changeSpecOption in changeSpec.ChangeSpec)
                     {
                         writer.WritePropertyName(changeSpecOption.Key);
                         serializer.Serialize(writer, changeSpecOption.Value);
@@ -89,7 +89,11 @@ public class TwinReportedConverter : JsonConverter
         {
             if (property.Value.Type == JTokenType.String && property.Name.EndsWith("Sign"))
             {
-                changeSign.Add(property.Name, property.Value.Value<string>());
+                var value = property.Value.Value<string>();
+                if (value is not null)
+                {
+                    changeSign.Add(property.Name, value);
+                }
             }
         }
         return changeSign;
@@ -119,7 +123,11 @@ public class TwinReportedConverter : JsonConverter
         {
             foreach (var item in supportShellArray)
             {
-                supportShell.Add(Enum.Parse<ShellType>(item.Value<string>(), true));
+                var value = item.Value<string>();
+                if (value is not null)
+                {
+                    supportShell.Add(Enum.Parse<ShellType>(value, true));
+                }
             }
         }
         return supportShell.ToArray();
@@ -134,9 +142,9 @@ public class TwinReportedConverter : JsonConverter
             foreach (var item in knownIdentitiesArray)
             {
                 knownIdentities.Add(
-                    new KnownIdentities((item["subject"] ?? item["Subject"])?.Value<string>(),
-                    (item["thumbprint"] ?? item["Thumbprint"])?.Value<string>(),
-                    (item["validThru"] ?? item["ValidThru"])?.Value<string>())
+                    new KnownIdentities((item["subject"] ?? item["Subject"])?.Value<string>() ?? string.Empty,
+                    (item["thumbprint"] ?? item["Thumbprint"])?.Value<string>() ?? string.Empty,
+                   ((item["validThru"] ?? item["ValidThru"])?.Value<string>()) ?? string.Empty)
                    );
             }
         }
@@ -154,8 +162,8 @@ public class TwinReportedConverter : JsonConverter
             {
                 customProperties.Add(new TwinReportedCustomProp()
                 {
-                    Name = (item["name"] ?? item["Name"]).Value<string>(),
-                    Value = (item["value"] ?? item["Value"]).Value<string>()
+                    Name = (item["name"] ?? item["Name"])?.Value<string>() ?? string.Empty,
+                    Value = (item["value"] ?? item["Value"])?.Value<string>() ?? string.Empty
                 });
             }
         }
@@ -178,7 +186,7 @@ public class TwinReportedConverter : JsonConverter
         var upperPropName = FirstLetterToUpperCase($"{changeSpecKey}");
         var changeSpec = new TwinReportedChangeSpec()
         {
-            Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>(),
+            Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>() ?? string.Empty,
             Patch = GetDynamicPatch(jsonObject, lowerPropName, upperPropName, serializer)
         };
         return changeSpec;
@@ -194,7 +202,11 @@ public class TwinReportedConverter : JsonConverter
         {
             foreach (var property in patchObject.Properties())
             {
-                dynamicPatch.Add(property.Name, property.Value.ToObject<TwinActionReported[]>(serializer));
+                var actions = property.Value.ToObject<TwinActionReported[]>(serializer);
+                if (actions is not null)
+                {
+                    dynamicPatch.Add(property.Name, actions);
+                }
             }
         }
 

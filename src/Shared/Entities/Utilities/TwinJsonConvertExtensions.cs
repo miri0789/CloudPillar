@@ -84,11 +84,12 @@ public static class TwinJsonConvertExtensions
             var key = twinReported?.ChangeSpec.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Key;
             if (key is not null)
             {
-                twinReported.ChangeSpec[key] = twinReportedChangeSpec;
+                var changeSpec = twinReported?.ChangeSpec[key];
+                changeSpec = twinReportedChangeSpec;
             }
             else
             {
-                twinReported.ChangeSpec.Add(changeSpecKey, twinReportedChangeSpec);
+                twinReported?.ChangeSpec.Add(changeSpecKey, twinReportedChangeSpec);
             }
         }
     }
@@ -125,12 +126,13 @@ public static class TwinJsonConvertExtensions
             var key = twinDesired?.ChangeSign.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Key;
             if (key is not null)
             {
-                twinDesired.ChangeSign[key] = signData;
+                var changeSign = twinDesired?.ChangeSign[key];
+                changeSign = signData;
                 return;
             }
             else
             {
-                twinDesired.ChangeSign.Add(changeSignKey, signData);
+                twinDesired?.ChangeSign.Add(changeSignKey, signData);
                 return;
             }
         }

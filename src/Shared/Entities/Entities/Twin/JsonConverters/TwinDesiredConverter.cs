@@ -29,7 +29,11 @@ public class TwinDesiredConverter : JsonConverter
         {
             if (property.Value.Type == JTokenType.String && property.Name.EndsWith("Sign"))
             {
-                changeSign.Add(property.Name, property.Value.Value<string>());
+                var value = property.Value.Value<string>();
+                if(value is not null)
+                {
+                    changeSign.Add(property.Name, value);
+                }
             }
         }
         return changeSign;
@@ -61,15 +65,15 @@ public class TwinDesiredConverter : JsonConverter
         {
             switch (changeSpecItem.Name)
             {
-                case "ChangeSign" when changeSpec.ChangeSign is not null:
-                    foreach (var changeSpecOption in changeSpec?.ChangeSign)
+                case "ChangeSign" when changeSpec?.ChangeSign is not null:
+                    foreach (var changeSpecOption in changeSpec.ChangeSign)
                     {
                         writer.WritePropertyName(changeSpecOption.Key);
                         serializer.Serialize(writer, changeSpecOption.Value);
                     }
                     break;
-                case "ChangeSpec" when changeSpec.ChangeSpec is not null:
-                    foreach (var changeSpecOption in changeSpec?.ChangeSpec)
+                case "ChangeSpec" when changeSpec?.ChangeSpec is not null:
+                    foreach (var changeSpecOption in changeSpec.ChangeSpec)
                     {
                         writer.WritePropertyName(changeSpecOption.Key);
                         serializer.Serialize(writer, changeSpecOption.Value);
@@ -111,7 +115,11 @@ public class TwinDesiredConverter : JsonConverter
         {
             foreach (var property in patchObject.Properties())
             {
-                dynamicPatch.Add(property.Name, property.Value.ToObject<TwinAction[]>(serializer));
+                var actions = property.Value.ToObject<TwinAction[]>(serializer);
+                if (actions is not null)
+                {
+                    dynamicPatch.Add(property.Name, actions);
+                }
             }
         }
 
