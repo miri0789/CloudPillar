@@ -78,14 +78,14 @@ public static class MockHelper
                 $"{ProvisioningConstants.CERTIFICATE_SUBJECT}{certificatePrefix}{deviceId}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-            byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(secretKey);
-            var OneMDKeyExtension = new X509Extension(
-                new Oid(ProvisioningConstants.ONE_MD_EXTENSION_KEY, DEVICE_SECRET_NAME),
-                oneMDKeyValue, false
+            byte[] deviceSecretKeyValue = Encoding.UTF8.GetBytes(secretKey);
+            var deviceSecretKeyExtension = new X509Extension(
+                new Oid(ProvisioningConstants.DEVICE_SECRET_EXTENSION_KEY, DEVICE_SECRET_NAME),
+                deviceSecretKeyValue, false
                );
 
 
-            request.CertificateExtensions.Add(OneMDKeyExtension);
+            request.CertificateExtensions.Add(deviceSecretKeyExtension);
 
             var certificate = request.CreateSelfSigned(
                 DateTimeOffset.Now.AddDays(-1),

@@ -34,14 +34,14 @@ public class X509Provider : IX509Provider
             subjectAlternativeNameBuilder.AddDnsName(DNS_NAME);
             request.CertificateExtensions.Add(subjectAlternativeNameBuilder.Build());
 
-            byte[] oneMDKeyValue = Encoding.UTF8.GetBytes(secretKey);
-            var OneMDKeyExtension = new X509Extension(
-                new Oid(ProvisioningConstants.ONE_MD_EXTENSION_KEY, DEVICE_SECRET_NAME),
-                oneMDKeyValue, false
+            byte[] deviceSecretKeyValue = Encoding.UTF8.GetBytes(secretKey);
+            var deviceSecretKeyExtension = new X509Extension(
+                new Oid(ProvisioningConstants.DEVICE_SECRET_EXTENSION_KEY, DEVICE_SECRET_NAME),
+                deviceSecretKeyValue, false
                );
 
 
-            request.CertificateExtensions.Add(OneMDKeyExtension);
+            request.CertificateExtensions.Add(deviceSecretKeyExtension);
 
 
 

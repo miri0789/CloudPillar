@@ -3,7 +3,7 @@ public class ProvisioningConstants
 {
     public const string CERTIFICATE_SUBJECT = "CN=";
 
-    public const string ONE_MD_EXTENSION_KEY = "1.1.1.1";
+    public const string DEVICE_SECRET_EXTENSION_KEY = "1.1.1.1";
 
     public const char CERTIFICATE_NAME_SEPARATOR = '@';
 
