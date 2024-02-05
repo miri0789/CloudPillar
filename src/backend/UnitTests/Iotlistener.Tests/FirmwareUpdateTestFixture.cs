@@ -50,7 +50,7 @@ public class FileDownloadTestFixture
     [Test]
     public async Task SendFileDownloadAsync_SendsRangeRequests()
     {
-        await _target.SendFileDownloadAsync(_deviceId, new FileUpdateEvent
+        await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
         {
             FileName = _fileName,
             ChunkSize = _chunkSize,
@@ -71,7 +71,7 @@ public class FileDownloadTestFixture
     [Test]
     public async Task SendFileDownloadAsync__MsgWithEndPosition_SendsOneRange()
     {
-        await _target.SendFileDownloadAsync(_deviceId, new FileUpdateEvent
+        await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
         {
             FileName = _fileName,
             ChunkSize = _chunkSize,
@@ -92,7 +92,7 @@ public class FileDownloadTestFixture
     public async Task SendFileDownloadAsync_MessageWithCompleteRanges_NotSendExistRanges()
     {
 
-        await _target.SendFileDownloadAsync(_deviceId, new FileUpdateEvent
+        await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
         {
             FileName = _fileName,
             ChunkSize = _chunkSize,
@@ -120,7 +120,7 @@ public class FileDownloadTestFixture
         _httpRequestorServiceMock.Setup(service =>
                         service.SendRequest<bool>(It.IsAny<string>(), HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
-        await _target.SendFileDownloadAsync(_deviceId, new FileUpdateEvent
+        await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
         {
             FileName = _fileName,
             ChunkSize = _chunkSize,
@@ -150,7 +150,7 @@ public class FileDownloadTestFixture
             .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception(errMsg));
 
-        await _target.SendFileDownloadAsync(_deviceId, new FileUpdateEvent
+        await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
         {
             FileName = _fileName,
             ChunkSize = _chunkSize,

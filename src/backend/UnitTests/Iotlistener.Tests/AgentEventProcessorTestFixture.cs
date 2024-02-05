@@ -70,7 +70,7 @@ public class AgentEventProcessorTestFixture
 
         await _target.ProcessEventsAsync(contextMock.Object, messages);
 
-        _FileDownloadServiceMock.Verify(f => f.SendFileDownloadAsync("deviceId", It.IsAny<FileUpdateEvent>()), Times.Once);
+        _FileDownloadServiceMock.Verify(f => f.SendFileDownloadAsync("deviceId", It.IsAny<FileDownloadEvent>()), Times.Once);
     }
 
     [Test]

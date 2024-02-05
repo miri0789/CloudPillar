@@ -126,9 +126,9 @@ public class AgentEventProcessor : IEventProcessor
             {
                 switch (d2CMessage.MessageType)
                 {
-                    case D2CMessageType.FileUpdateReady:
-                        var FileUpdateEvent = JsonSerializer.Deserialize<FileUpdateEvent>(data)!;
-                        await _FileDownloadService.SendFileDownloadAsync(deviceId, FileUpdateEvent);
+                    case D2CMessageType.FileDownloadReady:
+                        var FileDownloadEvent = JsonSerializer.Deserialize<FileDownloadEvent>(data)!;
+                        await _FileDownloadService.SendFileDownloadAsync(deviceId, FileDownloadEvent);
                         break;
                     case D2CMessageType.SignTwinKey:
                         var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;

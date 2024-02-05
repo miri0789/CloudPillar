@@ -43,16 +43,16 @@ namespace CloudPillar.Agent.Tests
         [TestCase(TransportType.Amqp, 64 * KB)]
         [TestCase(TransportType.Http1, 256 * KB)]
         [TestCase((TransportType)100, 32 * KB)] // Unknown transport type
-        public async Task SendFileUpdateEventAsync_ByTransportType_SendCorrectChunkSize(TransportType transportType, int expectedChunkSize)
+        public async Task SendFileDownloadEventAsync_ByTransportType_SendCorrectChunkSize(TransportType transportType, int expectedChunkSize)
         {
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(expectedChunkSize);
 
-            await _target.SendFileUpdateEventAsync(CancellationToken.None, CHANGE_SPEC_ID, FILE_NAME, 0, "0", START_POSITION, END_POSITION);
+            await _target.SendFileDownloadEventAsync(CancellationToken.None, CHANGE_SPEC_ID, FILE_NAME, 0, "0", START_POSITION, END_POSITION);
             _deviceClientMock.Verify(dc => dc.SendEventAsync(It.Is<Message>(msg => CheckMessageContent(msg, expectedChunkSize, CHANGE_SPEC_ID, FILE_NAME, 0, START_POSITION, END_POSITION) == true), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
-        public async Task SendFileUpdateEventAsync_Failure_ThrowException()
+        public async Task SendFileDownloadEventAsync_Failure_ThrowException()
         {
             _deviceClientMock.Setup(dc => dc.GetChunkSizeByTransportType()).Returns(MQQT_KB);
 
@@ -60,7 +60,7 @@ namespace CloudPillar.Agent.Tests
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _target.SendFileUpdateEventAsync(CancellationToken.None, CHANGE_SPEC_ID, FILE_NAME, 0);
+                await _target.SendFileDownloadEventAsync(CancellationToken.None, CHANGE_SPEC_ID, FILE_NAME, 0);
             });
         }
 
@@ -92,13 +92,13 @@ namespace CloudPillar.Agent.Tests
         private bool CheckMessageContent(Message msg, int chunkSize, string changeSpecId, string fileName, int actionIndex, long? startPosition, long? endPosition)
         {
             string messageString = Encoding.UTF8.GetString(msg.GetBytes());
-            FileUpdateEvent FileUpdateEvent = JsonConvert.DeserializeObject<FileUpdateEvent>(messageString);
-            return FileUpdateEvent.ChunkSize == chunkSize &&
-                  FileUpdateEvent.StartPosition == startPosition &&
-                  FileUpdateEvent.FileName == fileName &&
-                  FileUpdateEvent.ActionIndex == actionIndex &&
-                  FileUpdateEvent.EndPosition == endPosition &&
-                  FileUpdateEvent.ChangeSpecId == changeSpecId;
+            FileDownloadEvent FileDownloadEvent = JsonConvert.DeserializeObject<FileDownloadEvent>(messageString);
+            return FileDownloadEvent.ChunkSize == chunkSize &&
+                  FileDownloadEvent.StartPosition == startPosition &&
+                  FileDownloadEvent.FileName == fileName &&
+                  FileDownloadEvent.ActionIndex == actionIndex &&
+                  FileDownloadEvent.EndPosition == endPosition &&
+                  FileDownloadEvent.ChangeSpecId == changeSpecId;
         }
 
         private async Task<string> CalculateMdsCheckSumAsync(Stream stream)

@@ -2,7 +2,7 @@
 
 public enum D2CMessageType
 {
-    FileUpdateReady,
+    FileDownloadReady,
     SignTwinKey,
     SignFileKey,
     StreamingUploadChunk,

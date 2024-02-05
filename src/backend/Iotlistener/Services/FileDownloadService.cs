@@ -20,7 +20,7 @@ public class FileDownloadService : IFileDownloadService
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
     }
 
-    public async Task SendFileDownloadAsync(string deviceId, FileUpdateEvent data)
+    public async Task SendFileDownloadAsync(string deviceId, FileDownloadEvent data)
     {
         try
         {

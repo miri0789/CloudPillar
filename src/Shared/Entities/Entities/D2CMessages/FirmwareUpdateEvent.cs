@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 
 namespace Shared.Entities.Messages;
-public class FileUpdateEvent : D2CMessage
+public class FileDownloadEvent : D2CMessage
 {
     public string FileName { get; set; }
 
@@ -18,8 +18,8 @@ public class FileUpdateEvent : D2CMessage
     public string? ChangeSpecId { get; set; }
 
     [JsonConstructor]
-    public FileUpdateEvent()
+    public FileDownloadEvent()
     {
-        this.MessageType = D2CMessageType.FileUpdateReady;
+        this.MessageType = D2CMessageType.FileDownloadReady;
     }
 }
