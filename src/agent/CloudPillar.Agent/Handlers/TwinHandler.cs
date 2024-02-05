@@ -256,7 +256,7 @@ public class TwinHandler : ITwinHandler
         }
         catch (Exception ex)
         {
-            _logger.Error($"GetLatestTwi failed: {ex.Message}");
+            _logger.Error($"GetLatestTwin failed: {ex.Message}");
             throw;
         }
     }

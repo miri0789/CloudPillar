@@ -6,6 +6,6 @@ public class Constants
     public const int HTTPS_DEFAULT_PORT = 8199;
     public const string CONFIG_PORT = "Port";
     public const string HTTPS_CONFIG_PORT = "HTTPSPort";
-    public const string AGENT_SERVICE_DEFAULT_NAME = "CARTO v8 CloudPillar";
+    public const string AGENT_SERVICE_DEFAULT_NAME = "CARTO CloudPillar";
     public const string AGENT_SERVICE_DEFAULT_DESCRIPTION = "CloudPillar IoT Agent for update population, logs collection and telemetry";
 }
