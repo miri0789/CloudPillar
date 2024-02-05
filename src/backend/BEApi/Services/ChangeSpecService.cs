@@ -2,6 +2,7 @@ using System.Text;
 using Backend.BEApi.Services.interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
+using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Extensions.Options;
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
@@ -15,46 +16,51 @@ public class ChangeSpecService : IChangeSpecService
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly DownloadSettings _downloadSettings;
+    private readonly IRegistryManagerWrapper _registryManagerWrapper;
 
     public ChangeSpecService(ITwinDiseredService twinDiseredService, IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper,
-    IOptions<DownloadSettings> options)
+    IOptions<DownloadSettings> options, IRegistryManagerWrapper registryManagerWrapper)
     {
         _twinDesiredService = twinDiseredService ?? throw new ArgumentNullException(nameof(twinDiseredService));
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
     }
 
     public async Task AssignChangeSpecAsync(object assignChangeSpec, string devices, string changeSpecKey)
     {
         ArgumentNullException.ThrowIfNull(assignChangeSpec);
 
-        foreach (var deviceId in devices.Split(','))
+        using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
         {
-            var changeSpec = assignChangeSpec.ToString().ConvertToTwinChangeSpec();
-            foreach (var transistPackage in changeSpec.Patch)
+            foreach (var deviceId in devices.Split(','))
             {
-                foreach (var actionKey in transistPackage.Value)
+                var changeSpec = assignChangeSpec.ToString().ConvertToTwinChangeSpec();
+                foreach (var transistPackage in changeSpec.Patch)
                 {
-                    if (actionKey is DownloadAction downloadAction && downloadAction.Sign is null)
+                    foreach (var actionKey in transistPackage.Value)
                     {
-                        SignFileEvent signFileEvent = new SignFileEvent()
+                        if (actionKey is DownloadAction downloadAction && downloadAction.Sign is null)
                         {
-                            MessageType = D2CMessageType.SignFileKey,
-                            ActionIndex = Array.IndexOf(transistPackage.Value.ToArray(), actionKey),
-                            FileName = downloadAction.Source,
-                            BufferSize = _downloadSettings.SignFileBufferSize,
-                            PropName = changeSpecKey.GetSignKeyByChangeSpec(),
-                            ChangeSpecId = changeSpec.Id,
-                            ChangeSpecKey = changeSpecKey
-                        };
-                        downloadAction.Sign = await GetFileSignAsync(deviceId, changeSpecKey, signFileEvent);
+                            SignFileEvent signFileEvent = new SignFileEvent()
+                            {
+                                MessageType = D2CMessageType.SignFileKey,
+                                ActionIndex = Array.IndexOf(transistPackage.Value.ToArray(), actionKey),
+                                FileName = downloadAction.Source,
+                                BufferSize = _downloadSettings.SignFileBufferSize,
+                                PropName = changeSpecKey.GetSignKeyByChangeSpec(),
+                                ChangeSpecId = changeSpec.Id,
+                                ChangeSpecKey = changeSpecKey
+                            };
+                            downloadAction.Sign = await GetFileSignAsync(deviceId, changeSpecKey, signFileEvent);
+                        }
                     }
                 }
+                var changeSpecBytes = _twinDesiredService.GetChangeSpecDataToSign(changeSpec);
+                var signature = await SendToSignData(changeSpecBytes);
+                await _twinDesiredService.AddChangeSpec(registryManager, deviceId, changeSpecKey, changeSpec, signature);
             }
-            var changeSpecBytes = _twinDesiredService.GetChangeSpecDataToSign(changeSpec);
-            var signature = await SendToSignData(changeSpecBytes);
-            await _twinDesiredService.AddChangeSpec(deviceId, changeSpecKey, changeSpec, signature);
         }
     }
 
