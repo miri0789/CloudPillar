@@ -55,7 +55,7 @@
             "console": "internalConsole",
             "env": {
                 "KubernetesServiceHost": "",
-                "SigningPem": "=",
+                "SigningPem": "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1JR2tBZ0VCQkREeXNvWEwycGl3RElBSXhkYloxSTE0WnVlRlpVUjl0OWxETm5jK1VvSjZwM054NWZUdXJuTXUKVzduZ256UTMyME9nQndZRks0RUVBQ0toWkFOaUFBU0FHdjlybFhxc1ZBYW1yUEpZRWRNOUNjOVVMdnhDK295awpueDZpbUtaSW5FRE1sanMvOXArVXFidzF0UnhNRmRSdlh1MkU1OGwzWVNQZGpQdTNZbHNwb2lWekJTQ2lFZ2NXCm5keHUxb2J6aEJYcDdva0FzQzVIR1JPSFlBb1hLaUU9Ci0tLS0tRU5EIEVDIFBSSVZBVEUgS0VZLS0tLS0=",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
                 "IothubConnectionString": "",

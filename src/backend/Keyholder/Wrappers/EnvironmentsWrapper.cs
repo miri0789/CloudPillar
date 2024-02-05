@@ -9,6 +9,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _kubernetesServiceHost = "KubernetesServiceHost";
     private const string _signingPem = "SigningPem";
     private const string _SecretVolumeMountPath = "SecretVolumeMountPath";
+    private const string _DefaultSecretVolumeMountPath = "DefaultSecretVolumeMountPath";
     private const string _iothubConnectionString = "IothubConnectionString";
 
     private const string _dpsConnectionString = "DPSConnectionString";
@@ -26,6 +27,10 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public string SecretVolumeMountPath
     {
         get { return GetVariable(_SecretVolumeMountPath); }
+    }
+    public string DefaultSecretVolumeMountPath
+    {
+        get { return GetVariable(_DefaultSecretVolumeMountPath); }
     }
     public string iothubConnectionString
     {
@@ -52,5 +57,4 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         return Environment.GetEnvironmentVariable(name);
     }
-
 }

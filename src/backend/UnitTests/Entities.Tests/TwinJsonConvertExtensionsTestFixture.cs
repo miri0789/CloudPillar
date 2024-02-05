@@ -23,7 +23,7 @@ public class TwinJsonConvertExtensionsTestFixture
     [Test]
     public void GetReportedChangeSpecByKey_ExistsKey_ReturnCorrectValue()
     {
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME;
 
         var expectedResult = twinReported.ChangeSpec[changeSpecKey];
 
@@ -45,7 +45,7 @@ public class TwinJsonConvertExtensionsTestFixture
     public void GetReportedChangeSpecByKey_UpperCaseLettersKey_ReturCorrectValue()
     {
 
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
         twinReported.ChangeSpec.Where(x => x.Key == changeSpecKey).FirstOrDefault().Key.ToLower();
 
         var expectedResult = twinReported.ChangeSpec[changeSpecKey];
@@ -57,7 +57,7 @@ public class TwinJsonConvertExtensionsTestFixture
     [Test]
     public void GetDesiredChangeSpecByKey__ExistsKey_ReturnCorrectValue()
     {
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
 
         var expectedResult = twinDesired.ChangeSpec[changeSpecKey];
 
@@ -79,7 +79,7 @@ public class TwinJsonConvertExtensionsTestFixture
     public void GetDesiredChangeSpecByKey_UpperCaseLettersKey_ReturCorrectValue()
     {
 
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
         twinReported.ChangeSpec.Where(x => x.Key == changeSpecKey).FirstOrDefault().Key.ToLower();
 
         var expectedResult = twinDesired.ChangeSpec[changeSpecKey];
@@ -101,7 +101,7 @@ public class TwinJsonConvertExtensionsTestFixture
     [Test]
     public void SetReportedChangeSpecByKey_ExistsKey_UpdateChangeSpec()
     {
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
 
         twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey);
 
@@ -113,7 +113,7 @@ public class TwinJsonConvertExtensionsTestFixture
     [Test]
     public void SetReportedChangeSpecByKey_UpperCasesKey_UpdateChangeSpec()
     {
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
 
         twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey.ToUpper());
 
@@ -127,7 +127,7 @@ public class TwinJsonConvertExtensionsTestFixture
     {
         twinReported = null;
 
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
 
         twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey);
 
@@ -142,7 +142,7 @@ public class TwinJsonConvertExtensionsTestFixture
             ChangeSpec = null
         };
 
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
 
         twinReported.SetReportedChangeSpecByKey(twinReportedChangeSpec, changeSpecKey);
 
@@ -214,7 +214,7 @@ public class TwinJsonConvertExtensionsTestFixture
     [Test]
     public void GetSignKeyByChangeSpec_GetChangeSpecKey_ReturnChangeSignKey()
     {
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
 
         var expectedResult = $"{changeSpecKey}{DeviceConstants.SIGN_KEY}";
 
@@ -226,9 +226,9 @@ public class TwinJsonConvertExtensionsTestFixture
     [Test]
     public void GetSpecKeyBySignKey_GetChangeSignKey_ReturnChangeSpecKey()
     {
-        var changeSignKey = $"{TwinConstants.CHANGE_SPEC_NAME}{DeviceConstants.SIGN_KEY}";
+        var changeSignKey = $"{SharedConstants.CHANGE_SPEC_NAME}{DeviceConstants.SIGN_KEY}";
 
-        var expectedResult = TwinConstants.CHANGE_SPEC_NAME;
+        var expectedResult = SharedConstants.CHANGE_SPEC_NAME;
 
         var result = changeSignKey.GetSpecKeyBySignKey();
 
@@ -238,7 +238,7 @@ public class TwinJsonConvertExtensionsTestFixture
     [Test]
     public void GetSignKeyByChangeSpec_GetChangeSpecKey_ReturnChangeIdKey()
     {
-        var changeSpecKey = TwinConstants.CHANGE_SPEC_NAME;
+        var changeSpecKey = SharedConstants.CHANGE_SPEC_NAME;
 
         var expectedResult = $"{changeSpecKey}{DeviceConstants.ID_KEY}";
 
@@ -305,7 +305,7 @@ public class TwinJsonConvertExtensionsTestFixture
             ChangeSpec = new Dictionary<string, TwinReportedChangeSpec>
                 {
                     {
-                        TwinConstants.CHANGE_SPEC_NAME,
+                        SharedConstants.CHANGE_SPEC_NAME,
                         new TwinReportedChangeSpec
                         {
                             Id = "123",
@@ -316,7 +316,7 @@ public class TwinJsonConvertExtensionsTestFixture
                         }
                     },
                     {
-                        TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME,
+                        SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME,
                         new TwinReportedChangeSpec
                         {
                             Id = "456",
@@ -329,8 +329,8 @@ public class TwinJsonConvertExtensionsTestFixture
                 },
             ChangeSign = new Dictionary<string, string>
                 {
-                    { TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec(), "123" },
-                    { TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME.GetSignKeyByChangeSpec(), "456" }
+                    { SharedConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec(), "123" },
+                    { SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME.GetSignKeyByChangeSpec(), "456" }
                 }
         };
 
@@ -339,7 +339,7 @@ public class TwinJsonConvertExtensionsTestFixture
             ChangeSpec = new Dictionary<string, TwinChangeSpec>
                 {
                     {
-                        TwinConstants.CHANGE_SPEC_NAME,
+                        SharedConstants.CHANGE_SPEC_NAME,
                         new TwinChangeSpec
                         {
                             Id = "123",
@@ -350,7 +350,7 @@ public class TwinJsonConvertExtensionsTestFixture
                         }
                     },
                     {
-                        TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME,
+                        SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME,
                         new TwinChangeSpec
                         {
                             Id = "456",
@@ -363,8 +363,8 @@ public class TwinJsonConvertExtensionsTestFixture
                 },
             ChangeSign = new Dictionary<string, string>
                 {
-                    { TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec(), "123" },
-                    { TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME.GetSignKeyByChangeSpec(), "456" }
+                    { SharedConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec(), "123" },
+                    { SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME.GetSignKeyByChangeSpec(), "456" }
                 }
         };
 

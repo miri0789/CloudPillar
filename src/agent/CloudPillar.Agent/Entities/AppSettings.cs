@@ -2,5 +2,5 @@ namespace CloudPillar.Agent.Entities;
 
 public class AppSettings
 {
-    public string DefaultPublicKeyName { get; set; } = "CP-PublicKey";
+    public string DefaultSignCertificateName { get; set; } = "CP-Default-Sign-Certificate";
 }

@@ -15,7 +15,7 @@ public class SignatureHandler : ISignatureHandler
     private readonly IAsymmetricAlgorithmWrapper _asymmetricAlgorithmWrapper;
     private readonly IServerIdentityHandler _serverIdentityHandler;
     private readonly DownloadSettings _downloadSettings;
-    private const string FILE_EXTENSION = "*.cer";
+    private const string FILE_EXTENSION = "*.crt";
 
     public SignatureHandler(IFileStreamerWrapper fileStreamerWrapper, ILoggerHandler logger, ID2CMessengerHandler d2CMessengerHandler,
     ISHA256Wrapper sha256Wrapper, IAsymmetricAlgorithmWrapper asymmetricAlgorithmWrapper, IServerIdentityHandler serverIdentityHandler, IOptions<DownloadSettings> options)
@@ -53,24 +53,25 @@ public class SignatureHandler : ISignatureHandler
         var publicKeyBytes = Convert.FromBase64String(publicKeyContent);
         var keyReader = new ReadOnlySpan<byte>(publicKeyBytes);
 
-        if(isRSA)
+        if (isRSA)
         {
             RSA rsa = RSA.Create();
             rsa.ImportSubjectPublicKeyInfo(keyReader, out _);
-            _logger.Debug($"Imported public key");
+            _logger.Debug($"Imported RSA public key");
             return rsa;
         }
-        ECDsa ecdsa  = ECDsa.Create();
-        ecdsa .ImportSubjectPublicKeyInfo(keyReader, out _);
-        _logger.Debug($"Imported public key");
-        return ecdsa ;
+        ECDsa ecdsa = ECDsa.Create();
+        ecdsa.ImportSubjectPublicKeyInfo(keyReader, out _);
+        _logger.Debug($"Imported ECDsa public key");
+        return ecdsa;
     }
 
     public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)
     {
-        string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(Constants.PKI_FOLDER_PATH, FILE_EXTENSION);
+        string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(SharedConstants.PKI_FOLDER_PATH, FILE_EXTENSION);
         foreach (string publicKeyFile in publicKeyFiles)
         {
+            _logger.Debug($"VerifySignatureAsync: publicKeyFile: {publicKeyFile}");
             var publicKey = await _serverIdentityHandler.GetPublicKeyFromCertificateFileAsync(publicKeyFile);
             using (var signingPublicKey = await InitPublicKeyAsync(publicKey))
             {
@@ -106,7 +107,6 @@ public class SignatureHandler : ISignatureHandler
             {
                 byte[] buffer = new byte[_downloadSettings.SignFileBufferSize];
                 int bytesRead;
-
                 while ((bytesRead = _fileStreamerWrapper.Read(fileStream, buffer, 0, buffer.Length)) > 0)
                 {
                     _sha256Wrapper.TransformBlock(sha256, buffer, 0, bytesRead, null, 0);

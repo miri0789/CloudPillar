@@ -94,6 +94,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `UploadCompleteRetrySettings.MaxRetries`    | Specifies the maximum number of retry attempts that will be made in case of a failed upload or completion task | 3         |
 | `UploadCompleteRetrySettings.DelaySeconds`    | Defines the delay duration in seconds between successive retry attempts | 30         |
 | `AgentServiceName`    | Describes the name of the Agent when installed as a Windows Service | `CARTO v8 CloudPillar`         |
+| `DefaultSignCertificateName`    | When reset pki folder, All certificates in the PKI folder with a name different from DefaultSignCertificateName will be removed during this process. | `CP-Default-Sign-Certificate`         |
 
 
 ## Call GetDeviceState in C# Example
