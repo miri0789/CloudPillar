@@ -10,6 +10,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _expirationCertificatePercent = "ExpirationCertificatePercent";
     private const string _maxCountDevices = "MaxCountDevices";
     private const string _keyHolderUrl = "KeyHolderUrl";
+    private const string _blobStreamerUrl = "BlobStreamerUrl";
 
     public string iothubConnectionString
     {
@@ -44,6 +45,11 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public string keyHolderUrl
     {
         get { return GetVariable(_keyHolderUrl); }
+    }
+
+    public string blobStreamerUrl
+    {
+        get { return GetVariable(_blobStreamerUrl); }
     }
 
     private string GetVariable(string name)

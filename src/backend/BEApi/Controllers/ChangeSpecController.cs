@@ -1,5 +1,6 @@
 using Backend.BEApi.Services.interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Entities.Messages;
 
 namespace BEApi.Controllers
 {
@@ -30,9 +31,9 @@ namespace BEApi.Controllers
         }
 
         [HttpPost("CreateFileSign")]
-        public async Task<IActionResult> CreateFileSign(string deviceId, string propName, int actionIndex, string changeSpecKey, [FromBody] string signatureFileBytes)
+        public async Task<IActionResult> CreateFileSign(string deviceId, [FromBody] SignFileEvent signFileEvent)
         {
-            await _changeSpecService.CreateFileKeySignatureAsync(deviceId, propName, actionIndex, changeSpecKey, signatureFileBytes);
+            await _changeSpecService.CreateFileKeySignatureAsync(deviceId, signFileEvent);
             return Ok();
         }
     }

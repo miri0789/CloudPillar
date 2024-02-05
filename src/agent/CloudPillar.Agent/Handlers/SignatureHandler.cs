@@ -2,7 +2,7 @@
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
-using CloudPillar.Agent.Entities;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -53,17 +53,17 @@ public class SignatureHandler : ISignatureHandler
         var publicKeyBytes = Convert.FromBase64String(publicKeyContent);
         var keyReader = new ReadOnlySpan<byte>(publicKeyBytes);
 
-        if(isRSA)
+        if (isRSA)
         {
             RSA rsa = RSA.Create();
             rsa.ImportSubjectPublicKeyInfo(keyReader, out _);
             _logger.Debug($"Imported public key");
             return rsa;
         }
-        ECDsa ecdsa  = ECDsa.Create();
-        ecdsa .ImportSubjectPublicKeyInfo(keyReader, out _);
+        ECDsa ecdsa = ECDsa.Create();
+        ecdsa.ImportSubjectPublicKeyInfo(keyReader, out _);
         _logger.Debug($"Imported public key");
-        return ecdsa ;
+        return ecdsa;
     }
 
     public async Task<bool> VerifySignatureAsync(byte[] dataToVerify, string signatureString)

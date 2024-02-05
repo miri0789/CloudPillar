@@ -8,4 +8,5 @@ public interface IEnvironmentsWrapper
     double expirationCertificatePercent { get; }
     int maxCountDevices { get; }
     string keyHolderUrl { get; }
+    string blobStreamerUrl { get; }
 }

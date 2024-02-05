@@ -7,7 +7,6 @@ using Shared.Entities.Utilities;
 using Shared.Logger;
 using Microsoft.Azure.Devices;
 using System.Text;
-using Newtonsoft.Json.Linq;
 
 namespace Backend.Infra.Common.Services;
 
@@ -72,7 +71,7 @@ public class TwinDiseredService : ITwinDiseredService
 
     }
 
-    public async Task<TwinDesired> AddChangeSpec(string deviceId, string changeSpecKey, object assignChangeSpec)
+    public async Task<TwinDesired> AddChangeSpec(string deviceId, string changeSpecKey, TwinChangeSpec assignChangeSpec, string signature)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 
@@ -83,18 +82,19 @@ public class TwinDiseredService : ITwinDiseredService
                 var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
                 TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
+                twinDesired.ChangeSign ??= new Dictionary<string, string>();
                 var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
                 if (twinDesiredChangeSpec is not null)
                 {
                     twinDesired.ChangeSpec[changeSpecKey] = null;
-                    twinDesired.ChangeSign[changeSpecKey.GetSignKeyByChangeSpec()] = "";
+                    twinDesired.ChangeSign[changeSpecKey.GetSignKeyByChangeSpec()] = null;
                     await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
                     twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
                     twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                     twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
                 }
-                var changeSpec = assignChangeSpec.ToString().ConvertToTwinChangeSpec();
-                twinDesired.ChangeSpec.Add(changeSpecKey, changeSpec);
+                twinDesired.ChangeSpec.Add(changeSpecKey, assignChangeSpec);
+                twinDesired.ChangeSign.Add(changeSpecKey.GetSignKeyByChangeSpec(), signature);
                 await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
                 return twinDesired;
             }
@@ -106,10 +106,9 @@ public class TwinDiseredService : ITwinDiseredService
         }
     }
 
-    public Byte[] GetTwinDesiredDataToSign(TwinDesired twinDesired, string changeSpecKey)
+    public Byte[] GetChangeSpecDataToSign(TwinChangeSpec changeSpec)
     {
-        var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesiredChangeSpec));
+        var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(changeSpec));
         return dataToSign;
     }
 
