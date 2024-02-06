@@ -89,7 +89,6 @@ public class SigningService : ISigningService
             }
             _logger.Info("certificate is not valid. go to default certificate");
             privateKeyPem = await ReadKeyFromMount(Path.Combine(defaultSecretVolumeMountPath, PRIVATE_KEY_FILE));
-            return LoadPrivateKeyFromPem(privateKeyPem);
         }
 
         return LoadPrivateKeyFromPem(privateKeyPem);
@@ -133,7 +132,7 @@ public class SigningService : ISigningService
         return ecdsa;
     }
 
-    public async Task CreateTwinKeySignature(string deviceId, string changeSignKey)
+    public async Task CreateTwinKeySignature(string deviceId, string changeSignKey, int order)
     {
         try
         {

@@ -55,8 +55,7 @@ public class TwinDiseredService : ITwinDiseredService
                 }
                 if (order != twinDesiredChangeSpec?.Order)
                 {
-                    var changeSpecOrder = twinDesiredChangeSpec?.Order;
-                    changeSpecOrder = order;
+                    twinDesiredChangeSpec.Order = order;
                 }
 
                 var updatedArray = twinDesiredChangeSpec.Patch[transactionsKey].ToList();
