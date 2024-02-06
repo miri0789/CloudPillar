@@ -22,7 +22,7 @@ public class TwinDiseredService : ITwinDiseredService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction, string transactionsKey = SharedConstants.DEFAULT_TRANSACTIONS_KEY)
+    public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction, int order = 50, string transactionsKey = SharedConstants.DEFAULT_TRANSACTIONS_KEY)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 
@@ -52,6 +52,11 @@ public class TwinDiseredService : ITwinDiseredService
                     {
                         { transactionsKey, new TwinAction[0] }
                     };
+                }
+                if (order != twinDesiredChangeSpec?.Order)
+                {
+                    var changeSpecOrder = twinDesiredChangeSpec?.Order;
+                    changeSpecOrder = order;
                 }
 
                 var updatedArray = twinDesiredChangeSpec.Patch[transactionsKey].ToList();

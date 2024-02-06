@@ -83,7 +83,7 @@ namespace Backend.BlobStreamer.Tests
             var destionationPath = "C:\\Users\\Test\\AppData\\Local\\Temp\\test.tmp";
 
             _mockTwinDiseredService.Verify(b => b.AddDesiredRecipeAsync(It.IsAny<string>(), SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME,
-            It.Is<DownloadAction>(x => x.DestinationPath == destionationPath), SharedConstants.DEFAULT_TRANSACTIONS_KEY), Times.Once);
+            It.Is<DownloadAction>(x => x.DestinationPath == destionationPath),It.IsAny<int>(), SharedConstants.DEFAULT_TRANSACTIONS_KEY), Times.Once);
         }
     }
 }
