@@ -93,7 +93,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `RunDiagnosticsSettings.ResponseTimeoutMinutes`    | Sets the maximum time duration in minutes for which the diagnostics process should wait for a response before timing out | 5         |
 | `UploadCompleteRetrySettings.MaxRetries`    | Specifies the maximum number of retry attempts that will be made in case of a failed upload or completion task | 3         |
 | `UploadCompleteRetrySettings.DelaySeconds`    | Defines the delay duration in seconds between successive retry attempts | 30         |
-| `AgentServiceName`    | Describes the name of the Agent when installed as a Windows Service | `CARTO v8 CloudPillar`         |
+| `AgentServiceName`    | Describes the name of the Agent when installed as a Windows Service | `CARTO CloudPillar`         |
 | `AppSettings.DefaultSignCertificateName`    | The name of the default signing certificate. When resetting the pki folder, all certificates are deleted, except for the default signing certificate.  | `CP-Default-Sign-Certificate`         |
 
 
@@ -179,16 +179,7 @@ public class DeviceStateClient
 - `changeSpec`: The main object representing updates.
   - `id`: A unique identifier for the updates.
   - `changeSign`: The twin desired signature.
-  - `patch`: The "patch" section of the JSON structure contains details specific to the process. It includes the following five lists of actions to be executed in a specific order:
-    1. `preTransitConfig`: Configuration settings to be applied before the patch transit. These actions are performed prior to downloading or installing the firmware patch.
-
-    2. `transitPackage`: Actions related to the transit of the firmware package. This includes downloading the firmware artifact from a source, specifying communication protocols, and defining the destination path.
-
-    3. `preInstallConfig`: Configuration settings to be applied before the actual installation of the firmware. This can involve tasks like extracting the downloaded firmware.
-
-    4. `installSteps`: A sequence of actions that detail the steps to install the firmware. This may include running scripts or commands to perform the installation.
-
-    5. `postInstallConfig`: Configuration settings and actions to be executed after the firmware installation. These actions can include tasks such as triggering system updates or verifying the integrity of the installed firmware.
+  - `patch`: The "patch" section of the JSON structure contains details specific to the process. It includes string key and value of recipies need to be executed in keys order:
     
     **Actions Description**
 
