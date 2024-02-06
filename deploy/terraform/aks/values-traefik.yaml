@@ -1,13 +1,15 @@
-service:
+﻿service:
   annotations:
     service.beta.kubernetes.io/azure-load-balancer-internal: "true"
-    external-dns.alpha.kubernetes.io/hostname: devbe.cloudpillar.net
+    external-dns.alpha.kubernetes.io/hostname: devbe-cloudpillar-net
+  enabled: "true"
 
 additionalArguments:
   - "--providers.file.filename=/config/traefik.toml"
   - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
   - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-  - "--entrypoints.web.http.redirections.entrypoint.permanent=true" 
+  - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+  - "--ping=true"
 
 additionalVolumeMounts:
 - name: ssl
@@ -19,6 +21,7 @@ volumes:
     type: configMap
 
 deployment:
+  replicas: 4
   podAnnotations:
     openservicemesh.io/inbound-port-exclusion-list: "8443"
   initContainers:
@@ -42,9 +45,10 @@ deployment:
       defaultMode: 420
       optional: false
       secretName: devbe-cert
-
-tolerations:      
-  - key: "kubernetes.azure.com/scalesetpriority"
-    operator: "Equal"
-    value: "spot"
-    effect: "NoSchedule"
+      
+livenessProbe:
+  httpGet:
+    path: /ping
+    port: 9000
+  initialDelaySeconds: 10
+  periodSeconds: 10

@@ -1,0 +1,3 @@
+﻿spec:
+  traffic:
+    outboundIPRangeExclusionList: ["10.23.1.1/24" , "169.254.169.254/32"]

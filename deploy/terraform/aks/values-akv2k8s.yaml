@@ -1,0 +1,17 @@
+﻿global:
+  userDefinedMSI:
+    enabled: true
+    msi: 4c68658d-a8aa-4b5d-a793-40d56717d74c
+    subscriptionId: CloudPillar Dev
+    tenantId: 63d53a16-04d5-4981-b530-4f38d3b16281
+    azureCloudType: AzurePublicCloud
+controller:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    allowPrivilegeEscalation: false
+env_injector:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    allowPrivilegeEscalation: false
