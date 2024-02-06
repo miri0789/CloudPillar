@@ -90,6 +90,7 @@ public class TwinDiseredService : ITwinDiseredService
                 twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
                 twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
+                twinDesired.ChangeSign ??= new Dictionary<string, string>();
             }
             twinDesired.ChangeSpec.Add(changeSpecKey, assignChangeSpec);
             twinDesired.ChangeSign.Add(changeSpecKey.GetSignKeyByChangeSpec(), signature);

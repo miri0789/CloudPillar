@@ -165,13 +165,13 @@ public class SigningService : ISigningService
             {
                 var keyType = signingPrivateKey!.GetType();
                 var signature = keyType.BaseType == typeof(RSA) ? ((RSA)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1) : ((ECDsa)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512);
-                return signature;
+                return Convert.ToBase64String(signature); ;
             }
         }
         catch (Exception ex)
         {
             _logger.Error($"SignData error: {ex.Message}");
-            return new byte[0];
+            return "";
         }
     }
 
