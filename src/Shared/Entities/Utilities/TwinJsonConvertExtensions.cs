@@ -84,8 +84,7 @@ public static class TwinJsonConvertExtensions
             var key = twinReported?.ChangeSpec.FirstOrDefault(x => x.Key.ToLower() == changeSpecKey.ToLower()).Key;
             if (key is not null)
             {
-                var changeSpec = twinReported?.ChangeSpec[key];
-                changeSpec = twinReportedChangeSpec;
+                twinReported.ChangeSpec[key] = twinReportedChangeSpec;
             }
             else
             {
@@ -126,8 +125,7 @@ public static class TwinJsonConvertExtensions
             var key = twinDesired?.ChangeSign.FirstOrDefault(x => x.Key.ToLower() == changeSignKey.ToLower()).Key;
             if (key is not null)
             {
-                var changeSign = twinDesired?.ChangeSign[key];
-                changeSign = signData;
+                twinDesired.ChangeSign[key]= signData;
                 return;
             }
             else
