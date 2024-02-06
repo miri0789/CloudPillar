@@ -51,7 +51,6 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return GetVariable(_blobStreamerUrl); }
     }
-
     private string GetVariable(string name)
     {
         return Environment.GetEnvironmentVariable(name);

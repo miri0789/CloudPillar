@@ -21,32 +21,35 @@ public class SigningTestFixture
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
     private Mock<ILoggerHandler> _mockLogger;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapper;
+    private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
     private Mock<ECDsa> _ecdsaMock;
     string changeSignKey;
 
     [SetUp]
     public void Setup()
     {
-        changeSignKey = TwinConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
+        changeSignKey = SharedConstants.CHANGE_SPEC_NAME.GetSignKeyByChangeSpec();
         _ecdsaMock = new Mock<ECDsa>();
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLogger = new Mock<ILoggerHandler>();
         _registryManagerWrapper = new Mock<IRegistryManagerWrapper>();
         _mockEnvironmentsWrapper.Setup(c => c.iothubConnectionString).Returns("HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=");
-        _mockEnvironmentsWrapper.Setup(c => c.signingPem).Returns("");
         _mockEnvironmentsWrapper.Setup(c => c.kubernetesServiceHost).Returns("your-kubernetes-service-host");
         _mockEnvironmentsWrapper.Setup(c => c.SecretVolumeMountPath).Returns("");
+
+        _fileStreamerWrapper = new Mock<IFileStreamerWrapper>();
         var registryManagerMock = new Mock<RegistryManager>();
         _registryManagerWrapper.Setup(mock => mock.CreateFromConnectionString())
                         .Returns(registryManagerMock.Object);
-        _target = new SigningService(_mockEnvironmentsWrapper.Object, _mockLogger.Object, _registryManagerWrapper.Object);
+        _target = new SigningService(_mockEnvironmentsWrapper.Object, _mockLogger.Object, _registryManagerWrapper.Object, _fileStreamerWrapper.Object);
     }
 
 
     private void InitKeyFromEnvirementVar()
     {
         string pemContent = @"LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSHVBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFqQklIV01JSFRBZ0VCQkVJQml5QWE3YVJIRkRDaDJxZ2EKOXNUVUdJTkU1akhBRm5tTTh4V2VUL3VuaTVJNHROcWhWNVh4MHBEcm1DVjltYnJvRnRmRWEwWFZmS3VNQXh4ZgpaNkxNL3lLaGdZa0RnWVlBQkFHQnpnZG5QNzk4RnNMdVdZVEREUUE3YzByM0JWazhOblJVU2V4cFFVc1JpbFBOCnYzU2NoTzBsUnc5UnU4Nngxa2huVkR4K2R1cTRCaURGY3ZsU0FjeWpMQUNKdmp2b3lUTEppQStUUUZkbXJlYXIKak1pWk5FMjVwVDJ5V1AxTlVuZEp4UGN2VnRmQlc0OGtQT212a1k0V2xxUDViQXdDWHdic0tyQ2drNnhic3AxMgpldz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0=";
-        _mockEnvironmentsWrapper.Setup(c => c.signingPem).Returns(pemContent);
+        _fileStreamerWrapper.Setup(mock => mock.ReadAllTextAsync(It.IsAny<string>()))
+                             .ReturnsAsync(pemContent);
     }
 
     [Ignore("Move tests to beapi")]

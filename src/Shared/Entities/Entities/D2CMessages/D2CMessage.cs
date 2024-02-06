@@ -2,7 +2,7 @@
 
 public enum D2CMessageType
 {
-    FirmwareUpdateReady,
+    FileDownloadReady,
     SignTwinKey,
     SignFileKey,
     StreamingUploadChunk,

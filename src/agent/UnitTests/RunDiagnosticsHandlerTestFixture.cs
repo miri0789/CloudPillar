@@ -149,13 +149,13 @@ public class RunDiagnosticsHandlerTestFixture
     {
         var changeSign = new Dictionary<string, string>()
             {
-                { TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, "changeSign" }
+                { SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, "changeSign" }
             };
 
         var desired = new Dictionary<string, TwinChangeSpec>()
             {
                 {
-                TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinChangeSpec() {
+                SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinChangeSpec() {
                         Patch = new Dictionary<string, TwinAction[]>()
                         {
                             { 
@@ -176,7 +176,7 @@ public class RunDiagnosticsHandlerTestFixture
         var reported = new Dictionary<string, TwinReportedChangeSpec>
             {
                 {
-                    TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinReportedChangeSpec()
+                    SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, new TwinReportedChangeSpec()
                     {
                         Id = MockHelper.CHANGE_SPEC_ID,
                         Patch =  new Dictionary<string, TwinActionReported[]>()

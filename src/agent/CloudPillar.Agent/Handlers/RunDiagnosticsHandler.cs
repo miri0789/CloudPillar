@@ -155,8 +155,8 @@ public class RunDiagnosticsHandler : IRunDiagnosticsHandler
         var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
         var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
 
-        var desiredList = twinDesired?.GetDesiredChangeSpecByKey(TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)?.Patch?.FirstOrDefault().Value;
-        var reportedList = twinReported?.GetReportedChangeSpecByKey(TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)?.Patch?.FirstOrDefault().Value;
+        var desiredList = twinDesired?.GetDesiredChangeSpecByKey(SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)?.Patch?.FirstOrDefault().Value;
+        var reportedList = twinReported?.GetReportedChangeSpecByKey(SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)?.Patch?.FirstOrDefault().Value;
 
         var indexDesired = desiredList?.ToList().FindIndex(x => x is DownloadAction && Path.GetFileName(((DownloadAction)x).Source) == fileName) ?? -1;
         if (indexDesired == -1 || desiredList?.Count() > reportedList?.Count())

@@ -17,6 +17,8 @@ namespace Backend.BlobStreamer.Tests
         private Mock<ICheckSumService> _mockCheckSumService;
         private Mock<ICloudBlockBlobWrapper> _mockCloudBlockBlobWrapper;
         private Mock<ITwinDiseredService> _mockTwinDiseredService;
+        private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
+        private Mock<ICloudStorageWrapper> _mockCloudStorageWrapper;
         private Mock<ILoggerHandler> _mockLogger;
         private IUploadStreamChunksService _target;
         private readonly Uri STORAGE_URI = new Uri("https://mockstorage.example.com/mockcontainer/n-12%2FC_driveroot_%2FUsers%2FTest%2FAppData%2FLocal%2FTemp%2Ftest.tmp");
@@ -31,11 +33,13 @@ namespace Backend.BlobStreamer.Tests
             _mockCloudBlockBlobWrapper = new Mock<ICloudBlockBlobWrapper>();
             _mockLogger = new Mock<ILoggerHandler>();
             _mockTwinDiseredService = new Mock<ITwinDiseredService>();
+            _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
+        _mockCloudStorageWrapper = new Mock<ICloudStorageWrapper>();
 
             createMockBlob(STORAGE_URI);
             _mockCloudBlockBlobWrapper.Setup(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>())).Returns(Task.CompletedTask);
 
-            _target = new UploadStreamChunksService(_mockLogger.Object, _mockCheckSumService.Object, _mockCloudBlockBlobWrapper.Object, _mockTwinDiseredService.Object);
+            _target = new UploadStreamChunksService(_mockLogger.Object, _mockCheckSumService.Object, _mockCloudBlockBlobWrapper.Object,_mockCloudStorageWrapper.Object, _mockTwinDiseredService.Object, _mockEnvironmentsWrapper.Object);
         }
 
         private void createMockBlob(Uri storageUri)
@@ -48,7 +52,7 @@ namespace Backend.BlobStreamer.Tests
         public async Task UploadStreamChunkAsync_ValidData_Success()
         {
 
-            await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", false);
+            await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", "", false);
             _mockCloudBlockBlobWrapper.Verify(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>()), Times.Once);
         }
 
@@ -57,7 +61,7 @@ namespace Backend.BlobStreamer.Tests
         {
             Uri? emptyUri = null;
 
-            await _target.UploadStreamChunkAsync(emptyUri, BYTES, _startPosition, _checkSum, "", false);
+            await _target.UploadStreamChunkAsync(emptyUri, BYTES, _startPosition, _checkSum, "", "", false);
             _mockCloudBlockBlobWrapper.Verify(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>()), Times.Never);
         }
 
@@ -67,7 +71,7 @@ namespace Backend.BlobStreamer.Tests
 
             _mockCloudBlockBlobWrapper.Setup(b => b.BlobExists(It.IsAny<CloudBlockBlob>())).ReturnsAsync(true);
 
-            await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", false);
+            await _target.UploadStreamChunkAsync(STORAGE_URI, BYTES, 0, "", "", "", false);
             _mockCloudBlockBlobWrapper.Verify(b => b.DownloadToStreamAsync(It.IsAny<CloudBlockBlob>()), Times.Once);
         }
 
@@ -78,8 +82,8 @@ namespace Backend.BlobStreamer.Tests
 
             var destionationPath = "C:\\Users\\Test\\AppData\\Local\\Temp\\test.tmp";
 
-            _mockTwinDiseredService.Verify(b => b.AddDesiredRecipeAsync(It.IsAny<string>(), TwinConstants.CHANGE_SPEC_DIAGNOSTICS_NAME,
-            It.Is<DownloadAction>(x => x.DestinationPath == destionationPath),TwinConstants.DEFAULT_TRANSACTIONS_KEY), Times.Once);
+            _mockTwinDiseredService.Verify(b => b.AddDesiredRecipeAsync(It.IsAny<string>(), SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME,
+            It.Is<DownloadAction>(x => x.DestinationPath == destionationPath), SharedConstants.DEFAULT_TRANSACTIONS_KEY), Times.Once);
         }
     }
 }

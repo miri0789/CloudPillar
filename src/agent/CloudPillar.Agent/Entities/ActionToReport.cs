@@ -12,7 +12,7 @@ public class ActionToReport
     public string ChangeSpecId { get; set; }
     public string ChangeSpecKey { get; }
 
-    public ActionToReport(string changeSpecKey = TwinConstants.CHANGE_SPEC_NAME, string changeSpecId = "")
+    public ActionToReport(string changeSpecKey = SharedConstants.CHANGE_SPEC_NAME, string changeSpecId = "")
     {
         TwinReport = new TwinActionReported();
         TwinAction = new TwinAction();

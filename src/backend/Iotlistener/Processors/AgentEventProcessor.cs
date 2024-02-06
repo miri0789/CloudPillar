@@ -10,7 +10,7 @@ namespace Backend.Iotlistener.Processors;
 
 class AzureStreamProcessorFactory : IEventProcessorFactory
 {
-    private readonly IFirmwareUpdateService _firmwareUpdateService;
+    private readonly IFileDownloadService _FileDownloadService;
     private readonly ISigningService _signingService;
     private readonly IStreamingUploadChunkService _streamingUploadChunkService;
     private readonly IProvisionDeviceService _provisionDeviceCertificateService;
@@ -18,7 +18,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
-    public AzureStreamProcessorFactory(IFirmwareUpdateService firmwareUpdateService,
+    public AzureStreamProcessorFactory(IFileDownloadService FileDownloadService,
     ISigningService signingService,
     IStreamingUploadChunkService streamingUploadChunkService,
     IProvisionDeviceService provisionDeviceCertificateService,
@@ -27,7 +27,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     string partitionId)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
-        _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
+        _FileDownloadService = FileDownloadService ?? throw new ArgumentNullException(nameof(FileDownloadService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
         _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
@@ -39,7 +39,7 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
     {
         if (string.IsNullOrEmpty(_partitionId) || context.PartitionId == _partitionId)
         {
-            return new AgentEventProcessor(_firmwareUpdateService, _signingService, _streamingUploadChunkService, _provisionDeviceCertificateService, _environmentsWrapper, _logger);
+            return new AgentEventProcessor(_FileDownloadService, _signingService, _streamingUploadChunkService, _provisionDeviceCertificateService, _environmentsWrapper, _logger);
         }
 
         return new NullEventProcessor();
@@ -47,14 +47,14 @@ class AzureStreamProcessorFactory : IEventProcessorFactory
 }
 public class AgentEventProcessor : IEventProcessor
 {
-    private readonly IFirmwareUpdateService _firmwareUpdateService;
+    private readonly IFileDownloadService _FileDownloadService;
     private readonly ISigningService _signingService;
     private readonly IStreamingUploadChunkService _streamingUploadChunkService;
     private readonly IProvisionDeviceService _provisionDeviceCertificateService;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly ILoggerHandler _logger;
 
-    public AgentEventProcessor(IFirmwareUpdateService firmwareUpdateService,
+    public AgentEventProcessor(IFileDownloadService FileDownloadService,
     ISigningService signingService,
     IStreamingUploadChunkService streamingUploadChunkService,
     IProvisionDeviceService provisionDeviceCertificateService,
@@ -62,7 +62,7 @@ public class AgentEventProcessor : IEventProcessor
     ILoggerHandler logger)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
-        _firmwareUpdateService = firmwareUpdateService ?? throw new ArgumentNullException(nameof(firmwareUpdateService));
+        _FileDownloadService = FileDownloadService ?? throw new ArgumentNullException(nameof(FileDownloadService));
         _streamingUploadChunkService = streamingUploadChunkService ?? throw new ArgumentNullException(nameof(streamingUploadChunkService));
         _provisionDeviceCertificateService = provisionDeviceCertificateService ?? throw new ArgumentNullException(nameof(provisionDeviceCertificateService));
         _signingService = signingService ?? throw new ArgumentNullException(nameof(signingService));
@@ -126,9 +126,9 @@ public class AgentEventProcessor : IEventProcessor
             {
                 switch (d2CMessage.MessageType)
                 {
-                    case D2CMessageType.FirmwareUpdateReady:
-                        var firmwareUpdateEvent = JsonSerializer.Deserialize<FirmwareUpdateEvent>(data)!;
-                        await _firmwareUpdateService.SendFirmwareUpdateAsync(deviceId, firmwareUpdateEvent);
+                    case D2CMessageType.FileDownloadReady:
+                        var FileDownloadEvent = JsonSerializer.Deserialize<FileDownloadEvent>(data)!;
+                        await _FileDownloadService.SendFileDownloadAsync(deviceId, FileDownloadEvent);
                         break;
                     case D2CMessageType.SignTwinKey:
                         var signTwinKeyEvent = JsonSerializer.Deserialize<SignEvent>(data)!;

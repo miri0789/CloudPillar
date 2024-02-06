@@ -21,6 +21,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Infra\Common\Common.csproj" />
-
   </ItemGroup>
 </Project>

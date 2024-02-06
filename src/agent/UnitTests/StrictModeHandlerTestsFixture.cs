@@ -168,7 +168,7 @@ namespace CloudPillar.Agent.Handlers.Tests
         {
             SetMatchResult("globalupload/test.txt", "");
             var fileName = $"{StrictModeMockHelper.ROOT_GLOBAL}/test.txt";
-            mockStrictModeSettingsValue.GlobalPatterns = new List<string>() { $"{FileConstants.DOUEBLE_ASTERISK}/test.txt" };
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>() { $"{FileConstants.DOUBLE_ASTERISK}/test.txt" };
             mockStrictModeSettingsValue.FilesRestrictions = new List<FileRestrictionDetails>()
             {
                 new FileRestrictionDetails()
@@ -177,14 +177,14 @@ namespace CloudPillar.Agent.Handlers.Tests
             };
             _target.CheckFileAccessPermissions(UPLAOD_ACTION, fileName);
 
-            mockMatchWrapper.Verify(x => x.IsMatch(It.Is<string[]>(x => x.Contains($"{FileConstants.DOUEBLE_ASTERISK}/test.txt")), It.Is<string>(x => x == "c:/"), It.IsAny<string>()), Times.Once);
+            mockMatchWrapper.Verify(x => x.IsMatch(It.Is<string[]>(x => x.Contains($"{FileConstants.DOUBLE_ASTERISK}/test.txt")), It.Is<string>(x => x == "c:/"), It.IsAny<string>()), Times.Once);
         }
 
         [Test]
         public void CheckFileAccessPermissions_GlobalPatternContainsDoubleAstreisk_SplitPatternToRootAndPAttern()
         {
             var fileName = $"{StrictModeMockHelper.ROOT_GLOBAL}/test.txt";
-            mockStrictModeSettingsValue.GlobalPatterns = new List<string>() { $"{StrictModeMockHelper.ROOT_GLOBAL}/{FileConstants.DOUEBLE_ASTERISK}/test.txt" };
+            mockStrictModeSettingsValue.GlobalPatterns = new List<string>() { $"{StrictModeMockHelper.ROOT_GLOBAL}/{FileConstants.DOUBLE_ASTERISK}/test.txt" };
             mockStrictModeSettingsValue.FilesRestrictions = new List<FileRestrictionDetails>()
             {
                 new FileRestrictionDetails()

@@ -50,8 +50,6 @@ public class SignatureHandlerTestFixture
                     6MkyyYgPk0BXZq3mq4zImTRNuaU9slj9TVJ3ScT3L1bXwVuPJDzpr5GOFpaj+WwM
                     Al8G7CqwoJOsW7Kddns=
                     -----END PUBLIC KEY-----";
-        _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync("pathfile.txt")).ReturnsAsync(() => publicKeyPem1);
-        _fileStreamerWrapperMock.Setup(f => f.ReadAllTextAsync("pathfile2.txt")).ReturnsAsync(() => publicKeyPem2);
         _fileStreamerWrapperMock.Setup(f => f.GetFiles("pkipath", FILE_EXTENSION)).Returns(() => new string[] { "pathfile.txt", "pathfile2.txt" });
         _serverIdentityHandlerMock.Setup(s => s.GetPublicKeyFromCertificateFileAsync("pathfile.txt")).ReturnsAsync(() => publicKeyPem1);
         _serverIdentityHandlerMock.Setup(s => s.GetPublicKeyFromCertificateFileAsync("pathfile2.txt")).ReturnsAsync(() => publicKeyPem2);
