@@ -21,7 +21,7 @@ public class TwinReportedConverter : JsonConverter
             AgentPlatform = (jsonObject["agentPlatform"] ?? jsonObject["AgentPlatform"])?.Value<string>(),
             SupportedShells = GetSupportShell(jsonObject),
             SecretKey = (jsonObject["secretKey"] ?? jsonObject["SecretKey"])?.Value<string>(),
-            Custom = GetTwinReportedCustomProp(jsonObject),
+            Custom = (jsonObject["custom"] ?? jsonObject["Custom"])?.ToObject<Dictionary<string, object>>(),
             ChangeSpecId = (jsonObject["changeSpecId"] ?? jsonObject["ChangeSpecId"])?.Value<string>(),
             CertificateValidity = (jsonObject["certificateValidity"] ?? jsonObject["CertificateValidity"])?.ToObject<CertificateValidity>(),
             DeviceStateAfterServiceRestart = GetDeviceState(jsonObject, "deviceStateAfterServiceRestart"),
@@ -141,25 +141,6 @@ public class TwinReportedConverter : JsonConverter
             }
         }
         return knownIdentities;
-    }
-
-    private List<TwinReportedCustomProp> GetTwinReportedCustomProp(JObject jsonObject)
-    {
-
-        var customProperties = new List<TwinReportedCustomProp>();
-        var customToken = jsonObject["custom"] ?? jsonObject["Custom"];
-        if (customToken is JArray array)
-        {
-            foreach (var item in array)
-            {
-                customProperties.Add(new TwinReportedCustomProp()
-                {
-                    Name = (item["name"] ?? item["Name"]).Value<string>(),
-                    Value = (item["value"] ?? item["Value"]).Value<string>()
-                });
-            }
-        }
-        return customProperties;
     }
 
     private List<string> getChangeSpecKeys(JObject jsonObject)

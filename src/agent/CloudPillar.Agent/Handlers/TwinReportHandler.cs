@@ -254,7 +254,7 @@ public class TwinReportHandler : ITwinReportHandler
         return supportedShells;
     }
 
-    public async Task UpdateDeviceCustomPropsAsync(List<TwinReportedCustomProp> customProps, CancellationToken cancellationToken = default)
+    public async Task UpdateDeviceCustomPropsAsync(Dictionary<string, object> customProps, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -263,21 +263,23 @@ public class TwinReportHandler : ITwinReportHandler
                 var twin = await _deviceClient.GetTwinAsync(cancellationToken);
                 string reportedJson = twin.Properties.Reported.ToJson();
                 var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
-                var twinReportedCustom = twinReported?.Custom ?? new List<TwinReportedCustomProp>();
+                var twinReportedCustom = twinReported?.Custom ?? new Dictionary<string, object>();
                 foreach (var item in customProps)
                 {
-                    var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);
+                    var existingItem = twinReportedCustom.FirstOrDefault(x => x.Key.ToLower() == item.Key.ToLower());
 
-                    if (existingItem != null)
+                    if (existingItem.Value != null)
                     {
-                        existingItem.Value = item.Value;
+                        twinReportedCustom[existingItem.Key] = item.Value;
                     }
                     else
                     {
-                        twinReportedCustom.Add(item);
+                        twinReportedCustom.Add(item.Key, item.Value);
                     }
                 }
                 var deviceCustomProps = nameof(TwinReported.Custom);
+                await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, null, cancellationToken);
+
                 await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, twinReportedCustom, cancellationToken);
             }
             _logger.Info($"UpdateDeviceSecretKeyAsync success");

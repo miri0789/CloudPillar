@@ -26,5 +26,5 @@ public interface ITwinReportHandler
 
     Task InitReportDeviceParamsAsync(CancellationToken cancellationToken);
 
-    Task UpdateDeviceCustomPropsAsync(List<TwinReportedCustomProp> customProps, CancellationToken cancellationToken = default);
+    Task UpdateDeviceCustomPropsAsync(Dictionary<string, object> customProps, CancellationToken cancellationToken = default);
 }

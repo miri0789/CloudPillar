@@ -62,7 +62,7 @@ public class AgentController : ControllerBase
     {
         return await _twinHandler.GetTwinJsonAsync();
     }
-  
+
     [HttpGet("GetDeviceState")]
     public async Task<ActionResult<string>> GetDeviceStateAsync(CancellationToken cancellationToken)
     {
@@ -106,9 +106,9 @@ public class AgentController : ControllerBase
 
     [HttpPut("UpdateReportedProps")]
     [DeviceStateFilter]
-    public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] UpdateReportedProps updateReportedProps, CancellationToken cancellationToken)
+    public async Task<ActionResult<string>> UpdateReportedPropsAsync([FromBody] Dictionary<string, object> updateReportedProps, CancellationToken cancellationToken)
     {
-        await _twinReportHandler.UpdateDeviceCustomPropsAsync(updateReportedProps.Properties, cancellationToken);
+        await _twinReportHandler.UpdateDeviceCustomPropsAsync(updateReportedProps, cancellationToken);
         return await _twinHandler.GetTwinJsonAsync(cancellationToken);
     }
 
