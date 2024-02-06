@@ -74,7 +74,6 @@ public class SignatureHandler : ISignatureHandler
             var certificateExpired = await _serverIdentityHandler.CheckExpiredDateCertificatAsync(publicKeyFile);
             if (!certificateExpired)
             {
-                _fileStreamerWrapper.DeleteFile(publicKeyFile);
                 continue;
             }
             _logger.Debug($"VerifySignatureAsync: publicKeyFile: {publicKeyFile}");
