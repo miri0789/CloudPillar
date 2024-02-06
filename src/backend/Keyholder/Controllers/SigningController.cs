@@ -21,7 +21,7 @@ public class SigningController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("signData")]
+    [HttpPost("SignData")]
     public async Task<IActionResult> SignData(string deviceId, [FromBody] byte[] data)
     {
         var sign = await _signingService.SignData(data, deviceId);

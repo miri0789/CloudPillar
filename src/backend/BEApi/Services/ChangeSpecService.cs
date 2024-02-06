@@ -1,4 +1,3 @@
-using System.Text;
 using Backend.BEApi.Services.interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
@@ -53,12 +52,12 @@ public class ChangeSpecService : IChangeSpecService
                                 ChangeSpecId = changeSpec.Id,
                                 ChangeSpecKey = changeSpecKey
                             };
-                            downloadAction.Sign = await GetFileSignAsync(deviceId, changeSpecKey, signFileEvent);
+                            downloadAction.Sign = await GetFileSignAsync(deviceId, signFileEvent);
                         }
                     }
                 }
                 var changeSpecBytes = _twinDesiredService.GetChangeSpecDataToSign(changeSpec);
-                var signature = await SendToSignData(changeSpecBytes);
+                var signature = await SendToSignData(changeSpecBytes, deviceId);
                 await _twinDesiredService.AddChangeSpec(registryManager, deviceId, changeSpecKey, changeSpec, signature);
             }
         }
@@ -81,21 +80,21 @@ public class ChangeSpecService : IChangeSpecService
 
         var twinDesired = await _twinDesiredService.GetTwinDesiredAsync(deviceId);
         var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(signFileEvent.ChangeSpecKey);
-        var signature = await GetFileSignAsync(deviceId, signFileEvent.ChangeSpecKey, signFileEvent);
+        var signature = await GetFileSignAsync(deviceId, signFileEvent);
         ((DownloadAction)twinDesiredChangeSpec.Patch[signFileEvent.PropName][signFileEvent.ActionIndex]).Sign = signature;
         await GetAndSignTwinDesiredAsync(twinDesired, deviceId, signFileEvent.ChangeSpecKey);
     }
 
-    private async Task<string> GetFileSignAsync(string deviceId, string changeSpecKey, SignFileEvent signFileEvent)
+    private async Task<string> GetFileSignAsync(string deviceId, SignFileEvent signFileEvent)
     {
         var fileSign = await GetFileBytesAsync(deviceId, signFileEvent);
-        return await SendToSignData(Convert.FromBase64String(fileSign));
+        return await SendToSignData(Convert.FromBase64String(fileSign), deviceId);
     }
 
     private async Task GetAndSignTwinDesiredAsync(TwinDesired twinDesired, string deviceId, string changeSpecKey)
     {
         var dataToSign = _twinDesiredService.GetChangeSpecDataToSign(twinDesired.GetDesiredChangeSpecByKey(changeSpecKey));
-        var signature = await SendToSignData(dataToSign);
+        var signature = await SendToSignData(dataToSign, deviceId);
         await _twinDesiredService.SignTwinDesiredAsync(twinDesired, deviceId, changeSpecKey.GetSignKeyByChangeSpec(), signature);
     }
 
@@ -106,9 +105,9 @@ public class ChangeSpecService : IChangeSpecService
         return signatureFileBytes;
     }
 
-    private async Task<string> SendToSignData(byte[] dataToSign)
+    private async Task<string> SendToSignData(byte[] dataToSign, string deviceId)
     {
-        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData";
+        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
         var bytesSignature = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, dataToSign);
         return Convert.ToBase64String(bytesSignature);
     }
