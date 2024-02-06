@@ -1,3 +1,4 @@
+using System.Text;
 using Backend.BEApi.Services.interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
@@ -88,7 +89,7 @@ public class ChangeSpecService : IChangeSpecService
     private async Task<string> GetFileSignAsync(string deviceId, SignFileEvent signFileEvent)
     {
         var fileSign = await GetFileBytesAsync(deviceId, signFileEvent);
-        return await SendToSignData(Convert.FromBase64String(fileSign), deviceId);
+        return await SendToSignData(fileSign, deviceId);
     }
 
     private async Task GetAndSignTwinDesiredAsync(TwinDesired twinDesired, string deviceId, string changeSpecKey)
@@ -98,10 +99,10 @@ public class ChangeSpecService : IChangeSpecService
         await _twinDesiredService.SignTwinDesiredAsync(twinDesired, deviceId, changeSpecKey.GetSignKeyByChangeSpec(), signature);
     }
 
-    private async Task<string> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent)
+    private async Task<byte[]> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent)
     {
         string blobRequestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/CalculateHash?deviceId={deviceId}";
-        var signatureFileBytes = await _httpRequestorService.SendRequest<string>(blobRequestUrl, HttpMethod.Post, signFileEvent);
+        var signatureFileBytes = await _httpRequestorService.SendRequest<byte[]>(blobRequestUrl, HttpMethod.Post, signFileEvent);
         return signatureFileBytes;
     }
 
@@ -109,6 +110,6 @@ public class ChangeSpecService : IChangeSpecService
     {
         string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
         var bytesSignature = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, dataToSign);
-        return Convert.ToBase64String(bytesSignature);
+        return Encoding.UTF8.GetString(bytesSignature);
     }
 }
