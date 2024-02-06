@@ -29,7 +29,6 @@ public class TwinDiseredServiceTestFixture
         _loggerHandlerMock = new Mock<ILoggerHandler>();
         registryManager = new RegistryManager();
 
-        // assignChangeSpec = "{\"id\":\"try\",\"patch\":{\"transist2\":[{\"source\":\"tryDownloadShort.txt\",\"destinationPath\":\"C:/cp/tryDownloadShort.txt\",\"unzip\":false,\"action\":2,\"sign\":\"ALXnXdOQOIwYKBQavYWRnF0XHOJVtQRyZxkJo1ViGEFiWb/01cVMXcrUmt4QSfjn7kINGUxYbK+L/lIw6KJ/xIXzAOG3JouHgbxFHT72pW3CjTc0RFMYZfjqLuTBGyFfCkX0Pb2xuqHuYXr6qPA2tUmLwBc4jDOeRcRMdeMrsIFHfuNh\",\"description\":\"deny\"}]}}";
         SetupDesireds();
 
         _registryManagerWrapperMock.Setup(x => x.CreateFromConnectionString()).Returns(new RegistryManager());
