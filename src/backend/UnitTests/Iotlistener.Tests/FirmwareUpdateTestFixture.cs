@@ -37,7 +37,7 @@ public class FileDownloadTestFixture
         _mockEnvironmentsWrapper.Setup(f => f.rangeBytes).Returns(_rangeSize);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/Metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BlobData() { Length = _blobSize });
         _target = new FileDownloadService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
 
@@ -114,7 +114,7 @@ public class FileDownloadTestFixture
     public async Task SendFileDownloadAsync_SendBlobFalseResponse_BreakSendsRanges()
     {
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/Metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BlobData() { Length = _blobSize * 100 });
 
         _httpRequestorServiceMock.Setup(service =>
@@ -137,7 +137,7 @@ public class FileDownloadTestFixture
 
     private string BuildBlobRangeUrl(long rangeIndex = 0, long startPosition = 0)
     {
-        return $"{_blobStreamerUrl.AbsoluteUri}blob/range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex={rangeIndex}&startPosition={startPosition}&actionIndex={_actionIndexd}&rangesCount={_rangesCount}&changeSpecId={_changeSpecId}";
+        return $"{_blobStreamerUrl.AbsoluteUri}blob/Range?deviceId={_deviceId}&fileName={_fileName}&chunkSize={_chunkSize}&rangeSize={_rangeSize}&rangeIndex={rangeIndex}&startPosition={startPosition}&actionIndex={_actionIndexd}&rangesCount={_rangesCount}&changeSpecId={_changeSpecId}";
     }
 
 
@@ -147,7 +147,7 @@ public class FileDownloadTestFixture
     {
         var errMsg = "Failed to retrieve blob size.";
         _httpRequestorServiceMock
-            .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/Metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception(errMsg));
 
         await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
@@ -158,7 +158,7 @@ public class FileDownloadTestFixture
             ActionIndex = _actionIndexd,
             ChangeSpecId = _changeSpecId
         });
-        var errUrl = $"{_blobStreamerUrl.AbsoluteUri}blob/rangeError?deviceId={_deviceId}&fileName={_fileName}&actionIndex={_actionIndexd}&error={errMsg}&changeSpecId={_changeSpecId}";
+        var errUrl = $"{_blobStreamerUrl.AbsoluteUri}blob/RangeError?deviceId={_deviceId}&fileName={_fileName}&actionIndex={_actionIndexd}&error={errMsg}&changeSpecId={_changeSpecId}";
         _httpRequestorServiceMock.Verify(service =>
                service.SendRequest(errUrl, HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>()),
                Times.Once);

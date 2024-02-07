@@ -17,7 +17,7 @@ public class BlobController : ControllerBase
         _uploadStreamChunksService = uploadStreamChunksService ?? throw new ArgumentNullException(nameof(uploadStreamChunksService));
     }
 
-    [HttpGet("metadata")]
+    [HttpGet("Metadata")]
     public async Task<IActionResult> GetMeatadata(string fileName)
     {
         try
@@ -38,21 +38,21 @@ public class BlobController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("range")]
+    [HttpPost("Range")]
     public async Task<IActionResult> SendRange(string deviceId, string changeSpecId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {
         var isSendRangeComplete = await _blobService.SendRangeByChunksAsync(deviceId, changeSpecId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionIndex, rangesCount);
         return Ok(isSendRangeComplete);
     }
 
-    [HttpPost("rangeError")]
+    [HttpPost("RangeError")]
     public async Task<IActionResult> SendRangeError(string deviceId, string changeSpecId, string fileName, int actionIndex, string error)
     {
         await _blobService.SendDownloadErrorAsync(deviceId, changeSpecId, fileName, actionIndex, error);
         return Ok();
     }
 
-    [HttpPost("uploadStream")]
+    [HttpPost("UploadStream")]
     public async Task UploadStream([FromBody] StreamingUploadChunkEvent data, string deviceId)
     {
         await _uploadStreamChunksService.UploadStreamChunkAsync(data.StorageUri, data.Data, data.StartPosition, data.CheckSum, data.FileName, deviceId, data.IsRunDiagnostics);
