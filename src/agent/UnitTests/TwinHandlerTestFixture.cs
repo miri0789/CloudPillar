@@ -629,7 +629,7 @@ public class TwinHandlerTestFixture
     }
 
     private Twin CreateTwinMock(Dictionary<string, TwinChangeSpec> twinChangeSpec,
-    Dictionary<string, TwinReportedChangeSpec> twinReportedChangeSpec, Dictionary<string, string>? changeSign, List<TwinReportedCustomProp>? twinReportedCustomProps = null)
+    Dictionary<string, TwinReportedChangeSpec> twinReportedChangeSpec, Dictionary<string, string>? changeSign, Dictionary<string, object>? twinReportedCustomProps = null)
     {
         var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps, changeSign);
         _twinReportHandler.Setup(dc => dc.SetTwinReported(cancellationToken)).ReturnsAsync(twin);
