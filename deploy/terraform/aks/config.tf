@@ -44,7 +44,7 @@ resource "null_resource" "akv-secret" {
     interpreter = ["PowerShell", "-Command"]
     working_dir = "${path.module}"
   }
-  depends_on = [azurerm_app_service_certificate_order.app-cert, null_resource.copy-templates, null_resource.add-namespaces ]
+  depends_on = [azurerm_app_service_certificate_order.app-cert, null_resource.copy-templates, null_resource.add-namespaces, null_resource.helm-repos-updates ]
 }
 
 resource "null_resource" "helm-repos-updates" {
@@ -58,7 +58,7 @@ resource "null_resource" "helm-repos-updates" {
     interpreter = ["PowerShell", "-Command"]
     working_dir = "${path.module}"
   }
-  depends_on = [null_resource.add-namespaces, null_resource.akv-secret, null_resource.copy-templates ]
+  depends_on = [null_resource.add-namespaces, null_resource.copy-templates ]
 }
 
 resource "null_resource" "remove-temaple-files" {
