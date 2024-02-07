@@ -54,7 +54,7 @@ controllers:
     - name: MessageTimeoutMinutes
       value: "60"
     - name: RangeBytes
-      value: "123456"
+      value: "292000"
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
@@ -77,7 +77,7 @@ controllers:
     - name: GlobalDeviceEndpoint
       value: "global.azure-devices-provisioning.net"
   - title: "beapi"
-    replicaCount: 3
+    replicaCount: 1
     path: /beapi-service
     port: 8083
     env:
