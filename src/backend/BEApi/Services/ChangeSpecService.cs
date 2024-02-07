@@ -110,6 +110,11 @@ public class ChangeSpecService : IChangeSpecService
     {
         string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
         var bytesSignature = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, dataToSign);
-        return Encoding.UTF8.GetString(bytesSignature);
+        var signature = Encoding.UTF8.GetString(bytesSignature);
+        if (string.IsNullOrEmpty(signature))
+        {
+            throw new InvalidOperationException("Signature is empty");
+        }
+        return signature;
     }
 }

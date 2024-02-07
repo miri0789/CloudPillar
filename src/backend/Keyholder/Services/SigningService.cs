@@ -3,11 +3,9 @@ using System.Text;
 using Backend.Keyholder.Interfaces;
 using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
-using Newtonsoft.Json;
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
 using Backend.Infra.Common.Wrappers.Interfaces;
-using Microsoft.Azure.Devices.Shared;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Backend.Keyholder.Services;
@@ -133,30 +131,6 @@ public class SigningService : ISigningService
         return ecdsa;
     }
 
-    public async Task CreateTwinKeySignature(string deviceId, string changeSignKey)
-    {
-        try
-        {
-            var changeSpecKey = changeSignKey.GetSpecKeyBySignKey();
-            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
-            {
-                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
-                var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-
-                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.GetDesiredChangeSpecByKey(changeSpecKey)));
-                var signData = await SignData(dataToSign, deviceId);
-                twinDesired.SetDesiredChangeSignByKey(changeSignKey, signData);
-
-                twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
-                await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"CreateTwinKeySignature error: {ex.Message}");
-        }
-    }
-
     public async Task<string> SignData(byte[] data, string deviceId)
     {
         try
@@ -175,44 +149,6 @@ public class SigningService : ISigningService
         }
     }
 
-    public async Task CreateFileKeySignature(string deviceId, string propName, int actionIndex, byte[] hash, string changeSpecKey)
-    {
-        var signature = await SignData(hash, deviceId);
-        await AddFileSignToDesired(deviceId, changeSpecKey, propName, actionIndex, signature);
-
-    }
-
-    private async Task AddFileSignToDesired(string deviceId, string changeSpecKey, string propName, int actionIndex, string fileSign)
-    {
-        ArgumentNullException.ThrowIfNull(deviceId);
-
-        try
-        {
-            using (var registryManager = _registryManagerWrapper.CreateFromConnectionString())
-            {
-                var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
-                TwinDesired twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
-
-                var twinDesiredChangeSpec = twinDesired.GetDesiredChangeSpecByKey(changeSpecKey);
-                ((DownloadAction)twinDesiredChangeSpec.Patch[propName][actionIndex]).Sign = fileSign;
-
-                var dataToSign = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(twinDesired.ChangeSpec));
-                var changeSign = twinDesired.GetDesiredChangeSignByKey(changeSpecKey);
-                changeSign = await SignData(dataToSign, deviceId);
-
-                var twinDesiredJson = twinDesired.ConvertToJObject().ToString();
-                twin.Properties.Desired = new TwinCollection(twinDesiredJson);
-
-                await _registryManagerWrapper.UpdateTwinAsync(registryManager, deviceId, twin, twin.ETag);
-                _logger.Info($"Recipe: {actionIndex} has been successfully changed. DeviceId: {deviceId} ");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"An error occurred while attempting to update ChangeSpec: {ex.Message}");
-        }
-    }
-
     private async Task<bool> CheckValidCertificate(string deviceId)
     {
         _logger.Debug($"Checking certificate validity...");
@@ -226,7 +162,7 @@ public class SigningService : ISigningService
         }
 
         var certificate = new X509Certificate2(publicKeyPem);
-        var knownCertificate = await ceritficateIsknown(knownIdentitiesList, certificate);
+        var knownCertificate = await CeritficateIsknown(knownIdentitiesList, certificate);
         if (!knownCertificate)
         {
             _logger.Error($"certificate is not exists in knownIdentitiesList");
@@ -235,7 +171,7 @@ public class SigningService : ISigningService
         return true;
     }
 
-    private async Task<bool> ceritficateIsknown(List<KnownIdentities> knownIdentities, X509Certificate2 certificate)
+    private async Task<bool> CeritficateIsknown(List<KnownIdentities> knownIdentities, X509Certificate2 certificate)
     {
         var knownCertificate = knownIdentities.Any(x => x.Subject == certificate.Subject
                      && x.Thumbprint == certificate.Thumbprint &&

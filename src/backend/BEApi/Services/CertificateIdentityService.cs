@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Backend.BEApi.Services.interfaces;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
@@ -17,15 +18,17 @@ public class CertificateIdentityService : ICertificateIdentityService
     private readonly ITwinDiseredService _twinDiseredHandler;
     private readonly ILoggerHandler _logger;
     private readonly ISHA256Wrapper _sha256Wrapper;
+    private readonly IChangeSpecService _changeSpecService;
 
     public CertificateIdentityService(ILoggerHandler logger, IEnvironmentsWrapper environmentsWrapper, IHttpRequestorService httpRequestorService
-    , ITwinDiseredService twinDiseredHandler, ISHA256Wrapper sha256Wrapper)
+    , ITwinDiseredService twinDiseredHandler, ISHA256Wrapper sha256Wrapper, IChangeSpecService changeSpecService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
         _sha256Wrapper = sha256Wrapper ?? throw new ArgumentNullException(nameof(sha256Wrapper));
+        _changeSpecService = changeSpecService ?? throw new ArgumentNullException(nameof(changeSpecService));
     }
 
     public async Task ProcessNewSigningCertificate(string deviceId)
@@ -67,7 +70,7 @@ public class CertificateIdentityService : ICertificateIdentityService
             };
 
             _logger.Info($"Send publicKey to BlobStreamer for uploading");
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/uploadStream?deviceId={deviceId}";
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/UploadStream?deviceId={deviceId}";
             await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);
             _logger.Info("certificate with public key uploaded for blob successfully.");
         }
@@ -88,29 +91,28 @@ public class CertificateIdentityService : ICertificateIdentityService
             Action = TwinActionType.SingularDownload,
             Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
             Source = certificateName,
-            Sign = Encoding.UTF8.GetString(cerSign),
+            Sign = cerSign,
             DestinationPath = $"./{SharedConstants.PKI_FOLDER_PATH}/{certificateName}",
         };
         await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME, downloadAction);
         _logger.Info($"serverIdentity download certificate action added to device twin successfully.");
     }
 
-    private async Task<byte[]> SignCertificateFile(byte[] publicKey, string deviceId)
+    private async Task<string> SignCertificateFile(byte[] publicKey, string deviceId)
     {
         _logger.Info($"Send request to get Sign certificate from keyHolder");
 
         var signatureFileBytes = await GetCalculateHash(publicKey);
 
-        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
-        var cerSign = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, signatureFileBytes);
+        var cerSign = await _changeSpecService.SendToSignData(signatureFileBytes, deviceId);
         _logger.Info($"Sign certificate from keyHolder: {cerSign}");
         return cerSign;
     }
+
     private async Task UpdateChangeSpecSign(string deviceId)
     {
         var changeSignKey = SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME.GetSignKeyByChangeSpec();
-        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createTwinKeySignature?deviceId={deviceId}&changeSignKey={changeSignKey}";
-        await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Get);
+        await _changeSpecService.CreateChangeSpecKeySignatureAsync(deviceId, changeSignKey);
     }
 
     private async Task<byte[]> GetCalculateHash(byte[] data)
