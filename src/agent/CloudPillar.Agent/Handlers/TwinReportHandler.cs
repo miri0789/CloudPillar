@@ -195,8 +195,8 @@ public class TwinReportHandler : ITwinReportHandler
         {
             var certificateValidity = new CertificateValidity()
             {
-                CreationDate = DateTime.UtcNow,
-                ExpirationDate = DateTime.UtcNow.AddDays(CertificateExpiredDays)
+                CreationDate = DateTime.UtcNow.ToString("dd-MM-yyyy"),
+                ExpirationDate = DateTime.UtcNow.AddDays(CertificateExpiredDays).ToString("dd-MM-yyyy")
             };
             var certificateDates = nameof(TwinReported.CertificateValidity);
             await _deviceClient.UpdateReportedPropertiesAsync(certificateDates, certificateValidity, cancellationToken);
