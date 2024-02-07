@@ -41,7 +41,7 @@ public class ChangeSpecService : IChangeSpecService
                 {
                     foreach (var actionKey in transistPackage.Value)
                     {
-                        if (actionKey is DownloadAction downloadAction && downloadAction.Sign is null)
+                        if (actionKey is DownloadAction downloadAction)
                         {
                             SignFileEvent signFileEvent = new SignFileEvent()
                             {
