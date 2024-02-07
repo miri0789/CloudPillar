@@ -24,7 +24,7 @@ resource "azurerm_private_endpoint" "aks" {
   location            = azurerm_resource_group.aks.location
   tags                = { "Terraform" : "true" }
   resource_group_name = azurerm_resource_group.aks.name
-  subnet_id           = azurerm_subnet.aks.id
+  subnet_id           = azurerm_subnet.cp-keyvault-private-subnet.id
 
   private_dns_zone_group {
     name                 = "ZoneGroup"
