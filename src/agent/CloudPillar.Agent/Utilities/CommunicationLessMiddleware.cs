@@ -26,7 +26,7 @@ public class CommunicationLessMiddleware
                             ""description"": ""Carto 7.2 SPU Patch 1"",
                             ""source"": ""1111.txt"",
                             ""protocol"": ""https|iotamqp|iotmqtt"",
-                            ""destinationPath"": ""C:\\Users\\mmarzbac\\Downloads\\S31772750\\""
+                            ""destinationPath"": ""C:\\Users\\Downloads\\S31772750\\""
                         },
                         {
                             ""actionId"": ""5678"",
@@ -34,7 +34,7 @@ public class CommunicationLessMiddleware
                             ""description"": ""Carto 7.2 SPU Patch 3"",
                             ""source"": ""2222.txt"",
                             ""protocol"": ""https|iotamqp|iotmqtt"",
-                            ""destinationPath"": ""C:\\Users\\mmarzbac\\Downloads\\S317727502\\""
+                            ""destinationPath"": ""C:\\Users\\Downloads\\S317727502\\""
                         },
                         {
                             ""actionId"": ""97899"",
@@ -42,7 +42,7 @@ public class CommunicationLessMiddleware
                             ""description"": ""Carto 7.2 SPU Patch 3"",
                             ""source"": ""3333.txt"",
                             ""protocol"": ""https|iotamqp|iotmqtt"",
-                            ""destinationPath"": ""C:\\Users\\mmarzbac\\Downloads\\S317727503\\""
+                            ""destinationPath"": ""C:\\Users\\Downloads\\S317727503\\""
                         },
                         {
                             ""actionId"": ""111111"",
@@ -64,6 +64,7 @@ public class CommunicationLessMiddleware
         ""reported"": {
             ""deviceState"": ""Ready"",
             ""secretKey"": ""1111"",
+            ""custom"": { },
             ""changeSpec"": {
                 ""patch"": {
                     ""transitPackage"": [
@@ -116,10 +117,10 @@ public class CommunicationLessMiddleware
                 {
                     requestBody = await reader.ReadToEndAsync();
                 }
-                var updateReportedProps = JsonConvert.DeserializeObject<UpdateReportedProps>(requestBody)!;
-                foreach (var item in updateReportedProps.Properties)
+                var updateReportedProps = JsonConvert.DeserializeObject<Dictionary<string, object>>(requestBody)!;
+                foreach (var item in updateReportedProps)
                 {
-                    _twinJsonObject.properties.reported[item.Name] = JToken.FromObject(item.Value);
+                    _twinJsonObject.properties.reported.custom[item.Key] = JToken.FromObject(item.Value);
                 }
                 break;
         }
