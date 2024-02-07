@@ -99,7 +99,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
 
     public bool ValidateCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
     {
-        if (sender is System.Net.Security.SslStream sslSender)
+        if (sender is SslStream sslSender)
         {
             var targetHostName = sslSender.TargetHostName?.ToString();
             return _authenticationSettings.ValidDomains.Contains(targetHostName);
