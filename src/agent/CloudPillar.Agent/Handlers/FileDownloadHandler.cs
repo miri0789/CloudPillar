@@ -229,7 +229,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             BufferSize = _downloadSettings.SignFileBufferSize,
             PropName = actionToReport.ReportPartName,
             ChangeSpecId = actionToReport.ChangeSpecId,
-            ChangeSpec = actionToReport.ChangeSpecKey
+            ChangeSpecKey = actionToReport.ChangeSpecKey
 
         };
         await _d2CMessengerHandler.SendSignFileEventAsync(signFileEvent, cancellationToken);
