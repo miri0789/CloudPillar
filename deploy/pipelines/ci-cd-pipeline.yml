@@ -203,7 +203,7 @@ stages:
             releaseName: 'cloudpillarback'
             overrideValues: 'image.tag=$(imagetag)'
             valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
-            arguments: '--debug --timeout 10m0s'
+            arguments: '--debug --timeout 15m0s'
             
       - job: Stop_VM_Job
         dependsOn: CD_Job
