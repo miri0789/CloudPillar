@@ -13,7 +13,7 @@
       <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.5" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
       <PackageReference Include="SharedLogger" Version="1.0.10" />
-      <PackageReference Include="SharedEntities" Version="1.0.213" />
+      <PackageReference Include="SharedEntities" Version="1.0.219" />
       <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Service" Version="1.18.3" />
       <PackageReference Include="KubernetesClient" Version="11.0.21" />
       <PackageReference Include="Microsoft.Azure.Devices" Version="1.39.0" />

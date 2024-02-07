@@ -5,7 +5,7 @@ using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using System.Text;
 using System.Security.Cryptography;
-using CloudPillar.Agent.Entities;
+using Shared.Entities.Twin;
 
 
 namespace CloudPillar.Agent.Tests;
