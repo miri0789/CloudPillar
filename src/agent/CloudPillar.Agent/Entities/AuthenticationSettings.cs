@@ -19,7 +19,7 @@ public class AuthenticationSettings
     public string? UserName { get; set; }
     public string? UserPassword { get; set; }
     public StoreLocation StoreLocation { get; set; }
-    public string[] Domains { get; set; } = new string[] {  };
+    public string[] ValidDomains { get; set; } = new string[] {  };
 
     public string GetCertificatePrefix()
     {

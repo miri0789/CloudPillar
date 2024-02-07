@@ -102,7 +102,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         if (sender is System.Net.Security.SslStream sslSender)
         {
             var targetHostName = sslSender.TargetHostName?.ToString();
-            return _authenticationSettings.Domains.Contains(targetHostName);
+            return _authenticationSettings.ValidDomains.Contains(targetHostName);
         }
 
         return false;

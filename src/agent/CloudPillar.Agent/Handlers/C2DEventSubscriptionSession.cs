@@ -32,58 +32,58 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     {
         _logger.Info("Subscribing to C2D messages...");
         const string MESSAGE_TYPE_PROP = "MessageType";
-        // while (!cancellationToken.IsCancellationRequested)
-        // {
-        //     Message receivedMessage;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            Message receivedMessage;
 
-        //     try
-        //     {
-        //         receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.Error($"Exception hit when receiving the message, ignoring it message: {ex.Message}");
-        //         continue;
-        //     }
-        //     var parseMessage = Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType);
-        //     try
-        //     {
-        //         if (parseMessage)
-        //         {
-        //             _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]}");
-        //             var isHandleMsg = !isProvisioning && await HandleMessage(receivedMessage, cancellationToken, messageType);
-        //             if (!isHandleMsg)
-        //             {
-        //                 await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
-        //             }
-        //         }
-        //         else
-        //         {
-        //             _logger.Error($"Unknown recived message type");
-        //         }
+            try
+            {
+                receivedMessage = await _deviceClient.ReceiveAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Exception hit when receiving the message, ignoring it message: {ex.Message}");
+                continue;
+            }
+            var parseMessage = Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType);
+            try
+            {
+                if (parseMessage)
+                {
+                    _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]}");
+                    var isHandleMsg = !isProvisioning && await HandleMessage(receivedMessage, cancellationToken, messageType);
+                    if (!isHandleMsg)
+                    {
+                        await HandleProvisioningMessage(receivedMessage, cancellationToken, messageType);
+                    }
+                }
+                else
+                {
+                    _logger.Error($"Unknown recived message type");
+                }
 
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.Error($"Exception hit when parsing the message, ignoring it message: {ex.Message}");
-        //         continue;
-        //     }
-        //     finally
-        //     {
-        //         if (messageType != C2DMessageType.Reprovisioning)
-        //         {
-        //             try
-        //             {
-        //                 await _deviceClient.CompleteAsync(receivedMessage, cancellationToken);
-        //                 _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
-        //             }
-        //             catch (Exception ex)
-        //             {
-        //                 _logger.Error($"Complete message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} failed message {ex.Message}");
-        //             }
-        //         }
-        //     }
-       // }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Exception hit when parsing the message, ignoring it message: {ex.Message}");
+                continue;
+            }
+            finally
+            {
+                if (messageType != C2DMessageType.Reprovisioning)
+                {
+                    try
+                    {
+                        await _deviceClient.CompleteAsync(receivedMessage, cancellationToken);
+                        _logger.Info($"Receive message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} completed");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Complete message of type: {receivedMessage.Properties[MESSAGE_TYPE_PROP]} failed message {ex.Message}");
+                    }
+                }
+            }
+       }
     }
 
     private async Task HandleProvisioningMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
