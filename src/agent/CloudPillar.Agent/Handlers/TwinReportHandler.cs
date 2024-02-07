@@ -254,7 +254,7 @@ public class TwinReportHandler : ITwinReportHandler
         return supportedShells;
     }
 
-    public async Task UpdateDeviceCustomPropsAsync(Dictionary<string, object> customProps, CancellationToken cancellationToken = default)
+    public async Task UpdateDeviceCustomPropsAsync(List<TwinReportedCustomProp> customProps, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -266,7 +266,7 @@ public class TwinReportHandler : ITwinReportHandler
                 var twinReportedCustom = twinReported?.Custom ?? new Dictionary<string, object>();
                 foreach (var item in customProps)
                 {
-                    var existingItem = twinReportedCustom.FirstOrDefault(x => x.Key.ToLower() == item.Key.ToLower());
+                    var existingItem = twinReportedCustom.FirstOrDefault(x => x.Key.ToLower() == item.Name.ToLower());
 
                     if (existingItem.Value != null)
                     {
@@ -274,7 +274,7 @@ public class TwinReportHandler : ITwinReportHandler
                     }
                     else
                     {
-                        twinReportedCustom.Add(item.Key, item.Value);
+                        twinReportedCustom.Add(item.Name, item.Value);
                     }
                 }
                 var deviceCustomProps = nameof(TwinReported.Custom);

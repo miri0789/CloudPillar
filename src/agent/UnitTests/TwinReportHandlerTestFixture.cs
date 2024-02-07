@@ -144,7 +144,13 @@ public class TwinReportHandlerTestFixture
         CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), new Dictionary<string, TwinReportedChangeSpec>(), existingCustomProps);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
-        var newCustomProps = new Dictionary<string, object>(){
+        var newCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property2", Value = "NewValue2" },
+            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
+        };
+
+        new Dictionary<string, object>(){
             { "Property2", "NewValue2" },
             { "Property3", "Value3" }
         };
@@ -155,7 +161,7 @@ public class TwinReportHandlerTestFixture
             props => props != null && props.Count == 3), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
-       [Test]
+    [Test]
     public async Task UpdateDeviceCustomPropsAsync_ExistingPropsUpperLowerCase_OverrideProps()
     {
         var existingCustomProps = new Dictionary<string, object>(){
@@ -166,9 +172,11 @@ public class TwinReportHandlerTestFixture
         CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), new Dictionary<string, TwinReportedChangeSpec>(), existingCustomProps);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
-        var newCustomProps = new Dictionary<string, object>(){
-            { "property2", "NewValue2" },
-            { "Property3", "Value3" }
+
+        var newCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property2", Value = "NewValue2" },
+            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
         };
 
         await _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
@@ -233,11 +241,12 @@ public class TwinReportHandlerTestFixture
 
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
-        var newCustomProps = new Dictionary<string, object>(){
-            { "Property3", "Value3" },
-            { "Property4", "Value4" }
-        };
 
+        var newCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" },
+            new TwinReportedCustomProp { Name = "Property4", Value = "Value4" }
+        };
         await _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
 
 
