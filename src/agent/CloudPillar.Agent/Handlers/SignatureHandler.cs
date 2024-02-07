@@ -71,7 +71,7 @@ public class SignatureHandler : ISignatureHandler
         string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(SharedConstants.PKI_FOLDER_PATH, FILE_EXTENSION);
         foreach (string publicKeyFile in publicKeyFiles)
         {
-            var certificateExpired = await _serverIdentityHandler.CheckExpiredDateCertificatAsync(publicKeyFile);
+            var certificateExpired =  _serverIdentityHandler.CheckCertificateNotExpired(publicKeyFile);
             if (!certificateExpired)
             {
                 continue;

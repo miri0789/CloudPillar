@@ -61,8 +61,8 @@ public class ServerIdentityHandler : IServerIdentityHandler
         string pemPublicKey = ConvertToPem(publicKey, _x509CertificateWrapper.GetAlgorithmFriendlyName(certificate)?.ToUpper());
         return pemPublicKey;
     }
-    
-    public async Task<bool> CheckExpiredDateCertificatAsync(string path)
+
+    public bool CheckCertificateNotExpired(string path)
     {
         try
         {
@@ -71,13 +71,14 @@ public class ServerIdentityHandler : IServerIdentityHandler
             var certificate = _x509CertificateWrapper.CreateFromFile(path);
             if (certificate.NotAfter < DateTime.Now)
             {
-               throw new Exception($"Certificate {path} is expired");
+                _logger.Warn($"Certificate {path} is expired");
+                return false;
             }
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error($"CheckExpiredDateCertificatAsync failed message: {ex.Message}");
+            _logger.Error($"CheckCertificateNotExpired failed message: {ex.Message}");
             return false;
         }
     }

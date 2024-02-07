@@ -5,6 +5,6 @@ public interface IServerIdentityHandler
 {
     Task UpdateKnownIdentitiesFromCertificatesAsync(CancellationToken cancellationToken);
     Task<string> GetPublicKeyFromCertificateFileAsync(string certificatePath);
-    Task<bool> CheckExpiredDateCertificatAsync(string path);
+    bool CheckCertificateNotExpired(string path);
     Task RemoveNonDefaultCertificatesAsync(string path);
 }
