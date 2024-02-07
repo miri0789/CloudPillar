@@ -88,7 +88,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         try
         {
             var isProvisioningSuccess = await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, recivedMessage, cancellationToken);
-            if (isProvisioningSuccess)
+            if (!isProvisioningSuccess)
             {
                 throw new ArgumentNullException("Provisioning failed");
             }
