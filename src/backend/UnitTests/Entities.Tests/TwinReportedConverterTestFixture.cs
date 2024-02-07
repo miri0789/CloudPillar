@@ -144,11 +144,7 @@ public class TwinReportedConverterTestFixture
     {
         var expectedResult = new TwinReported()
         {
-            Custom = new List<TwinReportedCustomProp>
-                {
-                    new TwinReportedCustomProp { Name = "Custom1", Value = "Value1" },
-                    new TwinReportedCustomProp { Name = "Custom2", Value = "Value2" }
-                }
+            Custom = new Dictionary<string, object>() { { "Custom1", "Value1" }, { "Custom2", "Value2" } }
         };
 
         var json = "{ \"Custom\": [{\"Name\": \"Custom1\", \"Value\": \"Value1\"},{\"Name\": \"Custom2\", \"Value\": \"Value2\"}]}";
