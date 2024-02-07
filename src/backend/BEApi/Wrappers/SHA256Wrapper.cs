@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using Backend.BEApi.Wrappers.Interfaces;
 
-namespace CloudPillar.Agent.Wrappers;
+namespace Backend.BEApi.Wrappers;
 public class SHA256Wrapper : ISHA256Wrapper
 {
     public SHA256 Create()
@@ -13,7 +13,7 @@ public class SHA256Wrapper : ISHA256Wrapper
     {
         return sha256.TransformBlock(inputBuffer, inputOffset, inputCount, outputBuffer, outputOffset);
     }
-    
+
     public byte[] TransformFinalBlock(SHA256 sha256, byte[] inputBuffer, int inputOffset, int inputCount)
     {
         return sha256.TransformFinalBlock(inputBuffer, inputOffset, inputCount);

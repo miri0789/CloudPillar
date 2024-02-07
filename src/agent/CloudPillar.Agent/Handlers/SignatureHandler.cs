@@ -2,7 +2,7 @@
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
-using CloudPillar.Agent.Entities;
+using Shared.Entities.Twin;
 
 namespace CloudPillar.Agent.Handlers;
 

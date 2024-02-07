@@ -101,7 +101,7 @@ public class CertificateIdentityService : ICertificateIdentityService
 
         var signatureFileBytes = await GetCalculateHash(publicKey);
 
-        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/signData?deviceId={deviceId}";
+        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
         var cerSign = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, signatureFileBytes);
         _logger.Info($"Sign certificate from keyHolder: {cerSign}");
         return cerSign;

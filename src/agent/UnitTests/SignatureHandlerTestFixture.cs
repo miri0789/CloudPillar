@@ -7,6 +7,7 @@ using System.Text;
 using System.Security.Cryptography;
 using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Wrappers.Interfaces;
+using Shared.Entities.Twin;
 
 
 namespace CloudPillar.Agent.Tests;

@@ -11,6 +11,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _maxCountDevices = "MaxCountDevices";
     private const string _keyHolderUrl = "KeyHolderUrl";
     private const string _blobStreamerUrl = "BlobStreamerUrl";
+
     public string iothubConnectionString
     {
         get { return GetVariable(_iothubConnectionString); }
@@ -40,7 +41,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return int.Parse(GetVariable(_maxCountDevices)); }
     }
-    
+
     public string keyHolderUrl
     {
         get { return GetVariable(_keyHolderUrl); }
@@ -50,7 +51,6 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     {
         get { return GetVariable(_blobStreamerUrl); }
     }
-    
     private string GetVariable(string name)
     {
         return Environment.GetEnvironmentVariable(name);

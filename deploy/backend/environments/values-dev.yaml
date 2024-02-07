@@ -99,6 +99,8 @@ controllers:
       value: "0.6"
     - name: "maxCountOfDevices"
       value: "100"
+    - name: KeyHolderUrl
+      value: "http://keyholder-service:8082/"
     
 replicaCount: 1
 
