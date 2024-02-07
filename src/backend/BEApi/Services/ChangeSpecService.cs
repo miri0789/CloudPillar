@@ -106,7 +106,7 @@ public class ChangeSpecService : IChangeSpecService
         return signatureFileBytes;
     }
 
-    private async Task<string> SendToSignData(byte[] dataToSign, string deviceId)
+    public async Task<string> SendToSignData(byte[] dataToSign, string deviceId)
     {
         string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
         var bytesSignature = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, dataToSign);
