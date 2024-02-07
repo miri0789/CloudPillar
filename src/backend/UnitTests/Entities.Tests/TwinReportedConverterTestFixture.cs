@@ -147,7 +147,7 @@ public class TwinReportedConverterTestFixture
             Custom = new Dictionary<string, object>() { { "Custom1", "Value1" }, { "Custom2", "Value2" } }
         };
 
-        var json = "{ \"Custom\": [{\"Name\": \"Custom1\", \"Value\": \"Value1\"},{\"Name\": \"Custom2\", \"Value\": \"Value2\"}]}";
+        var json = "{\"Custom\":{ \"Custom1\": \"Value1\", \"Custom2\": \"Value2\"}}";
         var result = ExecReadJson(json);
 
         Assert.AreEqual(MockHelperEntities.EqualObjects(expectedResult.Custom, result.Custom), true);
