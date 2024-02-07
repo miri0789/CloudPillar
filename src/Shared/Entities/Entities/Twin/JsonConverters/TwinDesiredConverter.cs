@@ -46,6 +46,13 @@ public class TwinDesiredConverter : JsonConverter
             {
                 changeSpec.Add(property.Name, CreateTwinChangeSpec(jsonObject, serializer, property.Name));
             }
+
+            if (jsonObject.Type == JTokenType.Object &&
+            (jsonObject["patch"] ?? jsonObject["Patch"]) != null)
+            {
+                changeSpec.Add("patch", CreateTwinChangeSpec(jsonObject, serializer, "patch"));
+                break;
+            }
         }
 
         return changeSpec;
@@ -95,7 +102,8 @@ public class TwinDesiredConverter : JsonConverter
         var upperPropName = FirstLetterToUpperCase($"{changeSpecKey}");
         var changeSpec = new TwinChangeSpec()
         {
-            Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>(),
+            Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>() ??
+            (jsonObject.SelectToken("id") ?? jsonObject.SelectToken("Id"))?.Value<string>(),
             Patch = GetDynamicPatch(jsonObject, lowerPropName, upperPropName, serializer)
         };
         return changeSpec;
@@ -105,7 +113,8 @@ public class TwinDesiredConverter : JsonConverter
     {
         var dynamicPatch = new Dictionary<string, TwinAction[]>();
 
-        var patchToken = jsonObject.SelectToken($"{lowerPropName}.patch") ?? jsonObject.SelectToken($"{upperPropName}.Patch");
+        var patchToken = jsonObject.SelectToken($"{lowerPropName}.patch") ?? jsonObject.SelectToken($"{upperPropName}.Patch") ??
+        jsonObject.SelectToken("patch") ?? jsonObject.SelectToken("Patch");
 
         if (patchToken is JObject patchObject)
         {

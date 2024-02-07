@@ -11,6 +11,7 @@ using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Sevices.Interfaces;
+using Shared.Entities.Twin;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
