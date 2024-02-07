@@ -25,7 +25,7 @@ public class MessageProcessor : IMessageProcessor
     {
         using (var client = new HttpClient())
         {
-            client.BaseAddress = new Uri(_environmentsWrapper.svcBackendUrl);
+            client.BaseAddress = new Uri(_environmentsWrapper.SvcBackendUrl);
             if (headers != null)
             {
                 foreach (var property in headers)
@@ -46,7 +46,7 @@ public class MessageProcessor : IMessageProcessor
         try
         {
             using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
-                new CancellationTokenSource(new TimeSpan(0, 0, _environmentsWrapper.requestTimeoutSeconds)).Token))
+                new CancellationTokenSource(new TimeSpan(0, 0, _environmentsWrapper.RequestTimeoutSeconds)).Token))
             {
                 var relativeUri = properties.TryGetValue(Constants.RELATIVE_URI_PROP, out var uri) ? uri : "";
                 _logger.Info($"ProcessMessageAsync Sending message: {message} to url: {relativeUri}");

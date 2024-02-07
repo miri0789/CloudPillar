@@ -17,43 +17,49 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _completionTopic = "COMPLETION_TOPIC";
     private const string _completionUrlBase = "COMPLETION_URL_BASE";
 
-    public string serviceBusConnectionString
+    private const int DEFAULLT_PARALLEL_COUNT = 1;
+    private const int DEFAULLT_MAX_LOCK_DURATION_SECONDS = 30;
+    private const int HIGHER_PRIORITY_GRACE_MS = 2000;
+    private const int NO_MESSAGES_DELAY_MS = 5000;
+    private const int REQUEST_TIMEOUT_SECONDS = 60;
+
+    public string ServiceBusConnectionString
     {
         get { return GetVariable(_serviceBusConnectionString); }
     }
-    public string[] serviceBusUrls
+    public string[] ServiceBusUrls
     {
         get { return GetVariable(_serviceBusUrls)?.Split(';') ?? Array.Empty<string>(); }
     }
-    public int parallelCount
+    public int ParallelCount
     {
-        get { return int.TryParse(GetVariable(_parallelCount), out int value) ? value : 1; }
+        get { return int.TryParse(GetVariable(_parallelCount), out int value) ? value : DEFAULLT_PARALLEL_COUNT; }
     }
-    public int maxLockDurationSeconds
+    public int MaxLockDurationSeconds
     {
-        get { return int.TryParse(GetVariable(_maxLockDurationSeconds), out int value) ? value : 30; }
+        get { return int.TryParse(GetVariable(_maxLockDurationSeconds), out int value) ? value : DEFAULLT_MAX_LOCK_DURATION_SECONDS; }
     }
-    public string svcBackendUrl
+    public string SvcBackendUrl
     {
         get { return GetVariable(_svcBackendUrl); }
     }
-    public int higherPriorityGraceMS
+    public int HigherPriorityGraceMS
     {
-        get { return int.TryParse(GetVariable(_higherPriorityGraceMS), out int value) ? value : 2000; }
+        get { return int.TryParse(GetVariable(_higherPriorityGraceMS), out int value) ? value : HIGHER_PRIORITY_GRACE_MS; }
     }
-    public int noMessagesDelayMS
+    public int NoMessagesDelayMS
     {
-        get { return int.TryParse(GetVariable(_noMessagesDelayMS), out int value) ? value : 5000; }
+        get { return int.TryParse(GetVariable(_noMessagesDelayMS), out int value) ? value : NO_MESSAGES_DELAY_MS; }
     }
-    public int requestTimeoutSeconds
+    public int RequestTimeoutSeconds
     {
-        get { return int.TryParse(GetVariable(_requestTimeoutSeconds), out int value) ? value : 60; }
+        get { return int.TryParse(GetVariable(_requestTimeoutSeconds), out int value) ? value : REQUEST_TIMEOUT_SECONDS; }
     }
-    public string completionTopic
+    public string CompletionTopic
     {
         get { return GetVariable(_completionTopic); }
     }
-    public string completionUrlBase
+    public string CompletionUrlBase
     {
         get { return GetVariable(_completionUrlBase); }
     }
