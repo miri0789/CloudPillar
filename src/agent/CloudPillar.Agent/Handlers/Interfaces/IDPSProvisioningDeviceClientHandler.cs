@@ -5,7 +5,7 @@ using Microsoft.Azure.Devices.Client;
 namespace CloudPillar.Agent.Handlers;
 public interface IDPSProvisioningDeviceClientHandler
 {
-    Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, Message message, CancellationToken cancellationToken);
+    Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, Message message, CancellationToken cancellationToken);
 
     X509Certificate2? GetCertificate(string deviceId = "");
 

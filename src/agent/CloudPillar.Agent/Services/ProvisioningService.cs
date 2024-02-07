@@ -38,7 +38,11 @@ public class ProvisioningService : IProvisioningService
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = _requestWrapper.GetHeaderValue(Constants.X_DEVICE_ID);
         var secretKey = _requestWrapper.GetHeaderValue(Constants.X_SECRET_KEY);
-        if (await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken))
+        if(!await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken))
+        {
+            throw new Exception("Failed to provision symmetric key");
+        }
+        if (await _symmetricKeyProvisioningHandler.IsNewDeviceAsync(cancellationToken))
         {
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken, true);
             await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
