@@ -65,9 +65,9 @@ controllers:
     - name: KubernetesServiceHost
       value: ""
     - name: SecretVolumeMountPath
-      value: "/certs/devbe"
+      value: "/certs/tstbe"
     - name: DefaultSecretVolumeMountPath
-      value: "/certs/devbe/default"
+      value: "/certs/tstbe/default"
     - name: IothubConnectionString
       value: "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE="
     - name: DPSConnectionString
@@ -78,10 +78,10 @@ controllers:
       value: "global.azure-devices-provisioning.net"
     volumeMounts:
     - name: devbe-cert
-      mountPath: "/certs/devbe"
+      mountPath: "/certs/tstbe"
       readOnly: true
     - name: devbe-default-cert
-      mountPath: "/certs/devbe/default"
+      mountPath: "/certs/tstbe/default"
       readOnly: true
   - title: "beapi"
     replicaCount: 1
