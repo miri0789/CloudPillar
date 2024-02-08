@@ -1,4 +1,4 @@
-{{- range .Values.deployments }}
+{{- range .Values.controllers }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
@@ -14,6 +14,6 @@ spec:
     - name: {{ .service }}-headers
     services:
     - name: cloudpillar{{ .service }}-service
-      port: 8080
+      port: {{ .port }}
       scheme: http
 {{- end }}   

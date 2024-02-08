@@ -4,10 +4,10 @@ metadata:
   name: cloudpillar-services-ingress-backend
 spec:
   backends:
-    {{- range .Values.deployments }}
+    {{- range .Values.controllers }}
     - name: cloudpillar{{ .service }}-service
       port:
-        number: 8080
+        number: {{ .port }}
         protocol: http
       tls:
         skipClientCertValidation: false

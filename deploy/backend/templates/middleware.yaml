@@ -1,4 +1,4 @@
-{{- range .Values.deployments }}
+{{- range .Values.controllers }}
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
