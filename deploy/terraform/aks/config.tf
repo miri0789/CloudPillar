@@ -1,8 +1,3 @@
-data "azurerm_app_service_certificate_order" "cert" {
-   name                = "${var.env}be-cloudpillar-net"
-   resource_group_name = "cp-iot-${var.env}-rg"
-}
-
 resource "null_resource" "copy-templates" {
   provisioner "local-exec" {
     command = <<-EOT
@@ -24,11 +19,12 @@ resource "null_resource" "add-namespaces" {
 }
 
 resource "null_resource" "akv-secret" {
+  
     provisioner "local-exec" {
     command = <<-EOT
         
         (Get-Content AzureKeyVaultSecret.yaml) -replace "{env}", "${var.env}" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
-        (Get-Content AzureKeyVaultSecret.yaml) -replace "{cert}", "${data.azurerm_app_service_certificate_order.cert.certificates[0].key_vault_secret_name}" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
+        (Get-Content AzureKeyVaultSecret.yaml) -replace "{cert}", "${azurerm_app_service_certificate_order.app-cert.certificates[0].key_vault_secret_name}" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
         az aks get-credentials --name cp-${var.env}-aks --resource-group cp-ms-${var.env}-rg
         kubectl apply -f AzureKeyVaultSecret.yaml
 
@@ -41,14 +37,14 @@ resource "null_resource" "akv-secret" {
 
         Remove-Item -Path certificate.pfx -Force
 
-        (Get-Content AzureKeyVaultSecret.yaml) -replace "${data.azurerm_app_service_certificate_order.cert.certificates[0].key_vault_secret_name}", "${var.env}be-default-cloudpillar-net" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
+        (Get-Content AzureKeyVaultSecret.yaml) -replace "${azurerm_app_service_certificate_order.app-cert.certificates[0].key_vault_secret_name}", "${var.env}be-default-cloudpillar-net" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
         (Get-Content AzureKeyVaultSecret.yaml) -replace "${var.env}be-cert", "${var.env}be-default-cert" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
         kubectl apply -f AzureKeyVaultSecret.yaml
     EOT
     interpreter = ["PowerShell", "-Command"]
     working_dir = "${path.module}"
   }
-  depends_on = [null_resource.copy-templates, null_resource.add-namespaces ]
+  depends_on = [azurerm_app_service_certificate_order.app-cert, null_resource.copy-templates, null_resource.add-namespaces, null_resource.helm-repos-updates ]
 }
 
 resource "null_resource" "helm-repos-updates" {
@@ -62,7 +58,7 @@ resource "null_resource" "helm-repos-updates" {
     interpreter = ["PowerShell", "-Command"]
     working_dir = "${path.module}"
   }
-  depends_on = [null_resource.add-namespaces, null_resource.akv-secret, null_resource.copy-templates ]
+  depends_on = [null_resource.add-namespaces, null_resource.copy-templates ]
 }
 
 resource "null_resource" "remove-temaple-files" {
