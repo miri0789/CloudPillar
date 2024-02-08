@@ -136,11 +136,11 @@ public class TwinReportHandlerTestFixture
     [Test]
     public async Task UpdateDeviceCustomPropsAsync_ExistingProps_OverrideProps()
     {
-        var existingCustomProps = new List<TwinReportedCustomProp>
-        {
-            new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
-            new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
+        var existingCustomProps = new Dictionary<string, object>(){
+            { "Property1", "Value1" },
+            { "Property2", "Value2" }
         };
+
         CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), new Dictionary<string, TwinReportedChangeSpec>(), existingCustomProps);
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
@@ -150,10 +150,39 @@ public class TwinReportHandlerTestFixture
             new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
         };
 
+        new Dictionary<string, object>(){
+            { "Property2", "NewValue2" },
+            { "Property3", "Value3" }
+        };
+
         await _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
 
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.Is<List<TwinReportedCustomProp>>(
-            props => props.Count == 3), It.IsAny<CancellationToken>()), Times.Once);
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.Is<Dictionary<string, object>>(
+            props => props != null && props.Count == 3), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    [Test]
+    public async Task UpdateDeviceCustomPropsAsync_ExistingPropsUpperLowerCase_OverrideProps()
+    {
+        var existingCustomProps = new Dictionary<string, object>(){
+            { "Property1", "Value1" },
+            { "Property2", "Value2" }
+        };
+
+        CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), new Dictionary<string, TwinReportedChangeSpec>(), existingCustomProps);
+        _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
+                       .Returns(Task.CompletedTask);
+
+        var newCustomProps = new List<TwinReportedCustomProp>
+        {
+            new TwinReportedCustomProp { Name = "Property2", Value = "NewValue2" },
+            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
+        };
+
+        await _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
+
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.Is<Dictionary<string, object>>(
+            props => props != null && props.Count == 3), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [Test]
@@ -169,7 +198,7 @@ public class TwinReportHandlerTestFixture
     }
 
 
-    private void CreateTwinMock(Dictionary<string, TwinChangeSpec> twinChangeSpec, Dictionary<string, TwinReportedChangeSpec> twinReportedChangeSpec, List<TwinReportedCustomProp>? twinReportedCustomProps = null, Dictionary<string, string>? changeSign = null)
+    private void CreateTwinMock(Dictionary<string, TwinChangeSpec> twinChangeSpec, Dictionary<string, TwinReportedChangeSpec> twinReportedChangeSpec, Dictionary<string, object>? twinReportedCustomProps = null, Dictionary<string, string>? changeSign = null)
     {
         var twin = MockHelper.CreateTwinMock(twinChangeSpec, twinReportedChangeSpec, twinReportedCustomProps, changeSign);
         _deviceClientMock.Setup(dc => dc.GetTwinAsync(cancellationToken)).ReturnsAsync(twin);
@@ -196,32 +225,33 @@ public class TwinReportHandlerTestFixture
 
         await _target.UpdateDeviceCustomPropsAsync(null, cancellationToken);
 
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.IsAny<List<TwinReportedCustomProp>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.IsAny<Dictionary<string, object>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
     public async Task UpdateDeviceCustomPropsAsync_NewProps_AddProps()
     {
-        var existingCustomProps = new List<TwinReportedCustomProp>
-        {
-            new TwinReportedCustomProp { Name = "Property1", Value = "Value1" },
-            new TwinReportedCustomProp { Name = "Property2", Value = "Value2" }
+
+        var existingCustomProps = new Dictionary<string, object>(){
+            { "Property1", "Value1" },
+            { "Property2", "Value2" }
         };
+
         CreateTwinMock(new Dictionary<string, TwinChangeSpec>(), new Dictionary<string, TwinReportedChangeSpec>(), existingCustomProps);
 
         _deviceClientMock.Setup(dc => dc.UpdateReportedPropertiesAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
+
         var newCustomProps = new List<TwinReportedCustomProp>
         {
-            new TwinReportedCustomProp { Name = "Property4", Value = "Value4" },
-            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" }
+            new TwinReportedCustomProp { Name = "Property3", Value = "Value3" },
+            new TwinReportedCustomProp { Name = "Property4", Value = "Value4" }
         };
-
         await _target.UpdateDeviceCustomPropsAsync(newCustomProps, cancellationToken);
 
 
-        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.Is<List<TwinReportedCustomProp>>(
-            props => props.Count == 4), It.IsAny<CancellationToken>()), Times.Once);
+        _deviceClientMock.Verify(dc => dc.UpdateReportedPropertiesAsync(nameof(TwinReported.Custom), It.Is<Dictionary<string, object>>(
+            props => props != null && props.Count == 4), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

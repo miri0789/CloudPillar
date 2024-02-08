@@ -144,14 +144,10 @@ public class TwinReportedConverterTestFixture
     {
         var expectedResult = new TwinReported()
         {
-            Custom = new List<TwinReportedCustomProp>
-                {
-                    new TwinReportedCustomProp { Name = "Custom1", Value = "Value1" },
-                    new TwinReportedCustomProp { Name = "Custom2", Value = "Value2" }
-                }
+            Custom = new Dictionary<string, object>() { { "Custom1", "Value1" }, { "Custom2", "Value2" } }
         };
 
-        var json = "{ \"Custom\": [{\"Name\": \"Custom1\", \"Value\": \"Value1\"},{\"Name\": \"Custom2\", \"Value\": \"Value2\"}]}";
+        var json = "{\"Custom\":{ \"Custom1\": \"Value1\", \"Custom2\": \"Value2\"}}";
         var result = ExecReadJson(json);
 
         Assert.AreEqual(MockHelperEntities.EqualObjects(expectedResult.Custom, result.Custom), true);
@@ -174,14 +170,14 @@ public class TwinReportedConverterTestFixture
     [Test]
     public void ReadJson_ConvertCertificateValidity_ConvertCorretly()
     {
-        var DateTimeUtcNow = DateTime.UtcNow;
-        var ExpirationDate = DateTime.UtcNow.AddDays(30);
+        var DateTimeUtcNow = DateTime.UtcNow.ToString("dd/MM/yyyy");
+        var ExpirationDate = DateTime.UtcNow.AddDays(30).ToString("dd/MM/yyyy");
         var expectedResult = new TwinReported()
         {
             CertificateValidity = new CertificateValidity { CreationDate = DateTimeUtcNow, ExpirationDate = ExpirationDate },
         };
 
-        var json = "{ \"CertificateValidity\": {\"CreationDate\": \"" + DateTimeUtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ") + "\", \"ExpirationDate\": \"" + ExpirationDate.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ") + "\"}}";
+        var json = "{ \"CertificateValidity\": {\"CreationDate\": \"" + DateTimeUtcNow + "\", \"ExpirationDate\": \"" + ExpirationDate + "\"}}";
         var result = ExecReadJson(json);
 
         Assert.AreEqual(MockHelperEntities.EqualObjects(expectedResult.CertificateValidity, result.CertificateValidity), true);

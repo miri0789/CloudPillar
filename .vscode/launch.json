@@ -55,8 +55,6 @@
             "console": "internalConsole",
             "env": {
                 "KubernetesServiceHost": "",
-                "SecretName": "IoTTwinSecret",
-                "SecretKey": "signKey",
                 "IothubConnectionString": "",
                 "DPSConnectionString": "",
                 "DPSIdScope": "",

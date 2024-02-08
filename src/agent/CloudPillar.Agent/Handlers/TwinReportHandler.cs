@@ -195,8 +195,8 @@ public class TwinReportHandler : ITwinReportHandler
         {
             var certificateValidity = new CertificateValidity()
             {
-                CreationDate = DateTime.UtcNow,
-                ExpirationDate = DateTime.UtcNow.AddDays(CertificateExpiredDays)
+                CreationDate = DateTime.UtcNow.ToString("dd-MM-yyyy"),
+                ExpirationDate = DateTime.UtcNow.AddDays(CertificateExpiredDays).ToString("dd-MM-yyyy")
             };
             var certificateDates = nameof(TwinReported.CertificateValidity);
             await _deviceClient.UpdateReportedPropertiesAsync(certificateDates, certificateValidity, cancellationToken);
@@ -263,21 +263,23 @@ public class TwinReportHandler : ITwinReportHandler
                 var twin = await _deviceClient.GetTwinAsync(cancellationToken);
                 string reportedJson = twin.Properties.Reported.ToJson();
                 var twinReported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
-                var twinReportedCustom = twinReported?.Custom ?? new List<TwinReportedCustomProp>();
+                var twinReportedCustom = twinReported?.Custom ?? new Dictionary<string, object>();
                 foreach (var item in customProps)
                 {
-                    var existingItem = twinReportedCustom.FirstOrDefault(x => x.Name == item.Name);
+                    var existingItem = twinReportedCustom.FirstOrDefault(x => x.Key.ToLower() == item.Name.ToLower());
 
-                    if (existingItem != null)
+                    if (existingItem.Value != null)
                     {
-                        existingItem.Value = item.Value;
+                        twinReportedCustom[existingItem.Key] = item.Value;
                     }
                     else
                     {
-                        twinReportedCustom.Add(item);
+                        twinReportedCustom.Add(item.Name, item.Value);
                     }
                 }
                 var deviceCustomProps = nameof(TwinReported.Custom);
+                await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, null, cancellationToken);
+
                 await _deviceClient.UpdateReportedPropertiesAsync(deviceCustomProps, twinReportedCustom, cancellationToken);
             }
             _logger.Info($"UpdateDeviceSecretKeyAsync success");
