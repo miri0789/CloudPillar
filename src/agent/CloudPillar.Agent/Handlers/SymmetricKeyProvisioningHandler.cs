@@ -72,24 +72,25 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
                     }
 
                     _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
-                    await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
+                    return await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, drivedDevice, cancellationToken);
                 }
             }
         }
-        return await IsNewDeviceAsync(cancellationToken);
+        return false;
     }
 
-    private async Task InitializeDeviceAsync(string deviceId, string iotHubHostName, string deviceKey, CancellationToken cancellationToken)
+    private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, string deviceKey, CancellationToken cancellationToken)
     {
         try
         {
             var auth = _symmetricKeyWrapper.GetDeviceAuthentication(deviceId, deviceKey);
-            await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
-            await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
+            var isDeviceInitializedAsync = await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+            return isDeviceInitializedAsync;
         }
         catch (Exception ex)
         {
             _logger.Error($"Exception during IoT Hub connection message: {ex.Message}");
+            return false;
         }
     }
 
@@ -104,7 +105,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registrationId)));
     }
 
-    private async Task<bool> IsNewDeviceAsync(CancellationToken cancellationToken)
+    public async Task<bool> IsNewDeviceAsync(CancellationToken cancellationToken)
     {
         try
         {

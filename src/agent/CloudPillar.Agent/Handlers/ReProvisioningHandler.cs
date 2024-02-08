@@ -87,7 +87,11 @@ public class ReprovisioningHandler : IReprovisioningHandler
     {
         try
         {
-            await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, recivedMessage, cancellationToken);
+            var isProvisioningSuccess = await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, recivedMessage, cancellationToken);
+            if (!isProvisioningSuccess)
+            {
+                throw new ArgumentNullException("Provisioning failed");
+            }
             using (var store = _x509CertificateWrapper.Open(OpenFlags.ReadWrite, storeLocation: _authenticationSettings.StoreLocation))
             {
                 CleanCertificates(store, certificate, deviceId, iotHubHostName);
