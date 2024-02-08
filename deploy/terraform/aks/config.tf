@@ -1,7 +1,4 @@
-data "azurerm_app_service_certificate_order" "cert" {
-   name                = "${var.env}be-cloudpillar-net"
-   resource_group_name = "cp-iot-${var.env}-rg"
-}
+
 data "azurerm_subscription" "current" {}
 
 locals{ 
@@ -36,11 +33,12 @@ resource "null_resource" "add-namespaces" {
 }
 
 resource "null_resource" "akv-secret" {
+  
     provisioner "local-exec" {
     command = <<-EOT
         az aks command invoke -g cp-ms-${var.env}-rg -n cp-${var.env}-aks -f traefik.toml -c 'kubectl create configmap traefik-config --from-file=traefik.toml -n traefik'
         (Get-Content AzureKeyVaultSecret.yaml) -replace "{env}", "${var.env}" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
-        (Get-Content AzureKeyVaultSecret.yaml) -replace "{cert}", "${data.azurerm_app_service_certificate_order.cert.certificates[0].key_vault_secret_name}" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
+        (Get-Content AzureKeyVaultSecret.yaml) -replace "{cert}", "${azurerm_app_service_certificate_order.app-cert.certificates[0].key_vault_secret_name}" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
         az aks get-credentials --name cp-${var.env}-aks --resource-group cp-ms-${var.env}-rg
         kubectl apply -f AzureKeyVaultSecret.yaml
 
@@ -50,7 +48,8 @@ resource "null_resource" "akv-secret" {
         $base64String = [System.Convert]::ToBase64String($fileContentBytes)
         az keyvault secret set --vault-name cp-${var.env}be-kv --name ${var.env}be-default-cloudpillar-net --value $base64String --description "application/x-pkcs12"
         Remove-Item -Path certificate.pfx -Force
-        (Get-Content AzureKeyVaultSecret.yaml) -replace "${data.azurerm_app_service_certificate_order.cert.certificates[0].key_vault_secret_name}", "${var.env}be-default-cloudpillar-net" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
+
+        (Get-Content AzureKeyVaultSecret.yaml) -replace "${azurerm_app_service_certificate_order.app-cert.certificates[0].key_vault_secret_name}", "${var.env}be-default-cloudpillar-net" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
         (Get-Content AzureKeyVaultSecret.yaml) -replace "${var.env}be-cert", "${var.env}be-default-cert" | Set-Content -Path 'AzureKeyVaultSecret.yaml' -encoding utf8
         kubectl apply -f AzureKeyVaultSecret.yaml
 
@@ -62,7 +61,7 @@ resource "null_resource" "akv-secret" {
     interpreter = ["PowerShell", "-Command"]
     working_dir = "${path.module}"
   }
-  depends_on = [null_resource.copy-templates, null_resource.add-namespaces ]
+  depends_on = [azurerm_app_service_certificate_order.app-cert, null_resource.copy-templates, null_resource.add-namespaces, null_resource.helm-repos-updates ]
 }
 
 # resource "null_resource" "dns-cred" {
@@ -111,6 +110,19 @@ resource "null_resource" "mesh-ips" {
     working_dir = "${path.module}"
   }
   depends_on = [null_resource.copy-templates ]
+}
+
+resource "null_resource" "mesh-ips" {
+    provisioner "local-exec" {
+    command = <<-EOT
+        az aks command invoke -g cp-ms-${var.env}-rg -n cp-${var.env}-aks -f . -c 'helm repo add spv-charts https://charts.spvapi.no && helm upgrade --install akv2k8s spv-charts/akv2k8s --namespace akv2k8s --values values-akv2k8s.yaml --debug'
+        az aks command invoke -g cp-ms-${var.env}-rg -n cp-${var.env}-aks -f . -c 'helm repo add bitnami https://charts.bitnami.com/bitnami && helm upgrade --install externaldns bitnami/external-dns --values values-cpdns.yaml --set provider=azure --set azure.secretName=dns-update-cred --set azure.secretNamespace=cp-dns --set domainFilters[0]=cloudpillar.net --namespace cp-dns'
+        az aks command invoke -g cp-ms-${var.env}-rg -n cp-${var.env}-aks -f . -c 'helm repo add traefik https://traefik.github.io/charts && helm upgrade --install traefik traefik/traefik -n traefik --values values-traefik.yaml --debug'
+    EOT
+    interpreter = ["PowerShell", "-Command"]
+    working_dir = "${path.module}"
+  }
+  depends_on = [null_resource.add-namespaces, null_resource.copy-templates ]
 }
 
 resource "null_resource" "remove-temaple-files" {

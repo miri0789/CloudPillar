@@ -7,4 +7,6 @@ public interface IEnvironmentsWrapper
     string globalDeviceEndpoint { get; }
     double expirationCertificatePercent { get; }
     int maxCountDevices { get; }
+    string keyHolderUrl { get; }
+    string blobStreamerUrl { get; }
 }

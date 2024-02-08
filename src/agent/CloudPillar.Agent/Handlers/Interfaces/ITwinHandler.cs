@@ -7,6 +7,6 @@ public interface ITwinHandler
     Task<string> GetTwinJsonAsync(CancellationToken cancellationToken = default);
     Task SaveLastTwinAsync(CancellationToken cancellationToken = default);
     string GetLatestTwin();
-    void CancelCancellationToken();
+    void CancelCancellationToken(string changeSpecKey);
 
 }

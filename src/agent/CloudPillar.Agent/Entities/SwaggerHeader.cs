@@ -19,7 +19,7 @@ public class SwaggerHeader : IOperationFilter
             Name = Constants.X_SECRET_KEY,
             In = ParameterLocation.Header,
             Required = false,
-            Description = "OneMD value"
+            Description = "Device Secret value"
         });
 
     }

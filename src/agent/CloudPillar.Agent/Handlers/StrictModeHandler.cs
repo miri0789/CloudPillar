@@ -45,7 +45,7 @@ public class StrictModeHandler : IStrictModeHandler
         }
 
         var fileRestrictions = GetRestrictionsByActionType(actionType);
-        FileRestrictionDetails? zoneRestrictions = GetRestrinctionsByZone(fileName, fileRestrictions);
+        FileRestrictionDetails? zoneRestrictions = GetRestrictionsByZone(fileName, fileRestrictions);
         if (zoneRestrictions == null || !zoneRestrictions.MaxSize.HasValue)
         {
             return;
@@ -84,9 +84,9 @@ public class StrictModeHandler : IStrictModeHandler
     private FileRestrictionDetails? HandleRestictionWithGlobal(string verbatimFileName, TwinActionType actionType)
     {
         var restrictions = GetRestrictionsByActionType(actionType);
-        var zoneRestrictions = GetRestrinctionsByZone(verbatimFileName, restrictions);
+        var zoneRestrictions = GetRestrictionsByZone(verbatimFileName, restrictions);
         var globalRestrictions = ConvertGlobalPatternsToRestrictions(verbatimFileName);
-        var globalZoneRestrictions = GetRestrinctionsByZone(verbatimFileName, globalRestrictions);
+        var globalZoneRestrictions = GetRestrictionsByZone(verbatimFileName, globalRestrictions);
 
         if (zoneRestrictions is null)
         {
@@ -110,10 +110,15 @@ public class StrictModeHandler : IStrictModeHandler
     private List<FileRestrictionDetails>? GetRestrictionsByActionType(TwinActionType actionType)
     {
         _logger.Info($"Get restrictions for {actionType} action");
-        var strictActionType = actionType == TwinActionType.SingularDownload ? StrictModeAction.Download : StrictModeAction.Upload;
+        var strictActionType = actionType switch
+        {
+            TwinActionType.SingularDownload => StrictModeAction.Download.ToString().ToLower(),
+            TwinActionType.PeriodicUpload or TwinActionType.SingularUpload => StrictModeAction.Upload.ToString().ToLower(),
+            _ => string.Empty
+        };
 
         return _strictModeSettings.FilesRestrictions?
-        .Where(x => x.Type?.ToLower() == strictActionType.ToString().ToLower())
+        .Where(x => x.Type?.ToLower() == strictActionType)
         .Select(x => new FileRestrictionDetails
         {
             Root = replaceSlashString(x.Root),
@@ -126,7 +131,7 @@ public class StrictModeHandler : IStrictModeHandler
         .ToList();
     }
 
-    private FileRestrictionDetails? GetRestrinctionsByZone(string fileName, List<FileRestrictionDetails>? fileRestrictions)
+    private FileRestrictionDetails? GetRestrictionsByZone(string fileName, List<FileRestrictionDetails>? fileRestrictions)
     {
         var bestMatch = fileRestrictions?
                                     .Where(x => fileName.ToLower().Contains((x.Root ?? "").ToLower()))
@@ -191,11 +196,11 @@ public class StrictModeHandler : IStrictModeHandler
         var pattern = string.Empty;
         patterns.ForEach(p =>
         {
-            if (p.Contains(FileConstants.DOUEBLE_ASTERISK))
+            if (p.Contains(FileConstants.DOUBLE_ASTERISK))
             {
-                var parts = p.Split(FileConstants.DOUEBLE_ASTERISK);
+                var parts = p.Split(FileConstants.DOUBLE_ASTERISK);
                 rootPath = parts[0];
-                pattern = $"{FileConstants.DOUEBLE_ASTERISK}{parts[1]}";
+                pattern = $"{FileConstants.DOUBLE_ASTERISK}{parts[1]}";
                 if (string.IsNullOrWhiteSpace(rootPath))
                 {
                     rootPath = _fileStreamer.GetPathRoot(filePath);

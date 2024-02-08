@@ -1,4 +1,4 @@
-namespace CloudPillar.Agent.Entities;
+namespace Shared.Entities.Twin;
 
 public class DownloadSettings
 {

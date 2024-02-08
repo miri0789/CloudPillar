@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Backend.Keyholder.Interfaces;
-using System.Runtime.ConstrainedExecution;
+using System.Text;
 
 namespace Backend.Keyholder;
-
 
 [ApiController]
 [Route("[controller]")]
@@ -15,18 +14,27 @@ public class SigningController : ControllerBase
         _signingService = signingService;
     }
 
-    [HttpGet("createTwinKeySignature")]
-    public async Task<IActionResult> CreateTwinKeySignature(string deviceId)
-    {
-        await _signingService.CreateTwinKeySignature(deviceId);
-        return Ok();
-    }
-
     [HttpPost("createFileSign")]
-    public async Task<IActionResult> GetMeatadataFile(string deviceId, string propName, int actionIndex, byte[] data, TwinPatchChangeSpec changeSpecKey)
+    public async Task<IActionResult> GetMeatadataFile(string deviceId, string propName, int actionIndex, byte[] data, string changeSpecKey)
     {
         await _signingService.CreateFileKeySignature(deviceId, propName, actionIndex, data, changeSpecKey);
         return Ok();
+    }
+
+    [HttpPost("SignData")]
+    public async Task<IActionResult> SignData(string deviceId, [FromBody] byte[] data)
+    {
+        var sign = await _signingService.SignData(data, deviceId);
+        byte[] signBytes = Encoding.UTF8.GetBytes(sign);
+        return Ok(signBytes);
+    }
+
+
+    [HttpGet("GetSigningPublicKeyAsync")]
+    public async Task<IActionResult> GetSigningPublicKeyAsync()
+    {
+        var publicKey = await _signingService.GetSigningPublicKeyAsync();
+        return Ok(publicKey);
     }
 }
 

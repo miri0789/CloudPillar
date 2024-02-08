@@ -55,9 +55,6 @@
             "console": "internalConsole",
             "env": {
                 "KubernetesServiceHost": "",
-                "SigningPem": "=",
-                "SecretName": "IoTTwinSecret",
-                "SecretKey": "signKey",
                 "IothubConnectionString": "",
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
@@ -74,11 +71,13 @@
             "cwd": "${workspaceFolder}/src/backend/BEApi",
             "console": "internalConsole",
             "env": {
+                "IothubConnectionString": "",
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "ExpirationCertificatePercent": "0.6",
-                "maxCountDevices": "100"
+                "maxCountDevices": "100",
+                "KeyHolderUrl": "http://localhost:5164/",
             }
         },
         {
