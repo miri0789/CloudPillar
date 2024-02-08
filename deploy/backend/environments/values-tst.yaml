@@ -54,7 +54,7 @@ controllers:
     - name: MessageTimeoutMinutes
       value: "60"
     - name: RangeBytes
-      value: "123456"
+      value: "292000"
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
@@ -64,10 +64,10 @@ controllers:
     env:
     - name: KubernetesServiceHost
       value: ""
-    - name: SecretName
-      value: "IoTTwinSecret"
-    - name: SecretKey
-      value: "signKey"
+    - name: SecretVolumeMountPath
+      value: "/certs/tstbe"
+    - name: DefaultSecretVolumeMountPath
+      value: "/certs/tstbe/default"
     - name: IothubConnectionString
       value: "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE="
     - name: DPSConnectionString
@@ -76,8 +76,15 @@ controllers:
       value: "0ne00B56E85"
     - name: GlobalDeviceEndpoint
       value: "global.azure-devices-provisioning.net"
+    volumeMounts:
+    - name: devbe-cert
+      mountPath: "/certs/tstbe"
+      readOnly: true
+    - name: devbe-default-cert
+      mountPath: "/certs/tstbe/default"
+      readOnly: true
   - title: "beapi"
-    replicaCount: 3
+    replicaCount: 1
     path: /beapi-service
     port: 8083
     env:
@@ -95,6 +102,8 @@ controllers:
       value: "100"
     - name: KeyHolderUrl
       value: "http://keyholder-service:8082/"
+    - name: BlobStreamerUrl
+      value: "http://blobstreamer-service:8081/"
 
 replicaCount: 1
 
