@@ -65,6 +65,8 @@ controllers:
       value: ""
     - name: SecretVolumeMountPath
       value: "/certs/devbe"
+    - name: DefaultSecretVolumeMountPath
+      value: "/certs/devbe/default"
     - name: IothubConnectionString
       value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
     - name: DPSConnectionString
@@ -76,6 +78,9 @@ controllers:
     volumeMounts:
     - name: devbe-cert
       mountPath: "/certs/devbe"
+      readOnly: true
+    - name: devbe-default-cert
+      mountPath: "/certs/devbe/default"
       readOnly: true
   - title: "beapi"
     replicaCount: 3
@@ -94,6 +99,10 @@ controllers:
       value: "0.6"
     - name: "maxCountOfDevices"
       value: "100"
+    - name: KeyHolderUrl
+      value: "http://keyholder-service:8082/"
+    - name: BlobStreamerUrl
+      value: "http://blobstreamer-service:8081/"
     
 replicaCount: 1
 
