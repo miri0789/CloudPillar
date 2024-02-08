@@ -83,7 +83,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     }
                 }
             }
-        }
+       }
     }
 
     private async Task HandleProvisioningMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
