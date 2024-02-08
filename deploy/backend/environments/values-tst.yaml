@@ -77,10 +77,10 @@ controllers:
     - name: GlobalDeviceEndpoint
       value: "global.azure-devices-provisioning.net"
     volumeMounts:
-    - name: devbe-cert
+    - name: tstbe-cert
       mountPath: "/certs/tstbe"
       readOnly: true
-    - name: devbe-default-cert
+    - name: tstbe-default-cert
       mountPath: "/certs/tstbe/default"
       readOnly: true
   - title: "beapi"
