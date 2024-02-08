@@ -7,5 +7,5 @@ metadata:
 spec:
   headers:
     customRequestHeaders:
-      Host: cloudpillar{{ .service }}-service.cp-be-ns.svc
+      Host: {{ .service }}-service.cp-be-ns.svc
 {{- end }}   
