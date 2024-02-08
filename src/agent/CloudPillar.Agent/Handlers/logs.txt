@@ -1,0 +1,176 @@
+2024-02-08 10:34:36,724 [15 ] INFO  - Desired properties were updated.
+2024-02-08 10:34:37,241 [15 ] INFO  - There is no twin change sign, send sign event..
+2024-02-08 10:34:37,267 [15 ] DEBUG - D2CMessengerHandler PrepareD2CMessage. message title: SignTwinKey, properties: [ChangeSignKey, changeSpecSign]
+[MessageType, SignTwinKey]
+[ActionIndex, 0]
+2024-02-08 10:34:38,041 [16 ] INFO  - There is no twin change sign, send sign event..
+2024-02-08 10:34:38,043 [16 ] DEBUG - D2CMessengerHandler PrepareD2CMessage. message title: SignTwinKey, properties: [ChangeSignKey, changeSpecServerIdentitySign]
+[MessageType, SignTwinKey]
+[ActionIndex, 0]
+2024-02-08 10:34:38,748 [15 ] INFO  - Desired properties were updated.
+2024-02-08 10:34:39,020 [17 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\CP-Default-Sign-Certificate.crt
+2024-02-08 10:34:39,028 [17 ] DEBUG - Imported ECDsa public key
+2024-02-08 10:34:39,028 [17 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test.crt
+2024-02-08 10:34:39,030 [17 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:39,031 [17 ] INFO  - Signature from file: pki\test.crt verified successfully
+2024-02-08 10:34:39,434 [15 ] INFO  - HandleTwinUpdatesAsync: 1 actions to execute for changeSpec
+2024-02-08 10:34:39,440 [18 ] INFO  - ****start download for C:\demo\a\aaa111.pdf******
+Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.11\System.IO.FileSystem.DriveInfo.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.11\System.IO.FileSystem.AccessControl.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.11\System.Security.AccessControl.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+2024-02-08 10:34:39,489 [18 ] DEBUG - D2CMessengerHandler PrepareD2CMessage. message title: FileDownloadReady, properties: [FileName, aaa.pdf]
+[ChunkSize, 65536]
+[CompletedRanges, ]
+[StartPosition, 0]
+[EndPosition, ]
+[ChangeSpecId, 111]
+[MessageType, FileDownloadReady]
+[ActionIndex, 0]
+2024-02-08 10:34:39,630 [17 ] INFO  - There is no twin change sign, send sign event..
+2024-02-08 10:34:39,631 [17 ] DEBUG - D2CMessengerHandler PrepareD2CMessage. message title: SignTwinKey, properties: [ChangeSignKey, changeSpecServerIdentitySign]
+[MessageType, SignTwinKey]
+[ActionIndex, 0]
+2024-02-08 10:34:40,014 [18 ] INFO  - Desired properties were updated.
+2024-02-08 10:34:40,300 [18 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\CP-Default-Sign-Certificate.crt
+2024-02-08 10:34:40,309 [18 ] DEBUG - Imported ECDsa public key
+2024-02-08 10:34:40,311 [18 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test.crt
+2024-02-08 10:34:40,317 [18 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:40,317 [18 ] INFO  - Signature from file: pki\test.crt verified successfully
+2024-02-08 10:34:40,507 [18 ] INFO  - HandleTwinUpdatesAsync: 1 actions to execute for changeSpec
+2024-02-08 10:34:40,512 [16 ] INFO  - ****start download for C:\demo\a\aaa111.pdf******
+2024-02-08 10:34:40,532 [16 ] DEBUG - D2CMessengerHandler PrepareD2CMessage. message title: FileDownloadReady, properties: [FileName, aaa.pdf]
+[ChunkSize, 65536]
+[CompletedRanges, ]
+[StartPosition, 0]
+[EndPosition, ]
+[ChangeSpecId, 111]
+[MessageType, FileDownloadReady]
+[ActionIndex, 0]
+2024-02-08 10:34:40,712 [15 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\CP-Default-Sign-Certificate.crt
+2024-02-08 10:34:40,715 [15 ] DEBUG - Imported ECDsa public key
+2024-02-08 10:34:40,715 [15 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test.crt
+2024-02-08 10:34:40,718 [15 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:40,718 [15 ] INFO  - Signature from file: pki\test.crt verified successfully
+2024-02-08 10:34:41,023 [16 ] INFO  - HandleTwinUpdatesAsync: 1 actions to execute for changeSpecServerIdentity
+2024-02-08 10:34:41,024 [17 ] INFO  - ****start download for C:\git.dev\CloudPillar\CloudPillar\src\agent\CloudPillar.Agent\pki\test222.crt******
+2024-02-08 10:34:41,026 [17 ] DEBUG - D2CMessengerHandler PrepareD2CMessage. message title: FileDownloadReady, properties: [FileName, 2024_02_08_090526.crt]
+[ChunkSize, 65536]
+[CompletedRanges, ]
+[StartPosition, 0]
+[EndPosition, ]
+[ChangeSpecId, 222]
+[MessageType, FileDownloadReady]
+[ActionIndex, 0]
+2024-02-08 10:34:41,840 [16 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:41,872 [17 ] INFO  - %03 @pos: 00000370368 Throughput: 584.64 KiB/s
+2024-02-08 10:34:42,182 [15 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:42,184 [15 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:42,186 [17 ] INFO  - %16 @pos: 00000246912 Throughput: 177.43 KiB/s
+2024-02-08 10:34:42,476 [15 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:42,479 [15 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:42,485 [18 ] INFO  - %29 @pos: 00000123456 Throughput: 168.78 KiB/s
+2024-02-08 10:34:42,778 [17 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:42,782 [17 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:42,787 [16 ] INFO  - %41 @pos: 00000000000 Throughput: 165.24 KiB/s
+2024-02-08 10:34:43,076 [17 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:43,077 [17 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:43,079 [16 ] INFO  - %54 @pos: 00000295688 Throughput: 164.78 KiB/s
+2024-02-08 10:34:43,360 [17 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:43,364 [17 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:43,367 [16 ] INFO  - %67 @pos: 00000048776 Throughput: 164.87 KiB/s
+2024-02-08 10:34:43,537 [16 ] INFO  - Desired properties were updated.
+2024-02-08 10:34:43,652 [15 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:43,653 [15 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:43,655 [17 ] INFO  - %80 @pos: 00000172232 Throughput: 164.95 KiB/s
+2024-02-08 10:34:43,841 [17 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\CP-Default-Sign-Certificate.crt
+2024-02-08 10:34:43,843 [17 ] DEBUG - Imported ECDsa public key
+2024-02-08 10:34:43,844 [17 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test.crt
+2024-02-08 10:34:43,846 [17 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:43,846 [17 ] INFO  - Signature from file: pki\test.crt verified successfully
+2024-02-08 10:34:43,935 [16 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:43,937 [16 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:43,947 [17 ] INFO  - %86 @pos: 00000344464 Throughput: 154.05 KiB/s
+2024-02-08 10:34:44,034 [15 ] INFO  - HandleTwinUpdatesAsync: 0 actions to execute for changeSpec
+2024-02-08 10:34:44,118 [18 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:44,119 [18 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:44,125 [15 ] INFO  - %93 @pos: 00000097552 Throughput: 153.10 KiB/s
+2024-02-08 10:34:44,226 [17 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\CP-Default-Sign-Certificate.crt
+2024-02-08 10:34:44,228 [17 ] DEBUG - Imported ECDsa public key
+2024-02-08 10:34:44,229 [17 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test.crt
+2024-02-08 10:34:44,231 [17 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:44,231 [17 ] INFO  - Signature from file: pki\test.crt verified successfully
+2024-02-08 10:34:44,317 [18 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:44,318 [18 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:44,328 [16 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\CP-Default-Sign-Certificate.crt
+2024-02-08 10:34:44,330 [16 ] DEBUG - Imported ECDsa public key
+2024-02-08 10:34:44,331 [16 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test.crt
+2024-02-08 10:34:44,333 [16 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:44,333 [16 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test1.crt
+2024-02-08 10:34:44,336 [16 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:44,336 [16 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test4.crt
+2024-02-08 10:34:44,338 [16 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:44,339 [16 ] ERROR - File C:\demo\a\aaa111.pdf signature is not valid, the file will be deleted.
+Exception thrown: 'System.Exception' in CloudPillar.Agent.dll
+2024-02-08 10:34:44,450 [15 ] INFO  - HandleTwinUpdatesAsync: 1 actions to execute for changeSpecServerIdentity
+Exception thrown: 'System.Exception' in System.Private.CoreLib.dll
+2024-02-08 10:34:44,452 [18 ] INFO  - ****start download for C:\git.dev\CloudPillar\CloudPillar\src\agent\CloudPillar.Agent\pki\test222.crt******
+2024-02-08 10:34:44,495 [18 ] DEBUG - D2CMessengerHandler PrepareD2CMessage. message title: FileDownloadReady, properties: [FileName, 2024_02_08_090526.crt]
+[ChunkSize, 65536]
+[CompletedRanges, ]
+[StartPosition, 0]
+[EndPosition, ]
+[ChangeSpecId, 222]
+[MessageType, FileDownloadReady]
+[ActionIndex, 0]
+2024-02-08 10:34:44,497 [16 ] ERROR - File C:\demo\a\aaa111.pdf signature is not valid, the file will be deleted.
+2024-02-08 10:34:44,792 [16 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:44,951 [15 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:44,952 [15 ] ERROR - There is no active download for message aaa.pdf_3_0_0
+2024-02-08 10:34:45,044 [18 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,061 [15 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,063 [15 ] ERROR - There is no active download for message aaa.pdf_0_0_0
+2024-02-08 10:34:45,151 [15 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,152 [15 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,153 [15 ] ERROR - There is no active download for message aaa.pdf_2_0_0
+2024-02-08 10:34:45,253 [18 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,254 [18 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,256 [18 ] ERROR - There is no active download for message aaa.pdf_1_0_0
+2024-02-08 10:34:45,349 [15 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,351 [15 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,351 [15 ] ERROR - There is no active download for message aaa.pdf_0_1_0
+2024-02-08 10:34:45,452 [16 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,453 [16 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,454 [16 ] ERROR - There is no active download for message aaa.pdf_2_1_0
+2024-02-08 10:34:45,552 [18 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,554 [18 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,556 [18 ] ERROR - There is no active download for message aaa.pdf_1_1_0
+2024-02-08 10:34:45,639 [15 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,641 [15 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,643 [15 ] ERROR - There is no active download for message aaa.pdf_0_2_0
+2024-02-08 10:34:45,736 [16 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,738 [16 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,741 [16 ] ERROR - There is no active download for message aaa.pdf_2_2_0
+2024-02-08 10:34:45,825 [17 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:45,829 [17 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:45,832 [17 ] ERROR - There is no active download for message aaa.pdf_1_2_0
+2024-02-08 10:34:45,917 [16 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:46,539 [18 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:46,544 [18 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\CP-Default-Sign-Certificate.crt
+2024-02-08 10:34:46,547 [18 ] DEBUG - Imported ECDsa public key
+2024-02-08 10:34:46,548 [18 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test.crt
+2024-02-08 10:34:46,550 [18 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:46,550 [18 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test1.crt
+2024-02-08 10:34:46,552 [18 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:46,553 [18 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test222.crt
+2024-02-08 10:34:46,555 [18 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:46,556 [18 ] DEBUG - VerifySignatureAsync: publicKeyFile: pki\test4.crt
+2024-02-08 10:34:46,558 [18 ] DEBUG - Imported RSA public key
+2024-02-08 10:34:46,558 [18 ] ERROR - File C:\git.dev\CloudPillar\CloudPillar\src\agent\CloudPillar.Agent\pki\test222.crt signature is not valid, the file will be deleted.
+Exception thrown: 'System.Exception' in CloudPillar.Agent.dll
+Exception thrown: 'System.Exception' in System.Private.CoreLib.dll
+2024-02-08 10:34:46,869 [18 ] ERROR - File C:\git.dev\CloudPillar\CloudPillar\src\agent\CloudPillar.Agent\pki\test222.crt signature is not valid, the file will be deleted.
+2024-02-08 10:34:47,273 [15 ] INFO  - UpdateKnownIdentitiesInReported success
+2024-02-08 10:34:47,358 [17 ] INFO  - Receive message of type: DownloadChunk completed
+2024-02-08 10:34:47,936 [16 ] INFO  - Receive message of type: DownloadChunk
+2024-02-08 10:34:47,939 [16 ] ERROR - There is no active download for message 2024_02_08_090526.crt_0_0_0
+2024-02-08 10:34:48,025 [18 ] INFO  - Receive message of type: DownloadChunk completed

@@ -11,10 +11,10 @@
             "cwd": "${workspaceFolder}/src/backend/BlobStreamer",
             "console": "internalConsole",
             "env": {
-                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-dev-iot-25287979-68405f75ab.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M=;EntityPath=cp-dev-iothub",
-                "IothubConnectionString": "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M=",
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
+                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-nechama-25375812-139f638778.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=;EntityPath=cp-nechama-iothub",
+                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpiotnechamafiles;AccountKey=UMEi+bey1ynk5p2QoasOMidAgVEQZsrr9fkTVIpAv560sVO0J6k7V/t24O+5Fak+D0flzEMCPJVr+AStKiuOag==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "iotcontainer",
+                "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
                 "RetryPolicyExponent": "3"
@@ -30,9 +30,9 @@
             "cwd": "${workspaceFolder}/src/backend/Iotlistener",
             "console": "internalConsole",
             "env": {
-                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-dev-iot-25287979-68405f75ab.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M=;EntityPath=cp-dev-iothub",
-                "IothubEventHubCompatiblePath": "cp-dev-iothub",
-                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpdevfiles;AccountKey=8GD+xtC6uYWXYtRLPNREat6Zo3aZ9mrSUnhDB6/R6WjbZ3RAXKILSb1xF9h3d6HcR/ah8YmudC2W+ASts/69IA==;EndpointSuffix=core.windows.net",
+                "IothubEventHubCompatibleEndpoint": "Endpoint=sb://iothub-ns-cp-nechama-25375812-139f638778.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=;EntityPath=cp-nechama-iothub",
+                "IothubEventHubCompatiblePath": "cp-nechama-iothub",
+                "StorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=cpiotnechamafiles;AccountKey=UMEi+bey1ynk5p2QoasOMidAgVEQZsrr9fkTVIpAv560sVO0J6k7V/t24O+5Fak+D0flzEMCPJVr+AStKiuOag==;EndpointSuffix=core.windows.net",
                 "BlobContainerName": "iotcontainer",
                 "BlobStreamerUrl": "http://localhost:5019/",
                 "KeyHolderUrl": "http://localhost:5164/",
@@ -57,12 +57,12 @@
                 "KubernetesServiceHost": "",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
-                "IothubConnectionString": "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M=",
-                "DPSConnectionString": "HostName=cp-dev-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=OvCnPzeHY0yu211bWFmtWmxzvKz2jNYje3bUbDCOQDg=",
-                "DPSIdScope": "0ne00B51BC7",
+                "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
+                "DPSConnectionString": "HostName=cp-nechama-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=zh9gSAqFvin2Esh1kXZMVP2IPPOOhDuAfv+TXAZnHho=",
+                "DPSIdScope": "0ne00B889E4",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
-                "DefaultSecretVolumeMountPath":"C:/demo/default-cer",
-                "SecretVolumeMountPath":"C:/demo/cer"
+                "SecretVolumeMountPath":"C:/demo/cer",
+                "DefaultSecretVolumeMountPath":"C:/demo/default-cer"
             }
         },
         {
@@ -78,10 +78,11 @@
                 // "IothubConnectionString": "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE=",
                 // "DPSConnectionString": "HostName=cp-tst-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=z4ZY+yWfPMSQBVDxLqszzI4Z2vsvsEVR7QYkwi8E1Fc=",
                 // "DPSIdScope": "0ne00B56E85",
-                "IothubConnectionString": "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M=",
-                "DPSConnectionString": "HostName=cp-dev-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=OvCnPzeHY0yu211bWFmtWmxzvKz2jNYje3bUbDCOQDg=",
-                "DPSIdScope": "0ne00B51BC7",
+                "IothubConnectionString": "HostName=cp-nechama-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=HwYnO1saJNivvkr+TgTymiJrXSLE51PrQAIoTEdt/j4=",
+                "DPSConnectionString": "HostName=cp-nechama-dps.azure-devices-provisioning.net;SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=zh9gSAqFvin2Esh1kXZMVP2IPPOOhDuAfv+TXAZnHho=",
+                "DPSIdScope": "0ne00B889E4",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                
                 "ExpirationCertificatePercent": "0.6",
                 "maxCountDevices": "100",
                 "KeyHolderUrl": "http://localhost:5164/",

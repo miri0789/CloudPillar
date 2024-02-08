@@ -6,4 +6,6 @@ public class SharedConstants
     public const string DEFAULT_TRANSACTIONS_KEY = "transitPackcage";
     public const string PKI_FOLDER_PATH = "pki";
     public const string CERTIFICATE_FILE_EXTENSION = ".crt";
+    public const int DEFAULT_ORDER_VALUE = 50;
+    public const int MAX_ORDER_VALUE = 100;
 }

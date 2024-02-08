@@ -114,9 +114,10 @@ public class TwinHandler : ITwinHandler
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
             ResetNotActualDownloads(twinDesired, twinReported);
-            var changeSpecKeys = twinDesired?.ChangeSpec?.OrderBy(x => x.Value.Order).Select(x => x.Key).ToList();           
+             var changeSpecKeys =  twinDesired?.ChangeSpec?.OrderByDescending(x => x.Value.Order).Select(x => x.Key).ToList();           
             foreach (string changeSpecKey in changeSpecKeys)
             {
+                _logger.Info($"**************OnDesiredPropertiesUpdate for {changeSpecKey}");
                 var twinDesiredChangeSpec = twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey);
                 var twinReportedChangeSpec = twinReported?.GetReportedChangeSpecByKey(changeSpecKey);
                 twinReportedChangeSpec = await ResetReportedWhenDesiredChange(twinDesiredChangeSpec, twinReportedChangeSpec, changeSpecKey, isInitial, cancellationToken);
@@ -276,6 +277,7 @@ public class TwinHandler : ITwinHandler
                 switch (action.TwinAction)
                 {
                     case DownloadAction downloadAction:
+                    _logger.Info($"****start download for {((DownloadAction)action.TwinAction).DestinationPath}******");
                         await _fileDownloadHandler.InitFileDownloadAsync(action, cancellationToken);
                         break;
 

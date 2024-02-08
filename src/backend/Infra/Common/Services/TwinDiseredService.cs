@@ -21,7 +21,7 @@ public class TwinDiseredService : ITwinDiseredService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction, int order = 50, string transactionsKey = SharedConstants.DEFAULT_TRANSACTIONS_KEY)
+    public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction, int order = SharedConstants.DEFAULT_ORDER_VALUE, string transactionsKey = SharedConstants.DEFAULT_TRANSACTIONS_KEY)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 
@@ -55,7 +55,6 @@ public class TwinDiseredService : ITwinDiseredService
                 if (order != twinDesiredChangeSpec?.Order)
                 {
                     twinDesiredChangeSpec.Order = order;
-                    
                 }
 
                 var updatedArray = twinDesiredChangeSpec.Patch[transactionsKey].ToList();
@@ -91,7 +90,7 @@ public class TwinDiseredService : ITwinDiseredService
             {
                 twinDesired.ChangeSpec[changeSpecKey] = null;
                 twinDesired.ChangeSign[changeSpecKey.GetSignKeyByChangeSpec()] = null;
-                await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
+                await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin);
                 twin = await _registryManagerWrapper.GetTwinAsync(registryManager, deviceId);
                 twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
                 twinDesired.ChangeSpec ??= new Dictionary<string, TwinChangeSpec>();
@@ -99,7 +98,7 @@ public class TwinDiseredService : ITwinDiseredService
             }
             twinDesired.ChangeSpec.Add(changeSpecKey, assignChangeSpec);
             twinDesired.ChangeSign.Add(changeSpecKey.GetSignKeyByChangeSpec(), signature);
-            await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
+            await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin);
             return twinDesired;
         }
         catch (Exception ex)
@@ -142,11 +141,11 @@ public class TwinDiseredService : ITwinDiseredService
             twinDesired.SetDesiredChangeSignByKey(changeSignKey, signData);
 
             twin.Properties.Desired = new TwinCollection(twinDesired.ConvertToJObject().ToString());
-            await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin, twin.ETag);
+            await UpdateTwinAsync(twinDesired, registryManager, deviceId, twin);
         }
     }
 
-    private async Task UpdateTwinAsync(TwinDesired twinDesired, RegistryManager registryManager, string deviceId, Twin twin, string etag)
+    private async Task UpdateTwinAsync(TwinDesired twinDesired, RegistryManager registryManager, string deviceId, Twin twin)
     {
         var twinDesiredJson = JsonConvert.SerializeObject(twinDesired.ConvertToJObject());
         twin.Properties.Desired = new TwinCollection(twinDesiredJson);
