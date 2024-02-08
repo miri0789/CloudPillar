@@ -17,7 +17,7 @@ var informationalVersion = Assembly.GetEntryAssembly()?
 var builder = LoggerHostCreator.Configure("Iotlistener", WebApplication.CreateBuilder(args));
 
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
-builder.Services.AddScoped<IFirmwareUpdateService, FirmwareUpdateService>();
+builder.Services.AddScoped<IFileDownloadService, FileDownloadService>();
 builder.Services.AddScoped<IProvisionDeviceService, ProvisionDeviceService>();
 builder.Services.AddScoped<ISigningService, SigningService>();
 builder.Services.AddScoped<IStreamingUploadChunkService, StreamingUploadChunkService>();
@@ -55,11 +55,11 @@ var eventProcessorOptions = new EventProcessorOptions
     InvokeProcessorAfterReceiveTimeout = true,
 };
 
-var firmwareUpdateService = app.Services.GetService<IFirmwareUpdateService>();
+var FileDownloadService = app.Services.GetService<IFileDownloadService>();
 var signingService = app.Services.GetService<ISigningService>();
 var streamingUploadChunkEvent = app.Services.GetService<IStreamingUploadChunkService>();
 var provisionDeviceCertificateService = app.Services.GetService<IProvisionDeviceService>();
-var azureStreamProcessorFactory = new AzureStreamProcessorFactory(firmwareUpdateService, signingService, streamingUploadChunkEvent, provisionDeviceCertificateService, _envirementVariable, logger, PartitionId);
+var azureStreamProcessorFactory = new AzureStreamProcessorFactory(FileDownloadService, signingService, streamingUploadChunkEvent, provisionDeviceCertificateService, _envirementVariable, logger, PartitionId);
 
 await eventProcessorHost.RegisterEventProcessorFactoryAsync(azureStreamProcessorFactory, eventProcessorOptions);
 

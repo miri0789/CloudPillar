@@ -13,30 +13,42 @@ namespace Backend.BlobStreamer.Services;
 
 public class UploadStreamChunksService : IUploadStreamChunksService
 {
+    private readonly CloudBlobContainer _container;
     private readonly ILoggerHandler _logger;
     private readonly ICheckSumService _checkSumService;
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
     private readonly ITwinDiseredService _twinDiseredHandler;
+    private readonly IEnvironmentsWrapper _environmentsWrapper;
 
-    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper, ITwinDiseredService twinDiseredHandler)
+    public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper,
+      ICloudStorageWrapper cloudStorageWrapper, ITwinDiseredService twinDiseredHandler, IEnvironmentsWrapper environmentsWrapper)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
+        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
     }
 
-    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string deviceId, bool isRunDiagnostics)
+    public async Task UploadStreamChunkAsync(Uri storageUri, byte[] readStream, long startPosition, string checkSum, string fileName, string deviceId, bool isRunDiagnostics = false)
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(storageUri);
+            CloudBlockBlob blob;
 
+            if (storageUri == null)
+            {
+                _logger.Info($"BlobStreamer: storageUri is null, get storageUri from storage connectionstring");
+                blob = _container.GetBlockBlobReference(fileName);
+            }
+            else
+            {
+                blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
+            }
             long chunkIndex = (startPosition / readStream.Length) + 1;
 
-            _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex}, startPosition: {startPosition}, to {storageUri.AbsolutePath}");
-
-            CloudBlockBlob blob = _cloudBlockBlobWrapper.CreateCloudBlockBlob(storageUri);
+            _logger.Info($"BlobStreamer: Upload chunk number {chunkIndex}, startPosition: {startPosition}, to {blob.Uri.AbsolutePath}");
 
             using (Stream inputStream = new MemoryStream(readStream))
             {
@@ -108,14 +120,14 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
             DestinationPath = GetFilePathFromBlobName(Uri.UnescapeDataString(storageUri.Segments.Last())),
         };
-        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, TwinPatchChangeSpec.ChangeSpecDiagnostics, downloadAction);
+        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, downloadAction);
     }
 
     private string GetFilePathFromBlobName(string blobName)
     {
         string[] parts = blobName.Split('/');
         var partIndex = parts.ToList().FindIndex(x => x.Contains("_driveroot_"));
-        string result = string.Join("\\", parts, partIndex, parts.Length - partIndex);  
+        string result = string.Join("\\", parts, partIndex, parts.Length - partIndex);
 
         var filePath = Regex.Replace(result.Replace("_protocol_", "//:").Replace("_driveroot_", ":").Replace("/", "\\"), "^\\/", "_root_");
         _logger.Info($"GetFilePathFromBlobName, filePath is: {filePath}");

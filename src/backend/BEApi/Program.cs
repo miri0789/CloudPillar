@@ -1,4 +1,3 @@
-
 using System.Reflection;
 using Shared.Logger;
 using Backend.BEApi.Services;
@@ -11,6 +10,7 @@ using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Wrappers;
 using Shared.Entities.Factories;
+using Backend.BEApi.Services.interfaces;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -31,7 +31,15 @@ builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IValidateCertificateService, ValidateCertificateService>();
+builder.Services.AddScoped<IChangeSpecService, ChangeSpecService>();
+builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
+builder.Services.AddScoped<ICertificateIdentityService, CertificateIdentityService>();
+builder.Services.AddScoped<IDeviceCertificateService, DeviceCertificateService>();
+builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
+builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
+builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
