@@ -74,16 +74,23 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             case TransportType.Amqp_Tcp_Only:
                 return new ITransportSettings[]{
                     new AmqpTransportSettings(TransportType.Amqp_Tcp_Only)
-                        {RemoteCertificateValidationCallback = ValidateCertificate}};                        
+                        {RemoteCertificateValidationCallback = ValidateCertificate}};
             case TransportType.Amqp_WebSocket_Only:
                 return new ITransportSettings[]{
                     new AmqpTransportSettings(TransportType.Amqp_WebSocket_Only)
                         {RemoteCertificateValidationCallback = ValidateCertificate}};
             case TransportType.Http1:
             default:
+                var httpClientHandler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = ValidateCertificate
+                };
                 return new ITransportSettings[]
                 {
-                new Http1TransportSettings(),
+                    new Http1TransportSettings()
+                        {
+                            HttpClient = new HttpClient(httpClientHandler)
+                        }
                 };
 
         }
@@ -134,7 +141,6 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             TransportType.Amqp_Tcp_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.TcpOnly),
             TransportType.Amqp_WebSocket_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.WebSocketOnly),
             TransportType.Http1 => new ProvisioningTransportHandlerHttp(),
-            _ => throw new NotSupportedException($"Unsupported transport type {GetTransportType()}"),
         };
     }
 
