@@ -65,7 +65,7 @@ controllers:
     - name: KubernetesServiceHost
       value: ""
     - name: SecretVolumeMountPath
-      value: "/certs/tstbe/default"
+      value: "/certs/tstbe"
     - name: DefaultSecretVolumeMountPath
       value: "/certs/tstbe/default"
     - name: IothubConnectionString
@@ -78,7 +78,7 @@ controllers:
       value: "global.azure-devices-provisioning.net"
     volumeMounts:
     - name: tstbe-cert
-      mountPath: "/certs/tstbe/default"
+      mountPath: "/certs/tstbe"
       readOnly: true
     - name: tstbe-default-cert
       mountPath: "/certs/tstbe/default"
