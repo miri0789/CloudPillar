@@ -5,12 +5,14 @@ metadata:
 spec:
   backends:
     {{- range .Values.controllers }}
+    {{- if and .port .path }}
     - name: cloudpillar{{ .service }}-service
       port:
         number: {{ .port }}
         protocol: http
       tls:
         skipClientCertValidation: false
+    {{- end }}
     {{- end }}
   sources:
     - kind: IPRange
