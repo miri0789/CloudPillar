@@ -148,7 +148,7 @@ stages:
 
 
 - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
-  - ${{ if and(eq(parameters.env, 'dev'),eq(parameters.env, 'tst')) }}:
+  - ${{ if or(eq(parameters.env, 'dev'),eq(parameters.env, 'tst')) }}:
     - stage: CD_Stage
       jobs:              
       - job: CD_Job        
