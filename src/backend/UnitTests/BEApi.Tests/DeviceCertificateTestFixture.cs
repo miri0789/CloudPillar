@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace Backend.BEApi.Tests;
 
-public class ValidateCertificateTestFixture
+public class DeviceCertificateTestFixture
 {
     private Mock<IRegistrationService> _registrationServiceMock;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapperMock;
@@ -46,8 +46,8 @@ public class ValidateCertificateTestFixture
         var twin = new Twin();
         var twinReported = new TwinReported();
         twinReported.CertificateValidity = new CertificateValidity();
-        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-2);
-        twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(1);
+        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-2).ToString("dd-MM-yyyy");
+        twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy");
         twinReported.SecretKey = SECRET_KEY;
         string reportedJson = JsonConvert.SerializeObject(twinReported);
         twin.Properties.Reported = JsonConvert.DeserializeObject<TwinCollection>(reportedJson);
@@ -67,8 +67,8 @@ public class ValidateCertificateTestFixture
         var twin = new Twin();
         var twinReported = new TwinReported();
         twinReported.CertificateValidity = new CertificateValidity();
-        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-1);
-        twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(10);
+        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-1).ToString("dd-MM-yyyy");
+        twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(10).ToString("dd-MM-yyyy");
         twinReported.SecretKey = SECRET_KEY;
         string reportedJson = JsonConvert.SerializeObject(twinReported);
         twin.Properties.Reported = JsonConvert.DeserializeObject<TwinCollection>(reportedJson);
