@@ -38,8 +38,12 @@ public class ValidateCertificateService : IValidateCertificateService
                 var expiredDate = twinReported.CertificateValidity.ExpirationDate;
                 var currentDate = DateTime.UtcNow;
 
-                TimeSpan totalDuration = expiredDate - creationDate;
-                TimeSpan passedDuration = currentDate - creationDate;
+                var creationDateParse = DateTime.Parse(creationDate);
+                var expiredDateParse = DateTime.Parse(expiredDate);
+                var currentDateParse = DateTime.Parse(currentDate.ToString("dd-MM-yyyy"));
+
+                TimeSpan totalDuration = expiredDateParse - creationDateParse;
+                TimeSpan passedDuration = currentDateParse - creationDateParse;
                 double percentagePassed = (double)passedDuration.Ticks / totalDuration.Ticks;
                 if (percentagePassed >= _environmentsWrapper.expirationCertificatePercent)
                 {
