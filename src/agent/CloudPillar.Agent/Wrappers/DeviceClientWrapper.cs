@@ -6,6 +6,9 @@ using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Shared.Entities.Twin;
+using Microsoft.Azure.Devices.Client.Transport.Mqtt;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
@@ -26,26 +29,92 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
+    public async Task<bool> DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(hostname);
         ArgumentNullException.ThrowIfNull(authenticationMethod);
-
-        var iotClient = DeviceClient.Create(hostname, authenticationMethod, GetTransportType());
-        if (iotClient != null)
+        try
         {
-            // iotClient never return null also if device not exist, so to check if device is exist, or the certificate is valid we try to get the device twin.
-            var twin = await iotClient.GetTwinAsync(cancellationToken);
-            if (twin != null)
+            var iotClient = DeviceClient.Create(hostname, authenticationMethod, GetTransportSettings());
+            if (iotClient != null)
             {
-                _deviceClient = iotClient;
+                // iotClient never returns null also if the device does not exist, so to check if the device exists or the certificate is valid we try to get the device twin.
+                var twin = await iotClient.GetTwinAsync(cancellationToken);
+                if (twin != null)
+                {
+                    _deviceClient = iotClient;
+                    return true;
+                }
+                else
+                {
+                    _logger.Info($"Device does not exist in {hostname}.");
+                }
             }
-            else
-            {
-                _logger.Info($"Device does not exist in {hostname}.");
-            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"DeviceInitializationAsync, Exception: {ex.Message}");
+            return false;
         }
     }
+
+    public ITransportSettings[] GetTransportSettings()
+    {
+        var transportType = GetTransportType();
+        switch (transportType)
+        {
+            case TransportType.Mqtt:
+            case TransportType.Mqtt_Tcp_Only:
+            case TransportType.Mqtt_WebSocket_Only:
+                return new ITransportSettings[]{
+                    new MqttTransportSettings(transportType){
+                        RemoteCertificateValidationCallback = ValidateCertificate}};
+            case TransportType.Amqp:
+            case TransportType.Amqp_Tcp_Only:
+                return new ITransportSettings[]{
+                    new AmqpTransportSettings(TransportType.Amqp_Tcp_Only)
+                        {RemoteCertificateValidationCallback = ValidateCertificate}};
+            case TransportType.Amqp_WebSocket_Only:
+                return new ITransportSettings[]{
+                    new AmqpTransportSettings(TransportType.Amqp_WebSocket_Only)
+                        {RemoteCertificateValidationCallback = ValidateCertificate}};
+            case TransportType.Http1:
+            default:
+                var httpClientHandler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = ValidateCertificate
+                };
+                return new ITransportSettings[]
+                {
+                    new Http1TransportSettings()
+                        {
+                            HttpClient = new HttpClient(httpClientHandler)
+                        }
+                };
+
+        }
+    }
+
+    public TransportType GetTransportType()
+    {
+        var transportTypeString = _authenticationSettings.TransportType;
+        return Enum.TryParse(transportTypeString, out TransportType transportType)
+            ? transportType
+            : TransportType.Amqp;
+    }
+
+    public bool ValidateCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    {
+        if (sender is SslStream sslSender)
+        {
+            var targetHostName = sslSender.TargetHostName?.ToString();
+            return _authenticationSettings.ValidDomains.Contains(targetHostName);
+        }
+
+        return false;
+    }
+
 
     public async Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken)
     {
@@ -72,19 +141,11 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             TransportType.Amqp_Tcp_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.TcpOnly),
             TransportType.Amqp_WebSocket_Only => new ProvisioningTransportHandlerAmqp(TransportFallbackType.WebSocketOnly),
             TransportType.Http1 => new ProvisioningTransportHandlerHttp(),
-            _ => throw new NotSupportedException($"Unsupported transport type {GetTransportType()}"),
         };
     }
 
 
 
-    public TransportType GetTransportType()
-    {
-        var transportTypeString = _authenticationSettings.TransportType;
-        return Enum.TryParse(transportTypeString, out TransportType transportType)
-            ? transportType
-            : TransportType.Amqp;
-    }
     public int GetChunkSizeByTransportType()
     {
         int chunkSize =

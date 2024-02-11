@@ -20,7 +20,12 @@ public class RegistryManagerWrapper : IRegistryManagerWrapper
 
     public async Task<Twin> GetTwinAsync(RegistryManager registryManager, string deviceId)
     {
-        return await registryManager.GetTwinAsync(deviceId);
+        var twin = await registryManager.GetTwinAsync(deviceId);
+        if (twin == null)
+        {
+            throw new KeyNotFoundException($"Device {deviceId} not found");
+        }
+        return twin;
     }
 
     public async Task<Twin> UpdateTwinAsync(RegistryManager registryManager, string deviceId, Twin twinPatch, string etag)
