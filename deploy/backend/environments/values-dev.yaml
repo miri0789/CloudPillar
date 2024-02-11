@@ -4,7 +4,7 @@
 
 controllers:
   - title: "blobstreamer"
-    replicaCount: 3
+    replicaCount: 2
     path: /blobstreamer-service
     port: 8081
     env:
@@ -46,7 +46,7 @@ controllers:
     - name: KeyHolderUrl
       value: "http://keyholder-service:8082/"
     - name: BEApiUrl
-      value: "http://keyholder-service:8083/"
+      value: "http://beapi-service:8083/"
     - name: RangeCalculateType
       value: "percent"
     - name: RangePercent
@@ -54,10 +54,11 @@ controllers:
     - name: MessageTimeoutMinutes
       value: "60"
     - name: RangeBytes
-      value: "123456"
+      value: "292000"
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
+    replicaCount: 1
     path: /keyholder-service
     port: 8082
     env:
@@ -83,7 +84,7 @@ controllers:
       mountPath: "/certs/devbe/default"
       readOnly: true
   - title: "beapi"
-    replicaCount: 3
+    replicaCount: 1
     path: /beapi-service
     port: 8083
     env:
@@ -103,7 +104,7 @@ controllers:
       value: "http://keyholder-service:8082/"
     - name: BlobStreamerUrl
       value: "http://blobstreamer-service:8081/"
-    
+
 replicaCount: 1
 
 env:
