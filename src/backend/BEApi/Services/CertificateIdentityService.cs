@@ -92,7 +92,7 @@ public class CertificateIdentityService : ICertificateIdentityService
             Sign = cerSign,
             DestinationPath = $"./{SharedConstants.PKI_FOLDER_PATH}/{certificateName}",
         };
-        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME, downloadAction);
+        await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME, downloadAction, SharedConstants.MAX_CHANGE_SPEC_ORDER_VALUE);
         _logger.Info($"serverIdentity download certificate action added to device twin successfully.");
     }
 

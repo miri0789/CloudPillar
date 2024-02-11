@@ -114,7 +114,8 @@ public class TwinHandler : ITwinHandler
             var twinDesired = twin.Properties.Desired.ToJson().ConvertToTwinDesired();
 
             ResetNotActualDownloads(twinDesired, twinReported);
-            foreach (string changeSpecKey in twinDesired.ChangeSpec.Keys)
+            var changeSpecKeys = twinDesired?.ChangeSpec?.OrderByDescending(x => x.Value.Order).Select(x => x.Key).ToList();
+            foreach (string changeSpecKey in changeSpecKeys)
             {
                 var twinDesiredChangeSpec = twinDesired?.GetDesiredChangeSpecByKey(changeSpecKey);
                 var twinReportedChangeSpec = twinReported?.GetReportedChangeSpecByKey(changeSpecKey);
