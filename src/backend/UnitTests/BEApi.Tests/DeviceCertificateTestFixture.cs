@@ -48,8 +48,8 @@ public class DeviceCertificateTestFixture
         {
             CertificateValidity = new CertificateValidity()
             {
-                CreationDate = DateTime.UtcNow.AddDays(-2).ToString("yyyy-MM-dd"),
-                ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd")
+                CreationDate = DateTime.UtcNow.AddDays(-2).ToString("dd-MM-yyyy"),
+                ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy")
             },
             SecretKey = SECRET_KEY
         };
