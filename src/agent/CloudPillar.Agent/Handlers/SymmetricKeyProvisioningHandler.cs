@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using CloudPillar.Agent.Handlers.Logger;
 using Newtonsoft.Json;
 using Shared.Entities.Twin;
+using Shared.Entities.Utilities;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -111,7 +112,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         {
             // Check if the device is already initialized
             var twin = await _deviceClientWrapper.GetTwinAsync(cancellationToken);
-            var reported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
+            var reported = twin.Properties.Reported.ToJson().ConvertToTwinReported();
             return reported?.CertificateValidity is null;
         }
         catch (Exception ex)
