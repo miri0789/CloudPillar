@@ -1,9 +1,8 @@
 locals {
   domain = "${terraform.workspace}be.cloudpillar.net"
-  int-domain = "be.cp-int-tp-${terraform.workspace}.net"
   all-apps = [
-       { name  = "beapi", ip = [], fqdns=[local.int-domain],
-      host="${local.int-domain}", cp-dns="",
+       { name  = "beapi", ip = [], fqdns=[local.domain],
+      host="${local.domain}", 
       probe-path = "/beapi/version", probe-status = 399 }
   ]
   apps = [for i,val in local.all-apps: val]
@@ -46,8 +45,7 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   ssl_certificate {
-    name = data.azurerm_key_vault_certificate.appgw.name
-    key_vault_secret_id = data.azurerm_key_vault_certificate.appgw.versionless_secret_id
+    key_vault_secret_id  = data.azurerm_key_vault_secret.appgw.id
   }
 
   dynamic "backend_address_pool" {
@@ -84,7 +82,7 @@ resource "azurerm_application_gateway" "appgw" {
       timeout  = 30
       unhealthy_threshold = 3
       pick_host_name_from_backend_http_settings = false
-      host = local.int-domain
+      host = local.domain
       match { status_code = [ "200-${probe.value.probe-status}" ] }
     }
   }
@@ -96,9 +94,9 @@ resource "azurerm_application_gateway" "appgw" {
       frontend_ip_configuration_name = "appgw-frontend-ip"
       protocol                       = "Https"
       frontend_port_name             = "port_443"
-      host_name                      = "${http_listener.value.cp-dns}${local.domain}"
+      host_name                      = "${local.domain}"
       require_sni                    = true
-      ssl_certificate_name           = data.azurerm_key_vault_certificate.appgw.name
+      ssl_certificate_name           = data.azurerm_app_service_certificate.appgw.name
     }
   }
 

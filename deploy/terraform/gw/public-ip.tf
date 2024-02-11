@@ -4,6 +4,6 @@ resource "azurerm_public_ip" "appgw" {
   resource_group_name = azurerm_resource_group.appgw.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  domain_name_label   = "cartonet${terraform.workspace}appgw"
+  domain_name_label   = "cloudpillar${terraform.workspace}appgw"
   zones               = [ "1" ]
 }

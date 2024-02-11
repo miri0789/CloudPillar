@@ -1,12 +1,30 @@
 data "azurerm_key_vault" "appgw" {
-  name                = "cp-cert-${terraform.workspace}-kv"
-  resource_group_name = "cp-int-cyber-${terraform.workspace}-rg"
+  name                = "cp-${terraform.workspace}be-kv"
+  resource_group_name = "cp-ms-${terraform.workspace}-rg"
 }
 
-data "azurerm_key_vault_certificate" "appgw" {
-  name         = "DomainCert"
+data "azurerm_app_service_certificate_order" "appgw" {
+  name                = "${terraform.workspace}be-cloudpillar-net"
+  resource_group_name = "cp-ms-${terraform.workspace}-rg"
+}
+
+data "azurerm_key_vault_secret" "appgw" {
+  name         = data.azurerm_app_service_certificate_order.appgw.key_vault_secret_name
   key_vault_id = data.azurerm_key_vault.appgw.id
 }
+
+
+
+
+# data "azurerm_key_vault_certificate" "appgw" {
+#   name         = "DomainCert"
+#   key_vault_secret_id  = data.azurerm_key_vault.appgw.id
+# }
+
+# data "azurerm_app_service_certificate_order" "appgw" {
+#   name                = "${terraform.workspace}be-cloudpillar-net"
+#   resource_group_name = "cp-iot-${terraform.workspace}-rg"
+# }
 
 resource "azurerm_user_assigned_identity" "appgw" {
   name                = "cp-appgw-${terraform.workspace}-identity"
