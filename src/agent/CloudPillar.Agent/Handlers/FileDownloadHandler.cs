@@ -359,19 +359,19 @@ public class FileDownloadHandler : IFileDownloadHandler
             _logger.Error($"There is no active download for message {message.GetMessageId()}");
             return;
         }
-        if (file.Report.Status == StatusType.Blocked)
-        {
-            _logger.Info($"File {file.Action.DestinationPath} is blocked, message {message.GetMessageId()}");
-            return;
-        }
         var filePath = GetDestinationPath(file);
-
         var fileLength = Math.Max(file.TotalBytes - _fileStreamerWrapper.GetFileLength(filePath), message.Offset + message.Data?.Length ?? 0);
         if (!_fileStreamerWrapper.isSpaceOnDisk(filePath, fileLength))
         {
             SetBlockedStatus(file, DownloadBlocked.NotEnoughSpace, cancellationToken);
             _fileStreamerWrapper.DeleteFile(GetDestinationPath(file));
         }
+        if (file.Report.Status == StatusType.Blocked)
+        {
+            _logger.Info($"File {file.Action.DestinationPath} is blocked, message {message.GetMessageId()}");
+            return;
+        }
+
         try
         {
             if (!string.IsNullOrWhiteSpace(message.Error))

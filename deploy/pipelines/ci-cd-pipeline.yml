@@ -148,7 +148,7 @@ stages:
 
 
 - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev1')) }}:
-  - ${{ if eq(parameters.env, 'dev') }}:
+  - ${{ if or(eq(parameters.env, 'dev'),eq(parameters.env, 'tst')) }}:
     - stage: CD_Stage
       jobs:              
       - job: CD_Job        
@@ -170,7 +170,7 @@ stages:
             valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
             arguments: '--debug --timeout 15m0s'
             
-  - ${{ if ne(parameters.env, 'dev') }}:
+  - ${{ if and(ne(parameters.env, 'dev'),ne(parameters.env, 'tst')) }}:
     - stage: CD_Stage
       jobs:  
       - job: Start_VM_Job
