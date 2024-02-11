@@ -4,7 +4,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: cloudpillar{{ .service }}-service
+  name: cloudpillar{{ .title }}-service
 spec:
   entryPoints:
     - websecure
@@ -12,9 +12,9 @@ spec:
   - match: PathPrefix(`{{ .path }}`)
     kind: Rule
     middlewares:
-    - name: {{ .service }}-headers
+    - name: {{ .title }}-headers
     services:
-    - name: cloudpillar{{ .service }}-service
+    - name: cloudpillar{{ .title }}-service
       port: {{ .port }}
       scheme: http
 {{- end }}

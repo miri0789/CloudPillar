@@ -6,7 +6,7 @@ spec:
   backends:
     {{- range .Values.controllers }}
     {{- if and .port .path }}
-    - name: cloudpillar{{ .service }}-service
+    - name: cloudpillar{{ .title }}-service
       port:
         number: {{ .port }}
         protocol: http

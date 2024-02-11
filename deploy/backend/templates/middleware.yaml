@@ -3,9 +3,9 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: {{ .service }}-headers
+  name: {{ .title }}-headers
 spec:
   headers:
     customRequestHeaders:
-      Host: {{ .service }}-service.cp-be-ns.svc
+      Host: {{ .title }}-service.cp-be-ns.svc
 {{- end }}   
