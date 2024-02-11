@@ -44,11 +44,15 @@ public class DeviceCertificateTestFixture
     {
         var device = new Device(DEVICE_ID);
         var twin = new Twin();
-        var twinReported = new TwinReported();
-        twinReported.CertificateValidity = new CertificateValidity();
-        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-2).ToString("dd-MM-yyyy");
-        twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy");
-        twinReported.SecretKey = SECRET_KEY;
+        var twinReported = new TwinReported()
+        {
+            CertificateValidity = new CertificateValidity()
+            {
+                CreationDate = DateTime.UtcNow.AddDays(-2).ToString("yyyy-MM-dd"),
+                ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd")
+            },
+            SecretKey = SECRET_KEY
+        };
         string reportedJson = JsonConvert.SerializeObject(twinReported);
         twin.Properties.Reported = JsonConvert.DeserializeObject<TwinCollection>(reportedJson);
 
@@ -65,17 +69,18 @@ public class DeviceCertificateTestFixture
     {
         var device = new Device(DEVICE_ID);
         var twin = new Twin();
-        var twinReported = new TwinReported(){
-            CertificateValidity = new CertificateValidity(){
+        var twinReported = new TwinReported()
+        {
+            CertificateValidity = new CertificateValidity()
+            {
                 CreationDate = DateTime.UtcNow.AddDays(-1).ToString("dd-MM-yyyy"),
                 ExpirationDate = DateTime.UtcNow.AddDays(10).ToString("dd-MM-yyyy")
             },
             SecretKey = SECRET_KEY
-        };       
+        };
         string reportedJson = JsonConvert.SerializeObject(twinReported);
         twin.Properties.Reported = JsonConvert.DeserializeObject<TwinCollection>(reportedJson);
-        var devices = new List<Device>();
-        devices.Add(device);
+        var devices = new List<Device>() { device };
         _registryManagerWrapperMock.Setup(x => x.GetIotDevicesAsync(It.IsAny<RegistryManager>(), It.IsAny<int>())).ReturnsAsync(devices);
         _registryManagerWrapperMock.Setup(x => x.GetTwinAsync(It.IsAny<RegistryManager>(), It.IsAny<string>())).ReturnsAsync(twin);
         await _target.IsDevicesCertificateExpiredAsync();
