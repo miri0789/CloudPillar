@@ -65,11 +65,13 @@ public class DeviceCertificateTestFixture
     {
         var device = new Device(DEVICE_ID);
         var twin = new Twin();
-        var twinReported = new TwinReported();
-        twinReported.CertificateValidity = new CertificateValidity();
-        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-1).ToString("dd-MM-yyyy");
-        twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(10).ToString("dd-MM-yyyy");
-        twinReported.SecretKey = SECRET_KEY;
+        var twinReported = new TwinReported(){
+            CertificateValidity = new CertificateValidity(){
+                CreationDate = DateTime.UtcNow.AddDays(-1).ToString("dd-MM-yyyy"),
+                ExpirationDate = DateTime.UtcNow.AddDays(10).ToString("dd-MM-yyyy")
+            },
+            SecretKey = SECRET_KEY
+        };       
         string reportedJson = JsonConvert.SerializeObject(twinReported);
         twin.Properties.Reported = JsonConvert.DeserializeObject<TwinCollection>(reportedJson);
         var devices = new List<Device>();
