@@ -31,7 +31,7 @@ public class FileDownloadService : IFileDownloadService
             if (data.EndPosition != null)
             {
                 rangeSize = (long)data.EndPosition - data.StartPosition;
-                string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={data.CompletedRanges}&startPosition={data.StartPosition}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}&changeSpecId={data.ChangeSpecId}";
+                string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/Range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={data.CompletedRanges}&startPosition={data.StartPosition}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}&changeSpecId={data.ChangeSpecId}";
                 await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
             }
             else
@@ -47,7 +47,7 @@ public class FileDownloadService : IFileDownloadService
                     {
                         if (existRanges.IndexOf(rangeIndex.ToString()) == -1)
                         {
-                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}&changeSpecId={data.ChangeSpecId}";
+                            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/Range?deviceId={deviceId}&fileName={data.FileName}&chunkSize={data.ChunkSize}&rangeSize={rangeSize}&rangeIndex={rangeIndex}&startPosition={offset}&actionIndex={data.ActionIndex}&rangesCount={rangesCount}&changeSpecId={data.ChangeSpecId}";
                             requests.Add(_httpRequestorService.SendRequest<bool>(requestUrl, HttpMethod.Post));
                         }
                     }
@@ -71,7 +71,7 @@ public class FileDownloadService : IFileDownloadService
     {
         try
         {
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/rangeError?deviceId={deviceId}&fileName={fileName}&actionIndex={actionIndex}&error={error}&changeSpecId={changeSpecId}";
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/RangeError?deviceId={deviceId}&fileName={fileName}&actionIndex={actionIndex}&error={error}&changeSpecId={changeSpecId}";
             await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
         }
         catch (Exception ex)
@@ -84,7 +84,7 @@ public class FileDownloadService : IFileDownloadService
     {
         try
         {
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/metadata?fileName={fileName}";
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/Metadata?fileName={fileName}";
             var fileMetadata = await _httpRequestorService.SendRequest<BlobData>(requestUrl, HttpMethod.Get);
             return fileMetadata.Length;
         }
