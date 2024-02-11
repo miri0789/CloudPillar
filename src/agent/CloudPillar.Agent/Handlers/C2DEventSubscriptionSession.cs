@@ -43,7 +43,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             catch (Exception ex)
             {
                 _logger.Error($"Exception hit when receiving the message, ignoring it message: {ex.Message}");
-                continue;
+                break;
             }
             var parseMessage = Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType);
             try
@@ -83,7 +83,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
                     }
                 }
             }
-       }
+        }
     }
 
     private async Task HandleProvisioningMessage(Message receivedMessage, CancellationToken cancellationToken, C2DMessageType? messageType)
