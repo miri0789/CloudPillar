@@ -1,6 +1,4 @@
 using System.Security.Cryptography;
-using System.Text;
-using Backend.BEApi.Services.interfaces;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;

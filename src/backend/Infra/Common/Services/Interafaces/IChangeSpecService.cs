@@ -1,7 +1,7 @@
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 
-namespace Backend.BEApi.Services.interfaces;
+namespace Backend.Infra.Common.Services.Interfaces;
 
 public interface IChangeSpecService
 {

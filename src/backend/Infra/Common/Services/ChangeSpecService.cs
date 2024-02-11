@@ -1,6 +1,4 @@
 using System.Text;
-using Backend.BEApi.Services.interfaces;
-using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Extensions.Options;
@@ -8,22 +6,22 @@ using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
 
-namespace Backend.BEApi.Services;
+namespace Backend.Infra.Common.Services;
 
 public class ChangeSpecService : IChangeSpecService
 {
     private readonly ITwinDiseredService _twinDesiredService;
     private readonly IHttpRequestorService _httpRequestorService;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly ICommonEnvironmentsWrapper _environmentsCommonWrapper;
     private readonly DownloadSettings _downloadSettings;
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
 
-    public ChangeSpecService(ITwinDiseredService twinDiseredService, IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper,
+    public ChangeSpecService(ITwinDiseredService twinDiseredService, IHttpRequestorService httpRequestorService, ICommonEnvironmentsWrapper environmentsCommonWrapper,
     IOptions<DownloadSettings> options, IRegistryManagerWrapper registryManagerWrapper)
     {
         _twinDesiredService = twinDiseredService ?? throw new ArgumentNullException(nameof(twinDiseredService));
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _environmentsCommonWrapper = environmentsCommonWrapper ?? throw new ArgumentNullException(nameof(environmentsCommonWrapper));
         _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
     }
@@ -101,14 +99,14 @@ public class ChangeSpecService : IChangeSpecService
 
     private async Task<byte[]> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent)
     {
-        string blobRequestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/CalculateHash?deviceId={deviceId}";
+        string blobRequestUrl = $"{_environmentsCommonWrapper.blobStreamerUrl}blob/CalculateHash?deviceId={deviceId}";
         var signatureFileBytes = await _httpRequestorService.SendRequest<byte[]>(blobRequestUrl, HttpMethod.Post, signFileEvent);
         return signatureFileBytes;
     }
 
     public async Task<string> SendToSignData(byte[] dataToSign, string deviceId)
     {
-        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
+        string requestUrl = $"{_environmentsCommonWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
         var bytesSignature = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, dataToSign);
         var signature = Encoding.UTF8.GetString(bytesSignature);
         if (string.IsNullOrEmpty(signature))
