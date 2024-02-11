@@ -55,10 +55,14 @@
             "console": "internalConsole",
             "env": {
                 "KubernetesServiceHost": "",
+                "SecretName": "IoTTwinSecret",
+                "SecretKey": "signKey",
                 "IothubConnectionString": "",
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                "SecretVolumeMountPath": "",
+                "DefaultSecretVolumeMountPath": ""
             }
         },
         {
@@ -76,8 +80,7 @@
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "ExpirationCertificatePercent": "0.6",
-                "maxCountDevices": "100",
-                "KeyHolderUrl": "http://localhost:5164/",
+                "maxCountDevices": "100"
             }
         },
         {
