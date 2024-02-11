@@ -11,7 +11,7 @@ public class TwinReported
    public string SecretKey { get; set; }
    public Dictionary<string, object> Custom { get; set; }
    public string ChangeSpecId { get; set; }
-   public CertificateValidity CertificateValidity { get; set; }
+   public CertificateValidity? CertificateValidity { get; set; }
    public DeviceStateType? DeviceStateAfterServiceRestart { get; set; }
    public List<KnownIdentities>? KnownIdentities { get; set; }
 }

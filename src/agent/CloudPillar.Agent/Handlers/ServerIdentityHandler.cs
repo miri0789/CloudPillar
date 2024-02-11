@@ -62,7 +62,29 @@ public class ServerIdentityHandler : IServerIdentityHandler
         return pemPublicKey;
     }
 
-    public async Task RemoveNonDefaultCertificates(string path)
+    public bool CheckCertificateNotExpired(string path)
+    {
+        try
+        {
+            _logger.Info($"Check expired date certificate from path: {path}");
+
+            var certificate = _x509CertificateWrapper.CreateFromFile(path);
+            if (certificate.NotAfter < DateTime.Now)
+            {
+                _logger.Warn($"Certificate {path} is expired");
+                return false;
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"CheckCertificateNotExpired failed message: {ex.Message}");
+            return false;
+        }
+    }
+
+
+    public async Task RemoveNonDefaultCertificatesAsync(string path)
     {
         try
         {

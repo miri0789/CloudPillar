@@ -4,6 +4,7 @@ using Backend.BEApi.Wrappers.Interfaces;
 using Newtonsoft.Json;
 using Shared.Entities.Twin;
 using Shared.Logger;
+using System.Globalization;
 
 namespace Backend.BEApi.Services;
 
@@ -36,10 +37,14 @@ public class DeviceCertificateService : IDeviceCertificateService
                 var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
                 var creationDate = twinReported.CertificateValidity.CreationDate;
                 var expiredDate = twinReported.CertificateValidity.ExpirationDate;
-                var currentDate = DateTime.UtcNow;
+                var currentDate = DateTime.UtcNow.ToString("dd-MM-yyyy");
 
-                TimeSpan totalDuration = expiredDate - creationDate;
-                TimeSpan passedDuration = currentDate - creationDate;
+                var creationDateParse = DateTime.ParseExact(creationDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
+                var expiredDateParse = DateTime.ParseExact(expiredDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
+                var currentDateParse = DateTime.ParseExact(currentDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
+
+                TimeSpan totalDuration = expiredDateParse - creationDateParse;
+                TimeSpan passedDuration = currentDateParse - creationDateParse;
                 double percentagePassed = (double)passedDuration.Ticks / totalDuration.Ticks;
                 if (percentagePassed >= _environmentsWrapper.expirationCertificatePercent)
                 {

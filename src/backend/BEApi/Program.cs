@@ -30,7 +30,6 @@ builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<ICloudStorageWrapper, CloudStorageWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
-builder.Services.AddScoped<IValidateCertificateService, ValidateCertificateService>();
 builder.Services.AddScoped<IChangeSpecService, ChangeSpecService>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
 builder.Services.AddScoped<ICertificateIdentityService, CertificateIdentityService>();

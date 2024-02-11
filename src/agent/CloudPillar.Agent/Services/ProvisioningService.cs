@@ -32,7 +32,7 @@ public class ProvisioningService : IProvisioningService
     public async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
     {
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
-        await _serverIdentityHandler.RemoveNonDefaultCertificates(SharedConstants.PKI_FOLDER_PATH);
+        await _serverIdentityHandler.RemoveNonDefaultCertificatesAsync(SharedConstants.PKI_FOLDER_PATH);
         _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
         _reprovisioningHandler.RemoveX509CertificatesFromStore();
         //don't need to explicitly check if the header exists; it's already verified in the middleware.

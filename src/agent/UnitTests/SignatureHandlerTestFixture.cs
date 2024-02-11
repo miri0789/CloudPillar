@@ -5,8 +5,6 @@ using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using System.Text;
 using System.Security.Cryptography;
-using CloudPillar.Agent.Entities;
-using CloudPillar.Agent.Wrappers.Interfaces;
 using Shared.Entities.Twin;
 
 
@@ -54,6 +52,7 @@ public class SignatureHandlerTestFixture
         _fileStreamerWrapperMock.Setup(f => f.GetFiles("pkipath", FILE_EXTENSION)).Returns(() => new string[] { "pathfile.txt", "pathfile2.txt" });
         _serverIdentityHandlerMock.Setup(s => s.GetPublicKeyFromCertificateFileAsync("pathfile.txt")).ReturnsAsync(() => publicKeyPem1);
         _serverIdentityHandlerMock.Setup(s => s.GetPublicKeyFromCertificateFileAsync("pathfile2.txt")).ReturnsAsync(() => publicKeyPem2);
+        _serverIdentityHandlerMock.Setup(s => s.CheckCertificateNotExpired(It.IsAny<string>())).Returns(true);
     }
 
 
