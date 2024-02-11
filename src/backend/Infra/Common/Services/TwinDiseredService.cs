@@ -21,7 +21,7 @@ public class TwinDiseredService : ITwinDiseredService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction, int order = SharedConstants.DEFAULT_ORDER_VALUE, string transactionsKey = SharedConstants.DEFAULT_TRANSACTIONS_KEY)
+    public async Task AddDesiredRecipeAsync(string deviceId, string changeSpecKey, DownloadAction downloadAction, int order = SharedConstants.DEFAULT_CHANGE_SPEC_ORDER_VALUE, string transactionsKey = SharedConstants.DEFAULT_TRANSACTIONS_KEY)
     {
         ArgumentNullException.ThrowIfNull(deviceId);
 

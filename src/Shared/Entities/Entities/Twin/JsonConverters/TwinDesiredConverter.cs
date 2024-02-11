@@ -105,7 +105,7 @@ public class TwinDesiredConverter : JsonConverter
             Id = (jsonObject.SelectToken($"{lowerPropName}.id") ?? jsonObject.SelectToken($"{upperPropName}.Id"))?.Value<string>() ??
             (jsonObject.SelectToken("id") ?? jsonObject.SelectToken("Id"))?.Value<string>(),
             Patch = GetDynamicPatch(jsonObject, lowerPropName, upperPropName, serializer),
-            Order = (jsonObject.SelectToken($"{lowerPropName}.order") ?? jsonObject.SelectToken($"{upperPropName}.Order"))?.Value<int>() ?? SharedConstants.DEFAULT_ORDER_VALUE
+            Order = (jsonObject.SelectToken($"{lowerPropName}.order") ?? jsonObject.SelectToken($"{upperPropName}.Order"))?.Value<int>() ?? SharedConstants.DEFAULT_CHANGE_SPEC_ORDER_VALUE
         };
         return changeSpec;
     }
