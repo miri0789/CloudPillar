@@ -2,6 +2,6 @@ namespace Shared.Entities.Twin;
 
 public class CertificateValidity
 {
-    public string CreationDate { get; set; }
-    public string ExpirationDate { get; set; }
+    public DateOnly CreationDate { get; set; }
+    public DateOnly ExpirationDate { get; set; }
 }

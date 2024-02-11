@@ -21,6 +21,7 @@ public class DeviceCertificateTestFixture
     private const string DEVICE_ID = "deviceId";
     private const string SECRET_KEY = "secretKey";
     private const string CERTIFICATE_PREFIX = "UnitTest-CP-";
+    private DateOnly _dateOnly;
 
     [SetUp]
     public void Setup()
@@ -29,6 +30,8 @@ public class DeviceCertificateTestFixture
         _registryManagerWrapperMock = new Mock<IRegistryManagerWrapper>();
         _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
         _loggerMock = new Mock<ILoggerHandler>();
+        _dateOnly = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day);
+
         _environmentsWrapperMock.Setup(c => c.dpsConnectionString).Returns("dpsConnectionString");
         _environmentsWrapperMock.Setup(c => c.iothubConnectionString).Returns("HostName=unitTest;SharedAccessKeyName=iothubowner;");
         _environmentsWrapperMock.Setup(c => c.expirationCertificatePercent).Returns(0.6);
@@ -44,12 +47,13 @@ public class DeviceCertificateTestFixture
     {
         var device = new Device(DEVICE_ID);
         var twin = new Twin();
+
         var twinReported = new TwinReported()
         {
             CertificateValidity = new CertificateValidity()
             {
-                CreationDate = DateTime.UtcNow.AddDays(-2).ToString("dd-MM-yyyy"),
-                ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy")
+                CreationDate = _dateOnly.AddDays(-2),
+                ExpirationDate = _dateOnly.AddDays(1)
             },
             SecretKey = SECRET_KEY
         };
@@ -73,8 +77,8 @@ public class DeviceCertificateTestFixture
         {
             CertificateValidity = new CertificateValidity()
             {
-                CreationDate = DateTime.UtcNow.AddDays(-1).ToString("dd-MM-yyyy"),
-                ExpirationDate = DateTime.UtcNow.AddDays(10).ToString("dd-MM-yyyy")
+                CreationDate = _dateOnly.AddDays(-1),
+                ExpirationDate = _dateOnly.AddDays(10)
             },
             SecretKey = SECRET_KEY
         };

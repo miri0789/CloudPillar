@@ -35,16 +35,12 @@ public class DeviceCertificateService : IDeviceCertificateService
                 _logger.Info($"Device {device.Id}: Validating certificate...");
                 var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, device.Id);
                 var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
-                var creationDate = twinReported.CertificateValidity.CreationDate;
-                var expiredDate = twinReported.CertificateValidity.ExpirationDate;
-                var currentDate = DateTime.UtcNow.ToString("dd-MM-yyyy");
+                var creationDate = twinReported.CertificateValidity.CreationDate.ToDateTime(TimeOnly.MinValue);
+                var expiredDate = twinReported.CertificateValidity.ExpirationDate.ToDateTime(TimeOnly.MinValue);
+                var currentDate = DateTime.UtcNow.Date;
 
-                var creationDateParse = DateTime.ParseExact(creationDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                var expiredDateParse = DateTime.ParseExact(expiredDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                var currentDateParse = DateTime.ParseExact(currentDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-
-                TimeSpan totalDuration = expiredDateParse - creationDateParse;
-                TimeSpan passedDuration = currentDateParse - creationDateParse;
+                TimeSpan totalDuration = expiredDate - creationDate;
+                TimeSpan passedDuration = currentDate - creationDate;
                 double percentagePassed = (double)passedDuration.Ticks / totalDuration.Ticks;
                 if (percentagePassed >= _environmentsWrapper.expirationCertificatePercent)
                 {
