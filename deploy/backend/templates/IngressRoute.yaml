@@ -14,7 +14,7 @@ spec:
     middlewares:
     - name: {{ .title }}-headers
     services:
-    - name: cloudpillar{{ .title }}-service
+    - name: {{ .title }}-service
       port: {{ .port }}
       scheme: http
 {{- end }}
