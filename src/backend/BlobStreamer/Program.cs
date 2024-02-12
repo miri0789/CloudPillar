@@ -32,7 +32,6 @@ builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddScoped<IChangeSpecService, ChangeSpecService>();
 builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
-builder.Services.AddScoped<ISHA256Wrapper, SHA256Wrapper>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();

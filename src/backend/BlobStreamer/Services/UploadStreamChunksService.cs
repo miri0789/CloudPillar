@@ -24,11 +24,10 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly IChangeSpecService _changeSpecService;
     private readonly IBlobService _blobService;
-    private readonly DownloadSettings _downloadSettings;
 
     public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper,
       ICloudStorageWrapper cloudStorageWrapper, ITwinDiseredService twinDiseredHandler, IEnvironmentsWrapper environmentsWrapper,
-      IChangeSpecService changeSpecService, IBlobService blobService, IOptions<DownloadSettings> options)
+      IChangeSpecService changeSpecService, IBlobService blobService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
@@ -37,7 +36,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _changeSpecService = changeSpecService ?? throw new ArgumentNullException(nameof(changeSpecService));
         _blobService = blobService ?? throw new ArgumentNullException(nameof(blobService));
-        _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
     }
