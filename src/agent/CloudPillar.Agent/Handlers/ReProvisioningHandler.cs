@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Enums;
 
 namespace CloudPillar.Agent.Handlers;
 public class ReprovisioningHandler : IReprovisioningHandler
@@ -87,8 +88,8 @@ public class ReprovisioningHandler : IReprovisioningHandler
     {
         try
         {
-            var isProvisioningSuccess = await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, recivedMessage, cancellationToken);
-            if (!isProvisioningSuccess)
+            var connectRes = await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, recivedMessage, cancellationToken);
+            if (connectRes != DeviceConnectResultEnum.Valid)
             {
                 throw new ArgumentNullException("Provisioning failed");
             }

@@ -1,177 +1,189 @@
-using CloudPillar.Agent.Handlers;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using System.Text.RegularExpressions;
-using CloudPillar.Agent.Handlers.Logger;
-using Shared.Entities.Twin;
-using CloudPillar.Agent.Sevices.Interfaces;
+
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using CloudPillar.Agent.Wrappers;
+using Microsoft.Azure.Devices.Provisioning.Client;
+using Microsoft.Azure.Devices.Provisioning.Client.Transport;
+using DeviceMessage = Microsoft.Azure.Devices.Client;
+using CloudPillar.Agent.Handlers.Logger;
+using Microsoft.Extensions.Options;
+using CloudPillar.Agent.Enums;
 
-namespace CloudPillar.Agent.Utilities;
-public class AuthorizationCheckMiddleware
+namespace CloudPillar.Agent.Handlers;
+
+public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClientHandler
 {
-    private readonly RequestDelegate _requestDelegate;
-    private ILoggerHandler _logger;
-    private readonly IConfigurationWrapper _configuration;
-    private ISymmetricKeyProvisioningHandler? _symmetricKeyProvisioningHandler;
-    private IProvisioningService? _provisioningService;
-    private IHttpContextWrapper? _httpContextWrapper;
-    private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
+    private readonly ILoggerHandler _logger;
 
-    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfigurationWrapper configuration)
+    private IDeviceClientWrapper _deviceClientWrapper;
+    private readonly IX509CertificateWrapper _X509CertificateWrapper;
+    private readonly IProvisioningDeviceClientWrapper _provisioningDeviceClientWrapper;
+    private readonly AuthenticationSettings _authenticationSettings;
+    private readonly ITwinReportHandler _twinReportHandler;
+    public X509DPSProvisioningDeviceClientHandler(
+        ILoggerHandler loggerHandler,
+        IDeviceClientWrapper deviceClientWrapper,
+        IX509CertificateWrapper X509CertificateWrapper,
+        IProvisioningDeviceClientWrapper provisioningDeviceClientWrapper,
+        IOptions<AuthenticationSettings> options,
+        ITwinReportHandler twinReportHandler
+)
     {
-        _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-
+        _logger = loggerHandler ?? throw new ArgumentNullException(nameof(loggerHandler));
+        _deviceClientWrapper = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
+        _X509CertificateWrapper = X509CertificateWrapper ?? throw new ArgumentNullException(nameof(X509CertificateWrapper));
+        _provisioningDeviceClientWrapper = provisioningDeviceClientWrapper ?? throw new ArgumentNullException(nameof(provisioningDeviceClientWrapper));
+        _authenticationSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _twinReportHandler = twinReportHandler ?? throw new ArgumentNullException(nameof(twinReportHandler));
     }
 
-    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler,
-    IX509Provider x509Provider, IHttpContextWrapper httpContextWrapper)
+    public X509Certificate2? GetCertificate(string deviceId = "")
     {
-        _provisioningService = context.RequestServices.GetRequiredService<IProvisioningService>();
-        ArgumentNullException.ThrowIfNull(_provisioningService);
-        _symmetricKeyProvisioningHandler = context.RequestServices.GetRequiredService<ISymmetricKeyProvisioningHandler>();
-        ArgumentNullException.ThrowIfNull(_symmetricKeyProvisioningHandler);
-        _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
-        _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
-
-        if (!context.Request.IsHttps)
+        using (var store = _X509CertificateWrapper.Open(OpenFlags.ReadOnly, storeLocation: _authenticationSettings.StoreLocation))
         {
-            NextWithRedirectAsync(context, x509Provider);
-            return;
-        }
-        var endpoint = _httpContextWrapper.GetEndpoint(context);
-        //context
-        var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
-        if (deviceIsBusy)
-        {
-            var isActionBlockByBusy = endpoint?.Metadata.GetMetadata<DeviceStateFilterAttribute>();
-            if (isActionBlockByBusy != null)
-            {
-                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                await context.Response.WriteAsync(StateMachineConstants.BUSY_MESSAGE);
-                return;
-            }
-        }
-        CancellationToken cancellationToken = context.RequestAborted;
-        if (IsActionMethod(endpoint))
-        {
-            // check the headers for all the actions also for the AllowAnonymous.
-            IHeaderDictionary requestHeaders = context.Request.Headers;
-            var xDeviceId = _httpContextWrapper.TryGetValue(requestHeaders, Constants.X_DEVICE_ID, out var deviceId) ? deviceId.ToString() : string.Empty;
-            var xSecretKey = _httpContextWrapper.TryGetValue(requestHeaders, Constants.X_SECRET_KEY, out var secretKey) ? secretKey.ToString() : string.Empty;
+            var certificates = _X509CertificateWrapper.GetCertificates(store);
+            var filteredCertificate = certificates?.Cast<X509Certificate2>()
+               .Where(cert => cert.Subject.StartsWith(ProvisioningConstants.CERTIFICATE_SUBJECT + _authenticationSettings.GetCertificatePrefix())
+                && cert.FriendlyName.Contains(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR)
+                && (string.IsNullOrEmpty(deviceId) || cert.FriendlyName.Contains($"{deviceId}{ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR}")))
+               .FirstOrDefault();
 
-            if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
-            {
-                var error = "Require headers were not provided";
-                await UnauthorizedResponseAsync(context, error);
-                return;
-            }
-
-            if (!await IsValidDeviceId(context, xDeviceId))
-            {
-                return;
-            }
-
-            if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
-            {
-                // The action has [AllowAnonymous], so allow the request to proceed
-                await _requestDelegate(context);
-                return;
-            }
-            var actionName = context.Request.Path.Value?.Split("/").LastOrDefault();
-            var isAuthorized = await IsAuthorized(context, deviceIsBusy, xDeviceId, xSecretKey, actionName, cancellationToken);
-            if (!isAuthorized)
-            {
-                await UnauthorizedResponseAsync(context, $"{actionName}, Unauthorized device.");
-                return;
-            }
-            await _requestDelegate(context);
-        }
-        else
-        {
-            await _requestDelegate(context);
+            return filteredCertificate;
         }
     }
 
-    private async Task<bool> IsAuthorized(HttpContext context, bool deviceIsBusy, string xDeviceId, string xSecretKey, string actionName, CancellationToken cancellationToken)
+    public async Task<DeviceConnectResultEnum> InitAuthorizationAsync()
     {
-        var action = context.Request.Path.Value?.ToLower() ?? "";
-        var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
-        var x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
-        bool isX509Authorized = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
-        if (!isX509Authorized)
-        {
-            if (x509Certificate is not null)
-            {
-                return false;
-            }
-
-            _logger.Info($"{actionName}, The device is X509 unAuthorized, check symmetric key authorized");
-            var isSymetricKeyAuthorized = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
-            if (!isSymetricKeyAuthorized)
-            {
-                _logger.Info($"{actionName}, The device is symmetric key unAuthorized, start provisinig proccess");
-                await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
-            }
-            return action.Contains("getdevicestate");
-        }
-        if (x509Certificate?.NotAfter <= DateTime.UtcNow)
-        {
-            _logger.Info($"{actionName}, The certificate is expired, start provisinig proccess");
-            await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
-            return action.Contains("getdevicestate");
-        }
-        return true;
-    }
-    private void NextWithRedirectAsync(HttpContext context, IX509Provider x509Provider)
-    {
-        context.Connection.ClientCertificate = x509Provider.GetHttpsCertificate();
-
-        var sslPort = _configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
-        var uriBuilder = new UriBuilder(_httpContextWrapper.GetDisplayUrl(context))
-        {
-            Scheme = Uri.UriSchemeHttps,
-            Port = sslPort,
-        };
-
-        context.Response.Redirect(uriBuilder.Uri.AbsoluteUri, false, true);
+        return await AuthorizationAsync(string.Empty, string.Empty, default, true);
     }
 
-    private async Task UnauthorizedResponseAsync(HttpContext context, string error)
+    public async Task<DeviceConnectResultEnum> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool checkAuthorization = false)
     {
-        _logger.Error(error);
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsync(error);
+        return await AuthorizationAsync(XdeviceId, XSecretKey, cancellationToken, false, checkAuthorization);
     }
 
-    private bool IsActionMethod(Endpoint? endpoint)
+    private async Task<DeviceConnectResultEnum> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool IsInitializedLoad = false, bool checkAuthorization = false)
     {
-        if (endpoint == null)
+        X509Certificate2? userCertificate = GetCertificate();
+
+        if (userCertificate == null)
         {
-            return false;
+            _logger.Error("No certificate found in the store");
+            return DeviceConnectResultEnum.CertificateInvalid;
         }
 
-        var actionDescriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
-        return actionDescriptor != null;
-    }
+        var friendlyName = userCertificate?.FriendlyName ?? throw new ArgumentNullException(nameof(userCertificate.FriendlyName));
+        var parts = friendlyName.Split(ProvisioningConstants.CERTIFICATE_NAME_SEPARATOR);
 
-    private async Task<bool> IsValidDeviceId(HttpContext context, string deviceId)
-    {
-        string pattern = @"^[A-Za-z0-9\-:.+%_#*?!(),=$']{1,128}$";
-        var regex = new Regex(pattern);
-        if (!regex.IsMatch(deviceId))
+        if (parts.Length != 2)
         {
-            var error = "Device ID contains one or more invalid character. ID may contain [Aa-Zz] [0-9] and [-:.+%_#*?!(),=$']";
+            var error = "The FriendlyName is not in the expected format.";
             _logger.Error(error);
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await context.Response.WriteAsync(error);
-            return false;
+            return DeviceConnectResultEnum.CertificateInvalid;
         }
-        return true;
 
+        var deviceId = parts[0];
+        var iotHubHostName = parts[1];
+        var deviceSecret = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.DEVICE_SECRET_EXTENSION_KEY).RawData);
+
+        if ((!IsInitializedLoad || checkAuthorization) && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(deviceSecret)))
+        {
+            var error = "The deviceId or the SecretKey are incorrect.";
+            _logger.Error(error);
+            return DeviceConnectResultEnum.CertificateInvalid;
+        }
+
+        if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(iotHubHostName))
+        {
+            var error = "The deviceId or the iotHubHostName cant be null.";
+            _logger.Error(error);
+            return DeviceConnectResultEnum.CertificateInvalid;
+        }
+
+        if (IsInitializedLoad)
+        {
+            _logger.Info($"Try load with the following deviceId: {deviceId}");
+        }
+
+        iotHubHostName += ProvisioningConstants.IOT_HUB_NAME_SUFFIX;
+
+        return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad || checkAuthorization, cancellationToken);
     }
 
+    public async Task<DeviceConnectResultEnum> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNullOrEmpty(dpsScopeId);
+        ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
+        ArgumentNullException.ThrowIfNull(certificate);
+
+        using var security = _X509CertificateWrapper.GetSecurityProvider(certificate);
+
+        _logger.Debug($"Initializing the device provisioning client...");
+
+        using ProvisioningTransportHandler transport = _deviceClientWrapper.GetProvisioningTransportHandler();
+
+        _logger.Debug($"Initialized for registration Id {security.GetRegistrationID()}.");
+
+        DeviceRegistrationResult result = await _provisioningDeviceClientWrapper.RegisterAsync(globalDeviceEndpoint,
+            dpsScopeId,
+            security,
+            transport);
+
+        if (result == null)
+        {
+            _logger.Error("RegisterAsync failed");
+            return DeviceConnectResultEnum.CertificateInvalid;
+        }
+
+        _logger.Debug($"Registration status: {result.Status}.");
+        if (result.Status != ProvisioningRegistrationStatusType.Assigned)
+        {
+            _logger.Error("Registration status did not assign a hub.");
+            return DeviceConnectResultEnum.CertificateInvalid;
+        }
+        _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
+
+        await OnProvisioningCompleted(message, cancellationToken);
+
+        var devResult = await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
+        if (devResult == DeviceConnectResultEnum.Valid)
+        {
+            await _twinReportHandler.UpdateDeviceCertificateValidity(_authenticationSettings.CertificateExpiredDays, cancellationToken);
+        }
+        return devResult;
+    }
+
+    private async Task<DeviceConnectResultEnum> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, bool initialize, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (initialize)
+            {
+                using var auth = _X509CertificateWrapper.GetDeviceAuthentication(deviceId, userCertificate);
+                await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+            }
+            return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Exception during IoT Hub connection message: {ex.Message}");
+            return DeviceConnectResultEnum.Unknow;
+        }
+    }
+
+    private async Task OnProvisioningCompleted(DeviceMessage.Message message, CancellationToken cancellationToken)
+    {
+        //before initialize the device client, we need to complete the message
+        try
+        {
+            if (message != null)
+            {
+                await _deviceClientWrapper.CompleteAsync(message, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"ProvisioningAsync, Complete message failed message: {ex.Message}");
+        }
+    }
 }
