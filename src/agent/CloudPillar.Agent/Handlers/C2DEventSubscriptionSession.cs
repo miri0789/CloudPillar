@@ -42,8 +42,8 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             }
             catch (Exception ex)
             {
-                _logger.Error($"Exception hit when receiving the message, ignoring it message: {ex.Message}");
-                continue;
+                _logger.Error($"Certificate expired, ignoring it message: {ex.Message}");
+                break;
             }
             var parseMessage = Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType);
             try

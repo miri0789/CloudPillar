@@ -89,7 +89,7 @@ public class ReprovisioningHandlerTestFixture
         _certificate.FriendlyName = temporaryCertificateName;
         SetupX509CertificateWrapperMock();
         _dPSProvisioningDeviceClientHandlerMock.Setup(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<Message>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
 
         await _target.HandleReprovisioningMessageAsync(It.IsAny<Message>(), _validReprovisioningMessage, CancellationToken.None);
 
@@ -130,6 +130,8 @@ public class ReprovisioningHandlerTestFixture
     [Test]
     public async Task HandleReprovisioningMessageAsync_Valid_CertificateFriendlyNameChanged()
     {
+        _dPSProvisioningDeviceClientHandlerMock.Setup(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<Message>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _certificate.FriendlyName = temporaryCertificateName;
         SetupX509CertificateWrapperMock();
         await _target.HandleReprovisioningMessageAsync(It.IsAny<Message>(), _validReprovisioningMessage, CancellationToken.None);

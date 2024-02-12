@@ -19,7 +19,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.0" />
     <PackageReference Include="log4net" Version="2.0.15" />
-    <PackageReference Include="SharedEntities" Version="1.0.205" />
+    <PackageReference Include="SharedEntities" Version="1.0.232" />
   </ItemGroup>
 
 </Project>

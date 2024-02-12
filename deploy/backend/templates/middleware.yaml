@@ -1,0 +1,11 @@
+{{- range .Values.controllers }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .title }}-headers
+spec:
+  headers:
+    customRequestHeaders:
+      Host: {{ .title }}-service.cp-be-ns.svc
+{{- end }}   

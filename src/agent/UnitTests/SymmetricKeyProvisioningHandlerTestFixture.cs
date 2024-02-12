@@ -98,23 +98,17 @@ public class SymmetricKeyProvisioningHandlerTestFixture
 
     [TestCase(true)]
     [TestCase(false)]
-    public async Task ProvisioningAsync_IsNewDevice_ReturnsIsNewDevice(bool isNewDevice)
+    public async Task IsNewDeviceAsync_CheckReportedCertDetails_ReturnsIsNewDevice(bool isNewDevice)
     {
-        _authenticationSettingsMock.Setup(x => x.Value).Returns(authenticationSettings);
-        _provisioningDeviceClientWrapperMock.Setup(x => x.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SecurityProvider>(), It.IsAny<ProvisioningTransportHandler>())).ReturnsAsync(() =>
-        {
-            return GetDeviceRegistrationResult(ProvisioningRegistrationStatusType.Assigned);
-        });
-
         var twin = new Twin();
         var certificateValidity = new CertificateValidity()
         {
-            CreationDate = DateTime.UtcNow.AddDays(-1),
-            ExpirationDate = DateTime.UtcNow.AddDays(2)
+            CreationDate = DateTime.UtcNow.Date.AddDays(-1),
+            ExpirationDate = DateTime.UtcNow.Date.AddDays(2)
         };
         twin.Properties.Reported["certificateValidity"] = isNewDevice ? null : certificateValidity;
         _deviceClientWrapperMock.Setup(x => x.GetTwinAsync(It.IsAny<CancellationToken>())).ReturnsAsync(twin);
-        var result = await _target.ProvisioningAsync(DPS_SCOPE_ID, CancellationToken.None);
+        var result = await _target.IsNewDeviceAsync(CancellationToken.None);
         Assert.That(isNewDevice.Equals(result));
     }
 

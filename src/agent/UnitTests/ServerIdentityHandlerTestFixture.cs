@@ -7,6 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using CloudPillar.Agent.Entities;
 using Microsoft.Extensions.Options;
+using System.Text;
 
 namespace CloudPillar.Agent.Tests
 {
@@ -18,7 +19,7 @@ namespace CloudPillar.Agent.Tests
         private Mock<IFileStreamerWrapper> _fileStreamerWrapper;
         private Mock<IDeviceClientWrapper> _deviceClientWrapper;
         private IServerIdentityHandler _target;
-        private AppSettings appSettings = new AppSettings() { DefaultPublicKeyName = "UT-PublicKey" };
+        private AppSettings appSettings = new AppSettings() { DefaultSignCertificateName = "UT-PublicKey" };
         private Mock<IOptions<AppSettings>> mockAppSettings;
 
         private const string CERTIFICATE_PREFIX = "UT_PREFIX";
@@ -78,12 +79,16 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task GetPublicKeyFromCertificate_GetRSAPublicKey_Success()
         {
-            RSA rsa = RSA.Create();
-            _x509CertificateWrapper.Setup(x => x.GetRSAPublicKey(x509Certificate1)).Returns(rsa);
-            _x509CertificateWrapper.Setup(x => x.ExportSubjectPublicKeyInfo(It.IsAny<RSA>())).Returns("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzpIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr24Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMRgsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67JrN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3wMQIDAQAB");
-            var publicKey = await _target.GetPublicKeyFromCertificate(x509Certificate1);
 
-            var excepted = "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvzga8x+iIyrLferAnPzp\r\nIyuCO5PEKV3wgFaak94kDsm6W1qc7dxX4NrDZUT7cLqCIiv7qaszd+vQDzkQLJr2\r\n4Fd1NAnOylnY1CIAMeSL7BWOhubBaWeMbVZT3j1ivFAT27DgkUnRH87KJbB/AUMR\r\ngsKbDsC6cKZmoaORfDv0so9NV7TDnaRcD6I2QiVRlFG3QMVFYZ2WyVBwbbElkARs\r\n0iLzv5+FU4VYw7Ht4LPxxZaxm5r6xhPjr9APsFGalEoLM0EH+RwzFpyLuaTI67Jr\r\nN0pkX752+3a27XHuTMPFrVFyBNTstFZaAyW53E0eHegO/oNLpwzWFDlxQWRE6L3w\r\nMQIDAQAB\r\n-----END PUBLIC KEY-----\r\n";
+            _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
+            _x509CertificateWrapper.Setup(x => x.GetAlgorithmFriendlyName(x509Certificate1)).Returns("RSA");
+            string myString = "Hello, World!";
+            byte[] byteArray = Encoding.UTF8.GetBytes(myString);
+            string base64String = Convert.ToBase64String(byteArray);
+            _x509CertificateWrapper.Setup(x => x.ExportSubjectPublicKeyInfo(x509Certificate1)).Returns(byteArray);
+            var publicKey = await _target.GetPublicKeyFromCertificateFileAsync("certificate1.cer");
+
+            var excepted = "-----BEGIN RSA PUBLIC KEY-----\r\nSGVsbG8sIFdvcmxkIQ==\r\n-----END RSA PUBLIC KEY-----\r\n";
 
             Assert.AreEqual(excepted, publicKey);
         }
@@ -100,7 +105,7 @@ namespace CloudPillar.Agent.Tests
                 _fileStreamerWrapper.Setup(f => f.GetFileNameWithoutExtension(file)).Returns(Path.GetFileNameWithoutExtension(file));
             }
 
-            await _target.RemoveNonDefaultCertificates("pki");
+            await _target.RemoveNonDefaultCertificatesAsync("pki");
             _fileStreamerWrapper.Verify(f => f.DeleteFile(It.IsAny<string>()), Times.Exactly(2));
         }
 

@@ -32,13 +32,17 @@ public class ProvisioningService : IProvisioningService
     public async Task ProvisinigSymetricKeyAsync(CancellationToken cancellationToken)
     {
         await _stateMachineHandler.SetStateAsync(DeviceStateType.Uninitialized, cancellationToken);
-        await _serverIdentityHandler.RemoveNonDefaultCertificates(Constants.PKI_FOLDER_PATH);
+        await _serverIdentityHandler.RemoveNonDefaultCertificatesAsync(SharedConstants.PKI_FOLDER_PATH);
         _stateMachineChangedEvent.SetStateChanged(new StateMachineEventArgs(DeviceStateType.Busy));
         _reprovisioningHandler.RemoveX509CertificatesFromStore();
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = _requestWrapper.GetHeaderValue(Constants.X_DEVICE_ID);
         var secretKey = _requestWrapper.GetHeaderValue(Constants.X_SECRET_KEY);
-        if (await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken))
+        if(!await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken))
+        {
+            throw new Exception("Failed to provision symmetric key");
+        }
+        if (await _symmetricKeyProvisioningHandler.IsNewDeviceAsync(cancellationToken))
         {
             await _stateMachineHandler.SetStateAsync(DeviceStateType.Provisioning, cancellationToken, true);
             await _twinReportHandler.InitReportDeviceParamsAsync(cancellationToken);
@@ -48,6 +52,7 @@ public class ProvisioningService : IProvisioningService
         {
             await d2CMessengerHandler.SendRemoveDeviceEvent(cancellationToken);
             await ProvisinigSymetricKeyAsync(cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
         }
     }
 }

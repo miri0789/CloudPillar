@@ -1,0 +1,17 @@
+global:
+  userDefinedMSI:
+    enabled: true
+    msi: {msi}
+    subscriptionId: {subscription}
+    tenantId: {tenant}
+    azureCloudType: AzurePublicCloud
+controller:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    allowPrivilegeEscalation: false
+env_injector:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    allowPrivilegeEscalation: false

@@ -55,13 +55,14 @@
             "console": "internalConsole",
             "env": {
                 "KubernetesServiceHost": "",
-                "SigningPem": "=",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
                 "IothubConnectionString": "",
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                "SecretVolumeMountPath": "",
+                "DefaultSecretVolumeMountPath": ""
             }
         },
         {
@@ -74,6 +75,7 @@
             "cwd": "${workspaceFolder}/src/backend/BEApi",
             "console": "internalConsole",
             "env": {
+                "IothubConnectionString": "",
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",

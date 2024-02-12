@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace Backend.BEApi.Tests;
 
-public class ValidateCertificateTestFixture
+public class DeviceCertificateTestFixture
 {
     private Mock<IRegistrationService> _registrationServiceMock;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapperMock;
@@ -29,6 +29,7 @@ public class ValidateCertificateTestFixture
         _registryManagerWrapperMock = new Mock<IRegistryManagerWrapper>();
         _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
         _loggerMock = new Mock<ILoggerHandler>();
+
         _environmentsWrapperMock.Setup(c => c.dpsConnectionString).Returns("dpsConnectionString");
         _environmentsWrapperMock.Setup(c => c.iothubConnectionString).Returns("HostName=unitTest;SharedAccessKeyName=iothubowner;");
         _environmentsWrapperMock.Setup(c => c.expirationCertificatePercent).Returns(0.6);
@@ -44,11 +45,16 @@ public class ValidateCertificateTestFixture
     {
         var device = new Device(DEVICE_ID);
         var twin = new Twin();
-        var twinReported = new TwinReported();
-        twinReported.CertificateValidity = new CertificateValidity();
-        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-2);
-        twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(1);
-        twinReported.SecretKey = SECRET_KEY;
+
+        var twinReported = new TwinReported()
+        {
+            CertificateValidity = new CertificateValidity()
+            {
+                CreationDate = DateTime.UtcNow.Date.AddDays(-2),
+                ExpirationDate = DateTime.UtcNow.Date.AddDays(1)
+            },
+            SecretKey = SECRET_KEY
+        };
         string reportedJson = JsonConvert.SerializeObject(twinReported);
         twin.Properties.Reported = JsonConvert.DeserializeObject<TwinCollection>(reportedJson);
 
@@ -65,15 +71,18 @@ public class ValidateCertificateTestFixture
     {
         var device = new Device(DEVICE_ID);
         var twin = new Twin();
-        var twinReported = new TwinReported();
-        twinReported.CertificateValidity = new CertificateValidity();
-        twinReported.CertificateValidity.CreationDate = DateTime.UtcNow.AddDays(-1);
-        twinReported.CertificateValidity.ExpirationDate = DateTime.UtcNow.AddDays(10);
-        twinReported.SecretKey = SECRET_KEY;
+        var twinReported = new TwinReported()
+        {
+            CertificateValidity = new CertificateValidity()
+            {
+                CreationDate = DateTime.UtcNow.Date.AddDays(-1),
+                ExpirationDate = DateTime.UtcNow.Date.AddDays(10)
+            },
+            SecretKey = SECRET_KEY
+        };
         string reportedJson = JsonConvert.SerializeObject(twinReported);
         twin.Properties.Reported = JsonConvert.DeserializeObject<TwinCollection>(reportedJson);
-        var devices = new List<Device>();
-        devices.Add(device);
+        var devices = new List<Device>() { device };
         _registryManagerWrapperMock.Setup(x => x.GetIotDevicesAsync(It.IsAny<RegistryManager>(), It.IsAny<int>())).ReturnsAsync(devices);
         _registryManagerWrapperMock.Setup(x => x.GetTwinAsync(It.IsAny<RegistryManager>(), It.IsAny<string>())).ReturnsAsync(twin);
         await _target.IsDevicesCertificateExpiredAsync();

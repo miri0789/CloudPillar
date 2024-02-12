@@ -23,8 +23,8 @@ public class SigningService : ISigningService
     {
         try
         {
-            string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createTwinKeySignature?deviceId={deviceId}";
-            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Get);
+            string requestUrl = $"{_environmentsWrapper.beApiUrl}ChangeSpec/CreateChangeSpecKeySignature?deviceId={deviceId}&changeSignKey={signEvent.ChangeSignKey}";
+            await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post);
         }
         catch (Exception ex)
         {
@@ -36,11 +36,8 @@ public class SigningService : ISigningService
     {
         try
         {
-            string blobRequestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/CalculateHash?deviceId={deviceId}";
-            var signatureFileBytes = await _httpRequestorService.SendRequest<string>(blobRequestUrl, HttpMethod.Post, signFileEvent);
-
-            string signRequestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/createFileSign?deviceId={deviceId}&propName={signFileEvent.PropName}&actionIndex={signFileEvent.ActionIndex}&changeSpecKey={signFileEvent.ChangeSpec}";
-            await _httpRequestorService.SendRequest(signRequestUrl, HttpMethod.Post, signatureFileBytes);
+            string signRequestUrl = $"{_environmentsWrapper.beApiUrl}ChangeSpec/CreateFileSign?deviceId={deviceId}";
+            await _httpRequestorService.SendRequest(signRequestUrl, HttpMethod.Post, signFileEvent);
         }
         catch (Exception ex)
         {

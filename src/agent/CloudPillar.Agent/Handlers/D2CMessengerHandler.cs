@@ -20,12 +20,12 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task SendFirmwareUpdateEventAsync(CancellationToken cancellationToken, string changeSpecId, string fileName, int actionIndex, string CompletedRanges = "", long? startPosition = null, long? endPosition = null)
+    public async Task SendFileDownloadEventAsync(CancellationToken cancellationToken, string changeSpecId, string fileName, int actionIndex, string CompletedRanges = "", long? startPosition = null, long? endPosition = null)
     {
         // Deduct the chunk size based on the protocol being used
         int chunkSize = _deviceClientWrapper.GetChunkSizeByTransportType();
 
-        var firmwareUpdateEvent = new FirmwareUpdateEvent()
+        var FileDownloadEvent = new FileDownloadEvent()
         {
             FileName = fileName,
             ChunkSize = chunkSize,
@@ -36,7 +36,7 @@ public class D2CMessengerHandler : ID2CMessengerHandler
             ChangeSpecId = changeSpecId
         };
 
-        await SendMessageAsync(firmwareUpdateEvent, cancellationToken);
+        await SendMessageAsync(FileDownloadEvent, cancellationToken);
     }
 
     public async Task SendStreamingUploadChunkEventAsync(byte[] buffer, Uri storageUri, long currentPosition, string checkSum, CancellationToken cancellationToken, bool isRunDiagnostic = false)
@@ -72,9 +72,9 @@ public class D2CMessengerHandler : ID2CMessengerHandler
         await SendMessageAsync(d2CMessage, cancellationToken);
     }
 
-    public async Task SendSignTwinKeyEventAsync(string keyPath, string signatureKey, CancellationToken cancellationToken)
+    public async Task SendSignTwinKeyEventAsync(string changeSignKey, CancellationToken cancellationToken)
     {
-        await SendMessageAsync(new SignEvent(), cancellationToken);
+        await SendMessageAsync(new SignEvent(changeSignKey), cancellationToken);
     }
 
     public async Task SendRemoveDeviceEvent(CancellationToken cancellationToken)

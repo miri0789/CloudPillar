@@ -84,9 +84,9 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
 
         var deviceId = parts[0];
         var iotHubHostName = parts[1];
-        var oneMd = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.ONE_MD_EXTENTION_KEY).RawData);
+        var deviceSecret = Encoding.UTF8.GetString(userCertificate.Extensions.First(x => x.Oid?.Value == ProvisioningConstants.DEVICE_SECRET_EXTENSION_KEY).RawData);
 
-        if ((!IsInitializedLoad || checkAuthorization) && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(oneMd)))
+        if ((!IsInitializedLoad || checkAuthorization) && !(XdeviceId.Equals(deviceId) && XSecretKey.Equals(deviceSecret)))
         {
             var error = "The deviceId or the SecretKey are incorrect.";
             _logger.Error(error);
@@ -110,7 +110,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad || checkAuthorization, cancellationToken);
     }
 
-    public async Task ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
+    public async Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(dpsScopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
@@ -132,22 +132,25 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         if (result == null)
         {
             _logger.Error("RegisterAsync failed");
-            return;
+            return false;
         }
 
         _logger.Debug($"Registration status: {result.Status}.");
         if (result.Status != ProvisioningRegistrationStatusType.Assigned)
         {
             _logger.Error("Registration status did not assign a hub.");
-            return;
+            return false;
         }
         _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
         await OnProvisioningCompleted(message, cancellationToken);
 
-        await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
-
-        await _twinReportHandler.UpdateDeviceCertificateValidity(_authenticationSettings.CertificateExpiredDays, cancellationToken);
+        var isDeviceInitializedAsync = await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
+        if (isDeviceInitializedAsync)
+        {
+            await _twinReportHandler.UpdateDeviceCertificateValidity(_authenticationSettings.CertificateExpiredDays, cancellationToken);
+        }
+        return isDeviceInitializedAsync;
     }
 
     private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, bool initialize, CancellationToken cancellationToken)
@@ -157,7 +160,8 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             if (initialize)
             {
                 using var auth = _X509CertificateWrapper.GetDeviceAuthentication(deviceId, userCertificate);
-                await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+                var isDeviceInitializedAsync = await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+                return isDeviceInitializedAsync;
             }
             return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
         }
@@ -180,7 +184,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
         catch (Exception ex)
         {
-            _logger.Error("ProvisioningAsync, Complete message failed message: {ex.Message}");
+            _logger.Error($"ProvisioningAsync, Complete message failed message: {ex.Message}");
         }
     }
 }

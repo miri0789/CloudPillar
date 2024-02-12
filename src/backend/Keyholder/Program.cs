@@ -25,6 +25,7 @@ builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper
 builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
+builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();

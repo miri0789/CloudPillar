@@ -4,7 +4,7 @@
 
 controllers:
   - title: "blobstreamer"
-    replicaCount: 3
+    replicaCount: 2
     path: /blobstreamer-service
     port: 8081
     env:
@@ -54,22 +54,20 @@ controllers:
     - name: MessageTimeoutMinutes
       value: "60"
     - name: RangeBytes
-      value: "123456"
+      value: "292000"
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
-    replicaCount: 2
+    replicaCount: 1
     path: /keyholder-service
     port: 8082
     env:
     - name: KubernetesServiceHost
       value: ""
-    - name: SigningPem
-      value: "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSHVBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFqQklIV01JSFRBZ0VCQkVJQml5QWE3YVJIRkRDaDJxZ2EKOXNUVUdJTkU1akhBRm5tTTh4V2VUL3VuaTVJNHROcWhWNVh4MHBEcm1DVjltYnJvRnRmRWEwWFZmS3VNQXh4ZgpaNkxNL3lLaGdZa0RnWVlBQkFHQnpnZG5QNzk4RnNMdVdZVEREUUE3YzByM0JWazhOblJVU2V4cFFVc1JpbFBOCnYzU2NoTzBsUnc5UnU4Nngxa2huVkR4K2R1cTRCaURGY3ZsU0FjeWpMQUNKdmp2b3lUTEppQStUUUZkbXJlYXIKak1pWk5FMjVwVDJ5V1AxTlVuZEp4UGN2VnRmQlc0OGtQT212a1k0V2xxUDViQXdDWHdic0tyQ2drNnhic3AxMgpldz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0="
-    - name: SecretName
-      value: "IoTTwinSecret"
-    - name: SecretKey
-      value: "signKey"
+    - name: SecretVolumeMountPath
+      value: "/certs/tstbe"
+    - name: DefaultSecretVolumeMountPath
+      value: "/certs/tstbe/default"
     - name: IothubConnectionString
       value: "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE="
     - name: DPSConnectionString
@@ -78,8 +76,15 @@ controllers:
       value: "0ne00B56E85"
     - name: GlobalDeviceEndpoint
       value: "global.azure-devices-provisioning.net"
+    volumeMounts:
+    - name: tstbe-cert
+      mountPath: "/certs/tstbe"
+      readOnly: true
+    - name: tstbe-default-cert
+      mountPath: "/certs/tstbe/default"
+      readOnly: true
   - title: "beapi"
-    replicaCount: 3
+    replicaCount: 1
     path: /beapi-service
     port: 8083
     env:
@@ -95,6 +100,10 @@ controllers:
       value: "0.6"
     - name: "maxCountOfDevices"
       value: "100"
+    - name: KeyHolderUrl
+      value: "http://keyholder-service:8082/"
+    - name: BlobStreamerUrl
+      value: "http://blobstreamer-service:8081/"
 
 replicaCount: 1
 

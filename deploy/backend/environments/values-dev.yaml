@@ -4,7 +4,7 @@
 
 controllers:
   - title: "blobstreamer"
-    replicaCount: 3
+    replicaCount: 2
     path: /blobstreamer-service
     port: 8081
     env:
@@ -46,7 +46,7 @@ controllers:
     - name: KeyHolderUrl
       value: "http://keyholder-service:8082/"
     - name: BEApiUrl
-      value: "http://keyholder-service:8083/"
+      value: "http://beapi-service:8083/"
     - name: RangeCalculateType
       value: "percent"
     - name: RangePercent
@@ -54,10 +54,11 @@ controllers:
     - name: MessageTimeoutMinutes
       value: "60"
     - name: RangeBytes
-      value: "123456"
+      value: "292000"
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
+    replicaCount: 1
     path: /keyholder-service
     port: 8082
     env:
@@ -65,6 +66,8 @@ controllers:
       value: ""
     - name: SecretVolumeMountPath
       value: "/certs/devbe"
+    - name: DefaultSecretVolumeMountPath
+      value: "/certs/devbe/default"
     - name: IothubConnectionString
       value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
     - name: DPSConnectionString
@@ -77,8 +80,11 @@ controllers:
     - name: devbe-cert
       mountPath: "/certs/devbe"
       readOnly: true
+    - name: devbe-default-cert
+      mountPath: "/certs/devbe/default"
+      readOnly: true
   - title: "beapi"
-    replicaCount: 3
+    replicaCount: 1
     path: /beapi-service
     port: 8083
     env:
@@ -94,7 +100,11 @@ controllers:
       value: "0.6"
     - name: "maxCountOfDevices"
       value: "100"
-    
+    - name: KeyHolderUrl
+      value: "http://keyholder-service:8082/"
+    - name: BlobStreamerUrl
+      value: "http://blobstreamer-service:8081/"
+
 replicaCount: 1
 
 env:

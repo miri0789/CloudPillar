@@ -2,12 +2,12 @@
 
 public enum D2CMessageType
 {
-    FirmwareUpdateReady,
+    FileDownloadReady,
     SignTwinKey,
     SignFileKey,
     StreamingUploadChunk,
     ProvisionDeviceCertificate,
-    RemoveDevice,
+    RemoveDevice
 }
 
 public class D2CMessage
