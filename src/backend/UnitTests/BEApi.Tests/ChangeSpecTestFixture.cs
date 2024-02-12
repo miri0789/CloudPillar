@@ -35,7 +35,6 @@ public class ChangeSpecTestFixture
             }
     };
     private const string DEVICE_ID = "deviceId";
-    private const string CHANGE_SPEC_KEY = "changeSpec";
     private const string CHANGE_SIGN_KEY = "changeSpecSign";
     private const string SIGN = "ASZftuTGnLeppB4VYDU76cEuzAvrTnIdFLvfqcjLEnmLUE7mTSLhlWP1chQMZjm+s1gY85sNx6QZml3N+tpbnglrALwJ0mZlCTmZgdWiVsKi7Y1TD4HcmVeoc2L66uEyvLScGhIG0iblwvYJFC/hSQraKAb9hafN1U3PqI9CaohAMdMR";
 
