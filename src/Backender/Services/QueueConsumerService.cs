@@ -222,7 +222,7 @@ public class QueueConsumerService : BackgroundService
                 var relativeUri = GetCompleteRelatevieUri(type, properties);
 
                 await SendCompleteTopic(response, relativeUri, responseHeaers, cancellationToken);
-                await SendCompleteTopicAsync(response, relativeUri, responseHeaers, cancellationToken);
+                await SendCompleteRequestAsync(response, relativeUri, responseHeaers, cancellationToken);
 
                 await args.CompleteMessageAsync(args.Message);
             }
@@ -253,14 +253,14 @@ public class QueueConsumerService : BackgroundService
         }
     }
 
-    private async Task SendCompleteTopicAsync(string response, string relativeUri, IDictionary<string, string>? responseHeaers, CancellationToken cancellationToken)
+    private async Task SendCompleteRequestAsync(string response, string relativeUri, IDictionary<string, string>? responseHeaers, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(_environmentsWrapper.CompletionUrlBase))
         {
             try
             {
                 await _messageProcessor.SendPostRequestAsync($"{_environmentsWrapper.CompletionUrlBase}{relativeUri}", response, responseHeaers, cancellationToken);
-                _logger.Info($"SendCompleteTopicAsync for uri {relativeUri} success");
+                _logger.Info($"SendCompleteRequestAsync for uri {relativeUri} success");
 
             }
             catch (Exception ex)
