@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -52,7 +53,7 @@ public class SymmetricKeyProvisioningHandlerTestFixture
         _symmetricKeyWrapperMock.Setup(x => x.GetSecurityProvider(DEVICE_ID, PRIMARY_KEY, SECONDARY_KEY)).Returns(new SecurityProviderSymmetricKey(DEVICE_ID, PRIMARY_KEY, SECONDARY_KEY));
         _deviceClientWrapperMock.Setup(x => x.GetProvisioningTransportHandler()).Returns(Mock.Of<ProvisioningTransportHandler>());
 
-        _deviceClientWrapperMock.Setup(x => x.IsDeviceInitializedAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _deviceClientWrapperMock.Setup(x => x.IsDeviceInitializedAsync(It.IsAny<CancellationToken>())).ReturnsAsync(DeviceConnectResultEnum.Valid);
 
         CreateTarget();
     }

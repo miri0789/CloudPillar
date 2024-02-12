@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Shared.Entities.Authentication;
 using Shared.Entities.Messages;
 using CloudPillar.Agent.Handlers.Logger;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -89,7 +90,7 @@ public class ReprovisioningHandlerTestFixture
         _certificate.FriendlyName = temporaryCertificateName;
         SetupX509CertificateWrapperMock();
         _dPSProvisioningDeviceClientHandlerMock.Setup(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<Message>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(DeviceConnectResultEnum.Valid);
 
         await _target.HandleReprovisioningMessageAsync(It.IsAny<Message>(), _validReprovisioningMessage, CancellationToken.None);
 
@@ -131,7 +132,7 @@ public class ReprovisioningHandlerTestFixture
     public async Task HandleReprovisioningMessageAsync_Valid_CertificateFriendlyNameChanged()
     {
         _dPSProvisioningDeviceClientHandlerMock.Setup(x => x.ProvisioningAsync(It.IsAny<string>(), _certificate, It.IsAny<string>(), It.IsAny<Message>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(DeviceConnectResultEnum.Valid);
         _certificate.FriendlyName = temporaryCertificateName;
         SetupX509CertificateWrapperMock();
         await _target.HandleReprovisioningMessageAsync(It.IsAny<Message>(), _validReprovisioningMessage, CancellationToken.None);
