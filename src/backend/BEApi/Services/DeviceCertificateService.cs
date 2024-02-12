@@ -37,14 +37,10 @@ public class DeviceCertificateService : IDeviceCertificateService
                 var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
                 var creationDate = twinReported.CertificateValidity.CreationDate;
                 var expiredDate = twinReported.CertificateValidity.ExpirationDate;
-                var currentDate = DateTime.UtcNow.ToString("dd-MM-yyyy");
+                var currentDate = DateTime.UtcNow.Date;
 
-                var creationDateParse = DateTime.ParseExact(creationDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                var expiredDateParse = DateTime.ParseExact(expiredDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                var currentDateParse = DateTime.ParseExact(currentDate, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-
-                TimeSpan totalDuration = expiredDateParse - creationDateParse;
-                TimeSpan passedDuration = currentDateParse - creationDateParse;
+                TimeSpan totalDuration = expiredDate - creationDate;
+                TimeSpan passedDuration = currentDate - creationDate;
                 double percentagePassed = (double)passedDuration.Ticks / totalDuration.Ticks;
                 if (percentagePassed >= _environmentsWrapper.expirationCertificatePercent)
                 {

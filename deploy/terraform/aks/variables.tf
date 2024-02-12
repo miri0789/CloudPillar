@@ -11,3 +11,7 @@ variable "env" {
 variable "akspat" {
   type = string
 }
+variable "addressSpace"{
+  description = "The subnet address prefixes of aks vnet"
+  default = "10.23.1.1/24"
+}

@@ -1,0 +1,22 @@
+{{- range .Values.controllers }}
+{{- if and .port .path }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .title }}-service
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`{{ .path }}`)
+    kind: Rule
+    middlewares:
+    - name: {{ .title }}-headers
+    services:
+    - name: {{ .title }}-service
+      port: {{ .port }}
+      scheme: http
+{{- end }}
+{{- end }}
+  

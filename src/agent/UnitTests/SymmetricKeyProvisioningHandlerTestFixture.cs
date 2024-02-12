@@ -103,8 +103,8 @@ public class SymmetricKeyProvisioningHandlerTestFixture
         var twin = new Twin();
         var certificateValidity = new CertificateValidity()
         {
-            CreationDate = DateTime.UtcNow.AddDays(-1).ToString("dd/MM/yyyy"),
-            ExpirationDate = DateTime.UtcNow.AddDays(2).ToString("dd/MM/yyyy")
+            CreationDate = DateTime.UtcNow.Date.AddDays(-1),
+            ExpirationDate = DateTime.UtcNow.Date.AddDays(2)
         };
         twin.Properties.Reported["certificateValidity"] = isNewDevice ? null : certificateValidity;
         _deviceClientWrapperMock.Setup(x => x.GetTwinAsync(It.IsAny<CancellationToken>())).ReturnsAsync(twin);
