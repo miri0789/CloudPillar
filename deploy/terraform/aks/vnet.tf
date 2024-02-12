@@ -21,3 +21,10 @@ resource "azurerm_subnet" "cp-keyvault-private-subnet" {
   address_prefixes     = ["10.13.0.0/24"]
   service_endpoints = [ "Microsoft.KeyVault" ,"Microsoft.Web" ,"Microsoft.ContainerRegistry"]
 }
+
+resource "azurerm_role_assignment" "ra" {
+  principal_id                     = azurerm_kubernetes_cluster.aks.identity[0].principal_id
+  role_definition_name             = "Network Contributor"
+  scope                            = azurerm_virtual_network.aks.id
+  skip_service_principal_aad_check = true
+}
