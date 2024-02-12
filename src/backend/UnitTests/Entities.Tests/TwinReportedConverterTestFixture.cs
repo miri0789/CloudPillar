@@ -170,8 +170,8 @@ public class TwinReportedConverterTestFixture
     [Test]
     public void ReadJson_ConvertCertificateValidity_ConvertCorretly()
     {
-        var DateTimeUtcNow = DateTime.UtcNow.ToString("dd/MM/yyyy");
-        var ExpirationDate = DateTime.UtcNow.AddDays(30).ToString("dd/MM/yyyy");
+        var DateTimeUtcNow = DateTime.UtcNow.Date;
+        var ExpirationDate = DateTime.UtcNow.Date.AddDays(30);
         var expectedResult = new TwinReported()
         {
             CertificateValidity = new CertificateValidity { CreationDate = DateTimeUtcNow, ExpirationDate = ExpirationDate },

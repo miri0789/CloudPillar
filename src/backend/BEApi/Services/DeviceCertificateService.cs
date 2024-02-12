@@ -35,8 +35,8 @@ public class DeviceCertificateService : IDeviceCertificateService
                 _logger.Info($"Device {device.Id}: Validating certificate...");
                 var twin = await _registryManagerWrapper.GetTwinAsync(registryManager, device.Id);
                 var twinReported = JsonConvert.DeserializeObject<TwinReported>(twin.Properties.Reported.ToJson());
-                var creationDate = twinReported.CertificateValidity.CreationDate.ToDateTime(TimeOnly.MinValue);
-                var expiredDate = twinReported.CertificateValidity.ExpirationDate.ToDateTime(TimeOnly.MinValue);
+                var creationDate = twinReported.CertificateValidity.CreationDate;
+                var expiredDate = twinReported.CertificateValidity.ExpirationDate;
                 var currentDate = DateTime.UtcNow.Date;
 
                 TimeSpan totalDuration = expiredDate - creationDate;
