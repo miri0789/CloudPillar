@@ -1,7 +1,6 @@
 using System.Text;
-using Backend.BEApi.Services;
-using Backend.BEApi.Services.interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
+using Backend.Infra.Common.Services;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Extensions.Options;
@@ -14,7 +13,7 @@ public class ChangeSpecTestFixture
 {
     private Mock<ITwinDiseredService> _twinDiseredServiceMock;
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
-    private Mock<IEnvironmentsWrapper> _environmentsWrapperMock;
+    private Mock<ICommonEnvironmentsWrapper> _environmentsWrapperMock;
     private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
     private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapper;
@@ -45,7 +44,7 @@ public class ChangeSpecTestFixture
     {
         _twinDiseredServiceMock = new Mock<ITwinDiseredService>();
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
-        _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
+        _environmentsWrapperMock = new Mock<ICommonEnvironmentsWrapper>();
         mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
         mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
         _registryManagerWrapper = new Mock<IRegistryManagerWrapper>();
