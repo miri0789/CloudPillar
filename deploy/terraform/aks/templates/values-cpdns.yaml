@@ -1,5 +1,0 @@
-tolerations:      
-- key: "kubernetes.azure.com/scalesetpriority"
-  operator: "Equal"
-  value: "spot"
-  effect: "NoSchedule"
