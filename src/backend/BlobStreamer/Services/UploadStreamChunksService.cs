@@ -111,9 +111,6 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         else
         {
             _logger.Info($"Blobstreamer UploadFromStreamAsync Failed");
-
-            //TO DO
-            //add recipe to desired
         }
         return uploadSuccess;
     }
