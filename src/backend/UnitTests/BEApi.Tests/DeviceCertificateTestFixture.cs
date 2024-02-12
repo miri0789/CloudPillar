@@ -21,7 +21,6 @@ public class DeviceCertificateTestFixture
     private const string DEVICE_ID = "deviceId";
     private const string SECRET_KEY = "secretKey";
     private const string CERTIFICATE_PREFIX = "UnitTest-CP-";
-    private DateOnly _dateOnly;
 
     [SetUp]
     public void Setup()
@@ -30,7 +29,6 @@ public class DeviceCertificateTestFixture
         _registryManagerWrapperMock = new Mock<IRegistryManagerWrapper>();
         _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
         _loggerMock = new Mock<ILoggerHandler>();
-        _dateOnly = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day);
 
         _environmentsWrapperMock.Setup(c => c.dpsConnectionString).Returns("dpsConnectionString");
         _environmentsWrapperMock.Setup(c => c.iothubConnectionString).Returns("HostName=unitTest;SharedAccessKeyName=iothubowner;");
@@ -52,8 +50,8 @@ public class DeviceCertificateTestFixture
         {
             CertificateValidity = new CertificateValidity()
             {
-                CreationDate = _dateOnly.AddDays(-2),
-                ExpirationDate = _dateOnly.AddDays(1)
+                CreationDate = DateTime.UtcNow.Date.AddDays(-2),
+                ExpirationDate = DateTime.UtcNow.Date.AddDays(1)
             },
             SecretKey = SECRET_KEY
         };
@@ -77,8 +75,8 @@ public class DeviceCertificateTestFixture
         {
             CertificateValidity = new CertificateValidity()
             {
-                CreationDate = _dateOnly.AddDays(-1),
-                ExpirationDate = _dateOnly.AddDays(10)
+                CreationDate = DateTime.UtcNow.Date.AddDays(-1),
+                ExpirationDate = DateTime.UtcNow.Date.AddDays(10)
             },
             SecretKey = SECRET_KEY
         };
