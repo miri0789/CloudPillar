@@ -29,6 +29,7 @@ public class DeviceCertificateTestFixture
         _registryManagerWrapperMock = new Mock<IRegistryManagerWrapper>();
         _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
         _loggerMock = new Mock<ILoggerHandler>();
+
         _environmentsWrapperMock.Setup(c => c.dpsConnectionString).Returns("dpsConnectionString");
         _environmentsWrapperMock.Setup(c => c.iothubConnectionString).Returns("HostName=unitTest;SharedAccessKeyName=iothubowner;");
         _environmentsWrapperMock.Setup(c => c.expirationCertificatePercent).Returns(0.6);
@@ -44,12 +45,13 @@ public class DeviceCertificateTestFixture
     {
         var device = new Device(DEVICE_ID);
         var twin = new Twin();
+
         var twinReported = new TwinReported()
         {
             CertificateValidity = new CertificateValidity()
             {
-                CreationDate = DateTime.UtcNow.AddDays(-2).ToString("dd-MM-yyyy"),
-                ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy")
+                CreationDate = DateTime.UtcNow.Date.AddDays(-2),
+                ExpirationDate = DateTime.UtcNow.Date.AddDays(1)
             },
             SecretKey = SECRET_KEY
         };
@@ -73,8 +75,8 @@ public class DeviceCertificateTestFixture
         {
             CertificateValidity = new CertificateValidity()
             {
-                CreationDate = DateTime.UtcNow.AddDays(-1).ToString("dd-MM-yyyy"),
-                ExpirationDate = DateTime.UtcNow.AddDays(10).ToString("dd-MM-yyyy")
+                CreationDate = DateTime.UtcNow.Date.AddDays(-1),
+                ExpirationDate = DateTime.UtcNow.Date.AddDays(10)
             },
             SecretKey = SECRET_KEY
         };
