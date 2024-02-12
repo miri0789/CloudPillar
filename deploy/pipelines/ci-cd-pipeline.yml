@@ -1,6 +1,6 @@
 variables:
 - name: imagetag
-  value: 1.2.$(Build.BuildNumber)
+  value: 1.3.$(Build.BuildNumber)
 parameters:
 - name: env
   displayName: Select Environment to deploy
