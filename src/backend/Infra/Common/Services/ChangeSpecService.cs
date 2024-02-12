@@ -46,7 +46,7 @@ public class ChangeSpecService : IChangeSpecService
                                 MessageType = D2CMessageType.SignFileKey,
                                 ActionIndex = Array.IndexOf(transistPackage.Value.ToArray(), actionKey),
                                 FileName = downloadAction.Source,
-                                BufferSize = _downloadSettings.SignFileBufferSize,
+                                BufferSize = SharedConstants.SIGN_FILE_BUFFER_SIZE,
                                 PropName = changeSpecKey.GetSignKeyByChangeSpec(),
                                 ChangeSpecId = changeSpec.Id,
                                 ChangeSpecKey = changeSpecKey
@@ -97,7 +97,7 @@ public class ChangeSpecService : IChangeSpecService
         await _twinDesiredService.SignTwinDesiredAsync(twinDesired, deviceId, changeSpecKey.GetSignKeyByChangeSpec(), signature);
     }
 
-    private async Task<byte[]> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent)
+    public async Task<byte[]> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent)
     {
         string blobRequestUrl = $"{_environmentsCommonWrapper.blobStreamerUrl}blob/CalculateHash?deviceId={deviceId}";
         var signatureFileBytes = await _httpRequestorService.SendRequest<byte[]>(blobRequestUrl, HttpMethod.Post, signFileEvent);

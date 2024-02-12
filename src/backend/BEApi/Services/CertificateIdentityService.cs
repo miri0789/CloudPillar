@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
@@ -100,7 +99,11 @@ public class CertificateIdentityService : ICertificateIdentityService
     {
         _logger.Info($"Send request to get Sign certificate from keyHolder");
 
-        var signatureFileBytes = await GetCalculateHash(publicKey);
+        var evt = new SignFileEvent()
+        {
+            BufferSize = _d
+        };
+        var signatureFileBytes = await _changeSpecService.GetFileBytesAsync(deviceId,)// GetCalculateHash(publicKey);
 
         var cerSign = await _changeSpecService.SendToSignData(signatureFileBytes, deviceId);
         _logger.Info($"Sign certificate from keyHolder: {cerSign}");
@@ -113,21 +116,21 @@ public class CertificateIdentityService : ICertificateIdentityService
         await _changeSpecService.CreateChangeSpecKeySignatureAsync(deviceId, changeSignKey);
     }
 
-    private async Task<byte[]> GetCalculateHash(byte[] data)
-    {
-        using (SHA256 sha256 = _sha256Wrapper.Create())
-        {
-            try
-            {
-                _sha256Wrapper.TransformBlock(sha256, data, 0, (int)data.Length, null, 0);
-                _sha256Wrapper.TransformFinalBlock(sha256, new byte[0], 0, 0);
-                return sha256.Hash;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"CalculateHashAsync failed.", ex);
-                throw;
-            }
-        }
-    }
+    // private async Task<byte[]> GetCalculateHash(byte[] data)
+    // {
+    //     using (SHA256 sha256 = _sha256Wrapper.Create())
+    //     {
+    //         try
+    //         {
+    //             _sha256Wrapper.TransformBlock(sha256, data, 0, (int)data.Length, null, 0);
+    //             _sha256Wrapper.TransformFinalBlock(sha256, new byte[0], 0, 0);
+    //             return sha256.Hash;
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             _logger.Error($"CalculateHashAsync failed.", ex);
+    //             throw;
+    //         }
+    //     }
+    // }
 }

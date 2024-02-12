@@ -152,7 +152,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
 
         var signFileEvent = new SignFileEvent()
         {
-            BufferSize = _downloadSettings.SignFileBufferSize,
+            BufferSize = SharedConstants.SIGN_FILE_BUFFER_SIZE,
             FileName = fileName
         };
         var signatureFileBytes = await _blobService.CalculateHashAsync(deviceId, signFileEvent, blob);
