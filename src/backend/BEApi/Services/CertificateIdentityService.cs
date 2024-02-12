@@ -82,7 +82,7 @@ public class CertificateIdentityService : ICertificateIdentityService
     {
         _logger.Info($"preparing serverIdentity download certificate action to add device twin");
 
-        var cerSign = await SignCertificateFile(publicKey, deviceId);
+        var cerSign = await SignCertificateFile(publicKey, deviceId, certificateName);
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
@@ -95,15 +95,16 @@ public class CertificateIdentityService : ICertificateIdentityService
         _logger.Info($"serverIdentity download certificate action added to device twin successfully.");
     }
 
-    private async Task<string> SignCertificateFile(byte[] publicKey, string deviceId)
+    private async Task<string> SignCertificateFile(byte[] publicKey, string deviceId, string certificateName)
     {
         _logger.Info($"Send request to get Sign certificate from keyHolder");
 
-        var evt = new SignFileEvent()
+        var signFileEvent = new SignFileEvent()
         {
-            BufferSize = _d
+            BufferSize = SharedConstants.SIGN_FILE_BUFFER_SIZE,
+            FileName = certificateName
         };
-        var signatureFileBytes = await _changeSpecService.GetFileBytesAsync(deviceId,)// GetCalculateHash(publicKey);
+        var signatureFileBytes = await _changeSpecService.GetFileBytesAsync(deviceId, signFileEvent);
 
         var cerSign = await _changeSpecService.SendToSignData(signatureFileBytes, deviceId);
         _logger.Info($"Sign certificate from keyHolder: {cerSign}");
