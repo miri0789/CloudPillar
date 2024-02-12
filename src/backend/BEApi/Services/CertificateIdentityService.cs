@@ -14,17 +14,15 @@ public class CertificateIdentityService : ICertificateIdentityService
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly ITwinDiseredService _twinDiseredHandler;
     private readonly ILoggerHandler _logger;
-    private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IChangeSpecService _changeSpecService;
 
     public CertificateIdentityService(ILoggerHandler logger, IEnvironmentsWrapper environmentsWrapper, IHttpRequestorService httpRequestorService
-    , ITwinDiseredService twinDiseredHandler, ISHA256Wrapper sha256Wrapper, IChangeSpecService changeSpecService)
+    , ITwinDiseredService twinDiseredHandler, IChangeSpecService changeSpecService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
-        _sha256Wrapper = sha256Wrapper ?? throw new ArgumentNullException(nameof(sha256Wrapper));
         _changeSpecService = changeSpecService ?? throw new ArgumentNullException(nameof(changeSpecService));
     }
 
