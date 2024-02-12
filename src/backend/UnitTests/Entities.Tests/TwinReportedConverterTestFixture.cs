@@ -177,7 +177,7 @@ public class TwinReportedConverterTestFixture
             CertificateValidity = new CertificateValidity { CreationDate = DateTimeUtcNow, ExpirationDate = ExpirationDate },
         };
 
-        var json = "{ \"CertificateValidity\": {\"CreationDate\": \"" + DateTimeUtcNow + "\", \"ExpirationDate\": \"" + ExpirationDate + "\"}}";
+        var json = "{ \"CertificateValidity\": {\"CreationDate\": \"" + DateTimeUtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ") + "\", \"ExpirationDate\": \"" + ExpirationDate.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ") + "\"}}";
         var result = ExecReadJson(json);
 
         Assert.AreEqual(MockHelperEntities.EqualObjects(expectedResult.CertificateValidity, result.CertificateValidity), true);
