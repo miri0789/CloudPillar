@@ -92,8 +92,13 @@ public class BlobService : IBlobService
         }
         catch (Exception ex)
         {
-            await SendDownloadErrorAsync(deviceId, signFileEvent.ChangeSpecId, signFileEvent.FileName, signFileEvent.ActionIndex, ex.Message);
-            throw;
+            if (!string.IsNullOrEmpty(signFileEvent.ChangeSpecId))
+            {
+                await SendDownloadErrorAsync(deviceId, signFileEvent.ChangeSpecId, signFileEvent.FileName, signFileEvent.ActionIndex, ex.Message);
+                throw;
+            }
+            _logger.Error($"CalculateHashAsync error: {ex.Message}");
+            throw new Exception(ex.Message);
         }
     }
 

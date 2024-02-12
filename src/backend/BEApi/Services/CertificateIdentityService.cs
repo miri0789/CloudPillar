@@ -102,7 +102,10 @@ public class CertificateIdentityService : ICertificateIdentityService
         var signFileEvent = new SignFileEvent()
         {
             BufferSize = SharedConstants.SIGN_FILE_BUFFER_SIZE,
-            FileName = certificateName
+            FileName = certificateName,
+            ChangeSpecId = String.Empty,
+            ChangeSpecKey = String.Empty,
+            PropName = String.Empty
         };
         var signatureFileBytes = await _changeSpecService.GetFileBytesAsync(deviceId, signFileEvent);
 
@@ -115,23 +118,5 @@ public class CertificateIdentityService : ICertificateIdentityService
     {
         var changeSignKey = SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME.GetSignKeyByChangeSpec();
         await _changeSpecService.CreateChangeSpecKeySignatureAsync(deviceId, changeSignKey);
-    }
-
-    // private async Task<byte[]> GetCalculateHash(byte[] data)
-    // {
-    //     using (SHA256 sha256 = _sha256Wrapper.Create())
-    //     {
-    //         try
-    //         {
-    //             _sha256Wrapper.TransformBlock(sha256, data, 0, (int)data.Length, null, 0);
-    //             _sha256Wrapper.TransformFinalBlock(sha256, new byte[0], 0, 0);
-    //             return sha256.Hash;
-    //         }
-    //         catch (Exception ex)
-    //         {
-    //             _logger.Error($"CalculateHashAsync failed.", ex);
-    //             throw;
-    //         }
-    //     }
-    // }
+    }        
 }
