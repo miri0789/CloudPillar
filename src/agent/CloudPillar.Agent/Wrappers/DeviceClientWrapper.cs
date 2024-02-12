@@ -4,11 +4,11 @@ using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using Shared.Entities.Twin;
 using Microsoft.Azure.Devices.Client.Transport.Mqtt;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
+using Newtonsoft.Json.Linq;
+using CloudPillar.Agent.Entities;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
@@ -116,18 +116,25 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     }
 
 
-    public async Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken)
+    public async Task<DeviceConnectResultEnum> IsDeviceInitializedAsync(CancellationToken cancellationToken)
     {
         try
         {
             // Check if the device is already initialized
             await GetTwinAsync(cancellationToken);
-            return true;
+            return DeviceConnectResultEnum.Valid;
         }
         catch (Exception ex)
         {
+            JObject exceptionData = JObject.Parse(ex.Message);
+            var error = exceptionData?["errorCode"]?.ToString();
+            if (error is not null && Enum.TryParse(error, out DeviceConnectResultEnum errorCode))
+            {
+                return errorCode;
+            }
+            // Extract the error code
             _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized. {ex.Message}");
-            return false;
+            return DeviceConnectResultEnum.Unknow;
         }
     }
     public ProvisioningTransportHandler GetProvisioningTransportHandler()

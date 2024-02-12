@@ -1,15 +1,16 @@
 
 using System.Security.Cryptography.X509Certificates;
+using CloudPillar.Agent.Entities;
 using Microsoft.Azure.Devices.Client;
 
 namespace CloudPillar.Agent.Handlers;
 public interface IDPSProvisioningDeviceClientHandler
 {
-    Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, Message message, CancellationToken cancellationToken);
+    Task<DeviceConnectResultEnum> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, Message message, CancellationToken cancellationToken);
 
     X509Certificate2? GetCertificate(string deviceId = "");
 
-    Task<bool> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool checkAuthorization = false);
+    Task<DeviceConnectResultEnum> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool checkAuthorization = false);
 
-    Task<bool> InitAuthorizationAsync();
+    Task<DeviceConnectResultEnum> InitAuthorizationAsync();
 }

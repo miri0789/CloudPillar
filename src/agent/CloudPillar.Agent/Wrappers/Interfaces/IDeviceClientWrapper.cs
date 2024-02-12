@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Devices.Client;
+﻿using CloudPillar.Agent.Entities;
+using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Transport;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
@@ -7,7 +8,7 @@ namespace CloudPillar.Agent.Wrappers;
 public interface IDeviceClientWrapper
 {
     Task<bool> DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken);
-    Task<bool> IsDeviceInitializedAsync(CancellationToken cancellationToken);
+    Task<DeviceConnectResultEnum> IsDeviceInitializedAsync(CancellationToken cancellationToken);
     TransportType GetTransportType();
     int GetChunkSizeByTransportType();
 
