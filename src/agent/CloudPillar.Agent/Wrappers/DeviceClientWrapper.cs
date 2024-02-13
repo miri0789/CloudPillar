@@ -130,10 +130,10 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
         catch (Exception ex)
         {
-            var errorCode = (DeviceConnectResultEnum)_checkExceptionResult.IsDeviceConnectException(ex);
+            var errorCode = _checkExceptionResult.IsDeviceConnectException(ex);
             if (errorCode != null)
             {
-                return errorCode;
+                return (DeviceConnectResultEnum)errorCode;
             }
             // Extract the error code
             _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized. {ex.Message}");
