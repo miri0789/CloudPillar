@@ -30,7 +30,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         _authenticationSettings = authenticationSettings?.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));
     }
 
-    public async Task<DeviceConnectResultEnum> AuthorizationDeviceAsync(CancellationToken cancellationToken)
+    public async Task<DeviceConnectionResult> AuthorizationDeviceAsync(CancellationToken cancellationToken)
     {
         return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
     }

@@ -89,7 +89,7 @@ public class ReprovisioningHandler : IReprovisioningHandler
         try
         {
             var connectRes = await _dPSProvisioningDeviceClientHandler.ProvisioningAsync(message.ScopedId, certificate, message.DeviceEndpoint, recivedMessage, cancellationToken);
-            if (connectRes != DeviceConnectResultEnum.Valid)
+            if (connectRes != DeviceConnectionResult.Valid)
             {
                 throw new ArgumentNullException("Provisioning failed");
             }

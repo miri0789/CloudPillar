@@ -7,11 +7,11 @@ using Microsoft.Azure.Devices.Client;
 namespace CloudPillar.Agent.Handlers;
 public interface IDPSProvisioningDeviceClientHandler
 {
-    Task<DeviceConnectResultEnum> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, Message message, CancellationToken cancellationToken);
+    Task<DeviceConnectionResult> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, Message message, CancellationToken cancellationToken);
 
     X509Certificate2? GetCertificate(string deviceId = "");
 
-    Task<DeviceConnectResultEnum> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool checkAuthorization = false);
+    Task<DeviceConnectionResult> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool checkAuthorization = false);
 
-    Task<DeviceConnectResultEnum> InitAuthorizationAsync();
+    Task<DeviceConnectionResult> InitAuthorizationAsync();
 }

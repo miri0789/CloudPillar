@@ -101,12 +101,12 @@ public class AuthorizationCheckMiddleware
         var action = context.Request.Path.Value?.ToLower() ?? "";
         var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
         var x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
-        DeviceConnectResultEnum connectRes = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
-        if (connectRes != DeviceConnectResultEnum.Valid)
+        DeviceConnectionResult connectRes = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
+        if (connectRes != DeviceConnectionResult.Valid)
         {
             if (x509Certificate is not null)
             {
-                if (connectRes == DeviceConnectResultEnum.DeviceNotFound)
+                if (connectRes == DeviceConnectionResult.DeviceNotFound)
                 {
                     _logger.Info($"Device {xDeviceId} is not found, start provisioning");
                     return await StartProvisioning(action, cancellationToken);
@@ -116,7 +116,7 @@ public class AuthorizationCheckMiddleware
 
             _logger.Info($"{actionName}, The device is X509 unAuthorized, check symmetric key authorized");
             connectRes = await _symmetricKeyProvisioningHandler.AuthorizationDeviceAsync(cancellationToken);
-            if (connectRes != DeviceConnectResultEnum.Valid)
+            if (connectRes != DeviceConnectionResult.Valid)
             {
                 _logger.Info($"{actionName}, The device is symmetric key unAuthorized, start provisinig proccess");
                 return await StartProvisioning(action, cancellationToken);

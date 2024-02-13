@@ -119,24 +119,24 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     }
 
 
-    public async Task<DeviceConnectResultEnum> IsDeviceInitializedAsync(CancellationToken cancellationToken)
+    public async Task<DeviceConnectionResult> IsDeviceInitializedAsync(CancellationToken cancellationToken)
     {
         try
         {
             // Check if the device is already initialized
             await GetTwinAsync(cancellationToken);
-            return DeviceConnectResultEnum.Valid;
+            return DeviceConnectionResult.Valid;
         }
         catch (Exception ex)
         {
-            var errorCode = _checkExceptionResult.IsDeviceConnectException(ex);
+            var errorCode = (DeviceConnectResultEnum)_checkExceptionResult.IsDeviceConnectException(ex);
             if (errorCode != null)
             {
                 return (DeviceConnectResultEnum)errorCode;
             }
             // Extract the error code
             _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized. {ex.Message}");
-            return DeviceConnectResultEnum.Unknow;
+            return DeviceConnectionResult.Unknow;
         }
     }
     public ProvisioningTransportHandler GetProvisioningTransportHandler()
