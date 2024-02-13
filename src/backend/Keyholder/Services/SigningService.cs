@@ -21,7 +21,8 @@ public class SigningService : ISigningService
     private const string PUBLIC_KEY_FILE = "tls.crt";
     private const string BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
 
-    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper, IFileStreamerWrapper fileStreamerWrapper)
+    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper,
+     IFileStreamerWrapper fileStreamerWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -52,12 +53,12 @@ public class SigningService : ISigningService
             _logger.Error(message);
             throw new InvalidOperationException(message);
         }
+        _logger.Info($"publicKeyPem: {publicKeyPem}");
         var sectionsCount = publicKeyPem.Split(BEGIN_CERTIFICATE).Count();
         if (sectionsCount > 1)
         {
             publicKeyPem = GetLastCertificateSection(publicKeyPem);
         }
-
         return Encoding.UTF8.GetBytes(publicKeyPem);
     }
 
@@ -75,6 +76,7 @@ public class SigningService : ISigningService
             throw new InvalidOperationException(message);
         }
         string privateKeyPem = await ReadKeyFromMount(Path.Combine(secretVolumeMountPath, PRIVATE_KEY_FILE));
+        _logger.Info($"Key read from mount: {privateKeyPem}");
         _logger.Info($"Key Base64 decoded layer 1");
         var certificateIsValid = await CheckValidCertificate(deviceId);
         if (!certificateIsValid)
@@ -152,7 +154,7 @@ public class SigningService : ISigningService
     {
         _logger.Debug($"Checking certificate validity...");
         var publicKeyPem = await GetSigningPublicKeyAsync();
-
+        _logger.Debug($"publicKeyPem: {publicKeyPem}");
         var knownIdentitiesList = await GetKnownIdentitiesFromTwin(deviceId);
         if (knownIdentitiesList == null || knownIdentitiesList.Count == 0)
         {
@@ -172,6 +174,8 @@ public class SigningService : ISigningService
 
     private async Task<bool> CeritficateIsknown(List<KnownIdentities> knownIdentities, X509Certificate2 certificate)
     {
+        _logger.Debug($"Checking if certificate is known...: {certificate.Subject} {certificate.Thumbprint} {certificate.NotAfter}");
+        _logger.Debug($"knownIdentities: {knownIdentities}");
         var knownCertificate = knownIdentities.Any(x => x.Subject == certificate.Subject
                      && x.Thumbprint == certificate.Thumbprint &&
                    string.Format(x.ValidThru, "yyyy-MM-dd HH:mm:ss") == certificate.NotAfter.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -193,6 +197,7 @@ public class SigningService : ISigningService
         _logger.Debug($"Getting last certificate section...");
         var lastIndexOfCertificateSection = publicKeyPem.LastIndexOf(BEGIN_CERTIFICATE);
         var lastSection = publicKeyPem.Substring(lastIndexOfCertificateSection);
+        _logger.Info($"publicKeyPem last section: {publicKeyPem}");
         return lastSection;
     }
 
