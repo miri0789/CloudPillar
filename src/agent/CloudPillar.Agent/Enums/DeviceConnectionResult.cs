@@ -1,6 +1,6 @@
 namespace CloudPillar.Agent.Enums;
 
-public enum DeviceConnectResultEnum
+public enum DeviceConnectionResult
 {
     DeviceNotFound = 404001,
     Valid = -1,
