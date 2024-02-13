@@ -64,7 +64,7 @@ public class ReprovisioningHandlerTestFixture
             DPSConnectionString = "dpsConnectionString"
         };
 
-        _certificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, 60, GetCertificatePrefix());
+        _certificate = MockHelper.GenerateCertificate(DEVICE_ID, SECRET_KEY, GetCertificatePrefix(), 60);
         _x509CertificateWrapperMock.Setup(x => x.CreateFromBytes(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<X509KeyStorageFlags>())).Returns(_certificate);
         _sHA256WrapperMock.Setup(x => x.ComputeHash(It.IsAny<byte[]>())).Returns(Encoding.UTF8.GetBytes("hash"));
         _d2CMessengerHandlerMock.Setup(x => x.ProvisionDeviceCertificateEventAsync(GetCertificatePrefix(), _certificate, CancellationToken.None)).Returns(Task.CompletedTask);

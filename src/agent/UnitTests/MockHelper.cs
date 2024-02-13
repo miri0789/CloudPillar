@@ -70,7 +70,7 @@ public static class MockHelper
         return new Twin(twinProp);
     }
 
-    public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, int expiredDays, string certificatePrefix)
+    public static X509Certificate2 GenerateCertificate(string deviceId, string secretKey, string certificatePrefix, int notAfter, int notBefore = -1)
     {
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
@@ -88,8 +88,8 @@ public static class MockHelper
             request.CertificateExtensions.Add(deviceSecretKeyExtension);
 
             var certificate = request.CreateSelfSigned(
-                DateTimeOffset.Now.AddDays(-1),
-                DateTimeOffset.Now.AddDays(expiredDays));
+                DateTimeOffset.Now.AddDays(notBefore),
+                DateTimeOffset.Now.AddDays(notAfter));
 
             return certificate;
 

@@ -23,6 +23,9 @@ public class SignatureHandlerTestFixture
     private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
     private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
     private const string FILE_EXTENSION = "*.cer";
+    private string[] files = new string[] { "pathfile.txt", "pathfile2.txt" };
+    private const string SINGATURE_STRING = "AamBQZxGNBGWsm9NkOyWiZRCWGponIRIJo3nnKytRyQlcpJv/iUy5fS1FUodBAX6Sn5kJV9g3DMn2GkJovSWOFXTAdNgY+OJsV42919LetahmaR1M7V8wcHqm+0ddfwF9MzO11fl39PZTT6upInvAVb8KA7Hazjn9enCWCxcise/2RZy";
+
 
     [SetUp]
     public void Setup()
@@ -38,7 +41,7 @@ public class SignatureHandlerTestFixture
         mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
 
         _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, _sha256WrapperMock.Object, _asymmetricAlgorithmWrapperMock.Object, _serverIdentityHandlerMock.Object, mockDownloadSettings.Object);
-        _fileStreamerWrapperMock.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { "pathfile.txt", "pathfile2.txt" });
+        _fileStreamerWrapperMock.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
         string publicKeyPem1 = @"-----BEGIN PUBLIC KEY-----
                     MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESi/IRJco4/1xj3dD+G52BslMo0ZFK
                     4IlL202eiI/cMnUMs4Z7n/icR19JbGZv3URT2cyPjQfRHlSvJ+11XV+lw==
@@ -61,9 +64,8 @@ public class SignatureHandlerTestFixture
     public async Task VerifySignature_ValidSignature_ReturnsTrue()
     {
         string message = "value";
-        string signatureString = "AamBQZxGNBGWsm9NkOyWiZRCWGponIRIJo3nnKytRyQlcpJv/iUy5fS1FUodBAX6Sn5kJV9g3DMn2GkJovSWOFXTAdNgY+OJsV42919LetahmaR1M7V8wcHqm+0ddfwF9MzO11fl39PZTT6upInvAVb8KA7Hazjn9enCWCxcise/2RZy";
         _asymmetricAlgorithmWrapperMock.Setup(f => f.VerifyData(It.IsAny<ECDsa>(), It.IsAny<byte[]>(), It.IsAny<byte[]>(), It.IsAny<HashAlgorithmName>())).Returns(true);
-        bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), signatureString);
+        bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), SINGATURE_STRING);
         Assert.IsTrue(result);
     }
 
@@ -71,9 +73,8 @@ public class SignatureHandlerTestFixture
     public async Task VerifySignature_ValidSignature_TryAllKeyFiles()
     {
         string message = "value";
-        string signatureString = "AamBQZxGNBGWsm9NkOyWiZRCWGponIRIJo3nnKytRyQlcpJv/iUy5fS1FUodBAX6Sn5kJV9g3DMn2GkJovSWOFXTAdNgY+OJsV42919LetahmaR1M7V8wcHqm+0ddfwF9MzO11fl39PZTT6upInvAVb8KA7Hazjn9enCWCxcise/2RZy";
         _asymmetricAlgorithmWrapperMock.Setup(f => f.VerifyData(It.IsAny<ECDsa>(), It.IsAny<byte[]>(), It.IsAny<byte[]>(), It.IsAny<HashAlgorithmName>())).Returns(false);
-        bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), signatureString);
+        bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), SINGATURE_STRING);
         _asymmetricAlgorithmWrapperMock.Verify(e => e.VerifyData(It.IsAny<ECDsa>(), It.IsAny<byte[]>(), It.IsAny<byte[]>(), It.IsAny<HashAlgorithmName>()), Times.Exactly(2));
     }
 
@@ -84,6 +85,22 @@ public class SignatureHandlerTestFixture
         string signatureString = "SGVsbG8sIHdvcmxkIQ==";
         bool result = await _target.VerifySignatureAsync(Encoding.UTF8.GetBytes(message), signatureString);
         Assert.IsFalse(result);
+    }
+
+    [Test]
+    public async Task VerifySignature_CertificateIsExpired_CheckOnlyNonExpiredCertificate()
+    {
+        _fileStreamerWrapperMock.Setup(x => x.GetFiles(SharedConstants.PKI_FOLDER_PATH, FILE_EXTENSION)).Returns(files);
+        _serverIdentityHandlerMock.Setup(x => x.CheckCertificateNotExpired("pathfile.txt")).Returns(true);
+        _serverIdentityHandlerMock.Setup(x => x.CheckCertificateNotExpired("pathfile2.txt")).Returns(false);
+
+        _serverIdentityHandlerMock.Setup(x => x.GetPublicKeyFromCertificateFileAsync(It.IsAny<string>())).ReturnsAsync("-----BEGIN RSA PUBLIC KEY-----\r\nSGVsbG8sIFdvcmxkIQ==\r\n-----END RSA PUBLIC KEY-----\r\n");
+
+        _asymmetricAlgorithmWrapperMock.Setup(x => x.GetRSAKey(It.IsAny<byte[]>())).Returns(RSA.Create());
+        _asymmetricAlgorithmWrapperMock.Setup(x => x.GetECDsaKey(It.IsAny<byte[]>())).Returns(ECDsa.Create());
+
+        await _target.VerifySignatureAsync(It.IsAny<byte[]>(), SINGATURE_STRING);
+        _serverIdentityHandlerMock.Verify(x => x.GetPublicKeyFromCertificateFileAsync(It.IsAny<string>()), Times.Exactly(1));
     }
 
     [TestCase(true)]
@@ -101,5 +118,15 @@ public class SignatureHandlerTestFixture
         _asymmetricAlgorithmWrapperMock.Setup(f => f.VerifyData(It.IsAny<ECDsa>(), It.IsAny<byte[]>(), It.IsAny<byte[]>(), It.IsAny<HashAlgorithmName>())).Returns(expectedResult);
         bool result = await _target.VerifyFileSignatureAsync(filePath, validSignature);
         Assert.AreEqual(expectedResult, result);
+    }
+
+    [Test]
+    public async Task SendSignTwinKeyEventAsync_ValidData_SendEvent()
+    {
+        var cts = CancellationToken.None;
+        var changeSignKey = "key";
+
+        await _target.SendSignTwinKeyEventAsync(changeSignKey, cts);
+        _d2CMessengerHandlerMock.Verify(x => x.SendSignTwinKeyEventAsync(changeSignKey, cts), Times.Once);
     }
 }

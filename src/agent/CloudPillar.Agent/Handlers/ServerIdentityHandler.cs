@@ -56,7 +56,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         byte[] publicKey = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(certificate);
         if (publicKey == null)
         {
-            throw new Exception($"GetPublicKeyFromCertificateFileAsync failed to get public key from certificate {certificatePath}");
+            throw new InvalidDataException($"GetPublicKeyFromCertificateFileAsync failed to get public key from certificate {certificatePath}");
         }
         string pemPublicKey = ConvertToPem(publicKey, _x509CertificateWrapper.GetAlgorithmFriendlyName(certificate)?.ToUpper());
         return pemPublicKey;
