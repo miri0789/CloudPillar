@@ -40,7 +40,7 @@ public class MessageProcessor : IMessageProcessor
         }
     }
 
-    public async Task<(MessageProcessType type, string response, IDictionary<string, string>? responseHeaers)>
+    public async Task<(CompletionCode type, string response, IDictionary<string, string>? responseHeaers)>
     ProcessMessageAsync(string message, IDictionary<string, string> properties, CancellationToken cancellationToken)
     {
         try
@@ -54,13 +54,13 @@ public class MessageProcessor : IMessageProcessor
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 var responseHeaers = response.Headers.ToDictionary(h => h.Key, h => h.Value.FirstOrDefault());
-                var returnProcessType = MessageProcessType.ConsumeSuccess;
+                var returnProcessType = CompletionCode.ConsumeSuccess;
 
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.Warn($"ProcessMessageAsync not success status code: {response.StatusCode} with content: {responseContent} and headers: {responseHeaers}");
                     var isBadRequest = ((int)response.StatusCode) / 100 == 4;
-                    returnProcessType = isBadRequest ? MessageProcessType.ConsumeErrorFatal : MessageProcessType.ConsumeErrorRecoverable;
+                    returnProcessType = isBadRequest ? CompletionCode.ConsumeErrorFatal : CompletionCode.ConsumeErrorRecoverable;
                 }
                 return (returnProcessType, responseContent, responseHeaers);
 
@@ -69,17 +69,17 @@ public class MessageProcessor : IMessageProcessor
         catch (TaskCanceledException ex)
         {
             _logger.Error($"ProcessMessageAsync task cancel to process message: {message} with exception: {ex.Message}");
-            return (MessageProcessType.ConsumeErrorFatal, string.Empty, null);
+            return (CompletionCode.ConsumeErrorFatal, string.Empty, null);
         }
         catch (HttpRequestException ex)
         {
             _logger.Error($"ProcessMessageAsync Connection error to process message: {message} with exception: {ex.Message}");
-            return (MessageProcessType.Retain, string.Empty, null);
+            return (CompletionCode.Retain, string.Empty, null);
         }
         catch (Exception ex)
         {
             _logger.Error($"ProcessMessageAsync Failed to process message: {message} with exception: {ex.Message}");
-            return (MessageProcessType.ConsumeErrorRecoverable, string.Empty, null);
+            return (CompletionCode.ConsumeErrorRecoverable, string.Empty, null);
         }
 
     }

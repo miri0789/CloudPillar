@@ -210,9 +210,9 @@ public class QueueConsumerService : BackgroundService
         try
         {
             var properties = args.Message.ApplicationProperties.ToDictionary(kv => kv.Key, kv => kv.Value?.ToString() ?? string.Empty);
-            (MessageProcessType type, string response, IDictionary<string, string>? responseHeaers)
+            (CompletionCode type, string response, IDictionary<string, string>? responseHeaers)
              = await _messageProcessor.ProcessMessageAsync(args.Message.Body.ToString(), properties, cancellationToken);
-            if (type == MessageProcessType.Retain)
+            if (type == CompletionCode.Retain)
             {
                 await args.AbandonMessageAsync(args.Message);
                 _logger.Info($"OnMessageReceivedAsync ProcessMessageAsync Retain AbandonMessageAsync, queue index {processorIndex}, msg id: {args.Message.CorrelationId}");
@@ -239,7 +239,7 @@ public class QueueConsumerService : BackgroundService
     }
 
 
-    private string GetCompleteRelatevieUri(MessageProcessType type, IDictionary<string, string> properties)
+    private string GetCompleteRelatevieUri(CompletionCode type, IDictionary<string, string> properties)
     {
         var relativeUri = properties.TryGetValue(Constants.COMPLETION_RELATIVR_URI, out var uri) ? uri : "";
 
