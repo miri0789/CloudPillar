@@ -4,6 +4,7 @@ using CloudPillar.Agent.Wrappers;
 using Shared.Entities.Factories;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
+using CloudPillar.Agent.Utilities.Interfaces;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -13,17 +14,20 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
     private readonly IDeviceClientWrapper _deviceClient;
     private readonly IMessageFactory _messageFactory;
     private readonly IStateMachineHandler _stateMachineHandler;
+    private readonly ICheckExceptionResult _checkExceptionResult;
     private readonly ILoggerHandler _logger;
     public C2DEventSubscriptionSession(IDeviceClientWrapper deviceClientWrapper,
                                        IMessageSubscriber messageSubscriber,
                                        IMessageFactory messageFactory,
                                        IStateMachineHandler stateMachineHandler,
+                                    ICheckExceptionResult checkExceptionResult,
                                        ILoggerHandler logger)
     {
         _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         _deviceClient = deviceClientWrapper ?? throw new ArgumentNullException(nameof(deviceClientWrapper));
         _messageSubscriber = messageSubscriber ?? throw new ArgumentNullException(nameof(messageSubscriber));
         _stateMachineHandler = stateMachineHandler ?? throw new ArgumentNullException(nameof(stateMachineHandler));
+        _checkExceptionResult = checkExceptionResult ?? throw new ArgumentNullException(nameof(checkExceptionResult));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -43,7 +47,12 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             catch (Exception ex)
             {
                 _logger.Error($"Certificate expired, ignoring it message: {ex.Message}");
-                break;
+                var errorCode = _checkExceptionResult.IsDeviceConnectException(ex);
+                if (errorCode != null)
+                {
+                    break;
+                }
+                continue;
             }
             var parseMessage = Enum.TryParse(receivedMessage.Properties[MESSAGE_TYPE_PROP], out C2DMessageType messageType);
             try
