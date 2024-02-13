@@ -4,7 +4,7 @@ namespace CloudPillar.Agent.Utilities.Interfaces
 {
     public interface ICheckExceptionResult
     {
-        DeviceConnectResultEnum? IsDeviceConnectException(Exception ex);
+        DeviceConnectionResult? IsDeviceConnectException(Exception ex);
     }
 }
 
