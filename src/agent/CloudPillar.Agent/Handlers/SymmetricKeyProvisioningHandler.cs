@@ -4,9 +4,8 @@ using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Extensions.Options;
 using CloudPillar.Agent.Handlers.Logger;
-using Newtonsoft.Json;
-using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
+using CloudPillar.Agent.Enums;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -31,7 +30,7 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         _authenticationSettings = authenticationSettings?.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));
     }
 
-    public async Task<bool> AuthorizationDeviceAsync(CancellationToken cancellationToken)
+    public async Task<DeviceConnectionResult> AuthorizationDeviceAsync(CancellationToken cancellationToken)
     {
         return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
     }
