@@ -161,6 +161,8 @@ public class SigningService : ISigningService
             _logger.Error($"knownIdentitiesList is empty");
             return false;
         }
+        _logger.Info($"knownIdentitiesList: {knownIdentitiesList.Count}");
+        knownIdentitiesList.ForEach(x => _logger.Info($"knownIdentitiesList: {x.Subject} {x.Thumbprint} {x.ValidThru}"));
 
         var certificate = new X509Certificate2(publicKeyPem);
         var knownCertificate = await CeritficateIsknown(knownIdentitiesList, certificate);
