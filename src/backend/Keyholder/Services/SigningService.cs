@@ -162,7 +162,7 @@ public class SigningService : ISigningService
             return false;
         }
         _logger.Info($"knownIdentitiesList: {knownIdentitiesList.Count}");
-        knownIdentitiesList.ForEach(x => _logger.Info($"knownIdentitiesList: {x.Subject} {x.Thumbprint} {x.ValidThru}"));
+        knownIdentitiesList.ForEach(x => _logger.Info($"knownIdentitiesList: {x.Subject} {x.Thumbprint} {string.Format(x.ValidThru, "yyyy-MM-dd")}"));
 
         var certificate = new X509Certificate2(publicKeyPem);
         var knownCertificate = await CeritficateIsknown(knownIdentitiesList, certificate);
@@ -177,6 +177,9 @@ public class SigningService : ISigningService
     private async Task<bool> CeritficateIsknown(List<KnownIdentities> knownIdentities, X509Certificate2 certificate)
     {
         _logger.Debug($"Checking if certificate is known...: {certificate.Subject} {certificate.Thumbprint} {certificate.NotAfter.ToString("yyyy-MM-dd")}");
+        knownIdentities.ForEach(x => _logger.Info($"knownIdentitiesList-ValidThru: {string.Format(x.ValidThru, "yyyy-MM-dd")}:{certificate.NotAfter.ToString("yyyy-MM-dd")}:{(string.Format(x.ValidThru, "yyyy-MM-dd"))==certificate.NotAfter.ToString("yyyy-MM-dd")}:{string.Format(x.ValidThru, "yyyy-MM-dd").Equals(certificate.NotAfter.ToString("yyyy-MM-dd"))}"));
+        knownIdentities.ForEach(x => _logger.Info($"knownIdentitiesList-Subject: {x.Subject}:{certificate.Subject}:{x.Subject==certificate.Subject}:{x.Subject.Equals(certificate.Subject)}"));
+        knownIdentities.ForEach(x => _logger.Info($"knownIdentitiesList-Thumbprint: {x.Thumbprint}:{certificate.Thumbprint}:{x.Thumbprint==certificate.Thumbprint}:{x.Thumbprint.Equals(certificate.Thumbprint)}"));
         var knownCertificate = knownIdentities.Any(x => x.Subject == certificate.Subject
                      && x.Thumbprint == certificate.Thumbprint &&
                    string.Format(x.ValidThru, "yyyy-MM-dd") == certificate.NotAfter.ToString("yyyy-MM-dd"));
