@@ -138,7 +138,7 @@ public class SigningService : ISigningService
             {
                 var keyType = signingPrivateKey!.GetType();
                 var signature = keyType.BaseType == typeof(RSA) ? ((RSA)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1) : ((ECDsa)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512);
-                return Convert.ToBase64String(signature); ;
+                return Convert.ToBase64String(signature);
             }
         }
         catch (Exception ex)
@@ -174,7 +174,7 @@ public class SigningService : ISigningService
     {
         var knownCertificate = knownIdentities.Any(x => x.Subject == certificate.Subject
                      && x.Thumbprint == certificate.Thumbprint &&
-                   string.Format(x.ValidThru, "yyyy-MM-dd HH:mm:ss") == certificate.NotAfter.ToString("yyyy-MM-dd HH:mm:ss"));
+                   string.Format(x.ValidThru, "yyyy-MM-dd") == certificate.NotAfter.ToString("yyyy-MM-dd"));
         return knownCertificate;
     }
 
