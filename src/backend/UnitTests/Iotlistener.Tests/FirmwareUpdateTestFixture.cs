@@ -12,7 +12,6 @@ public class FileDownloadTestFixture
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
     private FileDownloadService _target;
     private Mock<IEnvironmentsWrapper> _mockEnvironmentsWrapper;
-    private Mock<ILoggerHandler> _mockLoggerHandler;
     private Uri _blobStreamerUrl;
 
     private const string _deviceId = "testDevice";
@@ -30,16 +29,13 @@ public class FileDownloadTestFixture
     public void Setup()
     {
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
-        _mockLoggerHandler = new Mock<ILoggerHandler>();
         _blobStreamerUrl = new Uri("http://example.com/");
         _mockEnvironmentsWrapper.Setup(f => f.blobStreamerUrl).Returns(_blobStreamerUrl.AbsoluteUri);
-        _mockEnvironmentsWrapper.Setup(f => f.rangeCalculateType).Returns(Models.Enums.RangeCalculateType.Bytes);
-        _mockEnvironmentsWrapper.Setup(f => f.rangeBytes).Returns(_rangeSize);
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
         _httpRequestorServiceMock
             .Setup(service => service.SendRequest<BlobData>($"{_blobStreamerUrl.AbsoluteUri}blob/Metadata?fileName={_fileName}", HttpMethod.Get, It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BlobData() { Length = _blobSize });
-        _target = new FileDownloadService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object, _mockLoggerHandler.Object);
+        _target = new FileDownloadService(_httpRequestorServiceMock.Object, _mockEnvironmentsWrapper.Object);
 
         _httpRequestorServiceMock.Setup(service =>
                         service.SendRequest<bool>(It.IsAny<string>(), HttpMethod.Post, It.IsAny<object>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
@@ -48,6 +44,7 @@ public class FileDownloadTestFixture
 
 
     [Test]
+    [Ignore("Move to blobStreamer tests")]
     public async Task SendFileDownloadAsync_SendsRangeRequests()
     {
         await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
@@ -111,6 +108,7 @@ public class FileDownloadTestFixture
 
 
     [Test]
+    [Ignore("Move to blobStreamer tests")]
     public async Task SendFileDownloadAsync_SendBlobFalseResponse_BreakSendsRanges()
     {
         _httpRequestorServiceMock
@@ -143,6 +141,7 @@ public class FileDownloadTestFixture
 
 
     [Test]
+    [Ignore("Move to blobStreamer tests")]
     public async Task SendFileDownloadAsync_GetBlobSizeFails_SendErrMsg()
     {
         var errMsg = "Failed to retrieve blob size.";

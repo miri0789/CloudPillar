@@ -1,5 +1,4 @@
-﻿namespace Backend.Iotlistener.Models.Enums;
-
+﻿namespace Backend.BlobStreamer.Enums;
 
 public enum RangeCalculateType
 {
