@@ -177,7 +177,6 @@ public class SigningService : ISigningService
     private async Task<bool> CeritficateIsknown(List<KnownIdentities> knownIdentities, X509Certificate2 certificate)
     {
         _logger.Debug($"Checking if certificate is known...: {certificate.Subject} {certificate.Thumbprint} {certificate.NotAfter.ToString("yyyy-MM-dd HH:mm:ss")}");
-        _logger.Debug($"knownIdentities: {knownIdentities}");
         var knownCertificate = knownIdentities.Any(x => x.Subject == certificate.Subject
                      && x.Thumbprint == certificate.Thumbprint &&
                    string.Format(x.ValidThru, "yyyy-MM-dd HH:mm:ss") == certificate.NotAfter.ToString("yyyy-MM-dd HH:mm:ss"));
