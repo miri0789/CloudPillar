@@ -6,6 +6,8 @@ using Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Entities;
 using Shared.Entities.Messages;
 using CloudPillar.Agent.Handlers.Logger;
+using Newtonsoft.Json.Linq;
+using CloudPillar.Agent.Utilities.Interfaces;
 
 namespace CloudPillar.Agent.Tests;
 [TestFixture]
@@ -15,6 +17,7 @@ public class C2DEventSubscriptionSessionTestFixture
     private Mock<IDeviceClientWrapper> _deviceClientMock;
     private Mock<IMessageSubscriber> _messageSubscriberMock;
     private Mock<IMessageFactory> _messageFactoryMock;
+    private Mock<ICheckExceptionResult> _checkExceptionResultMock;
     private Mock<ILoggerHandler> _loggerMock;
     private Mock<IStateMachineHandler> _stateMachineHandlerMock;
     private IC2DEventSubscriptionSession _target;
@@ -29,6 +32,7 @@ public class C2DEventSubscriptionSessionTestFixture
         _deviceClientMock = new Mock<IDeviceClientWrapper>();
         _messageSubscriberMock = new Mock<IMessageSubscriber>();
         _messageFactoryMock = new Mock<IMessageFactory>();
+        _checkExceptionResultMock = new Mock<ICheckExceptionResult>();
         _loggerMock = new Mock<ILoggerHandler>();
         _stateMachineHandlerMock = new Mock<IStateMachineHandler>();
 
@@ -37,6 +41,7 @@ public class C2DEventSubscriptionSessionTestFixture
              _messageSubscriberMock.Object,
              _messageFactoryMock.Object,
              _stateMachineHandlerMock.Object,
+             _checkExceptionResultMock.Object,
              _loggerMock.Object);
 
 
