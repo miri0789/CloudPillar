@@ -39,7 +39,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         try
         {
             string[] certificatesFiles = _fileStreamerWrapper.GetFiles(SharedConstants.PKI_FOLDER_PATH, $"*{SharedConstants.CERTIFICATE_FILE_EXTENSION}");
-            var knownIdentitiesList = GetKnownIdentitiesByCertFiles(certificatesFiles, cancellationToken);
+            var knownIdentitiesList = GetKnownIdentitiesByCertFiles(certificatesFiles);
             await UpdateKnownIdentitiesInReportedAsync(knownIdentitiesList, cancellationToken);
         }
         catch (Exception ex)
@@ -83,7 +83,6 @@ public class ServerIdentityHandler : IServerIdentityHandler
         }
     }
 
-
     public async Task RemoveNonDefaultCertificatesAsync(string path)
     {
         try
@@ -116,7 +115,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         return pemBuilder.ToString();
     }
 
-    private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles, CancellationToken cancellationToken)
+    private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles)
     {
         var knownIdentitiesList = certificatesFiles
                         .Select(certificatePath =>

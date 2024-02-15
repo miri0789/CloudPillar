@@ -18,4 +18,9 @@ public class SHA256Wrapper : ISHA256Wrapper
     {
         return sha256.TransformFinalBlock(inputBuffer, inputOffset, inputCount);
     }
+
+    public byte[] GetHash(SHA256 sha256)
+    {
+        return sha256.Hash;
+    }
 }

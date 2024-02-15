@@ -40,6 +40,10 @@ public class UploadStreamChunksService : IUploadStreamChunksService
             if (storageUri == null)
             {
                 _logger.Info($"BlobStreamer: storageUri is null, get storageUri from storage connectionstring");
+                if(string.IsNullOrEmpty(fileName))
+                {
+                    throw new ArgumentNullException("fileName is null or empty. cannot create blob without filename.");
+                }
                 blob = _container.GetBlockBlobReference(fileName);
             }
             else
@@ -83,7 +87,9 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         }
         catch (Exception ex)
         {
-            _logger.Error($"Blobstreamer UploadFromStreamAsync failed. Message: {ex.Message}");
+            var error = $"Blobstreamer UploadStreamChunkAsync failed. Message: {ex.Message}";
+            _logger.Error(error);
+            throw ex;
         }
     }
 

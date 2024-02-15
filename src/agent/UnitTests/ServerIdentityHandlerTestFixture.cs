@@ -49,7 +49,7 @@ namespace CloudPillar.Agent.Tests
             _target = new ServerIdentityHandler(_loggerMock.Object, _x509CertificateWrapper.Object, _fileStreamerWrapper.Object, _deviceClientWrapper.Object, mockAppSettings.Object);
         }
         [Test]
-        public async Task HandleKnownIdentitiesFromCertificatesAsync_ValidCertificates_ReturnsKnownIdentities()
+        public async Task UpdateKnownIdentitiesFromCertificatesAsync_ValidCertificates_ReturnsKnownIdentities()
         {
             _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
             var expected = new List<KnownIdentities>()
@@ -67,8 +67,22 @@ namespace CloudPillar.Agent.Tests
              It.Is<List<KnownIdentities>>(y => EqualDetails(y, expected)), It.IsAny<CancellationToken>()), Times.Once);
         }
 
+          [Test]
+        public async Task UpdateKnownIdentitiesFromCertificatesAsync_EmptyCertificatesList_ReturnsKnownIdentities()
+        {
+            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[]{});
+
+            _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
+            _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate2.cer")).Returns(x509Certificate2);
+
+            await _target.UpdateKnownIdentitiesFromCertificatesAsync(CancellationToken.None);
+
+            _deviceClientWrapper.Verify(d => d.UpdateReportedPropertiesAsync(It.Is<string>(x => x == reportedKey),
+             It.Is<List<KnownIdentities>>(y => y.Count == 0), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
         [Test]
-        public async Task HandleKnownIdentitiesFromCertificatesAsync_CreateCrertificateFromFileException_ThrowException()
+        public async Task UpdateKnownIdentitiesFromCertificatesAsync_CreateCrertificateFromFileException_ThrowException()
         {
             _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
             _x509CertificateWrapper.Setup(x => x.CreateFromFile(It.IsAny<string>())).Throws(new Exception());

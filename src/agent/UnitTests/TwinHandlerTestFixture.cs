@@ -212,6 +212,15 @@ public class TwinHandlerTestFixture
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
     }
 
+    //  [Test]
+    // public async Task OnDesiredPropertiesUpdate_FirstTimeGetActions_ExecInכprogressActions()
+    // {
+    //     InitDataForTestInprogressActions();
+    //     await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
+    //     Task.Delay(10).Wait();
+    //     _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()),Times. );
+    // }
+
     [Test]
     public async Task OnDesiredPropertiesUpdate_FirstTime_InitCancellatioToken()
     {

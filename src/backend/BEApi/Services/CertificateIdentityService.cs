@@ -123,7 +123,7 @@ public class CertificateIdentityService : ICertificateIdentityService
             {
                 _sha256Wrapper.TransformBlock(sha256, data, 0, (int)data.Length, null, 0);
                 _sha256Wrapper.TransformFinalBlock(sha256, new byte[0], 0, 0);
-                return sha256.Hash;
+                return _sha256Wrapper.GetHash(sha256);
             }
             catch (Exception ex)
             {
