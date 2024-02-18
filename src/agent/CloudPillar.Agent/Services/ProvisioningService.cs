@@ -51,8 +51,8 @@ public class ProvisioningService : IProvisioningService
         else
         {
             await d2CMessengerHandler.SendRemoveDeviceEvent(cancellationToken);
-            await ProvisinigSymetricKeyAsync(cancellationToken);
             await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+            await ProvisinigSymetricKeyAsync(cancellationToken);
         }
     }
 }
