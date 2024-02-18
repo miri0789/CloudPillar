@@ -2,8 +2,6 @@
 using Backend.Iotlistener.Services;
 using Backend.Iotlistener.Interfaces;
 using Moq;
-using Shared.Entities.Messages;
-using Shared.Logger;
 using Backend.Iotlistener.Models;
 
 namespace Backend.Iotlistener.Tests;

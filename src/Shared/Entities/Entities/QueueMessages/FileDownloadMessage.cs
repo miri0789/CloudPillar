@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace Shared.Entities.Messages;
-public class FileDownloadEvent : D2CMessage
+namespace Shared.Entities.QueueMessages;
+public class FileDownloadMessage : QueueMessage
 {
     public string FileName { get; set; }
 
     public int ChunkSize { get; set; }
-    
+
     [DefaultValue("")]
     public string CompletedRanges { get; set; }
 
@@ -18,8 +18,8 @@ public class FileDownloadEvent : D2CMessage
     public string? ChangeSpecId { get; set; }
 
     [JsonConstructor]
-    public FileDownloadEvent()
+    public FileDownloadMessage()
     {
-        this.MessageType = D2CMessageType.FileDownloadReady;
+        this.MessageType = QueueMessageType.FileDownloadReady;
     }
 }

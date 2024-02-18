@@ -8,6 +8,7 @@ using Shared.Entities.Services;
 using Backend.Infra.Common.Services.Interfaces;
 using System.Security.Cryptography;
 using Backend.Infra.Common.Wrappers.Interfaces;
+using Shared.Entities.QueueMessages;
 
 namespace Backend.BlobStreamer.Services;
 
@@ -113,39 +114,38 @@ public class BlobService : IBlobService
         }
     }
 
-    public async Task<bool> SendRangeByChunksAsync(string deviceId, string changeSpecId, string fileName, int chunkSize, int rangeSize,
-    int rangeIndex, long startPosition, int actionIndex, int rangesCount)
+    public async Task<bool> SendRangeByChunksAsync(string deviceId, SendRangeByChunksMessage queueSendRange)
     {
-        var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, fileName);
+        var blockBlob = await _cloudStorageWrapper.GetBlockBlobReference(_container, queueSendRange.FileName);
         var fileSize = _cloudStorageWrapper.GetBlobLength(blockBlob);
-        chunkSize = GetMaxChunkSize(chunkSize);
+        queueSendRange.ChunkSize = GetMaxChunkSize(queueSendRange.ChunkSize);
         var rangeBytes = new List<byte>();
-        var rangeEndPosition = Math.Min(rangeSize + startPosition, fileSize);
-        var data = new byte[chunkSize];
+        var rangeEndPosition = Math.Min(queueSendRange.RangeSize + queueSendRange.RangeStartPosition, fileSize);
+        var data = new byte[queueSendRange.ChunkSize];
         using (var serviceClient = _deviceClientWrapper.CreateFromConnectionString())
         {
-            for (long offset = startPosition, chunkIndex = 0; offset < rangeEndPosition; offset += chunkSize, chunkIndex++)
+            for (long offset = queueSendRange.RangeStartPosition, chunkIndex = 0; offset < rangeEndPosition; offset += queueSendRange.ChunkSize, chunkIndex++)
             {
-                var length = Math.Min(chunkSize, rangeEndPosition - offset);
-                if (length != chunkSize) { data = new byte[length]; }
+                var length = Math.Min(queueSendRange.ChunkSize, rangeEndPosition - offset);
+                if (length != queueSendRange.ChunkSize) { data = new byte[length]; }
                 await blockBlob.DownloadRangeToByteArrayAsync(data, 0, offset, length);
                 rangeBytes.AddRange(data);
                 var blobMessage = new DownloadBlobChunkMessage
                 {
-                    RangeIndex = rangeIndex,
+                    RangeIndex = queueSendRange.RangeIndex,
                     ChunkIndex = (int)chunkIndex,
                     Offset = offset,
-                    FileName = fileName,
-                    ActionIndex = actionIndex,
+                    FileName = queueSendRange.FileName,
+                    ActionIndex = queueSendRange.ActionIndex,
                     FileSize = fileSize,
-                    ChangeSpecId = changeSpecId,
+                    ChangeSpecId = queueSendRange.ChangeSpecId,
                     Data = data
                 };
-                if (offset + chunkSize >= rangeEndPosition)
+                if (offset + queueSendRange.ChunkSize >= rangeEndPosition)
                 {
-                    blobMessage.RangeStartPosition = startPosition;
+                    blobMessage.RangeStartPosition = queueSendRange.RangeStartPosition;
                     blobMessage.RangeEndPosition = rangeEndPosition;
-                    blobMessage.RangesCount = rangesCount;
+                    blobMessage.RangesCount = queueSendRange.RangesCount;
                     blobMessage.RangeCheckSum = await _checkSumService.CalculateCheckSumAsync(rangeBytes.ToArray());
                 }
                 try

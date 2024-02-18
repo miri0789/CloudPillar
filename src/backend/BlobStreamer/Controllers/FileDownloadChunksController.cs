@@ -1,6 +1,7 @@
 using Backend.BlobStreamer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Messages;
+using Shared.Entities.QueueMessages;
 
 namespace Backend.BlobStreamer.Controllers;
 
@@ -16,9 +17,9 @@ public class FileDownloadChunksController : ControllerBase
     }
 
     [HttpPost("SendFileDownloadChunks")]
-    public async Task<IActionResult> SendFileDownload(string deviceId, [FromBody] FileDownloadEvent data)
+    public async Task<IActionResult> SendFileDownload(string deviceId, [FromBody] FileDownloadMessage data)
     {
-        await _fileDownloadsService.SendFileDownloadAsync(deviceId, data);
+        _fileDownloadsService.SendFileDownloadAsync(deviceId, data);
         return Ok();
     }
 }

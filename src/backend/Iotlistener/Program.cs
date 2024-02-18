@@ -17,6 +17,7 @@ var informationalVersion = Assembly.GetEntryAssembly()?
 var builder = LoggerHostCreator.Configure("Iotlistener", WebApplication.CreateBuilder(args));
 
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddScoped<IQueueMessagesService, QueueMessagesService>();
 builder.Services.AddScoped<IFileDownloadService, FileDownloadService>();
 builder.Services.AddScoped<IProvisionDeviceService, ProvisionDeviceService>();
 builder.Services.AddScoped<ISigningService, SigningService>();

@@ -23,6 +23,7 @@ builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
 builder.Services.AddScoped<IBlobService, BlobService>();
+builder.Services.AddScoped<IQueueMessagesService, QueueMessagesService>();
 builder.Services.AddScoped<IFileDownloadChunksService, FileDownloadChunksService>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
 builder.Services.AddScoped<IUploadStreamChunksService, UploadStreamChunksService>();

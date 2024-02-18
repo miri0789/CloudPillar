@@ -38,20 +38,6 @@ public class BlobController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("Range")]
-    public async Task<IActionResult> SendRange(string deviceId, string changeSpecId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, int actionIndex, int rangesCount)
-    {
-        var isSendRangeComplete = await _blobService.SendRangeByChunksAsync(deviceId, changeSpecId, fileName, chunkSize, rangeSize, rangeIndex, startPosition, actionIndex, rangesCount);
-        return Ok(isSendRangeComplete);
-    }
-
-    [HttpPost("RangeError")]
-    public async Task<IActionResult> SendRangeError(string deviceId, string changeSpecId, string fileName, int actionIndex, string error)
-    {
-        await _blobService.SendDownloadErrorAsync(deviceId, changeSpecId, fileName, actionIndex, error);
-        return Ok();
-    }
-
     [HttpPost("UploadStream")]
     public async Task UploadStream([FromBody] StreamingUploadChunkEvent data, string deviceId)
     {

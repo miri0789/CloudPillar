@@ -3,5 +3,6 @@ public enum C2DMessageType
 {
     DownloadChunk,
     Reprovisioning,
-    RequestDeviceCertificate
+    RequestDeviceCertificate,
+
 }

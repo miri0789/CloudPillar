@@ -4,6 +4,7 @@ using Backend.Iotlistener.Interfaces;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Shared.Entities.Messages;
+using Shared.Entities.QueueMessages;
 using Shared.Logger;
 
 namespace Backend.Iotlistener.Processors;
@@ -127,7 +128,7 @@ public class AgentEventProcessor : IEventProcessor
                 switch (d2CMessage.MessageType)
                 {
                     case D2CMessageType.FileDownloadReady:
-                        var FileDownloadEvent = JsonSerializer.Deserialize<FileDownloadEvent>(data)!;
+                        var FileDownloadEvent = JsonSerializer.Deserialize<FileDownloadMessage>(data)!;
                         await _FileDownloadService.SendFileDownloadAsync(deviceId, FileDownloadEvent);
                         break;
                     case D2CMessageType.SignTwinKey:
