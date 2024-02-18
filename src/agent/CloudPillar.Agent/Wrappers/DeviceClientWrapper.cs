@@ -9,12 +9,14 @@ using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using Newtonsoft.Json.Linq;
 using CloudPillar.Agent.Enums;
+using CloudPillar.Agent.Utilities.Interfaces;
 
 namespace CloudPillar.Agent.Wrappers;
 public class DeviceClientWrapper : IDeviceClientWrapper
 {
     private DeviceClient _deviceClient;
     private readonly AuthenticationSettings _authenticationSettings;
+    private readonly ICheckExceptionResult _checkExceptionResult;
     private readonly ILoggerHandler _logger;
     private const int kB = 1024;
 
@@ -23,9 +25,10 @@ public class DeviceClientWrapper : IDeviceClientWrapper
     /// </summary>
     /// <param name="environmentsWrapper"></param>
     /// <exception cref="NullReferenceException"></exception>
-    public DeviceClientWrapper(IOptions<AuthenticationSettings> authenticationSettings, ILoggerHandler logger)
+    public DeviceClientWrapper(IOptions<AuthenticationSettings> authenticationSettings, ICheckExceptionResult checkExceptionResult, ILoggerHandler logger)
     {
         _authenticationSettings = authenticationSettings?.Value ?? throw new ArgumentNullException(nameof(authenticationSettings));
+        _checkExceptionResult = checkExceptionResult ?? throw new ArgumentNullException(nameof(checkExceptionResult));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -126,11 +129,10 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
         catch (Exception ex)
         {
-            JObject exceptionData = JObject.Parse(ex.Message);
-            var error = exceptionData?["errorCode"]?.ToString();
-            if (error is not null && Enum.TryParse(error, out DeviceConnectionResult errorCode))
+            var errorCode = _checkExceptionResult.IsDeviceConnectException(ex);
+            if (errorCode != null)
             {
-                return errorCode;
+                return (DeviceConnectionResult)errorCode;
             }
             // Extract the error code
             _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized. {ex.Message}");
