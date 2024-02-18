@@ -8,7 +8,14 @@ spec:
   headers:
     customRequestHeaders:
       Host: {{ .title }}-service.cp-be-ns.svc
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .title }}-prefixes
+spec:
   stripPrefix:
     prefixes:
       - "/{{ .title }}-service"
-{{- end }}   
+{{- end }}

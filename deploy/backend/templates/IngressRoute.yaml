@@ -13,6 +13,7 @@ spec:
     kind: Rule
     middlewares:
     - name: {{ .title }}-headers
+    - name: {{ .title }}-prefixes
     services:
     - name: {{ .title }}-service
       port: {{ .port }}
