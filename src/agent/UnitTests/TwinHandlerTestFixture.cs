@@ -192,7 +192,7 @@ public class TwinHandlerTestFixture
             }
         };
 
-        var desired = GetDefaultDesiredChangeSpec();//InstallSteps
+        var desired = GetDefaultDesiredChangeSpec();
         var reported = GetDefaultReportedChangeSpec(reportedPatch);
 
 
@@ -212,14 +212,59 @@ public class TwinHandlerTestFixture
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
     }
 
-    //  [Test]
-    // public async Task OnDesiredPropertiesUpdate_FirstTimeGetActions_ExecInכprogressActions()
-    // {
-    //     InitDataForTestInprogressActions();
-    //     await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
-    //     Task.Delay(10).Wait();
-    //     _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()),Times. );
-    // }
+//     [Test]
+//     public async Task OnDesiredPropertiesUpdate_FirstTimeGetActions_ExecInכprogressActions()
+//     {
+//         var desired = GetDefaultDesiredChangeSpec(null, "", true);
+//         var reported = GetDefaultReportedChangeSpec(null, "", true);
+
+//         desired[SharedConstants.CHANGE_SPEC_NAME].Order = 50;
+//         desired[SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME].Order = 100;
+//         desired[SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME].Patch[MockHelper.PATCH_KEY] = new TwinAction[]{
+//                         new DownloadAction() { Action = TwinActionType.SingularDownload, DestinationPath="abc"}
+//         };
+
+//         // reported = new Dictionary<string, TwinReportedChangeSpec>();
+//         reported[SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME].Patch[MockHelper.PATCH_KEY] = new TwinActionReported[]{
+//                        new TwinActionReported() {Status = StatusType.Pending},
+//         };
+//         reported[SharedConstants.CHANGE_SPEC_NAME].Patch[MockHelper.PATCH_KEY] = new TwinActionReported[]{
+//                        new TwinActionReported() {Status = StatusType.Pending},
+//         };
+
+// //         using (Sequence.Create())
+// //         {
+// //             mock.Setup(_ => _.Method1()).InSequence();
+// //             mock.Setup(_ => _.Method2()).InSequence(Times.AtMostOnce());
+// //             _fileDownloadHandlerMock.Setup(c=>c.AddFileDownload(It.IsAny<ActionToReport>())).Returns(true).InSequence(Times.AtMostOnce());
+// //             (dc => dc.AddFileDownload(It.Is<ActionToReport>(d => d.ChangeSpecKey == SharedConstants.CHANGE_SPEC_NAME)), Times.Once); var isFirstVerifyCalled = false;
+
+
+// // }
+
+//         CreateTwinMock(desired, reported, GetDefaultChangeSign(true));
+
+//         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
+//         // _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == changeSignKey), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+//         // _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == changeSignDiagnosticsKey), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+//         _fileDownloadHandlerMock.Verify(dc => dc.AddFileDownload(It.Is<ActionToReport>(d => d.ChangeSpecKey == SharedConstants.CHANGE_SPEC_NAME)), Times.Once); var isFirstVerifyCalled = false;
+//         _fileDownloadHandlerMock.Verify(dc =>
+//         dc.AddFileDownload(It.Is<ActionToReport>(d => d.ChangeSpecKey == SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME))).Callback(() => isFirstVerifyCalled = true);
+//             .Callback(() => isFirstVerifyCalled = true);
+
+//         // ... other code ...
+
+//         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4))
+//             .Callback(() =>
+//             {
+//                 if (!isFirstVerifyCalled)
+//                 {
+//                     throw new Exception("The first Verify call was not made before the second Verify call.");
+//                 }
+//             });
+//         _fileDownloadHandlerMock.Verify(dc => dc.AddFileDownload(It.Is<ActionToReport>(d => d.ChangeSpecKey == SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME)), Times.Once);
+
+//     }
 
     [Test]
     public async Task OnDesiredPropertiesUpdate_FirstTime_InitCancellatioToken()
@@ -621,10 +666,8 @@ public class TwinHandlerTestFixture
         _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == changeSignDiagnosticsKey), It.Is<string>(x => x == $"Change sign is required"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
-
-
     [Test]
-    public async Task OnDesiredPropertiesUpdate_MultipleChangeSpec_UpdateMatchKeyReported()
+    public async Task OnDesiredPropertiesUpdate_MultipleChangeSpec_UpdateMatchKeyReported() 
     {
         var desired = GetDefaultDesiredChangeSpec(null, "", true);
         var reported = GetDefaultReportedChangeSpec(null, "", true);
