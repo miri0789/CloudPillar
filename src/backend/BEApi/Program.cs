@@ -43,6 +43,7 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UsePathBase(new PathString("/beapi-service"));
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
@@ -52,5 +53,4 @@ app.UseSwaggerUI();
 
 
 app.MapControllers();
-
 app.Run();
