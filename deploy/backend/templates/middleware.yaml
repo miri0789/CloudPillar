@@ -8,4 +8,7 @@ spec:
   headers:
     customRequestHeaders:
       Host: {{ .title }}-service.cp-be-ns.svc
+  stripPrefix:
+    prefixes:
+      - "/{{ .title }}-service"
 {{- end }}   
