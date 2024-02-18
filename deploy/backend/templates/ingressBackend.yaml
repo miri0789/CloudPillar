@@ -6,7 +6,7 @@ spec:
   backends:
     {{- range .Values.controllers }}
     {{- if and .port .path }}
-    - name: {{ .title }}-service
+    - name: {{ .title }}-service.cp-be-ns.svc
       port:
         number: {{ .port }}
         protocol: http
