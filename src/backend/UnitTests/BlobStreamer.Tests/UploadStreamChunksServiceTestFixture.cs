@@ -45,7 +45,6 @@ namespace Backend.BlobStreamer.Tests
             _mockEnvironmentsWrapper.Setup(e => e.blobContainerName).Returns("iotcontainer");
 
             _target = new UploadStreamChunksService(_mockLogger.Object, _mockCheckSumService.Object, _mockCloudBlockBlobWrapper.Object, _mockCloudStorageWrapper.Object, _mockTwinDiseredService.Object, _mockEnvironmentsWrapper.Object);
-            // _container = new CloudBlobContainer(STORAGE_URI_SETTINGS);
             createMockBlob(STORAGE_URI);
             _mockCloudBlockBlobWrapper.Setup(b => b.UploadFromStreamAsync(It.IsAny<CloudBlockBlob>(), It.IsAny<Stream>())).Returns(Task.CompletedTask);
 
