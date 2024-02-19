@@ -29,7 +29,7 @@ public class AuthorizationCheckMiddleware
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-
+        _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
     }
 
     public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler,
