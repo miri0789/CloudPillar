@@ -13,4 +13,8 @@ public class ConfigurationWrapper : IConfigurationWrapper
     {
         return _configuration.GetValue(key, defaultValue);
     }
+    public bool GetValue(string key, bool defaultValue)
+    {
+        return _configuration.GetValue<bool>(key, defaultValue);
+    }
 }

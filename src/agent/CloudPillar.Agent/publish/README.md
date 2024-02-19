@@ -74,7 +74,6 @@ To configure the application settings, please refer to the appsettings.json file
 | `Authentication.UserName`       | The user's name when logged on as a service  |  Admin |
 | `Authentication.UserPassword`       | The user's password when logged on as a service  | From command line argument, or waits for user interactive input.  |
 | `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
-| `StrictModeSettings.AllowHTTPAPI`  | Allow run application with http  | `false`     |
 | `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
 | `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
 | `StrictModeSettings.GlobalPatterns`    | General file access permissions or restrictions across the application | `[]` |
@@ -96,7 +95,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `UploadCompleteRetrySettings.DelaySeconds`    | Defines the delay duration in seconds between successive retry attempts | 30         |
 | `AgentServiceName`    | Describes the name of the Agent when installed as a Windows Service | `CARTO CloudPillar`         |
 | `AppSettings.DefaultSignCertificateName`    | The name of the default signing certificate. When resetting the pki folder, all certificates are deleted, except for the default signing certificate.  | `CP-Default-Sign-Certificate`         |
-
+| `AllowHTTPAPI`  | Allow run application with http  | `false`     |
 
 ## Call GetDeviceState in C# Example
 ```csharp

@@ -8,7 +8,6 @@ using Shared.Entities.Twin;
 using CloudPillar.Agent.Sevices.Interfaces;
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Entities;
-using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
@@ -20,25 +19,17 @@ public class AuthorizationCheckMiddleware
     private IProvisioningService? _provisioningService;
     private IHttpContextWrapper? _httpContextWrapper;
     private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
-    private readonly StrictModeSettings _strictModeSettings;
 
-
-    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate,
-                                        ILoggerHandler logger, 
-                                        IConfigurationWrapper configuration, 
-                                        IOptions<StrictModeSettings> strictModeSettings)
+    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfigurationWrapper configuration)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
+
     }
 
-    public async Task Invoke(HttpContext context, 
-                             IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, 
-                             IStateMachineHandler stateMachineHandler,
-                             IX509Provider x509Provider, 
-                             IHttpContextWrapper httpContextWrapper)
+    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler,
+    IX509Provider x509Provider, IHttpContextWrapper httpContextWrapper)
     {
         _provisioningService = context.RequestServices.GetRequiredService<IProvisioningService>();
         ArgumentNullException.ThrowIfNull(_provisioningService);
@@ -47,7 +38,8 @@ public class AuthorizationCheckMiddleware
         _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
 
-        if (!context.Request.IsHttps && !_strictModeSettings.AllowHTTPAPI)
+        bool isAllowHTTPAPI = _configuration.GetValue(Constants.Allow_HTTP_API, false);
+        if (!context.Request.IsHttps && !isAllowHTTPAPI)
         {
             NextWithRedirectAsync(context, x509Provider);
             return;
