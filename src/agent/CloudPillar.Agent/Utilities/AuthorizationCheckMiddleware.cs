@@ -8,6 +8,7 @@ using Shared.Entities.Twin;
 using CloudPillar.Agent.Sevices.Interfaces;
 using CloudPillar.Agent.Wrappers;
 using CloudPillar.Agent.Entities;
+using Microsoft.Extensions.Options;
 
 namespace CloudPillar.Agent.Utilities;
 public class AuthorizationCheckMiddleware
@@ -19,8 +20,11 @@ public class AuthorizationCheckMiddleware
     private IProvisioningService? _provisioningService;
     private IHttpContextWrapper? _httpContextWrapper;
     private IDPSProvisioningDeviceClientHandler _dPSProvisioningDeviceClientHandler;
+    private readonly StrictModeSettings _strictModeSettings;
 
-    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate, ILoggerHandler logger, IConfigurationWrapper configuration)
+
+    public AuthorizationCheckMiddleware(RequestDelegate requestDelegate,
+    ILoggerHandler logger, IConfigurationWrapper configuration, IOptions<StrictModeSettings> strictModeSettings)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -38,7 +42,7 @@ public class AuthorizationCheckMiddleware
         _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
 
-        if (!context.Request.IsHttps)
+        if (!context.Request.IsHttps && !_strictModeSettings.AllowHTTPAPI)
         {
             NextWithRedirectAsync(context, x509Provider);
             return;
