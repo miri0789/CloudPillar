@@ -74,6 +74,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `Authentication.UserName`       | The user's name when logged on as a service  |  Admin |
 | `Authentication.UserPassword`       | The user's password when logged on as a service  | From command line argument, or waits for user interactive input.  |
 | `StrictModeSettings.StrictMode`  | Strict mode flag  | `false`     |
+| `StrictModeSettings.AllowHTTPAPI`  | Allow run application with http  | `false`     |
 | `StrictModeSettings.ProvisionalAuthenticationMethods`  | Method for provisional authentication  | `SAS`     |
 | `StrictModeSettings.PermanentAuthenticationMethods`    | Method for permanent authentication | `X509`         |
 | `StrictModeSettings.GlobalPatterns`    | General file access permissions or restrictions across the application | `[]` |
