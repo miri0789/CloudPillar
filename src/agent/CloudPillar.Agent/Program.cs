@@ -117,12 +117,7 @@ builder.Services.Configure<UploadCompleteRetrySettings>(uploadCompleteRetrySetti
 var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationExtensions.STRICT_MODE_SETTINGS_SECTION);
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
-var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
-var activeUrls = new string[] { httpsUrl };
-if (!isStrictmode)
-{
-    activeUrls.Append(httpUrl);
-}
+var activeUrls = new string[] { httpsUrl, httpUrl };
 builder.WebHost.UseUrls(activeUrls);
 
 builder.Services.AddCors(options =>
@@ -140,11 +135,8 @@ var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
 
 builder.WebHost.UseKestrel(options =>
 {
-    if (!isStrictmode)
-    {
-        options.Listen(IPAddress.Any, port);
-    }
-    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
+    options.Listen(IPAddress.Loopback, port);
+    options.Listen(IPAddress.Loopback, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
     });
