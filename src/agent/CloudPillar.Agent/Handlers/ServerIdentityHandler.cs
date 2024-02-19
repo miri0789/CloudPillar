@@ -124,7 +124,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
                             return new KnownIdentities(
                             cert.Subject,
                             cert.Thumbprint,
-                            $"{cert.NotAfter.ToString("yyyy-MM-dd HH:mm:ss")}"
+                            $"{cert.NotAfter.ToString("yyyy-MM-dd")}"
                             );
                         }).ToList();
         return knownIdentitiesList;

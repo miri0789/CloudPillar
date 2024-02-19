@@ -177,7 +177,7 @@ public class SigningService : ISigningService
     {
         var knownCertificate = knownIdentities.Any(x => x.Subject == certificate.Subject
                      && x.Thumbprint == certificate.Thumbprint &&
-                   string.Format(x.ValidThru, "yyyy-MM-dd HH:mm:ss") == certificate.NotAfter.ToString("yyyy-MM-dd HH:mm:ss"));
+                   string.Format(x.ValidThru, "yyyy-MM-dd") == certificate.NotAfter.ToString("yyyy-MM-dd"));
         return knownCertificate;
     }
 
