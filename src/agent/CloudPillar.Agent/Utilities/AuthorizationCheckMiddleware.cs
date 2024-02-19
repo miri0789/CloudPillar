@@ -38,7 +38,7 @@ public class AuthorizationCheckMiddleware
         _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
 
-        bool isAllowHTTPAPI = _configuration.GetValue(Constants.Allow_HTTP_API, false);
+        bool isAllowHTTPAPI = _configuration.GetValue(Constants.ALLOW_HTTP_API, false);
         if (!context.Request.IsHttps && !isAllowHTTPAPI)
         {
             NextWithRedirectAsync(context, x509Provider);

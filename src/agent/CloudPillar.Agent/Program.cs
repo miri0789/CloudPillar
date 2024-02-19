@@ -123,7 +123,7 @@ var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationE
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
 var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
-var isAllowHTTPAPI = builder.Configuration.GetValue<bool>(Constants.Allow_HTTP_API, false);
+var isAllowHTTPAPI = builder.Configuration.GetValue<bool>(Constants.ALLOW_HTTP_API, false);
 var activeUrls = new string[] { httpsUrl };
 if (!isStrictmode || isAllowHTTPAPI)
 {
