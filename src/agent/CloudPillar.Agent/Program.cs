@@ -123,8 +123,9 @@ var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationE
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
 var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
+var isAllowHTTPAPI = builder.Configuration.GetValue<bool>(Constants.Allow_HTTP_API, false);
 var activeUrls = new string[] { httpsUrl };
-if (!isStrictmode)
+if (!isStrictmode || isAllowHTTPAPI)
 {
     activeUrls.Append(httpUrl);
 }
@@ -145,11 +146,11 @@ var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
 
 builder.WebHost.UseKestrel(options =>
 {
-    if (!isStrictmode)
+    if (!isStrictmode || isAllowHTTPAPI)
     {
-        options.Listen(IPAddress.Any, port);
+        options.Listen(IPAddress.Loopback, port);
     }
-    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
+    options.Listen(IPAddress.Loopback, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
     });

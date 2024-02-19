@@ -95,7 +95,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `UploadCompleteRetrySettings.DelaySeconds`    | Defines the delay duration in seconds between successive retry attempts | 30         |
 | `AgentServiceName`    | Describes the name of the Agent when installed as a Windows Service | `CARTO CloudPillar`         |
 | `AppSettings.DefaultSignCertificateName`    | The name of the default signing certificate. When resetting the pki folder, all certificates are deleted, except for the default signing certificate.  | `CP-Default-Sign-Certificate`         |
-
+| `AllowHTTPAPI`  | Allow run application with http  | `false`     |
 
 ## Call GetDeviceState in C# Example
 ```csharp
