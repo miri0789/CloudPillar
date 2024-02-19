@@ -9,6 +9,7 @@ using Backend.Infra.Common.Services.Interfaces;
 using Microsoft.Azure.Devices.Provisioning.Service;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.BEApi.Services.Interfaces;
+using System.Xml.Serialization;
 
 namespace Backend.BEApi.Services;
 
@@ -94,6 +95,26 @@ public class RegistrationService : IRegistrationService
         }
     }
 
+
+    public async Task RegisterByOneMDReportAsync(string deviceId, string secretKey)
+    {
+        try
+        {
+            var devices = await GetDeviceListFromReportAsync();
+            var devicesForProvisioning = await GetDeviceForProvisioningAsync();
+            _loggerHandler.Info($"{devicesForProvisioning.Count} devices were found for provisioning");
+            devicesForProvisioning.ForEach(async device =>
+            {
+                await RegisterAsync(deviceId, deviceId);
+            });
+        }
+        catch (Exception ex)
+        {
+            _loggerHandler.Error("Faild to register ", ex);
+            throw;
+        }
+    }
+
     private async Task<IndividualEnrollment> CreateEnrollmentAsync(X509Certificate2 certificate, string deviceId, string prefix)
     {
         ArgumentNullException.ThrowIfNull(certificate);
@@ -160,5 +181,31 @@ public class RegistrationService : IRegistrationService
 
         ArgumentNullException.ThrowIfNullOrEmpty(iotHubHostName);
         return iotHubHostName;
+    }
+
+    private async Task<List<string>> GetDeviceListFromReportAsync()
+    {
+        var list = ConvertXmlToClass();
+        _loggerHandler.Info("Get devices from OneMd reported");
+        return new List<string>();
+    }
+
+    private async Task<List<string>> GetDeviceForProvisioningAsync()
+    {
+        _loggerHandler.Info("filter devices for provisioning");
+        return new List<string>();
+    }
+
+    private List<object> ConvertXmlToClass()
+    {
+        XmlSerializer serializer = new XmlSerializer(typeof(object));
+
+        using (FileStream stream = new FileStream("yourReport.xml", FileMode.Open))
+        {
+            object report = (object)serializer.Deserialize(stream);
+
+            // Now 'report' contains the deserialized data.
+        }
+        return new List<object>();
     }
 }
