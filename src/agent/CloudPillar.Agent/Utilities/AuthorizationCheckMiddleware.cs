@@ -24,7 +24,9 @@ public class AuthorizationCheckMiddleware
 
 
     public AuthorizationCheckMiddleware(RequestDelegate requestDelegate,
-    ILoggerHandler logger, IConfigurationWrapper configuration, IOptions<StrictModeSettings> strictModeSettings)
+                                        ILoggerHandler logger, 
+                                        IConfigurationWrapper configuration, 
+                                        IOptions<StrictModeSettings> strictModeSettings)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -32,8 +34,11 @@ public class AuthorizationCheckMiddleware
         _strictModeSettings = strictModeSettings.Value ?? throw new ArgumentNullException(nameof(strictModeSettings));
     }
 
-    public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler,
-    IX509Provider x509Provider, IHttpContextWrapper httpContextWrapper)
+    public async Task Invoke(HttpContext context, 
+                             IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, 
+                             IStateMachineHandler stateMachineHandler,
+                             IX509Provider x509Provider, 
+                             IHttpContextWrapper httpContextWrapper)
     {
         _provisioningService = context.RequestServices.GetRequiredService<IProvisioningService>();
         ArgumentNullException.ThrowIfNull(_provisioningService);
