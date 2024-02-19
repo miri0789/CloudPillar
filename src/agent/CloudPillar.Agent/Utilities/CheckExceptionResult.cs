@@ -11,11 +11,11 @@ public class CheckExceptionResult : ICheckExceptionResult
     {
         try
         {
-            var exceptionData = ex.Message is not null ? JObject.Parse(ex.Message) : null;
+            var exceptionData = !string.IsNullOrEmpty(ex.Message) ? JObject.Parse(ex.Message) : null;
             var error = exceptionData?["errorCode"]?.ToString();
             return error is not null && Enum.TryParse(error, out DeviceConnectResultEnum errorCode) ? errorCode : null;
         }
-        catch (JsonReaderException exception)
+        catch (Exception exception)
         {
             return null;
         }
