@@ -84,7 +84,6 @@ To configure the application settings, please refer to the appsettings.json file
 | `StrictModeSettings.FilesRestrictions.MaxSize`    |  Specifies the size limit for file downloads in bytes | `1` |
 | `StrictModeSettings.FilesRestrictions.AllowPatterns`    |  Array that contains patterns specifying the types of files that are allowed for the defined action | `[]`       |
 | `StrictModeSettings.FilesRestrictions.DenyPatterns`    |  Array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
-| `DownloadSettings.SignFileBufferSize`    | Sign documents buffer size | `16384`         |
 | `DownloadSettings.CommunicationDelaySeconds`    | Download delay seconds for check less communication | `30`         |
 | `DownloadSettings.BlockedDelayMinutes`    | Specifies the delay duration in minutes for download retry after blocked | `10`         |
 | `CommunicationLess`    | API returns mocks and not connect to IOT hub | `false`         |

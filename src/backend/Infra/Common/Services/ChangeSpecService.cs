@@ -13,16 +13,14 @@ public class ChangeSpecService : IChangeSpecService
     private readonly ITwinDiseredService _twinDesiredService;
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly ICommonEnvironmentsWrapper _environmentsCommonWrapper;
-    private readonly DownloadSettings _downloadSettings;
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
 
     public ChangeSpecService(ITwinDiseredService twinDiseredService, IHttpRequestorService httpRequestorService, ICommonEnvironmentsWrapper environmentsCommonWrapper,
-    IOptions<DownloadSettings> options, IRegistryManagerWrapper registryManagerWrapper)
+    IRegistryManagerWrapper registryManagerWrapper)
     {
         _twinDesiredService = twinDiseredService ?? throw new ArgumentNullException(nameof(twinDiseredService));
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
         _environmentsCommonWrapper = environmentsCommonWrapper ?? throw new ArgumentNullException(nameof(environmentsCommonWrapper));
-        _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
     }
 

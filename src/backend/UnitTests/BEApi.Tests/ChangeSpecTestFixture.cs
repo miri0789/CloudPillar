@@ -14,8 +14,6 @@ public class ChangeSpecTestFixture
     private Mock<ITwinDiseredService> _twinDiseredServiceMock;
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
     private Mock<ICommonEnvironmentsWrapper> _environmentsWrapperMock;
-    private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
-    private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapper;
     private IChangeSpecService _target;
 
@@ -44,16 +42,13 @@ public class ChangeSpecTestFixture
         _twinDiseredServiceMock = new Mock<ITwinDiseredService>();
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
         _environmentsWrapperMock = new Mock<ICommonEnvironmentsWrapper>();
-        mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
-        mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
         _registryManagerWrapper = new Mock<IRegistryManagerWrapper>();
-        mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
         _httpRequestorServiceMock.Setup(x => x.SendRequest<byte[]>(It.Is<string>(x => x.Contains("Signing/SignData")), HttpMethod.Post, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Encoding.UTF8.GetBytes(SIGN));
         _twinDiseredServiceMock.Setup(x => x.GetTwinDesiredAsync(DEVICE_ID)).ReturnsAsync(twinDesired);
 
         _target = new ChangeSpecService(_twinDiseredServiceMock.Object, _httpRequestorServiceMock.Object,
-         _environmentsWrapperMock.Object, mockDownloadSettings.Object, _registryManagerWrapper.Object);
+         _environmentsWrapperMock.Object,  _registryManagerWrapper.Object);
     }
 
     [Test]
