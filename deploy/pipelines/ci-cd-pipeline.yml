@@ -1,5 +1,3 @@
-variables:
-  versionLabel: ''
 parameters:
 - name: env
   displayName: Select Environment to deploy
@@ -73,7 +71,7 @@ stages:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
-  - job: Agent_CI_Job
+  - job: Agent_CI_Job    
     pool:
       vmImage: ubuntu-latest
     steps:
