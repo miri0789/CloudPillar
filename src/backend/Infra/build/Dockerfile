@@ -19,7 +19,6 @@ WORKDIR /src/backend/${DLL}
 
 ARG IMAGE_TAG="127.0.0.1"
 RUN sed -i "s/127.0.0.1/$IMAGE_TAG/g" ${DLL}.csproj
-RUN cat ${DLL}.csproj
 # Build the application for release
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
