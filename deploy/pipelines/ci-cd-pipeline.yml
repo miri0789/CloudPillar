@@ -47,6 +47,7 @@ stages:
             echo $(versionLabel)
         displayName: 'Display New Build Number'
 - stage: CI_Stage  
+  dependsOn: GENRRATE_BUILD_NUMBER
   jobs:
   - ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters['env'], 'dev')) }}:
     - job: RunUnitTests
@@ -72,6 +73,8 @@ stages:
           summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
   - job: Agent_CI_Job    
+    variables:
+      versionLabel: $[ stageDependencies.GENRRATE_BUILD_NUMBER.Build.outputs['versionLabel'] ]
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -119,6 +122,8 @@ stages:
 
   - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
+      variables:
+        versionLabel: $[ stageDependencies.GENRRATE_BUILD_NUMBER.Build.outputs['versionLabel'] ]
       pool:
         vmImage: ubuntu-latest
       steps: 
