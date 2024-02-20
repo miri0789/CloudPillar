@@ -20,6 +20,8 @@ ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":
 
 # Restore NuGet packages and build the application
 RUN dotnet restore
+ARG IMAGE_TAG = "INTERNAL.VERSION"
+RUN sed -i "s/INTERNAL.VERSION/${IMAGE_TAG}/g" ${DLL}.csproj
 RUN dotnet build -c Release -o /app
 RUN pwsh ./publish.ps1
 

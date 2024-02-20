@@ -67,7 +67,7 @@ stages:
         dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
         buildContext: src
         tags: aux-build
-        arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+        arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg IMAGE_TAG=$(imagetag)'
 
     - script: |
         CONTAINER_ID=$(docker create agent:aux-build)
@@ -126,7 +126,7 @@ stages:
           Dockerfile: './src/backend/Infra/build/Dockerfile'
           buildContext: src
           tags: '$(imagetag)'
-          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT=$(PORT)'        
+          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT=$(PORT) --build-arg IMAGE_TAG=$(imagetag)'        
             
       - script: |
           SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
