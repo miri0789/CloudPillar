@@ -33,19 +33,12 @@ stages:
       steps:
       - bash: |
           IFS='.' read -r -a parts <<< "$(Build.BuildNumber)"
-          buildDateStr="${parts[0]}" # Assuming Build.BuildNumber is in YYYYMMDD format without dots
-          
+          buildDateStr="${parts[0]}" # Assuming Build.BuildNumber is in YYYYMMDD format without dots          
           # Extract year, month, day
-          year="${buildDateStr:0:4}"
+          year="${buildDateStr:2:4}"
           month="${buildDateStr:4:2}"
-          day="${buildDateStr:6:2}"
-          
-          # Calculate years since 2000
-          let yearsSince2000=($year-2000)
-          
-          bb=parts[1] # Example static value for bb
-          
-          versionLabel="1.3.${yearsSince2000}${month}.${day}${bb}"
+          day="${buildDateStr:6:2}"          
+          versionLabel="1.3.${year}${month}.${day}${parts[1]}"
           echo "##vso[task.setvariable variable=versionLabel;isOutput=true]$versionLabel"
         name: generateVersionLabel
         displayName: 'Calculate Days Since 1.1.2024'
