@@ -12,6 +12,7 @@ using CloudPillar.Agent.Wrappers.Interfaces;
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Sevices.Interfaces;
 using Shared.Entities.Twin;
+using CloudPillar.Agent.Utilities.Interfaces;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
@@ -67,7 +68,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
-builder.Services.AddSingleton<IConfigurationWrapper, ConfigurationWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
@@ -104,6 +104,7 @@ builder.Services.AddScoped<IPeriodicUploaderHandler, PeriodicUploaderHandler>();
 builder.Services.AddScoped<IServerIdentityHandler, ServerIdentityHandler>();
 builder.Services.AddScoped<IProvisioningService, ProvisioningService>();
 builder.Services.AddScoped<IHttpContextWrapper, HttpContextWrapper>();
+builder.Services.AddSingleton<ICheckExceptionResult, CheckExceptionResult>();
 
 var appSettings = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettings);
@@ -121,8 +122,9 @@ var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationE
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
 var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
+var isAllowHTTPAPI = builder.Configuration.GetValue<bool>(Constants.ALLOW_HTTP_API, false);
 var activeUrls = new string[] { httpsUrl };
-if (!isStrictmode)
+if (!isStrictmode || isAllowHTTPAPI)
 {
     activeUrls.Append(httpUrl);
 }
@@ -143,11 +145,11 @@ var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
 
 builder.WebHost.UseKestrel(options =>
 {
-    if (!isStrictmode)
+    if (!isStrictmode || isAllowHTTPAPI)
     {
-        options.Listen(IPAddress.Any, port);
+        options.Listen(IPAddress.Loopback, port);
     }
-    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
+    options.Listen(IPAddress.Loopback, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
     });
