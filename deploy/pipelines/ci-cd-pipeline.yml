@@ -35,7 +35,7 @@ stages:
         vmImage: 'ubuntu-latest'
       steps:
       - task: |
-          IFS='.' read -r -a parts <<< "$(Build.BuildNumber)"
+          IFS='.' read -r -a parts <<< "1.3.$(Build.BuildNumber)"
           buildDateStr="${parts[2]}"
           # Convert YYYYMMDD to seconds since epoch, then to days, adjusting for start date
           startDate=$(date -d "20240101" +%s)
