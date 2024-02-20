@@ -117,7 +117,7 @@ public class BlobService : IBlobService
                 var rangeIndex = 0;
                 while (offset < blobSize)
                 {
-                    _logger.Info($"FileDownloadService Send ranges to blob streamer, range index: {rangeIndex}");
+                    _logger.Info($"BlobService Send ranges to blob streamer, range index: {rangeIndex}");
                     var requests = new List<Task<bool>>();
                     for (var i = 0; requests.Count < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                     {
