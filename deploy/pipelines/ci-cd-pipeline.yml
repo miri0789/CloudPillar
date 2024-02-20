@@ -49,7 +49,7 @@ stages:
 
       -script: | 
         echo $(newBuildNumber)
-      displayName: 'Display New Build Number'
+        displayName: 'Display New Build Number'
 - stage: CI_Stage  
   jobs:
   - ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters['env'], 'dev')) }}:
