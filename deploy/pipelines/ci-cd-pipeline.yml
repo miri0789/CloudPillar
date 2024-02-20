@@ -45,11 +45,11 @@ stages:
         if [ $daysDiff -lt 0 ]; then daysDiff=0; fi
         newBuildNumber="${parts[0]}.${parts[1]}.$daysDiff.${parts[3]}"
         echo "##vso[task.setvariable variable=newBuildNumber]$newBuildNumber"
-        displayName: 'Calculate Days Since 1.1.2024'
+      displayName: 'Calculate Days Since 1.1.2024'
 
       -script: | 
         echo $(newBuildNumber)
-        displayName: 'Display New Build Number'
+      displayName: 'Display New Build Number'
 - stage: CI_Stage  
   jobs:
   - ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters['env'], 'dev')) }}:
