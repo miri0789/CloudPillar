@@ -24,7 +24,7 @@ trigger:
     - $(Build.SourceBranchName)
 
 
-stages:  
+stages:
 - stage: Generate_Build_Number
   jobs:    
     - job: generateVersionLabel
@@ -32,7 +32,7 @@ stages:
         vmImage: 'ubuntu-latest'
       steps:
       - bash: |
-          IFS='.' read -r -a parts <<< "1.3.$(Build.BuildNumber)"
+          IFS='.' read -r -a parts <<< "1.3.3333$(Build.BuildNumber)"
           buildDateStr="${parts[2]}"
           # Convert YYYYMMDD to seconds since epoch, then to days, adjusting for start date
           startDate=$(date -d "20240101" +%s)
@@ -42,16 +42,13 @@ stages:
           if [ $daysDiff -lt 0 ]; then daysDiff=0; fi
           versionLabel="${parts[0]}.${parts[1]}.$daysDiff.${parts[3]}"
           echo "##vso[task.setvariable variable=versionLabel;isOutput=true]$versionLabel"
-        name: CalculateVersion
+        name: generateVersionLabel
         displayName: 'Calculate Days Since 1.1.2024'
       - script: | 
             echo $(versionLabel)
         displayName: 'Display New Build Number'
 - stage: CI_Stage  
   dependsOn: Generate_Build_Number
-  variables:
-    calculatedVersionLabel: $[ dependencies.Build.outputs['CalculateVersion.versionLabel'] ]
-    versionLabel: $[ stageDependencies.Generate_Build_Number.Build.outputs['versionLabel'] ]
   jobs:
   - ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters['env'], 'dev')) }}:
     - job: RunUnitTests
@@ -77,6 +74,8 @@ stages:
           summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
   - job: Agent_CI_Job    
+    variables:
+      versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -93,7 +92,7 @@ stages:
         dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
         buildContext: src
         tags: aux-build
-        arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg IMAGE_TAG=$(versionLabelFromBuild)'
+        arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg IMAGE_TAG=$(versionLabel)'
 
     - script: |
         CONTAINER_ID=$(docker create agent:aux-build)
@@ -127,6 +126,8 @@ stages:
 
   - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
+      variables:
+        versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
       pool:
         vmImage: ubuntu-latest
       steps: 
