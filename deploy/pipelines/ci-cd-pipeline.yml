@@ -74,7 +74,7 @@ stages:
 
   - job: Agent_CI_Job    
     variables:
-      versionLabel: $[ stageDependencies.Generate_Build_Number.Build.outputs['versionLabel'] ]
+      versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['versionLabel'] ]
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -126,7 +126,7 @@ stages:
   - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
       variables:
-        versionLabel: $[ stageDependencies.Generate_Build_Number.Build.outputs['versionLabel'] ]
+        versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['versionLabel'] ]
       pool:
         vmImage: ubuntu-latest
       steps: 
