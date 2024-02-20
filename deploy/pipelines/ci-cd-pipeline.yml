@@ -25,7 +25,7 @@ trigger:
 
 
 stages:  
-- stage: GENRRATE_BUILD_NUMBER
+- stage: Generate_Build_Number
   jobs:    
     - job: generateVersionLabel
       pool:
@@ -47,7 +47,7 @@ stages:
             echo $(versionLabel)
         displayName: 'Display New Build Number'
 - stage: CI_Stage  
-  dependsOn: GENRRATE_BUILD_NUMBER
+  dependsOn: Generate_Build_Number
   jobs:
   - ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters['env'], 'dev')) }}:
     - job: RunUnitTests
@@ -74,10 +74,13 @@ stages:
 
   - job: Agent_CI_Job    
     variables:
-      versionLabel: $[ stageDependencies.GENRRATE_BUILD_NUMBER.Build.outputs['versionLabel'] ]
+      versionLabel: $[ stageDependencies.Generate_Build_Number.Build.outputs['versionLabel'] ]
     pool:
       vmImage: ubuntu-latest
     steps:
+    - script: | 
+        echo $(versionLabel)
+      displayName: 'Display New Build Number'
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to NuGet'
     - task: Docker@2
@@ -123,7 +126,7 @@ stages:
   - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
       variables:
-        versionLabel: $[ stageDependencies.GENRRATE_BUILD_NUMBER.Build.outputs['versionLabel'] ]
+        versionLabel: $[ stageDependencies.Generate_Build_Number.Build.outputs['versionLabel'] ]
       pool:
         vmImage: ubuntu-latest
       steps: 
