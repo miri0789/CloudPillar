@@ -26,13 +26,7 @@ public class MessageProcessor : IMessageProcessor
         using (var client = new HttpClient())
         {
             client.BaseAddress = new Uri(_environmentsWrapper.SvcBackendUrl);
-            if (headers != null)
-            {
-                foreach (var property in headers)
-                {
-                    client.DefaultRequestHeaders.Add(property.Key, property.Value);
-                }
-            }
+            headers?.ToList().ForEach(h => client.DefaultRequestHeaders.Add(h.Key, h.Value));
             var content = new StringContent(body, Encoding.UTF8, "application/json");
             var response = await client.PostAsync(relativeUri, content, cancellationToken);
             return response;
@@ -48,6 +42,11 @@ public class MessageProcessor : IMessageProcessor
             using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
                 new CancellationTokenSource(new TimeSpan(0, 0, _environmentsWrapper.RequestTimeoutSeconds)).Token))
             {
+                if(!IsValidJson(message))
+                {
+                    _logger.Warn($"ProcessMessageAsync Invalid json message: {message}");
+                    return (CompletionCode.ConsumeErrorFatal, string.Empty, null);
+                }
                 var relativeUri = properties.TryGetValue(Constants.RELATIVE_URI_PROP, out var uri) ? uri : "";
                 _logger.Info($"ProcessMessageAsync Sending message: {message} to url: {relativeUri}");
                 var response = await SendPostRequestAsync(relativeUri, message, properties, cts.Token);
@@ -82,5 +81,21 @@ public class MessageProcessor : IMessageProcessor
             return (CompletionCode.ConsumeErrorRecoverable, string.Empty, null);
         }
 
+    }
+
+    private bool IsValidJson(string json)
+    {
+        try
+        {
+            using (JsonDocument doc = JsonDocument.Parse(json))
+            {
+                return true;
+            }
+            return false;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 }

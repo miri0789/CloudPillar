@@ -277,13 +277,7 @@ public class QueueConsumerService : BackgroundService
             {
                 var completionTopicSender = _client.CreateSender(_environmentsWrapper.CompletionTopic);
                 var completionMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(response));
-                if (responseHeaers != null)
-                {
-                    foreach (var header in responseHeaers)
-                    {
-                        completionMessage.ApplicationProperties.Add(header.Key, header.Value);
-                    }
-                }
+                responseHeaers?.ToList().ForEach(h => completionMessage.ApplicationProperties.Add(h.Key, h.Value));
                 completionMessage.ApplicationProperties.Add(Constants.RELATIVE_URI_PROP, relativeUri);
 
                 await completionTopicSender.SendMessageAsync(completionMessage, cancellationToken);
