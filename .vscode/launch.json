@@ -15,9 +15,11 @@
                 "StorageConnectionString": "",
                 "BlobContainerName": "",
                 "IothubConnectionString": "",
+                "ServiceBusConnectionString": "",
+                "QueueName": "",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
-                "RetryPolicyExponent": "3"
+                "RetryPolicyExponent": "3",
             }
         },
         {
@@ -34,6 +36,8 @@
                 "IothubEventHubCompatiblePath": "",
                 "StorageConnectionString": "",
                 "BlobContainerName": "",
+                "ServiceBusConnectionString": "",
+                "QueueName": "",
                 "BlobStreamerUrl": "http://localhost:5019/",
                 "KeyHolderUrl": "http://localhost:5164/",
                 "MessageTimeoutMinutes": "10",
@@ -41,7 +45,7 @@
                 "RangePercent": "25",
                 "RangeBytes": "123456",
                 "IothubConnectionDeviceId": "iothub-connection-device-id",
-                "BEApiUrl": "http://localhost:5192/"
+                "BEApiUrl": "http://localhost:5192/",
             }
         },
         {

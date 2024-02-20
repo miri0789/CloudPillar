@@ -12,6 +12,7 @@ using CloudPillar.Agent.Wrappers.Interfaces;
 using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Sevices.Interfaces;
 using Shared.Entities.Twin;
+using CloudPillar.Agent.Utilities.Interfaces;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
@@ -66,6 +67,7 @@ builder.Services.AddWindowsService(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<StateMachineListenerService>();
 builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEvent>();
+builder.Services.AddSingleton<ICheckExceptionResult, CheckExceptionResult>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IConfigurationWrapper, ConfigurationWrapper>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();

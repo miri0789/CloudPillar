@@ -14,6 +14,10 @@ controllers:
       value: "HostName=cp-tst-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=vwH20T4DwOCt2FBMMUfxXesdl5g8M8RDXAIoTGS6OhE="
     - name: StorageConnectionString
       value: "DefaultEndpointsProtocol=https;AccountName=cpiottstfiles;AccountKey=WgZ7bI603Y/+WCEK0nv+r9/M6vQ/rgMcfJUAgOSeehcqPqPpXhDSZfAsFGVuGIGPp2/eTrA3JGot+ASt4rFCqA==;EndpointSuffix=core.windows.net"
+    - name: "ServiceBusConnectionString"
+      value: ""
+    - name: "QueueName"
+      value: ""
     - name: MessageExpiredMinutes
       value: "60"
     - name: RetryPolicyBaseDelay
@@ -39,6 +43,10 @@ controllers:
       value: "cp-tst-iothub"
     - name: StorageConnectionString
       value: "DefaultEndpointsProtocol=https;AccountName=cpiottstfiles;AccountKey=WgZ7bI603Y/+WCEK0nv+r9/M6vQ/rgMcfJUAgOSeehcqPqPpXhDSZfAsFGVuGIGPp2/eTrA3JGot+ASt4rFCqA==;EndpointSuffix=core.windows.net"
+    - name: "ServiceBusConnectionString"
+      value: ""
+    - name: "QueueName"
+      value: ""
     - name: BlobContainerName
       value: "iotcontainer"
     - name: BlobStreamerUrl

@@ -38,6 +38,13 @@ public class BlobController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("SendFileDownloadChunks")]
+    public async Task<IActionResult> SendFileDownload(string deviceId, [FromBody] FileDownloadEvent data)
+    {
+        await _blobService.SendFileDownloadAsync(deviceId, data);
+        return Ok();
+    }
+
     [HttpPost("Range")]
     public async Task<IActionResult> SendRange(string deviceId, string changeSpecId, string fileName, int chunkSize, int rangeSize, int rangeIndex, long startPosition, int actionIndex, int rangesCount)
     {

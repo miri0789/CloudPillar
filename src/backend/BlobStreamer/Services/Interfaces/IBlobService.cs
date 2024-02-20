@@ -11,4 +11,5 @@ public interface IBlobService
     Task<bool> SendRangeByChunksAsync(string deviceId, string changeSpecId, string fileName, int chunkSize, int rangeSize,
     int rangeIndex, long startPosition, int actionIndex, int rangesCount);
     Task<byte[]> CalculateHashAsync(string deviceId, SignFileEvent signFileEvent);
+    Task SendFileDownloadAsync(string deviceId, FileDownloadEvent data);
 }

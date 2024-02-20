@@ -22,6 +22,7 @@ builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
+builder.Services.AddScoped<ISendQueueMessagesService, SendQueueMessagesService>();
 builder.Services.AddScoped<IBlobService, BlobService>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
 builder.Services.AddScoped<IUploadStreamChunksService, UploadStreamChunksService>();
