@@ -18,8 +18,8 @@ COPY . .
 WORKDIR /src/backend/${DLL}
 
 ARG IMAGE_TAG="127.0.0.1"
-RUN IMAGE_TAG_SWAPPED=$(echo $IMAGE_TAG | awk -F'.' '{print $1"."$2"."$4"."$3}')
-RUN sed -i "s/127.0.0.1/${IMAGE_TAG_SWAPPED}/g" ${DLL}.csproj
+RUN IMAGE_TAG_SWAPPED=$(echo $IMAGE_TAG | awk -F'.' '{print $1"."$2"."$4"."$3}') && sed -i "s/127.0.0.1/$IMAGE_TAG_SWAPPED/g" ${DLL}.csproj
+# Build the application for release
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
