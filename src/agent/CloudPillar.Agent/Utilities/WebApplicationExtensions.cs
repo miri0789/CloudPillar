@@ -1,3 +1,5 @@
+using CloudPillar.Agent.Enums;
+
 public static class WebApplicationExtensions
 {
     public const string STRICT_MODE_SETTINGS_SECTION = "StrictModeSettings";

@@ -6,10 +6,12 @@ using Shared.Logger;
 using Backend.Keyholder.Wrappers.Interfaces;
 using Shared.Entities.Factories;
 using Backend.Infra.Wrappers;
+using Backend.Infra.Common;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Services;
 using Backend.Infra.Common.Wrappers;
+
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -30,16 +32,14 @@ builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 var app = builder.Build();
+app.UsePathBase(new PathString(CommonConstants.KEYHOLDER_BASE_URL));
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
 
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapControllers();
 
