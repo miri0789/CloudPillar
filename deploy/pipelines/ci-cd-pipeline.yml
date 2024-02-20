@@ -1,4 +1,3 @@
-@ -1,249 +1,249 @@
 parameters:
 - name: env
   displayName: Select Environment to deploy
@@ -44,8 +43,7 @@ stages:
           # Calculate years since 2000
           let yearsSince2000=($year-2000)
           
-          # Assuming bb is a static value or another variable; set bb accordingly
-          bb="10" # Example static value for bb
+          bb=parts[1] # Example static value for bb
           
           versionLabel="1.3.${yearsSince2000}${month}.${day}${bb}"
           echo "##vso[task.setvariable variable=versionLabel;isOutput=true]$versionLabel"
