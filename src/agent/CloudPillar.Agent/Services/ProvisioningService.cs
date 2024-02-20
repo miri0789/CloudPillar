@@ -38,7 +38,7 @@ public class ProvisioningService : IProvisioningService
         //don't need to explicitly check if the header exists; it's already verified in the middleware.
         var deviceId = _requestWrapper.GetHeaderValue(Constants.X_DEVICE_ID);
         var secretKey = _requestWrapper.GetHeaderValue(Constants.X_SECRET_KEY);
-        if(!await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken))
+        if (!await _symmetricKeyProvisioningHandler.ProvisioningAsync(deviceId, cancellationToken))
         {
             throw new Exception("Failed to provision symmetric key");
         }
@@ -51,8 +51,8 @@ public class ProvisioningService : IProvisioningService
         else
         {
             await d2CMessengerHandler.SendRemoveDeviceEvent(cancellationToken);
-            await ProvisinigSymetricKeyAsync(cancellationToken);
             await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+            await ProvisinigSymetricKeyAsync(cancellationToken);
         }
     }
 }
