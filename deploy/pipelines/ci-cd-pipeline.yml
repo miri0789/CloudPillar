@@ -25,6 +25,31 @@ trigger:
 
 
 stages:  
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: VersionCheck
+    pool:
+      vmImage: 'ubuntu-latest'
+    displayName: Version Check
+    continueOnError: false
+    steps:
+
+      - script: |
+          echo "##vso[task.setvariable variable=curProjVersion;isOutput=true]1.4.5"
+        name: setCurProjVersion
+        displayName: "Collect Application Version ID"
+
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  variables:
+    curProjVersion1: $[ dependencies.Build.VersionCheck.outputs['setCurProjVersion.curProjVersion'] ]
+  jobs:
+  - job: 
+    steps: 
+      - script: |
+          echo $(curProjVersion1)
 - stage: Generate_Build_Number
   jobs:    
     - job: generateVersionLabel
