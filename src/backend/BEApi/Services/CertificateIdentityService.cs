@@ -70,7 +70,7 @@ public class CertificateIdentityService : ICertificateIdentityService
             };
 
             _logger.Info($"Send publicKey to BlobStreamer for uploading");
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/UploadStream?deviceId={deviceId}";
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}Blob/UploadStream?deviceId={deviceId}";
             await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);
             _logger.Info("certificate with public key uploaded for blob successfully.");
         }
