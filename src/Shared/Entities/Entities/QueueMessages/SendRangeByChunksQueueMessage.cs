@@ -1,7 +1,8 @@
 namespace Shared.Entities.QueueMessages;
 
-public class SendRangeByChunksMessage : QueueMessage
+public class SendRangeByChunksQueueMessage : QueueMessage
 {
+    public string DeviceId { get; set; }
     public int RangeIndex { get; set; }
     public string FileName { get; set; }
     public int ChunkSize { get; set; }
@@ -10,7 +11,7 @@ public class SendRangeByChunksMessage : QueueMessage
     public int? RangesCount { get; set; }
     public string? ChangeSpecId { get; set; }
 
-    public SendRangeByChunksMessage()
+    public SendRangeByChunksQueueMessage()
     {
         this.MessageType = QueueMessageType.SendRangeByChunks;
     }

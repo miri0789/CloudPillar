@@ -9,6 +9,8 @@ using Microsoft.Azure.EventHubs.Processor;
 using System.Runtime.Loader;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Services;
+using Backend.Infra.Common.Wrappers.Interfaces;
+using Backend.Infra.Wrappers;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -17,7 +19,8 @@ var informationalVersion = Assembly.GetEntryAssembly()?
 var builder = LoggerHostCreator.Configure("Iotlistener", WebApplication.CreateBuilder(args));
 
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
-builder.Services.AddScoped<IQueueMessagesService, QueueMessagesService>();
+builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
+builder.Services.AddScoped<ISendQueueMessagesService, SendQueueMessagesService>();
 builder.Services.AddScoped<IFileDownloadService, FileDownloadService>();
 builder.Services.AddScoped<IProvisionDeviceService, ProvisionDeviceService>();
 builder.Services.AddScoped<ISigningService, SigningService>();

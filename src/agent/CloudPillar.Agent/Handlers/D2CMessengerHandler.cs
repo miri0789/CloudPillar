@@ -6,6 +6,7 @@ using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Messages;
+using Shared.Entities.QueueMessages;
 
 namespace CloudPillar.Agent.Handlers;
 

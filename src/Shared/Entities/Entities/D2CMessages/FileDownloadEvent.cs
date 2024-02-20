@@ -1,12 +1,15 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
+using Shared.Entities.Messages;
 
 namespace Shared.Entities.QueueMessages;
-public class FileDownloadMessage : QueueMessage
+
+public class FileDownloadEvent : D2CMessage
 {
     public string FileName { get; set; }
-
     public int ChunkSize { get; set; }
+    public long? EndPosition { get; set; }
+    public string? ChangeSpecId { get; set; }
 
     [DefaultValue("")]
     public string CompletedRanges { get; set; }
@@ -14,12 +17,9 @@ public class FileDownloadMessage : QueueMessage
     [DefaultValue(0)]
     public long StartPosition { get; set; }
 
-    public long? EndPosition { get; set; }
-    public string? ChangeSpecId { get; set; }
-
     [JsonConstructor]
-    public FileDownloadMessage()
+    public FileDownloadEvent()
     {
-        this.MessageType = QueueMessageType.FileDownloadReady;
+        this.MessageType = D2CMessageType.FileDownloadReady;
     }
 }

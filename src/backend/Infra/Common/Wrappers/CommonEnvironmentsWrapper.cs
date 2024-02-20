@@ -5,6 +5,8 @@ public class CommonEnvironmentsWrapper : ICommonEnvironmentsWrapper
     private const string _iothubConnectionString = "IothubConnectionString";
     private const string _retryPolicyBaseDelay = "RetryPolicyBaseDelay";
     private const string _retryPolicyExponent = "RetryPolicyExponent";
+    private const string _serviceBusConnectionString = "ServiceBusConnectionString";
+    private const string _queueName = "QueueName";
 
     public int retryPolicyBaseDelay
     {
@@ -25,7 +27,17 @@ public class CommonEnvironmentsWrapper : ICommonEnvironmentsWrapper
     {
         get { return GetVariable(_iothubConnectionString); }
     }
-    
+
+    public string serviceBusConnectionString
+    {
+        get { return GetVariable(_serviceBusConnectionString); }
+    }
+
+    public string queueName
+    {
+        get { return GetVariable(_queueName); }
+    }
+
     private string GetVariable(string name)
     {
         return Environment.GetEnvironmentVariable(name);
