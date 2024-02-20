@@ -17,9 +17,9 @@ RUN dotnet restore backend/${DLL}/${DLL}.csproj
 COPY . .
 WORKDIR /src/backend/${DLL}
 
-ARG IMAGE_TAG="INTERNAL.VERSION"
+ARG IMAGE_TAG="127.0.0.1"
 # Build the application for release
-RUN sed -i "s/INTERNAL.VERSION/${IMAGE_TAG}/g" ${DLL}.csproj
+RUN sed -i "s/127.0.0.1/${IMAGE_TAG}/g" ${DLL}.csproj
 RUN dotnet build ${DLL}.csproj -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish ${DLL}.csproj -c Release -o /app/publish
