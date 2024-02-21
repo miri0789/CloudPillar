@@ -11,6 +11,7 @@ using Backend.BlobStreamer.Services.Interfaces;
 using Backend.Infra.Wrappers;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Services;
+using Backend.Infra.Wrappers.Interfaces;
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                .InformationalVersion;
@@ -22,6 +23,7 @@ builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<ICloudBlockBlobWrapper, CloudBlockBlobWrapper>();
 builder.Services.AddScoped<IMessageFactory, MessageFactory>();
+builder.Services.AddScoped<IServiceBusWrapper, ServiceBusWrapper>();
 builder.Services.AddScoped<ISendQueueMessagesService, SendQueueMessagesService>();
 builder.Services.AddScoped<IBlobService, BlobService>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();

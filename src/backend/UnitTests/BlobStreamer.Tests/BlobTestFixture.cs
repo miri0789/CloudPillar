@@ -27,6 +27,7 @@ namespace Backend.BlobStreamer.Tests
         private Mock<IDeviceConnectService> _mockDeviceConnectService;
         private Mock<ICheckSumService> _mockCheckSumService;
         private Mock<IDeviceClientWrapper> _mockDeviceClientWrapper;
+        private Mock<ISendQueueMessagesService> _mockSendQueueMessagesService;
         private IBlobService _target;
 
 
@@ -39,6 +40,9 @@ namespace Backend.BlobStreamer.Tests
         private const long _startPosition = 0;
         private const int _rangesCount = 0;
         private SignFileEvent signFileEvent;
+        private const int _actionIndexd = 123;
+        private const long _blobSize = 2048L;
+
 
         [SetUp]
         public void Setup()
@@ -51,6 +55,7 @@ namespace Backend.BlobStreamer.Tests
             _mockDeviceConnectService = new Mock<IDeviceConnectService>();
             _mockCheckSumService = new Mock<ICheckSumService>();
             _mockDeviceClientWrapper = new Mock<IDeviceClientWrapper>();
+            _mockSendQueueMessagesService = new Mock<ISendQueueMessagesService>();
             var mockDeviceClient = new Mock<ServiceClient>();
 
             signFileEvent = new SignFileEvent
@@ -63,24 +68,73 @@ namespace Backend.BlobStreamer.Tests
             _mockCloudStorageWrapper.Setup(c => c.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), _fileName)).ReturnsAsync(_mockBlockBlob.Object);
             _target = new BlobService(_mockEnvironmentsWrapper.Object,
                 _mockCloudStorageWrapper.Object, _mockDeviceConnectService.Object, _mockCheckSumService.Object, _mockLogger.Object, _mockMessageFactory.Object,
-                _mockDeviceClientWrapper.Object);
+                _mockDeviceClientWrapper.Object, _mockSendQueueMessagesService.Object);
 
+        }
+
+        [Test]
+        public async Task SendRangeByChunksAsync_OnCall_ShouldGetBlobLength()
+        {
+            _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
+            await _target.SendRangeByChunksAsync(_deviceId, _changeSpecId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
+            _mockCloudStorageWrapper.Verify(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>()), Times.Once);
+        }
+
+        [Test]
+        public async Task SendFileDownloadAsync_OnCall_SendMessageToQueue()
+        {
+            await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
+            {
+                FileName = _fileName,
+                ChunkSize = _chunkSize,
+                StartPosition = 0,
+                ActionIndex = _actionIndexd,
+                ChangeSpecId = _changeSpecId
+            });
+
+            for (long offset = _startPosition, rangeIndex = 0; offset < _blobSize; offset += _rangeSize, rangeIndex++)
+            {
+                _mockSendQueueMessagesService.Verify(q =>
+                    q.SendMessageToQueue(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+            }
         }
 
 
         [Test]
-        public async Task SendRangeByChunksAsync_ShouldSendBlobMessages()
+        public async Task SendFileDownloadAsync__MsgWithEndPosition_SendsOneRange()
         {
-            _mockBlockBlob.Setup(b => b.DownloadRangeToByteArrayAsync(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<int>()));
-            _mockCloudStorageWrapper.Setup(c => c.GetBlobLength(It.IsAny<CloudBlockBlob>())).Returns(_rangeSize);
+            await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
+            {
+                FileName = _fileName,
+                ChunkSize = _chunkSize,
+                StartPosition = 0,
+                ActionIndex = _actionIndexd,
+                EndPosition = 123,
+                ChangeSpecId = _changeSpecId
+            });
 
-            _mockDeviceConnectService.Setup(s => s.SendDeviceMessageAsync(It.IsAny<ServiceClient>(), It.IsAny<Message>(), _deviceId)).Returns(Task.CompletedTask);
-            await _target.SendRangeByChunksAsync(_deviceId, _changeSpecId, _fileName, _chunkSize, _rangeSize, _rangeIndex, _startPosition, 0, _rangesCount);
-            _mockDeviceConnectService.Verify(s => s.SendDeviceMessageAsync(
-                                                It.IsAny<ServiceClient>(),
-                                                It.IsAny<Message>(),
-                                                _deviceId),
-                                                Times.Exactly(4));
+            _mockSendQueueMessagesService.Verify(q =>
+                       q.SendMessageToQueue(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+
+        }
+
+        [Test]
+        public async Task SendFileDownloadAsync_GetBlobSizeFails_SendErrMsg()
+        {
+            var errMsg = "Failed to retrieve blob size.";
+            _mockCloudStorageWrapper.Setup(c => c.GetBlockBlobReference(It.IsAny<CloudBlobContainer>(), It.IsAny<string>())).ThrowsAsync(new StorageException(errMsg, null));
+
+            await _target.SendFileDownloadAsync(_deviceId, new FileDownloadEvent
+            {
+                FileName = _fileName,
+                ChunkSize = _chunkSize,
+                StartPosition = 0,
+                ActionIndex = _actionIndexd,
+                ChangeSpecId = _changeSpecId
+            });
+            var url = $"blob/RangeError?deviceId={_deviceId}&fileName={_fileName}&actionIndex={_actionIndexd}&error=Failed to retrieve blob size.&changeSpecId={_changeSpecId}";
+            _mockSendQueueMessagesService.Verify(q =>
+                q.SendMessageToQueue(It.Is<string>(url => url == url), null), Times.Once);
         }
 
         [Test]

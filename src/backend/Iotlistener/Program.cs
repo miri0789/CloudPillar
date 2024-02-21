@@ -11,6 +11,7 @@ using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Services;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Wrappers;
+using Backend.Infra.Wrappers.Interfaces;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -20,6 +21,7 @@ var builder = LoggerHostCreator.Configure("Iotlistener", WebApplication.CreateBu
 
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
+builder.Services.AddScoped<IServiceBusWrapper, ServiceBusWrapper>();
 builder.Services.AddScoped<ISendQueueMessagesService, SendQueueMessagesService>();
 builder.Services.AddScoped<IFileDownloadService, FileDownloadService>();
 builder.Services.AddScoped<IProvisionDeviceService, ProvisionDeviceService>();

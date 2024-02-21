@@ -99,7 +99,7 @@ public class BlobService : IBlobService
         try
         {
             var blobProperties = await GetBlobMetadataAsync(data.FileName);
-            var blobSize = blobProperties.Length;
+            var blobSize = _cloudStorageWrapper.GetBlobLength(blobProperties);
             ArgumentNullException.ThrowIfNull(blobSize);
 
             long rangeSize = GetRangeSize((long)blobSize, data.ChunkSize);
@@ -118,20 +118,13 @@ public class BlobService : IBlobService
                 while (offset < blobSize)
                 {
                     _logger.Info($"BlobService Send ranges to blob streamer, range index: {rangeIndex}");
-                    var requests = new List<Task<bool>>();
-                    for (var i = 0; requests.Count < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
+                    for (var i = 0; i < 4 && offset < blobSize; i++, offset += rangeSize, rangeIndex++)
                     {
                         if (existRanges.IndexOf(rangeIndex.ToString()) == -1)
                         {
                             string requestUrl = BuildRangeUrlRequest(deviceId, data.FileName, data.ChunkSize, (int)rangeSize, rangeIndex, data.StartPosition, data.ActionIndex, (int)rangesCount, data.ChangeSpecId);
                             await _sendQueueMessagesService.SendMessageToQueue(requestUrl);
                         }
-                    }
-                    await Task.WhenAll(requests);
-                    if (requests.Any(task => !task.Result))
-                    {
-                        _logger.Error($"FileDownloadService SendFileDownloadAsync failed to send range.");
-                        break;
                     }
                 }
             }

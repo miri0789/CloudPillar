@@ -27,6 +27,11 @@ public class CloudStorageWrapper : ICloudStorageWrapper
         return cloudBlockBlob.Properties.Length;
     }
 
+    public long GetBlobLength(BlobProperties cloudBlockBlobProperties)
+    {
+        return cloudBlockBlobProperties.Length;
+    }
+
     public async Task DownloadRangeToByteArrayAsync(CloudBlockBlob cloudBlockBlob, byte[] data, int index, long? blobOffset, long? length)
     {
         await cloudBlockBlob.DownloadRangeToByteArrayAsync(data, index, blobOffset, length);
