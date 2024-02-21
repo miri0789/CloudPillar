@@ -20,6 +20,8 @@ ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":
 
 # Restore NuGet packages and build the application
 RUN dotnet restore
+ARG IMAGE_TAG="127.0.0.1"
+RUN sed -i "s/127.0.0.1/$IMAGE_TAG/g" CloudPillar.Agent.csproj
 RUN dotnet build -c Release -o /app
 RUN pwsh ./publish.ps1
 
