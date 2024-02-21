@@ -49,6 +49,8 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
         {
             return int.TryParse(GetVariable(_rangeBytes), out int value) ? value : 0;
         }
+    }
+
     public string keyHolderUrl
     {
         get { return GetVariable(_keyHolderUrl); }

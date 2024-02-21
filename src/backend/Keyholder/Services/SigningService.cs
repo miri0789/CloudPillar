@@ -23,7 +23,7 @@ public class SigningService : ISigningService
     private const string BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
 
     public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper,
-     IFileStreamerWrapper fileStreamerWrapper,IX509CertificateWrapper x509CertificateWrapper)
+     IFileStreamerWrapper fileStreamerWrapper, IX509CertificateWrapper x509CertificateWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -163,7 +163,7 @@ public class SigningService : ISigningService
             return false;
         }
 
-        var certificate = _x509CertificateWrapper. CreateCertificateFrombytes(publicKeyPem);
+        var certificate = _x509CertificateWrapper.CreateCertificateFrombytes(publicKeyPem);
         var knownCertificate = await CeritficateIsknown(knownIdentitiesList, certificate);
         if (!knownCertificate)
         {
