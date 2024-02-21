@@ -80,7 +80,10 @@
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "ExpirationCertificatePercent": "0.6",
-                "maxCountDevices": "100"
+                "maxCountDevices": "100",
+                "RangeCalculateType": "percent",
+                "RangePercent": "25",
+                "RangeBytes": "123456",
             }
         },
         {

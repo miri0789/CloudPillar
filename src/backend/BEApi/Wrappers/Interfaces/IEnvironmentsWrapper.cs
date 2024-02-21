@@ -1,4 +1,6 @@
-﻿namespace Backend.BEApi.Wrappers.Interfaces;
+﻿using Shared.Entities.Messages;
+
+namespace Backend.BEApi.Wrappers.Interfaces;
 public interface IEnvironmentsWrapper
 {
     string iothubConnectionString { get; }
@@ -9,4 +11,8 @@ public interface IEnvironmentsWrapper
     int maxCountDevices { get; }
     string keyHolderUrl { get; }
     string blobStreamerUrl { get; }
+    RangeCalculateType rangeCalculateType { get; }
+    int rangePercent { get; }
+    long rangeBytes { get; }
+
 }

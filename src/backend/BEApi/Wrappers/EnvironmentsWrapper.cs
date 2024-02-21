@@ -11,6 +11,11 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _maxCountDevices = "MaxCountDevices";
     private const string _keyHolderUrl = "KeyHolderUrl";
     private const string _blobStreamerUrl = "BlobStreamerUrl";
+    public static readonly string _rangeCalculateType = "RangeCalculateType";
+    public static readonly string _rangePercent = "RangePercent";
+    public static readonly string _rangeBytes = "RangeBytes";
+
+
 
     public string iothubConnectionString
     {
@@ -50,6 +55,28 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public string blobStreamerUrl
     {
         get { return GetVariable(_blobStreamerUrl); }
+    }
+    public RangeCalculateType rangeCalculateType
+    {
+        get
+        {
+            return RangeCalculateType.TryParse(GetVariable(_rangeCalculateType), out RangeCalculateType value) ? value : RangeCalculateType.Bytes;
+
+        }
+    }
+    public int rangePercent
+    {
+        get
+        {
+            return int.TryParse(GetVariable(_rangePercent), out int value) ? value : 0;
+        }
+    }
+    public long rangeBytes
+    {
+        get
+        {
+            return int.TryParse(GetVariable(_rangeBytes), out int value) ? value : 0;
+        }
     }
     private string GetVariable(string name)
     {
