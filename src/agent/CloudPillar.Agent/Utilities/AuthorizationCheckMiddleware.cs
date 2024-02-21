@@ -31,70 +31,79 @@ public class AuthorizationCheckMiddleware
     public async Task Invoke(HttpContext context, IDPSProvisioningDeviceClientHandler dPSProvisioningDeviceClientHandler, IStateMachineHandler stateMachineHandler,
     IX509Provider x509Provider, IHttpContextWrapper httpContextWrapper)
     {
-        _provisioningService = context.RequestServices.GetRequiredService<IProvisioningService>();
-        ArgumentNullException.ThrowIfNull(_provisioningService);
-        _symmetricKeyProvisioningHandler = context.RequestServices.GetRequiredService<ISymmetricKeyProvisioningHandler>();
-        ArgumentNullException.ThrowIfNull(_symmetricKeyProvisioningHandler);
-        _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
-        _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
+        try
+        {
+            _provisioningService = context.RequestServices.GetRequiredService<IProvisioningService>();
+            ArgumentNullException.ThrowIfNull(_provisioningService);
+            _symmetricKeyProvisioningHandler = context.RequestServices.GetRequiredService<ISymmetricKeyProvisioningHandler>();
+            ArgumentNullException.ThrowIfNull(_symmetricKeyProvisioningHandler);
+            _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
+            _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
 
-        bool isAllowHTTPAPI = _configuration.GetValue(Constants.ALLOW_HTTP_API, false);
-        if (!context.Request.IsHttps && !isAllowHTTPAPI)
-        {
-            NextWithRedirectAsync(context, x509Provider);
-            return;
-        }
-        var endpoint = _httpContextWrapper.GetEndpoint(context);
-        //context
-        var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
-        if (deviceIsBusy)
-        {
-            var isActionBlockByBusy = endpoint?.Metadata.GetMetadata<DeviceStateFilterAttribute>();
-            if (isActionBlockByBusy != null)
+            bool isAllowHTTPAPI = _configuration.GetValue(Constants.ALLOW_HTTP_API, false);
+            if (!context.Request.IsHttps && !isAllowHTTPAPI)
             {
-                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                await context.Response.WriteAsync(StateMachineConstants.BUSY_MESSAGE);
+                NextWithRedirectAsync(context, x509Provider);
                 return;
             }
-        }
-        CancellationToken cancellationToken = context.RequestAborted;
-        if (IsActionMethod(endpoint))
-        {
-            // check the headers for all the actions also for the AllowAnonymous.
-            IHeaderDictionary requestHeaders = context.Request.Headers;
-            var xDeviceId = _httpContextWrapper.TryGetValue(requestHeaders, Constants.X_DEVICE_ID, out var deviceId) ? deviceId.ToString() : string.Empty;
-            var xSecretKey = _httpContextWrapper.TryGetValue(requestHeaders, Constants.X_SECRET_KEY, out var secretKey) ? secretKey.ToString() : string.Empty;
-
-            if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
+            var endpoint = _httpContextWrapper.GetEndpoint(context);
+            //context
+            var deviceIsBusy = stateMachineHandler.GetCurrentDeviceState() == DeviceStateType.Busy;
+            if (deviceIsBusy)
             {
-                var error = "Require headers were not provided";
-                await UnauthorizedResponseAsync(context, error);
-                return;
+                var isActionBlockByBusy = endpoint?.Metadata.GetMetadata<DeviceStateFilterAttribute>();
+                if (isActionBlockByBusy != null)
+                {
+                    context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                    await context.Response.WriteAsync(StateMachineConstants.BUSY_MESSAGE);
+                    return;
+                }
             }
-
-            if (!await IsValidDeviceId(context, xDeviceId))
+            CancellationToken cancellationToken = context.RequestAborted;
+            if (IsActionMethod(endpoint))
             {
-                return;
-            }
+                // check the headers for all the actions also for the AllowAnonymous.
+                IHeaderDictionary requestHeaders = context.Request.Headers;
+                var xDeviceId = _httpContextWrapper.TryGetValue(requestHeaders, Constants.X_DEVICE_ID, out var deviceId) ? deviceId.ToString() : string.Empty;
+                var xSecretKey = _httpContextWrapper.TryGetValue(requestHeaders, Constants.X_SECRET_KEY, out var secretKey) ? secretKey.ToString() : string.Empty;
 
-            if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
-            {
-                // The action has [AllowAnonymous], so allow the request to proceed
+                if (string.IsNullOrEmpty(xDeviceId) || string.IsNullOrEmpty(xSecretKey))
+                {
+                    var error = "Require headers were not provided";
+                    await UnauthorizedResponseAsync(context, error);
+                    return;
+                }
+
+                if (!await IsValidDeviceId(context, xDeviceId))
+                {
+                    return;
+                }
+
+                if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+                {
+                    // The action has [AllowAnonymous], so allow the request to proceed
+                    await _requestDelegate(context);
+                    return;
+                }
+                var actionName = context.Request.Path.Value?.Split("/").LastOrDefault();
+                var isAuthorized = await IsAuthorized(context, deviceIsBusy, xDeviceId, xSecretKey, actionName, cancellationToken);
+                if (!isAuthorized)
+                {
+                    await UnauthorizedResponseAsync(context, $"{actionName}, Unauthorized device.");
+                    return;
+                }
                 await _requestDelegate(context);
-                return;
             }
-            var actionName = context.Request.Path.Value?.Split("/").LastOrDefault();
-            var isAuthorized = await IsAuthorized(context, deviceIsBusy, xDeviceId, xSecretKey, actionName, cancellationToken);
-            if (!isAuthorized)
+            else
             {
-                await UnauthorizedResponseAsync(context, $"{actionName}, Unauthorized device.");
-                return;
+                await _requestDelegate(context);
             }
-            await _requestDelegate(context);
         }
-        else
+        catch (Exception ex)
         {
-            await _requestDelegate(context);
+            _logger.Error($"AuthorizationCheckMiddleware error: {ex.GetType().Name} message: {ex.Message}");
+            _logger.Debug($"AuthorizationCheckMiddleware StackTrace: {ex.StackTrace}");
+            await UnauthorizedResponseAsync(context, "An error occurred while processing the request");
         }
     }
 

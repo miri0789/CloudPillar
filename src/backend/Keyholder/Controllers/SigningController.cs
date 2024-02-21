@@ -2,7 +2,7 @@
 using Backend.Keyholder.Interfaces;
 using System.Text;
 
-namespace Backend.Keyholder;
+namespace Backend.Keyholder.Controllers;
 
 [ApiController]
 [Route("[controller]")]
