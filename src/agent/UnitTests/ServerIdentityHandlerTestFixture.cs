@@ -144,8 +144,8 @@ namespace CloudPillar.Agent.Tests
         [Test]
         public async Task RemoveNonDefaultCertificates_ValidProcess_RemoveAllNonDefaultCertificate()
         {
-            files = new string[] { "certificate1.cer", "certificate2.cer", "UT-PublicKey.cer" };
-            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(files);
+            var filesForDefault = new string[] { "certificate1.cer", "certificate2.cer", "UT-PublicKey.cer" };
+            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(filesForDefault);
             CreateTrarget();
 
             foreach (var file in files)
