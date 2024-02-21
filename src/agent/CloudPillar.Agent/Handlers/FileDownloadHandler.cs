@@ -226,7 +226,7 @@ public class FileDownloadHandler : IFileDownloadHandler
             MessageType = D2CMessageType.SignFileKey,
             ActionIndex = actionToReport.ReportIndex,
             FileName = ((DownloadAction)actionToReport.TwinAction).Source,
-            BufferSize = _downloadSettings.SignFileBufferSize,
+            BufferSize = SharedConstants.SIGN_FILE_BUFFER_SIZE,
             PropName = actionToReport.ReportPartName,
             ChangeSpecId = actionToReport.ChangeSpecId,
             ChangeSpecKey = actionToReport.ChangeSpecKey

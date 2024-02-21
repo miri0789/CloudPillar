@@ -5,6 +5,8 @@ public class CommonEnvironmentsWrapper : ICommonEnvironmentsWrapper
     private const string _iothubConnectionString = "IothubConnectionString";
     private const string _retryPolicyBaseDelay = "RetryPolicyBaseDelay";
     private const string _retryPolicyExponent = "RetryPolicyExponent";
+    private const string _keyHolderUrl = "KeyHolderUrl";
+    private const string _blobStreamerUrl = "BlobStreamerUrl";
 
     public int retryPolicyBaseDelay
     {
@@ -25,7 +27,16 @@ public class CommonEnvironmentsWrapper : ICommonEnvironmentsWrapper
     {
         get { return GetVariable(_iothubConnectionString); }
     }
-    
+
+    public string keyHolderUrl
+    {
+        get { return GetVariable(_keyHolderUrl); }
+    }
+    public string blobStreamerUrl
+    {
+        get { return GetVariable(_blobStreamerUrl); }
+    }
+
     private string GetVariable(string name)
     {
         return Environment.GetEnvironmentVariable(name);

@@ -16,17 +16,20 @@ public class SigningService : ISigningService
     private readonly ILoggerHandler _logger;
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
     private readonly IFileStreamerWrapper _fileStreamerWrapper;
+    private readonly IX509CertificateWrapper _x509CertificateWrapper;
 
     private const string PRIVATE_KEY_FILE = "tls.key";
     private const string PUBLIC_KEY_FILE = "tls.crt";
     private const string BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
 
-    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper, IFileStreamerWrapper fileStreamerWrapper)
+    public SigningService(IEnvironmentsWrapper environmentsWrapper, ILoggerHandler logger, IRegistryManagerWrapper registryManagerWrapper,
+     IFileStreamerWrapper fileStreamerWrapper,IX509CertificateWrapper x509CertificateWrapper)
     {
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
         _fileStreamerWrapper = fileStreamerWrapper ?? throw new ArgumentNullException(nameof(fileStreamerWrapper));
+        _x509CertificateWrapper = x509CertificateWrapper ?? throw new ArgumentNullException(nameof(x509CertificateWrapper));
 
         if (string.IsNullOrEmpty(_environmentsWrapper.iothubConnectionString))
         {
@@ -138,7 +141,7 @@ public class SigningService : ISigningService
             {
                 var keyType = signingPrivateKey!.GetType();
                 var signature = keyType.BaseType == typeof(RSA) ? ((RSA)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1) : ((ECDsa)signingPrivateKey!).SignData(data, HashAlgorithmName.SHA512);
-                return Convert.ToBase64String(signature); ;
+                return Convert.ToBase64String(signature);
             }
         }
         catch (Exception ex)
@@ -160,7 +163,7 @@ public class SigningService : ISigningService
             return false;
         }
 
-        var certificate = new X509Certificate2(publicKeyPem);
+        var certificate = _x509CertificateWrapper. CreateCertificateFrombytes(publicKeyPem);
         var knownCertificate = await CeritficateIsknown(knownIdentitiesList, certificate);
         if (!knownCertificate)
         {
