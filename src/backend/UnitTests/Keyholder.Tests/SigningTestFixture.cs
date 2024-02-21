@@ -34,6 +34,8 @@ public class SigningTestFixture
         _mockEnvironmentsWrapper = new Mock<IEnvironmentsWrapper>();
         _mockLogger = new Mock<ILoggerHandler>();
         _registryManagerWrapper = new Mock<IRegistryManagerWrapper>();
+        _x509CertificateWrapper = new Mock<IX509CertificateWrapper>();
+
         _mockEnvironmentsWrapper.Setup(c => c.iothubConnectionString).Returns("HostName=szlabs-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=dMBNypodzUSWPbxTXdWaV4PxJTR3jCwehPFCQn+XJXc=");
         _mockEnvironmentsWrapper.Setup(c => c.kubernetesServiceHost).Returns("your-kubernetes-service-host");
         _mockEnvironmentsWrapper.Setup(c => c.SecretVolumeMountPath).Returns(secretVolumeMountPath);
@@ -89,9 +91,8 @@ public class SigningTestFixture
         _mockEnvironmentsWrapper.Setup(c => c.SecretVolumeMountPath).Returns(secretVolumeMountPath);
 
         var res = await _target.GetSigningPublicKeyAsync();
-        Assert.AreEqual(Encoding.UTF8.GetBytes(@"-----BEGIN CERTIFICATE-----
-                                                    MIIGqz==
-                                                    -----END CERTIFICATE-----"), res);
+        var publicKeyPem = "-----BEGIN CERTIFICATE-----\r\n                            MIIGqz==\r\n                            -----END CERTIFICATE-----";
+        Assert.AreEqual(Encoding.UTF8.GetBytes(publicKeyPem), res);
     }
 
     [Test]

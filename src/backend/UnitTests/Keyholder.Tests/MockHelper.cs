@@ -1,13 +1,6 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using Microsoft.Azure.Devices.Shared;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
-using Shared.Entities.Authentication;
-using Shared.Entities.Twin;
-using Shared.Entities.Utilities;
 
 public static class MockHelper
 {
@@ -38,7 +31,7 @@ public static class MockHelper
         using (RSA rsa = RSA.Create(KEY_SIZE_IN_BITS))
         {
             var request = new CertificateRequest(
-                $"{subjectName}", rsa
+                $"CN={subjectName}", rsa
                 , HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             byte[] deviceSecretKeyValue = Encoding.UTF8.GetBytes("NNN");
