@@ -27,21 +27,18 @@ trigger:
 stages:
 - stage: Generate_Build_Number
   jobs:    
-    - job: generateVersionLabel
+    - job: GenerateVersionLabel
       pool:
         vmImage: 'ubuntu-latest'
       steps:
       - bash: |
           IFS='.' read -r -a parts <<< "$(Build.BuildNumber)"
-          buildDateStr="${parts[0]}" # Assuming Build.BuildNumber is in YYYYMMDD format without dots          
-          # Extract year, month, day
-          year="${buildDateStr:2:2}"
-          month="${buildDateStr:4:2}"
-          day="${buildDateStr:6:2}"          
-          versionLabel="1.3.${year}${month}.${day}${parts[1]}"
+          yearMonth="${parts[0]:2:4}"
+          day="${parts[0]:6:2}"          
+          versionLabel="1.3.${yearMonth}.${day}${parts[1]}"
           echo "##vso[task.setvariable variable=versionLabel;isOutput=true]$versionLabel"
         name: generateVersionLabel
-        displayName: 'Calculate Days Since 1.1.2024'
+        displayName: 'GenerateVersionLabel'
 - stage: CI_Stage  
   dependsOn: Generate_Build_Number
   jobs:
@@ -74,9 +71,6 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - script: | 
-        echo $(versionLabel)
-      displayName: 'Display New Build Number'
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to NuGet'
     - task: Docker@2
@@ -183,6 +177,7 @@ stages:
             azureSubscription: CloudPillar ${{ parameters.env }}
             azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
             kubernetesCluster: 'cp-${{ parameters.env }}-aks'
+            namespace: 'cp-be-ns'
             command: 'upgrade'
             chartType: 'FilePath'
             chartPath: 'deploy/backend/'
@@ -220,6 +215,7 @@ stages:
             azureSubscription: CloudPillar ${{ parameters.env }}
             azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
             kubernetesCluster: 'cp-${{ parameters.env }}-aks'
+            namespace: 'cp-be-ns'
             command: 'upgrade'
             chartType: 'FilePath'
             chartPath: 'deploy/backend/'
