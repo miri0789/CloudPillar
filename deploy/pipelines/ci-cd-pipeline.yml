@@ -166,7 +166,7 @@ stages:
 - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
   - ${{ if or(eq(parameters.env, 'dev'),eq(parameters.env, 'tst')) }}:
     - stage: CD_Stage
-      dependsOn: Generate_Build_Number
+      dependsOn: Generate_Build_Number, CI_Stage
       jobs:              
       - job: CD_Job        
         variables:
@@ -191,7 +191,7 @@ stages:
             
   - ${{ if and(ne(parameters.env, 'dev'),ne(parameters.env, 'tst')) }}:
     - stage: CD_Stage
-      dependsOn: Generate_Build_Number
+      dependsOn: Generate_Build_Number, CI_Stage
       jobs:  
       - job: Start_VM_Job
         pool:
