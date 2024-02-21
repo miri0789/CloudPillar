@@ -26,6 +26,10 @@ public class ErrorController : ControllerBase
             _logger.Error($"Error handler api exception type: {context.Error.GetType().Name} message: {context.Error.Message}");
             _logger.Debug($"Error handler api exception StackTrace: {context.Error.StackTrace}");
         }
+        else
+        {
+            _logger.Error("Error handler api exception type: null");
+        }
 
         return Problem(
             statusCode: (int)HttpStatusCode.InternalServerError,
