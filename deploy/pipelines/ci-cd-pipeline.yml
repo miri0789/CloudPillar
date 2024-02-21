@@ -71,9 +71,6 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - script: | 
-        echo $(versionLabel)
-      displayName: 'Display New Build Number'
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to NuGet'
     - task: Docker@2
