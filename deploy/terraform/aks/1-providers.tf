@@ -8,12 +8,19 @@ terraform {
   }
   required_version = ">=0.12"
 
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~>3.59.0"
+   required_providers {
+   azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.47.0"
+    }
+    azapi = {
+      source  = "Azure/azapi"
+      version = "1.8.0"
     }
   }
+}
+provider "azuread" {
+  tenant_id = "63d53a16-04d5-4981-b530-4f38d3b16281"
 }
 
 provider "azurerm" {
