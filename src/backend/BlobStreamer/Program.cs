@@ -31,7 +31,11 @@ builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
 builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
+builder.Services.AddScoped<IChangeSpecService, ChangeSpecService>();
+builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
+builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 

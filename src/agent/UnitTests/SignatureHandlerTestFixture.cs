@@ -5,7 +5,6 @@ using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
 using System.Text;
 using System.Security.Cryptography;
-using Shared.Entities.Twin;
 
 
 namespace CloudPillar.Agent.Tests;
@@ -20,7 +19,6 @@ public class SignatureHandlerTestFixture
     private Mock<ISHA256Wrapper> _sha256WrapperMock;
     private Mock<IAsymmetricAlgorithmWrapper> _asymmetricAlgorithmWrapperMock;
     private Mock<IServerIdentityHandler> _serverIdentityHandlerMock;
-    private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
     private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
     private const string FILE_EXTENSION = "*.cer";
 
@@ -33,9 +31,8 @@ public class SignatureHandlerTestFixture
         _sha256WrapperMock = new Mock<ISHA256Wrapper>();
         _asymmetricAlgorithmWrapperMock = new Mock<IAsymmetricAlgorithmWrapper>();
         _serverIdentityHandlerMock = new Mock<IServerIdentityHandler>();
-        mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
         mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
-        mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
+        mockDownloadSettings.Setup(x => x.Value).Returns(new DownloadSettings());
 
         _target = new SignatureHandler(_fileStreamerWrapperMock.Object, _loggerHandlerMock.Object, _d2CMessengerHandlerMock.Object, _sha256WrapperMock.Object, _asymmetricAlgorithmWrapperMock.Object, _serverIdentityHandlerMock.Object, mockDownloadSettings.Object);
         _fileStreamerWrapperMock.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { "pathfile.txt", "pathfile2.txt" });

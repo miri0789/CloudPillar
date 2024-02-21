@@ -6,6 +6,9 @@ using Shared.Entities.Twin;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.BlobStreamer.Wrappers.Interfaces;
 using System.Text.RegularExpressions;
+using Shared.Entities.Utilities;
+using Shared.Entities.Messages;
+using Microsoft.Extensions.Options;
 
 
 
@@ -19,15 +22,21 @@ public class UploadStreamChunksService : IUploadStreamChunksService
     private readonly ICloudBlockBlobWrapper _cloudBlockBlobWrapper;
     private readonly ITwinDiseredService _twinDiseredHandler;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
+    private readonly IChangeSpecService _changeSpecService;
+    private readonly IBlobService _blobService;
 
     public UploadStreamChunksService(ILoggerHandler logger, ICheckSumService checkSumService, ICloudBlockBlobWrapper cloudBlockBlobWrapper,
-      ICloudStorageWrapper cloudStorageWrapper, ITwinDiseredService twinDiseredHandler, IEnvironmentsWrapper environmentsWrapper)
+      ICloudStorageWrapper cloudStorageWrapper, ITwinDiseredService twinDiseredHandler, IEnvironmentsWrapper environmentsWrapper,
+      IChangeSpecService changeSpecService, IBlobService blobService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _checkSumService = checkSumService ?? throw new ArgumentNullException(nameof(checkSumService));
         _cloudBlockBlobWrapper = cloudBlockBlobWrapper ?? throw new ArgumentNullException(nameof(cloudBlockBlobWrapper));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
+        _changeSpecService = changeSpecService ?? throw new ArgumentNullException(nameof(changeSpecService));
+        _blobService = blobService ?? throw new ArgumentNullException(nameof(blobService));
+
         _container = cloudStorageWrapper.GetBlobContainer(_environmentsWrapper.storageConnectionString, _environmentsWrapper.blobContainerName);
     }
 
@@ -76,7 +85,7 @@ public class UploadStreamChunksService : IUploadStreamChunksService
                     _logger.Info($"isRunDiagnostics: {isRunDiagnostics}");
                     if (uploadSuccess && isRunDiagnostics)
                     {
-                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri);
+                        await HandleDownloadForDiagnosticsAsync(deviceId, storageUri, blob);
                     }
                 }
             }
@@ -102,25 +111,50 @@ public class UploadStreamChunksService : IUploadStreamChunksService
         else
         {
             _logger.Info($"Blobstreamer UploadFromStreamAsync Failed");
-
-            //TO DO
-            //add recipe to desired
         }
         return uploadSuccess;
     }
 
-    public async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri)
+    public async Task HandleDownloadForDiagnosticsAsync(string deviceId, Uri storageUri, CloudBlockBlob blob)
     {
         _logger.Info($"preparing download action to add device twin");
+
+        var source = Uri.UnescapeDataString(storageUri.Segments.Last());
+        var fileName = source.Split("/").Last();
+
+        var cerSign = await SignCertificateFile(deviceId, fileName, blob);
 
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
             Description = $"{DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}",
-            Source = Uri.UnescapeDataString(storageUri.Segments.Last()),
+            Source = source,
             DestinationPath = GetFilePathFromBlobName(Uri.UnescapeDataString(storageUri.Segments.Last())),
+            Sign = cerSign
         };
         await _twinDiseredHandler.AddDesiredRecipeAsync(deviceId, SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME, downloadAction);
+        await UpdateChangeSpecSign(deviceId);
+    }
+    private async Task UpdateChangeSpecSign(string deviceId)
+    {
+        var changeSignKey = SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME.GetSignKeyByChangeSpec();
+        await _changeSpecService.CreateChangeSpecKeySignatureAsync(deviceId, changeSignKey);
+    }
+
+    private async Task<string> SignCertificateFile(string deviceId, string fileName, CloudBlockBlob blob)
+    {
+        _logger.Info($"Send request to get Sign certificate from keyHolder");
+
+        var signFileEvent = new SignFileEvent()
+        {
+            BufferSize = SharedConstants.SIGN_FILE_BUFFER_SIZE,
+            FileName = fileName
+        };
+        var signatureFileBytes = await _blobService.CalculateHashAsync(deviceId, signFileEvent, blob);
+
+        var cerSign = await _changeSpecService.SendToSignData(signatureFileBytes, deviceId);
+        _logger.Info($"Sign certificate from keyHolder: {cerSign}");
+        return cerSign;
     }
 
     private string GetFilePathFromBlobName(string blobName)
