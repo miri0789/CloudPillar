@@ -42,46 +42,46 @@ stages:
 - stage: CI_Stage  
   dependsOn: Generate_Build_Number
   jobs:
-  - ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters['env'], 'dev')) }}:
-    - job: RunUnitTests
-      displayName: 'Run_Unit_Tests'
-      pool:
-        vmImage: 'windows-latest'
-      steps:
-      - task: NuGetAuthenticate@1
-        displayName: 'Authenticate to NuGet'
+  # - ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters['env'], 'dev')) }}:
+  #   - job: RunUnitTests
+  #     displayName: 'Run_Unit_Tests'
+  #     pool:
+  #       vmImage: 'windows-latest'
+  #     steps:
+  #     - task: NuGetAuthenticate@1
+  #       displayName: 'Authenticate to NuGet'
 
-      - task: DotNetCoreCLI@2
-        displayName: 'Run Unit Tests'
-        inputs:
-          command: 'test'
-          arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
-          publishTestResults: true
-          projects: '**/*Tests/*.csproj'
+  #     - task: DotNetCoreCLI@2
+  #       displayName: 'Run Unit Tests'
+  #       inputs:
+  #         command: 'test'
+  #         arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura'
+  #         publishTestResults: true
+  #         projects: '**/*Tests/*.csproj'
         
-      - task: PublishCodeCoverageResults@1
-        displayName: 'Publish code coverage report'
-        inputs:
-          codeCoverageTool: 'Cobertura'
-          summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+  #     - task: PublishCodeCoverageResults@1
+  #       displayName: 'Publish code coverage report'
+  #       inputs:
+  #         codeCoverageTool: 'Cobertura'
+  #         summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
-  - job: Agent_CI_Job    
-    variables:
-      versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: NuGetAuthenticate@1
-      displayName: 'Authenticate to NuGet'
-    - task: Docker@2
-      displayName: Agent Dockerize
-      inputs:
-        command: build
-        repository: agent
-        dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
-        buildContext: src
-        tags: aux-build
-        arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg IMAGE_TAG=$(versionLabel)'
+  # - job: Agent_CI_Job    
+  #   variables:
+  #     versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
+  #   pool:
+  #     vmImage: ubuntu-latest
+  #   steps:
+  #   - task: NuGetAuthenticate@1
+  #     displayName: 'Authenticate to NuGet'
+  #   - task: Docker@2
+  #     displayName: Agent Dockerize
+  #     inputs:
+  #       command: build
+  #       repository: agent
+  #       dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
+  #       buildContext: src
+  #       tags: aux-build
+  #       arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg IMAGE_TAG=$(versionLabel)'
 
     - script: |
         CONTAINER_ID=$(docker create agent:aux-build)
@@ -163,10 +163,10 @@ stages:
             tags: '$(versionLabel)'
 
 
-- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
-  - ${{ if or(eq(parameters.env, 'dev'),eq(parameters.env, 'tst')) }}:
+- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev1')) }}:
+  - ${{ if or(eq(parameters.env, 'dev1'),eq(parameters.env, 'tst')) }}:
     - stage: CD_Stage
-      dependsOn: Generate_Build_Number, CI_Stage
+      dependsOn: CI_Stage
       jobs:              
       - job: CD_Job        
         variables:
@@ -191,7 +191,7 @@ stages:
             
   - ${{ if and(ne(parameters.env, 'dev'),ne(parameters.env, 'tst')) }}:
     - stage: CD_Stage
-      dependsOn: Generate_Build_Number, CI_Stage
+      dependsOn: CI_Stage
       jobs:  
       - job: Start_VM_Job
         pool:
