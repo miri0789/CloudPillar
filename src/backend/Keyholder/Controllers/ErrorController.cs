@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Shared.Logger;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Logger;
 using System.Net;
 
 namespace Backend.Keyholder.Controllers;
@@ -21,11 +21,18 @@ public class ErrorController : ControllerBase
     public IActionResult Error()
     {
         var context = HttpContext.Features.Get<IExceptionHandlerFeature>();
-        _logger.Error($"Error handler api exception type: {context.Error.GetType().Name} message: {context.Error.Message}");
-        _logger.Debug("Error handler api exception StackTrace: ", context.Error.StackTrace);
+        if (context?.Error != null)
+        {
+            _logger.Error($"Error handler api exception type: {context.Error.GetType().Name} message: {context.Error.Message}");
+            _logger.Debug($"Error handler api exception StackTrace: {context.Error.StackTrace}");
+        }
+        else
+        {
+            _logger.Error("Error handler api exception type: null");
+        }
 
         return Problem(
             statusCode: (int)HttpStatusCode.InternalServerError,
-            title: context.Error.Message);
+            title: context?.Error?.Message);
     }
 }

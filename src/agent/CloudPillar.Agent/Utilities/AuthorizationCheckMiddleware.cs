@@ -102,7 +102,7 @@ public class AuthorizationCheckMiddleware
         catch (Exception ex)
         {
             _logger.Error($"AuthorizationCheckMiddleware error: {ex.GetType().Name} message: {ex.Message}");
-            _logger.Debug("AuthorizationCheckMiddleware StackTrace: ", ex.StackTrace);
+            _logger.Debug($"AuthorizationCheckMiddleware StackTrace: {ex.StackTrace}");
             await UnauthorizedResponseAsync(context, "An error occurred while processing the request");
         }
     }
