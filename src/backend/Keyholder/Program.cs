@@ -30,6 +30,12 @@ builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 var app = builder.Build();
+app.UseExceptionHandler(new ExceptionHandlerOptions()
+{
+    AllowStatusCode404Response = true,
+    ExceptionHandlingPath = "/error"
+});
+
 app.UsePathBase(new PathString("/keyholder-service"));
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
