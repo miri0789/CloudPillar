@@ -2,6 +2,7 @@ using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
+using Backend.Infra.Common;
 using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.BlobStreamer.Wrappers;
@@ -11,6 +12,7 @@ using Backend.BlobStreamer.Services.Interfaces;
 using Backend.Infra.Wrappers;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Services;
+
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                .InformationalVersion;
@@ -38,15 +40,13 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UsePathBase(new PathString(CommonConstants.BLOBSTREAMER_BASE_URL));
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapControllers();
 

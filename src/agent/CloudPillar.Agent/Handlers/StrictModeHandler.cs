@@ -5,6 +5,7 @@ using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Wrappers.Interfaces;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Extensions.FileSystemGlobbing;
+using CloudPillar.Agent.Enums;
 
 namespace CloudPillar.Agent.Handlers;
 

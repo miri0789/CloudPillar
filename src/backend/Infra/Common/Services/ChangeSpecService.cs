@@ -97,7 +97,7 @@ public class ChangeSpecService : IChangeSpecService
 
     public async Task<byte[]> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent)
     {
-        string blobRequestUrl = $"{_environmentsCommonWrapper.blobStreamerUrl}blob/CalculateHash?deviceId={deviceId}";
+        string blobRequestUrl = $"{_environmentsCommonWrapper.blobStreamerUrl}Blob/CalculateHash?deviceId={deviceId}";
         var signatureFileBytes = await _httpRequestorService.SendRequest<byte[]>(blobRequestUrl, HttpMethod.Post, signFileEvent);
         return signatureFileBytes;
     }

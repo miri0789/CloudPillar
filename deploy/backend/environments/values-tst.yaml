@@ -4,7 +4,7 @@
 
 controllers:
   - title: "blobstreamer"
-    replicaCount: 2
+    replicaCount: 4
     path: /blobstreamer-service
     port: 8081
     env:
@@ -61,7 +61,7 @@ controllers:
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
-    replicaCount: 1
+    replicaCount: 4
     path: /keyholder-service
     port: 8082
     env:
@@ -87,7 +87,7 @@ controllers:
       mountPath: "/certs/tstbe/default"
       readOnly: true
   - title: "beapi"
-    replicaCount: 1
+    replicaCount: 4
     path: /beapi-service
     port: 8083
     env:
@@ -101,7 +101,7 @@ controllers:
       value: "global.azure-devices-provisioning.net"
     - name: ExpirationCertificatePercent
       value: "0.6"
-    - name: "maxCountOfDevices"
+    - name: "MaxCountDevices"
       value: "100"
     - name: KeyHolderUrl
       value: "http://keyholder-service:8082/"

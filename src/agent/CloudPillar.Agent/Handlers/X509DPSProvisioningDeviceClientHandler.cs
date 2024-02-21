@@ -4,10 +4,10 @@ using System.Text;
 using CloudPillar.Agent.Wrappers;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Shared.Entities.Authentication;
 using DeviceMessage = Microsoft.Azure.Devices.Client;
 using CloudPillar.Agent.Handlers.Logger;
 using Microsoft.Extensions.Options;
+using CloudPillar.Agent.Enums;
 
 namespace CloudPillar.Agent.Handlers;
 
@@ -52,24 +52,24 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         }
     }
 
-    public async Task<bool> InitAuthorizationAsync()
+    public async Task<DeviceConnectionResult> InitAuthorizationAsync()
     {
         return await AuthorizationAsync(string.Empty, string.Empty, default, true);
     }
 
-    public async Task<bool> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool checkAuthorization = false)
+    public async Task<DeviceConnectionResult> AuthorizationDeviceAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool checkAuthorization = false)
     {
         return await AuthorizationAsync(XdeviceId, XSecretKey, cancellationToken, false, checkAuthorization);
     }
 
-    private async Task<bool> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool IsInitializedLoad = false, bool checkAuthorization = false)
+    private async Task<DeviceConnectionResult> AuthorizationAsync(string XdeviceId, string XSecretKey, CancellationToken cancellationToken, bool IsInitializedLoad = false, bool checkAuthorization = false)
     {
         X509Certificate2? userCertificate = GetCertificate();
 
         if (userCertificate == null)
         {
             _logger.Error("No certificate found in the store");
-            return false;
+            return DeviceConnectionResult.CertificateInvalid;
         }
 
         var friendlyName = userCertificate?.FriendlyName ?? throw new ArgumentNullException(nameof(userCertificate.FriendlyName));
@@ -79,7 +79,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             var error = "The FriendlyName is not in the expected format.";
             _logger.Error(error);
-            return false;
+            return DeviceConnectionResult.CertificateInvalid;
         }
 
         var deviceId = parts[0];
@@ -90,14 +90,14 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         {
             var error = "The deviceId or the SecretKey are incorrect.";
             _logger.Error(error);
-            return false;
+            return DeviceConnectionResult.CertificateInvalid;
         }
 
         if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(iotHubHostName))
         {
             var error = "The deviceId or the iotHubHostName cant be null.";
             _logger.Error(error);
-            return false;
+            return DeviceConnectionResult.CertificateInvalid;
         }
 
         if (IsInitializedLoad)
@@ -110,7 +110,7 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         return await InitializeDeviceAsync(deviceId, iotHubHostName, userCertificate, IsInitializedLoad || checkAuthorization, cancellationToken);
     }
 
-    public async Task<bool> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
+    public async Task<DeviceConnectionResult> ProvisioningAsync(string dpsScopeId, X509Certificate2 certificate, string globalDeviceEndpoint, DeviceMessage.Message message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(dpsScopeId);
         ArgumentNullException.ThrowIfNullOrEmpty(globalDeviceEndpoint);
@@ -132,43 +132,42 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
         if (result == null)
         {
             _logger.Error("RegisterAsync failed");
-            return false;
+            return DeviceConnectionResult.CertificateInvalid;
         }
 
         _logger.Debug($"Registration status: {result.Status}.");
         if (result.Status != ProvisioningRegistrationStatusType.Assigned)
         {
             _logger.Error("Registration status did not assign a hub.");
-            return false;
+            return DeviceConnectionResult.CertificateInvalid;
         }
         _logger.Info($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
         await OnProvisioningCompleted(message, cancellationToken);
 
-        var isDeviceInitializedAsync = await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
-        if (isDeviceInitializedAsync)
+        var devResult = await InitializeDeviceAsync(result.DeviceId, result.AssignedHub, certificate, true, cancellationToken);
+        if (devResult == DeviceConnectionResult.Valid)
         {
             await _twinReportHandler.UpdateDeviceCertificateValidity(_authenticationSettings.CertificateExpiredDays, cancellationToken);
         }
-        return isDeviceInitializedAsync;
+        return devResult;
     }
 
-    private async Task<bool> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, bool initialize, CancellationToken cancellationToken)
+    private async Task<DeviceConnectionResult> InitializeDeviceAsync(string deviceId, string iotHubHostName, X509Certificate2 userCertificate, bool initialize, CancellationToken cancellationToken)
     {
         try
         {
             if (initialize)
             {
                 using var auth = _X509CertificateWrapper.GetDeviceAuthentication(deviceId, userCertificate);
-                var isDeviceInitializedAsync = await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
-                return isDeviceInitializedAsync;
+                await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
             }
             return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.Error($"Exception during IoT Hub connection message: {ex.Message}");
-            return false;
+            return DeviceConnectionResult.Unknow;
         }
     }
 
