@@ -83,35 +83,35 @@ stages:
   #       tags: aux-build
   #       arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg IMAGE_TAG=$(versionLabel)'
 
-    - script: |
-        CONTAINER_ID=$(docker create agent:aux-build)
-        docker cp $CONTAINER_ID:/app/cloudpillar.zip .
-        docker cp $CONTAINER_ID:/app/export ./export
-        docker rm $CONTAINER_ID
-        mv ./cloudpillar.zip ./cloudpillar-agent-publish-$(versionLabel).zip
-        ls -al ./cloudpillar-agent-publish-$(versionLabel).zip
-      displayName: 'Extract cloudpillar.zip from Image'
+    # - script: |
+    #     CONTAINER_ID=$(docker create agent:aux-build)
+    #     docker cp $CONTAINER_ID:/app/cloudpillar.zip .
+    #     docker cp $CONTAINER_ID:/app/export ./export
+    #     docker rm $CONTAINER_ID
+    #     mv ./cloudpillar.zip ./cloudpillar-agent-publish-$(versionLabel).zip
+    #     ls -al ./cloudpillar-agent-publish-$(versionLabel).zip
+    #   displayName: 'Extract cloudpillar.zip from Image'
 
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish cloudpillar.zip to Artifacts'
-      inputs:
-        pathtoPublish: ./cloudpillar-agent-publish-$(versionLabel).zip
-        artifactName: 'cloudpillar'
+    # - task: PublishBuildArtifacts@1
+    #   displayName: 'Publish cloudpillar.zip to Artifacts'
+    #   inputs:
+    #     pathtoPublish: ./cloudpillar-agent-publish-$(versionLabel).zip
+    #     artifactName: 'cloudpillar'
     
-    - task: ArchiveFiles@2
-      displayName: 'Archive Agent src code'
-      inputs:
-        rootFolderOrFile: './export'
-        includeRootFolder: true
-        archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(versionLabel).zip'
-        replaceExistingArchive: true
+    # - task: ArchiveFiles@2
+    #   displayName: 'Archive Agent src code'
+    #   inputs:
+    #     rootFolderOrFile: './export'
+    #     includeRootFolder: true
+    #     archiveType: 'zip'
+    #     archiveFile: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(versionLabel).zip'
+    #     replaceExistingArchive: true
 
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish Agent src code to Artifacts'
-      inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(versionLabel).zip'
-        artifactName: 'cloudpillar'
+    # - task: PublishBuildArtifacts@1
+    #   displayName: 'Publish Agent src code to Artifacts'
+    #   inputs:
+    #     pathtoPublish: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(versionLabel).zip'
+    #     artifactName: 'cloudpillar'
 
   - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
