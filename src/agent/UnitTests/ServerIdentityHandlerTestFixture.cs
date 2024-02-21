@@ -67,10 +67,10 @@ namespace CloudPillar.Agent.Tests
              It.Is<List<KnownIdentities>>(y => EqualDetails(y, expected)), It.IsAny<CancellationToken>()), Times.Once);
         }
 
-          [Test]
+        [Test]
         public async Task UpdateKnownIdentitiesFromCertificatesAsync_EmptyCertificatesList_ReturnsKnownIdentities()
         {
-            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[]{});
+            _fileStreamerWrapper.Setup(f => f.GetFiles(It.IsAny<string>(), It.IsAny<string>())).Returns(new string[] { });
 
             _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
             _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate2.cer")).Returns(x509Certificate2);
@@ -91,7 +91,7 @@ namespace CloudPillar.Agent.Tests
 
         [TestCase("RSA", "-----BEGIN RSA PUBLIC KEY-----\r\nSGVsbG8sIFdvcmxkIQ==\r\n-----END RSA PUBLIC KEY-----\r\n")]
         [TestCase("ECDSA", "-----BEGIN PUBLIC KEY-----\r\nSGVsbG8sIFdvcmxkIQ==\r\n-----END PUBLIC KEY-----\r\n")]
-        public async Task GetPublicKeyFromCertificate_GetRSAPublicKey_Success(string algorithm, string signExcepted)
+        public async Task GetPublicKeyFromCertificate_GetPublicKey_Success(string algorithm, string signExcepted)
         {
 
             _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
@@ -114,23 +114,14 @@ namespace CloudPillar.Agent.Tests
             Assert.ThrowsAsync<InvalidDataException>(async () => await _target.GetPublicKeyFromCertificateFileAsync("certificate1.cer"));
         }
 
-        [Test]
-        public async Task CheckCertificateNotExpired_CertificateNotExpired_ReturnTrue()
+        [TestCase(60, -1, true)]
+        [TestCase(-60, -120, false)]
+        public async Task CheckCertificateExpired_CertificateExpiredOrNot_ReturnMatchRes(int notAfter, int notBefore, bool exceptedRes)
         {
-
-            x509Certificate1 = MockHelper.GenerateCertificate("1", "", CERTIFICATE_PREFIX, 60);
+            x509Certificate1 = MockHelper.GenerateCertificate("1", "", CERTIFICATE_PREFIX, notAfter, notBefore);
             _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
             var res = _target.CheckCertificateNotExpired("certificate1.cer");
-            Assert.AreEqual(res, true);
-        }
-
-        [Test]
-        public async Task CheckCertificateNotExpired_CertificateExpired_ReturnFalse()
-        {
-            x509Certificate1 = MockHelper.GenerateCertificate("1", "", CERTIFICATE_PREFIX, -60, -120);
-            _x509CertificateWrapper.Setup(x => x.CreateFromFile("certificate1.cer")).Returns(x509Certificate1);
-            var res = _target.CheckCertificateNotExpired("certificate1.cer");
-            Assert.AreEqual(res, false);
+            Assert.AreEqual(res, exceptedRes);
         }
 
         [Test]

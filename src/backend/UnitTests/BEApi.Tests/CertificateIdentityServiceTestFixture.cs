@@ -46,7 +46,7 @@ public class CertificateIdentityServiceTestFixture
     }
 
     [Test]
-    public async Task ProcessNewSigningCertificate_ValidProcess_UploadCertificateToBlobc()
+    public async Task ProcessNewSigningCertificate_ValidProcess_UploadCertificateToBlob()
     {
         await _target.ProcessNewSigningCertificate(DEVICE_ID);
         _httpRequestorServiceMock.Verify(x => x.SendRequest(It.Is<string>(u => u.Contains("Blob/UploadStream")), HttpMethod.Post, It.Is<StreamingUploadChunkEvent>(c => c.Data == publicKey), It.IsAny<CancellationToken>()), Times.Once);
@@ -54,7 +54,7 @@ public class CertificateIdentityServiceTestFixture
 
 
     [Test]
-    public async Task ProcessNewSigningCertificate_AddRecipeFordownloadCertificate_SignCertificateFile()
+    public async Task AddRecipeFordownloadCertificate_ValidProcess_SignCertificateFile()
     {
         await _target.ProcessNewSigningCertificate(DEVICE_ID);
         _changeSpecServiceMock.Verify(x => x.SendToSignData(It.IsAny<byte[]>(), It.IsAny<string>()), Times.Once);
