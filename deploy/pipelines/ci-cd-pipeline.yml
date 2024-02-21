@@ -166,8 +166,11 @@ stages:
 - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
   - ${{ if or(eq(parameters.env, 'dev'),eq(parameters.env, 'tst')) }}:
     - stage: CD_Stage
+      dependsOn: Generate_Build_Number
       jobs:              
       - job: CD_Job        
+        variables:
+          versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -188,6 +191,7 @@ stages:
             
   - ${{ if and(ne(parameters.env, 'dev'),ne(parameters.env, 'tst')) }}:
     - stage: CD_Stage
+      dependsOn: Generate_Build_Number
       jobs:  
       - job: Start_VM_Job
         pool:
@@ -204,6 +208,8 @@ stages:
             
       - job: CD_Job
         dependsOn: Start_VM_Job
+        variables:
+          versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
         pool:
           name: CloudPillar-Pool
           demands:
