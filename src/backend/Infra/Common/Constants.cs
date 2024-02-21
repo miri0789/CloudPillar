@@ -7,7 +7,7 @@ public static class CommonConstants
 
     #endregion
 
-    public static readonly string BEAPI_BASE_URL = "/bepi-service";
+    public static readonly string BEAPI_BASE_URL = "/beapi-service";
     public static readonly string BLOBSTREAMER_BASE_URL = "/blobstreamer-service";
     public static readonly string KEYHOLDER_BASE_URL = "/keyholder-service";
 
