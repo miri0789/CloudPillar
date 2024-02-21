@@ -25,7 +25,7 @@ public class StreamingUploadChunkService : IStreamingUploadChunkService
 
         _logger.Info($"IotListener: Send chunk number {chunkIndex} to BlobStreamer");
 
-        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/UploadStream?deviceId={deviceId}";
+        string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}Blob/UploadStream?deviceId={deviceId}";
         await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);
     }  
 }

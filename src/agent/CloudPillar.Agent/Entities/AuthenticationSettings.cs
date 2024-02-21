@@ -1,6 +1,4 @@
-using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography.X509Certificates;
-using Shared.Entities.Authentication;
 
 public class AuthenticationSettings
 {

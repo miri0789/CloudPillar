@@ -17,7 +17,8 @@
                 "IothubConnectionString": "",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
-                "RetryPolicyExponent": "3"
+                "RetryPolicyExponent": "3",
+                "KeyholderUrl": "http://localhost:5164/",
             }
         },
         {
@@ -62,6 +63,8 @@
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                "SecretVolumeMountPath":"",
+                "DefaultSecretVolumeMountPath":""
             }
         },
         {
@@ -78,8 +81,11 @@
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                
                 "ExpirationCertificatePercent": "0.6",
-                "maxCountDevices": "100"
+                "maxCountDevices": "100",
+                "KeyHolderUrl": "http://localhost:5164/",
+                "BlobStreamerUrl": "http://localhost:5019/",
             }
         },
         {

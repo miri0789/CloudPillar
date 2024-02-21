@@ -4,4 +4,5 @@ public interface IEnvironmentsWrapper
     string storageConnectionString { get; }
     string blobContainerName { get; }
     int messageExpiredMinutes { get; }
+    string keyHolderUrl { get; }
 }

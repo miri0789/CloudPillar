@@ -6,6 +6,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _storageConnectionString = "StorageConnectionString";
     private const string _blobContainerName = "BlobContainerName";
     private const string _messageExpiredMinutes = "MessageExpiredMinutes";
+    private const string _keyHolderUrl = "KeyHolderUrl";
 
     public string storageConnectionString
     {
@@ -21,6 +22,10 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
         {
             return int.TryParse(GetVariable(_messageExpiredMinutes), out int value) ? value : 60;
         }
+    }
+    public string keyHolderUrl
+    {
+        get { return GetVariable(_keyHolderUrl); }
     }
 
     private string GetVariable(string name)

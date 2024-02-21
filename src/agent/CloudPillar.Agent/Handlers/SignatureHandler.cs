@@ -108,7 +108,7 @@ public class SignatureHandler : ISignatureHandler
         {
             using (FileStream fileStream = _fileStreamerWrapper.OpenRead(filePath))
             {
-                byte[] buffer = new byte[_downloadSettings.SignFileBufferSize];
+                byte[] buffer = new byte[SharedConstants.SIGN_FILE_BUFFER_SIZE];
                 int bytesRead;
                 while ((bytesRead = _fileStreamerWrapper.Read(fileStream, buffer, 0, buffer.Length)) > 0)
                 {
