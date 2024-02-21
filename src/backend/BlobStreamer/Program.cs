@@ -2,6 +2,7 @@ using System.Reflection;
 using Shared.Logger;
 using Shared.Entities.Factories;
 using Shared.Entities.Services;
+using Backend.Infra.Common;
 using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.BlobStreamer.Wrappers;
@@ -32,11 +33,16 @@ builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
 builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
+builder.Services.AddScoped<IChangeSpecService, ChangeSpecService>();
+builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
+builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UsePathBase(new PathString(CommonConstants.BLOBSTREAMER_BASE_URL));
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");

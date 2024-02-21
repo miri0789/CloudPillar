@@ -1,6 +1,4 @@
 using System.Text;
-using Backend.BEApi.Services.interfaces;
-using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Extensions.Options;
@@ -8,23 +6,21 @@ using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 using Shared.Entities.Utilities;
 
-namespace Backend.BEApi.Services;
+namespace Backend.Infra.Common.Services;
 
 public class ChangeSpecService : IChangeSpecService
 {
     private readonly ITwinDiseredService _twinDesiredService;
     private readonly IHttpRequestorService _httpRequestorService;
-    private readonly IEnvironmentsWrapper _environmentsWrapper;
-    private readonly DownloadSettings _downloadSettings;
+    private readonly ICommonEnvironmentsWrapper _environmentsCommonWrapper;
     private readonly IRegistryManagerWrapper _registryManagerWrapper;
 
-    public ChangeSpecService(ITwinDiseredService twinDiseredService, IHttpRequestorService httpRequestorService, IEnvironmentsWrapper environmentsWrapper,
-    IOptions<DownloadSettings> options, IRegistryManagerWrapper registryManagerWrapper)
+    public ChangeSpecService(ITwinDiseredService twinDiseredService, IHttpRequestorService httpRequestorService, ICommonEnvironmentsWrapper environmentsCommonWrapper,
+    IRegistryManagerWrapper registryManagerWrapper)
     {
         _twinDesiredService = twinDiseredService ?? throw new ArgumentNullException(nameof(twinDiseredService));
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
-        _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
-        _downloadSettings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _environmentsCommonWrapper = environmentsCommonWrapper ?? throw new ArgumentNullException(nameof(environmentsCommonWrapper));
         _registryManagerWrapper = registryManagerWrapper ?? throw new ArgumentNullException(nameof(registryManagerWrapper));
     }
 
@@ -48,7 +44,7 @@ public class ChangeSpecService : IChangeSpecService
                                 MessageType = D2CMessageType.SignFileKey,
                                 ActionIndex = Array.IndexOf(transistPackage.Value.ToArray(), actionKey),
                                 FileName = downloadAction.Source,
-                                BufferSize = _downloadSettings.SignFileBufferSize,
+                                BufferSize = SharedConstants.SIGN_FILE_BUFFER_SIZE,
                                 PropName = changeSpecKey.GetSignKeyByChangeSpec(),
                                 ChangeSpecId = changeSpec.Id,
                                 ChangeSpecKey = changeSpecKey
@@ -99,16 +95,16 @@ public class ChangeSpecService : IChangeSpecService
         await _twinDesiredService.SignTwinDesiredAsync(twinDesired, deviceId, changeSpecKey.GetSignKeyByChangeSpec(), signature);
     }
 
-    private async Task<byte[]> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent)
+    public async Task<byte[]> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent)
     {
-        string blobRequestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/CalculateHash?deviceId={deviceId}";
+        string blobRequestUrl = $"{_environmentsCommonWrapper.blobStreamerUrl}Blob/CalculateHash?deviceId={deviceId}";
         var signatureFileBytes = await _httpRequestorService.SendRequest<byte[]>(blobRequestUrl, HttpMethod.Post, signFileEvent);
         return signatureFileBytes;
     }
 
     public async Task<string> SendToSignData(byte[] dataToSign, string deviceId)
     {
-        string requestUrl = $"{_environmentsWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
+        string requestUrl = $"{_environmentsCommonWrapper.keyHolderUrl}Signing/SignData?deviceId={deviceId}";
         var bytesSignature = await _httpRequestorService.SendRequest<byte[]>(requestUrl, HttpMethod.Post, dataToSign);
         var signature = Encoding.UTF8.GetString(bytesSignature);
         if (string.IsNullOrEmpty(signature))

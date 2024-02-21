@@ -24,6 +24,9 @@ controllers:
       value: "20"
     - name: RetryPolicyExponent
       value: "30"
+    - name: KeyHolderUrl
+      value: "http://keyholder-service:8082/"
+
     # - name: PARTITION_ID
     #   valueFrom:
     #     fieldRef:

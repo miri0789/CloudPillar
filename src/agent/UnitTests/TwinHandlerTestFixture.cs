@@ -192,7 +192,7 @@ public class TwinHandlerTestFixture
             }
         };
 
-        var desired = GetDefaultDesiredChangeSpec();//InstallSteps
+        var desired = GetDefaultDesiredChangeSpec();
         var reported = GetDefaultReportedChangeSpec(reportedPatch);
 
 
@@ -210,6 +210,28 @@ public class TwinHandlerTestFixture
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
         Task.Delay(10).Wait();
         _fileDownloadHandlerMock.Verify(dc => dc.InitFileDownloadAsync(It.IsAny<ActionToReport>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
+    }
+
+    [Test]
+    public async Task OnDesiredPropertiesUpdate_PriorityBetweenChangeSpec_ExecOrderChangeSpecList()
+    {
+        var desired = GetDefaultDesiredChangeSpec(null, "", true);
+        desired[SharedConstants.CHANGE_SPEC_NAME].Order = 50;
+        desired[SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME].Order = 100;
+        desired[SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME].Patch[MockHelper.PATCH_KEY] = new TwinAction[]{
+                        new DownloadAction() { Action = TwinActionType.SingularDownload, DestinationPath="abc"}
+        };
+
+        var reported = new Dictionary<string, TwinReportedChangeSpec>();
+        var result = string.Empty;
+
+        _fileDownloadHandlerMock.Setup(dc => dc.AddFileDownload(It.Is<ActionToReport>(d => d.ChangeSpecKey == SharedConstants.CHANGE_SPEC_DIAGNOSTICS_NAME))).Callback(() => result += "1");
+        _fileDownloadHandlerMock.Setup(dc => dc.AddFileDownload(It.Is<ActionToReport>(d => d.ChangeSpecKey == SharedConstants.CHANGE_SPEC_NAME))).Callback(() => result += "2");
+
+        CreateTwinMock(desired, reported, GetDefaultChangeSign(true));
+
+        await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None, true);
+        Assert.AreEqual(result, "12");
     }
 
     [Test]
@@ -611,8 +633,6 @@ public class TwinHandlerTestFixture
         await _target.OnDesiredPropertiesUpdateAsync(CancellationToken.None);
         _deviceClientMock.Verify(x => x.UpdateReportedPropertiesAsync(It.Is<string>(x => x == changeSignDiagnosticsKey), It.Is<string>(x => x == $"Change sign is required"), It.IsAny<CancellationToken>()), Times.Once);
     }
-
-
 
     [Test]
     public async Task OnDesiredPropertiesUpdate_MultipleChangeSpec_UpdateMatchKeyReported()

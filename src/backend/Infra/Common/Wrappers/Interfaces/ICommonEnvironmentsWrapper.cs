@@ -6,4 +6,7 @@ public interface ICommonEnvironmentsWrapper
     string iothubConnectionString { get; }
     string serviceBusConnectionString { get; }
     string queueName { get; }
+    string keyHolderUrl { get; }
+    string blobStreamerUrl { get; }
+
 }

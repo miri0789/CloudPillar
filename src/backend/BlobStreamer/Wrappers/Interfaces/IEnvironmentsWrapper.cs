@@ -9,4 +9,5 @@ public interface IEnvironmentsWrapper
     int rangePercent { get; }
     long rangeBytes { get; }
     RangeCalculateType rangeCalculateType { get; }
+    string keyHolderUrl { get; }
 }

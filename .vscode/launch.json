@@ -59,6 +59,7 @@
             "console": "internalConsole",
             "env": {
                 "KubernetesServiceHost": "",
+                "SigningPem": "=",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
                 "IothubConnectionString": "",
@@ -84,7 +85,9 @@
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
                 "ExpirationCertificatePercent": "0.6",
-                "maxCountDevices": "100"
+                "maxCountDevices": "100",
+                "KeyHolderUrl": "http://localhost:5164/",
+                "BlobStreamerUrl": "http://localhost:5019/",
             }
         },
         {

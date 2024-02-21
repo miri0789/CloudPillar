@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-using Backend.BEApi.Services.interfaces;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
 using Backend.Infra.Common.Services.Interfaces;
@@ -17,17 +14,15 @@ public class CertificateIdentityService : ICertificateIdentityService
     private readonly IHttpRequestorService _httpRequestorService;
     private readonly ITwinDiseredService _twinDiseredHandler;
     private readonly ILoggerHandler _logger;
-    private readonly ISHA256Wrapper _sha256Wrapper;
     private readonly IChangeSpecService _changeSpecService;
 
     public CertificateIdentityService(ILoggerHandler logger, IEnvironmentsWrapper environmentsWrapper, IHttpRequestorService httpRequestorService
-    , ITwinDiseredService twinDiseredHandler, ISHA256Wrapper sha256Wrapper, IChangeSpecService changeSpecService)
+    , ITwinDiseredService twinDiseredHandler, IChangeSpecService changeSpecService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environmentsWrapper = environmentsWrapper ?? throw new ArgumentNullException(nameof(environmentsWrapper));
         _httpRequestorService = httpRequestorService ?? throw new ArgumentNullException(nameof(httpRequestorService));
         _twinDiseredHandler = twinDiseredHandler ?? throw new ArgumentNullException(nameof(twinDiseredHandler));
-        _sha256Wrapper = sha256Wrapper ?? throw new ArgumentNullException(nameof(sha256Wrapper));
         _changeSpecService = changeSpecService ?? throw new ArgumentNullException(nameof(changeSpecService));
     }
 
@@ -70,7 +65,7 @@ public class CertificateIdentityService : ICertificateIdentityService
             };
 
             _logger.Info($"Send publicKey to BlobStreamer for uploading");
-            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}blob/UploadStream?deviceId={deviceId}";
+            string requestUrl = $"{_environmentsWrapper.blobStreamerUrl}Blob/UploadStream?deviceId={deviceId}";
             await _httpRequestorService.SendRequest(requestUrl, HttpMethod.Post, data);
             _logger.Info("certificate with public key uploaded for blob successfully.");
         }
@@ -85,7 +80,7 @@ public class CertificateIdentityService : ICertificateIdentityService
     {
         _logger.Info($"preparing serverIdentity download certificate action to add device twin");
 
-        var cerSign = await SignCertificateFile(publicKey, deviceId);
+        var cerSign = await SignCertificateFile(publicKey, deviceId, certificateName);
         DownloadAction downloadAction = new DownloadAction()
         {
             Action = TwinActionType.SingularDownload,
@@ -98,11 +93,19 @@ public class CertificateIdentityService : ICertificateIdentityService
         _logger.Info($"serverIdentity download certificate action added to device twin successfully.");
     }
 
-    private async Task<string> SignCertificateFile(byte[] publicKey, string deviceId)
+    private async Task<string> SignCertificateFile(byte[] publicKey, string deviceId, string certificateName)
     {
         _logger.Info($"Send request to get Sign certificate from keyHolder");
 
-        var signatureFileBytes = await GetCalculateHash(publicKey);
+        var signFileEvent = new SignFileEvent()
+        {
+            BufferSize = SharedConstants.SIGN_FILE_BUFFER_SIZE,
+            FileName = certificateName,
+            ChangeSpecId = String.Empty,
+            ChangeSpecKey = String.Empty,
+            PropName = String.Empty
+        };
+        var signatureFileBytes = await _changeSpecService.GetFileBytesAsync(deviceId, signFileEvent);
 
         var cerSign = await _changeSpecService.SendToSignData(signatureFileBytes, deviceId);
         _logger.Info($"Sign certificate from keyHolder: {cerSign}");
@@ -113,23 +116,5 @@ public class CertificateIdentityService : ICertificateIdentityService
     {
         var changeSignKey = SharedConstants.CHANGE_SPEC_SERVER_IDENTITY_NAME.GetSignKeyByChangeSpec();
         await _changeSpecService.CreateChangeSpecKeySignatureAsync(deviceId, changeSignKey);
-    }
-
-    private async Task<byte[]> GetCalculateHash(byte[] data)
-    {
-        using (SHA256 sha256 = _sha256Wrapper.Create())
-        {
-            try
-            {
-                _sha256Wrapper.TransformBlock(sha256, data, 0, (int)data.Length, null, 0);
-                _sha256Wrapper.TransformFinalBlock(sha256, new byte[0], 0, 0);
-                return sha256.Hash;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"CalculateHashAsync failed.", ex);
-                throw;
-            }
-        }
-    }
+    }        
 }

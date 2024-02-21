@@ -13,9 +13,9 @@ public class CheckExceptionResult : ICheckExceptionResult
         {
             var exceptionData = JObject.Parse(ex.Message);
             var error = exceptionData?["errorCode"]?.ToString();
-            return error is not null && Enum.TryParse(error, out DeviceConnectionResult errorCode) && errorCode == DeviceConnectionResult.IotHubUnauthorizedAccess ? errorCode : null;
+            return error is not null && Enum.TryParse(error, out DeviceConnectionResult errorCode) ? errorCode : null;
         }
-        catch (JsonReaderException exception)
+        catch (Exception exception)
         {
             return null;
         }

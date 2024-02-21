@@ -7,6 +7,8 @@ public class CommonEnvironmentsWrapper : ICommonEnvironmentsWrapper
     private const string _retryPolicyExponent = "RetryPolicyExponent";
     private const string _serviceBusConnectionString = "ServiceBusConnectionString";
     private const string _queueName = "QueueName";
+    private const string _keyHolderUrl = "KeyHolderUrl";
+    private const string _blobStreamerUrl = "BlobStreamerUrl";
 
     public int retryPolicyBaseDelay
     {
@@ -36,6 +38,16 @@ public class CommonEnvironmentsWrapper : ICommonEnvironmentsWrapper
     public string queueName
     {
         get { return GetVariable(_queueName); }
+    }
+
+    public string keyHolderUrl
+    {
+        get { return GetVariable(_keyHolderUrl); }
+    }
+
+    public string blobStreamerUrl
+    {
+        get { return GetVariable(_blobStreamerUrl); }
     }
 
     private string GetVariable(string name)

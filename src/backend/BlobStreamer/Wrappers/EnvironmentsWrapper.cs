@@ -10,6 +10,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public static readonly string _rangeCalculateType = "RangeCalculateType";
     public static readonly string _rangePercent = "RangePercent";
     public static readonly string _rangeBytes = "RangeBytes";
+    private const string _keyHolderUrl = "KeyHolderUrl";
 
     public string storageConnectionString
     {
@@ -48,6 +49,9 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
         {
             return int.TryParse(GetVariable(_rangeBytes), out int value) ? value : 0;
         }
+    public string keyHolderUrl
+    {
+        get { return GetVariable(_keyHolderUrl); }
     }
 
     private string GetVariable(string name)

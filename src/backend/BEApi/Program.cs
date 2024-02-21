@@ -4,13 +4,13 @@ using Backend.BEApi.Services;
 using Backend.BEApi.Services.Interfaces;
 using Backend.BEApi.Wrappers;
 using Backend.BEApi.Wrappers.Interfaces;
+using Backend.Infra.Common;
 using Backend.Infra.Common.Services;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Wrappers;
 using Shared.Entities.Factories;
-using Backend.BEApi.Services.interfaces;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -43,6 +43,7 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UsePathBase(new PathString(CommonConstants.BEAPI_BASE_URL));
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();
 logger.Info($"Informational Version: {informationalVersion ?? "Unknown"}");
@@ -52,5 +53,4 @@ app.UseSwaggerUI();
 
 
 app.MapControllers();
-
 app.Run();
