@@ -84,7 +84,6 @@ To configure the application settings, please refer to the appsettings.json file
 | `StrictModeSettings.FilesRestrictions.MaxSize`    |  Specifies the size limit for file downloads in bytes | `1` |
 | `StrictModeSettings.FilesRestrictions.AllowPatterns`    |  Array that contains patterns specifying the types of files that are allowed for the defined action | `[]`       |
 | `StrictModeSettings.FilesRestrictions.DenyPatterns`    |  Array that contains patterns specifying the types of files that are not allowed for the defined action | `[]`       |
-| `DownloadSettings.SignFileBufferSize`    | Sign documents buffer size | `16384`         |
 | `DownloadSettings.CommunicationDelaySeconds`    | Download delay seconds for check less communication | `30`         |
 | `DownloadSettings.BlockedDelayMinutes`    | Specifies the delay duration in minutes for download retry after blocked | `10`         |
 | `CommunicationLess`    | API returns mocks and not connect to IOT hub | `false`         |
@@ -95,7 +94,7 @@ To configure the application settings, please refer to the appsettings.json file
 | `UploadCompleteRetrySettings.DelaySeconds`    | Defines the delay duration in seconds between successive retry attempts | 30         |
 | `AgentServiceName`    | Describes the name of the Agent when installed as a Windows Service | `CARTO CloudPillar`         |
 | `AppSettings.DefaultSignCertificateName`    | The name of the default signing certificate. When resetting the pki folder, all certificates are deleted, except for the default signing certificate.  | `CP-Default-Sign-Certificate`         |
-
+| `AllowHTTPAPI`  | Allow run application with http  | `false`     |
 
 ## Call GetDeviceState in C# Example
 ```csharp

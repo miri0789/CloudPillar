@@ -1,11 +1,13 @@
 using CloudPillar.Agent.Handlers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.RegularExpressions;
 using CloudPillar.Agent.Handlers.Logger;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Sevices.Interfaces;
 using CloudPillar.Agent.Wrappers;
+using CloudPillar.Agent.Entities;
 using CloudPillar.Agent.Enums;
 
 namespace CloudPillar.Agent.Utilities;
@@ -37,7 +39,8 @@ public class AuthorizationCheckMiddleware
         _httpContextWrapper = httpContextWrapper ?? throw new ArgumentNullException(nameof(httpContextWrapper));
         _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
 
-        if (!context.Request.IsHttps)
+        bool isAllowHTTPAPI = _configuration.GetValue(Constants.ALLOW_HTTP_API, false);
+        if (!context.Request.IsHttps && !isAllowHTTPAPI)
         {
             NextWithRedirectAsync(context, x509Provider);
             return;
@@ -101,7 +104,7 @@ public class AuthorizationCheckMiddleware
         var action = context.Request.Path.Value?.ToLower() ?? "";
         var checkAuthorization = deviceIsBusy && (action.Contains("setready") == true || action.Contains("setbusy") == true);
         var x509Certificate = _dPSProvisioningDeviceClientHandler.GetCertificate();
-        DeviceConnectionResult connectRes = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
+        var connectRes = await _dPSProvisioningDeviceClientHandler.AuthorizationDeviceAsync(xDeviceId, xSecretKey, cancellationToken, checkAuthorization);
         if (connectRes != DeviceConnectionResult.Valid)
         {
             if (x509Certificate is not null)

@@ -1,7 +1,6 @@
 using System.Text;
-using Backend.BEApi.Services;
-using Backend.BEApi.Services.interfaces;
 using Backend.BEApi.Wrappers.Interfaces;
+using Backend.Infra.Common.Services;
 using Backend.Infra.Common.Services.Interfaces;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Microsoft.Extensions.Options;
@@ -14,9 +13,7 @@ public class ChangeSpecTestFixture
 {
     private Mock<ITwinDiseredService> _twinDiseredServiceMock;
     private Mock<IHttpRequestorService> _httpRequestorServiceMock;
-    private Mock<IEnvironmentsWrapper> _environmentsWrapperMock;
-    private DownloadSettings mockDownloadSettingsValue = new DownloadSettings();
-    private Mock<IOptions<DownloadSettings>> mockDownloadSettings;
+    private Mock<ICommonEnvironmentsWrapper> _environmentsWrapperMock;
     private Mock<IRegistryManagerWrapper> _registryManagerWrapper;
     private IChangeSpecService _target;
 
@@ -36,7 +33,6 @@ public class ChangeSpecTestFixture
             }
     };
     private const string DEVICE_ID = "deviceId";
-    private const string CHANGE_SPEC_KEY = "changeSpec";
     private const string CHANGE_SIGN_KEY = "changeSpecSign";
     private const string SIGN = "ASZftuTGnLeppB4VYDU76cEuzAvrTnIdFLvfqcjLEnmLUE7mTSLhlWP1chQMZjm+s1gY85sNx6QZml3N+tpbnglrALwJ0mZlCTmZgdWiVsKi7Y1TD4HcmVeoc2L66uEyvLScGhIG0iblwvYJFC/hSQraKAb9hafN1U3PqI9CaohAMdMR";
 
@@ -45,17 +41,14 @@ public class ChangeSpecTestFixture
     {
         _twinDiseredServiceMock = new Mock<ITwinDiseredService>();
         _httpRequestorServiceMock = new Mock<IHttpRequestorService>();
-        _environmentsWrapperMock = new Mock<IEnvironmentsWrapper>();
-        mockDownloadSettingsValue = DownloadSettingsHelper.SetDownloadSettingsValueMock();
-        mockDownloadSettings = new Mock<IOptions<DownloadSettings>>();
+        _environmentsWrapperMock = new Mock<ICommonEnvironmentsWrapper>();
         _registryManagerWrapper = new Mock<IRegistryManagerWrapper>();
-        mockDownloadSettings.Setup(x => x.Value).Returns(mockDownloadSettingsValue);
         _httpRequestorServiceMock.Setup(x => x.SendRequest<byte[]>(It.Is<string>(x => x.Contains("Signing/SignData")), HttpMethod.Post, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Encoding.UTF8.GetBytes(SIGN));
         _twinDiseredServiceMock.Setup(x => x.GetTwinDesiredAsync(DEVICE_ID)).ReturnsAsync(twinDesired);
 
         _target = new ChangeSpecService(_twinDiseredServiceMock.Object, _httpRequestorServiceMock.Object,
-         _environmentsWrapperMock.Object, mockDownloadSettings.Object, _registryManagerWrapper.Object);
+         _environmentsWrapperMock.Object,  _registryManagerWrapper.Object);
     }
 
     [Test]

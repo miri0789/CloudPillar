@@ -17,7 +17,8 @@
                 "IothubConnectionString": "",
                 "MessageExpiredMinutes": "60",
                 "RetryPolicyBaseDelay": "2",
-                "RetryPolicyExponent": "3"
+                "RetryPolicyExponent": "3",
+                "KeyholderUrl": "http://localhost:5164/",
             }
         },
         {
@@ -55,14 +56,15 @@
             "console": "internalConsole",
             "env": {
                 "KubernetesServiceHost": "",
+                "SigningPem": "=",
                 "SecretName": "IoTTwinSecret",
                 "SecretKey": "signKey",
                 "IothubConnectionString": "",
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
-                "SecretVolumeMountPath": "",
-                "DefaultSecretVolumeMountPath": ""
+                "SecretVolumeMountPath":"",
+                "DefaultSecretVolumeMountPath":""
             }
         },
         {
@@ -79,11 +81,14 @@
                 "DPSConnectionString": "",
                 "DPSIdScope": "",
                 "GlobalDeviceEndpoint": "global.azure-devices-provisioning.net",
+                
                 "ExpirationCertificatePercent": "0.6",
                 "maxCountDevices": "100",
                 "RangeCalculateType": "percent",
                 "RangePercent": "25",
                 "RangeBytes": "123456",
+                "KeyHolderUrl": "http://localhost:5164/",
+                "BlobStreamerUrl": "http://localhost:5019/",
             }
         },
         {

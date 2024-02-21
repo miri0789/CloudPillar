@@ -62,7 +62,6 @@ namespace CloudPillar.Agent.Tests
             await _target.RunDiagnostics();
             _runDiagnosticsHandler.Verify(x => x.HandleRunDiagnosticsProcess(It.IsAny<CancellationToken>()), Times.Never);
             RunDiagnosticsHandler.IsDiagnosticsProcessRunning = false;
-
         }
 
         [Test]

@@ -39,7 +39,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         try
         {
             string[] certificatesFiles = _fileStreamerWrapper.GetFiles(SharedConstants.PKI_FOLDER_PATH, $"*{SharedConstants.CERTIFICATE_FILE_EXTENSION}");
-            var knownIdentitiesList = GetKnownIdentitiesByCertFiles(certificatesFiles, cancellationToken);
+            var knownIdentitiesList = GetKnownIdentitiesByCertFiles(certificatesFiles);
             await UpdateKnownIdentitiesInReportedAsync(knownIdentitiesList, cancellationToken);
         }
         catch (Exception ex)
@@ -56,7 +56,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         byte[] publicKey = _x509CertificateWrapper.ExportSubjectPublicKeyInfo(certificate);
         if (publicKey == null)
         {
-            throw new Exception($"GetPublicKeyFromCertificateFileAsync failed to get public key from certificate {certificatePath}");
+            throw new InvalidDataException($"GetPublicKeyFromCertificateFileAsync failed to get public key from certificate {certificatePath}");
         }
         string pemPublicKey = ConvertToPem(publicKey, _x509CertificateWrapper.GetAlgorithmFriendlyName(certificate)?.ToUpper());
         return pemPublicKey;
@@ -82,7 +82,6 @@ public class ServerIdentityHandler : IServerIdentityHandler
             return false;
         }
     }
-
 
     public async Task RemoveNonDefaultCertificatesAsync(string path)
     {
@@ -116,7 +115,7 @@ public class ServerIdentityHandler : IServerIdentityHandler
         return pemBuilder.ToString();
     }
 
-    private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles, CancellationToken cancellationToken)
+    private List<KnownIdentities> GetKnownIdentitiesByCertFiles(string[] certificatesFiles)
     {
         var knownIdentitiesList = certificatesFiles
                         .Select(certificatePath =>
