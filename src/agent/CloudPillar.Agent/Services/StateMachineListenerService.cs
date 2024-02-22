@@ -1,5 +1,6 @@
 
 using System.Security.Cryptography.X509Certificates;
+using CloudPillar.Agent.Enums;
 using CloudPillar.Agent.Handlers;
 using CloudPillar.Agent.Handlers.Logger;
 using CloudPillar.Agent.Sevices.Interfaces;
@@ -45,12 +46,19 @@ public class StateMachineListenerService : BackgroundService
             ArgumentNullException.ThrowIfNull(_stateMachineHandlerService);
             provisioningService = scope.ServiceProvider.GetService<IProvisioningService>();
             ArgumentNullException.ThrowIfNull(provisioningService);
+            var reprovisioningHandle = scope.ServiceProvider.GetService<IReprovisioningHandler>();
+            ArgumentNullException.ThrowIfNull(reprovisioningHandle);
 
             X509Certificate2? userCertificate = dpsProvisioningDeviceClientHandler.GetCertificate();
             if (userCertificate?.NotAfter <= DateTime.UtcNow)
             {
                 await provisioningService.ProvisinigSymetricKeyAsync(stoppingToken);
                 return;
+            }
+            var res = await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
+            if (res == DeviceConnectionResult.DeviceNotFound || res == DeviceConnectionResult.IotHubUnauthorizedAccess)
+            {
+                reprovisioningHandle.RemoveX509CertificatesFromStore();
             }
             await dpsProvisioningDeviceClientHandler.InitAuthorizationAsync();
             await _stateMachineHandlerService.InitStateMachineHandlerAsync(stoppingToken);

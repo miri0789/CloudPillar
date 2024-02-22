@@ -84,8 +84,9 @@ public class SymmetricKeyProvisioningHandler : ISymmetricKeyProvisioningHandler
         try
         {
             var auth = _symmetricKeyWrapper.GetDeviceAuthentication(deviceId, deviceKey);
-            var isDeviceInitializedAsync = await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
-            return isDeviceInitializedAsync;
+            var deviceInitializedRes = await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+            var isValid = deviceInitializedRes == DeviceConnectionResult.Valid;
+            return isValid;
         }
         catch (Exception ex)
         {

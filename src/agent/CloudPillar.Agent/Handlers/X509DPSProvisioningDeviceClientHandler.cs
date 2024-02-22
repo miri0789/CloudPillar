@@ -160,7 +160,11 @@ public class X509DPSProvisioningDeviceClientHandler : IDPSProvisioningDeviceClie
             if (initialize)
             {
                 using var auth = _X509CertificateWrapper.GetDeviceAuthentication(deviceId, userCertificate);
-                await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+                var res = await _deviceClientWrapper.DeviceInitializationAsync(iotHubHostName, auth, cancellationToken);
+                if (res != DeviceConnectionResult.Valid)
+                {
+                    return res;
+                }
             }
             return await _deviceClientWrapper.IsDeviceInitializedAsync(cancellationToken);
         }

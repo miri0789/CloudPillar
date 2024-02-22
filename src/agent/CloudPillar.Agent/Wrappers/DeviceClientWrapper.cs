@@ -32,7 +32,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<bool> DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
+    public async Task<DeviceConnectionResult> DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(hostname);
         ArgumentNullException.ThrowIfNull(authenticationMethod);
@@ -46,19 +46,19 @@ public class DeviceClientWrapper : IDeviceClientWrapper
                 if (twin != null)
                 {
                     _deviceClient = iotClient;
-                    return true;
+                    return DeviceConnectionResult.Valid;
                 }
                 else
                 {
                     _logger.Info($"Device does not exist in {hostname}.");
                 }
             }
-            return false;
+            return DeviceConnectionResult.Unknow;
         }
         catch (Exception ex)
         {
-            _logger.Error($"DeviceInitializationAsync, Exception: {ex.Message}");
-            return false;
+            _logger.Debug($"DeviceConnectionResult, Device is not initialized. {ex.Message}");
+            return _checkExceptionResult.IsDeviceConnectException(ex.Message) ?? DeviceConnectionResult.Unknow;
         }
     }
 
@@ -129,14 +129,8 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
         catch (Exception ex)
         {
-            var errorCode = _checkExceptionResult.IsDeviceConnectException(ex);
-            if (errorCode != null)
-            {
-                return (DeviceConnectionResult)errorCode;
-            }
-            // Extract the error code
             _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized. {ex.Message}");
-            return DeviceConnectionResult.Unknow;
+            return _checkExceptionResult.IsDeviceConnectException(ex.Message) ?? DeviceConnectionResult.Unknow;
         }
     }
     public ProvisioningTransportHandler GetProvisioningTransportHandler()
