@@ -33,7 +33,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<bool> DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
+    public async Task<DeviceConnectResultEnum> DeviceInitializationAsync(string hostname, IAuthenticationMethod authenticationMethod, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(hostname);
         ArgumentNullException.ThrowIfNull(authenticationMethod);
@@ -47,19 +47,25 @@ public class DeviceClientWrapper : IDeviceClientWrapper
                 if (twin != null)
                 {
                     _deviceClient = iotClient;
-                    return true;
+                    return DeviceConnectResultEnum.Valid;
                 }
                 else
                 {
                     _logger.Info($"Device does not exist in {hostname}.");
                 }
             }
-            return false;
+            return DeviceConnectResultEnum.Unknow;
         }
         catch (Exception ex)
         {
-            _logger.Error($"DeviceInitializationAsync, Exception: {ex.Message}");
-            return false;
+            var errorCode = _checkExceptionResult.IsDeviceConnectException(ex.Message);
+            if (errorCode != null)
+            {
+                return (DeviceConnectResultEnum)errorCode;
+            }
+            // Extract the error code
+            _logger.Debug($"IsDeviceInitializedAsync, Device is not initialized. {ex.Message}");
+            return DeviceConnectResultEnum.Unknow;
         }
     }
 
@@ -130,7 +136,7 @@ public class DeviceClientWrapper : IDeviceClientWrapper
         }
         catch (Exception ex)
         {
-            var errorCode = _checkExceptionResult.IsDeviceConnectException(ex);
+            var errorCode = _checkExceptionResult.IsDeviceConnectException(ex.Message);
             if (errorCode != null)
             {
                 return (DeviceConnectResultEnum)errorCode;
@@ -140,6 +146,8 @@ public class DeviceClientWrapper : IDeviceClientWrapper
             return DeviceConnectResultEnum.Unknow;
         }
     }
+
+
     public ProvisioningTransportHandler GetProvisioningTransportHandler()
     {
         return GetTransportType() switch

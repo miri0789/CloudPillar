@@ -47,7 +47,7 @@ public class C2DEventSubscriptionSession : IC2DEventSubscriptionSession
             catch (Exception ex)
             {
                 _logger.Error($"Certificate expired, ignoring it message: {ex.Message}");
-                var errorCode = _checkExceptionResult.IsDeviceConnectException(ex);
+                var errorCode = _checkExceptionResult.IsDeviceConnectException(ex.Message);
                 if (errorCode != null)
                 {
                     break;
