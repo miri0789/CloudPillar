@@ -7,6 +7,7 @@ controllers:
     replicaCount: 2
     path: /blobstreamer-service
     port: 8081
+    expose: false
     env:
     - name: BlobContainerName
       value: "iotcontainer"
@@ -64,6 +65,7 @@ controllers:
     replicaCount: 1
     path: /keyholder-service
     port: 8082
+    expose: false
     env:
     - name: KubernetesServiceHost
       value: ""
@@ -90,6 +92,7 @@ controllers:
     replicaCount: 1
     path: /beapi-service
     port: 8083
+    expose: true
     env:
     - name: IothubConnectionString
       value: "HostName=cp-dev-iothub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=MUEZMQwZ6IK1WeEsLNM7Egb/vFb5NKS1vAIoTEK8D/M="
