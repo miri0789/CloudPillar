@@ -3,7 +3,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Backend.BEApi.Controllers;
+namespace Backend.BlobStreamer.Controllers;
 
 [AllowAnonymous]
 [Route("[controller]")]
