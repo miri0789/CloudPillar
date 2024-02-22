@@ -1,0 +1,69 @@
+parameters:
+- name: env
+  displayName: Select Environment to deploy
+  type: string
+  default: dev
+  values:
+  - tst
+  - dev
+  - stg
+  - prd 
+trigger: none
+
+
+stages:
+- stage: Generate_Build_Number
+  jobs:    
+    - job: GenerateVersionLabel
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+      - bash: |
+          IFS='.' read -r -a parts <<< "$(Build.BuildNumber)"
+          yearMonth="${parts[0]:2:4}"
+          day="${parts[0]:6:2}"          
+          versionLabel="1.3.${yearMonth}.${day}${parts[1]}"
+          echo "##vso[task.setvariable variable=versionLabel;isOutput=true]$versionLabel"
+        name: generateVersionLabel
+        displayName: 'GenerateVersionLabel'
+- stage: CI_Stage  
+  dependsOn: Generate_Build_Number
+  jobs:
+    - job: 'Backender_CI_Job'
+      variables:
+        versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
+      pool:
+        vmImage: ubuntu-latest
+      steps: 
+
+      - task: NuGetAuthenticate@1
+        displayName: 'Authenticate to NuGet'
+
+      - task: Docker@2
+        displayName: 'Backender Dockerize'
+        inputs:
+          containerRegistry: 'ACR ${{ parameters.env }}'
+          repository: 'backenderservice'
+          command: 'build'
+          Dockerfile: './src/backend/Infra/build/Dockerfile'
+          buildContext: src
+          tags: '$(versionLabel)'
+          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=Backender --build-arg PORT=8080 --build-arg IMAGE_TAG=$(versionLabel)'        
+            
+      - script: |
+          SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(versionLabel))
+          echo "$SCAN_RESULT" 
+          if [[ $SCAN_RESULT == *"CRITICAL"* && "$SCAN_RESULT" != *"CRITICAL: 0"* ]]; then
+            echo "Critical vulnerabilities found. Failing the pipeline."
+            exit 1  # This will cause the pipeline to fail
+          fi
+        displayName: 'Backender Security Scan'
+
+      - task: Docker@2
+        displayName: 'Backender Docker Push'
+        inputs:
+          command: 'push' 
+          containerRegistry: 'ACR ${{ parameters.env }}'
+          repository: 'backenderservice'
+          tags: '$(versionLabel)'
+

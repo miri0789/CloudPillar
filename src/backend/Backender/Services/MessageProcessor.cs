@@ -4,6 +4,7 @@ using Backender.Wrappers.Interfaces;
 using Shared.Logger;
 using Backender.Entities.Enums;
 using Backender.Entities;
+using System.Text.Json;
 
 namespace Backender.Services;
 public class MessageProcessor : IMessageProcessor
@@ -42,7 +43,7 @@ public class MessageProcessor : IMessageProcessor
             using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
                 new CancellationTokenSource(new TimeSpan(0, 0, _environmentsWrapper.RequestTimeoutSeconds)).Token))
             {
-                if(!IsValidJson(message))
+                if (!IsValidJson(message))
                 {
                     _logger.Warn($"ProcessMessageAsync Invalid json message: {message}");
                     return (CompletionCode.ConsumeErrorFatal, string.Empty, null);
@@ -61,7 +62,14 @@ public class MessageProcessor : IMessageProcessor
                     var isBadRequest = ((int)response.StatusCode) / 100 == 4;
                     returnProcessType = isBadRequest ? CompletionCode.ConsumeErrorFatal : CompletionCode.ConsumeErrorRecoverable;
                 }
-                return (returnProcessType, responseContent, responseHeaers);
+                var result = new ResponseInfo()
+                {
+                    StatusCode = response.StatusCode,
+                    Response = responseContent,
+                    ResponseHeaders = responseHeaers,
+                    RequestHeaders = properties
+                };
+                return (returnProcessType, JsonSerializer.Serialize(result), responseHeaers);
 
             }
         }

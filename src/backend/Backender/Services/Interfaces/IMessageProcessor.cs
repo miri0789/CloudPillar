@@ -1,4 +1,5 @@
 ﻿using Backender.Entities.Enums;
+using Backender.Entities;
 
 namespace Backender.Services.Interfaces;
 public interface IMessageProcessor
