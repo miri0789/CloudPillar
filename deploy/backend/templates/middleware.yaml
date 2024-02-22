@@ -1,4 +1,5 @@
 {{- range .Values.controllers }}
+{{- if and .port .path .expose }}
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
@@ -8,4 +9,5 @@ spec:
   headers:
     customRequestHeaders:
       Host: {{ .title }}-service.cp-be-ns.svc
+{{- end }}
 {{- end }}

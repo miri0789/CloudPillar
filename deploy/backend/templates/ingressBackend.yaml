@@ -5,7 +5,7 @@ metadata:
 spec:
   backends:
     {{- range .Values.controllers }}
-    {{- if and .port .path }}
+    {{- if and .port .path .expose }}
     - name: {{ .title }}-service
       port:
         number: {{ .port }}

@@ -1,5 +1,5 @@
 {{- range .Values.controllers }}
-{{- if and .port .path }}
+{{- if and .port .path .expose }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
