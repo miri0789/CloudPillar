@@ -49,7 +49,10 @@ public class ChangeSpecService : IChangeSpecService
                                 ChangeSpecId = changeSpec.Id,
                                 ChangeSpecKey = changeSpecKey
                             };
-                            downloadAction.Sign = await GetFileSignAsync(deviceId, signFileEvent);
+                            if(string.IsNullOrEmpty(downloadAction.Sign))
+                            {
+                                downloadAction.Sign = await GetFileSignAsync(deviceId, signFileEvent);
+                            }                            
                         }
                     }
                 }

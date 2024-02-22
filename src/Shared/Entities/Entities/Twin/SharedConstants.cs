@@ -8,6 +8,6 @@ public class SharedConstants
     public const string CERTIFICATE_FILE_EXTENSION = ".crt";
     public const int DEFAULT_CHANGE_SPEC_ORDER_VALUE = 50;
     public const int MAX_CHANGE_SPEC_ORDER_VALUE = 100;
-    public const int SIGN_FILE_BUFFER_SIZE = 16384;
+    public const int SIGN_FILE_BUFFER_SIZE = 262144;
 
 }
