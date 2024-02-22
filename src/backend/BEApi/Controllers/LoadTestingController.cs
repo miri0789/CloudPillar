@@ -15,8 +15,8 @@ public class LoadTestingController : ControllerBase
         _loadTestingService = loadTestingService ?? throw new ArgumentNullException(nameof(loadTestingService));
     }
 
-    [HttpGet("SendFileDownloadAsync")]
-    public async Task SendFileDownloadAsync(string deviceId, FileDownloadEvent data)
+    [HttpPost("SendFileDownloadAsync")]
+    public async Task SendFileDownloadAsync( [FromBody] FileDownloadEvent data,string deviceId)
     {
         try
         {

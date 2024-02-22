@@ -19,6 +19,7 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public static readonly string _storageConnectionString = "StorageConnectionString";
     public static readonly string _blobContainerName = "BlobContainerName";
     public static readonly string _partitionId = "PartitionId";
+    public static readonly string _loadingTestDevicePrefix = "LoadingTestDevicePrefix";
 
     public string blobStreamerUrl
     {
@@ -89,7 +90,10 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
 
         }
     }
-
+    public string loadingTestDevicePrefix
+    {
+        get { return GetVariable(_loadingTestDevicePrefix); }
+    }
     private string GetVariable(string name)
     {
         return Environment.GetEnvironmentVariable(name);

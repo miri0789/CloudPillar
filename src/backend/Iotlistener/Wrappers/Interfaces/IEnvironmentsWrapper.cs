@@ -19,6 +19,6 @@ public interface IEnvironmentsWrapper
     string blobContainerName { get; }
     RangeCalculateType rangeCalculateType { get; }
     string partitionId { get; }
-
+    string loadingTestDevicePrefix { get; }
 
 }
