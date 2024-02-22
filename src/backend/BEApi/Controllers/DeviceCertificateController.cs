@@ -56,7 +56,6 @@ public class DeviceCertificateController : ControllerBase
         {
             _logger.Info($"Error handling certificate: {ex.Message}");
             return BadRequest(ex.Message);
-
         }
     }
 }

@@ -1,6 +1,3 @@
-variables:
-- name: imagetag
-  value: 1.2.$(Build.BuildNumber)
 parameters:
 - name: env
   displayName: Select Environment to deploy
@@ -27,8 +24,23 @@ trigger:
     - $(Build.SourceBranchName)
 
 
-stages:  
+stages:
+- stage: Generate_Build_Number
+  jobs:    
+    - job: GenerateVersionLabel
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+      - bash: |
+          IFS='.' read -r -a parts <<< "$(Build.BuildNumber)"
+          yearMonth="${parts[0]:2:4}"
+          day="${parts[0]:6:2}"          
+          versionLabel="1.3.${yearMonth}.${day}${parts[1]}"
+          echo "##vso[task.setvariable variable=versionLabel;isOutput=true]$versionLabel"
+        name: generateVersionLabel
+        displayName: 'GenerateVersionLabel'
 - stage: CI_Stage  
+  dependsOn: Generate_Build_Number
   jobs:
   - ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters['env'], 'dev')) }}:
     - job: RunUnitTests
@@ -53,7 +65,9 @@ stages:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
-  - job: Agent_CI_Job
+  - job: Agent_CI_Job    
+    variables:
+      versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -67,21 +81,21 @@ stages:
         dockerfile: ./src/agent/CloudPillar.Agent/Dockerfile
         buildContext: src
         tags: aux-build
-        arguments: --build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN)
+        arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg IMAGE_TAG=$(versionLabel)'
 
     - script: |
         CONTAINER_ID=$(docker create agent:aux-build)
         docker cp $CONTAINER_ID:/app/cloudpillar.zip .
         docker cp $CONTAINER_ID:/app/export ./export
         docker rm $CONTAINER_ID
-        mv ./cloudpillar.zip ./cloudpillar-agent-publish-$(imagetag).zip
-        ls -al ./cloudpillar-agent-publish-$(imagetag).zip
+        mv ./cloudpillar.zip ./cloudpillar-agent-publish-$(versionLabel).zip
+        ls -al ./cloudpillar-agent-publish-$(versionLabel).zip
       displayName: 'Extract cloudpillar.zip from Image'
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cloudpillar.zip to Artifacts'
       inputs:
-        pathtoPublish: ./cloudpillar-agent-publish-$(imagetag).zip
+        pathtoPublish: ./cloudpillar-agent-publish-$(versionLabel).zip
         artifactName: 'cloudpillar'
     
     - task: ArchiveFiles@2
@@ -90,17 +104,19 @@ stages:
         rootFolderOrFile: './export'
         includeRootFolder: true
         archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(imagetag).zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(versionLabel).zip'
         replaceExistingArchive: true
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Agent src code to Artifacts'
       inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(imagetag).zip'
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/cloudpillar-agent-$(versionLabel).zip'
         artifactName: 'cloudpillar'
 
   - ${{each item in parameters.services}}:    
     - job: '${{ item }}_CI_Job'
+      variables:
+        versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
       pool:
         vmImage: ubuntu-latest
       steps: 
@@ -125,11 +141,11 @@ stages:
           command: 'build'
           Dockerfile: './src/backend/Infra/build/Dockerfile'
           buildContext: src
-          tags: '$(imagetag)'
-          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT=$(PORT)'        
+          tags: '$(versionLabel)'
+          arguments: '--build-arg FEED_ACCESSTOKEN=$(VSS_NUGET_ACCESSTOKEN) --build-arg DLL=${{ item }} --build-arg PORT=$(PORT) --build-arg IMAGE_TAG=$(versionLabel)'        
             
       - script: |
-          SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(imagetag))
+          SCAN_RESULT=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL,MEDIUM cp${{ parameters.env }}acr.azurecr.io/cloudpillar${{ lower(item) }}service:$(versionLabel))
           echo "$SCAN_RESULT" 
           if [[ $SCAN_RESULT == *"CRITICAL"* && "$SCAN_RESULT" != *"CRITICAL: 0"* ]]; then
             echo "Critical vulnerabilities found. Failing the pipeline."
@@ -137,21 +153,26 @@ stages:
           fi
         displayName: '${{ item }} Security Scan'
 
-      - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+      - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev1')) }}:
         - task: Docker@2
           displayName: '${{ item }} Docker Push'
           inputs:
             command: 'push' 
             repository: 'cloudpillar${{ lower(item) }}service'
             containerRegistry: 'cp ${{ parameters.env }} docker registry'
-            tags: '$(imagetag)'
+            tags: '$(versionLabel)'
 
 
-- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
+- ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev1')) }}:
   - ${{ if or(eq(parameters.env, 'dev'),eq(parameters.env, 'tst')) }}:
-    - stage: CD_Stage
+    - stage: CD_Stage      
+      dependsOn: 
+        - CI_Stage
+        - Generate_Build_Number
       jobs:              
       - job: CD_Job        
+        variables:
+          versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -166,12 +187,15 @@ stages:
             chartType: 'FilePath'
             chartPath: 'deploy/backend/'
             releaseName: 'cloudpillarback'
-            overrideValues: 'image.tag=$(imagetag)'
+            overrideValues: 'image.tag=$(versionLabel)'
             valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
             arguments: '--debug --timeout 15m0s'
             
   - ${{ if and(ne(parameters.env, 'dev'),ne(parameters.env, 'tst')) }}:
     - stage: CD_Stage
+      dependsOn: 
+        - CI_Stage
+        - Generate_Build_Number
       jobs:  
       - job: Start_VM_Job
         pool:
@@ -188,6 +212,8 @@ stages:
             
       - job: CD_Job
         dependsOn: Start_VM_Job
+        variables:
+          versionLabel: $[ stageDependencies.Generate_Build_Number.generateVersionLabel.outputs['generateVersionLabel.versionLabel'] ]
         pool:
           name: CloudPillar-Pool
           demands:
@@ -204,7 +230,7 @@ stages:
             chartType: 'FilePath'
             chartPath: 'deploy/backend/'
             releaseName: 'cloudpillarback'
-            overrideValues: 'image.tag=$(imagetag)'
+            overrideValues: 'image.tag=$(versionLabel)'
             valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
             arguments: '--debug --timeout 15m0s'
             

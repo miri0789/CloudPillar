@@ -28,10 +28,18 @@ builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
 builder.Services.AddScoped<IRegistryManagerWrapper, RegistryManagerWrapper>();
 builder.Services.AddScoped<ITwinDiseredService, TwinDiseredService>();
 builder.Services.AddScoped<IFileStreamerWrapper, FileStreamerWrapper>();
+builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 var app = builder.Build();
+
+app.UseExceptionHandler(new ExceptionHandlerOptions()
+{
+    AllowStatusCode404Response = true,
+    ExceptionHandlingPath = "/error"
+});
+
 app.UsePathBase(new PathString(CommonConstants.KEYHOLDER_BASE_URL));
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();

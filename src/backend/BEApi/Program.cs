@@ -11,7 +11,6 @@ using Backend.Infra.Common.Wrappers;
 using Backend.Infra.Common.Wrappers.Interfaces;
 using Backend.Infra.Wrappers;
 using Shared.Entities.Factories;
-using Backend.BEApi.Services.interfaces;
 
 var informationalVersion = Assembly.GetEntryAssembly()?
                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
@@ -44,6 +43,13 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(new ExceptionHandlerOptions()
+{
+    AllowStatusCode404Response = true,
+    ExceptionHandlingPath = "/error"
+});
+
 app.UsePathBase(new PathString(CommonConstants.BEAPI_BASE_URL));
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();

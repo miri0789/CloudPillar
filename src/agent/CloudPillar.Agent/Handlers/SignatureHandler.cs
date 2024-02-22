@@ -51,17 +51,14 @@ public class SignatureHandler : ISignatureHandler
                                         .Trim();
 
         var publicKeyBytes = Convert.FromBase64String(publicKeyContent);
-        var keyReader = new ReadOnlySpan<byte>(publicKeyBytes);
 
         if (isRSA)
         {
-            RSA rsa = RSA.Create();
-            rsa.ImportSubjectPublicKeyInfo(keyReader, out _);
+            RSA rsa = _asymmetricAlgorithmWrapper.GetRSAKey(publicKeyBytes);
             _logger.Debug($"Imported RSA public key");
             return rsa;
         }
-        ECDsa ecdsa = ECDsa.Create();
-        ecdsa.ImportSubjectPublicKeyInfo(keyReader, out _);
+        ECDsa ecdsa = _asymmetricAlgorithmWrapper.GetECDsaKey(publicKeyBytes);
         _logger.Debug($"Imported ECDsa public key");
         return ecdsa;
     }
@@ -71,7 +68,7 @@ public class SignatureHandler : ISignatureHandler
         string[] publicKeyFiles = _fileStreamerWrapper.GetFiles(SharedConstants.PKI_FOLDER_PATH, FILE_EXTENSION);
         foreach (string publicKeyFile in publicKeyFiles)
         {
-            var certificateExpired =  _serverIdentityHandler.CheckCertificateNotExpired(publicKeyFile);
+            var certificateExpired = _serverIdentityHandler.CheckCertificateNotExpired(publicKeyFile);
             if (!certificateExpired)
             {
                 continue;
@@ -111,7 +108,7 @@ public class SignatureHandler : ISignatureHandler
         {
             using (FileStream fileStream = _fileStreamerWrapper.OpenRead(filePath))
             {
-                byte[] buffer = new byte[_downloadSettings.SignFileBufferSize];
+                byte[] buffer = new byte[SharedConstants.SIGN_FILE_BUFFER_SIZE];
                 int bytesRead;
                 while ((bytesRead = _fileStreamerWrapper.Read(fileStream, buffer, 0, buffer.Length)) > 0)
                 {

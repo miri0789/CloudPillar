@@ -1,7 +1,7 @@
 using Shared.Entities.Messages;
 using Shared.Entities.Twin;
 
-namespace Backend.BEApi.Services.interfaces;
+namespace Backend.Infra.Common.Services.Interfaces;
 
 public interface IChangeSpecService
 {
@@ -9,5 +9,6 @@ public interface IChangeSpecService
     Task CreateChangeSpecKeySignatureAsync(string deviceId, string changeSignKey, TwinDesired twinDesired = null);
     Task CreateFileKeySignatureAsync(string deviceId, SignFileEvent signFileEvent);
     Task<string> SendToSignData(byte[] dataToSign, string deviceId);
+    Task<byte[]> GetFileBytesAsync(string deviceId, SignFileEvent signFileEvent);
 }
 

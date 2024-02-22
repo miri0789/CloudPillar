@@ -1,4 +1,4 @@
-using Backend.BEApi.Services.interfaces;
+using Backend.Infra.Common.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities.Messages;
 

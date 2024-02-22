@@ -6,7 +6,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "aks" {
   zones                 = [ "1", "2", "3" ]
   node_count            = 3
   min_count             = 1
-  max_count             = var.env == "dev" || var.env == "tst" ? 5 : 20
+  max_count             = var.env == "dev" ? 5 : 20
   enable_auto_scaling   = true
   enable_node_public_ip = false
   os_disk_type          = "Managed"

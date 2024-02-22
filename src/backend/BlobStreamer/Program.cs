@@ -31,11 +31,22 @@ builder.Services.AddScoped<ICheckSumService, CheckSumService>();
 builder.Services.AddScoped<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddScoped<ICommonEnvironmentsWrapper, CommonEnvironmentsWrapper>();
 builder.Services.AddScoped<IDeviceConnectService, DeviceConnectService>();
+builder.Services.AddScoped<IChangeSpecService, ChangeSpecService>();
+builder.Services.AddScoped<ISchemaValidator, SchemaValidator>();
+builder.Services.AddScoped<IHttpRequestorService, HttpRequestorService>();
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(new ExceptionHandlerOptions()
+{
+    AllowStatusCode404Response = true,
+    ExceptionHandlingPath = "/error"
+});
+
 app.UsePathBase(new PathString(CommonConstants.BLOBSTREAMER_BASE_URL));
 
 var logger = app.Services.GetRequiredService<ILoggerHandler>();

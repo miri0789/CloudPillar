@@ -70,6 +70,7 @@ builder.Services.AddSingleton<IStateMachineChangedEvent, StateMachineChangedEven
 builder.Services.AddSingleton<ICheckExceptionResult, CheckExceptionResult>();
 builder.Services.AddSingleton<IDeviceClientWrapper, DeviceClientWrapper>();
 builder.Services.AddSingleton<IConfigurationWrapper, ConfigurationWrapper>();
+builder.Services.AddSingleton<ICheckExceptionResult, CheckExceptionResult>();
 builder.Services.AddScoped<IDPSProvisioningDeviceClientHandler, X509DPSProvisioningDeviceClientHandler>();
 builder.Services.AddScoped<IX509CertificateWrapper, X509CertificateWrapper>();
 builder.Services.AddScoped<IMatcherWrapper, MatcherWrapper>();
@@ -123,8 +124,9 @@ var strictModeSettingsSection = builder.Configuration.GetSection(WebApplicationE
 builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 
 var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
+var isAllowHTTPAPI = builder.Configuration.GetValue<bool>(Constants.ALLOW_HTTP_API, false);
 var activeUrls = new string[] { httpsUrl };
-if (!isStrictmode)
+if (!isStrictmode || isAllowHTTPAPI)
 {
     activeUrls.Append(httpUrl);
 }
@@ -145,11 +147,11 @@ var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
 
 builder.WebHost.UseKestrel(options =>
 {
-    if (!isStrictmode)
+    if (!isStrictmode || isAllowHTTPAPI)
     {
-        options.Listen(IPAddress.Any, port);
+        options.Listen(IPAddress.Loopback, port);
     }
-    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
+    options.Listen(IPAddress.Loopback, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
     });
@@ -168,6 +170,12 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(new ExceptionHandlerOptions()
+{
+    AllowStatusCode404Response = true,
+    ExceptionHandlingPath = "/error"
+});
 
 app.UseSwagger();
 app.UseSwaggerUI();
