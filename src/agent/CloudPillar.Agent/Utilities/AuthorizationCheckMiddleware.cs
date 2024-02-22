@@ -117,7 +117,7 @@ public class AuthorizationCheckMiddleware
         {
             if (x509Certificate is not null)
             {
-                if (connectRes == DeviceConnectResultEnum.DeviceNotFound)
+                if (connectRes == DeviceConnectResultEnum.DeviceNotFound || connectRes == DeviceConnectResultEnum.IotHubUnauthorizedAccess)
                 {
                     _logger.Info($"Device {xDeviceId} is not found, start provisioning");
                     return await StartProvisioning(action, cancellationToken);
