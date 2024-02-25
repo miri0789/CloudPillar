@@ -18,14 +18,26 @@ public interface IServiceBusClientWrapper
     ServiceBusProcessorOptions CreateProcessorOptions(int parallelCount, int maxLockDurationSeconds);
 
     Task StartProcessingAsync(ServiceBusProcessor processor, CancellationToken cancellationToken);
-    
+
     Task StopProcessingAsync(ServiceBusProcessor processor);
-    
-    Task CompleteMessageAsync(ProcessMessageEventArgs processor, ServiceBusReceivedMessage message);
-    
-    Task AbandonMessageAsync(ProcessMessageEventArgs processor, ServiceBusReceivedMessage message);
-    
+
+    Task CompleteMessageAsync(ProcessMessageEventArgs processor);
+
+    Task AbandonMessageAsync(ProcessMessageEventArgs processor);
+
     Task DisposeAsync(ServiceBusProcessor processor);
-    
+
     void SetProcessorEvents(ServiceBusProcessor processor, Func<ProcessMessageEventArgs, Task> messageHandler, Func<ProcessErrorEventArgs, Task> errorHandler);
+
+    Task<bool> QueueExistsAsync(ServiceBusAdministrationClient client, string queueName);
+
+    Task CreateQueueAsync(ServiceBusAdministrationClient client, string queueName);
+
+    Task<bool> SubscriptionExistsAsync(ServiceBusAdministrationClient client, string topicName, string subscriptionName);
+
+    Task CreateSubscriptionAsync(ServiceBusAdministrationClient client, string topicName, string subscriptionName);
+
+    Task<bool> TopicExistsAsync(ServiceBusAdministrationClient client, string topicName);
+
+    Task CreateTopicAsync(ServiceBusAdministrationClient client, string topicName);
 }

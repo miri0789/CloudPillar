@@ -41,9 +41,34 @@ public class ServiceBusClientWrapper : IServiceBusClientWrapper
         };
     }
 
-    public async Task< bool> QueueExistsAsync(ServiceBusAdministrationClient client, string queueName)
+    public async Task<bool> QueueExistsAsync(ServiceBusAdministrationClient client, string queueName)
     {
         return await client.QueueExistsAsync(queueName);
+    }
+
+    public async Task CreateQueueAsync(ServiceBusAdministrationClient client, string queueName)
+    {
+        await client.CreateQueueAsync(queueName);
+    }
+
+    public async Task<bool> SubscriptionExistsAsync(ServiceBusAdministrationClient client, string topicName, string subscriptionName)
+    {
+        return await client.SubscriptionExistsAsync(topicName, subscriptionName);
+    }
+
+    public async Task CreateSubscriptionAsync(ServiceBusAdministrationClient client, string topicName, string subscriptionName)
+    {
+        await client.CreateSubscriptionAsync(topicName, subscriptionName);
+    }
+
+    public async Task<bool> TopicExistsAsync(ServiceBusAdministrationClient client, string topicName)
+    {
+        return await client.TopicExistsAsync(topicName);
+    }   
+
+    public async Task CreateTopicAsync(ServiceBusAdministrationClient client, string topicName)
+    {
+        await client.CreateTopicAsync(topicName);
     }
 
     public async Task StartProcessingAsync(ServiceBusProcessor processor, CancellationToken cancellationToken)
@@ -56,14 +81,14 @@ public class ServiceBusClientWrapper : IServiceBusClientWrapper
         await processor.StopProcessingAsync();
     }
 
-    public async Task CompleteMessageAsync(ProcessMessageEventArgs processor, ServiceBusReceivedMessage message)
+    public async Task CompleteMessageAsync(ProcessMessageEventArgs processor)
     {
-        await processor.CompleteMessageAsync(message);
+        await processor.CompleteMessageAsync(processor.Message);
     }
 
-    public async Task AbandonMessageAsync(ProcessMessageEventArgs processor, ServiceBusReceivedMessage message)
+    public async Task AbandonMessageAsync(ProcessMessageEventArgs processor)
     {
-        await processor.AbandonMessageAsync(message);
+        await processor.AbandonMessageAsync(processor.Message);
     }
 
     public async Task DisposeAsync(ServiceBusProcessor processor)

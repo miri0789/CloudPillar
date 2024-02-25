@@ -11,4 +11,5 @@ public interface IEnvironmentsWrapper
     int RequestTimeoutSeconds { get; }
     string CompletionTopic { get; }
     string CompletionUrlBase { get; }
+    int defaultMaxdeliverycount { get; }
 }

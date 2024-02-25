@@ -16,12 +16,14 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     private const string _requestTimeoutSeconds = "REQUEST_TIMEOUT_SECONDS";
     private const string _completionTopic = "COMPLETION_TOPIC";
     private const string _completionUrlBase = "COMPLETION_URL_BASE";
-
+    private const string _defaultMaxdeliverycount = "DEFAULT_MAXDELIVERYCOUNT";
+ 
     private const int DEFAULLT_PARALLEL_COUNT = 1;
     private const int DEFAULLT_MAX_LOCK_DURATION_SECONDS = 30;
     private const int HIGHER_PRIORITY_GRACE_MS = 2000;
     private const int NO_MESSAGES_DELAY_MS = 5000;
     private const int REQUEST_TIMEOUT_SECONDS = 60;
+    private const int MAX_DELIVERY_COUNT = 10;
 
     public string ServiceBusConnectionString
     {
@@ -62,6 +64,10 @@ public class EnvironmentsWrapper : IEnvironmentsWrapper
     public string CompletionUrlBase
     {
         get { return GetVariable(_completionUrlBase); }
+    }
+    public int defaultMaxdeliverycount
+    {
+        get { return int.TryParse(GetVariable(_defaultMaxdeliverycount), out int value) ? value : MAX_DELIVERY_COUNT; }
     }
 
 
