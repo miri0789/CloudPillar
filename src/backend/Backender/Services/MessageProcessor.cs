@@ -5,6 +5,11 @@ using Shared.Logger;
 using Backender.Entities.Enums;
 using Backender.Entities;
 using System.Text.Json;
+using System.Security.Authentication;
+using System.Net;
+using System.IOException;
+
+
 
 namespace Backender.Services;
 public class MessageProcessor : IMessageProcessor
@@ -12,6 +17,18 @@ public class MessageProcessor : IMessageProcessor
     private readonly HttpClient _httpClient;
     private readonly ILoggerHandler _logger;
     private readonly IEnvironmentsWrapper _environmentsWrapper;
+
+    private readonly Dictionary<Type, CompletionCode> exceptionMap = new Dictionary<Type, CompletionCode>
+        {
+            { typeof(AuthenticationException), CompletionCode.ConsumeErrorRecoverable },
+            { typeof(InvalidOperationException), CompletionCode.ConsumeErrorRecoverable },
+            { typeof(ArgumentNullException), CompletionCode.ConsumeErrorRecoverable },
+            { typeof(IOException), CompletionCode.ConsumeErrorRecoverable },
+            { typeof(WebException), CompletionCode.ConsumeErrorRecoverable },
+            { typeof(SocketException), CompletionCode.ConsumeErrorRecoverable },
+            { typeof(TaskCanceledException), CompletionCode.ConsumeErrorRecoverable },
+            { typeof(HttpRequestException), CompletionCode.Retain },
+        };
     public MessageProcessor(HttpClient httpClient,
                             ILoggerHandler logger,
                             IEnvironmentsWrapper environmentsWrapper)
@@ -75,18 +92,12 @@ public class MessageProcessor : IMessageProcessor
         }
         catch (TaskCanceledException ex)
         {
-            _logger.Error($"ProcessMessageAsync task cancel to process message: {message} with exception: {ex.Message}");
-            return (CompletionCode.ConsumeErrorFatal, string.Empty, null);
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.Error($"ProcessMessageAsync Connection error to process message: {message} with exception: {ex.Message}");
-            return (CompletionCode.Retain, string.Empty, null);
-        }
-        catch (Exception ex)
-        {
+            CompletionCode completionCode = exceptionMap.TryGetValue(ex.GetType(), out CompletionCode code)
+                ? code
+                : CompletionCode.ConsumeErrorRecoverable;
+
             _logger.Error($"ProcessMessageAsync Failed to process message: {message} with exception: {ex.Message}");
-            return (CompletionCode.ConsumeErrorRecoverable, string.Empty, null);
+            return (completionCode, string.Empty, null);
         }
 
     }
