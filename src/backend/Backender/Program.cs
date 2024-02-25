@@ -15,12 +15,14 @@ var builder = LoggerHostCreator.Configure("Backender", WebApplication.CreateBuil
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IMessageProcessor, MessageProcessor>();
 builder.Services.AddScoped<IEnvironmentsWrapper, EnvironmentsWrapper>();
+builder.Services.AddScoped<IServiceBusClientWrapper, ServiceBusClientWrapper>();
 
 
 builder.Services.AddHostedService(sp => new QueueConsumerService(
     sp.GetRequiredService<IMessageProcessor>(),
     sp.GetRequiredService<ILoggerHandler>(),
-    sp.GetRequiredService<IEnvironmentsWrapper>()));
+    sp.GetRequiredService<IEnvironmentsWrapper>(),
+    sp.GetRequiredService<IServiceBusClientWrapper>()));
 
 var app = builder.Build();
 await app.RunAsync();

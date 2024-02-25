@@ -53,7 +53,7 @@ public class MessageProcessor : IMessageProcessor
                 var response = await SendPostRequestAsync(relativeUri, message, properties, cts.Token);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var responseHeaers = response.Headers.ToDictionary(h => h.Key, h => h.Value.FirstOrDefault());
+                var responseHeaers = response.Headers.ToDictionary(h => h.Key, h => h.Value.FirstOrDefault() ?? "");
                 var returnProcessType = CompletionCode.ConsumeSuccess;
 
                 if (!response.IsSuccessStatusCode)
@@ -99,7 +99,6 @@ public class MessageProcessor : IMessageProcessor
             {
                 return true;
             }
-            return false;
         }
         catch (JsonException)
         {
