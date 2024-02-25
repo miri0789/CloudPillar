@@ -7,8 +7,7 @@ using Backender.Entities;
 using System.Text.Json;
 using System.Security.Authentication;
 using System.Net;
-using System.IOException;
-
+using System.Net.Sockets;
 
 
 namespace Backender.Services;
