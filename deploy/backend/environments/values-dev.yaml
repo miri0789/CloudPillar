@@ -3,9 +3,9 @@
 # Declare variables to be passed into your templates.
 
 controllers:
-  - title: "blobstreamer"
+  - title: "blobstreamersa"
     replicaCount: 2
-    path: /blobstreamer-service
+    path: /blobstreamersa-service
     port: 8081
     expose: false
     env:
@@ -22,7 +22,7 @@ controllers:
     - name: RetryPolicyExponent
       value: "30"
     - name: KeyHolderUrl
-      value: "http://keyholder-service:8082/"
+      value: "http://keyholdersa-service:8082/"
 
     # - name: PARTITION_ID
     #   valueFrom:
@@ -32,7 +32,7 @@ controllers:
     #   valueFrom:
     #     fieldRef:
     #       fieldPath: metadata.namespace
-  - title: "iotlistener"
+  - title: "iotlistenersa"
     kind: StatefulSet
     env:
     - name: LogswriteTopic
@@ -46,11 +46,11 @@ controllers:
     - name: BlobContainerName
       value: "iotcontainer"
     - name: BlobStreamerUrl
-      value: "http://blobstreamer-service:8081/"
+      value: "http://blobstreamersa-service:8081/"
     - name: KeyHolderUrl
-      value: "http://keyholder-service:8082/"
+      value: "http://keyholdersa-service:8082/"
     - name: BEApiUrl
-      value: "http://beapi-service:8083/"
+      value: "http://beapisa-service:8083/"
     - name: RangeCalculateType
       value: "percent"
     - name: RangePercent
@@ -61,9 +61,9 @@ controllers:
       value: "292000"
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
-  - title: "keyholder"
+  - title: "keyholdersa"
     replicaCount: 1
-    path: /keyholder-service
+    path: /keyholdersa-service
     port: 8082
     expose: false
     env:
@@ -88,9 +88,9 @@ controllers:
     - name: devbe-default-cert
       mountPath: "/certs/devbe/default"
       readOnly: true
-  - title: "beapi"
+  - title: "beapisa"
     replicaCount: 1
-    path: /beapi-service
+    path: /beapisa-service
     port: 8083
     expose: true
     env:
@@ -107,9 +107,9 @@ controllers:
     - name: "MaxCountDevices"
       value: "100"
     - name: KeyHolderUrl
-      value: "http://keyholder-service:8082/"
+      value: "http://keyholdersa-service:8082/"
     - name: BlobStreamerUrl
-      value: "http://blobstreamer-service:8081/"
+      value: "http://blobstreamersa-service:8081/"
 
 replicaCount: 1
 
