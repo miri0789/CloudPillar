@@ -4,7 +4,7 @@
 
 controllers:
   - title: "blobstreamer"
-    replicaCount: 50
+    replicaCount: 10
     path: /blobstreamer-service
     port: 8081
     env:
@@ -61,7 +61,7 @@ controllers:
     - name: IothubConnectionDeviceId
       value: "iothub-connection-device-id"     
   - title: "keyholder"
-    replicaCount: 50
+    replicaCount: 3
     path: /keyholder-service
     port: 8082
     env:
@@ -87,7 +87,7 @@ controllers:
       mountPath: "/certs/devbe/default"
       readOnly: true
   - title: "beapi"
-    replicaCount: 50
+    replicaCount: 2
     path: /beapi-service
     port: 8083
     env:
