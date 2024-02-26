@@ -182,7 +182,7 @@ stages:
             azureSubscription: CloudPillar ${{ parameters.env }}
             azureResourceGroup: 'cp-ms-${{ parameters.env }}-rg'
             kubernetesCluster: 'cp-${{ parameters.env }}-aks'
-            namespace: 'cp-be-ns'
+            namespace: 'cp-be-sa-ns'
             command: 'upgrade'
             chartType: 'FilePath'
             chartPath: 'deploy/backend/'
