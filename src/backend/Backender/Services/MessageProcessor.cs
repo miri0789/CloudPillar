@@ -91,9 +91,9 @@ public class MessageProcessor : IMessageProcessor
         }
         catch (TaskCanceledException ex)
         {
-            CompletionCode completionCode = exceptionMap.TryGetValue(ex.GetType(), out CompletionCode code)
-                ? code
-                : CompletionCode.ConsumeErrorRecoverable;
+            CompletionCode completionCode = exceptionMap.TryGetValue(ex.GetType(), out CompletionCode code) ? code
+                : exceptionMap.TryGetValue(ex.InnerException.GetType(), out CompletionCode innerCode) ? innerCode :
+                 CompletionCode.ConsumeErrorRecoverable;
 
             _logger.Error($"ProcessMessageAsync Failed to process message: {message} with exception: {ex.Message}");
             return (completionCode, string.Empty, null);

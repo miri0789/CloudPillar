@@ -16,7 +16,6 @@ public class QueueConsumerService : BackgroundService
     private readonly IEnvironmentsWrapper _environmentsWrapper;
     private readonly IServiceBusClientWrapper _serviceBusClientWrapper;
     private readonly IList<ServiceBusProcessor> _processors;
-    private readonly IList<int> _maxDeliveryCount;
     private static int _currentParallelCount = 0;
     private ServiceBusClient _client;
 
@@ -55,8 +54,6 @@ public class QueueConsumerService : BackgroundService
         {
             var processor = await CreateProcessorAsync(adminClient, url);
             SubscribeToProcessorEvents(processor, cancellationToken);
-            var maxDeliveryCount = await SetMaxDeliveryCountAsync(adminClient, url);
-            _maxDeliveryCount.Add(maxDeliveryCount);
             _processors.Add(processor);
         }
     }
@@ -73,26 +70,7 @@ public class QueueConsumerService : BackgroundService
             return null;
         }
     }
-    private async Task<int> SetMaxDeliveryCountAsync(ServiceBusAdministrationClient? adminClient, string url)
-    {
-        int maxDeliveryCount = _environmentsWrapper.defaultMaxdeliverycount;
-        if (adminClient is not null)
-        {
-            // if (IsQueueUrl(url))
-            // {
-            //     var queueProperties = await adminClient.GetQueueRuntimePropertiesAsync(url);
-            //     maxDeliveryCount = queueProperties.Value.MaxDeliveryCount ?? _environmentsWrapper.defaultMaxdeliverycount;
-            // }
-            // else
-            // {
-            //     var (topicName, subscriptionName) = ParseTopicSubscription(url);
-            //     var subscriptionProperties = await adminClient.GetSubscriptionRuntimePropertiesAsync(topicName, subscriptionName);
-            //     maxDeliveryCount = subscriptionProperties.Value.MaxDeliveryCount ?? _environmentsWrapper.defaultMaxdeliverycount;
-            // }
-        }
-        
-        return maxDeliveryCount;
-    }
+    
 
     private async Task<ServiceBusProcessor> CreateProcessorAsync(ServiceBusAdministrationClient? adminClient, string url)
     {
@@ -259,7 +237,7 @@ public class QueueConsumerService : BackgroundService
     private int GetRemainingAbandons(ServiceBusReceivedMessage message, int processorIndex)
     {
         var maxDeliveryCount = message.ApplicationProperties.ContainsKey(Constants.CPBACKENDER_MAXDELIVERYCOUNT) ?
-         (int)message.ApplicationProperties[Constants.CPBACKENDER_MAXDELIVERYCOUNT] : _maxDeliveryCount[processorIndex];
+         (int)message.ApplicationProperties[Constants.CPBACKENDER_MAXDELIVERYCOUNT] : _environmentsWrapper.defaultMaxdeliverycount;
 
         return maxDeliveryCount - message.DeliveryCount;
     }
