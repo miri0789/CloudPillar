@@ -35,7 +35,7 @@ stages:
           IFS='.' read -r -a parts <<< "$(Build.BuildNumber)"
           yearMonth="${parts[0]:2:4}"
           day="${parts[0]:6:2}"          
-          versionLabel="1.4.${yearMonth}.${day}${parts[1]}"
+          versionLabel="1.3.${yearMonth}.${day}${parts[1]}"
           echo "##vso[task.setvariable variable=versionLabel;isOutput=true]$versionLabel"
         name: generateVersionLabel
         displayName: 'GenerateVersionLabel'
@@ -165,8 +165,10 @@ stages:
 
 - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(parameters['env'], 'dev')) }}:
   - ${{ if or(eq(parameters.env, 'dev'),eq(parameters.env, 'tst')) }}:
-    - stage: CD_Stage
-      dependsOn: Generate_Build_Number, CI_Stage
+    - stage: CD_Stage      
+      dependsOn: 
+        - CI_Stage
+        - Generate_Build_Number
       jobs:              
       - job: CD_Job        
         variables:
@@ -191,7 +193,9 @@ stages:
             
   - ${{ if and(ne(parameters.env, 'dev'),ne(parameters.env, 'tst')) }}:
     - stage: CD_Stage
-      dependsOn: Generate_Build_Number, CI_Stage
+      dependsOn: 
+        - CI_Stage
+        - Generate_Build_Number
       jobs:  
       - job: Start_VM_Job
         pool:
