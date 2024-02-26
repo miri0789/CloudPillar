@@ -108,6 +108,7 @@ resource "null_resource" "helm-repos-updates" {
 
         az aks get-credentials --name cp-${var.env}-aks --resource-group cp-ms-${var.env}-rg
         helm repo add spv-charts https://charts.spvapi.no
+        helm repo update
         helm upgrade --install akv2k8s spv-charts/akv2k8s --namespace akv2k8s --values values-akv2k8s.yaml --debug
         helm repo add traefik https://traefik.github.io/charts
         helm upgrade --install traefik traefik/traefik -n traefik --values values-traefik.yaml --debug
