@@ -41,9 +41,11 @@ public class AuthorizationCheckMiddleware
             _dPSProvisioningDeviceClientHandler = dPSProvisioningDeviceClientHandler ?? throw new ArgumentNullException(nameof(dPSProvisioningDeviceClientHandler));
 
             bool isAllowHTTPAPI = _configuration.GetValue(Constants.ALLOW_HTTP_API, false);
-            if (!context.Request.IsHttps && !isAllowHTTPAPI)
+            var sslPort = _configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
+
+            if (!context.Request.IsHttps && !isAllowHTTPAPI && IsValidPort(sslPort))
             {
-                NextWithRedirectAsync(context, x509Provider);
+                NextWithRedirectAsync(context, x509Provider, sslPort);
                 return;
             }
             var endpoint = _httpContextWrapper.GetEndpoint(context);
@@ -148,11 +150,10 @@ public class AuthorizationCheckMiddleware
         await _provisioningService.ProvisinigSymetricKeyAsync(cancellationToken);
         return action.Contains("getdevicestate");
     }
-    private void NextWithRedirectAsync(HttpContext context, IX509Provider x509Provider)
+    private void NextWithRedirectAsync(HttpContext context, IX509Provider x509Provider, int sslPort)
     {
         context.Connection.ClientCertificate = x509Provider.GetHttpsCertificate();
 
-        var sslPort = _configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
         var uriBuilder = new UriBuilder(_httpContextWrapper.GetDisplayUrl(context))
         {
             Scheme = Uri.UriSchemeHttps,
@@ -194,6 +195,11 @@ public class AuthorizationCheckMiddleware
         }
         return true;
 
+    }
+
+    private bool IsValidPort(int port)
+    {
+        return port > 0 && port <= 65535; // Ports must be in the range 1-65535    
     }
 
 }
