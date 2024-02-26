@@ -108,7 +108,7 @@ controllers:
     - name: BlobStreamerUrl
       value: "http://blobstreamer-service:8081/"
 
-replicaCount: 50
+replicaCount: 1
 
 env:
   - name: ASPNETCORE_ENVIRONMENT
