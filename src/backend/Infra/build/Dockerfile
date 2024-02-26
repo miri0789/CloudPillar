@@ -1,3 +1,5 @@
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+
 # adding new user with id 1001
 RUN useradd --uid 1001 admin
 # giving user ownership of the app directory
@@ -5,7 +7,6 @@ RUN chown -R admin:admin /app
 # switching to the new user
 USER admin
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
 RUN curl -L https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/master/helpers/installcredprovider.sh  | sh
 
