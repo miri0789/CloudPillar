@@ -13,6 +13,8 @@ using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Sevices.Interfaces;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Utilities.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Rest;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
@@ -27,6 +29,23 @@ var port = builder.Configuration.GetValue(Constants.CONFIG_PORT, Constants.HTTP_
 var httpsPort = builder.Configuration.GetValue(Constants.HTTPS_CONFIG_PORT, Constants.HTTPS_DEFAULT_PORT);
 var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
+
+var validPorts = new List<int>();
+// if (IsValidPort(port))
+// {
+//     httpUrl = $"http://localhost:{port}";
+// }
+// if (IsValidPort(httpsPort))
+// {
+//     httpsUrl = $"https://localhost:{httpsPort}";
+// }
+// if (!validPorts.Any())
+// {
+//     Console.WriteLine("Invalid HTTP and HTTPS port. Please provide valid port numbers.");
+//     Environment.Exit(1); // Exit the application due to invalid ports
+// }
+// Validate HTTP and HTTPS ports
+CheckValidPorts();
 
 var serviceName = string.IsNullOrWhiteSpace(builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME)) ? Constants.AGENT_SERVICE_DEFAULT_NAME : builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
 
@@ -125,9 +144,28 @@ builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
 var isAllowHTTPAPI = builder.Configuration.GetValue<bool>(Constants.ALLOW_HTTP_API, false);
 var activeUrls = new string[] { httpsUrl };
+// if (!string.IsNullOrEmpty(httpsUrl))
+// {
+// activeUrls.Append(httpsUrl);
+// }
+// if ((!isStrictmode || isAllowHTTPAPI) && !string.IsNullOrEmpty(httpUrl))
 if (!isStrictmode || isAllowHTTPAPI)
 {
-    activeUrls.Append(httpUrl);
+    activeUrls = activeUrls.Append(httpUrl).ToArray();
+}
+activeUrls = activeUrls.Where(x =>
+{
+    var port = x.Split(":").Last();
+    if (validPorts.Contains(int.Parse(port)))
+    {
+        return true;
+    }
+    return false;
+}).ToArray();
+if (!activeUrls.Any())
+{
+    Console.WriteLine("Invalid HTTP and HTTPS port. Please provide valid port numbers.");
+    Environment.Exit(1); // Exit the application due to invalid ports
 }
 builder.WebHost.UseUrls(activeUrls);
 
@@ -146,14 +184,17 @@ var x509Provider = servcieProvider.GetRequiredService<IX509Provider>();
 
 builder.WebHost.UseKestrel(options =>
 {
-    if (!isStrictmode || isAllowHTTPAPI)
+    if ((!isStrictmode || isAllowHTTPAPI) && validPorts.Contains(port))
     {
         options.Listen(IPAddress.Loopback, port);
     }
-    options.Listen(IPAddress.Loopback, httpsPort, listenOptions =>
+    if (validPorts.Contains(httpsPort))
     {
-        listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
-    });
+        options.Listen(IPAddress.Loopback, httpsPort, listenOptions =>
+     {
+         listenOptions.UseHttps(x509Provider.GetHttpsCertificate());
+     });
+    }
 });
 
 builder.Services.AddSwaggerGen(c =>
@@ -194,3 +235,27 @@ app.MapControllers();
 app.ValidateAuthenticationSettings();
 
 app.Run();
+
+
+void CheckValidPorts()
+{
+    if (IsValidPort(port))
+    {
+        validPorts.Add(port);
+    }
+    if (IsValidPort(httpsPort))
+    {
+        validPorts.Add(httpsPort);
+    }
+    if (!validPorts.Any())
+    {
+        Console.WriteLine("Invalid HTTP and HTTPS port. Please provide valid port numbers.");
+        Environment.Exit(1); // Exit the application due to invalid ports
+    }
+}
+
+// Function to check if a port is valid
+bool IsValidPort(int port)
+{
+    return port > 0 && port <= 65535; // Ports must be in the range 1-65535    
+}
