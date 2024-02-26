@@ -187,7 +187,7 @@ stages:
             releaseName: 'cloudpillarback'
             overrideValues: 'image.tag=$(versionLabel)'
             valueFile: 'deploy/backend/environments/values-${{ parameters.env }}.yaml'
-            arguments: '--debug --timeout 15m0s'
+            arguments: '--debug --timeout 30m0s'
             
   - ${{ if and(ne(parameters.env, 'dev'),ne(parameters.env, 'tst')) }}:
     - stage: CD_Stage
