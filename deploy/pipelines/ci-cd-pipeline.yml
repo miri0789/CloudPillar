@@ -35,7 +35,7 @@ stages:
           IFS='.' read -r -a parts <<< "$(Build.BuildNumber)"
           yearMonth="${parts[0]:2:4}"
           day="${parts[0]:6:2}"          
-          versionLabel="1.3.${yearMonth}.${day}${parts[1]}"
+          versionLabel="1.4.${yearMonth}.${day}${parts[1]}"
           echo "##vso[task.setvariable variable=versionLabel;isOutput=true]$versionLabel"
         name: generateVersionLabel
         displayName: 'GenerateVersionLabel'
