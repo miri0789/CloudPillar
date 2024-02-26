@@ -143,8 +143,7 @@ activeUrls = activeUrls.Where(x =>
 }).ToArray();
 if (!activeUrls.Any())
 {
-    Console.WriteLine("Invalid HTTP and HTTPS port. Please provide valid port numbers.");
-    Environment.Exit(1); // Exit the application due to invalid ports
+    ExitApplication("Invalid active Urls");
 }
 builder.WebHost.UseUrls(activeUrls);
 
@@ -228,8 +227,7 @@ void CheckValidPorts()
     }
     if (!validPorts.Any())
     {
-        Console.WriteLine("Invalid HTTP and HTTPS port. Please provide valid port numbers.");
-        Environment.Exit(1); // Exit the application due to invalid ports
+        ExitApplication("Invalid HTTP and HTTPS port. Please provide valid port numbers.");
     }
 }
 
@@ -237,4 +235,10 @@ void CheckValidPorts()
 bool IsValidPort(int port)
 {
     return port > 0 && port <= 65535; // Ports must be in the range 1-65535    
+}
+
+void ExitApplication(string message)
+{
+    Console.WriteLine(message);
+    Environment.Exit(1);
 }
