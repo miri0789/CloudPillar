@@ -135,11 +135,7 @@ if (!isStrictmode || isAllowHTTPAPI)
 activeUrls = activeUrls.Where(x =>
 {
     var port = x.Split(":").Last();
-    if (validPorts.Contains(int.Parse(port)))
-    {
-        return true;
-    }
-    return false;
+    return validPorts.Contains(int.Parse(port));
 }).ToArray();
 if (!activeUrls.Any())
 {
