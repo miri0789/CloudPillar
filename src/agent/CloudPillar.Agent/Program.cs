@@ -13,8 +13,6 @@ using System.Security.Cryptography.X509Certificates;
 using CloudPillar.Agent.Sevices.Interfaces;
 using Shared.Entities.Twin;
 using CloudPillar.Agent.Utilities.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Rest;
 
 bool runAsService = args.FirstOrDefault() == "--winsrv";
 Environment.CurrentDirectory = Directory.GetCurrentDirectory();
@@ -31,20 +29,6 @@ var httpUrl = $"http://localhost:{port}";
 var httpsUrl = $"https://localhost:{httpsPort}";
 
 var validPorts = new List<int>();
-// if (IsValidPort(port))
-// {
-//     httpUrl = $"http://localhost:{port}";
-// }
-// if (IsValidPort(httpsPort))
-// {
-//     httpsUrl = $"https://localhost:{httpsPort}";
-// }
-// if (!validPorts.Any())
-// {
-//     Console.WriteLine("Invalid HTTP and HTTPS port. Please provide valid port numbers.");
-//     Environment.Exit(1); // Exit the application due to invalid ports
-// }
-// Validate HTTP and HTTPS ports
 CheckValidPorts();
 
 var serviceName = string.IsNullOrWhiteSpace(builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME)) ? Constants.AGENT_SERVICE_DEFAULT_NAME : builder.Configuration.GetValue("AgentServiceName", Constants.AGENT_SERVICE_DEFAULT_NAME);
@@ -144,11 +128,6 @@ builder.Services.Configure<StrictModeSettings>(strictModeSettingsSection);
 var isStrictmode = strictModeSettingsSection.GetValue("StrictMode", false);
 var isAllowHTTPAPI = builder.Configuration.GetValue<bool>(Constants.ALLOW_HTTP_API, false);
 var activeUrls = new string[] { httpsUrl };
-// if (!string.IsNullOrEmpty(httpsUrl))
-// {
-// activeUrls.Append(httpsUrl);
-// }
-// if ((!isStrictmode || isAllowHTTPAPI) && !string.IsNullOrEmpty(httpUrl))
 if (!isStrictmode || isAllowHTTPAPI)
 {
     activeUrls = activeUrls.Append(httpUrl).ToArray();
