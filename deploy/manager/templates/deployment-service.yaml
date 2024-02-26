@@ -16,11 +16,16 @@ spec:
       labels:
         app: {{ .title }}
     spec:
+      securityContext:  
+          runAsUser: {{ $.Values.runAsUser }} 
+          runAsNonRoot: true
       containers:
       - name: {{ .title }}
         image: "{{ $.Values.image.acr }}/{{ .title }}:{{ .tag | default $.Values.image.tag }}"
         securityContext:
           allowPrivilegeEscalation: false
+          runAsUser: {{ .runAsUser }}          
+          runAsNonRoot: true
           capabilities:
             drop:
             - all

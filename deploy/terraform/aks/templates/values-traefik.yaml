@@ -37,6 +37,13 @@ deployment:
       readOnly: true
     - name: ssl
       mountPath: /ssl
+    securityContext:          
+      allowPrivilegeEscalation: false          
+      runAsNonRoot: true
+      runAsUser: 65534
+      capabilities:
+        drop:
+          - all
   additionalVolumes:
   - name: ssl
     emptyDir: {}

@@ -16,14 +16,19 @@ spec:
       labels:
         app: {{ .title }}
     spec:
+      securityContext:  
+          runAsUser: {{ $.Values.runAsUser }} 
+          runAsNonRoot: true
       containers:
       - name: {{ .title }}
         image: "{{ $.Values.image.acr }}/cloudpillar{{ .title }}service:{{ $.Values.image.tag }}"
-        securityContext:
-          allowPrivilegeEscalation: false
+        securityContext: 
+          allowPrivilegeEscalation: false          
+          runAsNonRoot: true
+          runAsUser: {{ .runAsUser }}          
           capabilities:
-            drop:
-            - all
+                  drop:
+                    - all
         imagePullPolicy: IfNotPresent
         {{- if .port }}
         ports:
