@@ -4,7 +4,7 @@
 # 
 # ******************************************************************
 
-FROM debian
+FROM debian:12.5
 RUN apt update
 RUN apt install -y wget zip g++ make lua5.1 liblua5.1-0-dev lua-socket p7zip-full sudo
 RUN apt install -y gettext-base
