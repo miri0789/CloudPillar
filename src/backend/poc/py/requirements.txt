@@ -3,3 +3,4 @@ azure-storage-blob
 azure-eventhub
 azure-eventhub-checkpointstoreblob-aio
 azure-iot-device
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
