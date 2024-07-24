@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Serve the application from NGINX
-FROM nginx:stable-alpine as production-stage
+FROM nginx:1.26.1-alpine3.19 as production-stage
 
 # Remove the default NGINX configuration file
 RUN rm /etc/nginx/conf.d/default.conf
